@@ -5,7 +5,16 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ENV-001_dome.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/_Project/Scenes/Bootstrap/SCN_Bootstrap.unity
+    guid: 06e5ffb09cce2254db72c772b8d58009
+  - enabled: 1
+    path: Assets/_Project/Scenes/Dome/SCN_Dome_Main.unity
+    guid: 4893ba62e351e994bb3b836d105b7e2d
+  - enabled: 1
+    path: Assets/_Project/Scenes/Lab/SCN_Lab_Main.unity
+    guid: 3c79ce3e74961924891d2cddd807af1a
   m_configObjects: {}
