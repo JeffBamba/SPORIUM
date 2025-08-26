@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class BootstrapLoader : MonoBehaviour
 {
-    [SerializeField] private string firstScene = "SCN_Dome_Main";
+    [SerializeField] private string firstScene = "SCN_VaultMap";
 
     void Start()
     {

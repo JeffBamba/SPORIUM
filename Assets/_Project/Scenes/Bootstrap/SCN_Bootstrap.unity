@@ -661,12 +661,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b769cadd5ec534ebaeafa55e4eb146, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstScene: SCN_Dome_Main
+  firstScene: SCN_VaultMap
   loadingText: {fileID: 711398877}
   loadingBarFill: {fileID: 1818923854}
-  holdForKey: 1
-  continueKey: 13
-  showHint: 1
 --- !u!1 &1196465119
 GameObject:
   m_ObjectHideFlags: 0
@@ -818,7 +815,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1369806327}
   - component: {fileID: 1369806329}
-  - component: {fileID: 1369806328}
   m_Layer: 0
   m_Name: SYS_GameManager
   m_TagString: Untagged
@@ -841,21 +837,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1369806328
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1369806326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e062779151a18640a970505eeccb7c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  startingDay: 1
-  actionsPerDay: 3
-  startingCRY: 50
 --- !u!114 &1369806329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -947,7 +928,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d916f54319371544c8ea23a5fdd8f43e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstScene: SCN_Dome_Main
+  firstScene: SCN_VaultMap
 --- !u!1 &1818923852
 GameObject:
   m_ObjectHideFlags: 0
