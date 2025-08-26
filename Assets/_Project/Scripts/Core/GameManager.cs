@@ -52,11 +52,16 @@ public class GameManager : MonoBehaviour
     {
         if (ActionsLeft <= 0) return false;
         if (CurrentCRY < costCRY) return false;
+
         ActionsLeft--;
         if (costCRY > 0) SpendCRY(costCRY);
+
         OnActionsChanged?.Invoke(ActionsLeft);
+        OnCRYChanged?.Invoke(CurrentCRY);   // ⬅️ AGGIUNGI QUESTA RIGA
+
         return true;
     }
+
 
     public void EndDay(int dailyPowerCost = 20)
     {
