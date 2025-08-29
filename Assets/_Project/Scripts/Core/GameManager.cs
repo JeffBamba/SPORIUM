@@ -1,11 +1,9 @@
 ﻿using System;
 using UnityEngine;
-using Sporae.Core;   // usa Inventory e InventoryItem
+using Sporae.Core;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager I { get; private set; }
-
     [Header("Day & Actions")]
     [Min(1)] public int startingDay = 1;
     [Min(1)] public int actionsPerDay = 3;
@@ -24,66 +22,88 @@ public class GameManager : MonoBehaviour
     public event Action<int> OnActionsChanged;
     public event Action<int> OnCRYChanged;
 
+    // Sistema di azioni separato
+    private ActionSystem actionSystem;
+    private EconomySystem economySystem;
+
     void Awake()
     {
-        if (I != null && I != this) { Destroy(gameObject); return; }
-        I = this;
-
-        // 🔧 assicurati che sia ROOT prima del DontDestroyOnLoad
-        transform.SetParent(null, worldPositionStays: true);
-
-        DontDestroyOnLoad(gameObject);
-
+        // Inizializza sistemi
+        actionSystem = new ActionSystem(actionsPerDay);
+        economySystem = new EconomySystem(startingCRY);
+        
+        // Setup iniziale
         CurrentDay = startingDay;
         ActionsLeft = actionsPerDay;
         CurrentCRY = startingCRY;
 
+        // Inventario iniziale
         AddItem("SEED_GENERIC", 1);
         AddItem("SPORE_GENERIC", 2);
 
-        OnDayChanged?.Invoke(CurrentDay);
-        OnActionsChanged?.Invoke(ActionsLeft);
-        OnCRYChanged?.Invoke(CurrentCRY);
+        // Notifica UI
+        NotifyUI();
     }
-
-
 
     public bool TrySpendAction(int costCRY = 0)
     {
-        if (ActionsLeft <= 0) return false;
-        if (CurrentCRY < costCRY) return false;
+        if (!actionSystem.CanSpendAction()) return false;
+        if (!economySystem.CanAfford(costCRY)) return false;
 
-        ActionsLeft--;
-        if (costCRY > 0) SpendCRY(costCRY);
+        actionSystem.SpendAction();
+        if (costCRY > 0) economySystem.Spend(costCRY);
 
+        // Aggiorna stati locali
+        ActionsLeft = actionSystem.ActionsLeft;
+        CurrentCRY = economySystem.CurrentCRY;
+
+        // Notifica UI
         OnActionsChanged?.Invoke(ActionsLeft);
-        OnCRYChanged?.Invoke(CurrentCRY);   // ⬅️ AGGIUNGI QUESTA RIGA
+        OnCRYChanged?.Invoke(CurrentCRY);
 
         return true;
     }
 
-
     public void EndDay(int dailyPowerCost = 20)
     {
-        SpendCRY(dailyPowerCost);
-        CurrentDay++;
-        ActionsLeft = actionsPerDay;
-        OnDayChanged?.Invoke(CurrentDay);
-        OnActionsChanged?.Invoke(ActionsLeft);
+        if (economySystem.CanAfford(dailyPowerCost))
+        {
+            economySystem.Spend(dailyPowerCost);
+            CurrentDay++;
+            actionSystem.ResetActions();
+            
+            // Aggiorna stati locali
+            ActionsLeft = actionSystem.ActionsLeft;
+            CurrentCRY = economySystem.CurrentCRY;
+            
+            // Notifica UI
+            NotifyUI();
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] Non hai abbastanza CRY per finire la giornata!");
+        }
     }
 
     public void AddCRY(int amount)
     {
         if (amount <= 0) return;
-        CurrentCRY += amount;
+        
+        economySystem.Add(amount);
+        CurrentCRY = economySystem.CurrentCRY;
         OnCRYChanged?.Invoke(CurrentCRY);
     }
 
     public void SpendCRY(int amount)
     {
         if (amount <= 0) return;
-        CurrentCRY = Mathf.Max(0, CurrentCRY - amount);
-        OnCRYChanged?.Invoke(CurrentCRY);
+        
+        if (economySystem.CanAfford(amount))
+        {
+            economySystem.Spend(amount);
+            CurrentCRY = economySystem.CurrentCRY;
+            OnCRYChanged?.Invoke(CurrentCRY);
+        }
     }
 
     // Wrappers inventario
@@ -91,4 +111,11 @@ public class GameManager : MonoBehaviour
     public void AddItem(string id, int qty = 1) => inventory.Add(id, qty);
     public bool ConsumeItem(string id, int qty = 1) => inventory.Consume(id, qty);
     public Inventory GetInventory() => inventory;
+
+    private void NotifyUI()
+    {
+        OnDayChanged?.Invoke(CurrentDay);
+        OnActionsChanged?.Invoke(ActionsLeft);
+        OnCRYChanged?.Invoke(CurrentCRY);
+    }
 }
