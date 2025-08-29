@@ -1,0 +1,319 @@
+________________________________________
+🌱 SPORIUM — Game Design Document
+Versione: GDD16 (Latest Esteso)
+Data: 25/08/2025
+________________________________________
+🎯 Visione
+Sporium è un gestionale/simulativo in pixel art ambientato in un futuro post-apocalittico.
+Il giocatore impersona un biologo solitario che vive e lavora in un Vault botanico sotterraneo, con lo scopo di ricostruire o corrompere la biodiversità attraverso spore, semi, clonazioni e manipolazioni genetiche.
+●	Ritmo: cicli giornalieri, missioni, reputazione con le fazioni, progressione narrativa emergente.
+
+●	Atmosfera: cupa, sospesa tra scienza e follia, con un’estetica semi-realistico/pixel art illuminata da LED e bioluminescenze.
+
+●	Obiettivo del giocatore: raggiungere un equilibrio ecologico, oppure spingere il Vault verso la corruzione, in una esperienza contemplativa, etica e rigiocabile.
+
+●	Caratteristica chiave: nessun timer globale, libertà di scelta, ma conseguenze a lungo termine.
+
+________________________________________
+🌌 Lore & Main Quest
+●	Origine del Vault: ultimo laboratorio botanico rimasto, ispirato al Global Seed Vault delle Svalbard. Sopravvissuto a un collasso globale (clima, pandemia fungina, guerra biotecnologica).
+
+●	Il Biologo: identità ambigua (sopravvissuto, clone o delirio pre-morte).
+
+●	Il Diario SPORIUM: log narrativo, voce interiore instabile, contraddittoria, poetica, glitchata.
+
+●	Fazioni:
+
+Fazione	Visione	Toni
+Custodi della Rinascita	Ricostruzione ecologica e speranza	Idealismo fragile
+Culto della Muffa	Corruzione, muffa come gioia	Estasi degenerata
+Mercanti Ombra	Contrabbando semi, cinismo	Pragmatismo oscuro
+Ipnotici	Onirismo e trance da spore	Visioni disturbanti
+Militari	Ordine e sfruttamento	Crudezza, dominio
+Setta religiosa	Devozione e superstizione	Tragico/ridicolo
+●	
+Main Quest: conflitto simbolico Custodi ↔ Culto Muffa, con esiti variabili.
+
+ Possibile finale in loop eterno → tutto è un sogno pre-morte del biologo.
+
+________________________________________
+⚙️ Core Gameplay
+●	Coltivazione: da spore → semi → pianta → ibridi/mutazioni.
+
+●	Pipeline: Clonazione → Manipolazione semi → Ibridazione → Mutazioni.
+
+●	Routine: irrigazione, potatura, esposizione a LED, spray antifungini, analisi fogliare.
+
+●	Reputazione: influenza scambi, accesso a missioni e mercato nero.
+
+●	Eventi: arrivi casuali, sabotaggi, muffe, blackout, baratti.
+
+●	Diario SPORIUM: micro-missioni poetiche e glitchate.
+
+________________________________________
+🏛️ Ambienti Principali & Vault Map_01
+Vault Map_01 (ufficiale):
+●	Esterno: Visitor Room + Seed Storage collegato con tubo pneumatico all’ascensore.
+
+●	Livello –1: Dome Centrale + Laboratorio.
+
+●	Livello –2: Dome del Cibo + Bedroom del Biologo.
+
+●	Livello –3: “?” (area segreta/espansione futura).
+
+●	Navigazione: verticale con ascensore.
+
+📌 Tutti gli ambienti hanno codici ENV-xxx e saranno disegnati in stile semi-realistico/pixel art con luci LED.
+________________________________________
+📖 Diario SPORIUM
+●	Funzione: registro + voce narrativa.
+
+●	Tono: poetico, delirante, contraddittorio.
+
+●	Funzioni:
+
+○	genera micro-missioni legate ad achievement.
+
+○	glitch visivi/sonori come rottura della quarta parete.
+
+○	influenza la percezione del giocatore sulla verità della storia.
+
+________________________________________
+🔬 Sistemi Chiave
+Spore
+●	SPO-001 Pura → stabilità, tratti rigenerativi.
+
+●	SPO-002 Corrotta → instabilità, tossicità.
+
+●	SPO-003 Neutra → imprevedibilità.
+
+●	SPO-004 Onirica → occultismo, visioni.
+
+Ibridazione
+●	Combinazione di due specie → semi con tratti fissi.
+
+●	Codici HYB-201…210.
+
+Manipolazione Semi
+●	Step post-clonazione.
+
+●	Permette tratti unici e variazioni.
+
+Reputazione
+●	Scala –100 ↔ +100.
+
+●	Influenza missioni, accesso a scambi, eventi.
+
+Eventi & Visitatori
+●	Arrivi randomici con crisi, richieste, doni, sabotaggi.
+
+●	Codici EVT-001…010.
+
+________________________________________
+🌡️ Sistema Ecologico Dome (pH)
+Valore –100 (Ultra Acido) ↔ +100 (Ultra Basico).
+●	Piante tossiche → acido.
+
+●	Piante pure → basico.
+
+●	Monocolture → estremi.
+
+●	Ibridazioni rare → stabilizzano.
+
+📊 Tabella Range pH
+Range	Stato	Effetti
+–100/–80	Ultra Acido	Piante pure collassano; tossiche +50% resa
+–79/–30	Acido stabile	Tossiche rapide; +10% mutazioni
+–29/+29	Neutro	Biodiversità stabile
++30/+79	Basico stabile	Piante pure prosperano
++80/+100	Ultra Basico	Tossiche collassano, pure iper-produttive ma sterili
+________________________________________
+🌱 Ciclo di Crescita Piante
+●	Ogni pianta → 3 stadi (Germoglio → Crescita → Maturità).
+
+●	Durata media 5 giorni.
+
+📊 Tabella Piante Base (PLT-xxx)
+Cod.	Pianta	Fasi	Totale
+PLT-101	Arctic Hask	2+3	5
+PLT-102	Night-Bloom Iris	2+3	5
+PLT-103	Ferric Fern	2+4	6
+PLT-104	Glasscap Fungus	1+2	3
+PLT-105	Saltbloom Succulent	3+4	7
+PLT-106	Red Tangle Vine	2+3	5
+PLT-107	Blue Sedge	2+3	5
+PLT-108	Lantern Moss	2+3	5
+________________________________________
+🖥️ UI & HUD
+●	HUD Dome: barra pH, slot missioni, tempo/giorno, energia operativa, reputazione, inventario rapido.
+
+●	Schermata missioni: titolo, fazione, TIER, ricompensa, rischi.
+
+●	Notifiche: richieste aggiornamenti.
+
+________________________________________
+💰 Economia Interna
+Valute:
+●	CRY (cripto, moneta unica sopravvissuta).
+
+●	BRR (baratto diretto).
+
+📊 Tabella Flusso Economico
+Voce	Tipo	Valore (CRY)
+Missione Tier 1	Entrata	+20–30
+Missione Tier 3	Entrata	+80–120
+Missione Tier 5	Entrata	+200–300
+Vendita pianta base	Entrata	+10–15
+Vendita ibrido raro	Entrata	+50–80
+Vendita seme leggendario	Entrata	+150–250
+Corrente giornaliera	Uscita	–20
+Sterilizzazione muffa	Uscita	–30/80
+Riparazioni sabotaggio	Uscita	–50/100
+Fee Mercato Nero	Uscita	–10/20%
+________________________________________
+🎮 Minigiochi
+●	Laboratorio: microscopio, pipetta, catalizzatori, incubazione.
+
+●	Routine: irrigazione, potatura, spray antifungino, esposizione LED, analisi fogliare.
+
+________________________________________
+📌 Sistema Missioni
+●	Fonti: Visitor Room, Diario, Eventi, Mercato Nero.
+
+●	Struttura: Proposta + Consegna.
+
+●	Max 3 missioni attive.
+
+●	Tier 1–5 con impatti economici e sul pH.
+
+📊 Esempi Missioni per Fazioni (codificate)
+Cod.	Fazione	Missione	Descrizione	Reward	Rischio	Effetto
+MISSION-CR-001	Custodi	Semi di Speranza	Dona una pianta pura ai Custodi	+20 CRY	Basso	pH +5, reputazione Custodi +10
+MISSION-CR-002	Custodi	Pulizia Muffa	Sterilizza zona Dome e porta campioni	+30 CRY	Medio	pH +10, reputazione Custodi +15
+MISSION-CR-003	Custodi	Frutti Rigeneranti	Consegna Arctic Hask maturi	Nuovo seme raro	Medio	Reputazione Custodi +20
+MISSION-CM-001	Culto Muffa	Spore Corrotte	Coltiva e consegna spore tossiche	+25 CRY	Medio	pH –10, reputazione Culto +15
+MISSION-CM-002	Culto Muffa	Fungus Benedetto	Dona Glasscap Fungus	Semi corrotti	Basso	Reputazione Culto +10
+MISSION-CM-003	Culto Muffa	Invasione	Pianta Red Tangle Vine nella Dome	+50 CRY	Alto	pH –15, reputazione Culto +20
+MISSION-MO-001	Mercanti Ombra	Contrabbando	Vendi ibrido raro	+80 CRY	Alto	Reputazione Mercanti +15
+MISSION-MO-002	Mercanti Ombra	Baratto Energetico	Scambia semi per CRY	+30–50 CRY	Basso	–
+MISSION-MO-003	Mercanti Ombra	Rarità Biologica	Porta pianta mutata	Nuovo strumento	Medio	–
+MISSION-IP-001	Ipnotici	Visione Onirica	Dona Umbral Iris	SPO-004 Onirica	Medio	Reputazione Ipnotici +15
+MISSION-IP-002	Ipnotici	Sogno Profondo	Coltiva Glasscap Bloom	+50 CRY	Alto	Reputazione Ipnotici +20
+MISSION-MIL-001	Militari	Fibra Resistente	Consegna Blue Sedge	+40 CRY	Medio	Reputazione Militari +15
+MISSION-MIL-002	Militari	Arma Biologica	Fornisci pianta tossica	+80 CRY	Alto	Reputazione Militari +20, pH –10
+MISSION-REL-001	Setta	Offerta Sacrificale	Dona Lantern Moss	Benedizione (buff random)	Basso	Reputazione Setta +10
+MISSION-REL-002	Setta	Rituale	Coltiva pianta in data precisa	Strumento raro	Medio	Reputazione Setta +20
+________________________________________
+🎲 Eventi Randomici
+📊 Tabella Eventi EVT-001…010
+Cod.	Evento	Descrizione	Effetto
+EVT-001	Blackout	Interruzione corrente Vault	–20 CRY, stop LED
+EVT-002	Muffa Invasiva	Muffa casuale nella Dome	pH –10, richiede spray
+EVT-003	Sabotaggio	Fazione avversa danneggia coltura	–1 pianta, reputazione –5
+EVT-004	Visitatori Perduti	Arrivano sopravvissuti con doni	Semi comuni
+EVT-005	Visione Glitch	Diario si corrompe	Lore + frammento narrativa
+EVT-006	Guasto Ascensore	Ascensore bloccato 1 giorno	Azioni limitate
+EVT-007	Semi Antichi	Ricevi piante rare da sconosciuto	+1 seme raro
+EVT-008	Malattia	Pianta casuale collassa	–1 pianta
+EVT-009	Dono Mercanti	Pacco sorpresa	+30 CRY o mutazione
+EVT-010	Rivelazione Biologo	Voce narrante si contraddice	Influenza reputazione globale
+________________________________________
+🧰 Strumenti (STR-xxx)
+Cod.	Strumento
+STR-001	Microscopio
+STR-002	Pipetta
+STR-003	Catalizzatore
+STR-004	Incubatore
+STR-005	LED
+STR-006	Spray Antifungino
+STR-007	Cesoie
+STR-008	Mixer
+STR-009	PC Nexus (mercato nero)
+STR-010	Interfaccia Seed Vault
+________________________________________
+📈 Progressione Run
+Capitoli: Germinazione → Ibridazione → Polarizzazione → Specializzazione → Epilogo/Loop.
+●	Ogni fase lega reputazione, pH e nuove missioni.
+
+●	NG+ con semi rari ereditati.
+
+________________________________________
+📦 Blocking_01 – Loop Minimo (Aggiornato con Energia CRY)
+Fase	Codice	Attività	Dettagli	Costo/Reward
+Setup	BLK-00.01–05	Progetto Unity, cartelle, scene, player, GameManager	Aggiunto sistema CRY	–
+Dome	BLK-01.01–05	Piantare/annaffiare/illuminare 2 vasi	Crescita in 3 stadi	–1 CRY per azione
+Laboratorio	BLK-02.01–04	Microscopio, input 2 spore → output seme	Minigioco base	–2 CRY per utilizzo
+Visitor Room	BLK-03.01–03	Scambio pianta/frutto con fazioni	Ricompensa seme o CRY	+10–20 CRY
+Seed Storage	BLK-04.01–02	Deposita/ritira semi	Collegato a tubo pneumatico	–1 CRY per operazione
+Bedroom	BLK-05.01–03	Fine giornata, Diario, reset slot	Corrente giornaliera	–20 CRY
+Collaudo	BLK-06.01–06	Loop completo	Avvio con 50 CRY, 1 seme, 2 spore	Bilancio energia
+________________________________________
+📦 Blocking_02 – Tutorial Narrativo (8 Giorni)
+Giorno	Tema	Contenuti Introdotti	Note
+1	Semi	Piantare e curare il primo seme	Azioni base Dome
+2	Spore	Raccolta e analisi spore	Microscopio
+3	Clonazione	Pipeline base clonazione → seme	CRY come costo
+4	pH Dome	Introduzione barra pH e influssi	Effetti ecologici
+5	Ibridazione	Selezione di 2 specie e combinazione	Semi ibridi
+6	Manipolazione Semi	Attivazione tratti unici	Minigioco semi
+7	Reputazione/Missioni	Prime missioni fazioni	Effetto sulle relazioni
+8	Routine/Automazione	Azioni giornaliere, Diario, energia	Loop autonomo
+________________________________________
+📝 TO DO LIST
+●	Sistema missioni (durata, ricompensa, rischio).
+
+●	UI generale (HUD, barra bene/male, indicatori).
+
+●	Progressione a lungo termine (milestone run, fazioni minori).
+
+●	Eventi randomici.
+
+●	Economia interna (valuta, produzione ↔ richieste).
+
+●	Codifica strumenti STR-xxx.
+
+●	Tutorial narrativo (8 giorni).
+
+________________________________________
+📑 Indice Codificato Ufficiale
+●	Spore (SPO-xxx) → 4 tipi.
+
+●	Piante base (PLT-xxx) → 8 specie.
+
+●	Ibridi (HYB-xxx) → 10 combinazioni.
+
+●	Mutazioni (MUT-xxx) → 6 varianti.
+
+●	Strumenti (STR-xxx) → 10 tool.
+
+●	Eventi (EVT-xxx) → 10 esempi.
+
+●	Missioni (MISSION-xxx) → 24 totali (3–5 per fazione).
+
+________________________________________
+Navigazione & Struttura del Vault
+Il Vault di Sporae è rappresentato in un’unica scena continua disegnata in sezione verticale, ispirata allo stile Fallout Shelter.
+ Questa scelta garantisce:
+●	Coerenza visiva: il giocatore vede sempre l’intero complesso del Vault, con i vari piani collegati.
+
+●	Navigazione fluida: il biologo si muove verticalmente tramite ascensore (a pagamento, costo –5 CRY) o scale manuali (senza costo, input W/S).
+
+●	Immersione narrativa: l’ascensore diventa parte integrante dell’esperienza, legato all’economia del Vault (consumo risorse), mentre le scale rappresentano un fallback “povero” ma gratuito.
+
+●	Prestazioni ottimizzate: tutte le stanze sono prefab modulari inseriti nella stessa scena. Solo la stanza attuale ha logiche attive grazie a un sistema di RoomController che abilita/disabilita script e animazioni.
+
+●	Gestione camera: un controller di camera (SYS_CameraController) gestisce il movimento verticale con pan/lerp smooth, accompagnando il Player quando cambia livello.
+
+Struttura dei livelli (VaultMap_01)
+●	Livello esterno: Visitor Room + Seed Storage.
+
+●	Livello -1: Dome centrale + Laboratorio.
+
+●	Livello -2: Food Dome + Bedroom (collegata al Diario SPORAE).
+
+●	Livello -3: Area TBD/Archivio segreto (espandibile).
+
+Il Vault è quindi un hub modulare verticale, con percorsi chiari e navigazione costante, senza caricamenti di scena. Tutti i sistemi futuri (UI, Ascensore, interazioni con i visitatori) si basano su questa scelta definitiva.
+
+
+

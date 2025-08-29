@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
 /// Configurazione globale per il sistema dei vasi.
@@ -49,6 +50,10 @@ public class PotSystemConfig : ScriptableObject
     [Header("Layers")]
     [Tooltip("Layer per i vasi interagibili (esclude Player e Ground)")]
     public LayerMask PotLayerMask = 1 << 8; // Default: Layer 8 (LAYER_INTERACTABLE)
+    
+    [Header("Growth System (BLK-01.03A)")]
+    [Tooltip("Configurazione per la crescita delle piante")]
+    public PlantGrowthConfig GrowthConfig;
     
     [Header("Debug Settings")]
     public const bool DEFAULT_SHOW_DEBUG_LOGS = true;

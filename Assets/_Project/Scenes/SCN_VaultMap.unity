@@ -1223,7 +1223,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.3, y: 0.8, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1374,6 +1374,7 @@ GameObject:
   - component: {fileID: 575054909}
   - component: {fileID: 575054908}
   - component: {fileID: 575054907}
+  - component: {fileID: 575054911}
   m_Layer: 0
   m_Name: Pot_POT-002
   m_TagString: Untagged
@@ -1408,8 +1409,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49fd7eede8317d74ab2f967670fdfba6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  potSlot: {fileID: 0}
-  config: {fileID: 0}
+  potSlot: {fileID: 575054908}
+  config: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
+  potGrowthController: {fileID: 575054911}
   genericSeedCode: SDE-001
   showDebugLogs: 1
 --- !u!114 &575054908
@@ -1527,6 +1529,33 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &575054911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 575054905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c91edf79f0f0b044ea7970cf2b6c426f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  potState:
+    PotId: 
+    HasPlant: 0
+    Stage: 0
+    Hydration: 0
+    LightExposure: 0
+    GrowthPoints: 0
+    DaysSincePlant: 0
+    DaysNeglectedStreak: 0
+    HydrationConsumedToday: 0
+    LightExposureToday: 0
+    PlantedDay: 0
+    LastWateredDay: 0
+    LastLitDay: 0
+  enableDebugLogs: 1
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -1604,6 +1633,53 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &688948179
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 688948181}
+  - component: {fileID: 688948180}
+  m_Layer: 0
+  m_Name: GameManagerDebugHelper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &688948180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688948179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 196085cf000e9ed44a6f52a11af9ebfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableDebug: 1
+  debugKey: 283
+  forceUpdateKey: 284
+--- !u!4 &688948181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688948179}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.9600611, y: 0.040551692, z: 1.0677146}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1784,6 +1860,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1774168346590118878, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
+      propertyPath: m_Color.b
+      value: 0.3962264
+      objectReference: {fileID: 0}
+    - target: {fileID: 1774168346590118878, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
+      propertyPath: m_Color.g
+      value: 0.3962264
+      objectReference: {fileID: 0}
+    - target: {fileID: 1774168346590118878, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
+      propertyPath: m_Color.r
+      value: 0.3962264
+      objectReference: {fileID: 0}
     - target: {fileID: 5163974695504287113, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.1686727
@@ -1827,6 +1915,14 @@ PrefabInstance:
     - target: {fileID: 8960416039086652105, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
       propertyPath: m_Name
       value: Room_Dome_Placeholder
+      objectReference: {fileID: 0}
+    - target: {fileID: 8960416039086652105, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8960416039086652105, guid: bde99ad9ed004d64ab0d868f14618ae3, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1997,7 +2093,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableIntegration: 1
-  potSystemConfig: {fileID: 0}
+  potSystemConfig: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
   potsBootstrap: {fileID: 0}
   potHUDWidget: {fileID: 0}
 --- !u!4 &935511553
@@ -2237,6 +2333,7 @@ GameObject:
   - component: {fileID: 1260461831}
   - component: {fileID: 1260461830}
   - component: {fileID: 1260461829}
+  - component: {fileID: 1260461833}
   m_Layer: 0
   m_Name: Pot_POT-001
   m_TagString: Untagged
@@ -2271,8 +2368,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49fd7eede8317d74ab2f967670fdfba6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  potSlot: {fileID: 0}
-  config: {fileID: 0}
+  potSlot: {fileID: 1260461830}
+  config: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
+  potGrowthController: {fileID: 1260461833}
   genericSeedCode: SDE-001
   showDebugLogs: 1
 --- !u!114 &1260461830
@@ -2390,6 +2488,33 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1260461833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260461827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c91edf79f0f0b044ea7970cf2b6c426f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  potState:
+    PotId: 
+    HasPlant: 0
+    Stage: 0
+    Hydration: 0
+    LightExposure: 0
+    GrowthPoints: 0
+    DaysSincePlant: 0
+    DaysNeglectedStreak: 0
+    HydrationConsumedToday: 0
+    LightExposureToday: 0
+    PlantedDay: 0
+    LastWateredDay: 0
+    LastLitDay: 0
+  enableDebugLogs: 1
 --- !u!1 &1262169051
 GameObject:
   m_ObjectHideFlags: 0
@@ -2852,7 +2977,7 @@ MonoBehaviour:
   runOnStart: 1
   createMissingComponents: 1
   showDebugLogs: 1
-  potSystemConfig: {fileID: 0}
+  potSystemConfig: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
 --- !u!4 &1508880359
 Transform:
   m_ObjectHideFlags: 0
@@ -3002,6 +3127,69 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1542996605}
   m_CullTransparentMesh: 1
+--- !u!1 &1586752413
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1586752416}
+  - component: {fileID: 1586752415}
+  - component: {fileID: 1586752414}
+  m_Layer: 0
+  m_Name: GrowthSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1586752414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586752413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 599848f13971d304eabee9e20a8486da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autoFindPots: 1
+  autoRegisterWithGrowthSystem: 1
+  showDebugLogs: 1
+--- !u!114 &1586752415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586752413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0c2b2d2295aae9449d4703dea52cc63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  growthConfig: {fileID: 11400000, guid: 93a0f8d656e508e48b1fb905f76a625c, type: 2}
+  enableDebugLogs: 1
+  logRegisteredPots: 1
+--- !u!4 &1586752416
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586752413}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.9600611, y: 0.040551692, z: 1.0677146}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1782181131
 GameObject:
   m_ObjectHideFlags: 0
@@ -3739,3 +3927,5 @@ SceneRoots:
   - {fileID: 2009229767}
   - {fileID: 1138730108}
   - {fileID: 1936923660}
+  - {fileID: 1586752416}
+  - {fileID: 688948181}

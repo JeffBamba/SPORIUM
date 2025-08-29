@@ -71,6 +71,19 @@ namespace Sporae.Core
         {
             if (_isInitialized) return;
             
+            // Verifica se c'è già un GameManager in scena
+            GameManager existingGameManager = FindObjectOfType<GameManager>();
+            if (existingGameManager != null)
+            {
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[AppRoot] GameManager già presente nella scena: {existingGameManager.name}");
+                }
+                // Non creare un nuovo GameManager se ne esiste già uno
+                _isInitialized = true;
+                return;
+            }
+            
             // Crea GameManager se necessario
             if (autoCreateGameManager && gameManagerPrefab != null)
             {

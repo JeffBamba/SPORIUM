@@ -1,0 +1,398 @@
+[AppRoot] Applicazione in pausa.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationPause (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:297)
+
+[AppRoot] Applicazione ripresa.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationPause (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:297)
+
+[AppRoot] Applicazione in focus.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationFocus (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:305)
+UnityEditor.HostView:OnFocus ()
+
+[UIBlocker] Puntatore sopra UI (API standard)
+UnityEngine.Debug:Log (object)
+UIBlocker:IsPointerOverUI () (at Assets/_Project/Scripts/Core/UIBlocker.cs:24)
+PlayerClickMover2D:HandleInput () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:69)
+PlayerClickMover2D:Update () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:40)
+
+[PotHUDWidget] Evento PointerDown bloccato per Plant
+UnityEngine.Debug:Log (object)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__1 (UnityEngine.EventSystems.BaseEventData) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:418)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Click su pulsante Plant intercettato!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:439)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Trovato vaso selezionato: POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:FindSelectedPot () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:490)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:442)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Eseguendo azione Plant su vaso POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:449)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=True, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:152)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Seme piantato, inizializzato come Seed
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:OnPlanted () (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:47)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:179)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotAction: Plant su POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitAction (PotEvents/PotActionType,PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:65)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:183)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotStateChanged per POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:81)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:184)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:184)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:184)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:184)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[ACT-001][POT-001] Plant OK: seme piantato, stato=[POT-001] Plant:True Stage:0 H:0 L:0 GP:0 Day:1
+UnityEngine.Debug:Log (object)
+PotActions:DoPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:188)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:456)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Azione Plant eseguita con successo!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:468)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[UIBlocker] Puntatore sopra UI (API standard)
+UnityEngine.Debug:Log (object)
+UIBlocker:IsPointerOverUI () (at Assets/_Project/Scripts/Core/UIBlocker.cs:24)
+PlayerClickMover2D:HandleInput () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:69)
+PlayerClickMover2D:Update () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:40)
+
+[PotHUDWidget] Evento PointerDown bloccato per Water
+UnityEngine.Debug:Log (object)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__1 (UnityEngine.EventSystems.BaseEventData) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:418)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Click su pulsante Water intercettato!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:439)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Trovato vaso selezionato: POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:FindSelectedPot () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:490)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:442)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Eseguendo azione Water su vaso POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:449)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:199)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotAction: Water su POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitAction (PotEvents/PotActionType,PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:65)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:222)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotStateChanged per POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:81)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:223)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:223)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:223)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:223)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[ACT-002][POT-001] Water OK: hydration=1/3, flag giornaliero impostato
+UnityEngine.Debug:Log (object)
+PotActions:DoWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:227)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:459)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Azione Water eseguita con successo!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:468)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[UIBlocker] Puntatore sopra UI (API standard)
+UnityEngine.Debug:Log (object)
+UIBlocker:IsPointerOverUI () (at Assets/_Project/Scripts/Core/UIBlocker.cs:24)
+PlayerClickMover2D:HandleInput () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:69)
+PlayerClickMover2D:Update () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:40)
+
+[PotHUDWidget] Evento PointerDown bloccato per Light
+UnityEngine.Debug:Log (object)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__1 (UnityEngine.EventSystems.BaseEventData) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:418)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Click su pulsante Light intercettato!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:439)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Trovato vaso selezionato: POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:FindSelectedPot () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:490)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:442)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Eseguendo azione Light su vaso POT-001
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:449)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:241)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotAction: Light su POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitAction (PotEvents/PotActionType,PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:65)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:264)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPotStateChanged per POT-001
+UnityEngine.Debug:Log (object)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:81)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:265)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:265)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:265)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnPotStateChanged (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:578)
+PotEvents:EmitChanged (PotSlot) (at Assets/_Project/Scripts/Dome/PotEvents.cs:82)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:265)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[ACT-003][POT-001] Light OK: light=1/3, flag giornaliero impostato
+UnityEngine.Debug:Log (object)
+PotActions:DoLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:269)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:462)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotHUDWidget] Azione Light eseguita con successo!
+UnityEngine.Debug:Log (object)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:468)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanPlant: Empty=False, Seed=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanPlant () (at Assets/_Project/Scripts/Dome/PotActions.cs:95)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:527)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanWater: Plant=True, HydrationNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanWater () (at Assets/_Project/Scripts/Dome/PotActions.cs:116)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:528)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotActions][POT-001] CanLight: Plant=True, LightNotMax=True, Range=True, Resources=True
+UnityEngine.Debug:Log (object)
+PotActions:CanLight () (at Assets/_Project/Scripts/Dome/PotActions.cs:137)
+PotHUDWidget:UpdateActionButtons (PotSlot) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:529)
+PotHUDWidget:OnActionButtonClicked (PotEvents/PotActionType) (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:470)
+PotHUDWidget/<>c__DisplayClass31_0:<CreateActionButton>b__0 () (at Assets/_Project/Scripts/UI/PotHUDWidget.cs:399)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[AppRoot] Applicazione perso focus.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationFocus (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:305)
+UnityEditor.HostView:OnLostFocus ()
+

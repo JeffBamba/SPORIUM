@@ -95,9 +95,35 @@ public class LayerSetup : MonoBehaviour
     
     private void SetupGroundLayer()
     {
+        // Verifica se i tag esistono prima di usarli
+        string[] availableTags = UnityEditorInternal.InternalEditorUtility.tags;
+        bool hasGroundTag = System.Array.Exists(availableTags, tag => tag == "Ground");
+        bool hasNavPlaneTag = System.Array.Exists(availableTags, tag => tag == "NAV_Plane");
+        
+        if (!hasGroundTag && !hasNavPlaneTag)
+        {
+            if (showDebugLogs)
+                Debug.Log("[LayerSetup] Tag 'Ground' e 'NAV_Plane' non definiti. Salto setup ground layer.");
+            return;
+        }
+        
         // Cerca oggetti con tag "Ground" o "NAV_Plane"
-        GameObject[] groundObjects = GameObject.FindGameObjectsWithTag("Ground");
-        GameObject[] navPlanes = GameObject.FindGameObjectsWithTag("NAV_Plane");
+        GameObject[] groundObjects = new GameObject[0];
+        GameObject[] navPlanes = new GameObject[0];
+        
+        try
+        {
+            if (hasGroundTag)
+                groundObjects = GameObject.FindGameObjectsWithTag("Ground");
+            if (hasNavPlaneTag)
+                navPlanes = GameObject.FindGameObjectsWithTag("NAV_Plane");
+        }
+        catch (System.Exception e)
+        {
+            if (showDebugLogs)
+                Debug.LogWarning($"[LayerSetup] Errore nel cercare oggetti ground: {e.Message}");
+            return;
+        }
         
         int groundLayer = LayerMask.NameToLayer(LAYER_GROUND);
         
@@ -152,8 +178,22 @@ public class LayerSetup : MonoBehaviour
         }
         
         // Verifica Ground
-        GameObject[] groundObjects = GameObject.FindGameObjectsWithTag("Ground");
-        GameObject[] navPlanes = GameObject.FindGameObjectsWithTag("NAV_Plane");
+        GameObject[] groundObjects = new GameObject[0];
+        GameObject[] navPlanes = new GameObject[0];
+        
+        try
+        {
+            string[] availableTags = UnityEditorInternal.InternalEditorUtility.tags;
+            if (System.Array.Exists(availableTags, tag => tag == "Ground"))
+                groundObjects = GameObject.FindGameObjectsWithTag("Ground");
+            if (System.Array.Exists(availableTags, tag => tag == "NAV_Plane"))
+                navPlanes = GameObject.FindGameObjectsWithTag("NAV_Plane");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[LayerSetup] Errore nel verificare tag ground: {e.Message}");
+        }
+        
         Debug.Log($"Ground objects: {groundObjects.Length + navPlanes.Length}");
         
         Debug.Log("=== FINE VERIFICA ===");

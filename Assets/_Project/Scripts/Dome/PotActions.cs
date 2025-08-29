@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -11,6 +12,7 @@ public class PotActions : MonoBehaviour
     [Header("References")]
     [SerializeField] private PotSlot potSlot;
     [SerializeField] private PotSystemConfig config;
+    [SerializeField] private PotGrowthController potGrowthController;
     
     [Header("Seed Configuration")]
     [SerializeField] private string genericSeedCode = "SDE-001";
@@ -33,6 +35,12 @@ public class PotActions : MonoBehaviour
         if (potSlot == null)
         {
             potSlot = GetComponent<PotSlot>();
+        }
+        
+        // Trova il PotGrowthController se non assegnato
+        if (potGrowthController == null)
+        {
+            potGrowthController = GetComponent<PotGrowthController>();
         }
         
         // Trova il GameManager
@@ -165,6 +173,12 @@ public class PotActions : MonoBehaviour
         // Aggiorna lo stato del vaso
         potState.PlantSeed(gameManager.CurrentDay);
         
+        // Notifica il sistema di crescita (BLK-01.03A)
+        if (potGrowthController != null)
+        {
+            potGrowthController.OnPlanted();
+        }
+        
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
         PotEvents.EmitChanged(potSlot);
@@ -201,13 +215,16 @@ public class PotActions : MonoBehaviour
         {
             potState.UpdateWateringDay(gameManager.CurrentDay);
             
+            // Imposta flag giornaliero per crescita (BLK-01.03A)
+            potState.HydrationConsumedToday = true;
+            
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
             PotEvents.EmitChanged(potSlot);
             
             if (showDebugLogs)
             {
-                Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={potState.Hydration}/{GetMaxHydration()}");
+                Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={potState.Hydration}/{GetMaxHydration()}, flag giornaliero impostato");
             }
             
             return true;
@@ -240,13 +257,16 @@ public class PotActions : MonoBehaviour
         {
             potState.UpdateLightingDay(gameManager.CurrentDay);
             
+            // Imposta flag giornaliero per crescita (BLK-01.03A)
+            potState.LightExposureToday = true;
+            
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
             PotEvents.EmitChanged(potSlot);
             
             if (showDebugLogs)
             {
-                Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={potState.LightExposure}/{GetMaxLightExposure()}");
+                Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={potState.LightExposure}/{GetMaxLightExposure()}, flag giornaliero impostato");
             }
             
             return true;

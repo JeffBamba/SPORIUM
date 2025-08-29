@@ -661,9 +661,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b769cadd5ec534ebaeafa55e4eb146, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstScene: SCN_VaultMap
+  targetScene: SCN_VaultMap
+  loadMode: 0
+  allowSceneActivation: 1
   loadingText: {fileID: 711398877}
   loadingBarFill: {fileID: 1818923854}
+  loadingPanel: {fileID: 0}
+  minLoadingTime: 1
+  showProgressPercentage: 1
+  showProgressBar: 1
+  loadingMessages:
+  - Caricamento...
+  - Preparazione scena...
+  - Caricamento asset...
+  - Quasi pronto...
+  validateOnStart: 1
+  showDebugLogs: 1
 --- !u!1 &1196465119
 GameObject:
   m_ObjectHideFlags: 0
@@ -851,7 +864,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingDay: 1
   actionsPerDay: 3
-  startingCRY: 50
+  startingCRY: 250
 --- !u!1 &1526826157
 GameObject:
   m_ObjectHideFlags: 0
@@ -883,6 +896,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 402a732e969851d469131b1d7a5934a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  persistBetweenScenes: 1
+  validateOnStart: 1
+  showDebugLogs: 1
+  gameManagerPrefab: {fileID: 0}
+  autoCreateGameManager: 1
 --- !u!114 &1526826159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -929,6 +947,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstScene: SCN_VaultMap
+  delayBeforeLoad: 0.1
+  loadOnStart: 1
+  validateOnStart: 1
+  showDebugLogs: 1
 --- !u!1 &1818923852
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
 /// Bootstrap per garantire la presenza di due vasi interattivi nella stanza Dome.
@@ -53,6 +54,9 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         {
             Debug.Log("[RoomDomePotsBootstrap] Inizializzazione vasi Dome completata.");
         }
+
+        // BLK-01.03A: Registra vasi nel PlantGrowthSystem
+        RegisterPotsWithGrowthSystem();
     }
 
     private void CreatePotsAnchor()
@@ -158,6 +162,9 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         
         // Aggiungi il componente PotActions per BLK-01.02
         PotActions potActions = potGO.AddComponent<PotActions>();
+        
+        // Aggiungi il componente PotGrowthController per BLK-01.03A
+        PotGrowthController potGrowthController = potGO.AddComponent<PotGrowthController>();
 
         // Imposta il layer
         potGO.layer = (int)Mathf.Log(potLayer.value, 2);
@@ -227,6 +234,20 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         if (potSlot != null)
         {
             potSlot.SetPotId(potId);
+        }
+        
+        // Configura il PotGrowthController
+        PotGrowthController potGrowthController = potGO.GetComponent<PotGrowthController>();
+        if (potGrowthController != null)
+        {
+            // Crea e assegna il PotStateModel
+            PotStateModel potState = new PotStateModel(potId);
+            potGrowthController.SetPotState(potState);
+            
+            if (showDebugLogs)
+            {
+                Debug.Log($"[RoomDomePotsBootstrap] PotGrowthController configurato per {potId}");
+            }
         }
 
         // Assegna il riferimento
@@ -304,4 +325,24 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         UnityEditor.Handles.Label(anchorPos + Vector3.up * 0.3f, "Dome_PotsAnchor");
     }
 #endif
+
+    /// <summary>
+    /// BLK-01.03A: Registra i vasi nel PlantGrowthSystem
+    /// </summary>
+    private void RegisterPotsWithGrowthSystem()
+    {
+        var sys = FindObjectOfType<PlantGrowthSystem>();
+        if (sys != null)
+        {
+            foreach (var pot in FindObjectsOfType<PotGrowthController>())
+            {
+                sys.RegisterPot(pot);
+            }
+            Debug.Log($"[BLK-01.03A] Registered {FindObjectsOfType<PotGrowthController>().Length} pots");
+        }
+        else
+        {
+            Debug.LogWarning("[BLK-01.03A] PlantGrowthSystem non trovato!");
+        }
+    }
 }

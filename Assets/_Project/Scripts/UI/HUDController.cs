@@ -71,14 +71,28 @@ public class HUDController : MonoBehaviour
         // Sottoscrivi agli eventi
         SubscribeToEvents();
         
-        // Aggiorna UI iniziale
-        UpdateAllUI();
+        // Aggiorna UI iniziale con delay per assicurarsi che GameManager sia pronto
+        StartCoroutine(InitializeWithDelay());
         
         isInitialized = true;
         
         if (showDebugLogs)
         {
             Debug.Log("[HUDController] HUD inizializzato correttamente.");
+        }
+    }
+    
+    private System.Collections.IEnumerator InitializeWithDelay()
+    {
+        // Aspetta un frame per assicurarsi che GameManager sia completamente inizializzato
+        yield return null;
+        
+        // Forza aggiornamento UI
+        ForceUpdateAllUI();
+        
+        if (showDebugLogs)
+        {
+            Debug.Log("[HUDController] UI aggiornata con delay per sincronizzazione GameManager");
         }
     }
 
@@ -179,6 +193,44 @@ public class HUDController : MonoBehaviour
         {
             UpdateAllUI();
         }
+    }
+    
+    /// <summary>
+    /// Forza aggiornamento completo dell'HUD (per debug e sincronizzazione)
+    /// </summary>
+    public void ForceUpdateAllUI()
+    {
+        if (gameManager == null) return;
+        
+        if (showDebugLogs)
+        {
+            Debug.Log($"[HUDController] Force Update - Day: {gameManager.CurrentDay}, Actions: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
+        }
+        
+        UpdateDay(gameManager.CurrentDay);
+        UpdateActions(gameManager.ActionsLeft);
+        UpdateCRY(gameManager.CurrentCRY);
+    }
+    
+    /// <summary>
+    /// Debug: mostra stato attuale dell'HUD e del GameManager
+    /// </summary>
+    [ContextMenu("Debug HUD Status")]
+    public void DebugHUDStatus()
+    {
+        Debug.Log("=== HUD DEBUG STATUS ===");
+        Debug.Log($"HUD Initialized: {isInitialized}");
+        Debug.Log($"GameManager Found: {gameManager != null}");
+        
+        if (gameManager != null)
+        {
+            Debug.Log($"GameManager Values - Day: {gameManager.CurrentDay}, Actions: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
+        }
+        
+        if (dayText != null) Debug.Log($"Day Text: {dayText.text}");
+        if (actionsText != null) Debug.Log($"Actions Text: {actionsText.text}");
+        if (cryText != null) Debug.Log($"CRY Text: {cryText.text}");
+        Debug.Log("========================");
     }
 
     public void SetDebugMode(bool enabled)

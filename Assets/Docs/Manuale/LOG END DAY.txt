@@ -1,0 +1,432 @@
+[AppRoot] Applicazione in focus.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationFocus (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:305)
+UnityEditor.HostView:OnFocus ()
+
+[UIBlocker] Puntatore sopra UI (raycast): 1 elementi
+UnityEngine.Debug:Log (object)
+UIBlocker:IsPointerOverUI () (at Assets/_Project/Scripts/Core/UIBlocker.cs:42)
+PlayerClickMover2D:HandleInput () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:69)
+PlayerClickMover2D:Update () (at Assets/_Project/Scripts/Player/PlayerClickMover2D.cs:40)
+
+[BLK-01.03A] HandleDayChanged chiamato per Day 2
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:144)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicazione crescita a 2 vasi
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:161)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-002
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=False, Stage=0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Vaso vuoto, solo decay/reset
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:68)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-001
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=True, Stage=1
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Giorno 1, nessuna cura - Neglect streak: 1
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:85)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Decay applicato - Hydration: 0, Light: 0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:DecayAndReset (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:196)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:98)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPlantGrew:  - Seed (+0 punti, totali: 0)
+UnityEngine.Debug:Log (object)
+PotEvents:RaiseOnPlantGrew (string,Sporae.Dome.PotSystem.Growth.PlantStage,int,int) (at Assets/_Project/Scripts/Dome/PotEvents.cs:210)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:101)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Growth tick completato per Day 2
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:170)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] HandleDayChanged chiamato per Day 2
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:144)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicazione crescita a 2 vasi
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:161)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-002
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=False, Stage=0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Vaso vuoto, solo decay/reset
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:68)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-001
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=True, Stage=1
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Giorno 2, nessuna cura - Neglect streak: 2
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:85)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Decay applicato - Hydration: 0, Light: 0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:DecayAndReset (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:196)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:98)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPlantGrew:  - Seed (+0 punti, totali: 0)
+UnityEngine.Debug:Log (object)
+PotEvents:RaiseOnPlantGrew (string,Sporae.Dome.PotSystem.Growth.PlantStage,int,int) (at Assets/_Project/Scripts/Dome/PotEvents.cs:210)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:101)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Growth tick completato per Day 2
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:170)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] EndDay -> Day=2, CRY=227, Actions=4
+UnityEngine.Debug:Log (object)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:99)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[EndDayButton] Giornata finita! Giorno: 2, Azioni: 4, CRY: 227
+UnityEngine.Debug:Log (object)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:146)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[EndDayButton] Sei sicuro di voler finire la giornata?
+UnityEngine.Debug:Log (object)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:119)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] HandleDayChanged chiamato per Day 3
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:144)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicazione crescita a 2 vasi
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:161)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-002
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=False, Stage=0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Vaso vuoto, solo decay/reset
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:68)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-001
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=True, Stage=1
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Giorno 3, nessuna cura - Neglect streak: 3
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:85)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Decay applicato - Hydration: 0, Light: 0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:DecayAndReset (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:196)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:98)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPlantGrew:  - Seed (+0 punti, totali: 0)
+UnityEngine.Debug:Log (object)
+PotEvents:RaiseOnPlantGrew (string,Sporae.Dome.PotSystem.Growth.PlantStage,int,int) (at Assets/_Project/Scripts/Dome/PotEvents.cs:210)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:101)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Growth tick completato per Day 3
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:170)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] HandleDayChanged chiamato per Day 3
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:144)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicazione crescita a 2 vasi
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:161)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-002
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=False, Stage=0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Vaso vuoto, solo decay/reset
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:68)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Applicando crescita a vaso: Pot_POT-001
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:166)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : ApplyDailyGrowth - HasPlant=True, Stage=1
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:63)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Giorno 4, nessuna cura - Neglect streak: 4
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:85)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] : Decay applicato - Hydration: 0, Light: 0
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:DecayAndReset (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:196)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:98)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[PotEvents] Emesso evento OnPlantGrew:  - Seed (+0 punti, totali: 0)
+UnityEngine.Debug:Log (object)
+PotEvents:RaiseOnPlantGrew (string,Sporae.Dome.PotSystem.Growth.PlantStage,int,int) (at Assets/_Project/Scripts/Dome/PotEvents.cs:210)
+Sporae.Dome.PotSystem.Growth.PotGrowthController:ApplyDailyGrowth (Sporae.Dome.PotSystem.Growth.PlantGrowthConfig) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs:101)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:167)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] Growth tick completato per Day 3
+UnityEngine.Debug:Log (object)
+Sporae.Dome.PotSystem.Growth.PlantGrowthSystem:HandleDayChanged (int) (at Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthSystem.cs:170)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:86)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[BLK-01.03A] EndDay -> Day=3, CRY=207, Actions=4
+UnityEngine.Debug:Log (object)
+GameManager:EndDay (int) (at Assets/_Project/Scripts/Core/GameManager.cs:99)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:142)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[EndDayButton] Giornata finita! Giorno: 3, Azioni: 4, CRY: 207
+UnityEngine.Debug:Log (object)
+EndDayButton:EndDay () (at Assets/_Project/Scripts/UI/EndDayButton.cs:146)
+EndDayButton:ShowConfirmationDialog () (at Assets/_Project/Scripts/UI/EndDayButton.cs:123)
+EndDayButton:OnEndDayButtonClicked () (at Assets/_Project/Scripts/UI/EndDayButton.cs:105)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
+
+[AppRoot] Applicazione perso focus.
+UnityEngine.Debug:Log (object)
+Sporae.Core.AppRoot:OnApplicationFocus (bool) (at Assets/_Project/Scripts/Core/AppRoot.cs:305)
+UnityEditor.HostView:OnLostFocus ()
+

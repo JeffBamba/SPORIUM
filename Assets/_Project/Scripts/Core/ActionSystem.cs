@@ -35,6 +35,13 @@ namespace Sporae.Core
             OnActionsChanged?.Invoke(ActionsLeft);
         }
 
+        public void ResetActions(int specificAmount)
+        {
+            ActionsLeft = specificAmount;
+            MaxActions = specificAmount;
+            OnActionsChanged?.Invoke(ActionsLeft);
+        }
+
         public void AddActions(int amount)
         {
             if (amount <= 0) return;

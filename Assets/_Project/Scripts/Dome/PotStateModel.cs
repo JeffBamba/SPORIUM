@@ -21,6 +21,15 @@ public class PotStateModel
     public int Hydration;         // 0..MaxHydration
     public int LightExposure;     // 0..MaxLightExposure
     
+    [Header("Growth System (BLK-01.03A)")]
+    public int GrowthPoints;              // Progress interno allo stadio attuale
+    public int DaysSincePlant;            // Giorni dalla semina
+    public int DaysNeglectedStreak;       // Giorni consecutivi senza cura
+    
+    [Header("Daily Flags")]
+    public bool HydrationConsumedToday;   // Annaffiato oggi
+    public bool LightExposureToday;       // Illuminato oggi
+    
     [Header("Timestamps")]
     public int PlantedDay;        // Giorno in cui è stato piantato il seme
     public int LastWateredDay;    // Ultimo giorno di annaffiatura
@@ -36,6 +45,11 @@ public class PotStateModel
         Stage = 0;
         Hydration = 0;
         LightExposure = 0;
+        GrowthPoints = 0;
+        DaysSincePlant = 0;
+        DaysNeglectedStreak = 0;
+        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
+        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -51,6 +65,11 @@ public class PotStateModel
         Stage = 0; // Seeded
         Hydration = 0;
         LightExposure = 0;
+        GrowthPoints = 0;
+        DaysSincePlant = 0;
+        DaysNeglectedStreak = 0;
+        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
+        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = plantedDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -111,6 +130,11 @@ public class PotStateModel
         Stage = 0; // Seeded
         Hydration = 0;
         LightExposure = 0;
+        GrowthPoints = 0;
+        DaysSincePlant = 0;
+        DaysNeglectedStreak = 0;
+        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
+        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = currentDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -141,6 +165,11 @@ public class PotStateModel
         Stage = 0;
         Hydration = 0;
         LightExposure = 0;
+        GrowthPoints = 0;
+        DaysSincePlant = 0;
+        DaysNeglectedStreak = 0;
+        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
+        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -176,6 +205,6 @@ public class PotStateModel
     /// </summary>
     public override string ToString()
     {
-        return $"[{PotId}] Plant:{HasPlant} Stage:{Stage} H:{Hydration} L:{LightExposure} Day:{PlantedDay}";
+        return $"[{PotId}] Plant:{HasPlant} Stage:{Stage} H:{Hydration} L:{LightExposure} GP:{GrowthPoints} Day:{PlantedDay}";
     }
 }

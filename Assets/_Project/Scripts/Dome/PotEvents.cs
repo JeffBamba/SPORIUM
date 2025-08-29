@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
 /// Sistema di eventi per il sistema dei vasi.
@@ -37,6 +38,16 @@ public static class PotEvents
     /// Evento emesso quando un'azione fallisce (risorse insufficienti, gating non soddisfatto)
     /// </summary>
     public static event Action<PotActionType, PotSlot, string> OnPotActionFailed;
+    
+    /// <summary>
+    /// Evento emesso quando una pianta cresce (punti aggiunti)
+    /// </summary>
+    public static event Action<string, PlantStage, int, int> OnPlantGrew;
+    
+    /// <summary>
+    /// Evento emesso quando una pianta cambia stadio
+    /// </summary>
+    public static event Action<string, PlantStage> OnPlantStageChanged;
     
     /// <summary>
     /// Emette l'evento di azione su vaso
@@ -185,5 +196,29 @@ public static class PotEvents
     {
         // Per BLK-01.02, tutte le azioni costano 1 CRY (GDD Blocking_01)
         return 1;
+    }
+    
+    /// <summary>
+    /// Emette l'evento di crescita pianta
+    /// </summary>
+    /// <param name="potId">ID del vaso</param>
+    /// <param name="stage">Stadio corrente della pianta</param>
+    /// <param name="addedPoints">Punti aggiunti oggi</param>
+    /// <param name="totalPoints">Punti totali nello stadio</param>
+    public static void RaiseOnPlantGrew(string potId, PlantStage stage, int addedPoints, int totalPoints)
+    {
+        Debug.Log($"[PotEvents] Emesso evento OnPlantGrew: {potId} - {stage} (+{addedPoints} punti, totali: {totalPoints})");
+        OnPlantGrew?.Invoke(potId, stage, addedPoints, totalPoints);
+    }
+    
+    /// <summary>
+    /// Emette l'evento di cambio stadio pianta
+    /// </summary>
+    /// <param name="potId">ID del vaso</param>
+    /// <param name="stage">Nuovo stadio della pianta</param>
+    public static void RaiseOnPlantStageChanged(string potId, PlantStage stage)
+    {
+        Debug.Log($"[PotEvents] Emesso evento OnPlantStageChanged: {potId} - Nuovo stadio: {stage}");
+        OnPlantStageChanged?.Invoke(potId, stage);
     }
 }
