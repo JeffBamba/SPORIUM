@@ -36,165 +36,58 @@ namespace Sporae.Dome.PotSystem.Growth
             if (potState == null) return;
 
             potState.HasPlant = true;
-            potState.Stage = (int)PlantStage.Seed;
+            potState.Stage = (int)PlantStage.Seed; // 1 = Seed
             potState.GrowthPoints = 0;
             potState.DaysSincePlant = 0;
             potState.DaysNeglectedStreak = 0;
-            // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-            // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
+            // BLK-01.03A: I timestamp vengono impostati da PotActions quando si eseguono le azioni
 
             if (enableDebugLogs)
                 Debug.Log($"[BLK-01.03A] {potState.PotId}: Seme piantato, inizializzato come Seed");
         }
 
         /// <summary>
-        /// Applica la crescita giornaliera al vaso
+        /// DEPRECATO - La crescita è ora gestita dal DayCycleController (BLK-01.03A)
+        /// Questo metodo è mantenuto per compatibilità ma non dovrebbe essere chiamato
         /// </summary>
+        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
         public void ApplyDailyGrowth(PlantGrowthConfig growthConfig)
         {
-            if (potState == null) 
-            {
-                if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] {gameObject.name}: potState è NULL!");
-                return;
-            }
-
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] {potState.PotId}: ApplyDailyGrowth - HasPlant={potState.HasPlant}, Stage={potState.Stage}");
-
-            if (!potState.HasPlant)
-            {
-                if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] {potState.PotId}: Vaso vuoto, solo decay/reset");
-                // Solo decadimento e reset per vasi vuoti
-                DecayAndReset(growthConfig);
-                return;
-            }
-
-            // FIX BLK-01.03A: Calcola punti crescita PRIMA del decay/reset
-            // così i flag giornalieri sono ancora attivi
-            int addedPoints = CalculateDailyGrowthPoints(growthConfig);
+                Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: ApplyDailyGrowth è deprecato! Usa DayCycleController invece.");
             
-            if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] {potState.PotId}: Punti calcolati: {addedPoints} (H={potState.HydrationConsumedToday}, L={potState.LightExposureToday})");
-            
-            // Aggiorna contatori
-            potState.GrowthPoints += addedPoints;
-            potState.DaysSincePlant++;
-
-            if (addedPoints == 0)
-            {
-                potState.DaysNeglectedStreak++;
-                if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] {potState.PotId}: Giorno {potState.DaysSincePlant}, nessuna cura - Neglect streak: {potState.DaysNeglectedStreak}");
-            }
-            else
-            {
-                potState.DaysNeglectedStreak = 0;
-                if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] {potState.PotId}: Giorno {potState.DaysSincePlant}, punti aggiunti: {addedPoints}, totali: {potState.GrowthPoints}");
-            }
-
-            // Prova ad avanzare di stadio
-            TryAdvanceStage(growthConfig);
-
-            // FIX BLK-01.03A: Decadimento e reset DOPO il calcolo punti
-            DecayAndReset(growthConfig);
-
-            // Evento crescita giornaliera
-            PotEvents.RaiseOnPlantGrew(potState.PotId, (PlantStage)potState.Stage, addedPoints, potState.GrowthPoints);
+            // La crescita è ora gestita automaticamente dal DayCycleController
+            // Questo metodo è mantenuto solo per compatibilità con codice esistente
         }
 
         /// <summary>
-        /// Calcola i punti crescita per questo giorno basati sulla cura
+        /// DEPRECATO - Calcolo punti ora gestito dal DayCycleController (BLK-01.03A)
         /// </summary>
+        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
         private int CalculateDailyGrowthPoints(PlantGrowthConfig growthConfig)
         {
-            bool hasHydration = potState.Hydration > 0;
-            bool hasLight = potState.LightExposure > 0;
-            bool consumedHydration = potState.HydrationConsumedToday;
-            bool consumedLight = potState.LightExposureToday;
-
-            // Cura ideale: acqua + luce disponibili E consumate oggi
-            if (hasHydration && hasLight && consumedHydration && consumedLight)
-            {
-                return growthConfig.pointsIdealCare;
-            }
-            
-            // Cura parziale: uno dei due disponibile e consumato
-            if ((hasHydration && consumedHydration) || (hasLight && consumedLight))
-            {
-                return growthConfig.pointsPartialCare;
-            }
-
-            // Nessuna cura
-            return growthConfig.pointsNoCare;
+            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: CalculateDailyGrowthPoints è deprecato!");
+            return 0; // La crescita è ora gestita automaticamente
         }
 
         /// <summary>
-        /// Prova ad avanzare di stadio se i punti sono sufficienti
+        /// DEPRECATO - Avanzamento stadi ora gestito dal DayCycleController (BLK-01.03A)
         /// </summary>
+        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
         private void TryAdvanceStage(PlantGrowthConfig growthConfig)
         {
-            PlantStage currentStage = (PlantStage)potState.Stage;
-            PlantStage newStage = currentStage;
-
-            switch (currentStage)
-            {
-                case PlantStage.Seed:
-                    if (potState.GrowthPoints >= growthConfig.pointsSeedToSprout)
-                    {
-                        newStage = PlantStage.Sprout;
-                        potState.GrowthPoints = 0;
-                        if (enableDebugLogs)
-                            Debug.Log($"[BLK-01.03A] {potState.PotId}: Avanzamento Seed → Sprout!");
-                    }
-                    break;
-
-                case PlantStage.Sprout:
-                    if (potState.GrowthPoints >= growthConfig.pointsSproutToMature)
-                    {
-                        newStage = PlantStage.Mature;
-                        potState.GrowthPoints = 0;
-                        if (enableDebugLogs)
-                            Debug.Log($"[BLK-01.03A] {potState.PotId}: Avanzamento Sprout → Mature!");
-                    }
-                    break;
-
-                case PlantStage.Mature:
-                    // Già maturo, nessun avanzamento
-                    break;
-            }
-
-            // Aggiorna stadio se cambiato
-            if (newStage != currentStage)
-            {
-                potState.Stage = (int)newStage;
-                PotEvents.RaiseOnPlantStageChanged(potState.PotId, newStage);
-                
-                if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] {potState.PotId}: Nuovo stadio: {newStage}");
-            }
+            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: TryAdvanceStage è deprecato!");
+            // L'avanzamento di stadio è ora gestito automaticamente dal DayCycleController
         }
 
         /// <summary>
-        /// Applica decadimento (SENZA reset flag giornalieri!)
+        /// DEPRECATO - Decadimento ora gestito dal DayCycleController (BLK-01.03A)
         /// </summary>
+        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
         private void DecayAndReset(PlantGrowthConfig growthConfig)
         {
-            // Decadimento idratazione
-            potState.Hydration = Mathf.Max(0, potState.Hydration - growthConfig.dailyHydrationDecay);
-            
-            // Reset esposizione luce
-            potState.LightExposure = 0;
-
-            // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-            // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
-
-            if (enableDebugLogs && potState.HasPlant)
-            {
-                Debug.Log($"[BLK-01.03A] {potState.PotId}: Decay applicato - Hydration: {potState.Hydration}, Light: {potState.LightExposure}");
-            }
+            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: DecayAndReset è deprecato!");
+            // Il decadimento è ora gestito automaticamente dal DayCycleController
         }
 
         /// <summary>

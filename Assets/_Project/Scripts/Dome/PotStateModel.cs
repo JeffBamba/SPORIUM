@@ -26,11 +26,7 @@ public class PotStateModel
     public int DaysSincePlant;            // Giorni dalla semina
     public int DaysNeglectedStreak;       // Giorni consecutivi senza cura
     
-    [Header("Daily Flags")]
-    public bool HydrationConsumedToday;   // Annaffiato oggi
-    public bool LightExposureToday;       // Illuminato oggi
-    
-    [Header("Timestamps")]
+    [Header("Timestamps (BLK-01.03A)")]
     public int PlantedDay;        // Giorno in cui è stato piantato il seme
     public int LastWateredDay;    // Ultimo giorno di annaffiatura
     public int LastLitDay;        // Ultimo giorno di illuminazione
@@ -48,8 +44,6 @@ public class PotStateModel
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
-        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -62,14 +56,12 @@ public class PotStateModel
     {
         PotId = potId;
         HasPlant = true;
-        Stage = 0; // Seeded
+        Stage = 1; // Seeded (1 = Seed, non 0 = Empty)
         Hydration = 0;
         LightExposure = 0;
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
-        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = plantedDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -83,7 +75,7 @@ public class PotStateModel
     /// <summary>
     /// Verifica se il vaso ha una pianta
     /// </summary>
-    public bool HasPlantGrowing => HasPlant && Stage >= 0;
+    public bool HasPlantGrowing => HasPlant && Stage >= 1; // 1 = Seed, 2 = Sprout, 3 = Mature
     
     /// <summary>
     /// Verifica se l'idratazione è al massimo
@@ -127,14 +119,12 @@ public class PotStateModel
     public void PlantSeed(int currentDay)
     {
         HasPlant = true;
-        Stage = 0; // Seeded
+        Stage = 1; // Seeded (1 = Seed, non 0 = Empty)
         Hydration = 0;
         LightExposure = 0;
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
-        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = currentDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -162,14 +152,12 @@ public class PotStateModel
     public void ResetToEmpty()
     {
         HasPlant = false;
-        Stage = 0;
+        Stage = 0; // Empty (0 = Empty, 1 = Seed)
         Hydration = 0;
         LightExposure = 0;
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
-        // FIX BLK-01.03A: I flag giornalieri NON vengono mai resettati automaticamente!
-        // HydrationConsumedToday e LightExposureToday rimangono attivi per il calcolo crescita
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -185,7 +173,7 @@ public class PotStateModel
             return "Vaso vuoto";
         }
         
-        string status = $"Pianta (Stadio {Stage})";
+        string status = $"Pianta ({GetStageName(Stage)})";
         
         if (Hydration > 0)
         {
@@ -205,6 +193,21 @@ public class PotStateModel
     /// </summary>
     public override string ToString()
     {
-        return $"[{PotId}] Plant:{HasPlant} Stage:{Stage} H:{Hydration} L:{LightExposure} GP:{GrowthPoints} Day:{PlantedDay}";
+        return $"[{PotId}] Plant:{HasPlant} Stage:{Stage}({GetStageName(Stage)}) H:{Hydration} L:{LightExposure} GP:{GrowthPoints} Day:{PlantedDay}";
+    }
+    
+    /// <summary>
+    /// Restituisce il nome localizzato per uno stadio
+    /// </summary>
+    private string GetStageName(int stage)
+    {
+        switch (stage)
+        {
+            case 0: return "Empty";
+            case 1: return "Seed";
+            case 2: return "Sprout";
+            case 3: return "Mature";
+            default: return $"Stadio {stage}";
+        }
     }
 }

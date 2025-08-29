@@ -55,8 +55,12 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             Debug.Log("[RoomDomePotsBootstrap] Inizializzazione vasi Dome completata.");
         }
 
-        // BLK-01.03A: Registra vasi nel PlantGrowthSystem
-        RegisterPotsWithGrowthSystem();
+        // BLK-01.03A: I vasi verranno registrati automaticamente da PotActions
+        // NON registrare qui per evitare duplicazione
+        if (showDebugLogs)
+        {
+            Debug.Log("[RoomDomePotsBootstrap] Vasi creati, registrazione gestita da PotActions");
+        }
     }
 
     private void CreatePotsAnchor()
@@ -240,7 +244,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         PotGrowthController potGrowthController = potGO.GetComponent<PotGrowthController>();
         if (potGrowthController != null)
         {
-            // Crea e assegna il PotStateModel
+            // Crea e assegna il PotStateModel (Stage 0 = Empty per vasi vuoti)
             PotStateModel potState = new PotStateModel(potId);
             potGrowthController.SetPotState(potState);
             
@@ -327,22 +331,28 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 #endif
 
     /// <summary>
-    /// BLK-01.03A: Registra i vasi nel PlantGrowthSystem
+    /// BLK-01.03A: Registra i vasi nel DayCycleController
     /// </summary>
     private void RegisterPotsWithGrowthSystem()
     {
-        var sys = FindObjectOfType<PlantGrowthSystem>();
-        if (sys != null)
+        var dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
+        if (dayCycleController != null)
         {
+            int registeredCount = 0;
             foreach (var pot in FindObjectsOfType<PotGrowthController>())
             {
-                sys.RegisterPot(pot);
+                var potState = pot.GetPotState();
+                if (potState != null)
+                {
+                    dayCycleController.RegisterPot(potState);
+                    registeredCount++;
+                }
             }
-            Debug.Log($"[BLK-01.03A] Registered {FindObjectsOfType<PotGrowthController>().Length} pots");
+            Debug.Log($"[BLK-01.03A] Registered {registeredCount} pots in DayCycleController");
         }
         else
         {
-            Debug.LogWarning("[BLK-01.03A] PlantGrowthSystem non trovato!");
+            Debug.LogWarning("[BLK-01.03A] DayCycleController non trovato!");
         }
     }
 }

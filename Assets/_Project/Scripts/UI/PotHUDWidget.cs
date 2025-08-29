@@ -235,7 +235,9 @@ public class PotHUDWidget : MonoBehaviour
         }
         else
         {
-            return $"Pianta (Stadio {state.Stage}) - H:{state.Hydration}/3 L:{state.LightExposure}/3";
+            string stageName = GetStageName(state.Stage);
+            string threshold = GetStageThreshold(state.Stage);
+            return $"Pianta ({stageName}) - H:{state.Hydration}/3 L:{state.LightExposure}/3 - Progresso: {state.GrowthPoints}/{threshold}";
         }
     }
     
@@ -593,4 +595,34 @@ public class PotHUDWidget : MonoBehaviour
     }
     
     #endregion
+
+    /// <summary>
+    /// Restituisce il nome localizzato per uno stadio
+    /// </summary>
+    private string GetStageName(int stage)
+    {
+        switch (stage)
+        {
+            case 0: return "Empty";
+            case 1: return "Seed";
+            case 2: return "Sprout";
+            case 3: return "Mature";
+            default: return $"Stadio {stage}";
+        }
+    }
+
+    /// <summary>
+    /// Restituisce la soglia di punti per lo stadio corrente
+    /// </summary>
+    private string GetStageThreshold(int stage)
+    {
+        switch (stage)
+        {
+            case 0: return "0"; // Empty (nessun avanzamento)
+            case 1: return "2"; // Seed to Sprout
+            case 2: return "3"; // Sprout to Mature
+            case 3: return "∞"; // Mature (nessun avanzamento)
+            default: return "?";
+        }
+    }
 }

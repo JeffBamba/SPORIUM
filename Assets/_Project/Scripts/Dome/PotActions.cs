@@ -13,6 +13,7 @@ public class PotActions : MonoBehaviour
     [SerializeField] private PotSlot potSlot;
     [SerializeField] private PotSystemConfig config;
     [SerializeField] private PotGrowthController potGrowthController;
+    [SerializeField] private SPOR_BLK_01_03A_DayCycleController dayCycleController;
     
     [Header("Seed Configuration")]
     [SerializeField] private string genericSeedCode = "SDE-001";
@@ -43,6 +44,12 @@ public class PotActions : MonoBehaviour
             potGrowthController = GetComponent<PotGrowthController>();
         }
         
+        // Trova il DayCycleController se non assegnato
+        if (dayCycleController == null)
+        {
+            dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
+        }
+        
         // Trova il GameManager
         gameManager = FindObjectOfType<GameManager>();
         if (gameManager == null)
@@ -59,18 +66,38 @@ public class PotActions : MonoBehaviour
         {
             Debug.Log($"[PotActions] Inizializzato per {potSlot?.PotId ?? "vaso sconosciuto"}");
         }
+        
+        // Registra il vaso nel sistema di crescita (BLK-01.03A)
+        // NON registrare qui per evitare duplicazione con DoPlant
+        if (showDebugLogs)
+        {
+            Debug.Log($"[PotActions] {potSlot?.PotId} inizializzato, registrazione gestita da DoPlant");
+        }
     }
     
     private void InitializePotState()
     {
         if (potSlot != null)
         {
-            // Crea un nuovo stato vuoto se non esiste
-            potState = new PotStateModel(potSlot.PotId);
-            
-            if (showDebugLogs)
+            // Cerca PotStateModel esistente prima di crearne uno nuovo
+            var existingPotGrowthController = GetComponent<PotGrowthController>();
+            if (existingPotGrowthController != null)
             {
-                Debug.Log($"[PotActions] Stato inizializzato per {potSlot.PotId}: {potState}");
+                potState = existingPotGrowthController.GetPotState();
+                if (showDebugLogs && potState != null)
+                {
+                    Debug.Log($"[PotActions] Stato esistente trovato per {potSlot.PotId}: {potState}");
+                }
+            }
+            
+            // Crea nuovo solo se non esiste
+            if (potState == null)
+            {
+                potState = new PotStateModel(potSlot.PotId);
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PotActions] Nuovo stato creato per {potSlot.PotId}: {potState}");
+                }
             }
         }
     }
@@ -170,13 +197,19 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
-        // Aggiorna lo stato del vaso
+        // Aggiorna lo stato del vaso (Stage 1 = Seed)
         potState.PlantSeed(gameManager.CurrentDay);
         
         // Notifica il sistema di crescita (BLK-01.03A)
         if (potGrowthController != null)
         {
             potGrowthController.OnPlanted();
+        }
+        
+        // Registra il vaso nel sistema di crescita se non già fatto
+        if (dayCycleController != null)
+        {
+            dayCycleController.RegisterPot(potState);
         }
         
         // Notifica il cambio stato
@@ -213,10 +246,8 @@ public class PotActions : MonoBehaviour
         // Aumenta l'idratazione
         if (potState.IncreaseHydration(GetMaxHydration()))
         {
+            // Imposta timestamp per crescita (BLK-01.03A)
             potState.UpdateWateringDay(gameManager.CurrentDay);
-            
-            // Imposta flag giornaliero per crescita (BLK-01.03A)
-            potState.HydrationConsumedToday = true;
             
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
@@ -224,7 +255,7 @@ public class PotActions : MonoBehaviour
             
             if (showDebugLogs)
             {
-                Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={potState.Hydration}/{GetMaxHydration()}, flag giornaliero impostato");
+                Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={potState.Hydration}/{GetMaxHydration()}, timestamp aggiornato");
             }
             
             return true;
@@ -255,10 +286,8 @@ public class PotActions : MonoBehaviour
         // Aumenta l'esposizione alla luce
         if (potState.IncreaseLightExposure(GetMaxLightExposure()))
         {
+            // Imposta timestamp per crescita (BLK-01.03A)
             potState.UpdateLightingDay(gameManager.CurrentDay);
-            
-            // Imposta flag giornaliero per crescita (BLK-01.03A)
-            potState.LightExposureToday = true;
             
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
@@ -266,7 +295,7 @@ public class PotActions : MonoBehaviour
             
             if (showDebugLogs)
             {
-                Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={potState.LightExposure}/{GetMaxLightExposure()}, flag giornaliero impostato");
+                Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato");
             }
             
             return true;
@@ -423,6 +452,21 @@ public class PotActions : MonoBehaviour
         {
             PotEvents.EmitChanged(potSlot);
         }
+    }
+    
+    /// <summary>
+    /// DEPRECATO - La registrazione è ora gestita da DoPlant per evitare duplicazione
+    /// </summary>
+    [System.Obsolete("Usa la registrazione automatica in DoPlant invece")]
+    private void RegisterPotInGrowthSystem()
+    {
+        if (showDebugLogs)
+        {
+            Debug.LogWarning($"[PotActions] {potSlot?.PotId} - RegisterPotInGrowthSystem è deprecato!");
+        }
+        
+        // La registrazione è ora gestita automaticamente da DoPlant
+        // per evitare duplicazione con RoomDomePotsBootstrap
     }
     
     #endregion

@@ -29,8 +29,9 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("L'acqua scende di questo valore a fine giorno")]
         public int dailyHydrationDecay = 1;
         
-        [Tooltip("Azzera i flag giornalieri a fine giorno")]
-        public bool resetDailyExposureFlags = true;
+        [Tooltip("DEPRECATO - I flag giornalieri sono stati sostituiti da timestamp (BLK-01.03A)")]
+        [System.Obsolete("Sostituito da sistema timestamp in BLK-01.03A")]
+        public bool resetDailyExposureFlags = false;
 
         [Header("Futuro (hook pH Dome)")]
         [Tooltip("Moltiplicatore per integrazione futura pH")]
