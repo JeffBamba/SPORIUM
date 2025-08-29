@@ -4,7 +4,8 @@ using UnityEngine;
 /// Configurazione globale per il sistema dei vasi.
 /// Contiene costanti e impostazioni condivise tra tutti i componenti del sistema.
 /// </summary>
-public static class PotSystemConfig
+[CreateAssetMenu(menuName = "Spore/PotSystemConfig")]
+public class PotSystemConfig : ScriptableObject
 {
     [Header("Pot Configuration")]
     public const string POT_ID_PREFIX = "POT-";
@@ -30,6 +31,24 @@ public static class PotSystemConfig
     [Header("Layer Settings")]
     public const int DEFAULT_POT_LAYER = 0; // Default layer
     public const string POT_LAYER_NAME = "Default";
+    
+    [Header("Action Costs (BLK-01.02)")]
+    [SerializeField] public int CostActionsPerPotAction = 1;
+    [SerializeField] public int CostCryPerPotAction = 1;         // –1 CRY Dome action (GDD Blocking_01)
+    
+    [Header("Interaction Gating")]
+    [SerializeField] public float InteractDistance = 2.0f;
+    
+    [Header("Resource Caps")]
+    [SerializeField] public int MaxHydration = 3;
+    [SerializeField] public int MaxLightExposure = 3;
+    
+    [Header("Seed Configuration")]
+    [SerializeField] public string GenericSeedCode = "SDE-001";
+    
+    [Header("Layers")]
+    [Tooltip("Layer per i vasi interagibili (esclude Player e Ground)")]
+    public LayerMask PotLayerMask = 1 << 8; // Default: Layer 8 (LAYER_INTERACTABLE)
     
     [Header("Debug Settings")]
     public const bool DEFAULT_SHOW_DEBUG_LOGS = true;
@@ -146,6 +165,31 @@ public static class PotSystemConfig
             showDebugLogs = DEFAULT_SHOW_DEBUG_LOGS,
             drawGizmos = DEFAULT_DRAW_GIZMOS
         };
+    }
+    
+    /// <summary>
+    /// Restituisce le impostazioni predefinite per BLK-01.02
+    /// </summary>
+    /// <returns>Configurazione predefinita per le azioni base</returns>
+    public static PotSystemConfig CreateDefaultConfig()
+    {
+        var config = ScriptableObject.CreateInstance<PotSystemConfig>();
+        
+        // Costi azioni
+        config.CostActionsPerPotAction = 1;
+        config.CostCryPerPotAction = 1;
+        
+        // Gating
+        config.InteractDistance = 2.0f;
+        
+        // Limiti risorse
+        config.MaxHydration = 3;
+        config.MaxLightExposure = 3;
+        
+        // Codice seme
+        config.GenericSeedCode = "SDE-001";
+        
+        return config;
     }
 }
 

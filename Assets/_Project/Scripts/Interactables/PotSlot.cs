@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using Sporae.Core;
 
 /// <summary>
 /// Rappresenta uno slot vaso interagibile nella Dome.
@@ -15,7 +16,7 @@ public class PotSlot : MonoBehaviour
     [Header("Visual Feedback")]
     [SerializeField] private Color highlightColor = Color.yellow;
     [SerializeField] private Color baseColor = Color.white;
-    [SerializeField] private float interactDistance = 1.5f;
+    [SerializeField] private float interactDistance = 2.0f; // Sincronizzato con PotSystemConfig
     
     [Header("Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -26,10 +27,18 @@ public class PotSlot : MonoBehaviour
     // Riferimento alla pianta (null per ora, da implementare in BLK-01.04)
     private GameObject plantInstance;
     
+    // Riferimento al PotActions (BLK-01.02)
+    private PotActions potActions;
+    
     // Proprietà pubbliche
     public string PotId => potId;
     public PotState State => state;
     public bool IsEmpty => state == PotState.Empty;
+    
+    // Proprietà per BLK-01.02
+    public PotActions PotActions => potActions;
+    public bool InRange => IsPlayerInRange();
+    public bool IsSelected { get; private set; } = false;
     
     // Cache del player per controllo distanza
     private Transform playerTransform;
@@ -52,6 +61,9 @@ public class PotSlot : MonoBehaviour
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
+        
+        // Trova PotActions se presente
+        potActions = GetComponent<PotActions>();
         
         // Imposta colore base
         if (spriteRenderer != null)
@@ -86,15 +98,27 @@ public class PotSlot : MonoBehaviour
     
     private void HandlePotClick()
     {
+        // IMPORTANTE: Blocca selezione se il click è sopra UI
+        if (UIBlocker.IsPointerOverUI())
+        {
+            Debug.Log($"[{potId}] Click bloccato: sopra UI");
+            return;
+        }
+        
         // Controlla distanza dal player se disponibile
         if (playerTransform != null)
         {
             float distance = Vector2.Distance(playerTransform.position, transform.position);
+            Debug.Log($"[{potId}] Click rilevato - Distanza: {distance:F2}, Max: {interactDistance}");
             if (distance > interactDistance)
             {
                 Debug.Log($"[{potId}] Troppo lontano (>= {interactDistance})");
                 return;
             }
+        }
+        else
+        {
+            Debug.Log($"[{potId}] Click rilevato - Player non trovato, selezione permessa");
         }
         
         // Seleziona il vaso
@@ -107,6 +131,12 @@ public class PotSlot : MonoBehaviour
     public void SelectPot()
     {
         Debug.Log($"[{potId}] Selected (state: {state})");
+        
+        // Pulisci selezione precedente su altri vasi
+        ClearAllSelections();
+        
+        // Imposta questo vaso come selezionato
+        IsSelected = true;
         
         // Evidenzia visivamente
         if (spriteRenderer != null)
@@ -140,10 +170,47 @@ public class PotSlot : MonoBehaviour
     /// </summary>
     public void ClearSelection()
     {
+        IsSelected = false;
         if (spriteRenderer != null)
         {
             spriteRenderer.color = baseColor;
         }
+    }
+    
+    /// <summary>
+    /// Pulisce la selezione di tutti i vasi
+    /// </summary>
+    private void ClearAllSelections()
+    {
+        PotSlot[] allPots = FindObjectsOfType<PotSlot>();
+        foreach (PotSlot pot in allPots)
+        {
+            if (pot != this)
+            {
+                pot.ClearSelection();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Verifica se il player è in range per interagire
+    /// </summary>
+    public bool IsPlayerInRange()
+    {
+        if (playerTransform == null) return true; // Se non c'è player, sempre in range
+        
+        float distance = Vector2.Distance(playerTransform.position, transform.position);
+        return distance <= interactDistance;
+    }
+    
+    /// <summary>
+    /// Restituisce la distanza dal player
+    /// </summary>
+    public float GetDistanceFromPlayer()
+    {
+        if (playerTransform == null) return 0f;
+        
+        return Vector2.Distance(playerTransform.position, transform.position);
     }
     
     #if UNITY_EDITOR

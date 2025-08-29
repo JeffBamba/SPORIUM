@@ -13,9 +13,9 @@ TagManager:
   - UI
   - GROUND
   - 
-  - 
-  - 
-  - 
+  - LAYER_INTERACTABLE
+  - LAYER_PLAYER
+  - LAYER_GROUND
   - 
   - 
   - 

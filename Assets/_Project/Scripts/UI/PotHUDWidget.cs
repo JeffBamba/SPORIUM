@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Widget UI minimale che mostra informazioni sul vaso selezionato.
@@ -11,6 +12,12 @@ public class PotHUDWidget : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI potInfoText;
     [SerializeField] private Image backgroundImage;
+    
+    [Header("Action Buttons (BLK-01.02)")]
+    [SerializeField] private Button btnPlant;
+    [SerializeField] private Button btnWater;
+    [SerializeField] private Button btnLight;
+    [SerializeField] private TextMeshProUGUI txtCosts;
     
     [Header("Widget Settings")]
     [SerializeField] private Vector2 widgetPosition = new Vector2(12, 12);
@@ -33,14 +40,18 @@ public class PotHUDWidget : MonoBehaviour
     
     void OnEnable()
     {
-        // Sottoscrivi all'evento di selezione vaso
+        // Sottoscrivi agli eventi del sistema dei vasi
         PotSlot.OnPotSelected += OnPotSelected;
+        PotEvents.OnPotStateChanged += OnPotStateChanged;
+        PotEvents.OnPotActionFailed += OnPotActionFailed;
     }
     
     void OnDisable()
     {
-        // Annulla sottoscrizione
+        // Annulla sottoscrizioni
         PotSlot.OnPotSelected -= OnPotSelected;
+        PotEvents.OnPotStateChanged -= OnPotStateChanged;
+        PotEvents.OnPotActionFailed -= OnPotActionFailed;
     }
     
     private void InitializeWidget()
@@ -136,6 +147,13 @@ public class PotHUDWidget : MonoBehaviour
         rectTransform.anchoredPosition = widgetPosition;
         rectTransform.sizeDelta = widgetSize;
         
+        // IMPORTANTE: Assicurati che il Canvas abbia GraphicRaycaster per i click UI
+        if (parentCanvas.GetComponent<GraphicRaycaster>() == null)
+        {
+            Debug.LogWarning("[PotHUDWidget] Aggiungendo GraphicRaycaster al Canvas per i click UI");
+            parentCanvas.gameObject.AddComponent<GraphicRaycaster>();
+        }
+        
         // Crea background (opzionale)
         if (backgroundImage == null)
         {
@@ -170,17 +188,30 @@ public class PotHUDWidget : MonoBehaviour
             textRect.offsetMin = new Vector2(10, 10);
             textRect.offsetMax = new Vector2(-10, -10);
         }
+        
+        // Crea pulsanti di azione se non assegnati
+        CreateActionButtons();
     }
     
     private void OnPotSelected(PotSlot pot)
     {
         if (!isInitialized) return;
         
-        // Aggiorna le informazioni del vaso
-        string potInfo = $"Selected: {pot.PotId} — Stato: {GetStateText(pot.State)}";
+        Debug.Log($"[PotHUDWidget] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
+        Debug.Log($"[PotHUDWidget] PotActions presente: {pot.PotActions != null}");
+        Debug.Log($"[PotHUDWidget] Player in range: {pot.InRange}");
+        
+        // Aggiorna le informazioni del vaso usando il nuovo sistema
+        string potInfo = $"Selected: {pot.PotId} — {GetPotStatusText(pot)}";
         UpdatePotInfo(potInfo);
         
-        Debug.Log($"[PotHUDWidget] Aggiornato widget per vaso: {pot.PotId}");
+        // Aggiorna i pulsanti di azione
+        UpdateActionButtons(pot);
+        
+        // Mostra il widget
+        SetWidgetVisible(true);
+        
+        Debug.Log($"[PotHUDWidget] UI aggiornata per vaso {pot.PotId}");
     }
     
     private void UpdatePotInfo(string info)
@@ -191,20 +222,20 @@ public class PotHUDWidget : MonoBehaviour
         }
     }
     
-    private string GetStateText(PotState state)
+    private string GetPotStatusText(PotSlot pot)
     {
-        switch (state)
+        if (pot.PotActions == null) return "Errore: PotActions mancante";
+        
+        PotStateModel state = pot.PotActions.GetCurrentState();
+        if (state == null) return "Errore: Stato vaso mancante";
+        
+        if (state.IsEmpty)
         {
-            case PotState.Empty:
-                return "Vuoto";
-            case PotState.Occupied:
-                return "Occupato";
-            case PotState.Growing:
-                return "In crescita";
-            case PotState.Mature:
-                return "Maturo";
-            default:
-                return "Sconosciuto";
+            return "Vuoto - Pronto per piantare";
+        }
+        else
+        {
+            return $"Pianta (Stadio {state.Stage}) - H:{state.Hydration}/3 L:{state.LightExposure}/3";
         }
     }
     
@@ -239,6 +270,17 @@ public class PotHUDWidget : MonoBehaviour
     }
     
     /// <summary>
+    /// Mostra/nasconde il widget
+    /// </summary>
+    public void SetWidgetVisible(bool visible)
+    {
+        if (widgetContainer != null)
+        {
+            widgetContainer.SetActive(visible);
+        }
+    }
+    
+    /// <summary>
     /// Cambia la posizione del widget
     /// </summary>
     public void SetWidgetPosition(Vector2 newPosition)
@@ -253,4 +295,302 @@ public class PotHUDWidget : MonoBehaviour
             }
         }
     }
+    
+    #region Action Buttons (BLK-01.02)
+    
+    /// <summary>
+    /// Crea i pulsanti di azione per il vaso
+    /// </summary>
+    private void CreateActionButtons()
+    {
+        if (btnPlant == null)
+        {
+            btnPlant = CreateActionButton("Plant", "Piantare", PotEvents.PotActionType.Plant);
+        }
+        
+        if (btnWater == null)
+        {
+            btnWater = CreateActionButton("Water", "Annaffiare", PotEvents.PotActionType.Water);
+        }
+        
+        if (btnLight == null)
+        {
+            btnLight = CreateActionButton("Light", "Illuminare", PotEvents.PotActionType.Light);
+        }
+        
+        // Crea il testo dei costi
+        if (txtCosts == null)
+        {
+            GameObject costsGO = new GameObject("CostsText");
+            costsGO.transform.SetParent(widgetContainer.transform, false);
+            
+            txtCosts = costsGO.AddComponent<TextMeshProUGUI>();
+            txtCosts.color = textColor;
+            txtCosts.fontSize = 12;
+            txtCosts.alignment = TextAlignmentOptions.Center;
+            txtCosts.text = "Costo: -1 Azione / -1 CRY";
+            
+            RectTransform costsRect = costsGO.GetComponent<RectTransform>();
+            costsRect.anchorMin = new Vector2(0, 0);
+            costsRect.anchorMax = new Vector2(1, 0);
+            costsRect.pivot = new Vector2(0.5f, 0);
+            costsRect.anchoredPosition = new Vector2(0, 5);
+            costsRect.sizeDelta = new Vector2(0, 20);
+        }
+        
+        // Nascondi tutti i pulsanti inizialmente
+        SetActionButtonsVisible(false);
+    }
+    
+    /// <summary>
+    /// Crea un singolo pulsante di azione
+    /// </summary>
+    private Button CreateActionButton(string buttonName, string buttonText, PotEvents.PotActionType actionType)
+    {
+        GameObject buttonGO = new GameObject($"Btn_{buttonName}");
+        buttonGO.transform.SetParent(widgetContainer.transform, false);
+        
+        // Aggiungi Button
+        Button button = buttonGO.AddComponent<Button>();
+        
+        // Aggiungi Image per il background
+        Image buttonImage = buttonGO.AddComponent<Image>();
+        buttonImage.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+        
+        // Aggiungi testo
+        GameObject textGO = new GameObject("Text");
+        textGO.transform.SetParent(buttonGO.transform, false);
+        
+        TextMeshProUGUI buttonTextComponent = textGO.AddComponent<TextMeshProUGUI>();
+        buttonTextComponent.text = buttonText;
+        buttonTextComponent.color = Color.white;
+        buttonTextComponent.fontSize = 14;
+        buttonTextComponent.alignment = TextAlignmentOptions.Center;
+        
+        // Posiziona il testo
+        RectTransform textRect = textGO.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        // Posiziona il pulsante
+        RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
+        buttonRect.anchorMin = new Vector2(0, 0);
+        buttonRect.anchorMax = new Vector2(0, 0);
+        buttonRect.pivot = new Vector2(0, 0);
+        buttonRect.sizeDelta = new Vector2(80, 30);
+        
+        // Posiziona in base al tipo di azione (Y aumentato per evitare sovrapposizioni)
+        switch (actionType)
+        {
+            case PotEvents.PotActionType.Plant:
+                buttonRect.anchoredPosition = new Vector2(10, 60);
+                break;
+            case PotEvents.PotActionType.Water:
+                buttonRect.anchoredPosition = new Vector2(100, 60);
+                break;
+            case PotEvents.PotActionType.Light:
+                buttonRect.anchoredPosition = new Vector2(190, 60);
+                break;
+        }
+        
+        // Aggiungi listener per l'azione
+        button.onClick.AddListener(() => OnActionButtonClicked(actionType));
+        
+        // IMPORTANTE: Configura il pulsante per intercettare correttamente i click UI
+        button.transition = Selectable.Transition.ColorTint;
+        button.navigation = new Navigation() { mode = Navigation.Mode.None };
+        
+        // Aggiungi Image con raycast target per intercettare meglio i click
+        if (buttonImage != null)
+        {
+            buttonImage.raycastTarget = true;
+        }
+        
+        // Aggiungi EventTrigger per intercettare tutti gli eventi e prevenire movimento player
+        EventTrigger eventTrigger = buttonGO.AddComponent<EventTrigger>();
+        
+        // PointerDown - blocca movimento player
+        EventTrigger.Entry pointerDownEntry = new EventTrigger.Entry();
+        pointerDownEntry.eventID = EventTriggerType.PointerDown;
+        pointerDownEntry.callback.AddListener((data) => { 
+            Debug.Log($"[PotHUDWidget] Evento PointerDown bloccato per {actionType}");
+            // Blocca la propagazione dell'evento
+        });
+        eventTrigger.triggers.Add(pointerDownEntry);
+        
+        // BeginDrag - previene drag accidentali
+        EventTrigger.Entry beginDragEntry = new EventTrigger.Entry();
+        beginDragEntry.eventID = EventTriggerType.BeginDrag;
+        beginDragEntry.callback.AddListener((data) => { 
+            Debug.Log($"[PotHUDWidget] Evento BeginDrag bloccato per {actionType}");
+        });
+        eventTrigger.triggers.Add(beginDragEntry);
+        
+        return button;
+    }
+    
+    /// <summary>
+    /// Gestisce il click su un pulsante di azione
+    /// </summary>
+    private void OnActionButtonClicked(PotEvents.PotActionType actionType)
+    {
+        Debug.Log($"[PotHUDWidget] Click su pulsante {actionType} intercettato!");
+        
+        // Trova il vaso selezionato
+        PotSlot selectedPot = FindSelectedPot();
+        if (selectedPot == null || selectedPot.PotActions == null)
+        {
+            Debug.LogWarning("[PotHUDWidget] Nessun vaso selezionato o PotActions mancante");
+            return;
+        }
+        
+        Debug.Log($"[PotHUDWidget] Eseguendo azione {actionType} su vaso {selectedPot.PotId}");
+        
+        // Esegui l'azione appropriata
+        bool success = false;
+        switch (actionType)
+        {
+            case PotEvents.PotActionType.Plant:
+                success = selectedPot.PotActions.DoPlant();
+                break;
+            case PotEvents.PotActionType.Water:
+                success = selectedPot.PotActions.DoWater();
+                break;
+            case PotEvents.PotActionType.Light:
+                success = selectedPot.PotActions.DoLight();
+                break;
+        }
+        
+        if (success)
+        {
+            Debug.Log($"[PotHUDWidget] Azione {actionType} eseguita con successo!");
+            // Aggiorna l'UI
+            UpdateActionButtons(selectedPot);
+        }
+        else
+        {
+            Debug.LogWarning($"[PotHUDWidget] Azione {actionType} fallita!");
+        }
+    }
+    
+    /// <summary>
+    /// Trova il vaso attualmente selezionato
+    /// </summary>
+    private PotSlot FindSelectedPot()
+    {
+        // Trova il vaso che ha emesso l'evento OnPotSelected
+        // Usa il sistema di eventi per tracciare la selezione
+        PotSlot[] allPots = FindObjectsOfType<PotSlot>();
+        foreach (PotSlot pot in allPots)
+        {
+            if (pot.PotActions != null && pot.IsSelected)
+            {
+                Debug.Log($"[PotHUDWidget] Trovato vaso selezionato: {pot.PotId}");
+                return pot;
+            }
+        }
+        
+        // Fallback: cerca il primo vaso con PotActions
+        foreach (PotSlot pot in allPots)
+        {
+            if (pot.PotActions != null)
+            {
+                Debug.LogWarning($"[PotHUDWidget] Fallback: usando primo vaso disponibile {pot.PotId}");
+                return pot;
+            }
+        }
+        
+        Debug.LogError("[PotHUDWidget] Nessun vaso trovato!");
+        return null;
+    }
+    
+    /// <summary>
+    /// Aggiorna i pulsanti di azione in base al vaso selezionato
+    /// </summary>
+    private void UpdateActionButtons(PotSlot pot)
+    {
+        if (pot == null || pot.PotActions == null)
+        {
+            SetActionButtonsVisible(false);
+            return;
+        }
+        
+        // Mostra i pulsanti solo se il player è in range
+        bool inRange = pot.InRange;
+        SetActionButtonsVisible(inRange);
+        
+        if (inRange)
+        {
+            // Aggiorna lo stato di ogni pulsante
+            UpdateButtonState(btnPlant, pot.PotActions.CanPlant(), "Piantare");
+            UpdateButtonState(btnWater, pot.PotActions.CanWater(), "Annaffiare");
+            UpdateButtonState(btnLight, pot.PotActions.CanLight(), "Illuminare");
+        }
+    }
+    
+    /// <summary>
+    /// Aggiorna lo stato di un singolo pulsante
+    /// </summary>
+    private void UpdateButtonState(Button button, bool canExecute, string actionName)
+    {
+        if (button == null) return;
+        
+        button.interactable = canExecute;
+        
+        // Aggiorna il colore e il tooltip
+        Image buttonImage = button.GetComponent<Image>();
+        if (buttonImage != null)
+        {
+            buttonImage.color = canExecute ? 
+                new Color(0.2f, 0.8f, 0.2f, 0.9f) : // Verde se abilitato
+                new Color(0.5f, 0.5f, 0.5f, 0.9f);   // Grigio se disabilitato
+        }
+        
+        // Aggiorna il testo
+        TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+        if (buttonText != null)
+        {
+            buttonText.text = canExecute ? actionName : $"{actionName} (N/A)";
+        }
+    }
+    
+    /// <summary>
+    /// Mostra/nasconde i pulsanti di azione
+    /// </summary>
+    private void SetActionButtonsVisible(bool visible)
+    {
+        if (btnPlant != null) btnPlant.gameObject.SetActive(visible);
+        if (btnWater != null) btnWater.gameObject.SetActive(visible);
+        if (btnLight != null) btnLight.gameObject.SetActive(visible);
+        if (txtCosts != null) txtCosts.gameObject.SetActive(visible);
+    }
+    
+    /// <summary>
+    /// Gestisce il cambio di stato di un vaso
+    /// </summary>
+    private void OnPotStateChanged(PotSlot pot)
+    {
+        if (!isInitialized) return;
+        
+        // Aggiorna i pulsanti se questo è il vaso selezionato
+        UpdateActionButtons(pot);
+    }
+    
+    /// <summary>
+    /// Gestisce il fallimento di un'azione
+    /// </summary>
+    private void OnPotActionFailed(PotEvents.PotActionType actionType, PotSlot pot, string reason)
+    {
+        if (!isInitialized) return;
+        
+        // Mostra il motivo del fallimento
+        string failureMessage = $"Azione {PotEvents.GetActionName(actionType)} fallita: {reason}";
+        UpdatePotInfo(failureMessage);
+        
+        Debug.LogWarning($"[PotHUDWidget] {failureMessage}");
+    }
+    
+    #endregion
 }

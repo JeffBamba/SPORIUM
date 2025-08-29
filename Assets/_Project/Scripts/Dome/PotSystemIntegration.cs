@@ -2,20 +2,19 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Esempio di integrazione del sistema dei vasi con il GameManager esistente.
-/// Questo script mostra come collegare i vasi al sistema di azioni e CRY.
-/// DA IMPLEMENTARE IN BLK-01.02+ (per ora è solo un esempio)
+/// Integrazione del sistema dei vasi con il GameManager esistente.
+/// Bridge tra HUD, PotSlot selezionato e PotActions.
+/// Gestisce la selezione dei vasi e aggiorna l'UI.
 /// </summary>
 public class PotSystemIntegration : MonoBehaviour
 {
     [Header("Integration Settings")]
-    [SerializeField] private bool enableIntegration = false;
-    [SerializeField] private int plantSeedCost = 5; // CRY per piantare
-    [SerializeField] private int waterPlantCost = 2; // CRY per annaffiare
-    [SerializeField] private int lightPlantCost = 3; // CRY per illuminare
+    [SerializeField] private bool enableIntegration = true;
+    [SerializeField] private PotSystemConfig potSystemConfig;
     
     [Header("References")]
     [SerializeField] private RoomDomePotsBootstrap potsBootstrap;
+    [SerializeField] private PotHUDWidget potHUDWidget;
     
     private GameManager gameManager;
     private List<PotSlot> allPots;
@@ -78,158 +77,45 @@ public class PotSystemIntegration : MonoBehaviour
     /// </summary>
     private void ShowAvailableActions(PotSlot pot)
     {
-        if (pot == null) return;
+        if (pot == null || pot.PotActions == null) return;
         
         Debug.Log($"[PotSystemIntegration] Azioni disponibili per {pot.PotId}:");
         
-        switch (pot.State)
+        // Usa il nuovo sistema PotActions per determinare le azioni disponibili
+        if (pot.PotActions.CanPlant())
         {
-            case PotState.Empty:
-                Debug.Log($"  - Piantare seme (Costo: {plantSeedCost} CRY)");
-                Debug.Log($"    Azioni richieste: 1");
-                break;
-                
-            case PotState.Occupied:
-                Debug.Log($"  - Annaffiare pianta (Costo: {waterPlantCost} CRY)");
-                Debug.Log($"    Azioni richieste: 1");
-                break;
-                
-            case PotState.Growing:
-                Debug.Log($"  - Annaffiare pianta (Costo: {waterPlantCost} CRY)");
-                Debug.Log($"  - Illuminare pianta (Costo: {lightPlantCost} CRY)");
-                Debug.Log($"    Azioni richieste: 1 per azione");
-                break;
-                
-            case PotState.Mature:
-                Debug.Log($"  - Raccogliere pianta (Costo: 0 CRY)");
-                Debug.Log($"    Azioni richieste: 1");
-                break;
+            Debug.Log($"  - Piantare seme (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
         }
+        
+        if (pot.PotActions.CanWater())
+        {
+            Debug.Log($"  - Annaffiare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
+        }
+        
+        if (pot.PotActions.CanLight())
+        {
+            Debug.Log($"  - Illuminare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
+        }
+        
+        Debug.Log($"    Azioni richieste: 1 per azione");
     }
     
     /// <summary>
-    /// Tenta di piantare un seme nel vaso
-    /// DA IMPLEMENTARE IN BLK-01.02
+    /// Configura i vasi con la configurazione del sistema
     /// </summary>
-    public bool TryPlantSeed(PotSlot pot, string seedId)
+    public void ConfigurePots()
     {
-        if (!enableIntegration || pot == null) return false;
+        if (potsBootstrap == null) return;
         
-        if (pot.State != PotState.Empty)
+        PotSlot[] allPots = potsBootstrap.GetAllPots();
+        foreach (PotSlot pot in allPots)
         {
-            Debug.LogWarning($"[PotSystemIntegration] Impossibile piantare: vaso {pot.PotId} non vuoto.");
-            return false;
+            if (pot.PotActions != null && potSystemConfig != null)
+            {
+                pot.PotActions.SetConfig(potSystemConfig);
+                Debug.Log($"[PotSystemIntegration] Configurato vaso {pot.PotId}");
+            }
         }
-        
-        // Controlla se il player può permettersi l'azione
-        if (!gameManager.TrySpendAction(plantSeedCost))
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Azione non permessa: CRY insufficienti o azioni esaurite.");
-            return false;
-        }
-        
-        // Controlla se il player ha il seme
-        if (!gameManager.HasItem(seedId, 1))
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Seme {seedId} non disponibile nell'inventario.");
-            return false;
-        }
-        
-        // Consuma il seme
-        gameManager.ConsumeItem(seedId, 1);
-        
-        // Cambia stato del vaso
-        pot.SetState(PotState.Occupied);
-        
-        Debug.Log($"[PotSystemIntegration] Seme {seedId} piantato in {pot.PotId}. CRY spesi: {plantSeedCost}");
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// Tenta di annaffiare la pianta nel vaso
-    /// DA IMPLEMENTARE IN BLK-01.02
-    /// </summary>
-    public bool TryWaterPlant(PotSlot pot)
-    {
-        if (!enableIntegration || pot == null) return false;
-        
-        if (pot.State == PotState.Empty)
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Impossibile annaffiare: vaso {pot.PotId} vuoto.");
-            return false;
-        }
-        
-        // Controlla se il player può permettersi l'azione
-        if (!gameManager.TrySpendAction(waterPlantCost))
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Azione non permessa: CRY insufficienti o azioni esaurite.");
-            return false;
-        }
-        
-        // Logica di annaffiatura (da implementare in BLK-01.04)
-        Debug.Log($"[PotSystemIntegration] Pianta in {pot.PotId} annaffiata. CRY spesi: {waterPlantCost}");
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// Tenta di illuminare la pianta nel vaso
-    /// DA IMPLEMENTARE IN BLK-01.02
-    /// </summary>
-    public bool TryLightPlant(PotSlot pot)
-    {
-        if (!enableIntegration || pot == null) return false;
-        
-        if (pot.State == PotState.Empty)
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Impossibile illuminare: vaso {pot.PotId} vuoto.");
-            return false;
-        }
-        
-        // Controlla se il player può permettersi l'azione
-        if (!gameManager.TrySpendAction(lightPlantCost))
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Azione non permessa: CRY insufficienti o azioni esaurite.");
-            return false;
-        }
-        
-        // Logica di illuminazione (da implementare in BLK-01.04)
-        Debug.Log($"[PotSystemIntegration] Pianta in {pot.PotId} illuminata. CRY spesi: {lightPlantCost}");
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// Tenta di raccogliere la pianta matura
-    /// DA IMPLEMENTARE IN BLK-01.02
-    /// </summary>
-    public bool TryHarvestPlant(PotSlot pot)
-    {
-        if (!enableIntegration || pot == null) return false;
-        
-        if (pot.State != PotState.Mature)
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Impossibile raccogliere: pianta in {pot.PotId} non matura.");
-            return false;
-        }
-        
-        // Controlla se il player ha azioni disponibili
-        if (!gameManager.TrySpendAction(0)) // 0 CRY per raccogliere
-        {
-            Debug.LogWarning($"[PotSystemIntegration] Azione non permessa: azioni esaurite.");
-            return false;
-        }
-        
-        // Logica di raccolta (da implementare in BLK-01.04)
-        // Aggiungi ricompense all'inventario
-        
-        // Reset stato del vaso
-        pot.SetState(PotState.Empty);
-        
-        Debug.Log($"[PotSystemIntegration] Pianta raccolta da {pot.PotId}. Vaso ora vuoto.");
-        
-        return true;
     }
     
     /// <summary>
@@ -237,25 +123,13 @@ public class PotSystemIntegration : MonoBehaviour
     /// </summary>
     public int GetTotalActionCost(PotSlot pot)
     {
-        if (pot == null) return 0;
+        if (pot == null || pot.PotActions == null) return 0;
         
         int totalCost = 0;
         
-        switch (pot.State)
-        {
-            case PotState.Empty:
-                totalCost += plantSeedCost;
-                break;
-            case PotState.Occupied:
-                totalCost += waterPlantCost;
-                break;
-            case PotState.Growing:
-                totalCost += waterPlantCost + lightPlantCost;
-                break;
-            case PotState.Mature:
-                totalCost = 0; // Raccolta gratuita
-                break;
-        }
+        if (pot.PotActions.CanPlant()) totalCost += potSystemConfig?.CostCryPerPotAction ?? 1;
+        if (pot.PotActions.CanWater()) totalCost += potSystemConfig?.CostCryPerPotAction ?? 1;
+        if (pot.PotActions.CanLight()) totalCost += potSystemConfig?.CostCryPerPotAction ?? 1;
         
         return totalCost;
     }
@@ -265,21 +139,14 @@ public class PotSystemIntegration : MonoBehaviour
     /// </summary>
     public int GetTotalActionsRequired(PotSlot pot)
     {
-        if (pot == null) return 0;
+        if (pot == null || pot.PotActions == null) return 0;
         
-        switch (pot.State)
-        {
-            case PotState.Empty:
-                return 1; // Piantare
-            case PotState.Occupied:
-                return 1; // Annaffiare
-            case PotState.Growing:
-                return 2; // Annaffiare + Illuminare
-            case PotState.Mature:
-                return 1; // Raccogliere
-            default:
-                return 0;
-        }
+        int actions = 0;
+        if (pot.PotActions.CanPlant()) actions++;
+        if (pot.PotActions.CanWater()) actions++;
+        if (pot.PotActions.CanLight()) actions++;
+        
+        return actions;
     }
     
     #if UNITY_EDITOR

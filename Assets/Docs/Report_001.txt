@@ -1,0 +1,101 @@
+Sporae — Blocking_01 — Fase 0 (Setup Tecnico)
+Panoramica
+La Fase 0 del Blocking_01 ha avuto come obiettivo il setup tecnico iniziale del progetto Sporae, la definizione delle cartelle, delle scene fondamentali e l’implementazione dei primi sistemi base (movimento, gestione risorse, HUD, ascensore). Tutte le attività pianificate sono state completate con successo.
+________________________________________
+Task completati
+BLK-00.01 — Creazione progetto Unity 2D URP LTS
+•	Creato nuovo progetto Unity con template 2D URP LTS.
+•	Nome: Sporium_Blocking_01.
+•	Verificata configurazione pipeline grafica e versioning LTS.
+BLK-00.02 — Struttura cartelle + Repo Git
+•	Organizzate cartelle in Assets/: Scenes, Prefabs, Scripts, Placeholders, UI.
+•	Creato repository Git con .gitignore specifico per Unity.
+BLK-00.03 — Scene placeholder
+•	Generate scene iniziali vuote (Dome, Lab, Visitor Room, Seed Storage, Bedroom).
+•	Successivamente convertite in prefab modulari (Rooms) alla luce della decisione Vault unica.
+•	Aggiunta scena SCN_Bootstrap con APP_Root e Canvas_Loading.
+BLK-00.04 — Player click-to-move
+•	Implementato sistema di movimento punta-e-clicca:
+o	PlayerClickMover2D: Raycast verso NAV_Plane con Ground Mask.
+o	Player con Rigidbody2D Kinematic e Collider2D.
+•	Aggiunto supporto W/S (fallback scale manuali).
+BLK-00.05 — GameManager + HUD + EndDay
+•	Creato GameManager (singleton + DontDestroyOnLoad).
+o	Variabili: Giorni, Azioni, CRY, Inventario.
+o	Eventi OnDayChanged, OnActionsChanged, OnCRYChanged.
+•	Creato HUD con TextMeshPro:
+o	TXT_Day, TXT_Actions, TXT_CRY.
+o	Controller: HUDController.
+•	Pulsante BTN_EndDay per avanzare il giorno e scalare risorse.
+•	Pulsante BTN_DummyAction con ActionCost e DummyAction per test consumo Azioni e CRY.
+BLK-00.06 — Implementare Ascensore
+•	Decisione ufficiale: Vault unica scena verticale in stile Fallout Shelter.
+•	Creata scena SCN_VaultMap con struttura base:
+o	ELEV_Elevator (Empty root).
+o	ELEV_Levels con target Y (LVL_-1, LVL_0, LVL_+1).
+o	ELEV_UseZone con BoxCollider2D (IsTrigger).
+o	UI_ElevatorPanel con bottoni BTN_LVL_-1, BTN_LVL_0, BTN_LVL_+1.
+•	Script ElevatorSystem:
+o	Mostra/nasconde pannello UI.
+o	Funzione GoToLevel(int) che sposta il Player e scala –5 CRY.
+o	Se CRY insufficiente → log warning + fallback scale manuali con W/S.
+•	Debug log in Console per confermare interazioni.
+________________________________________
+Decisioni strutturali prese durante la Fase 0
+•	Vault come unica scena: tutte le stanze modulari (Visitor, Dome, Lab, Food, Bedroom) sono prefab piazzati in SCN_VaultMap. Nessun caricamento scena per i piani, navigazione solo verticale.
+•	SCN_Bootstrap rimane scena di avvio, carica SCN_VaultMap.
+•	SYS_GameManager rimane globale con DontDestroyOnLoad.
+•	Le stanze prefab contengono solo ambienti e trigger locali, non logiche globali.
+•	HUD unico e persistente.
+________________________________________
+Stato finale Fase 0 (27/08/2025)
+Tutti i task BLK-00.01 → BLK-00.06 sono DONE e funzionanti: - Progetto avviabile da SCN_Bootstrap → SCN_VaultMap. - Player si muove con click-to-move. - GameManager traccia Giorni/Azioni/CRY. - HUD aggiornato in tempo reale. - Pulsanti EndDay e DummyAction funzionano. - Ascensore operativo (CRY cost, fallback scale).
+La Fase 0 può considerarsi completata con successo ✅.
+
+INIZIO FASE 1
+
+🎯 IMPLEMENTAZIONE COMPLETATA - BLK-01.01
+File Creati:
+PotSlot.cs - Script principale per i vasi interattivi
+Gestione click, evidenziazione, stati
+Controllo distanza dal Player
+Eventi per selezione vaso
+Gizmos per visibilità in Editor
+PotHUDWidget.cs - Widget UI integrato con HUD esistente
+Mostra info sui vasi selezionati
+Integrazione automatica con Canvas
+Fallback se non trova HUD esistente
+Posizionamento configurabile
+RoomDomePotsBootstrap.cs - Bootstrap automatico per la Dome
+Crea 2 vasi (POT-001, POT-002) automaticamente
+Posizioni configurabili via Inspector
+Supporto per prefab opzionale
+Gizmos per visibilità
+PotSystemConfig.cs - Configurazione globale del sistema
+Costanti e impostazioni condivise
+Validazione parametri
+Colori e stati predefiniti
+PotSystemTester.cs - Script di test completo
+Test automatici con tasti T/R
+Verifica integrazione con sistemi esistenti
+Debug e troubleshooting
+PotSystemIntegration.cs - Esempio per BLK-01.02+
+Integrazione con GameManager esistente
+Sistema costi CRY e azioni
+Logica per piantare/annaffiare/illuminare
+PREF_POT_Slot.prefab - Prefab del vaso (opzionale)
+Componenti preconfigurati
+Fallback a creazione runtime
+README_BLK-01.01.md - Documentazione completa
+Setup passo-passo
+Test di accettazione
+Configurazione avanzata
+✅ Funzionalità Implementate:
+2 vasi interattivi nella Dome con ID univoci
+Click handling con controllo distanza dal Player
+Evidenziazione al passaggio del mouse
+Widget HUD integrato con sistema esistente
+Bootstrap automatico per creazione vasi
+Sistema di test completo per debugging
+Configurazione globale centralizzata
+Integrazione futura con GameManager (BLK-01.02+)

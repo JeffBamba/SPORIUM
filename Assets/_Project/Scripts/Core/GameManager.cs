@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 {
     [Header("Day & Actions")]
     [Min(1)] public int startingDay = 1;
-    [Min(1)] public int actionsPerDay = 3;
+    [Min(1)] public int actionsPerDay = 4; // BLK-01.02: 4 azioni per test completo
     public int CurrentDay { get; private set; }
     public int ActionsLeft { get; private set; }
 
@@ -38,7 +38,7 @@ public class GameManager : MonoBehaviour
         CurrentCRY = startingCRY;
 
         // Inventario iniziale
-        AddItem("SEED_GENERIC", 1);
+        AddItem("SDE-001", 3); // Generic Seed per BLK-01.02
         AddItem("SPORE_GENERIC", 2);
 
         // Notifica UI

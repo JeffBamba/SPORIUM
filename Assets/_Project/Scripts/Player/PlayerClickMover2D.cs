@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerClickMover2D : MonoBehaviour
@@ -64,6 +65,13 @@ public class PlayerClickMover2D : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            // IMPORTANTE: Blocca movimento se il click è sopra UI
+            if (UIBlocker.IsPointerOverUI())
+            {
+                // Debug.Log("[Move] Bloccato: click sopra UI");
+                return;
+            }
+            
             Vector2 clickPosition = GetMouseWorldPosition();
             
             if (IsValidTargetPosition(clickPosition))

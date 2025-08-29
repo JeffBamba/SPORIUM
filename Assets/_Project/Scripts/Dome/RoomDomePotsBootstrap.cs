@@ -57,7 +57,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
     private void CreatePotsAnchor()
     {
-        // Cerca se esiste già un anchor
+        // Cerca se esiste giï¿½ un anchor
         potsAnchor = transform.Find("Dome_PotsAnchor")?.gameObject;
 
         if (potsAnchor == null)
@@ -83,7 +83,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
     private void CreatePot(string potId, Vector2 offset, int potNumber)
     {
-        // Cerca se il vaso esiste già
+        // Cerca se il vaso esiste giï¿½
         Transform existingPot = potsAnchor.transform.Find($"Pot_{potId}");
         if (existingPot != null)
         {
@@ -92,7 +92,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             {
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[RoomDomePotsBootstrap] Vaso {potId} già esistente, saltato.");
+                    Debug.Log($"[RoomDomePotsBootstrap] Vaso {potId} giï¿½ esistente, saltato.");
                 }
 
                 // Assegna il riferimento
@@ -116,7 +116,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         }
         else
         {
-            // Crea il vaso a runtime se non c'è prefab
+            // Crea il vaso a runtime se non c'ï¿½ prefab
             potGO = CreatePotRuntime(potId);
             if (showDebugLogs)
             {
@@ -155,6 +155,9 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
         // Aggiungi il componente PotSlot
         PotSlot potSlot = potGO.AddComponent<PotSlot>();
+        
+        // Aggiungi il componente PotActions per BLK-01.02
+        PotActions potActions = potGO.AddComponent<PotActions>();
 
         // Imposta il layer
         potGO.layer = (int)Mathf.Log(potLayer.value, 2);
@@ -167,7 +170,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         // Cerca sprite esistenti nel progetto
         Sprite[] allSprites = Resources.FindObjectsOfTypeAll<Sprite>();
 
-        // Priorità: cerca sprite che potrebbero essere vasi
+        // Prioritï¿½: cerca sprite che potrebbero essere vasi
         foreach (Sprite sprite in allSprites)
         {
             if (sprite.name.ToLower().Contains("pot") ||
