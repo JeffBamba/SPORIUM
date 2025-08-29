@@ -122,6 +122,61 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &113591324
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 113591326}
+  - component: {fileID: 113591325}
+  m_Layer: 0
+  m_Name: ROOM_Dome
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &113591325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 113591324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 688699eb88bc79d46ab9d2aecbfce09f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pot1Id: POT-001
+  pot2Id: POT-002
+  pot1Offset: {x: -1.5, y: 0}
+  pot2Offset: {x: 1.5, y: 0}
+  potScale: 1
+  potLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  potPrefab: {fileID: 0}
+  showDebugLogs: 1
+  drawGizmos: 1
+--- !u!4 &113591326
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 113591324}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &170435549
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +603,8 @@ MonoBehaviour:
   - {fileID: 1239571394}
   uiPanel: {fileID: 1824738947}
   cryCost: 5
+  teleportDelay: 0.1
+  validateLevelsOnStart: 1
 --- !u!61 &401336200
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -647,6 +704,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cryCost: 2
+  actionCost: 1
+  requireBothResources: 0
+  validateOnStart: 1
 --- !u!114 &445619055
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -754,6 +814,59 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cost: {fileID: 445619054}
+  actionName: Azione
+  showDebugLogs: 1
+  validateOnStart: 1
+--- !u!1 &513494508
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 513494510}
+  - component: {fileID: 513494509}
+  m_Layer: 0
+  m_Name: PotSystemTester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &513494509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513494508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f663d62a29bace47b697a092f0bc0c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableTesting: 1
+  testKey: 116
+  resetKey: 114
+  potsFound: 0
+  widgetFound: 0
+  totalPots: 0
+--- !u!4 &513494510
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513494508}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5818699, y: -0.054571144, z: 1.005364}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -930,7 +1043,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 537101281}
+  findPlayerOnStart: 1
+  playerTag: Player
   smoothSpeed: 5
+  offset: {x: 0, y: 0, z: 0}
+  useOffset: 0
+  useBounds: 0
+  minBounds: {x: -10, y: -10}
+  maxBounds: {x: 10, y: 10}
+  lookAhead: 0
+  lookAheadDistance: 2
+  smoothRotation: 0
+  rotationSpeed: 3
+  validateOnStart: 1
+  showDebugLogs: 0
 --- !u!1 &537101276
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,9 +1091,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   stopDistance: 0.05
+  acceleration: 10
+  deceleration: 15
   groundMask:
     serializedVersion: 2
     m_Bits: 64
+  pathfindingRadius: 0.5
+  rotationSpeed: 5
+  smoothRotation: 1
 --- !u!70 &537101278
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -1835,6 +1966,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 730567320}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1262169051
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1262169053}
+  - component: {fileID: 1262169052}
+  m_Layer: 0
+  m_Name: PotHUDWidget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1262169052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262169051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cd165b215d46d648968f69367a41036, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  potInfoText: {fileID: 0}
+  backgroundImage: {fileID: 0}
+  widgetPosition: {x: 12, y: 12}
+  widgetSize: {x: 300, y: 80}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.8}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  createFallbackCanvas: 1
+  fallbackCanvasName: PotHUD_Fallback
+--- !u!4 &1262169053
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262169051}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5818699, y: -0.054571144, z: 1.005364}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1367396345
 GameObject:
   m_ObjectHideFlags: 0
@@ -2350,6 +2533,8 @@ MonoBehaviour:
   dayText: {fileID: 1542996607}
   actionsText: {fileID: 932135940}
   cryText: {fileID: 365427100}
+  validateOnStart: 1
+  showDebugLogs: 0
 --- !u!1 &1809145778
 GameObject:
   m_ObjectHideFlags: 0
@@ -2771,6 +2956,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dailyPowerCost: 20
+  confirmBeforeEnding: 1
+  confirmationMessage: Sei sicuro di voler finire la giornata?
+  endDayButton: {fileID: 0}
+  buttonText: {fileID: 0}
+  validateOnStart: 1
+  showDebugLogs: 1
 --- !u!114 &2033427972
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2879,3 +3070,6 @@ SceneRoots:
   - {fileID: 1938280433}
   - {fileID: 1809145779}
   - {fileID: 849665143}
+  - {fileID: 113591326}
+  - {fileID: 1262169053}
+  - {fileID: 513494510}

@@ -5,7 +5,7 @@ public class PlayerClickMover2D : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 4f;
-    [SerializeField] private float stopDistance = 0.05f;
+    [SerializeField] private float stopDistance = 0.1f; // Aumentato per fermata più precisa
     [SerializeField] private float acceleration = 10f;
     [SerializeField] private float deceleration = 15f;
 
@@ -22,10 +22,6 @@ public class PlayerClickMover2D : MonoBehaviour
     private Vector2 currentVelocity;
     private bool hasTarget;
     private bool isMoving;
-
-    // Pathfinding
-    private Vector2[] pathPoints;
-    private int currentPathIndex;
 
     void Awake()
     {
@@ -59,6 +55,7 @@ public class PlayerClickMover2D : MonoBehaviour
             {
                 isMoving = false;
                 currentVelocity = Vector2.zero;
+                rb.velocity = Vector2.zero; // Forza la velocità a zero
             }
         }
     }
@@ -94,49 +91,29 @@ public class PlayerClickMover2D : MonoBehaviour
     {
         targetPosition = newTarget;
         hasTarget = true;
-        currentPathIndex = 0;
+        isMoving = true;
         
-        // Calcola path semplice (per ora lineare, può essere esteso con A*)
-        CalculateSimplePath();
-    }
-
-    private void CalculateSimplePath()
-    {
-        Vector2 startPos = rb.position;
-        Vector2 direction = (targetPosition - startPos).normalized;
-        float distance = Vector2.Distance(startPos, targetPosition);
-        
-        // Path semplice con punti intermedi per evitare ostacoli
-        int pathSegments = Mathf.Max(1, Mathf.RoundToInt(distance / 2f));
-        pathPoints = new Vector2[pathSegments + 1];
-        
-        for (int i = 0; i <= pathSegments; i++)
-        {
-            float t = (float)i / pathSegments;
-            pathPoints[i] = Vector2.Lerp(startPos, targetPosition, t);
-        }
-        
-        currentPathIndex = 0;
+        // Reset della velocità quando si imposta un nuovo target
+        currentVelocity = Vector2.zero;
+        rb.velocity = Vector2.zero;
     }
 
     private void MoveTowardsTarget()
     {
-        if (currentPathIndex >= pathPoints.Length)
-        {
-            // Raggiunto il target
-            hasTarget = false;
-            isMoving = false;
-            return;
-        }
+        Vector2 direction = (targetPosition - rb.position).normalized;
+        float distanceToTarget = Vector2.Distance(rb.position, targetPosition);
 
-        Vector2 currentTarget = pathPoints[currentPathIndex];
-        Vector2 direction = (currentTarget - rb.position).normalized;
-        float distanceToTarget = Vector2.Distance(rb.position, currentTarget);
-
+        // Controlla se siamo abbastanza vicini al target per fermarci
         if (distanceToTarget <= stopDistance)
         {
-            // Raggiunto il punto del path, passa al prossimo
-            currentPathIndex++;
+            // Raggiunto il target - ferma il movimento
+            hasTarget = false;
+            isMoving = false;
+            currentVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
+            
+            // Posiziona il player esattamente sul target per evitare deriva
+            rb.position = targetPosition;
             return;
         }
 
@@ -145,7 +122,6 @@ public class PlayerClickMover2D : MonoBehaviour
         currentVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
         
         rb.velocity = currentVelocity;
-        isMoving = true;
 
         // Rotazione smooth verso la direzione del movimento
         if (smoothRotation && currentVelocity.magnitude > 0.1f)
@@ -176,20 +152,13 @@ public class PlayerClickMover2D : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(targetPosition, 0.2f);
             
-            // Path
-            if (pathPoints != null)
-            {
-                Gizmos.color = Color.cyan;
-                for (int i = 0; i < pathPoints.Length - 1; i++)
-                {
-                    Gizmos.DrawLine(pathPoints[i], pathPoints[i + 1]);
-                    Gizmos.DrawWireSphere(pathPoints[i], 0.1f);
-                }
-                if (pathPoints.Length > 0)
-                {
-                    Gizmos.DrawWireSphere(pathPoints[pathPoints.Length - 1], 0.1f);
-                }
-            }
+            // Linea diretta al target
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, targetPosition);
+            
+            // Area di stop
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(targetPosition, stopDistance);
         }
         
         // Area di pathfinding
