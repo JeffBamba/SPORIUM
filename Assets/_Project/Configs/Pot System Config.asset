@@ -21,4 +21,4 @@ MonoBehaviour:
   PotLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  GrowthConfig: {fileID: 0}
+  GrowthConfig: {fileID: 11400000, guid: 93a0f8d656e508e48b1fb905f76a625c, type: 2}

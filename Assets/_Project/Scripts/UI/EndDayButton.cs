@@ -119,8 +119,9 @@ public class EndDayButton : MonoBehaviour
             Debug.Log($"[EndDayButton] {confirmationMessage}");
         }
         
-        // Simula conferma (in un'implementazione reale, questo sarebbe un UI dialog)
-        EndDay();
+        // DEBUG_SAFE_FIX: Non chiamare EndDay() automaticamente
+        // Deve aspettare la conferma reale dell'utente
+        // EndDay();  // ← RIMOSSO: causava doppia chiamata
     }
 
     public void EndDay()
