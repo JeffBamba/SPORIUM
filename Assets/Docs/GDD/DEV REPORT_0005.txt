@@ -1,0 +1,487 @@
+# 📋 **REPORT TECNICO BUGFIX HUD - SPORAE BLK-01.03B**
+# 📋 **HUD BUGFIX TECHNICAL REPORT - SPORAE BLK-01.03B**
+
+---
+
+## 🇮🇹 **VERSIONE ITALIANA**
+
+### 🎯 **PANORAMICA GENERALE**
+Questo report documenta il **bugfix completo** per il bug BLK-01.03B identificato nel video: **HUD duplicata e mancata deselezione click fuori dal pot**. Il lavoro ha implementato un sistema robusto di gestione HUD con deselezione automatica e prevenzione duplicati.
+
+### 📅 **SESIONE DI LAVORO**
+
+**Data**: Oggi  
+**Durata**: Sessione intensiva di implementazione bugfix  
+**Risultato**: **BUG HUD DUPLICATA + NO DESELECT RISOLTO** ✅
+
+### 🐛 **BUG IDENTIFICATO E RISOLTO**
+
+#### **Bug #1: HUD Duplicata + Mancata Deselezione** ✅ **RISOLTO**
+
+**Descrizione**: 
+- L'HUD mostrava **doppie istanze** del `PotHUDWidget` causando visualizzazione duplicata
+- Mancava la logica di **deselezione**: cliccando fuori da un `PotSlot`, la HUD non si resettava
+- I pulsanti di azione rimanevano sempre attivi anche senza vaso selezionato
+
+**Causa**: 
+- Sistema di creazione HUD non controllato che permetteva duplicati
+- Mancanza dell'evento `OnPotDeselected` in `PotEvents`
+- Nessun handler per gestire click fuori dai vasi
+
+**Impatto**: 
+- Layout HUD completamente sbagliato con elementi duplicati
+- Impossibilità di deselezionare un vaso cliccando fuori
+- UX confusa con pulsanti sempre attivi
+
+**Soluzione Applicata**: 
+- Implementato **singleton gentile** in `PotHUDWidget` per prevenire duplicati
+- Aggiunto evento `OnPotDeselected` in `PotEvents`
+- Creato `PotDeselectionHandler` per gestire click fuori dai vasi
+- Aggiornato `PotSystemIntegration` per cercare HUD esistente invece di crearne di nuove
+
+**Risultato**: HUD ora mostra un solo set di elementi e si resetta correttamente quando si clicca fuori
+
+### 🔧 **MODIFICHE TECNICHE APPLICATE**
+
+#### **1. PotEvents.cs - Aggiunta Evento Deselezione**
+
+**Prima (BUGGATO)**:
+```csharp
+// Mancava evento di deselezione
+public static event Action<PotSlot> OnPotSelected;
+// Nessun OnPotDeselected
+```
+
+**Dopo (CORRETTO)**:
+```csharp
+public static event Action<PotSlot> OnPotSelected;
+public static event Action OnPotDeselected;  // ← NUOVO
+
+public static void EmitDeselected() => OnPotDeselected?.Invoke();  // ← NUOVO
+```
+
+#### **2. PotHUDWidget.cs - Singleton Gentile e Deselezione**
+
+**Implementazione**:
+```csharp
+public class PotHUDWidget : MonoBehaviour
+{
+    private static PotHUDWidget _instance;
+
+    private void Awake()
+    {
+        // Singleton "gentile": se esiste già, distruggi il duplicato
+        if (_instance != null && _instance != this)
+        {
+            Debug.LogWarning("[PotHUDWidget] Duplicate detected, destroying this instance.");
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+        
+        // Inizializza UI a stato "nessuna selezione"
+        _currentPot = null;
+        UpdateUI();
+    }
+    
+    private void HandlePotDeselected()
+    {
+        _currentPot = null;
+        UpdateUI();  // Mostra "Nessun POT selezionato"
+        SetButtonsActive(false);  // Disabilita pulsanti
+    }
+}
+```
+
+#### **3. PotDeselectionHandler.cs - Nuovo Script per Deselezione**
+
+**Implementazione**:
+```csharp
+public class PotDeselectionHandler : MonoBehaviour
+{
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Se il click è su UI, ignora
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            Vector2 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(worldPos, Vector2.zero);
+
+            // Se non ha colpito nulla O ha colpito qualcosa che NON è un PotSlot
+            if (hit.collider == null || hit.collider.GetComponent<PotSlot>() == null)
+            {
+                PotEvents.EmitDeselected();  // Emetti evento deselezione
+            }
+        }
+    }
+}
+```
+
+#### **4. PotSystemIntegration.cs - Ricerca HUD Esistente**
+
+**Prima (BUGGATO)**:
+```csharp
+// Potrebbe creare HUD duplicate
+[SerializeField] private PotHUDWidget potHUDWidget;
+```
+
+**Dopo (CORRETTO)**:
+```csharp
+// DEBUG_SAFE_FIX: Cerca automaticamente la HUD esistente invece di crearne una nuova
+if (potHUDWidget == null)
+{
+    potHUDWidget = FindObjectOfType<PotHUDWidget>(true);
+    if (potHUDWidget == null)
+    {
+        Debug.LogError("[PotSystemIntegration] Nessun PotHUDWidget trovato in scena.");
+    }
+}
+```
+
+### 📊 **RISULTATI DEI TEST**
+
+#### **Test 1: Verifica Duplicati HUD**
+- ✅ **Prima**: HUD mostrava elementi duplicati (testi, pulsanti)
+- ✅ **Dopo**: HUD mostra un solo set di elementi
+- ✅ **Singleton**: Pattern implementato correttamente
+- ✅ **Log**: Nessun log di istanze multiple
+
+#### **Test 2: Verifica Deselezione**
+- ✅ **Selezione vaso**: HUD mostra "POT XXX" e pulsanti attivi
+- ✅ **Click fuori**: HUD si resetta a "Nessun POT selezionato"
+- ✅ **Pulsanti**: Si disabilitano automaticamente
+- ✅ **Eventi**: OnPotDeselected emesso correttamente
+
+#### **Test 3: Stabilità Sistema**
+- ✅ **Avvio scena**: HUD si crea correttamente senza duplicati
+- ✅ **Riavvio scena**: HUD si ricrea correttamente senza duplicati
+- ✅ **Integrazione**: PotSystemIntegration trova HUD esistente
+- ✅ **Performance**: Nessun overhead da elementi duplicati
+
+### 🎯 **STATO FINALE DEL SISTEMA**
+
+#### **PotHUDWidget: COMPLETAMENTE STABILE** ✅
+
+**Gestione Duplicati**:
+- ✅ **Singleton gentile**: Distrugge solo i duplicati, lascia viva la prima istanza
+- ✅ **Controllo automatico**: Nessuna creazione di HUD multiple
+- ✅ **Log dettagliati**: Tracciamento completo delle operazioni
+
+**Sistema Deselezione**:
+- ✅ **Evento OnPotDeselected**: Implementato e funzionante
+- ✅ **Handler dedicato**: PotDeselectionHandler gestisce click fuori
+- ✅ **Reset automatico**: HUD si resetta quando si clicca fuori
+- ✅ **Pulsanti intelligenti**: Si abilitano/disabilitano automaticamente
+
+**Integrazione Sistema**:
+- ✅ **Ricerca automatica**: PotSystemIntegration trova HUD esistente
+- ✅ **Namespace corretti**: Utilizzo di Sporae.UI e Sporae.Dome.PotSystem
+- ✅ **Eventi sincronizzati**: Sistema di comunicazione robusto
+
+### 🚀 **PROSSIMI PASSI**
+
+#### **Sistema HUD Pronto per Estensioni**
+- **Temi visivi**: Implementazione di diversi temi e colori
+- **Animazioni**: Aggiunta di animazioni per transizioni e feedback
+- **Layout personalizzato**: Creazione di layout specifici per diverse risoluzioni
+- **Accessibilità**: Miglioramenti per utenti con disabilità
+
+#### **Architettura Solida**
+- ✅ **Pattern implementati**: Singleton, Observer, Event-driven
+- ✅ **Gestione errori**: Controlli anti-duplicati e validazioni
+- ✅ **Debug completo**: Log dettagliati per troubleshooting futuro
+- ✅ **Manutenibilità**: Codice pulito e ben documentato
+
+### 📝 **LEZIONI IMPARATE**
+
+#### **1. Gestione HUD Dinamica**
+- **Problema**: HUD create dinamicamente possono duplicarsi facilmente
+- **Soluzione**: Pattern singleton con distruzione duplicati
+- **Risultato**: Sistema HUD stabile e senza duplicati
+
+#### **2. Sistema di Deselezione**
+- **Problema**: Mancava logica per deselezionare elementi UI
+- **Soluzione**: Evento dedicato + handler per click fuori
+- **Risultato**: UX migliorata con deselezione intuitiva
+
+#### **3. Integrazione Sistemi**
+- **Problema**: Sistemi separati non comunicavano correttamente
+- **Soluzione**: Eventi centralizzati e namespace corretti
+- **Risultato**: Sistema integrato e robusto
+
+### 🏆 **SUCCESSI RAGGIUNTI**
+
+#### **Qualità del Sistema HUD**
+- ✅ **Stabilità**: Nessun elemento duplicato
+- ✅ **Funzionalità**: Deselezione completa implementata
+- ✅ **Performance**: Nessun overhead da duplicati
+- ✅ **UX**: Comportamento intuitivo e prevedibile
+
+#### **Architettura del Sistema**
+- ✅ **Pattern robusti**: Singleton, Observer, Event-driven
+- ✅ **Gestione errori**: Controlli completi e validazioni
+- ✅ **Debug**: Log dettagliati per troubleshooting futuro
+- ✅ **Manutenibilità**: Codice pulito e ben strutturato
+
+#### **Integrazione e Test**
+- ✅ **Identificazione**: Bug identificato rapidamente dal video
+- ✅ **Soluzione**: Approccio sistematico alla risoluzione
+- ✅ **Verifica**: Test completi per confermare la risoluzione
+- ✅ **Documentazione**: Report tecnico completo per riferimento futuro
+
+---
+
+## 🇬🇧 **ENGLISH VERSION**
+
+### 🎯 **GENERAL OVERVIEW**
+This report documents the **complete bugfix** for the BLK-01.03B bug identified in the video: **HUD duplicated and missing deselection click outside pot**. The work implemented a robust HUD management system with automatic deselection and duplicate prevention.
+
+### 📅 **WORK SESSION**
+
+**Date**: Today  
+**Duration**: Intensive bugfix implementation session  
+**Result**: **HUD DUPLICATED + NO DESELECT BUG RESOLVED** ✅
+
+### 🐛 **BUG IDENTIFIED AND RESOLVED**
+
+#### **Bug #1: HUD Duplicated + Missing Deselection** ✅ **RESOLVED**
+
+**Description**: 
+- HUD displayed **duplicate instances** of `PotHUDWidget` causing duplicated visualization
+- Missing **deselection logic**: clicking outside a `PotSlot`, HUD didn't reset
+- Action buttons remained always active even without selected pot
+
+**Cause**: 
+- Uncontrolled HUD creation system that allowed duplicates
+- Missing `OnPotDeselected` event in `PotEvents`
+- No handler to manage clicks outside pots
+
+**Impact**: 
+- HUD layout completely wrong with duplicate elements
+- Inability to deselect a pot by clicking outside
+- Confused UX with always active buttons
+
+**Applied Solution**: 
+- Implemented **gentle singleton** in `PotHUDWidget` to prevent duplicates
+- Added `OnPotDeselected` event in `PotEvents`
+- Created `PotDeselectionHandler` to manage clicks outside pots
+- Updated `PotSystemIntegration` to find existing HUD instead of creating new ones
+
+**Result**: HUD now displays single set of elements and resets correctly when clicking outside
+
+### 🔧 **TECHNICAL CHANGES APPLIED**
+
+#### **1. PotEvents.cs - Added Deselection Event**
+
+**Before (BUGGED)**:
+```csharp
+// Missing deselection event
+public static event Action<PotSlot> OnPotSelected;
+// No OnPotDeselected
+```
+
+**After (CORRECTED)**:
+```csharp
+public static event Action<PotSlot> OnPotSelected;
+public static event Action OnPotDeselected;  // ← NEW
+
+public static void EmitDeselected() => OnPotDeselected?.Invoke();  // ← NEW
+```
+
+#### **2. PotHUDWidget.cs - Gentle Singleton and Deselection**
+
+**Implementation**:
+```csharp
+public class PotHUDWidget : MonoBehaviour
+{
+    private static PotHUDWidget _instance;
+
+    private void Awake()
+    {
+        // Gentle singleton: if exists already, destroy duplicate
+        if (_instance != null && _instance != this)
+        {
+            Debug.LogWarning("[PotHUDWidget] Duplicate detected, destroying this instance.");
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+        
+        // Initialize UI to "no selection" state
+        _currentPot = null;
+        UpdateUI();
+    }
+    
+    private void HandlePotDeselected()
+    {
+        _currentPot = null;
+        UpdateUI();  // Show "No POT selected"
+        SetButtonsActive(false);  // Disable buttons
+    }
+}
+```
+
+#### **3. PotDeselectionHandler.cs - New Script for Deselection**
+
+**Implementation**:
+```csharp
+public class PotDeselectionHandler : MonoBehaviour
+{
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            // If click is on UI, ignore
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            Vector2 worldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(worldPos, Vector2.zero);
+
+            // If hit nothing OR hit something that is NOT a PotSlot
+            if (hit.collider == null || hit.collider.GetComponent<PotSlot>() == null)
+            {
+                PotEvents.EmitDeselected();  // Emit deselection event
+            }
+        }
+    }
+}
+```
+
+#### **4. PotSystemIntegration.cs - Find Existing HUD**
+
+**Before (BUGGED)**:
+```csharp
+// Could create duplicate HUDs
+[SerializeField] private PotHUDWidget potHUDWidget;
+```
+
+**After (CORRECTED)**:
+```csharp
+// DEBUG_SAFE_FIX: Automatically find existing HUD instead of creating new ones
+if (potHUDWidget == null)
+{
+    potHUDWidget = FindObjectOfType<PotHUDWidget>(true);
+    if (potHUDWidget == null)
+    {
+        Debug.LogError("[PotSystemIntegration] No PotHUDWidget found in scene.");
+    }
+}
+```
+
+### 📊 **TEST RESULTS**
+
+#### **Test 1: HUD Duplicates Verification**
+- ✅ **Before**: HUD displayed duplicate elements (texts, buttons)
+- ✅ **After**: HUD displays single set of elements
+- ✅ **Singleton**: Pattern implemented correctly
+- ✅ **Logs**: No logs of multiple instances
+
+#### **Test 2: Deselection Verification**
+- ✅ **Pot selection**: HUD shows "POT XXX" and active buttons
+- ✅ **Click outside**: HUD resets to "No POT selected"
+- ✅ **Buttons**: Automatically disable
+- ✅ **Events**: OnPotDeselected emitted correctly
+
+#### **Test 3: System Stability**
+- ✅ **Scene start**: HUD creates correctly without duplicates
+- ✅ **Scene restart**: HUD recreates correctly without duplicates
+- ✅ **Integration**: PotSystemIntegration finds existing HUD
+- ✅ **Performance**: No overhead from duplicate elements
+
+### 🎯 **FINAL SYSTEM STATUS**
+
+#### **PotHUDWidget: COMPLETELY STABLE** ✅
+
+**Duplicate Management**:
+- ✅ **Gentle singleton**: Destroys only duplicates, keeps first instance alive
+- ✅ **Automatic control**: No creation of multiple HUDs
+- ✅ **Detailed logs**: Complete tracking of operations
+
+**Deselection System**:
+- ✅ **OnPotDeselected event**: Implemented and working
+- ✅ **Dedicated handler**: PotDeselectionHandler manages outside clicks
+- ✅ **Automatic reset**: HUD resets when clicking outside
+- ✅ **Smart buttons**: Automatically enable/disable
+
+**System Integration**:
+- ✅ **Automatic search**: PotSystemIntegration finds existing HUD
+- ✅ **Correct namespaces**: Use of Sporae.UI and Sporae.Dome.PotSystem
+- ✅ **Synchronized events**: Robust communication system
+
+### 🚀 **NEXT STEPS**
+
+#### **HUD System Ready for Extensions**
+- **Visual themes**: Implementation of different themes and colors
+- **Animations**: Addition of animations for transitions and feedback
+- **Custom layout**: Creation of specific layouts for different resolutions
+- **Accessibility**: Improvements for users with disabilities
+
+#### **Solid Architecture**
+- ✅ **Implemented patterns**: Singleton, Observer, Event-driven
+- ✅ **Error handling**: Anti-duplicate controls and validations
+- ✅ **Complete debug**: Detailed logs for future troubleshooting
+- ✅ **Maintainability**: Clean and well-structured code
+
+### 📝 **LESSONS LEARNED**
+
+#### **1. Dynamic HUD Management**
+- **Problem**: Dynamically created HUDs can easily duplicate
+- **Solution**: Singleton pattern with duplicate destruction
+- **Result**: Stable HUD system without duplicates
+
+#### **2. Deselection System**
+- **Problem**: Missing logic to deselect UI elements
+- **Solution**: Dedicated event + handler for outside clicks
+- **Result**: Improved UX with intuitive deselection
+
+#### **3. System Integration**
+- **Problem**: Separate systems didn't communicate correctly
+- **Solution**: Centralized events and correct namespaces
+- **Result**: Integrated and robust system
+
+### 🏆 **ACHIEVEMENTS**
+
+#### **HUD System Quality**
+- ✅ **Stability**: No duplicate elements
+- ✅ **Functionality**: Complete deselection implemented
+- ✅ **Performance**: No overhead from duplicates
+- ✅ **UX**: Intuitive and predictable behavior
+
+#### **System Architecture**
+- ✅ **Robust patterns**: Singleton, Observer, Event-driven
+- ✅ **Error handling**: Complete controls and validations
+- ✅ **Debug**: Detailed logs for future troubleshooting
+- ✅ **Maintainability**: Clean and well-structured code
+
+#### **Integration and Testing**
+- ✅ **Identification**: Bug quickly identified from video
+- ✅ **Solution**: Systematic approach to resolution
+- ✅ **Verification**: Complete tests to confirm resolution
+- ✅ **Documentation**: Complete technical report for future reference
+
+---
+
+## 📝 **CONCLUSIONI / CONCLUSIONS**
+
+### 🇮🇹 **VERSIONE ITALIANA**
+Il bugfix di oggi ha risolto completamente il problema della HUD duplicata e della mancata deselezione. L'implementazione di un sistema robusto di gestione HUD con pattern singleton e sistema di deselezione ha trasformato l'interfaccia da uno stato instabile a uno stato completamente funzionale e intuitivo.
+
+**Il sistema HUD è ora pronto per future estensioni e può essere utilizzato come base solida per miglioramenti dell'interfaccia utente.**
+
+### 🇬🇧 **ENGLISH VERSION**
+Today's bugfix completely resolved the HUD duplication and missing deselection issue. The implementation of a robust HUD management system with singleton pattern and deselection system has transformed the interface from an unstable state to a completely functional and intuitive state.
+
+**The HUD system is now ready for future extensions and can be used as a solid foundation for user interface improvements.**
+
+---
+
+**Data / Date**: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  
+**Versione / Version**: BLK-01.03B  
+**Stato / Status**: ✅ **HUD COMPLETAMENTE STABILE + DESELEZIONE IMPLEMENTATA / HUD COMPLETELY STABLE + DESELECTION IMPLEMENTED**  
+**Autore / Author**: AI Assistant  
+**Verificato / Verified**: ✅ **Sì / Yes**  
+**Tipo / Type**: 🐛 **HUD BUGFIX REPORT**
