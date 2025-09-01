@@ -2,16 +2,26 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Sporae.Dome.PotSystem;
+using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
 /// Widget UI minimale che mostra informazioni sul vaso selezionato.
 /// Si integra con l'HUD esistente o crea un fallback se necessario.
+/// BLK-01.03B: Esteso con Stage label, Stage icon, Progress bar e PotId attivo.
 /// </summary>
 public class PotHUDWidget : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI potInfoText;
     [SerializeField] private Image backgroundImage;
+    
+    [Header("BLK-01.03B - Stage & Progress UI")]
+    [SerializeField] private Image stageIcon;
+    [SerializeField] private TextMeshProUGUI stageLabel;
+    [SerializeField] private Slider progressBar;
+    [SerializeField] private TextMeshProUGUI potIdText;
+    [SerializeField] private TextMeshProUGUI progressText;
     
     [Header("Action Buttons (BLK-01.02)")]
     [SerializeField] private Button btnPlant;
@@ -21,7 +31,7 @@ public class PotHUDWidget : MonoBehaviour
     
     [Header("Widget Settings")]
     [SerializeField] private Vector2 widgetPosition = new Vector2(12, 12);
-    [SerializeField] private Vector2 widgetSize = new Vector2(300, 80);
+    [SerializeField] private Vector2 widgetSize = new Vector2(300, 120); // Aumentato per nuovi elementi
     [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.8f);
     [SerializeField] private Color textColor = Color.white;
     
@@ -32,10 +42,13 @@ public class PotHUDWidget : MonoBehaviour
     private GameObject widgetContainer;
     private Canvas parentCanvas;
     private bool isInitialized = false;
+    private PotSlot currentSelectedPot;
+    private PlantGrowthConfig growthConfig;
     
     void Start()
     {
         InitializeWidget();
+        LoadGrowthConfig();
     }
     
     void OnEnable()
@@ -44,6 +57,8 @@ public class PotHUDWidget : MonoBehaviour
         PotSlot.OnPotSelected += OnPotSelected;
         PotEvents.OnPotStateChanged += OnPotStateChanged;
         PotEvents.OnPotActionFailed += OnPotActionFailed;
+        PotEvents.OnPlantGrew += OnPlantGrew;
+        PotEvents.OnPlantStageChanged += OnPlantStageChanged;
     }
     
     void OnDisable()
@@ -52,6 +67,20 @@ public class PotHUDWidget : MonoBehaviour
         PotSlot.OnPotSelected -= OnPotSelected;
         PotEvents.OnPotStateChanged -= OnPotStateChanged;
         PotEvents.OnPotActionFailed -= OnPotActionFailed;
+        PotEvents.OnPlantGrew -= OnPlantGrew;
+        PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
+    }
+    
+    private void LoadGrowthConfig()
+    {
+        // Carica la configurazione di crescita
+        growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
+        if (growthConfig == null)
+        {
+            Debug.LogWarning("[BLK-01.03B] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
+            // Crea configurazione di fallback
+            growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
+        }
     }
     
     private void InitializeWidget()
@@ -191,19 +220,155 @@ public class PotHUDWidget : MonoBehaviour
         
         // Crea pulsanti di azione se non assegnati
         CreateActionButtons();
+        
+        // BLK-01.03B: Crea i nuovi elementi UI per stage e progresso
+        CreateStageAndProgressUI();
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Crea gli elementi UI per stage e progresso
+    /// </summary>
+    private void CreateStageAndProgressUI()
+    {
+        // Crea PotId Text
+        if (potIdText == null)
+        {
+            GameObject potIdGO = new GameObject("PotIdText");
+            potIdGO.transform.SetParent(widgetContainer.transform, false);
+            
+            potIdText = potIdGO.AddComponent<TextMeshProUGUI>();
+            potIdText.color = textColor;
+            potIdText.fontSize = 14;
+            potIdText.alignment = TextAlignmentOptions.Left;
+            potIdText.text = "POT-ID";
+            
+            RectTransform potIdRect = potIdGO.GetComponent<RectTransform>();
+            potIdRect.anchorMin = new Vector2(0, 1);
+            potIdRect.anchorMax = new Vector2(0, 1);
+            potIdRect.pivot = new Vector2(0, 1);
+            potIdRect.anchoredPosition = new Vector2(10, -10);
+            potIdRect.sizeDelta = new Vector2(100, 20);
+        }
+        
+        // Crea Stage Icon
+        if (stageIcon == null)
+        {
+            GameObject stageIconGO = new GameObject("StageIcon");
+            stageIconGO.transform.SetParent(widgetContainer.transform, false);
+            
+            stageIcon = stageIconGO.AddComponent<Image>();
+            stageIcon.color = Color.white;
+            stageIcon.sprite = null; // Sarà impostato dinamicamente
+            
+            RectTransform stageIconRect = stageIconGO.GetComponent<RectTransform>();
+            stageIconRect.anchorMin = new Vector2(1, 1);
+            stageIconRect.anchorMax = new Vector2(1, 1);
+            stageIconRect.pivot = new Vector2(1, 1);
+            stageIconRect.anchoredPosition = new Vector2(-10, -10);
+            stageIconRect.sizeDelta = new Vector2(32, 32);
+        }
+        
+        // Crea Stage Label
+        if (stageLabel == null)
+        {
+            GameObject stageLabelGO = new GameObject("StageLabel");
+            stageLabelGO.transform.SetParent(widgetContainer.transform, false);
+            
+            stageLabel = stageLabelGO.AddComponent<TextMeshProUGUI>();
+            stageLabel.color = textColor;
+            stageLabel.fontSize = 16;
+            stageLabel.alignment = TextAlignmentOptions.Center;
+            stageLabel.text = "Empty";
+            stageLabel.fontStyle = FontStyles.Bold;
+            
+            RectTransform stageLabelRect = stageLabelGO.GetComponent<RectTransform>();
+            stageLabelRect.anchorMin = new Vector2(0.5f, 1);
+            stageLabelRect.anchorMax = new Vector2(0.5f, 1);
+            stageLabelRect.pivot = new Vector2(0.5f, 1);
+            stageLabelRect.anchoredPosition = new Vector2(0, -10);
+            stageLabelRect.sizeDelta = new Vector2(150, 20);
+        }
+        
+        // Crea Progress Bar
+        if (progressBar == null)
+        {
+            GameObject progressBarGO = new GameObject("ProgressBar");
+            progressBarGO.transform.SetParent(widgetContainer.transform, false);
+            
+            progressBar = progressBarGO.AddComponent<Slider>();
+            progressBar.minValue = 0f;
+            progressBar.maxValue = 100f;
+            progressBar.value = 0f;
+            progressBar.interactable = false;
+            
+            // Background della progress bar
+            GameObject bgGO = new GameObject("Background");
+            bgGO.transform.SetParent(progressBarGO.transform, false);
+            Image bgImage = bgGO.AddComponent<Image>();
+            bgImage.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+            
+            RectTransform bgRect = bgGO.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            
+            // Fill della progress bar
+            GameObject fillGO = new GameObject("Fill");
+            fillGO.transform.SetParent(progressBarGO.transform, false);
+            Image fillImage = fillGO.AddComponent<Image>();
+            fillImage.color = new Color(0.2f, 0.8f, 0.2f, 1f);
+            
+            RectTransform fillRect = fillGO.GetComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            
+            progressBar.fillRect = fillRect;
+            
+            RectTransform progressBarRect = progressBarGO.GetComponent<RectTransform>();
+            progressBarRect.anchorMin = new Vector2(0, 0.5f);
+            progressBarRect.anchorMax = new Vector2(1, 0.5f);
+            progressBarRect.pivot = new Vector2(0.5f, 0.5f);
+            progressBarRect.anchoredPosition = new Vector2(0, 0);
+            progressBarRect.sizeDelta = new Vector2(-20, 15);
+        }
+        
+        // Crea Progress Text
+        if (progressText == null)
+        {
+            GameObject progressTextGO = new GameObject("ProgressText");
+            progressTextGO.transform.SetParent(widgetContainer.transform, false);
+            
+            progressText = progressTextGO.AddComponent<TextMeshProUGUI>();
+            progressText.color = textColor;
+            progressText.fontSize = 12;
+            progressText.alignment = TextAlignmentOptions.Center;
+            progressText.text = "0%";
+            
+            RectTransform progressTextRect = progressTextGO.GetComponent<RectTransform>();
+            progressTextRect.anchorMin = new Vector2(0.5f, 0.5f);
+            progressTextRect.anchorMax = new Vector2(0.5f, 0.5f);
+            progressTextRect.pivot = new Vector2(0.5f, 0.5f);
+            progressTextRect.anchoredPosition = new Vector2(0, 0);
+            progressTextRect.sizeDelta = new Vector2(100, 20);
+        }
     }
     
     private void OnPotSelected(PotSlot pot)
     {
         if (!isInitialized) return;
         
-        Debug.Log($"[PotHUDWidget] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
-        Debug.Log($"[PotHUDWidget] PotActions presente: {pot.PotActions != null}");
-        Debug.Log($"[PotHUDWidget] Player in range: {pot.InRange}");
+        Debug.Log($"[BLK-01.03B] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
+        Debug.Log($"[BLK-01.03B] PotActions presente: {pot.PotActions != null}");
+        Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
-        // Aggiorna le informazioni del vaso usando il nuovo sistema
-        string potInfo = $"Selected: {pot.PotId} — {GetPotStatusText(pot)}";
-        UpdatePotInfo(potInfo);
+        // Salva il vaso selezionato corrente
+        currentSelectedPot = pot;
+        
+        // BLK-01.03B: Aggiorna tutti gli elementi UI del nuovo sistema
+        UpdateStageAndProgressUI(pot);
         
         // Aggiorna i pulsanti di azione
         UpdateActionButtons(pot);
@@ -211,7 +376,7 @@ public class PotHUDWidget : MonoBehaviour
         // Mostra il widget
         SetWidgetVisible(true);
         
-        Debug.Log($"[PotHUDWidget] UI aggiornata per vaso {pot.PotId}");
+        Debug.Log($"[BLK-01.03B] UI aggiornata per vaso {pot.PotId}");
     }
     
     private void UpdatePotInfo(string info)
@@ -258,6 +423,9 @@ public class PotHUDWidget : MonoBehaviour
         {
             widgetContainer.SetActive(false);
         }
+        
+        // BLK-01.03B: Reset selezione corrente
+        currentSelectedPot = null;
     }
     
     /// <summary>
@@ -279,6 +447,17 @@ public class PotHUDWidget : MonoBehaviour
         if (widgetContainer != null)
         {
             widgetContainer.SetActive(visible);
+        }
+        
+        // BLK-01.03B: Nascondi anche il widget se non c'è selezione
+        if (!visible && currentSelectedPot == null)
+        {
+            // Reset UI elements
+            if (potIdText != null) potIdText.text = "POT-ID";
+            if (stageLabel != null) stageLabel.text = "Empty";
+            if (stageIcon != null) stageIcon.color = Color.gray;
+            if (progressBar != null) progressBar.value = 0f;
+            if (progressText != null) progressText.text = "0%";
         }
     }
     
@@ -591,7 +770,123 @@ public class PotHUDWidget : MonoBehaviour
         string failureMessage = $"Azione {PotEvents.GetActionName(actionType)} fallita: {reason}";
         UpdatePotInfo(failureMessage);
         
-        Debug.LogWarning($"[PotHUDWidget] {failureMessage}");
+        Debug.LogWarning($"[BLK-01.03B] {failureMessage}");
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Gestisce l'evento OnPlantGrew
+    /// </summary>
+    private void OnPlantGrew(string potId, PlantStage stage, int oldPoints, int newPoints)
+    {
+        if (!isInitialized || currentSelectedPot == null || currentSelectedPot.PotId != potId) return;
+        
+        Debug.Log($"[BLK-01.03B] Pianta cresciuta su {potId}: {oldPoints} → {newPoints} punti. Aggiornamento progress bar...");
+        UpdateStageAndProgressUI(currentSelectedPot);
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Gestisce l'evento OnPlantStageChanged
+    /// </summary>
+    private void OnPlantStageChanged(string potId, PlantStage stage)
+    {
+        if (!isInitialized || currentSelectedPot == null || currentSelectedPot.PotId != potId) return;
+        
+        Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
+        UpdateStageAndProgressUI(currentSelectedPot);
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Aggiorna tutti gli elementi UI per stage e progresso
+    /// </summary>
+    private void UpdateStageAndProgressUI(PotSlot pot)
+    {
+        if (pot == null || pot.PotActions == null) return;
+        
+        PotStateModel state = pot.PotActions.GetCurrentState();
+        if (state == null) return;
+        
+        // Aggiorna PotId
+        if (potIdText != null)
+        {
+            potIdText.text = pot.PotId;
+        }
+        
+        // Aggiorna Stage Label
+        if (stageLabel != null)
+        {
+            stageLabel.text = GetStageName(state.Stage);
+        }
+        
+        // Aggiorna Stage Icon (placeholder per ora)
+        if (stageIcon != null)
+        {
+            // TODO: Implementare sprite swap quando disponibili
+            stageIcon.color = GetStageColor(state.Stage);
+        }
+        
+        // Calcola e aggiorna Progress
+        float progressPercentage = CalculateProgressPercentage(state);
+        if (progressBar != null)
+        {
+            progressBar.value = progressPercentage;
+        }
+        
+        if (progressText != null)
+        {
+            progressText.text = $"{Mathf.RoundToInt(progressPercentage)}%";
+        }
+        
+        Debug.Log($"[BLK-01.03B] UI aggiornata: {pot.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}%");
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Calcola la percentuale di progresso per lo stadio corrente
+    /// </summary>
+    private float CalculateProgressPercentage(PotStateModel state)
+    {
+        if (growthConfig == null) return 0f;
+        
+        switch (state.Stage)
+        {
+            case (int)PlantStage.Empty:
+                return 0f; // Nessun progresso per vasi vuoti
+                
+            case (int)PlantStage.Seed:
+                if (state.GrowthPoints >= growthConfig.pointsSeedToSprout)
+                    return 100f; // Pronto per avanzare
+                return (float)state.GrowthPoints / growthConfig.pointsSeedToSprout * 100f;
+                
+            case (int)PlantStage.Sprout:
+                if (state.GrowthPoints >= growthConfig.pointsSproutToMature)
+                    return 100f; // Pronto per avanzare
+                return (float)state.GrowthPoints / growthConfig.pointsSproutToMature * 100f;
+                
+            case (int)PlantStage.Mature:
+                return 100f; // Pianta completamente matura
+                
+            default:
+                return 0f;
+        }
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Restituisce il colore per lo stadio corrente (placeholder per sprite)
+    /// </summary>
+    private Color GetStageColor(int stage)
+    {
+        switch (stage)
+        {
+            case (int)PlantStage.Empty:
+                return Color.gray;
+            case (int)PlantStage.Seed:
+                return new Color(0.6f, 0.4f, 0.2f); // Brown color
+            case (int)PlantStage.Sprout:
+                return Color.green;
+            case (int)PlantStage.Mature:
+                return Color.yellow;
+            default:
+                return Color.white;
+        }
     }
     
     #endregion

@@ -6,11 +6,19 @@ namespace Sporae.Dome.PotSystem.Growth
     /// <summary>
     /// Controller per la crescita di un singolo vaso
     /// Gestisce la logica di avanzamento stadi e calcolo punti crescita
+    /// BLK-01.03B: Esteso con sistema visuale per stadi di crescita
     /// </summary>
     public class PotGrowthController : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private PotStateModel potState;
+        
+        [Header("BLK-01.03B - Visual References")]
+        [SerializeField] private SpriteRenderer plantRenderer;
+        [SerializeField] private Sprite s0_empty;
+        [SerializeField] private Sprite s1_seed;
+        [SerializeField] private Sprite s2_sprout;
+        [SerializeField] private Sprite s3_mature;
         
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = true;
@@ -24,6 +32,16 @@ namespace Sporae.Dome.PotSystem.Growth
                 if (potState == null)
                 {
                     Debug.LogError($"[BLK-01.03A] PotGrowthController su {gameObject.name}: PotStateModel non trovato!");
+                }
+            }
+            
+            // BLK-01.03B: Cerca il plantRenderer se non assegnato
+            if (plantRenderer == null)
+            {
+                plantRenderer = GetComponentInChildren<SpriteRenderer>();
+                if (plantRenderer == null)
+                {
+                    Debug.LogWarning($"[BLK-01.03B] PotGrowthController su {gameObject.name}: SpriteRenderer non trovato. Le visuali non saranno aggiornate.");
                 }
             }
         }
@@ -44,6 +62,73 @@ namespace Sporae.Dome.PotSystem.Growth
 
             if (enableDebugLogs)
                 Debug.Log($"[BLK-01.03A] {potState.PotId}: Seme piantato, inizializzato come Seed");
+            
+            // BLK-01.03B: Aggiorna le visuali
+            UpdateVisuals();
+        }
+
+        /// <summary>
+        /// BLK-01.03B: Aggiorna le visuali del vaso in base allo stadio corrente
+        /// </summary>
+        public void UpdateVisuals()
+        {
+            if (plantRenderer == null || potState == null) return;
+            
+            // Aggiorna sprite in base allo stadio
+            Sprite targetSprite = GetSpriteForStage(potState.Stage);
+            if (targetSprite != null)
+            {
+                plantRenderer.sprite = targetSprite;
+            }
+            
+            // Aggiorna scala in base allo stadio
+            float targetScale = GetScaleForStage(potState.Stage);
+            plantRenderer.transform.localScale = Vector3.one * targetScale;
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[BLK-01.03B] {potState.PotId}: Visuali aggiornate - Stadio: {potState.Stage}, Scala: {targetScale:F2}");
+            }
+        }
+        
+        /// <summary>
+        /// BLK-01.03B: Restituisce lo sprite appropriato per lo stadio corrente
+        /// </summary>
+        private Sprite GetSpriteForStage(int stage)
+        {
+            switch (stage)
+            {
+                case (int)PlantStage.Empty:
+                    return s0_empty;
+                case (int)PlantStage.Seed:
+                    return s1_seed;
+                case (int)PlantStage.Sprout:
+                    return s2_sprout;
+                case (int)PlantStage.Mature:
+                    return s3_mature;
+                default:
+                    return s0_empty; // Fallback
+            }
+        }
+        
+        /// <summary>
+        /// BLK-01.03B: Restituisce la scala appropriata per lo stadio corrente
+        /// </summary>
+        private float GetScaleForStage(int stage)
+        {
+            switch (stage)
+            {
+                case (int)PlantStage.Empty:
+                    return 1.00f;
+                case (int)PlantStage.Seed:
+                    return 1.05f;
+                case (int)PlantStage.Sprout:
+                    return 1.12f;
+                case (int)PlantStage.Mature:
+                    return 1.20f;
+                default:
+                    return 1.00f; // Fallback
+            }
         }
 
         /// <summary>

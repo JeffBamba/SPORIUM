@@ -116,9 +116,12 @@ namespace Sporae.Core
             GameManager newGameManager = Instantiate(gameManagerPrefab);
             newGameManager.name = "GameManager";
             
+            // 🚨 CRITICO: Rendi GameManager persistente tra le scene
+            DontDestroyOnLoad(newGameManager.gameObject);
+            
             if (showDebugLogs)
             {
-                Debug.Log("[AppRoot] GameManager creato automaticamente.");
+                Debug.Log("[AppRoot] GameManager creato automaticamente e reso persistente.");
             }
         }
 

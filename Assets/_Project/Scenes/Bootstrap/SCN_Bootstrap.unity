@@ -806,6 +806,7 @@ MonoBehaviour:
   startingDay: 1
   actionsPerDay: 3
   startingCRY: 50
+  showDebugLogs: 1
 --- !u!114 &1282888829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -865,6 +866,7 @@ MonoBehaviour:
   startingDay: 1
   actionsPerDay: 3
   startingCRY: 250
+  showDebugLogs: 1
 --- !u!1 &1526826157
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,6 +879,7 @@ GameObject:
   - component: {fileID: 1526826159}
   - component: {fileID: 1526826158}
   - component: {fileID: 1526826161}
+  - component: {fileID: 1526826162}
   m_Layer: 0
   m_Name: AppRoot
   m_TagString: Untagged
@@ -899,7 +902,7 @@ MonoBehaviour:
   persistBetweenScenes: 1
   validateOnStart: 1
   showDebugLogs: 1
-  gameManagerPrefab: {fileID: 0}
+  gameManagerPrefab: {fileID: 1234567890123456791, guid: 20188fc335e516543956b1d7b7937a6d, type: 3}
   autoCreateGameManager: 1
 --- !u!114 &1526826159
 MonoBehaviour:
@@ -950,6 +953,22 @@ MonoBehaviour:
   delayBeforeLoad: 0.1
   loadOnStart: 1
   validateOnStart: 1
+  showDebugLogs: 1
+--- !u!114 &1526826162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526826157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e062779151a18640a970505eeccb7c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingDay: 1
+  actionsPerDay: 4
+  startingCRY: 250
   showDebugLogs: 1
 --- !u!1 &1818923852
 GameObject:
