@@ -1,0 +1,132 @@
+- Main Camera
+  [Component] Transform
+  [Component] Camera
+  [Component] AudioListener
+  [Component] UniversalAdditionalCameraData
+  [Component] PixelPerfectCamera
+  [Component] CameraFollow2D
+- Global Light 2D
+  [Component] Transform
+  [Component] Light2D
+- PLY_Player
+  [Component] Transform
+  [Component] SpriteRenderer
+  [Component] Rigidbody2D
+  [Component] CapsuleCollider2D
+  [Component] PlayerClickMover2D
+- Canvas
+  [Component] RectTransform
+  [Component] Canvas
+  [Component] CanvasScaler
+  [Component] GraphicRaycaster
+  - EventSystem
+    [Component] Transform
+    [Component] EventSystem
+    [Component] StandaloneInputModule
+  - BTN_EndDay
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] TextMeshProUGUI
+    [Component] EndDayButton
+    [Component] Button
+  - UI_HUD
+    [Component] RectTransform
+    [Component] HUDController
+    - TXT_Day
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] TextMeshProUGUI
+    - TXT_Actions
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] TextMeshProUGUI
+    - TXT_Cry
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] TextMeshProUGUI
+  - BTN_DummyAction
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+    [Component] Button
+    [Component] ActionCost
+    [Component] DummyAction
+    - Text (TMP)
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] TextMeshProUGUI
+  - UI_ElevatorPanel
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+    - BTN_LVL_-1
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] Image
+      [Component] Button
+      - Text (TMP)
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+    - BTN_LVL_0
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] Image
+      [Component] Button
+      - Text (TMP)
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+    - BTN_LVL_+1
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] Image
+      [Component] Button
+      - Text (TMP)
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+- ELEV_Elevator
+  [Component] Transform
+  - ELEV_Levels
+    [Component] Transform
+    - LVL_-1
+      [Component] Transform
+    - LVL_0
+      [Component] Transform
+    - LVL_+1
+      [Component] Transform
+  - ELEV_UseZone
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorSystem
+- Room_Dome_Placeholder
+  [Component] Transform
+  [Component] SpriteRenderer
+  [Component] BoxCollider2D
+- ROOM_Dome
+  [Component] Transform
+  [Component] RoomDomePotsBootstrap
+  - Dome_PotsAnchor
+    [Component] Transform
+    - Pot_POT-001
+      [Component] Transform
+      [Component] SpriteRenderer
+      [Component] BoxCollider2D
+      [Component] PotSlot
+      [Component] PotActions
+      [Component] PotGrowthController
+    - Pot_POT-002
+      [Component] Transform
+      [Component] SpriteRenderer
+      [Component] BoxCollider2D
+      [Component] PotSlot
+      [Component] PotActions
+      [Component] PotGrowthController
+- POT_HUD_Widget
+  [Component] RectTransform
+  [Component] CanvasRenderer
+  [Component] PotHUDWidget
+- GameManager
+  [Component] Transform
+  [Component] GameManager

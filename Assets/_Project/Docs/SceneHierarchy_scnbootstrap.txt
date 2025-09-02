@@ -1,0 +1,48 @@
+- Main Camera
+  [Component] Transform
+  [Component] Camera
+  [Component] AudioListener
+  [Component] UniversalAdditionalCameraData
+- SYS_GameManager
+  [Component] Transform
+  [Component] GameManager
+- AppRoot
+  [Component] Transform
+  [Component] Volume
+  [Component] AppRoot
+  [Component] BootstrapLoader
+  [Component] GameManager
+  - Systems
+    [Component] Transform
+    [Component] AudioManager
+    [Component] GameManager
+    [Component] SaveManager
+    - DayCycleController
+      [Component] Transform
+      [Component] SPOR_BLK_01_03A_DayCycleController
+- EventSystem
+  [Component] Transform
+  [Component] EventSystem
+  [Component] StandaloneInputModule
+- Canvas_Loading
+  [Component] RectTransform
+  [Component] Canvas
+  [Component] CanvasScaler
+  [Component] GraphicRaycaster
+  [Component] SceneLoadingUI
+  - OverlayBg
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+  - LoadingText
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] TextMeshProUGUI
+  - LoadingBarBG
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+  - LoadingBarFill
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
