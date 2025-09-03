@@ -105,7 +105,7 @@ public class PotHUDWidget : MonoBehaviour
         CreateWidgetUI();
         
         // Imposta testo iniziale
-        UpdatePotInfo("Nessun vaso selezionato");
+        UpdatePotInfo("Nessun POT selezionato");
         
         isInitialized = true;
         Debug.Log("[PotHUDWidget] Widget inizializzato correttamente.");
@@ -331,7 +331,7 @@ public class PotHUDWidget : MonoBehaviour
             progressBarRect.anchorMin = new Vector2(0, 0.5f);
             progressBarRect.anchorMax = new Vector2(1, 0.5f);
             progressBarRect.pivot = new Vector2(0.5f, 0.5f);
-            progressBarRect.anchoredPosition = new Vector2(0, 0);
+            progressBarRect.anchoredPosition = new Vector2(0, -25);
             progressBarRect.sizeDelta = new Vector2(-20, 15);
         }
         
@@ -351,7 +351,7 @@ public class PotHUDWidget : MonoBehaviour
             progressTextRect.anchorMin = new Vector2(0.5f, 0.5f);
             progressTextRect.anchorMax = new Vector2(0.5f, 0.5f);
             progressTextRect.pivot = new Vector2(0.5f, 0.5f);
-            progressTextRect.anchoredPosition = new Vector2(0, 0);
+            progressTextRect.anchoredPosition = new Vector2(0, -25);
             progressTextRect.sizeDelta = new Vector2(100, 20);
         }
     }
@@ -476,6 +476,17 @@ public class PotHUDWidget : MonoBehaviour
             }
         }
     }
+
+    public void DeselectPot()
+    {
+        currentSelectedPot = null;
+        
+        potIdText.text = "POT-ID";
+
+        SetCustomMessage("Nessun POT selezionato");
+
+        SetActionButtonsVisible(false);
+    }
     
     #region Action Buttons (BLK-01.02)
     
@@ -566,13 +577,13 @@ public class PotHUDWidget : MonoBehaviour
         switch (actionType)
         {
             case PotEvents.PotActionType.Plant:
-                buttonRect.anchoredPosition = new Vector2(10, 60);
+                buttonRect.anchoredPosition = new Vector2(10, 50);
                 break;
             case PotEvents.PotActionType.Water:
-                buttonRect.anchoredPosition = new Vector2(100, 60);
+                buttonRect.anchoredPosition = new Vector2(100, 50);
                 break;
             case PotEvents.PotActionType.Light:
-                buttonRect.anchoredPosition = new Vector2(190, 60);
+                buttonRect.anchoredPosition = new Vector2(190, 50);
                 break;
         }
         
@@ -746,6 +757,8 @@ public class PotHUDWidget : MonoBehaviour
         if (btnWater != null) btnWater.gameObject.SetActive(visible);
         if (btnLight != null) btnLight.gameObject.SetActive(visible);
         if (txtCosts != null) txtCosts.gameObject.SetActive(visible);
+
+        if (visible) SetCustomMessage("");
     }
     
     /// <summary>

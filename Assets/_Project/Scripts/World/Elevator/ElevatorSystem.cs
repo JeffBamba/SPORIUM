@@ -3,6 +3,7 @@
 public class ElevatorSystem : MonoBehaviour
 {
     [Header("Elevator Configuration")]
+    [SerializeField] private int startingLevelIndex;
     [SerializeField] private Transform[] levels;
     [SerializeField] private GameObject uiPanel;
     [SerializeField] private int cryCost = 5;
@@ -15,6 +16,7 @@ public class ElevatorSystem : MonoBehaviour
     private Transform player;
     private bool isTeleporting = false;
     private GameManager gameManager;
+    private int currentLevelIndex;
 
     void Start()
     {
@@ -27,6 +29,8 @@ public class ElevatorSystem : MonoBehaviour
         {
             uiPanel.SetActive(false);
         }
+
+        currentLevelIndex = startingLevelIndex; 
     }
 
     private void ValidateConfiguration()
@@ -58,13 +62,8 @@ public class ElevatorSystem : MonoBehaviour
 
         if (other.CompareTag("Player"))
         {
-            playerInside = true;
             player = other.transform;
-            
-            if (uiPanel != null)
-            {
-                uiPanel.SetActive(true);
-            }
+            ShowFloorOptions(true);
         }
     }
 
@@ -74,19 +73,28 @@ public class ElevatorSystem : MonoBehaviour
 
         if (other.CompareTag("Player"))
         {
-            playerInside = false;
             player = null;
-            
-            if (uiPanel != null)
-            {
-                uiPanel.SetActive(false);
-            }
+            ShowFloorOptions(false);
+        }
+    }
+
+    void ShowFloorOptions(bool state)
+    {
+        playerInside = state;
+        
+
+        if (uiPanel != null)
+        {
+            uiPanel.SetActive(state);
         }
     }
 
     public void GoToLevel(int levelIndex)
     {
-        if (!CanTeleportToLevel(levelIndex)) return;
+        if (!CanTeleportToLevel(levelIndex)) {
+            ShowFloorOptions(false);
+            return;
+        }
 
         if (gameManager == null)
         {
@@ -114,6 +122,7 @@ public class ElevatorSystem : MonoBehaviour
     {
         if (isTeleporting) return false;
         if (levelIndex < 0 || levelIndex >= levels.Length) return false;
+        if (levelIndex == currentLevelIndex) return false;
         if (levels[levelIndex] == null) return false;
         if (player == null) return false;
         
@@ -129,6 +138,9 @@ public class ElevatorSystem : MonoBehaviour
         
         if (player != null && levels[levelIndex] != null)
         {
+            //Prevent player transition to clicked position when quick floor(level) selection on elevator
+            player.GetComponent<PlayerClickMover2D>().StopMovement();
+            
             Vector3 targetPosition = new Vector3(
                 player.position.x, 
                 levels[levelIndex].position.y, 
@@ -139,6 +151,10 @@ public class ElevatorSystem : MonoBehaviour
         }
         
         isTeleporting = false;
+
+        currentLevelIndex = levelIndex;
+        //player needs to re-enter to zone
+        ShowFloorOptions(false);
     }
 
     public bool IsPlayerInside => playerInside;

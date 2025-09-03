@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -98,6 +99,7 @@ public class PlayerClickMover2D : MonoBehaviour
     private void SetTarget(Vector2 newTarget)
     {
         targetPosition = newTarget;
+        targetPosition.y = transform.position.y;
         hasTarget = true;
         isMoving = true;
         
