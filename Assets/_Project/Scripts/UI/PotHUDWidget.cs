@@ -809,7 +809,7 @@ public class PotHUDWidget : MonoBehaviour
     }
     
     /// <summary>
-    /// BLK-01.03B: Aggiorna tutti gli elementi UI per stage e progresso
+    /// BLK-01.04: Aggiorna tutti gli elementi UI per stage e progresso
     /// </summary>
     private void UpdateStageAndProgressUI(PotSlot pot)
     {
@@ -824,20 +824,22 @@ public class PotHUDWidget : MonoBehaviour
             potIdText.text = pot.PotId;
         }
         
-        // Aggiorna Stage Label
+        // BLK-01.04: Aggiorna Stage Label con informazioni dettagliate
         if (stageLabel != null)
         {
-            stageLabel.text = GetStageName(state.Stage);
+            string stageName = GetStageName(state.Stage);
+            string stageInfo = GetStageInfo(state);
+            stageLabel.text = $"{stageName} - {stageInfo}";
         }
         
-        // Aggiorna Stage Icon (placeholder per ora)
+        // BLK-01.04: Aggiorna Stage Icon con colore appropriato
         if (stageIcon != null)
         {
-            // TODO: Implementare sprite swap quando disponibili
             stageIcon.color = GetStageColor(state.Stage);
+            // TODO: Sostituire con sprite reali quando disponibili
         }
         
-        // Calcola e aggiorna Progress
+        // BLK-01.04: Calcola e aggiorna Progress con informazioni dettagliate
         float progressPercentage = CalculateProgressPercentage(state);
         if (progressBar != null)
         {
@@ -846,10 +848,11 @@ public class PotHUDWidget : MonoBehaviour
         
         if (progressText != null)
         {
-            progressText.text = $"{Mathf.RoundToInt(progressPercentage)}%";
+            string progressInfo = GetProgressInfo(state);
+            progressText.text = progressInfo;
         }
         
-        Debug.Log($"[BLK-01.03B] UI aggiornata: {pot.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}%");
+        Debug.Log($"[BLK-01.04] UI aggiornata: {pot.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
     }
     
     /// <summary>
@@ -931,6 +934,55 @@ public class PotHUDWidget : MonoBehaviour
             case 2: return "3"; // Sprout to Mature
             case 3: return "∞"; // Mature (nessun avanzamento)
             default: return "?";
+        }
+    }
+    
+    /// <summary>
+    /// BLK-01.04: Restituisce informazioni dettagliate sullo stadio
+    /// </summary>
+    private string GetStageInfo(PotStateModel state)
+    {
+        if (state.IsEmpty)
+        {
+            return "Pronto per piantare";
+        }
+        
+        switch (state.Stage)
+        {
+            case (int)PlantStage.Seed:
+                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/2 punti";
+            case (int)PlantStage.Sprout:
+                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/3 punti";
+            case (int)PlantStage.Mature:
+                return $"Giorno {state.DaysSincePlant} - Pronta per raccolta!";
+            default:
+                return $"Stadio {state.Stage}";
+        }
+    }
+    
+    /// <summary>
+    /// BLK-01.04: Restituisce informazioni dettagliate sul progresso
+    /// </summary>
+    private string GetProgressInfo(PotStateModel state)
+    {
+        if (state.IsEmpty)
+        {
+            return "0%";
+        }
+        
+        float percentage = CalculateProgressPercentage(state);
+        string stageName = GetStageName(state.Stage);
+        
+        switch (state.Stage)
+        {
+            case (int)PlantStage.Seed:
+                return $"{Mathf.RoundToInt(percentage)}% → Sprout";
+            case (int)PlantStage.Sprout:
+                return $"{Mathf.RoundToInt(percentage)}% → Mature";
+            case (int)PlantStage.Mature:
+                return "100% - Mature!";
+            default:
+                return $"{Mathf.RoundToInt(percentage)}%";
         }
     }
 }

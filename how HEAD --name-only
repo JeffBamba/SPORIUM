@@ -1,0 +1,46 @@
+[33mcommit ed94e345f30944c0f5de05b9c511a61ce0c82e59[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Zhenya <68060501+wismh@users.noreply.github.com>
+Date:   Thu Sep 4 16:59:37 2025 +0300
+
+    test/VC-bugfixing (#1)
+    
+    * implemented player animator & added basic player animations
+    
+    * bugfix: bug-elv-001
+    
+    * bugfix: bug-pot-002
+    
+    * fix: exclude layersetup.cs from player builds by wrapping in unity_editor
+    
+    * fix: bug-pot-002
+    
+    * fix: bug-pot-002
+
+ .gitignore                                         |   3 [32m+[m
+ .../GDD/DEV REPORT_0007.txt.meta}                  |   2 [32m+[m[31m-[m
+ .../GDD+devreport.zip.meta}                        |   2 [32m+[m[31m-[m
+ Assets/_Project/Animations.meta                    |   8 [32m+[m
+ Assets/_Project/Animations/Player.meta             |   8 [32m+[m
+ Assets/_Project/Animations/Player/Idle.anim        |  81 [32m+++++++[m
+ Assets/_Project/Animations/Player/Idle.anim.meta   |   8 [32m+[m
+ .../_Project/Animations/Player/Player.controller   | 147 [32m++++++++++++[m
+ .../Animations/Player/Player.controller.meta       |   8 [32m+[m
+ Assets/_Project/Animations/Player/Walk.anim        |  84 [32m+++++++[m
+ Assets/_Project/Animations/Player/Walk.anim.meta   |   8 [32m+[m
+ .../_Project/Art/Animations/16x32 Idle-Sheet.png   | Bin [31m0[m -> [32m1922[m bytes
+ .../Art/Animations/16x32 Idle-Sheet.png.meta       | 210 [32m++++++++++++++++++[m
+ .../Art/Animations/16x32 Walk Cycle-Sheet.png      | Bin [31m0[m -> [32m2153[m bytes
+ .../Art/Animations/16x32 Walk Cycle-Sheet.png.meta | 218 [32m++++++++++++++++++[m
+ .../Docs/SceneHierarchy_scnVaultMap.txt.meta       |   7 [32m+[m
+ .../_Project/Prefabs/Character/PLY_Player.prefab   | 240 [32m++++++++++++++++++++[m
+ .../Prefabs/Character/PLY_Player.prefab.meta       |   7 [32m+[m
+ Assets/_Project/Scenes/SCN_VaultMap.unity          | 247 [32m++++++[m[31m---------------[m
+ Assets/_Project/Scripts/Core/LayerSetup.cs         |   2 [32m+[m
+ Assets/_Project/Scripts/DeselectHandler.cs         |   5 [31m-[m
+ Assets/_Project/Scripts/Dome/PotActions.cs         |  11 [32m+[m[31m-[m
+ Assets/_Project/Scripts/Interactables/PotSlot.cs   |   2 [32m+[m[31m-[m
+ Assets/_Project/Scripts/Player/PlayerAnimator.cs   |  46 [32m++++[m
+ .../_Project/Scripts/Player/PlayerAnimator.cs.meta |  11 [32m+[m
+ .../Scripts/World/Elevator/ElevatorSystem.cs       |  39 [32m+++[m[31m-[m
+ Assets/_Settings/URP/URP_Asset.asset               |  52 [32m++[m[31m---[m
+ 27 files changed, 1231 insertions(+), 225 deletions(-)

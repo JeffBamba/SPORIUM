@@ -221,4 +221,14 @@ public static class PotEvents
         Debug.Log($"[PotEvents] Emesso evento OnPlantStageChanged: {potId} - Nuovo stadio: {stage}");
         OnPlantStageChanged?.Invoke(potId, stage);
     }
+    
+    /// <summary>
+    /// BLK-01.04: Emette l'evento di cambio stadio pianta (alias per compatibilità)
+    /// </summary>
+    /// <param name="potId">ID del vaso</param>
+    /// <param name="stage">Nuovo stadio della pianta</param>
+    public static void EmitPlantStageChanged(string potId, PlantStage stage)
+    {
+        RaiseOnPlantStageChanged(potId, stage);
+    }
 }

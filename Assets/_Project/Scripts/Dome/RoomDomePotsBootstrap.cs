@@ -288,6 +288,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         return new PotSlot[] { pot1, pot2 };
     }
 
+
     /// <summary>
     /// Ricrea i vasi (utile per debugging)
     /// </summary>

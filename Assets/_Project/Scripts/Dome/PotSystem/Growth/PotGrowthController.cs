@@ -79,6 +79,17 @@ namespace Sporae.Dome.PotSystem.Growth
             if (targetSprite != null)
             {
                 plantRenderer.sprite = targetSprite;
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[BLK-01.04] {potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");
+                }
+            }
+            else
+            {
+                if (enableDebugLogs)
+                {
+                    Debug.LogWarning($"[BLK-01.04] {potState.PotId}: Sprite NULL per stadio {potState.Stage}! Controlla assegnazione sprite nel PotGrowthController.");
+                }
             }
             
             // Aggiorna scala in base allo stadio
@@ -87,7 +98,7 @@ namespace Sporae.Dome.PotSystem.Growth
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-01.03B] {potState.PotId}: Visuali aggiornate - Stadio: {potState.Stage}, Scala: {targetScale:F2}");
+                Debug.Log($"[BLK-01.04] {potState.PotId}: Visuali aggiornate - Stadio: {potState.Stage}, Scala: {targetScale:F2}, Sprite: {(targetSprite != null ? targetSprite.name : "NULL")}");
             }
         }
         
@@ -96,19 +107,39 @@ namespace Sporae.Dome.PotSystem.Growth
         /// </summary>
         private Sprite GetSpriteForStage(int stage)
         {
+            Sprite result = null;
+            string stageName = "";
+            
             switch (stage)
             {
                 case (int)PlantStage.Empty:
-                    return s0_empty;
+                    result = s0_empty;
+                    stageName = "Empty";
+                    break;
                 case (int)PlantStage.Seed:
-                    return s1_seed;
+                    result = s1_seed;
+                    stageName = "Seed";
+                    break;
                 case (int)PlantStage.Sprout:
-                    return s2_sprout;
+                    result = s2_sprout;
+                    stageName = "Sprout";
+                    break;
                 case (int)PlantStage.Mature:
-                    return s3_mature;
+                    result = s3_mature;
+                    stageName = "Mature";
+                    break;
                 default:
-                    return s0_empty; // Fallback
+                    result = s0_empty; // Fallback
+                    stageName = "Fallback";
+                    break;
             }
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[BLK-01.04] {potState?.PotId ?? "Unknown"}: GetSpriteForStage({stage}={stageName}) = {(result != null ? result.name : "NULL")}");
+            }
+            
+            return result;
         }
         
         /// <summary>
@@ -132,47 +163,22 @@ namespace Sporae.Dome.PotSystem.Growth
         }
 
         /// <summary>
-        /// DEPRECATO - La crescita è ora gestita dal DayCycleController (BLK-01.03A)
-        /// Questo metodo è mantenuto per compatibilità ma non dovrebbe essere chiamato
+        /// BLK-01.04: Aggiorna le visuali quando lo stadio cambia
+        /// Chiamato automaticamente dal DayCycleController quando avviene una transizione
         /// </summary>
-        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
-        public void ApplyDailyGrowth(PlantGrowthConfig growthConfig)
+        public void OnStageChanged(PlantStage newStage)
         {
-            if (enableDebugLogs)
-                Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: ApplyDailyGrowth è deprecato! Usa DayCycleController invece.");
+            if (potState == null) 
+            {
+                Debug.LogWarning($"[BLK-01.04] OnStageChanged chiamato ma potState è NULL!");
+                return;
+            }
             
-            // La crescita è ora gestita automaticamente dal DayCycleController
-            // Questo metodo è mantenuto solo per compatibilità con codice esistente
-        }
-
-        /// <summary>
-        /// DEPRECATO - Calcolo punti ora gestito dal DayCycleController (BLK-01.03A)
-        /// </summary>
-        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
-        private int CalculateDailyGrowthPoints(PlantGrowthConfig growthConfig)
-        {
-            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: CalculateDailyGrowthPoints è deprecato!");
-            return 0; // La crescita è ora gestita automaticamente
-        }
-
-        /// <summary>
-        /// DEPRECATO - Avanzamento stadi ora gestito dal DayCycleController (BLK-01.03A)
-        /// </summary>
-        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
-        private void TryAdvanceStage(PlantGrowthConfig growthConfig)
-        {
-            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: TryAdvanceStage è deprecato!");
-            // L'avanzamento di stadio è ora gestito automaticamente dal DayCycleController
-        }
-
-        /// <summary>
-        /// DEPRECATO - Decadimento ora gestito dal DayCycleController (BLK-01.03A)
-        /// </summary>
-        [System.Obsolete("Sostituito da DayCycleController in BLK-01.03A")]
-        private void DecayAndReset(PlantGrowthConfig growthConfig)
-        {
-            Debug.LogWarning($"[BLK-01.03A] {potState?.PotId ?? "Unknown"}: DecayAndReset è deprecato!");
-            // Il decadimento è ora gestito automaticamente dal DayCycleController
+            if (enableDebugLogs)
+                Debug.Log($"[BLK-01.04] {potState.PotId}: Stadio cambiato a {newStage}. Aggiornamento visuali...");
+            
+            // Aggiorna le visuali
+            UpdateVisuals();
         }
 
         /// <summary>

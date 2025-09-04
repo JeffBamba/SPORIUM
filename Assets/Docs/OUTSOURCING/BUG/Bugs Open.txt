@@ -1,4 +1,55 @@
+🐛 Bug Briefing — Pot Growth System
+Task ID
 
+BLK-01.04 — Pot Growth Visualization & Points Counter Issues
+
+🔁 Repro Steps
+
+Launch the game in Unity and open scene SCN_VaultMap.
+
+Select POT-001 and plant a seed (Stage = Seed).
+
+Advance days using EndDay while applying Water and/or Light actions.
+
+Observe both the plant’s visual placeholder and the growth points counter.
+
+⚠️ Observed Behavior
+
+Bug #1 (Visual Placeholder):
+POT-001 does not update its placeholder image when the plant stage changes. It always shows the Seed sprite, even after the plant should be at Sprout or Mature.
+
+Bug #2 (Growth Points Counter):
+When performing Water or Light actions, the growth points counter does not update. The HUD continues to show the initial value instead of incrementing.
+
+🎯 Expected Behavior
+
+Bug #1: Whenever the plant stage changes (Seed → Sprout → Mature), the placeholder image should also update in the scene and HUD accordingly.
+
+Bug #2: After each valid action (Water, Light), growth points should increment based on the rules in PlantGrowthConfig, and the HUD should immediately reflect the updated value.
+
+📦 Deliverables
+
+Fix in PotGrowthController to correctly switch placeholder sprites when advancing stages.
+
+Fix in PotStateModel (or related systems) to ensure growth points increment on actions and trigger OnPotStateChanged.
+
+HUD integration: ensure that updated stage and growth points are displayed consistently.
+
+Add debug logs for verification:
+
+[PotGrowth] POT-001 advanced to Stage 2 (Sprout)
+
+[PotGrowth] POT-001 GrowthPoints = X.
+
+✅ Definition of Done
+
+Visual placeholder updates correctly at each stage transition.
+
+Growth points increment correctly after actions and HUD updates in real time.
+
+Console shows clear debug logs for stage changes and point updates.
+
+No errors or warnings in Unity Console.
 
 
 

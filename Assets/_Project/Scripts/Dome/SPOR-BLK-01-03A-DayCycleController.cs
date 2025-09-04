@@ -198,38 +198,98 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
 
     /// <summary>
     /// Risolve la crescita per un singolo vaso
+    /// BLK-01.04: Implementa sistema di crescita a 3 stadi con punti giornalieri
     /// </summary>
     private void ResolveGrowthForPot(PotStateModel pot, int dayIndex)
     {
-        // Calcola se il vaso ha ricevuto acqua e luce oggi usando i timestamp
-        bool hadHydration = (pot.LastWateredDay == dayIndex);
-        bool hadLight = (pot.LastLitDay == dayIndex);
+        // BLK-01.04: Fix - Confronta con il giorno precedente perché i timestamp
+        // vengono impostati con gameManager.CurrentDay, ma dayIndex è il giorno corrente
+        // dopo che EndDay ha già incrementato il giorno
+        int previousDay = dayIndex - 1;
+        bool hadHydration = (pot.LastWateredDay == previousDay);
+        bool hadLight = (pot.LastLitDay == previousDay);
         
-        // Calcola punti crescita basati sulla cura ricevuta oggi
-        int gained = (hadHydration ? 1 : 0) + (hadLight ? 1 : 0);
+        // BLK-01.04: Calcola punti crescita basati sulla cura ricevuta oggi
+        // Cura ideale (acqua + luce) = +2 punti
+        // Cura parziale (una delle due) = +1 punto  
+        // Nessuna cura = +0 punti
+        int gained = 0;
+        if (hadHydration && hadLight)
+        {
+            gained = growthConfig.pointsIdealCare; // +2 punti
+        }
+        else if (hadHydration || hadLight)
+        {
+            gained = growthConfig.pointsPartialCare; // +1 punto
+        }
+        else
+        {
+            gained = growthConfig.pointsNoCare; // +0 punti
+        }
+        
+        int oldPoints = pot.GrowthPoints;
         pot.GrowthPoints += gained;
 
         if (enableDebugLogs)
         {
             string stageName = GetStageName(pot.Stage);
-            Debug.Log($"[Growth] D={dayIndex} pot={pot.PotId} H={hadHydration} L={hadLight} +{gained} gp={pot.GrowthPoints} stage={pot.Stage}({stageName})");
+            string careType = (hadHydration && hadLight) ? "ideale" : (hadHydration || hadLight) ? "parziale" : "nessuna";
+            Debug.Log($"[BLK-01.04] D={dayIndex} {pot.PotId}: Cura {careType} (H={hadHydration} L={hadLight}) +{gained} punti, totali={pot.GrowthPoints}, stage={pot.Stage}({stageName}) - Timestamps: W={pot.LastWateredDay} L={pot.LastLitDay} vs giorno={previousDay}");
         }
 
-        // Avanzamento stadio (Stage 1 = Seed, 2 = Sprout, 3 = Mature)
-        if (pot.Stage == 1 && pot.GrowthPoints >= growthConfig.pointsSeedToSprout)
+        // BLK-01.04: Avanzamento stadi con soglie configurabili
+        // Seed (Stage 1) → Sprout (Stage 2) = 2 punti
+        // Sprout (Stage 2) → Mature (Stage 3) = 3 punti
+        bool stageChanged = false;
+        int oldStage = pot.Stage;
+        
+        if (pot.Stage == (int)PlantStage.Seed && pot.GrowthPoints >= growthConfig.pointsSeedToSprout)
         {
             pot.GrowthPoints -= growthConfig.pointsSeedToSprout;
-            pot.Stage = 2; // Sprout
+            pot.Stage = (int)PlantStage.Sprout;
+            stageChanged = true;
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] {pot.PotId}: Avanzamento Seed → Sprout!");
+                Debug.Log($"[BLK-01.04] {pot.PotId}: 🎉 Avanzamento Seed → Sprout! (soglia: {growthConfig.pointsSeedToSprout} punti)");
         }
-        
-        if (pot.Stage == 2 && pot.GrowthPoints >= growthConfig.pointsSproutToMature)
+        else if (pot.Stage == (int)PlantStage.Sprout && pot.GrowthPoints >= growthConfig.pointsSproutToMature)
         {
             pot.GrowthPoints -= growthConfig.pointsSproutToMature;
-            pot.Stage = 3; // Mature
+            pot.Stage = (int)PlantStage.Mature;
+            stageChanged = true;
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] {pot.PotId}: Avanzamento Sprout → Mature!");
+                Debug.Log($"[BLK-01.04] {pot.PotId}: 🌱 Avanzamento Sprout → Mature! (soglia: {growthConfig.pointsSproutToMature} punti)");
+        }
+
+        // BLK-01.04: Emetti eventi per notificare crescita e/o cambio di stadio
+        if (stageChanged)
+        {
+            // Notifica il PotGrowthController per aggiornare le visuali
+            var potGrowthController = FindPotGrowthController(pot.PotId);
+            if (potGrowthController != null)
+            {
+                if (enableDebugLogs)
+                    Debug.Log($"[BLK-01.04] {pot.PotId}: Trovato PotGrowthController, chiamando OnStageChanged...");
+                potGrowthController.OnStageChanged((PlantStage)pot.Stage);
+            }
+            else
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning($"[BLK-01.04] {pot.PotId}: PotGrowthController NON TROVATO! Le visuali non saranno aggiornate.");
+            }
+            
+            // Emetti evento per l'UI
+            PotEvents.EmitPlantStageChanged(pot.PotId, (PlantStage)pot.Stage);
+            
+            if (enableDebugLogs)
+                Debug.Log($"[BLK-01.04] {pot.PotId}: Eventi emessi per cambio stadio {oldStage} → {pot.Stage}, punti rimanenti: {pot.GrowthPoints}");
+        }
+        
+        // BLK-01.04: Emetti evento di crescita (sempre, per aggiornare progress bar)
+        if (gained > 0 || stageChanged)
+        {
+            PotEvents.RaiseOnPlantGrew(pot.PotId, (PlantStage)pot.Stage, gained, pot.GrowthPoints);
+            if (enableDebugLogs)
+                Debug.Log($"[BLK-01.04] {pot.PotId}: Evento crescita emesso: +{gained} punti, totali: {pot.GrowthPoints}");
         }
 
         // Aggiorna contatori
@@ -324,6 +384,24 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
     }
     #endif
     
+    /// <summary>
+    /// BLK-01.04: Trova il PotGrowthController per un vaso specifico
+    /// </summary>
+    private PotGrowthController FindPotGrowthController(string potId)
+    {
+        // Cerca tutti i PotGrowthController nella scena
+        PotGrowthController[] controllers = FindObjectsOfType<PotGrowthController>();
+        foreach (var controller in controllers)
+        {
+            var potState = controller.GetPotState();
+            if (potState != null && potState.PotId == potId)
+            {
+                return controller;
+            }
+        }
+        return null;
+    }
+
     /// <summary>
     /// Restituisce il nome localizzato per uno stadio
     /// </summary>
