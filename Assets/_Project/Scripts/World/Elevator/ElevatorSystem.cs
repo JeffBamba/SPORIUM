@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class ElevatorSystem : MonoBehaviour
 {
@@ -6,10 +9,11 @@ public class ElevatorSystem : MonoBehaviour
     [SerializeField] private float elevatorSpeed = 1f;
     [SerializeField] private int startingLevelIndex;
     [SerializeField] private Transform[] levels;
+    [SerializeField] private List<Button> levelsButtons;
     [SerializeField] private GameObject uiPanel;
     [SerializeField] private int cryCost = 5;
     [SerializeField] private float teleportDelay = 0.1f;
-
+    
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
 
@@ -86,19 +90,29 @@ public class ElevatorSystem : MonoBehaviour
     {
         playerInside = state;
         
-
         if (uiPanel != null)
-        {
             uiPanel.SetActive(state);
-        }
+
+        if (state)
+            UpdateAvailablesFloorOptions();
     }
 
+    private void UpdateAvailablesFloorOptions()
+    {
+        for (int i = 0; i < levelsButtons.Count; ++i)
+            levelsButtons[i].interactable = i != currentLevelIndex;
+    }
+
+    private void DisableAllFloorOptions()
+    {
+        foreach (var item in levelsButtons)
+            item.interactable = false;
+    }
+    
     public void GoToLevel(int levelIndex)
     {
-        if (!CanTeleportToLevel(levelIndex)) {
-            ShowFloorOptions(false);
+        if (!CanTeleportToLevel(levelIndex))
             return;
-        }
 
         if (gameManager == null)
         {
@@ -138,16 +152,17 @@ public class ElevatorSystem : MonoBehaviour
         if (player != null && levels[levelIndex] != null)
         {
             isTeleporting = true;
+            
+            DisableAllFloorOptions();
+            
             //Prevent player transition to clicked position when quick floor(level) selection on elevator
             playerMover.StopMovement();
+            
             //and suspend further movement 
             playerMover.SuspendMovement(true);
-            //player needs to re-enter to the zone inorder to see floor options
-            ShowFloorOptions(false);
 
             // Delay per stabilizzare la fisica
             yield return new WaitForSeconds(teleportDelay);
-        
             
             Vector3 targetPosition = new Vector3(
                 player.position.x, 
@@ -168,7 +183,7 @@ public class ElevatorSystem : MonoBehaviour
             playerMover.SuspendMovement(false);
 
             currentLevelIndex = levelIndex;
-
+            UpdateAvailablesFloorOptions();
         }
     }
 

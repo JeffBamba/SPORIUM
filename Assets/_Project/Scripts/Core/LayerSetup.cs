@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 
 /// <summary>
@@ -216,3 +217,4 @@ public class LayerSetup : MonoBehaviour
     }
     #endif
 }
+#endif
