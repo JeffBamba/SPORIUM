@@ -139,13 +139,14 @@ public class PotActions : MonoBehaviour
         bool inRange = IsPlayerInRange();
         bool hasResources = CanConsumeResources();
         bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
+        bool notPlantedOnThisDay = potState.PlantedDay != gameManager.CurrentDay;
         
         if (showDebugLogs)
         {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
         }
         
-        return hasPlant && hydrationNotMax && inRange && hasResources && notWateredOnThisDay;
+        return hasPlant && hydrationNotMax && inRange && hasResources && notPlantedOnThisDay && notWateredOnThisDay;
     }
     
     /// <summary>
