@@ -116,13 +116,14 @@ public class PotActions : MonoBehaviour
         bool hasSeed = gameManager.HasItem(genericSeedCode, 1);
         bool inRange = IsPlayerInRange();
         bool hasResources = CanConsumeResources();
+        bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
         
         if (showDebugLogs)
         {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
         }
         
-        return isEmpty && hasSeed && inRange && hasResources;
+        return isEmpty && hasSeed && inRange && hasResources && notWateredOnThisDay;
     }
     
     /// <summary>
@@ -137,7 +138,6 @@ public class PotActions : MonoBehaviour
         bool hydrationNotMax = !potState.IsHydrationMax(GetMaxHydration());
         bool inRange = IsPlayerInRange();
         bool hasResources = CanConsumeResources();
-        bool notPlantedOnThisDay = potState.PlantedDay != gameManager.CurrentDay;
         bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
         
         if (showDebugLogs)
@@ -145,7 +145,7 @@ public class PotActions : MonoBehaviour
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
         }
         
-        return hasPlant && hydrationNotMax && inRange && hasResources && notPlantedOnThisDay && notWateredOnThisDay;
+        return hasPlant && hydrationNotMax && inRange && hasResources && notWateredOnThisDay;
     }
     
     /// <summary>
