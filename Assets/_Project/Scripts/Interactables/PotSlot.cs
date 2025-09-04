@@ -20,7 +20,7 @@ public class PotSlot : MonoBehaviour
     
     [Header("Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
-    
+
     // Evento statico per la selezione del vaso
     public static event Action<PotSlot> OnPotSelected;
     
