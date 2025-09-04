@@ -20,6 +20,9 @@ namespace Game
             _animator = GetComponentInChildren<Animator>();
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
+            if (!_animator || !_spriteRenderer || !_rigidbody)
+                Debug.LogWarning("PlayerAnimator is missing a necessary components.");
+            
             _currentAnimation = k_idleAnimation;
         }
 
