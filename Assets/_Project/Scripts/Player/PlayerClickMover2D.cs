@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -23,6 +24,7 @@ public class PlayerClickMover2D : MonoBehaviour
     private Vector2 currentVelocity;
     private bool hasTarget;
     private bool isMoving;
+    private bool suspendMovement;
 
     void Awake()
     {
@@ -97,7 +99,10 @@ public class PlayerClickMover2D : MonoBehaviour
 
     private void SetTarget(Vector2 newTarget)
     {
+        if (suspendMovement) return;
+
         targetPosition = newTarget;
+        targetPosition.y = transform.position.y;
         hasTarget = true;
         isMoving = true;
         
@@ -147,6 +152,11 @@ public class PlayerClickMover2D : MonoBehaviour
         isMoving = false;
         currentVelocity = Vector2.zero;
         rb.velocity = Vector2.zero;
+    }
+
+    public void SuspendMovement(bool st)
+    {
+        suspendMovement = st;
     }
 
     public bool IsMoving => isMoving || hasTarget;
