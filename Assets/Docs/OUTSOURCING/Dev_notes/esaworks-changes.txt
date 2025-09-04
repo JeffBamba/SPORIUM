@@ -1,0 +1,29 @@
+Whloe tasks performed in 3.5 hours of active work.
+
+Cinemachine package added to implement camera follow needs.
+	- Boostrap camera included in AppRoot object to prevent it from being destroyed since it is Cinemachine Brain now.
+	- Other cameras on the scene must be VirtualCamera of cinemachine.
+	- Created object "Room Camra Bounds" to confine the camera within boundries.
+
+BUG (Not reported) Top Left HUD positioning [fixed]
+	- Edited RectTransform alignment and offset parameters directly on Editor. Used a layout components as well.
+
+BUG Elevator [fixed]
+	- Elevator zone expanded to other floors as well.
+	- Elevator UI button alignments done and works when player first entered to the zone.
+	- Elevator movement lerps the player up/down to the floors. Disables input or click movement until elevator movement is done.
+	- Camera functionality works. 
+
+Bug #1 [fixed] — HUD overlapped from Play (always unreadable) 
+	- Suggestion: pot creation and population of elements should not be at runtime for better design and alignment
+	- Since there are no mockups about the states of HUD Widget I displaced the progressbar down to prevent overlapping with the text. 
+	- Progress bar hidden when buttons appear since buttons are chunky and unable to fit there. Kept other information which thought can be useful for player.
+
+
+Bug #2 [fixed] — Clicking outside a pot does not clear selection 
+	- Created a following background object (obj name "Deselect Pots Handler") which catches MouseDown event and executes deselect operations.
+	I didn't like this solution since handling input using Monobehvior.MouseDown events it is not ideal IMO. The ideal is to change whole input processing convention to "New Unity Input System". But that would create regression problems throughout the project which bug report notes clearly stated to avoid me to do so.
+	
+
+Bug #3 [fixed] — Pot not clickable when the Player stands on it 
+	- Solved by offseting pots on Z by 0.1 

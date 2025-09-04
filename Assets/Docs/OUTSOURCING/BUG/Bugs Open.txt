@@ -1,0 +1,24 @@
+
+
+
+
+
+
+
+📦 Deliverables
+
+Updated prefab(s) and animation controller for Player.
+
+Commit & PR with list of modified files.
+
+Final Report (mandatory) including:
+
+Approach used (asset chosen, setup in Unity).
+
+Files modified/created (scripts, prefabs, animator).
+
+Tests performed to ensure correct behavior.
+
+Any limitations or notes for future improvement.
+
+Screenshots or short gif of the Player in Play mode.
