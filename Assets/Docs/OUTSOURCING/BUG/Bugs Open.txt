@@ -1,3 +1,104 @@
+-------------------------------------------------------------------
+Title (ID):
+ECO-01.00 — Economy Engine Update (Actions ≠ CRY)
+
+Context:
+Latest GDD18 changes the economy model: Dome/Lab/Seed Storage use only Actions (no CRY), CRY is reserved for structural/extraordinary costs (elevator, daily power, repairs, mold sterilization). Current build still reflects mixed costs in several places and UI text inherited from previous reports. Please align the game behavior, UI, and copy to the new model and provide a short implementation report at the end.
+
+Actions cost model
+
+Plant, Water, Light (Dome): consume 1 Action each, 0 CRY.
+
+Lab minigames (microscope & co.): 1 Action, 0 CRY.
+
+Seed Storage (deposit/withdraw): 1 Action, 0 CRY.
+
+Do not deduct CRY anywhere for the above.
+
+CRY-only costs
+
+Elevator use: –5 CRY (keep it configurable).
+
+Daily power consumption at End Day: –20 CRY (configurable).
+
+Repairs/sabotage/mold sterilization: keep CRY values as currently defined ranges (e.g., –30/80 CRY, –50/100 CRY).
+
+HUD & Copy
+
+HUD must clearly separate: “Actions remaining” vs “CRY total”.
+
+Remove/adjust any tooltip, hint, or label implying CRY cost for base actions or lab/storage usage.
+
+Tutorial/Day texts: introduce CRY as structural/energy resource (not as cost for daily actions).
+
+Saves & Compatibility
+
+Existing saves must not soft-lock the player after the change: legacy negative/low CRY states should still allow performing base actions (since they cost only Actions now).
+
+Telemetry/Logs (lightweight)
+
+Add minimal logs or counters (if already present) to confirm at runtime that base actions deduct only Actions and never CRY.
+
+Repro Steps (to verify the change)
+
+Start a fresh run with default starting resources.
+
+Select a Pot, execute Plant, then Water, then Light in the same day.
+
+Enter Lab, start a minigame once.
+
+Use Seed Storage once (deposit or withdraw).
+
+Trigger End Day.
+
+Use Elevator in/out of the engagement zone.
+
+Expected Behavior (pass/fail)
+
+Steps 2–4: each operation reduces Actions by 1, CRY unchanged.
+
+Step 5: –20 CRY (daily power) applied once per End Day.
+
+Step 6: –5 CRY per elevator usage.
+
+HUD shows correct remaining Actions and CRY totals at all times.
+
+No UI hint/tutorial text claims CRY is required for base actions.
+
+Acceptance Criteria / DoD
+
+✅ All base actions (Dome/Lab/Seed) cost Actions-only across the whole loop.
+
+✅ Elevator and daily power costs correctly consume CRY; values are configurable.
+
+✅ HUD & tooltips reflect the new model; no leftover copy suggesting CRY on base actions.
+
+✅ End Day applies exactly one daily power charge (no double charges).
+
+✅ Existing saves remain playable; performing base actions is possible at 0 CRY.
+
+✅ No console errors/warnings related to economy after the changes.
+
+Test Plan (functional)
+
+Day 1
+
+Plant → Water → (Light disabled if no plant image/stage yet, else enabled by design)
+
+Verify: Actions go down; CRY unchanged.
+Day 2
+
+Water + Light; Lab minigame ×1; Seed Storage deposit/withdraw ×1 → Actions reduce accordingly; CRY unchanged.
+
+End Day → CRY –20.
+Elevator
+
+Enter elevator zone, press +1 / –1 / 0 (or W/S mappings as available) → each travel costs –5 CRY.
+Regression
+
+Rapid selections on Pots do not reintroduce wrong costs; HUD remains in sync.
+----------------------------------------------------------------------------------
+
 🐛 Bug Briefing — Pot Growth System
 Task ID
 
@@ -52,8 +153,276 @@ Console shows clear debug logs for stage changes and point updates.
 No errors or warnings in Unity Console.
 
 
+----------------------------------------------------------------------------
 
 
+📝 Task: Add Player Navigation with WASD
+
+ID: BLK-00.04C
+
+🎯 Context
+
+Currently, the Player character can move only using the click-to-move system (implemented in BLK-00.04). For better usability and testing, we also want to allow direct movement using WASD keys (W = Up, A = Left, S = Down, D = Right).
+
+This will give us two parallel navigation systems:
+
+Point & Click (already working).
+
+WASD keyboard input (to be added).
+
+🔄 Repro Steps (Current Behavior)
+
+Enter Play Mode.
+
+Click on the floor → Player moves to that position.
+
+Try pressing W, A, S, D → nothing happens.
+
+✅ Expected Behavior
+
+Player can still move with click-to-move exactly as now.
+
+Player can also move using WASD keys:
+
+W → move up
+
+A → move left
+
+S → move down
+
+D → move right
+
+Both systems should co-exist without conflicts.
+
+Animations (Idle/Walk) must trigger correctly with WASD input, same as click movement.
+
+📋 Acceptance / DoD
+
+WASD movement added, smooth and functional.
+
+Click-to-move continues to work as before.
+
+No UI conflicts or console errors.
+
+Player animations work with both movement methods.
+
+New code integrated into existing PlayerController or equivalent script.
+
+🌱 Branch & Deliverables
+
+Branch: feature/BLK-00.04C-WASD
+
+Deliverables:
+
+Updated Player movement script.
+
+Commit message referencing BLK-00.04C.
+
+Short report: approach taken, files modified, testing performed.
+
+-----------------------------------------------------------------
+📝 Task: Elevator Modifications
+
+ID: BLK-ELV-002
+
+🎯 Goal
+
+Improve the elevator with clearer visuals and more intuitive controls, keeping the player always visible.
+
+📋 What Needs to Change
+
+Elevator Doors
+
+Add a placeholder door graphic at each floor, so the player clearly sees the elevator entrance.
+
+Floor Buttons UI
+
+When the player enters the elevator, remove the full white screen overlay.
+
+The floor buttons (+1 / 0 / –1) should appear next to the character (to the side, not on top), so they never cover the player.
+
+Keyboard Controls
+
+Inside the elevator, pressing W should work as the +1 button.
+
+Pressing S should work as the –1 button.
+
+The 0 button remains available through the UI.
+
+Dome Graphics
+
+Add the PNG graphics (if they fit, otherwise please use placeholder with similar characteristcs) provided for the elevator inside the Dome room (where the Pots are), integrated without covering other elements.
+
+✅ Acceptance Criteria
+
+Doors are visible at every floor.
+
+Floor buttons never cover the player and remain clear.
+
+W = go up, S = go down, 0 = via UI.
+
+The Dome elevator shows the provided graphics.
+
+Player movement is not blocked even when the elevator UI is visible.
+
+
+----------------------------------------------------------------
+Task Briefing – BLK-01.05
+
+Context:
+We are in the Blocking_01 phase of the Sporium project (Unity 2D URP).
+Previous tasks (BLK-01.01 → BLK-01.04) implemented:
+
+Player navigation (CLICK + WASD) and interaction
+
+Pot selection system + HUD with Plant/Water/Light actions
+
+Growth system across multiple days with EndDay logic
+
+Elevator placeholder with basic floor navigation
+
+Task ID: BLK-01.05
+Title: Integrate HUD feedback + Growth progression consistency
+
+Repro Steps
+
+Start the game and select a Pot.
+
+Perform actions (Plant, Water, Light) during Day 1 and Day 2.
+
+End the Day and continue for 3–4 cycles.
+
+Observe HUD, Pot visuals, and Player interaction flow.
+
+Issues / Missing behaviors
+
+Pot placeholder does not update consistently when plant status changes.
+
+When actions are performed (Water, Light), HUD counters do not always update immediately.
+
+Action buttons sometimes remain green (active) after being clicked, instead of turning inactive until the next Day.
+
+In Day 1, “Light” is available even if no plant is present yet (it should not be).
+
+After Day 2, “Plant” button should disappear but correct actions should remain available.
+
+Expected Behavior
+
+Pot placeholder should correctly update for each growth stage (Seed → Sprout → Mature).
+
+When an action is used, the button must deactivate until the next Day.
+
+HUD counters (Actions left, CRY points) must refresh instantly after each action.
+
+Action availability must follow logic:
+
+Day 1: Plant + Water only.
+
+Day 2: Water + Light (Plant disabled).
+
+Day 3+: Water + Light remain, with proper stage progression.
+
+EndDay should always advance plant growth when the correct actions were performed.
+
+Acceptance Criteria / DoD
+
+All HUD updates are real-time and consistent with actions.
+
+Growth stages always match the number of Days and care actions.
+
+No action button remains stuck as active after being used.
+
+Console shows no warnings/errors during these sequences.
+
+
+--------------------------------------------------------------------
+🏷️ Task
+
+BLK-02.01 — Microscope: Basic Minigame Implementation
+
+📖 Context
+
+The project is Sporium, a Unity 2D URP (2022.3 LTS) game in development.
+
+Current state: Blocking_01 completed → the Dome system is functional (pots, actions, growth, HUD, economy CRY).
+
+We are now starting Blocking_02: Laboratory features.
+
+This task introduces the Microscope as the first interactive object of the Lab.
+
+Later tasks (BLK-02.02 → 02.04) will expand it to combine spores and produce seeds. For now, we only want the minigame skeleton.
+
+🐞 Repro Steps / Expected Flow
+
+Player enters the Laboratory room (already exists as placeholder).
+
+Player clicks on the Microscope object (placeholder grey block).
+
+A UI panel opens with:
+
+A horizontal bar (placeholder).
+
+A moving cursor sliding left → right.
+
+A highlighted target zone (placeholder).
+
+Player must click when the cursor overlaps the target zone.
+
+✅ Expected Behavior
+
+Success: click inside target → “Analysis Successful” (placeholder text).
+
+Failure: click outside → “Analysis Failed” (placeholder text), retry possible.
+
+Economy: Each attempt consumes –2 CRY from the player (integrated with GameManager economy).
+
+End of minigame: only message feedback, no seeds or inventory updates yet (will come with BLK-02.03).
+
+UI/UX: Placeholder graphics are fine (grey block, simple bar + cursor).
+
+📋 Acceptance Criteria (DoD)
+
+Microscope can be clicked and opens the UI.
+
+Cursor moves automatically across the bar.
+
+Click detection works → success or fail.
+
+CRY is reduced by 2 for each use.
+
+Message feedback is displayed correctly.
+
+System can be closed and retried without breaking gameplay.
+
+🧪 Test Plan
+
+Enter Lab → click microscope → UI opens.
+
+Test click inside target → success message, –2 CRY deducted.
+
+Test click outside target → fail message, –2 CRY deducted.
+
+Test retry works multiple times in the same day.
+
+Verify CRY does not go below zero (if no resources, usage should be blocked).
+
+Confirm console has no warnings/errors.
+
+📌 Notes for Delivery
+
+Branch: blocking/BLK-02.01-microscope
+
+Deliverables: Updated Unity scene, new scripts/prefabs for microscope and UI.
+
+Report Required: Please describe in short:
+
+How you implemented the system.
+
+Files/scripts created or modified.
+
+Tests you performed.
+
+---------------------------------------------------------------------------------------
 
 
 📦 Deliverables
@@ -72,4 +441,4 @@ Tests performed to ensure correct behavior.
 
 Any limitations or notes for future improvement.
 
-Screenshots or short gif of the Player in Play mode.
+Screenshots or short video of the Player in Play mode.
