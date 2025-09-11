@@ -20,11 +20,11 @@ namespace Sporae.Core
             return ActionsLeft > 0;
         }
 
-        public bool SpendAction()
+        public bool SpendAction(int amount = 1)
         {
             if (!CanSpendAction()) return false;
             
-            ActionsLeft--;
+            ActionsLeft -= amount;
             OnActionsChanged?.Invoke(ActionsLeft);
             return true;
         }

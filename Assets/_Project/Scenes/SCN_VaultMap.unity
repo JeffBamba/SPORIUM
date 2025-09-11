@@ -1244,7 +1244,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   potState:
-    PotId: 
+    PotId: Pot002
     HasPlant: 0
     Stage: 0
     Hydration: 0
@@ -2296,7 +2296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   potState:
-    PotId: 
+    PotId: Pot001
     HasPlant: 0
     Stage: 0
     Hydration: 0

@@ -61,21 +61,32 @@ public class GameManager : MonoBehaviour
         NotifyUI();
     }
 
-    public bool TrySpendAction(int costCRY = 0)
+    public bool TrySpendCry(int amount)
     {
-        if (!actionSystem.CanSpendAction()) return false;
-        if (!economySystem.CanAfford(costCRY)) return false;
+        if (!economySystem.CanAfford(amount))
+            return false;
 
-        actionSystem.SpendAction();
-        if (costCRY > 0) economySystem.Spend(costCRY);
+        economySystem.Spend(amount);
+        
+        CurrentCRY = economySystem.CurrentCRY;
+        
+        OnCRYChanged?.Invoke(CurrentCRY);
+        
+        return true;
+    }
+    
+    public bool TrySpendAction(int amount = 0)
+    {
+        if (!actionSystem.CanSpendAction()) 
+            return false;
+
+        actionSystem.SpendAction(amount);
 
         // Aggiorna stati locali
         ActionsLeft = actionSystem.ActionsLeft;
-        CurrentCRY = economySystem.CurrentCRY;
 
         // Notifica UI
         OnActionsChanged?.Invoke(ActionsLeft);
-        OnCRYChanged?.Invoke(CurrentCRY);
 
         return true;
     }

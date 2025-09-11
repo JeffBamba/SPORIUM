@@ -189,7 +189,7 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
 
         foreach (var pot in registeredPots)
         {
-            if (pot != null && pot.HasPlant)
+            if (pot is { HasPlant: true })
             {
                 ResolveGrowthForPot(pot, dayIndex);
             }
@@ -229,7 +229,7 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
         
         int oldPoints = pot.GrowthPoints;
         pot.GrowthPoints += gained;
-
+        
         if (enableDebugLogs)
         {
             string stageName = GetStageName(pot.Stage);

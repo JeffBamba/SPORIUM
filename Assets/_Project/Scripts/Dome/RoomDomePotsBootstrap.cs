@@ -245,6 +245,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         if (potGrowthController != null)
         {
             // Crea e assegna il PotStateModel (Stage 0 = Empty per vasi vuoti)
+            Debug.LogError($"new pot state model with id: {potId}");
             PotStateModel potState = new PotStateModel(potId);
             potGrowthController.SetPotState(potState);
             
