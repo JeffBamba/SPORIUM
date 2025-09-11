@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using Sporae.Core;
+using TMPro;
 
 /// <summary>
 /// Rappresenta uno slot vaso interagibile nella Dome.
@@ -21,6 +22,8 @@ public class PotSlot : MonoBehaviour
     [Header("Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
 
+    [SerializeField] private TextMeshProUGUI _amountOfFruits;
+    
     // Evento statico per la selezione del vaso
     public static event Action<PotSlot> OnPotSelected;
     
@@ -43,8 +46,12 @@ public class PotSlot : MonoBehaviour
     // Cache del player per controllo distanza
     private Transform playerTransform;
     
+    private GameManager gameManager;
+    
     void Awake()
     {
+        gameManager = FindObjectOfType<GameManager>();
+        
         // Trova il player se presente
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -72,6 +79,16 @@ public class PotSlot : MonoBehaviour
         }
     }
     
+    private void Start() {
+        gameManager.OnDayChanged += HandleDayChanged;   
+    }
+
+    private void HandleDayChanged(int obj)
+    {
+        _amountOfFruits.text = PotActions.PotState.Stage != (int)PotState.Mature ? 
+                "" : $"+{PotActions.PotState.AmountFruits.ToString()}";
+    }
+
     void OnMouseEnter()
     {
         // Evidenzia il vaso al passaggio del mouse
@@ -143,7 +160,14 @@ public class PotSlot : MonoBehaviour
         {
             spriteRenderer.color = highlightColor;
         }
-        
+
+        if (PotActions.PotState.AmountFruits != 0)
+        {
+            gameManager.AddItem("Fruits", PotActions.PotState.AmountFruits);
+            PotActions.PotState.AmountFruits = 0;
+            _amountOfFruits.text = "";
+        }
+
         // Notifica la selezione
         OnPotSelected?.Invoke(this);
     }

@@ -260,6 +260,9 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
                 Debug.Log($"[BLK-01.04] {pot.PotId}: 🌱 Avanzamento Sprout → Mature! (soglia: {growthConfig.pointsSproutToMature} punti)");
         }
 
+        if (pot.Stage == (int)PlantStage.Mature && !stageChanged)
+            pot.AmountFruits = (pot.AmountFruits + 1) % 10;
+        
         // BLK-01.04: Emetti eventi per notificare crescita e/o cambio di stadio
         if (stageChanged)
         {

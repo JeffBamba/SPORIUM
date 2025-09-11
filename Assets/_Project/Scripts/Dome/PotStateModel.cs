@@ -17,6 +17,7 @@ public class PotStateModel
     [Header("Plant State")]
     public bool HasPlant;         // True se il vaso contiene una pianta
     public int Stage;             // 0=Seeded (placeholder BLK-01.02), 1-3 per crescita futura
+    public int AmountFruits;
     
     [Header("Resource Levels")]
     public int Hydration;         // 0..MaxHydration
