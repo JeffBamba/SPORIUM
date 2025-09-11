@@ -14,6 +14,7 @@ public class ElevatorSystem : MonoBehaviour
     [SerializeField] private GameObject uiPanel;
     [SerializeField] private int cryCost = 5;
     [SerializeField] private float teleportDelay = 0.1f;
+    [SerializeField] private GameObject elevatorSection;
     
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
@@ -184,6 +185,11 @@ public class ElevatorSystem : MonoBehaviour
             while (Vector3.Distance(player.position, targetPosition) > 0.05f)
             {
                 player.position = Vector3.Lerp(player.position, targetPosition, Time.deltaTime * elevatorSpeed);
+                elevatorSection.transform.position = new Vector3(
+                    elevatorSection.transform.position.x,
+                    player.position.y,
+                    elevatorSection.transform.position.z);
+                
                 yield return null;
             }
             
