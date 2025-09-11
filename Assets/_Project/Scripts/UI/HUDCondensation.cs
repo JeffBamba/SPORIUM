@@ -15,6 +15,8 @@ namespace _Project
         private void Awake()
         { 
             _gameManager = FindObjectOfType<GameManager>();
+            if (_gameManager == null)
+                Debug.LogWarning("There is no GameManager in the scene");
         }
 
         private void Start()

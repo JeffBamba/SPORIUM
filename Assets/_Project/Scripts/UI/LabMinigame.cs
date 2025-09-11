@@ -36,6 +36,8 @@ namespace _Project
         private void Awake()
         {
             _gameManager = FindObjectOfType<GameManager>();
+            if (_gameManager == null)
+                Debug.LogWarning("There is no GameManager in the scene");
         }
         
         private void Start()
@@ -84,10 +86,10 @@ namespace _Project
             if (!Input.GetMouseButtonDown(0))
                 return;
             
-            var targetMinX = _targetBar.position.x - _targetBar.rect.width / 2;
-            var targetMaxX = _targetBar.position.x + _targetBar.rect.width / 2;
-            var playerMinX = _playerBar.position.x - _playerBar.rect.width / 2;
-            var playerMaxX = _playerBar.position.x + _playerBar.rect.width / 2;
+            var targetMinX = _targetBar.anchoredPosition.x - _targetBar.rect.width / 2;
+            var targetMaxX = _targetBar.anchoredPosition.x + _targetBar.rect.width / 2;
+            var playerMinX = _playerBar.anchoredPosition.x - _playerBar.rect.width / 2;
+            var playerMaxX = _playerBar.anchoredPosition.x + _playerBar.rect.width / 2;
 
             _gameInProgress = false;
             _isWon =
