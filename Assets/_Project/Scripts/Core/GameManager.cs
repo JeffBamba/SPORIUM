@@ -1,8 +1,9 @@
 ﻿using System;
+using _Project;
 using UnityEngine;
 using Sporae.Core;
 
-public class GameManager : MonoBehaviour
+public class  GameManager : MonoBehaviour
 {
     [Header("Day & Actions")]
     [Min(1)] public int startingDay = 1;
@@ -25,16 +26,19 @@ public class GameManager : MonoBehaviour
     public event Action<int> OnDayChanged;
     public event Action<int> OnActionsChanged;
     public event Action<int> OnCRYChanged;
-
+    public event Action<float> OnCondensationChanged;
+    
     // Sistema di azioni separato
     private ActionSystem actionSystem;
     private EconomySystem economySystem;
-
+    private CondensationSystem condensationSystem;
+    
     void Awake()
     {
         // Inizializza sistemi
         actionSystem = new ActionSystem(actionsPerDay);
         economySystem = new EconomySystem(startingCRY);
+        condensationSystem = new CondensationSystem();
         
         // Setup iniziale
         CurrentDay = startingDay;
@@ -44,6 +48,7 @@ public class GameManager : MonoBehaviour
         // Inventario iniziale
         AddItem("SDE-001", 3); // Generic Seed per BLK-01.02
         AddItem("SPORE_GENERIC", 2);
+        AddItem("WAT-Raw", 2);
         
         // BLK-01.03A: CRY aumentati per permettere test completo (Plant+Water+Light+EndDay × 5 giorni)
 
@@ -91,6 +96,21 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
+    public float CollectCondensation()
+    {
+        var amount = condensationSystem.CondensationAmount;
+        
+        condensationSystem.Reset();
+        OnCondensationChanged?.Invoke(condensationSystem.CondensationAmount);
+        
+        return amount;
+    }
+
+    public float GetMaxCondensation()
+    {
+        return condensationSystem.GetMax();
+    }
+
     public void EndDay(int dailyPowerCost = 20)
     {
         CurrentDay++;
@@ -106,6 +126,10 @@ public class GameManager : MonoBehaviour
         if (actionSystem != null) actionSystem.ResetActions(4);
         ActionsLeft = actionSystem?.ActionsLeft ?? 4;
         OnActionsChanged?.Invoke(ActionsLeft);
+        
+        // 4) accumulation of condensation
+        condensationSystem.DayChanged();
+        OnCondensationChanged?.Invoke(condensationSystem.CondensationAmount);
         
         Debug.Log($"[BLK-01.03A] EndDay -> Day={CurrentDay}, CRY={CurrentCRY}, Actions={ActionsLeft}");
     }

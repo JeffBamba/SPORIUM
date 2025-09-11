@@ -247,6 +247,12 @@ public class PotActions : MonoBehaviour
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
             return false;
         }
+
+        if (!gameManager.ConsumeItem("WAT-Raw", 1))
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
+            return false;
+        }
         
         // Aumenta l'idratazione
         if (potState.IncreaseHydration(GetMaxHydration()))
