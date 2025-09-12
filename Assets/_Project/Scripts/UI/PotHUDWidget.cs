@@ -886,14 +886,9 @@ public class PotHUDWidget : MonoBehaviour
         Debug.Log($"[BLK-01.04] UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
 
     }
-    
-    /// <summary>
-    /// BLK-01.03B: Calcola la percentuale di progresso per lo stadio corrente
-    /// </summary>
-    private float CalculateProgressPercentage(PotStateModel state)
-    {
-        if (growthConfig == null) return 0f;
 
+    private int CalculateCurrentGrowthPoints(PotStateModel state)
+    {
         int points = state.GrowthPoints;
         bool hadHydration = (state.LastWateredDay == gameManager.CurrentDay);
         bool hadLight = (state.LastLitDay == gameManager.CurrentDay);
@@ -905,6 +900,18 @@ public class PotHUDWidget : MonoBehaviour
             (false, true)  => growthConfig.pointsPartialCare,
             (false, false) => growthConfig.pointsNoCare
         };
+
+        return points;
+    }
+    
+    /// <summary>
+    /// BLK-01.03B: Calcola la percentuale di progresso per lo stadio corrente
+    /// </summary>
+    private float CalculateProgressPercentage(PotStateModel state)
+    {
+        if (growthConfig == null) return 0f;
+
+        int points = CalculateCurrentGrowthPoints(state);
         
         switch (state.Stage)
         {
@@ -990,13 +997,15 @@ public class PotHUDWidget : MonoBehaviour
         {
             return "Pronto per piantare";
         }
+
+        int points = CalculateCurrentGrowthPoints(state);
         
         switch (state.Stage)
         {
             case (int)PlantStage.Seed:
-                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/2 punti";
+                return $"Giorno {state.DaysSincePlant} - {points}/2 punti";
             case (int)PlantStage.Sprout:
-                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/3 punti";
+                return $"Giorno {state.DaysSincePlant} - {points}/3 punti";
             case (int)PlantStage.Mature:
                 return $"Giorno {state.DaysSincePlant} - Pronta per raccolta!";
             default:
@@ -1015,7 +1024,6 @@ public class PotHUDWidget : MonoBehaviour
         }
         
         float percentage = CalculateProgressPercentage(state);
-        string stageName = GetStageName(state.Stage);
         
         switch (state.Stage)
         {
