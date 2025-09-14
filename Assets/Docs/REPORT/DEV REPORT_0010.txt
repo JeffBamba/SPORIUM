@@ -376,3 +376,4 @@ La sessione di sviluppo ha completato con successo il **BLK-01.04**, implementan
 ---
 
 **IMPORTANTE**: Questo report documenta il completamento del BLK-01.04, portando il progetto Sporae a un nuovo livello di funzionalità. Il sistema di crescita è completamente operativo, i bug critici sono stati risolti, e il progetto è pronto per l'implementazione del sistema di raccolta e vendita (BLK-01.05). L'unico problema rimanente è la visualizzazione inconsistente degli sprite, che non compromette la funzionalità principale.
+

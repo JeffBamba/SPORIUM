@@ -1,0 +1,296 @@
+---
+
+# 🌱 SPORIUM — Game Design Document
+
+**Versione: GDD19**
+**Data: 06/09/2025**
+
+---
+
+## 🎯 Visione
+
+**Sporium** è un gestionale/simulativo in pixel art ambientato in un futuro post-apocalittico.
+
+Il giocatore impersona un biologo solitario che vive e lavora in un Vault botanico sotterraneo, con lo scopo di **ricostruire o corrompere la biodiversità** attraverso spore, semi, clonazioni e manipolazioni genetiche.
+
+* **Ritmo**: cicli giornalieri, missioni, reputazione con le fazioni, progressione narrativa emergente.
+* **Atmosfera**: cupa, sospesa tra scienza e follia, con estetica semi-realistico/pixel art illuminata da LED e bioluminescenze.
+* **Obiettivo del giocatore**: raggiungere un equilibrio ecologico, oppure spingere il Vault verso la corruzione, in un’esperienza contemplativa, etica e rigiocabile.
+* **Caratteristica chiave**: nessun timer globale, libertà di scelta, ma conseguenze a lungo termine.
+
+---
+
+## 🌌 Lore & Main Quest
+
+### Origine del Vault
+
+Ultimo laboratorio botanico rimasto, ispirato al Global Seed Vault delle Svalbard. Sopravvissuto a un collasso globale (clima, pandemia fungina, guerra biotecnologica).
+
+### Il Biologo
+
+Identità ambigua (sopravvissuto, clone o delirio pre-morte).
+
+### Diario SPORIUM
+
+Log narrativo, voce interiore instabile, contraddittoria, poetica, glitchata.
+
+### Fazioni
+
+| Fazione                 | Visione                            | Toni                |
+| ----------------------- | ---------------------------------- | ------------------- |
+| Custodi della Rinascita | Ricostruzione ecologica e speranza | Idealismo fragile   |
+| Culto della Muffa       | Corruzione, muffa come gioia       | Estasi degenerata   |
+| Mercanti Ombra          | Contrabbando semi, cinismo         | Pragmatismo oscuro  |
+| Ipnotici                | Onirismo e trance da spore         | Visioni disturbanti |
+| Militari                | Ordine e sfruttamento              | Crudezza, dominio   |
+| Setta religiosa         | Devozione e superstizione          | Tragico/ridicolo    |
+
+### Main Quest
+
+Conflitto simbolico Custodi ↔ Culto Muffa, con esiti variabili. Possibile finale in loop eterno → tutto è un sogno pre-morte del biologo.
+
+---
+
+## ⚙️ Core Gameplay
+
+* **Coltivazione**: da spore → semi → pianta → ibridi/mutazioni.
+* **Pipeline**: Clonazione → Manipolazione semi → Ibridazione → Mutazioni.
+* **Routine**: irrigazione, potatura, esposizione a LED, spray antifungini, analisi fogliare.
+* **Reputazione**: influenza scambi, accesso a missioni e mercato nero.
+* **Eventi**: arrivi casuali, sabotaggi, muffe, blackout, baratti.
+* **Diario SPORIUM**: micro-missioni poetiche e glitchate.
+
+---
+
+## 🏛️ Ambienti Principali & Vault Map\_01
+
+* **Esterno**: Visitor Room + Seed Storage collegato con tubo pneumatico all’ascensore.
+* **Livello –1**: Dome Centrale + Laboratorio.
+* **Livello –2**: Dome del Cibo + Bedroom del Biologo.
+* **Livello –3**: “?” (area segreta/espansione futura).
+
+**Navigazione**: verticale con ascensore (–5 CRY) o scale gratuite.
+
+---
+
+## 📖 Diario SPORIUM
+
+* **Funzione**: registro + voce narrativa.
+* **Tono**: poetico, delirante, contraddittorio.
+* **Funzioni**:
+
+  * Genera micro-missioni legate ad achievement.
+  * Glitch visivi/sonori come rottura della quarta parete.
+  * Influenza la percezione del giocatore sulla verità della storia.
+
+---
+
+## 🔬 Sistemi Chiave
+
+### Spore (SPO-xxx)
+
+* **SPO-001 Pura** → stabilità, tratti rigenerativi.
+* **SPO-002 Corrotta** → instabilità, tossicità.
+* **SPO-003 Neutra** → imprevedibilità.
+* **SPO-004 Onirica** → occultismo, visioni.
+
+### Ibridazione
+
+Combinazione di due specie → semi con tratti fissi.
+Codici: HYB-201…210.
+
+### Manipolazione Semi
+
+Step post-clonazione → permette tratti unici e variazioni.
+
+### Reputazione
+
+Scala –100 ↔ +100. Influenza missioni, accesso a scambi, eventi.
+
+### Eventi & Visitatori
+
+Arrivi randomici con crisi, richieste, doni, sabotaggi.
+Codici EVT-001…010.
+
+---
+
+## 🌡️ Sistema Ecologico Dome (pH)
+
+| Range    | Stato          | Effetti                                              |
+| -------- | -------------- | ---------------------------------------------------- |
+| –100/–80 | Ultra Acido    | Piante pure collassano; tossiche +50% resa           |
+| –79/–30  | Acido stabile  | Tossiche rapide; +10% mutazioni                      |
+| –29/+29  | Neutro         | Biodiversità stabile                                 |
+| +30/+79  | Basico stabile | Piante pure prosperano                               |
+| +80/+100 | Ultra Basico   | Tossiche collassano, pure iper-produttive ma sterili |
+
+---
+
+## 🌱 Ciclo di Crescita Piante
+
+Ogni pianta ha 3 stadi (Germoglio → Crescita → Maturità).
+Durata media: 5 giorni.
+
+| Cod.    | Pianta              | Fasi | Totale |
+| ------- | ------------------- | ---- | ------ |
+| PLT-101 | Arctic Hask         | 2+3  | 5      |
+| PLT-102 | Night-Bloom Iris    | 2+3  | 5      |
+| PLT-103 | Ferric Fern         | 2+4  | 6      |
+| PLT-104 | Glasscap Fungus     | 1+2  | 3      |
+| PLT-105 | Saltbloom Succulent | 3+4  | 7      |
+| PLT-106 | Red Tangle Vine     | 2+3  | 5      |
+| PLT-107 | Blue Sedge          | 2+3  | 5      |
+| PLT-108 | Lantern Moss        | 2+3  | 5      |
+
+---
+
+## 🖥️ UI & HUD
+
+* **HUD Dome**: barra pH, slot missioni, tempo/giorno, energia operativa, reputazione, inventario rapido.
+* **Schermata missioni**: titolo, fazione, TIER, ricompensa, rischi.
+* **Notifiche**: richieste aggiornamenti.
+
+---
+
+## 💰 Economia Interna
+
+### Valute
+
+* **CRY** = cripto, moneta unica sopravvissuta.
+* **BRR** = baratto diretto.
+
+### Flusso Economico
+
+| Voce                     | Tipo           | Valore             | Costo in Azioni | Costo in CRY |
+| ------------------------ | -------------- | ------------------ | --------------- | ------------ |
+| Missione Tier 1          | Entrata        | +20–30 CRY         | –               | –            |
+| Missione Tier 3          | Entrata        | +80–120 CRY        | –               | –            |
+| Missione Tier 5          | Entrata        | +200–300 CRY       | –               | –            |
+| Vendita pianta base      | Entrata        | +10–15 CRY         | –               | –            |
+| Vendita ibrido raro      | Entrata        | +50–80 CRY         | –               | –            |
+| Vendita seme leggendario | Entrata        | +150–250 CRY       | –               | –            |
+| Azioni Dome              | Uscita         | –                  | 1 Azione        | –            |
+| Minigiochi Laboratorio   | Uscita         | –                  | 1 Azione        | –            |
+| Seed Storage             | Uscita         | –                  | 1 Azione        | –            |
+| Ascensore                | Uscita         | –                  | –               | –5 CRY       |
+| Corrente giornaliera     | Uscita         | –                  | –               | –20 CRY      |
+| Sterilizzazione muffa    | Uscita         | –                  | –               | –30/80 CRY   |
+| Riparazioni sabotaggio   | Uscita         | –                  | –               | –50/100 CRY  |
+| Mercato Nero             | Entrata/Uscita | Transazioni libere | –               | Nessuna fee  |
+
+---
+
+## 🎮 Minigiochi
+
+### Laboratorio
+
+* **Microscopio** (analisi tratti).
+* **Pipetta** (innesto semi/spore).
+* **Catalizzatori** (attivazione).
+* **Combinazione spore** *(aggiornato)*:
+
+  * Input: 2 spore.
+  * Premendo **Combine**, la camera torna a livello zoom del Lab.
+  * Sopra al microscopio appare un **fumetto** con testo *“Clicka per Combinare”*.
+  * Una **barra di progresso** cresce con i click del giocatore.
+  * Al completamento, il fumetto mostra *“Generic Seed +1”*.
+  * Output: 1 seme generico `SDE-001` aggiunto all’inventario.
+  * Costo: –1 Azione.
+  * Debug log: `"[BLK-02.03] Combining SPO-xxx + SPO-yyy → Generated SDE-001"`.
+* **Incubazione** (luce/umidità/tempo).
+
+### Routine Dome
+
+* Irrigazione.
+* Potatura.
+* Spray antifungino.
+* Esposizione LED.
+* Analisi fogliare.
+
+---
+
+## 📌 Sistema Missioni
+
+* **Fonti**: Visitor Room, Diario, Eventi, Mercato Nero.
+* **Struttura**: Proposta + Consegna.
+* **Max 3 missioni attive.**
+* **Tier 1–5** con impatti economici e sul pH.
+
+---
+
+## 🎲 Eventi Randomici
+
+Arrivi EVT-001…010 con crisi, richieste, doni, sabotaggi.
+*(tabella invariata da GDD18)*
+
+---
+
+## 🧰 Strumenti (STR-xxx)
+
+| Cod.    | Strumento               |
+| ------- | ----------------------- |
+| STR-001 | Microscopio             |
+| STR-002 | Pipetta                 |
+| STR-003 | Catalizzatore           |
+| STR-004 | Incubatore              |
+| STR-005 | LED                     |
+| STR-006 | Spray Antifungino       |
+| STR-007 | Cesoie                  |
+| STR-008 | Mixer                   |
+| STR-009 | PC Nexus (mercato nero) |
+| STR-010 | Interfaccia Seed Vault  |
+
+---
+
+## 📦 Blocking\_01 – Loop Minimo (aggiornato)
+
+* Dome: azioni = –1 Azione (nessun CRY).
+* Laboratorio: minigiochi = –1 Azione (nessun CRY).
+* Seed Storage: deposito/ritiro = –1 Azione (nessun CRY).
+* Ascensore = –5 CRY.
+* Fine giornata = –20 CRY (corrente).
+* Avvio loop: 50 CRY, 1 seme, 2 spore.
+
+---
+
+## 📦 Blocking\_02 – Tutorial Narrativo (8 Giorni)
+
+**Giorno 1** → Introduzione Dome (piantumazione).
+**Giorno 2** → Azioni base (acqua, luce).
+**Giorno 3** → Economia: introduzione CRY come energia, non costo azioni.
+**Giorno 4** → Crescita pianta, logica a stadi.
+**Giorno 5** → **Laboratorio: combinazione spore** (nuovo gameplay visivo).
+
+* Inserisci 2 spore.
+* Premendo **Combine**, zoom out + fumetto *“Clicka per Combinare”*.
+* Barra a click → completamento → fumetto *“Generic Seed +1”*.
+* Inventario aggiornato con SDE-001.
+  **Giorno 6** → Incubazione semi.
+  **Giorno 7** → Reputazione e prime missioni.
+  **Giorno 8** → Routine completa e Diario SPORIUM.
+
+---
+
+## 📑 Indice Codificato Ufficiale
+
+* Spore (SPO-xxx) → 4 tipi.
+* Piante base (PLT-xxx) → 8 specie.
+* Ibridi (HYB-xxx) → 10 combinazioni.
+* Mutazioni (MUT-xxx) → 6 varianti.
+* Strumenti (STR-xxx) → 10 tool.
+* Eventi (EVT-xxx) → 10 esempi.
+* Missioni (MISSION-xxx) → 24 totali (3–5 per fazione).
+
+---
+
+## 📝 TO DO LIST (aggiornata)
+
+* Aggiornare HUD → mostrare slot azioni e CRY separati.
+* Aggiornare testi tutorial giorno 3 → CRY come energia e non costo azioni.
+* Eliminare fee Mercato Nero.
+* Rifinire messaggi del Diario → enfatizzare il consumo di tempo/azioni, non di CRY.
+* **Nuovo**: Implementare fumetto + barra interattiva nel Laboratorio per output seme generico.
+
+---
+
+
