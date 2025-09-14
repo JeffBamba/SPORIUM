@@ -1,0 +1,51 @@
+📅 Road Map — 
+BLOCKING_01
+
+Fase 0 – Setup Tecnico
+BLK-00.01 → Creazione progetto Unity 2D URP LTS
+BLK-00.02 → Struttura cartelle (Assets/Scenes, Prefabs, Scripts, Placeholders)
+BLK-00.03 → Creazione scene placeholder: Dome, Lab, Visitor Room, Seed Storage, Bedroom
+BLK-00.04 → Player placeholder con navigazione punta-e-clicca (traslazione)
+BLK-00.05 → GameManager: gestisce giorni, slot azioni, inventario
+
+Fase 1 – Dome
+BLK-01.01 → Piazzare 2 vasi interattivi
+BLK-01.02 → Azioni: pianta seme, annaffia, illumina
+BLK-01.03 → Gestione slot giornalieri (3–4)
+BLK-01.04 → Crescita pianta in 3 stadi placeholder
+BLK-01.05 → Output pianta matura = frutto
+
+Fase 2 – Laboratorio
+BLK-02.01 → Microscopio: minigioco base (clic barra)
+BLK-02.02 → Input: 2 spore
+BLK-02.03 → Output: 1 seme generico (SDE-001)
+BLK-02.04 → Aggiunta seme all’inventario
+
+Fase 3 – Visitor Room (Missione Placeholder Fazione)
+BLK-03.01 → Arrivo visitatore (Day 2) + popup “Visitor in attesa” + interazione (E/click) → UI dialogo centro schermo (ritratto placeholder + info fazione + testo con effetto macchina da scrivere)
+BLK-03.02 → Missione: scelta percorso (Veloce o Completo) + validazione flow Dome+Lab + logica rifiuto/ritorno (2 giorni).  
+  • Quick Path → consegna frutto/pianta già esistente → Ricompensa prevista: pochi CRY + seme nuovo (PLT-102) → Hint: “Soluzione rapida: meno rischi, ma guadagno ridotto.”  
+  • Complete Path → coltiva e consegna pianta nuova ottenuta con SDE-001 (≠ starter) → Ricompensa prevista: più CRY + seme nuovo (PLT-102) + 1 item speciale (STR-005 LED Blu o REA-204 Medium A) → Hint: “Soluzione elaborata: più impegno, più valore.”  
+  • Se missione RIFIUTATA → il visitatore sparisce e si ripresenta dopo 2 giorni con la stessa richiesta.
+BLK-03.03 → Consegna missione: il player deve tornare nella Visitor Room e usare il tasto 📞 Call.  
+  • Se missione non completata → auto-reply: “Connessione non disponibile. Torna al lavoro.” (nessun spawn).  
+  • Se missione ReadyToDeliver → breve delay con SFX/luce → arrivo visitatore → dialogo finale con riepilogo ricompensa.  
+  • Conferma consegna → deduzione item dall’inventario, applicazione ricompensa (in base alla scelta Quick/Complete), log entry nel Diario SPORAE.  
+  • Dopo consegna → visitatore lascia la stanza → missione segnata come COMPLETATA.
+
+Fase 4 – Seed Storage
+BLK-04.01 → Interfaccia placeholder inventario
+BLK-04.02 → Funzione: Deposita / Ritira (1 slot test)
+
+Fase 5 – Bedroom
+BLK-05.01 → Pulsante “Fine Giornata”
+BLK-05.02 → Diario placeholder: log 1 riga
+BLK-05.03 → Giorno successivo + reset slot
+
+Fase 6 – Collaudo Loop
+BLK-06.01 → Avvio con 1 seme + 2 spore
+BLK-06.02 → Giocatore combina spore → seme
+BLK-06.03 → Pianta seme → crescita → frutto
+BLK-06.04 → Visitor Room → missione → nuovo seme
+BLK-06.05 → Fine giornata → Diario
+BLK-06.06 → Ripetizione ciclo

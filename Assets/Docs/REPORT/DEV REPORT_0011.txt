@@ -1,0 +1,128 @@
+📑 Dev Report
+
+ECO-01.00 — Economy Engine Update (Actions ≠ CRY)
+
+Status: ✅ Completed
+
+Reworked the economy: all base actions (Plant, Water, Light, Lab minigames, Seed Storage) now cost Actions only, no CRY.
+
+Elevator, End Day (daily power), and Repair/Events remain CRY-only.
+
+HUD updated: clear separation of Actions remaining vs CRY total.
+
+Adjusted tooltips/tutorials — no more CRY costs on basic actions.
+
+BLK-01.04 — Pot Growth Visualization & Points Counter Issues
+
+Status: ✅ Fixed
+
+Fixed placeholder sprite updates: now switches correctly (Seed → Sprout → Mature).
+
+GrowthPoints increment correctly on Water/Light according to PlantGrowthConfig.
+
+HUD reflects changes instantly.
+
+BLK-01.05 — HUD Feedback + Growth Progression Consistency
+
+Status: ✅ Completed
+
+HUD now refreshes instantly after actions.
+
+Action buttons deactivate until next Day.
+
+Logic enforced:
+
+Day 1 → Plant + Water
+
+Day 2 → Water + Light
+
+Day 3+ → Water + Light only
+
+Plant button disappears after planting. Light disabled if no plant present.
+
+Growth stages always match days + correct care actions.
+
+BLK-00.04C — Player Navigation with WASD
+
+Status: ✅ Added
+
+WASD input added alongside click-to-move.
+
+Animations (Idle/Walk) work with both systems.
+
+No conflicts between control schemes.
+
+BLK-ELV-002 — Elevator Modifications
+
+Status: ✅ Completed
+
+Added placeholder elevator doors at each floor.
+
+Floor buttons appear to the side of the character (never covering).
+
+Controls: W = +1, S = –1, 0 = UI button.
+
+Integrated Dome elevator PNG graphics.
+
+Player remains fully controllable even with UI active.
+
+BLK-01.05A — Elevator HUD/Panel Placeholder & Walkable Floors
+
+Status: ✅ Implemented
+
+Elevator panel with 4 floor buttons (0, –1, –2, –3).
+
+Current floor highlighted in yellow.
+
+Buttons fully linked to elevator logic.
+
+Walkable areas: Visitor Room + Seed Storage (0), Dome (–1).
+
+Added entrance occlusion pillar (“quinta effect”): player briefly hidden behind it when exiting elevator.
+
+BLK-02.01 — Microscope: Basic Minigame Implementation
+
+Status: ✅ Delivered
+
+Implemented first Lab minigame (Microscope).
+
+UI: horizontal bar, sliding cursor, target zone.
+
+Interaction flow:
+
+Click inside zone → “Analysis Successful”
+
+Click outside zone → “Analysis Failed”
+
+Each attempt costs –2 CRY, retries allowed.
+
+Blocked when CRY = 0.
+
+Multiple retries in the same day work fine.
+
+Console clean, no warnings/errors.
+
+✅ Completed: BLK-01.07 — Unified Basic Food & Water System + Resource Inventory + Harvest & Collection Feedback
+
+Implemented Features:
+
+Basic Resource Inventory
+
+Tracks CRY (currency), Generic Fruit, and WAT-RAW (raw water).
+
+Values update dynamically in real time.
+
+Minimal HUD Integration
+
+Static resource list displayed.
+
+Condensation progress bar visible and updating each day.
+
+Water System
+
+Condensation Collector generates +2 WAT-RAW at End of Day.
+
+Watering consumes exactly 1 WAT-RAW from Inventory.
+
+✅ All tasks from the document are completed.
+System updated, tested, and integrated into the current build.
