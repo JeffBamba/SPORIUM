@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Game
+namespace _Project
 {
     [RequireComponent(typeof(PlayerClickMover2D))]
     public class PlayerAnimator : MonoBehaviour

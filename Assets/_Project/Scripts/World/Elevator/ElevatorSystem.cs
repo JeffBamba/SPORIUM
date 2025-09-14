@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,7 @@ public class ElevatorSystem : MonoBehaviour
     [SerializeField] private GameObject uiPanel;
     [SerializeField] private int cryCost = 5;
     [SerializeField] private float teleportDelay = 0.1f;
+    [SerializeField] private GameObject elevatorSection;
     
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
@@ -64,6 +66,15 @@ public class ElevatorSystem : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.W))
+            GoToLevel((currentLevelIndex + 1) % levels.Length);
+        
+        if (Input.GetKeyDown(KeyCode.S))
+            GoToLevel((currentLevelIndex - 1) % levels.Length);
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (!enabled) return;
@@ -85,7 +96,7 @@ public class ElevatorSystem : MonoBehaviour
             ShowFloorOptions(false);
         }
     }
-
+    
     void ShowFloorOptions(bool state)
     {
         playerInside = state;
@@ -126,7 +137,7 @@ public class ElevatorSystem : MonoBehaviour
             return;
         }
 
-        if (!gameManager.TrySpendAction(cryCost))
+        if (!gameManager.TrySpendCry(cryCost))
         {
             Debug.LogWarning($"[ElevatorSystem] Non hai abbastanza azioni o CRY per usare l'ascensore! (Costo: {cryCost})");
             return;
@@ -174,6 +185,11 @@ public class ElevatorSystem : MonoBehaviour
             while (Vector3.Distance(player.position, targetPosition) > 0.05f)
             {
                 player.position = Vector3.Lerp(player.position, targetPosition, Time.deltaTime * elevatorSpeed);
+                elevatorSection.transform.position = new Vector3(
+                    elevatorSection.transform.position.x,
+                    player.position.y,
+                    elevatorSection.transform.position.z);
+                
                 yield return null;
             }
             

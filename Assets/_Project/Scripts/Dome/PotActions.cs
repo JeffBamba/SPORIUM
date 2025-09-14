@@ -93,6 +93,7 @@ public class PotActions : MonoBehaviour
             // Crea nuovo solo se non esiste
             if (potState == null)
             {
+                Debug.LogError($"create new pot state model: {potSlot.PotId}");
                 potState = new PotStateModel(potSlot.PotId);
                 if (showDebugLogs)
                 {
@@ -139,14 +140,13 @@ public class PotActions : MonoBehaviour
         bool inRange = IsPlayerInRange();
         bool hasResources = CanConsumeResources();
         bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
-        bool notPlantedOnThisDay = potState.PlantedDay != gameManager.CurrentDay;
         
         if (showDebugLogs)
         {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
         }
         
-        return hasPlant && hydrationNotMax && inRange && hasResources && notPlantedOnThisDay && notWateredOnThisDay;
+        return hasPlant && hydrationNotMax && inRange && hasResources && notWateredOnThisDay;
     }
     
     /// <summary>
@@ -243,6 +243,12 @@ public class PotActions : MonoBehaviour
         
         // Consuma le risorse
         if (!TryConsumeResources())
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
+            return false;
+        }
+
+        if (!gameManager.ConsumeItem("WAT-Raw", 1))
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
             return false;
@@ -352,10 +358,9 @@ public class PotActions : MonoBehaviour
         if (gameManager == null) return false;
         
         int actionsCost = GetActionsCost();
-        int cryCost = GetCryCost();
         
         // Usa il metodo TrySpendAction del GameManager esistente
-        return gameManager.TrySpendAction(cryCost);
+        return gameManager.TrySpendAction(actionsCost);
     }
     
     /// <summary>

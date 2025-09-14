@@ -45,6 +45,8 @@ public class PotHUDWidget : MonoBehaviour
     private PotSlot currentSelectedPot;
     private PlantGrowthConfig growthConfig;
     
+    private GameManager gameManager;
+    
     void Start()
     {
         InitializeWidget();
@@ -85,6 +87,17 @@ public class PotHUDWidget : MonoBehaviour
     
     private void InitializeWidget()
     {
+        // Cerca GameManager e si iscrive
+        gameManager = FindObjectOfType<GameManager>();
+        if (gameManager != null)
+        {
+            gameManager.OnDayChanged += HandleDayChanged;
+        }
+        else
+        {
+            Debug.LogError("[BLK-01.03A] DayCycleController: GameManager non trovato!");
+        }
+        
         // Cerca un Canvas esistente (preferibilmente quello dell'HUD)
         parentCanvas = FindParentCanvas();
         
@@ -110,7 +123,16 @@ public class PotHUDWidget : MonoBehaviour
         isInitialized = true;
         Debug.Log("[PotHUDWidget] Widget inizializzato correttamente.");
     }
-    
+
+    private void HandleDayChanged(int currentDay)
+    {
+        if (currentSelectedPot == null)
+            return;
+        
+        UpdateActionButtons(currentSelectedPot);
+        UpdateStageAndProgressUI(currentSelectedPot);
+    }
+
     private Canvas FindParentCanvas()
     {
         // Cerca prima nell'HUD esistente
@@ -520,7 +542,7 @@ public class PotHUDWidget : MonoBehaviour
             txtCosts.color = textColor;
             txtCosts.fontSize = 12;
             txtCosts.alignment = TextAlignmentOptions.Center;
-            txtCosts.text = "Costo: -1 Azione / -1 CRY";
+            txtCosts.text = "Costo: -1 Azione";
             
             RectTransform costsRect = costsGO.GetComponent<RectTransform>();
             costsRect.anchorMin = new Vector2(0, 0);
@@ -660,6 +682,10 @@ public class PotHUDWidget : MonoBehaviour
             Debug.Log($"[PotHUDWidget] Azione {actionType} eseguita con successo!");
             // Aggiorna l'UI
             UpdateActionButtons(selectedPot);
+
+            var growthController = selectedPot.GetComponent<PotGrowthController>();
+            if (growthController != null)
+                UpdateStageAndProgressUI(selectedPot);
         }
         else
         {
@@ -838,7 +864,12 @@ public class PotHUDWidget : MonoBehaviour
             stageIcon.color = GetStageColor(state.Stage);
             // TODO: Sostituire con sprite reali quando disponibili
         }
-        
+
+        UpdateProgressUI(state);
+    }
+
+    private void UpdateProgressUI(PotStateModel state)
+    {
         // BLK-01.04: Calcola e aggiorna Progress con informazioni dettagliate
         float progressPercentage = CalculateProgressPercentage(state);
         if (progressBar != null)
@@ -852,7 +883,25 @@ public class PotHUDWidget : MonoBehaviour
             progressText.text = progressInfo;
         }
         
-        Debug.Log($"[BLK-01.04] UI aggiornata: {pot.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
+        Debug.Log($"[BLK-01.04] UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
+
+    }
+
+    private int CalculateCurrentGrowthPoints(PotStateModel state)
+    {
+        int points = state.GrowthPoints;
+        bool hadHydration = (state.LastWateredDay == gameManager.CurrentDay);
+        bool hadLight = (state.LastLitDay == gameManager.CurrentDay);
+
+        points += (hadHydration, hadLight) switch
+        {
+            (true, true)   => growthConfig.pointsIdealCare,
+            (true, false)  => growthConfig.pointsPartialCare,
+            (false, true)  => growthConfig.pointsPartialCare,
+            (false, false) => growthConfig.pointsNoCare
+        };
+
+        return points;
     }
     
     /// <summary>
@@ -861,6 +910,8 @@ public class PotHUDWidget : MonoBehaviour
     private float CalculateProgressPercentage(PotStateModel state)
     {
         if (growthConfig == null) return 0f;
+
+        int points = CalculateCurrentGrowthPoints(state);
         
         switch (state.Stage)
         {
@@ -868,14 +919,14 @@ public class PotHUDWidget : MonoBehaviour
                 return 0f; // Nessun progresso per vasi vuoti
                 
             case (int)PlantStage.Seed:
-                if (state.GrowthPoints >= growthConfig.pointsSeedToSprout)
+                if (points >= growthConfig.pointsSeedToSprout)
                     return 100f; // Pronto per avanzare
-                return (float)state.GrowthPoints / growthConfig.pointsSeedToSprout * 100f;
+                return (float)points / growthConfig.pointsSeedToSprout * 100f;
                 
             case (int)PlantStage.Sprout:
-                if (state.GrowthPoints >= growthConfig.pointsSproutToMature)
+                if (points >= growthConfig.pointsSproutToMature)
                     return 100f; // Pronto per avanzare
-                return (float)state.GrowthPoints / growthConfig.pointsSproutToMature * 100f;
+                return (float)points / growthConfig.pointsSproutToMature * 100f;
                 
             case (int)PlantStage.Mature:
                 return 100f; // Pianta completamente matura
@@ -946,13 +997,15 @@ public class PotHUDWidget : MonoBehaviour
         {
             return "Pronto per piantare";
         }
+
+        int points = CalculateCurrentGrowthPoints(state);
         
         switch (state.Stage)
         {
             case (int)PlantStage.Seed:
-                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/2 punti";
+                return $"Giorno {state.DaysSincePlant} - {points}/2 punti";
             case (int)PlantStage.Sprout:
-                return $"Giorno {state.DaysSincePlant} - {state.GrowthPoints}/3 punti";
+                return $"Giorno {state.DaysSincePlant} - {points}/3 punti";
             case (int)PlantStage.Mature:
                 return $"Giorno {state.DaysSincePlant} - Pronta per raccolta!";
             default:
@@ -971,7 +1024,6 @@ public class PotHUDWidget : MonoBehaviour
         }
         
         float percentage = CalculateProgressPercentage(state);
-        string stageName = GetStageName(state.Stage);
         
         switch (state.Stage)
         {

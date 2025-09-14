@@ -114,6 +114,7 @@ MonoBehaviour:
   stopDistance: 0.05
   acceleration: 10
   deceleration: 15
+  sideShift: 10
   groundMask:
     serializedVersion: 2
     m_Bits: 1088
@@ -205,7 +206,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_Sprite: {fileID: 1375680998, guid: 885f531827c9feb408fc671c1446c101, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

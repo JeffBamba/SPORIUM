@@ -10,6 +10,7 @@ public class PlayerClickMover2D : MonoBehaviour
     [SerializeField] private float stopDistance = 0.1f; // Aumentato per fermata più precisa
     [SerializeField] private float acceleration = 10f;
     [SerializeField] private float deceleration = 15f;
+    [SerializeField] private float sideShift = 10f;
 
     [Header("Pathfinding")]
     [SerializeField] private LayerMask groundMask;
@@ -81,6 +82,14 @@ public class PlayerClickMover2D : MonoBehaviour
                 SetTarget(clickPosition);
             }
         }
+
+        var horizontal = Input.GetAxis("Horizontal");
+        if (horizontal != 0)
+        {
+            Vector2 target = transform.position + transform.right * (horizontal * sideShift);   
+            if (IsValidTargetPosition(target))
+                SetTarget(target);
+        }
     }
 
     private Vector2 GetMouseWorldPosition()
@@ -105,10 +114,15 @@ public class PlayerClickMover2D : MonoBehaviour
         targetPosition.y = transform.position.y;
         hasTarget = true;
         isMoving = true;
+
+        var offset = new Vector2(transform.position.x, transform.position.y) - targetPosition;
         
-        // Reset della velocità quando si imposta un nuovo target
-        currentVelocity = Vector2.zero;
-        rb.velocity = Vector2.zero;
+        if (Mathf.Approximately(Mathf.Sign(offset.x), Mathf.Sign(currentVelocity.x)))
+        {
+            // Reset della velocità quando si imposta un nuovo target
+            currentVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
+        }
     }
 
     private void MoveTowardsTarget()
