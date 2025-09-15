@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Sporae.Core;
 
@@ -28,6 +29,12 @@ namespace _Project
         {
             _showInventoryButton.onClick.AddListener(Show);
             _closeInventoryButton.onClick.AddListener(Close);
+            _inventory.OnInventoryChanged += UpdateInventory;
+        }
+
+        private void OnDestroy()
+        {
+            _inventory.OnInventoryChanged -= UpdateInventory;
         }
 
         private void Close()
@@ -37,8 +44,12 @@ namespace _Project
         
         private void Show()
         {
-            _inventoryPage.SetActive(true);
-            
+            _inventoryPage.SetActive(!_inventoryPage.activeSelf);
+            UpdateInventory();
+        }
+
+        private void UpdateInventory()
+        {
             foreach (HUDInventoryItem item in _items)
                 item.gameObject.SetActive(false);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using _Project;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,7 @@ public class ElevatorSystem : MonoBehaviour
     private GameManager gameManager;
     private int currentLevelIndex;
     private PlayerClickMover2D playerMover;
+    private UINotification uiNotification;
 
     void Start()
     {
@@ -33,8 +35,8 @@ public class ElevatorSystem : MonoBehaviour
         // Trova il GameManager nella scena
         gameManager = FindObjectOfType<GameManager>();
         playerMover = FindObjectOfType<PlayerClickMover2D>();
-
-
+        uiNotification = FindObjectOfType<UINotification>();
+        
         if (uiPanel != null)
         {
             uiPanel.SetActive(false);
@@ -125,6 +127,13 @@ public class ElevatorSystem : MonoBehaviour
         if (!CanTeleportToLevel(levelIndex))
             return;
 
+        if (!IsLevelUnlocked(levelIndex))
+        {
+            uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+            return;
+        }
+            
+        
         if (gameManager == null)
         {
             Debug.LogWarning("[ElevatorSystem] GameManager non trovato!");
@@ -147,6 +156,11 @@ public class ElevatorSystem : MonoBehaviour
         StartCoroutine(TeleportPlayer(levelIndex));
     }
 
+    private bool IsLevelUnlocked(int levelIndex)
+    {
+        return levelIndex < 3;
+    }
+    
     private bool CanTeleportToLevel(int levelIndex)
     {
         if (isTeleporting) return false;

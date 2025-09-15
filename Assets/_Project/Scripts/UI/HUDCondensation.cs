@@ -11,12 +11,18 @@ namespace _Project
 
         private GameManager _gameManager;
         private Inventory _inventory;
+        private UINotification _uiNotification;
         
         private void Awake()
         { 
             _gameManager = FindObjectOfType<GameManager>();
+            _uiNotification = FindObjectOfType<UINotification>();
+            
             if (_gameManager == null)
                 Debug.LogWarning("There is no GameManager in the scene");
+            
+            if (_uiNotification == null)
+                Debug.LogWarning("There is no UiNotification in the scene");
         }
 
         private void Start()
@@ -41,7 +47,10 @@ namespace _Project
         {
             int amountToCollect = (int)_gameManager.CollectCondensation();
             if (amountToCollect != 0)
+            {
+                _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
                 _gameManager.AddItem("WAT-Raw", amountToCollect);
+            }
         }
     }
 }

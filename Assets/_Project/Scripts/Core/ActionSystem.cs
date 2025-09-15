@@ -15,9 +15,9 @@ namespace Sporae.Core
             ActionsLeft = maxActions;
         }
 
-        public bool CanSpendAction()
+        public bool CanSpendAction(int amount = 1)
         {
-            return ActionsLeft > 0;
+            return ActionsLeft >= amount;
         }
 
         public bool SpendAction(int amount = 1)

@@ -12,6 +12,8 @@ namespace Sporae.Core
         public IReadOnlyCollection<InventoryItem> Items => _items.Values;
         public int TotalItems => _items.Values.Sum(item => item.Quantity);
         public int UniqueItems => _items.Count;
+        
+        public event Action OnInventoryChanged;
 
         public void Add(string id, int quantity = 1)
         {
@@ -29,6 +31,8 @@ namespace Sporae.Core
             {
                 _items[id] = new InventoryItem(id, quantity);
             }
+            
+            OnInventoryChanged?.Invoke();
         }
 
         public bool Has(string id, int quantity = 1)
@@ -52,6 +56,8 @@ namespace Sporae.Core
                 {
                     _items.Remove(id);
                 }
+                
+                OnInventoryChanged?.Invoke();
                 return true;
             }
             
