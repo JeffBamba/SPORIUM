@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,10 +22,17 @@ namespace _Project
         [SerializeField] private string _loseText;
 
         [SerializeField] private int _costCry;
+        [SerializeField] private int _costAction;
+
+        [SerializeField] private string _firstAttemptButtonText;
+        [SerializeField] private string _anotherAttemptButtonText;
+        
         
         private bool _gameInProgress;
         private bool _isWon;
+        private int _lastPlayingDay;
 
+        private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
 
         public void Show()
@@ -38,6 +46,8 @@ namespace _Project
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
                 Debug.LogWarning("There is no GameManager in the scene");
+            
+            _startButtonLabel = _startButton.GetComponentInChildren<TextMeshProUGUI>();
         }
         
         private void Start()
@@ -52,10 +62,13 @@ namespace _Project
 
         private void TryLaunch()
         {
-            if (!_gameManager.TrySpendCry(_costCry))
+            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+
+            if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
-                
+
             _textLabel.text = _defaultText;
+            _lastPlayingDay = _gameManager.CurrentDay;
             _gameInProgress = true;
         }
         
@@ -101,6 +114,9 @@ namespace _Project
 
         private void UpdateUI()
         {
+            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+            _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
+            
             _textLabel.text = _isWon ? _wonText : _loseText;
         }
     }
