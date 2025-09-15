@@ -2,6 +2,7 @@
 using _Project;
 using UnityEngine;
 using Sporae.Core;
+using UnityEngine.Serialization;
 
 public class  GameManager : MonoBehaviour
 {
