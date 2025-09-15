@@ -1004,9 +1004,9 @@ public class PotHUDWidget : MonoBehaviour
         switch (state.Stage)
         {
             case (int)PlantStage.Seed:
-                return $"Giorno {daysSincePlant} - {points}/2 punti";
+                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 2)}/2 punti";
             case (int)PlantStage.Sprout:
-                return $"Giorno {daysSincePlant} - {points}/3 punti";
+                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 3)}/3 punti";
             case (int)PlantStage.Mature:
                 return $"Giorno {daysSincePlant} - Pronta per raccolta!";
             default:
