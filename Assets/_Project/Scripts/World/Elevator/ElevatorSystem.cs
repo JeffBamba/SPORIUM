@@ -129,7 +129,7 @@ public class ElevatorSystem : MonoBehaviour
 
         if (!IsLevelUnlocked(levelIndex))
         {
-            uiNotification.ShowNotification("Sorry, out of order", 3);
+            uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
             return;
         }
             

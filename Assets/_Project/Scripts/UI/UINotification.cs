@@ -8,10 +8,17 @@ namespace _Project
     {
         [SerializeField] private TextMeshProUGUI _notificationText;
 
-        public void ShowNotification(string notification, float duration)
+        private Coroutine _coroutine;
+        
+        public void ShowNotification(string notification, float duration, Color color)
         {
             _notificationText.text = notification;
-            StartCoroutine(NotificationClearRoutine(duration));
+            
+            if (_coroutine != null)
+                StopCoroutine(_coroutine);
+            
+            _notificationText.color = color;
+            _coroutine = StartCoroutine(NotificationClearRoutine(duration));
         }
 
         private IEnumerator NotificationClearRoutine(float duration)

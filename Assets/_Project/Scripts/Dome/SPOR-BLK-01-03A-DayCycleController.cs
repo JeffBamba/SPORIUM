@@ -64,7 +64,6 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
-            gameManager.OnDayChanged += HandleDayChanged;
             if (enableDebugLogs)
                 Debug.Log("[BLK-01.03A] DayCycleController: Iscritto a GameManager.OnDayChanged");
         }

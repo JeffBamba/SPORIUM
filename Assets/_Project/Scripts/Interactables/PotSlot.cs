@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using _Project;
 using Sporae.Core;
 using TMPro;
 
@@ -47,10 +48,12 @@ public class PotSlot : MonoBehaviour
     private Transform playerTransform;
     
     private GameManager gameManager;
+    private UINotification uiNotification;
     
     void Awake()
     {
         gameManager = FindObjectOfType<GameManager>();
+        uiNotification = FindObjectOfType<UINotification>();
         
         // Trova il player se presente
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -85,8 +88,11 @@ public class PotSlot : MonoBehaviour
 
     private void HandleDayChanged(int obj)
     {
-        _amountOfFruits.text = PotActions.PotState.Stage != (int)PotState.Mature ? 
-                "" : $"+{PotActions.PotState.AmountFruits.ToString()}";
+        bool isMature = PotActions.PotState.Stage == (int)PotState.Mature;
+        bool hasFruits = PotActions.PotState.AmountFruits > 0;
+        
+        _amountOfFruits.text = (isMature && hasFruits) ? 
+                $"{PotActions.PotState.AmountFruits.ToString()}+" : "";
     }
 
     void OnMouseEnter()
@@ -163,6 +169,7 @@ public class PotSlot : MonoBehaviour
 
         if (PotActions.PotState.AmountFruits != 0)
         {
+            uiNotification.ShowNotification($"New Fruit added to Inventory: {PotActions.PotState.AmountFruits}", 3f, Color.green);
             gameManager.AddItem("Fruits", PotActions.PotState.AmountFruits);
             PotActions.PotState.AmountFruits = 0;
             _amountOfFruits.text = "";
