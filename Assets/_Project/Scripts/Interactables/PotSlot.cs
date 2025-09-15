@@ -92,7 +92,7 @@ public class PotSlot : MonoBehaviour
         bool hasFruits = PotActions.PotState.AmountFruits >= 1;
         
         _amountOfFruits.text = (isMature && hasFruits) ? 
-                $"{PotActions.PotState.AmountFruits:F0}+" : "";
+                $"{(int)PotActions.PotState.AmountFruits}+" : "";
     }
 
     void OnMouseEnter()
