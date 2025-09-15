@@ -1,0 +1,219 @@
+DOME 2.0 — Implementazione funzionalità (pre-bilanciamento)
+1) Data Model & ScriptableObjects Base — D2-01
+
+Step
+
+Estendere PlantState con: Level (1–5), AgeDays, Hydration (0–100), HydrExposureWet/Dry, NeedsPrune, Mold {None,Mild,Severe}, BurnStress (0–100), Sterile (bool), Stage {Seed,Growth,Flowering,HarvestReady,Resting}, FruitsOnPlant (0–3), DaysSinceMature, OldnessTier {Young,Adult,Old}.
+
+Creare DMBConfig (SO) con tutti i parametri tunabili (placeholder).
+
+Aggiornare SpeciesConfig (SO) con rese base/specie e tempi stadio.
+Dipendenze: nessuna.
+DoD: serializzazione ok, salvataggio/caricamento integri, inspector leggibile, nessun compile error.
+
+2) HUD Idratazione (barra secco/ottimale/bagnato) — D2-02
+
+Step
+
+Aggiungere widget HUD per Hydration con banda verde centrale (valori dinamici).
+
+Esposizione valori “dry/optimal/wet” + tooltip testuale.
+
+Aggancio a Water() e all’evaporazione giornaliera.
+Dipendenze: D2-01.
+DoD: barra aggiorna in tempo reale; banda verde evidenziata; valori coerenti a fine turno.
+
+3) Logica Idratazione + Accumulatori Wet/Dry — D2-03
+
+Step
+
+Implementare incremento Hydration su Water() e decremento per evaporazione in EndOfDay().
+
+Calcolare HydrExposureWet/Dry quando fuori banda ottimale; influenzerà rischi/events.
+
+Esporre eventi UI minimi (icona goccia con stato).
+Dipendenze: D2-02.
+DoD: esposizione cresce coerente; accumuli funzionano; nessun overshoot negativo/oltre 100.
+
+4) Nuovo stadio “Flowering” + Transizioni — D2-04
+
+Step
+
+Aggiungere Stage Flowering tra Growth e HarvestReady.
+
+Introdurre contatori di progresso stage (StagePts) con soglie.
+
+Aggiornare UI stadio pianta.
+Dipendenze: D2-01.
+DoD: passaggio stage verificabile in sandbox; UI mostra i 5 stadi.
+
+5) LED Blu/Rosso (progressione stadi + rischi) — D2-05
+
+Step
+
+LED Blu: incrementa StagePts per Growth→Flowering.
+
+LED Rosso: incrementa StagePts per Flowering→HarvestReady.
+
+Introdurre BurnStress e flag Sterile per abuso LED (no pH).
+
+UI: contatore utilizzi LED/giorno + icone warning (“burn/sterile”).
+Dipendenze: D2-04.
+DoD: uso LED accelera correttamente gli stadi; abuso genera burn/sterile; feedback UI chiaro.
+
+6) Sistema Livelli 1–5 (semi/spore/piante/frutti) — D2-06
+
+Step
+
+Mappare esito minigiochi Lab → livello iniziale {1..5} su semi/spore.
+
+Alla semina, la pianta eredita il livello del seme; i frutti ereditano il livello della pianta al momento dell’Harvest.
+
+Integrare decrementi/incrementi livello segnaposto (potatura, muffa, burn) — valori statici per ora.
+Dipendenze: D2-01.
+DoD: tracciamento livello corretto lungo l’intero ciclo; visibile in HUD scheda pianta.
+
+7) Potatura (resa ↑, −1 livello, NeedsPrune) — D2-07
+
+Step
+
+Implementare azione Prune() con bonus resa % (parametro SO) e decremento livello −1.
+
+Flag NeedsPrune scatta se non poti entro X giorni; reset con potatura.
+
+UI: stato “Prune needed” e tooltip su effetti.
+Dipendenze: D2-06.
+DoD: resa aumenta post-potatura; livello cala di 1; NeedsPrune funziona e si resetta.
+
+8) Muffe (Mild/Severe) + Antifungino — D2-08
+
+Step
+
+Calcolo probabilità muffa usando HydrExposureWet e NeedsPrune.
+
+Applicare severità: Mild (−1 livello), Severe (−3 livelli).
+
+Azione Spray: rimuove stato muffa (non ripristina livelli persi).
+
+UI: badge “Mold: Mild/Severe” con colore differente.
+Dipendenze: D2-03, D2-07.
+DoD: la muffa può insorgere, crescere di severità e venire rimossa dallo spray; perdita livelli applicata.
+
+9) Finestra Harvest (1→3 frutti) + Marcescenza — D2-09
+
+Step
+
+All’ingresso in HarvestReady, generare 1° frutto.
+
+Se non raccolto, generare 1 frutto/giorno fino a max 3.
+
+Dal giorno 4: frutti non raccolti marciscono (−1 livello/giorno).
+
+UI: contatore “Fruits on plant (0–3)” + timer marcescenza.
+Dipendenze: D2-04, D2-06.
+DoD: produce correttamente fino a 3 frutti; marcescenza riduce livello giorno per giorno.
+
+10) Concime (re-flower immediato) — D2-10
+
+Step
+
+Implementare item “Concime” (consumabile).
+
+Dopo raccolto completo: uso concime salta “Resting” e porta subito a Flowering.
+
+UI: pulsante “Fertilize” abilitato solo se condizioni valide.
+Dipendenze: D2-09.
+DoD: dopo Harvest + Concime, la pianta torna a Flowering immediatamente; senza concime serve cooldown.
+
+11) Età Pianta (Young/Adult/Old) — Quantità vs Qualità — D2-11
+
+Step
+
+Incremento AgeDays a fine giornata; mappatura automatica a tier {Young, Adult, Old}.
+
+Effetti: YieldMul (quantità) e LevelCap/QualityBias (qualità) per tier.
+
+UI: icona età con tooltip.
+Dipendenze: D2-01, D2-06, D2-09.
+DoD: vecchiaia riduce quantità ma aumenta qualità/livello medio; cap applicato.
+
+12) Storage vs Inventario (livello stabile vs decadimento) — D2-12
+
+Step
+
+In Inventario: organici perdono 1 livello/giorno (min 1).
+
+In Seed Storage: livello congelato (no decadimento).
+
+UI: badge “preserva livello” nello Storage; warning decadimento in inventario.
+Dipendenze: D2-06.
+DoD: test con frutto livello 4 — resta 4 in Storage; scende 3→2→1 in inventario su giorni.
+
+13) UI Indicatori Dome 2.0 (stati chiave) — D2-13
+
+Step
+
+Aggiungere indicatori: Level, Hydration, NeedsPrune, Mold state, FruitsOnPlant, Sterile, AgeTier.
+
+Allineare con stile placeholder attuale; tooltips chiari.
+
+Aggiornare scheda pianta (vista 2.0).
+Dipendenze: D2-02..D2-12.
+DoD: tutti gli stati visibili/aggiornati; nessuna sovrapposizione UI; performance stabile.
+
+14) Save/Load esteso (nuovi campi) — D2-14
+
+Step
+
+Serializzare i nuovi campi (StagePts, BurnStress, OldnessTier, ecc.).
+
+Migrare eventuali salvataggi esistenti con default sicuri.
+
+Test: salva/chiudi/riapri → stato identico.
+Dipendenze: D2-01..D2-13.
+DoD: parità di stato post-reload al 100%.
+
+15) Telemetria interna & Log Designer — D2-15
+
+Step
+
+Eventi log per: cambio livello, muffa, burn, harvest, concime, LED/day, hydration deviation.
+
+Console togglable + file log opzionale.
+Dipendenze: D2-01..D2-13.
+DoD: eventi principali tracciati; utile per tuning successivo.
+
+16) Placeholder VFX/SFX & Localizzazione stringhe — D2-16
+
+Step
+
+Placeholders per: potatura, spray, burn, sterile, harvest, concime, muffa.
+
+Estrarre stringhe UI in table (EN/IT).
+Dipendenze: D2-13.
+DoD: feedback base presente, stringhe centralizzate.
+
+DOME 2.0 — Bilanciamento (blocco finale)
+17) Bilanciamento Unico Dome — Implementazione formule & parametri — D2-BAL-01
+
+Step
+
+Integrare tutte le formule (idratazione, LED, potatura, muffe, finestra frutti, concime, età, livelli) dentro EndOfDay() e azioni.
+
+Collegare tutti i coefficienti a DMBConfig (SO).
+
+Scrivere scenari di test (happy path, abuso LED, trascuratezza potatura, inventario vs storage).
+Dipendenze: D2-01..D2-16.
+DoD: 5 scenari superati; nessuna regressione; valori editabili via SO senza rebuild.
+
+18) Tuning & QA mirato (passi successivi) — D2-BAL-02
+
+Step
+
+Sessioni di tuning su 3 specie campione (rapida, media, lenta).
+
+Ritocchi parametri per: tempo stadi (3–5 gg), rischio muffa realistico, resa concime, impatto età.
+
+Chiusura con preset “Demo Build” e preset “Early Access Default”.
+Dipendenze: D2-BAL-01.
+DoD: preset salvati; checklist UX positiva; approvazione PM/Design.
