@@ -44,7 +44,7 @@ namespace _Project
         
         private void Show()
         {
-            _inventoryPage.SetActive(true);
+            _inventoryPage.SetActive(!_inventoryPage.activeSelf);
             UpdateInventory();
         }
 
