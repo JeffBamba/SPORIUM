@@ -260,7 +260,7 @@ public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
         }
 
         if (pot.Stage == (int)PlantStage.Mature && !stageChanged)
-            pot.AmountFruits = (pot.AmountFruits + 1) % 10;
+            pot.AmountFruits = (pot.AmountFruits + 0.5f) % 10;
         
         // BLK-01.04: Emetti eventi per notificare crescita e/o cambio di stadio
         if (stageChanged)

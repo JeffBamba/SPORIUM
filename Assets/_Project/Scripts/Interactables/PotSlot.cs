@@ -89,10 +89,10 @@ public class PotSlot : MonoBehaviour
     private void HandleDayChanged(int obj)
     {
         bool isMature = PotActions.PotState.Stage == (int)PotState.Mature;
-        bool hasFruits = PotActions.PotState.AmountFruits > 0;
+        bool hasFruits = PotActions.PotState.AmountFruits >= 1;
         
         _amountOfFruits.text = (isMature && hasFruits) ? 
-                $"{PotActions.PotState.AmountFruits.ToString()}+" : "";
+                $"{PotActions.PotState.AmountFruits:F0}+" : "";
     }
 
     void OnMouseEnter()
@@ -167,11 +167,11 @@ public class PotSlot : MonoBehaviour
             spriteRenderer.color = highlightColor;
         }
 
-        if (PotActions.PotState.AmountFruits != 0)
+        if (PotActions.PotState.AmountFruits >= 1)
         {
-            uiNotification.ShowNotification($"New Fruit added to Inventory: {PotActions.PotState.AmountFruits}", 3f, Color.green);
-            gameManager.AddItem("Fruits", PotActions.PotState.AmountFruits);
-            PotActions.PotState.AmountFruits = 0;
+            uiNotification.ShowNotification($"New Fruit added to Inventory: {PotActions.PotState.AmountFruits:F0}", 3f, Color.green);
+            gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
+            PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
             _amountOfFruits.text = "";
         }
 
