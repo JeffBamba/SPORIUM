@@ -169,7 +169,7 @@ public class PotSlot : MonoBehaviour
 
         if (PotActions.PotState.AmountFruits >= 1)
         {
-            uiNotification.ShowNotification($"New Fruit added to Inventory: {PotActions.PotState.AmountFruits:F0}", 3f, Color.green);
+            uiNotification.ShowNotification($"New Fruit added to Inventory: {(int)PotActions.PotState.AmountFruits}", 3f, Color.green);
             gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
             PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
             _amountOfFruits.text = "";
