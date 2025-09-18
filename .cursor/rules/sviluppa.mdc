@@ -1,0 +1,79 @@
+REGOLA: Modalità "SVILUPPA"
+
+TRIGGER
+Quando il prompt inizia con: SVILUPPA: <titolo task> [#tag opzionali]
+
+OBIETTIVO
+Prima di scrivere codice, esegui una ricognizione completa del progetto e del contesto per evitare rework, duplicazioni e scelte miopi. Riusa ciò che esiste, estendi dove serve, riscrivi solo se dimostrabilmente necessario.
+
+FLOW OBBLIGATORIO (in questo ordine)
+1) CONTESTO & OBIETTIVO
+   - Riassumi in 2–3 righe cosa vuoi ottenere e perché è rilevante per l’architettura.
+
+2) INVENTARIO PROGETTO (scansione repo locale)
+   - Mappa struttura cartelle e moduli chiave.
+   - Elenca scene/sistemi o sottosistemi già integrati utili al task.
+   - Identifica pattern e astrazioni esistenti.
+   - Evidenzia API pubbliche, contratti, config/env.
+
+3) RICOGNIZIONE CONOSCENZA (storico & pianificazione)
+   - GITHUB: leggi README, ADR, CHANGELOG, Issues, PR, TODO/FIXME.
+   - NOTION: controlla roadmap/board per task correlati.
+   - SE TROVI OVERLAP: segnala cosa riusare/estendere; se trovi conflitti, proponi risoluzione.
+
+4) RISCHI, VINCOLI, DIPENDENZE
+
+5) STRATEGIA DI INTERVENTO (riuso > estendi > refactor > riscrivi)
+
+6) PIANO TECNICO
+   - Disegna soluzione a blocchi.
+   - File da toccare, firme funzioni/classi, test da predisporre.
+   - Backout plan e feature flag se impattante.
+
+7) IMPLEMENTAZIONE (solo dopo 1–6)
+   - Proponi patch in blocchi DIFF atomici.
+   - Aggiorna/aggiungi test; mantieni stile e linter.
+
+8) VERIFICA
+   - Comandi per build/test/lint/run; scenari manuali.
+   - KPI da monitorare.
+
+9) DELIVERABLES
+   - Messaggio PR pronto.
+   - Aggiornamenti docs/CHANGELOG.
+   - Note per Notion.
+
+10) STEP MANUALI (NUOVO)
+   - Elenca chiaramente cosa l’utente deve fare manualmente per completare e rendere operativo il task (es: migrazioni DB, setup env, attivare feature flag, rebuild asset, deploy script, aggiornare config, lanciare comandi extra).
+   - Indica l’ordine e i comandi precisi.
+
+11) CHECK DI SISTEMA (NUOVO)
+   - Simula/verifica a livello logico il funzionamento del sistema integrato, non solo della parte sviluppata.
+   - Assicurati che il task non rompa build, test, dipendenze, pipeline CI/CD, compatibilità ambienti.
+   - Segnala eventuali punti deboli che meritano un controllo manuale da parte dell’utente.
+
+FORMATO DI USCITA
+# ANALISI
+# DECISIONI
+# PIANO
+# PATCH
+# VERIFICHE
+# DELIVERABLES
+# STEP MANUALI (nuova sezione)
+# CHECK DI SISTEMA (nuova sezione)
+
+REGOLE DI QUALITÀ (immutate + estese)
+- Non duplicare codice o concetti già presenti.
+- Mantieni contratti pubblici stabili o versionali breaking changes.
+- Rispetta standard del repo (formatter, linter, CI).
+- Test completi (happy path, edge case, regressioni).
+- Documenta dove vivono le decisioni (ADR/docs).
+- PR piccole, narrative chiare, rollback semplice.
+- SEMPRE fornire lista STEP MANUALI + CHECK DI SISTEMA finale.
+
+COMPORTAMENTO IN CASO DI LACUNE
+- Se mancano accessi a GitHub/Notion o cartelle: continua con analisi locale, indica assunti e segna TODO/Follow-up.
+- Se trovi implementazioni simili: STOP e proponi estensione/integrazione invece di riscrivere.
+
+ESEMPIO DI INVOCATION
+SVILUPPA: Sistema salvataggi partite offline #gameplay #persistence
