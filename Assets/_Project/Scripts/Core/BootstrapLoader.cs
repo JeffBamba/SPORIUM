@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 public class BootstrapLoader : MonoBehaviour
 {
     [Header("Scene Configuration")]
-    [SerializeField] private string firstScene = "SCN_VaultMap";
+    [SerializeField] private string firstScene = "SCN_MainMenu";
     [SerializeField] private float delayBeforeLoad = 0.1f;
     [SerializeField] private bool loadOnStart = true;
     
