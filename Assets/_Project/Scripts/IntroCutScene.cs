@@ -6,6 +6,9 @@ namespace _Project
 {
     public class IntroCutScene : MonoBehaviour
     {
+        [SerializeField] private string _sceneToLoad;
+        [SerializeField] private float _timeToLoad;
+        
         private void Start()
         {
             StartCoroutine(LoadRoutine());
@@ -13,8 +16,8 @@ namespace _Project
 
         private IEnumerator LoadRoutine()
         {
-            yield return new WaitForSeconds(5f);
-            SceneManager.LoadScene(2);
+            yield return new WaitForSeconds(_timeToLoad);
+            SceneManager.LoadScene(_sceneToLoad);
         }
     }
 }
