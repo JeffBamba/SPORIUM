@@ -1,5 +1,6 @@
 ﻿using System;
 using _Project;
+using _Project.Scripts.Core;
 using UnityEngine;
 using Sporae.Core;
 using UnityEngine.Serialization;
@@ -33,6 +34,7 @@ public class  GameManager : MonoBehaviour
     private ActionSystem actionSystem;
     private EconomySystem economySystem;
     private CondensationSystem condensationSystem;
+    private DeteriorationSystem deteriorationSystem;
     
     void Awake()
     {
@@ -40,6 +42,7 @@ public class  GameManager : MonoBehaviour
         actionSystem = new ActionSystem(actionsPerDay);
         economySystem = new EconomySystem(startingCRY);
         condensationSystem = new CondensationSystem();
+        deteriorationSystem = new DeteriorationSystem(this);
         
         // Setup iniziale
         CurrentDay = startingDay;

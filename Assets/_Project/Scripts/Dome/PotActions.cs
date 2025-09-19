@@ -126,6 +126,16 @@ public class PotActions : MonoBehaviour
         
         return isEmpty && hasSeed && inRange && hasResources && notWateredOnThisDay;
     }
+
+
+    public bool CanUproot()
+    {
+        if (potState == null)
+            return false;
+        
+        bool hasPlant = potState.HasPlantGrowing;
+        return hasPlant;
+    }
     
     /// <summary>
     /// Verifica se è possibile annaffiare la pianta
@@ -230,6 +240,28 @@ public class PotActions : MonoBehaviour
         return true;
     }
     
+    public bool DoUproot()
+    {
+        if (!CanUproot())
+            return false;
+        
+        potState.Stage = 0;
+     
+        if (dayCycleController != null)
+            dayCycleController.UnregisterPot(potState);
+        
+        if (potGrowthController != null)
+            potGrowthController.OnUprooted();
+
+        gameManager.GetInventory().AddItem("Whole-Plant", 1);
+        
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Uproot, potSlot);
+        PotEvents.EmitChanged(potSlot);
+        
+        return true;
+    }
+
     /// <summary>
     /// Esegue l'azione di annaffiare la pianta
     /// </summary>

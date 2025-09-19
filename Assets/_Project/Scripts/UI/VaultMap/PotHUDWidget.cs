@@ -49,6 +49,7 @@ public class PotHUDWidget : MonoBehaviour
     
     void Start()
     {
+        gameObject.SetActive(false);
         InitializeWidget();
         LoadGrowthConfig();
     }
