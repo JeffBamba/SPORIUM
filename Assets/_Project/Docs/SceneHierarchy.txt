@@ -1,0 +1,8 @@
+- Main Camera
+  [Component] Transform
+  [Component] Camera
+  [Component] AudioListener
+  [Component] UniversalAdditionalCameraData
+- Intro
+  [Component] Transform
+  [Component] IntroCutScene
