@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using Sporae.Core;
+using UnityEngine;
 
 namespace _Project
 {
-    public class Microscope : MonoBehaviour
+    public class Microscope : Storage
     {
         [SerializeField] private LabMinigame _labMiniGame;
         [SerializeField] private float _interactDistance;
@@ -12,6 +13,8 @@ namespace _Project
         
         private Transform _playerTransform;
         private SpriteRenderer _spriteRenderer;
+        
+        private Inventory _inventory = new();
 
         private void Awake()
         {
@@ -42,6 +45,11 @@ namespace _Project
         private void OnMouseExit()
         {
             _spriteRenderer.color = _normalColor;
+        }
+
+        public override Inventory GetInventory()
+        {
+            return _inventory;
         }
     }
 }

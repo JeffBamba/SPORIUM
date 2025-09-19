@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Collections;
+using System.Linq;
+using Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,6 +29,11 @@ namespace _Project
         [SerializeField] private string _firstAttemptButtonText;
         [SerializeField] private string _anotherAttemptButtonText;
         
+        [SerializeField] private DragDropUI _dragDropUI;
+        [SerializeField] private HUDInventory _inventory;
+        [SerializeField] private Microscope _microscope;
+
+        [SerializeField] private GameObject _gameView;
         
         private bool _gameInProgress;
         private bool _isWon;
@@ -34,10 +41,14 @@ namespace _Project
 
         private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
-
+        
+        private Inventory _storage;
+        private HUDItemContainer _hudItemContainer;
+        
         public void Show()
         {
             _textLabel.text = _defaultText;
+            _inventory.Show();
             gameObject.SetActive(true);
         }
         
@@ -48,6 +59,10 @@ namespace _Project
                 Debug.LogWarning("There is no GameManager in the scene");
             
             _startButtonLabel = _startButton.GetComponentInChildren<TextMeshProUGUI>();
+
+            _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
+            _storage = _microscope.GetInventory();
+            _storage.OnInventoryChanged += UpdateStorage;
         }
         
         private void Start()
@@ -58,16 +73,26 @@ namespace _Project
                 _gameInProgress = false;
                 gameObject.SetActive(false);
             });
+
+            UpdateStorage();
         }
 
         private void TryLaunch()
         {
             var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
 
+            if (!_storage.Has("Fruits"))
+                return;
+            
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
 
+            _dragDropUI.ConfirmOperation();
+            _storage.Remove("Fruits", 1);
+
             _textLabel.text = _defaultText;
+            _gameView.SetActive(true);
+            
             _lastPlayingDay = _gameManager.CurrentDay;
             _gameInProgress = true;
         }
@@ -108,7 +133,11 @@ namespace _Project
             _isWon =
                 targetMinX < playerMinX &&
                 targetMaxX > playerMaxX;
+            
+            if (_isWon)
+                _storage.Add("SDE-001");
 
+            StartCoroutine(HideRoutine());
             UpdateUI();
         }
 
@@ -118,6 +147,23 @@ namespace _Project
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
             
             _textLabel.text = _isWon ? _wonText : _loseText;
+        }
+        
+        private void UpdateStorage()
+        {
+            _hudItemContainer.DisableAllSlots();
+            
+            for (var i = 0; i < _storage.UniqueItems; i++)
+            {
+                var item = _storage.Items.ElementAt(i);
+                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+            }
+        }
+
+        private IEnumerator HideRoutine()
+        {
+            yield return new WaitForSeconds(_playerDuration);
+            _gameView.SetActive(false);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace _Project
         [SerializeField] private Storage _storage;
         
         [SerializeField] private List<string> _allowedItemsIds;
+        [SerializeField] private int _containerCapacity; 
         
         [SerializeField] private HUDItemContainer _hudPlayerContainer;
         [SerializeField] private HUDItemContainer _hudStorageContainer;
@@ -28,22 +29,26 @@ namespace _Project
         private TextMeshProUGUI _confirmOperationLabel;
         private string _confirmLabelPattern;
         
-        private Dictionary<string, int> _movedToLeft = new();
-        private Dictionary<string, int> _movedToRight = new();
+        private readonly Dictionary<string, int> _movedToLeft = new();
+        private readonly Dictionary<string, int> _movedToRight = new();
+
         
         private void Awake()
         {
-            _confirmOperationLabel = _confirmOperation.GetComponentInChildren<TextMeshProUGUI>();
-            _confirmLabelPattern = _confirmOperationLabel.text;
             _storageInventory = _storage.GetInventory();
                 
             var gameManager = FindObjectOfType<GameManager>();
             _playerInventory = gameManager.GetInventory();
+
+            if (!_confirmOperation)
+                return;
             
-            _confirmOperation.onClick.AddListener(HandleConfirmOperation);
+            _confirmOperationLabel = _confirmOperation.GetComponentInChildren<TextMeshProUGUI>();
+            _confirmOperation.onClick.AddListener(ConfirmOperation);
+            _confirmLabelPattern = _confirmOperationLabel.text;
         }
 
-        private void HandleConfirmOperation()
+        public void ConfirmOperation()
         {
             _movedToLeft.Clear();
             _movedToRight.Clear();
@@ -57,10 +62,13 @@ namespace _Project
 
         private void Update()
         {
+            if (!_confirmOperationLabel) 
+                return;
+            
             var totalCryCost = _movedToRight.Sum(item => item.Value);
             _confirmOperationLabel.text = _confirmLabelPattern.Replace("{}", totalCryCost.ToString());
         }
-        
+
         private void OnEnable()
         {
             _movedToLeft.Clear();
@@ -79,7 +87,7 @@ namespace _Project
         private void HandleRight()
         {
             var id = _hudPlayerContainer.SelectedId;
-            if (id >= _playerInventory.Items.Count)
+            if (id < 0 || id >= _playerInventory.Items.Count)
                 return;
             
             var item = _playerInventory.Items.ElementAt(id);
@@ -92,7 +100,7 @@ namespace _Project
         private void HandleLeft()
         {
             var id = _hudStorageContainer.SelectedId;
-            if (id >= _storageInventory.Items.Count)
+            if (id < 0 || id >= _storageInventory.Items.Count)
                 return;
             
             var item = _storageInventory.Items.ElementAt(id);
@@ -103,6 +111,9 @@ namespace _Project
         {
             var inventoryFrom = isMoveToLeft ? _storageInventory : _playerInventory;
             var inventoryTo = isMoveToLeft ? _playerInventory : _storageInventory;
+
+            if (!isMoveToLeft && inventoryTo.UniqueItems >= _containerCapacity)
+                return;
             
             if (!inventoryFrom.Consume(itemId, amount))
             {
