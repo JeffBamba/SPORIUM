@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/Bootstrap/SCN_Bootstrap.unity
     guid: 06e5ffb09cce2254db72c772b8d58009
   - enabled: 1
+    path: Assets/_Project/Scenes/Menu/SCN_MainMenu.unity
+    guid: 6dba8808220b4cb4d8f7c7db702bf9a7
+  - enabled: 1
     path: Assets/_Project/Scenes/SCN_VaultMap.unity
     guid: d68273cae2393f64399c2ad21d1c4eb9
   - enabled: 1
@@ -20,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Lab/SCN_Lab_Main.unity
     guid: 3c79ce3e74961924891d2cddd807af1a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Intro/SCN_Intro.unity
+    guid: b3c01b7807e5b314c8806f1a40992d08
   m_configObjects: {}

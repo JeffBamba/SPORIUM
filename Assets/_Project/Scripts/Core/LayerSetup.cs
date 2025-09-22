@@ -29,7 +29,7 @@ public class LayerSetup : MonoBehaviour
     {
         if (showDebugLogs)
             Debug.Log("[LayerSetup] Iniziando configurazione layer...");
-        
+
         // Configura Player
         SetupPlayerLayer();
         

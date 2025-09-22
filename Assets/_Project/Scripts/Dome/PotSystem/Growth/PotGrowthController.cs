@@ -66,7 +66,22 @@ namespace Sporae.Dome.PotSystem.Growth
             // BLK-01.03B: Aggiorna le visuali
             UpdateVisuals();
         }
-
+        
+        public void OnUprooted()
+        {
+            if (potState == null)
+                return;
+            
+            potState.HasPlant = false;
+            potState.Stage = (int)PlantStage.Empty;
+            potState.GrowthPoints = 0;
+            potState.DaysSincePlant = 0;
+            potState.DaysNeglectedStreak = 0;
+            
+            // BLK-01.03B: Aggiorna le visuali
+            UpdateVisuals();   
+        }
+        
         /// <summary>
         /// BLK-01.03B: Aggiorna le visuali del vaso in base allo stadio corrente
         /// </summary>
@@ -76,9 +91,9 @@ namespace Sporae.Dome.PotSystem.Growth
             
             // Aggiorna sprite in base allo stadio
             Sprite targetSprite = GetSpriteForStage(potState.Stage);
+            plantRenderer.sprite = targetSprite;
             if (targetSprite != null)
             {
-                plantRenderer.sprite = targetSprite;
                 if (enableDebugLogs)
                 {
                     Debug.Log($"[BLK-01.04] {potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");

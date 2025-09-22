@@ -8,7 +8,8 @@ namespace Sporae.Core
     {
         [SerializeField] private string _id;
         [SerializeField] private int _quantity;
-
+        [SerializeField] private int _quality;
+        
         public string Id => _id;
         public int Quantity 
         { 
@@ -16,13 +17,20 @@ namespace Sporae.Core
             private set => _quantity = Math.Max(0, value);
         }
 
-        public InventoryItem(string id, int quantity = 1)
+        public int Quality
+        {
+            get => _quality;
+            set => _quality = Math.Max(0, value);
+        }
+
+        public InventoryItem(string id, int quantity = 1, int quality = 4)
         {
             if (string.IsNullOrEmpty(id))
                 throw new ArgumentException("ID non può essere null o vuoto", nameof(id));
             
             _id = id;
             Quantity = quantity;
+            Quality = quality;
         }
 
         public bool AddQuantity(int amount)

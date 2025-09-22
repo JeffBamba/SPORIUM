@@ -1,11 +1,14 @@
-﻿using System;
+﻿using System.Collections;
+using System.Linq;
+using Sporae.Core;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace _Project
 {
-    public class LabMinigame : MonoBehaviour
+    public class LabMinigameExtractor : MonoBehaviour
     {
         [SerializeField] private RectTransform _panel;
         [SerializeField] private RectTransform _playerBar;
@@ -27,6 +30,11 @@ namespace _Project
         [SerializeField] private string _firstAttemptButtonText;
         [SerializeField] private string _anotherAttemptButtonText;
         
+        [SerializeField] private DragDropUI _dragDropUI;
+        [SerializeField] private HUDInventory _inventory;
+        [FormerlySerializedAs("_microscope")] [SerializeField] private Extractor _extractor;
+
+        [SerializeField] private GameObject _gameView;
         
         private bool _gameInProgress;
         private bool _isWon;
@@ -34,10 +42,14 @@ namespace _Project
 
         private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
-
+        
+        private Inventory _storage;
+        private HUDItemContainer _hudItemContainer;
+        
         public void Show()
         {
             _textLabel.text = _defaultText;
+            _inventory.Show();
             gameObject.SetActive(true);
         }
         
@@ -48,33 +60,49 @@ namespace _Project
                 Debug.LogWarning("There is no GameManager in the scene");
             
             _startButtonLabel = _startButton.GetComponentInChildren<TextMeshProUGUI>();
+
+            _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
+            _storage = _extractor.GetInventory();
         }
         
         private void Start()
         {
+            _storage.OnInventoryChanged += UpdateStorage;
+            
             _startButton.onClick.AddListener(TryLaunch);
             _closeButton.onClick.AddListener(() =>
             {
+                _dragDropUI.ConfirmOperation();
                 _gameInProgress = false;
                 gameObject.SetActive(false);
             });
+
+            UpdateStorage();
         }
 
         private void TryLaunch()
         {
             var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
 
+            if (!_storage.Has("Fruits"))
+                return;
+            
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
 
+            _dragDropUI.ConfirmOperation();
+            _storage.Remove("Fruits", 1);
+
             _textLabel.text = _defaultText;
+            _gameView.SetActive(true);
+            
             _lastPlayingDay = _gameManager.CurrentDay;
             _gameInProgress = true;
         }
         
         private void Update()
         {
-            _startButton.interactable = !_gameInProgress;
+            UpdateUI();
             
             if (!_gameInProgress)
                 return;
@@ -108,16 +136,37 @@ namespace _Project
             _isWon =
                 targetMinX < playerMinX &&
                 targetMaxX > playerMaxX;
+            
+            if (_isWon)
+                _storage.Add("SPORE_GENERIC");
 
-            UpdateUI();
+            StartCoroutine(HideRoutine());
+            _textLabel.text = _isWon ? _wonText : _loseText;
         }
 
         private void UpdateUI()
         {
+            _startButton.interactable = !_gameInProgress;
+
             var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
+        }
+        
+        private void UpdateStorage()
+        {
+            _hudItemContainer.DisableAllSlots();
             
-            _textLabel.text = _isWon ? _wonText : _loseText;
+            for (var i = 0; i < _storage.UniqueItems; i++)
+            {
+                var item = _storage.Items.ElementAt(i);
+                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+            }
+        }
+
+        private IEnumerator HideRoutine()
+        {
+            yield return new WaitForSeconds(_playerDuration);
+            _gameView.SetActive(false);
         }
     }
 }

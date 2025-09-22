@@ -16,7 +16,8 @@ public static class PotEvents
     { 
         Plant,      // ACT-001: Piantare seme
         Water,      // ACT-002: Annaffiare pianta
-        Light       // ACT-003: Illuminare pianta
+        Light,       // ACT-003: Illuminare pianta
+        Uproot       // ACT-004: Uproot pianta
     }
     
     /// <summary>

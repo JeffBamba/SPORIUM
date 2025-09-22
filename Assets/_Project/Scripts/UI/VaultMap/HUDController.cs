@@ -101,8 +101,8 @@ public class HUDController : MonoBehaviour
         if (gameManager == null) return;
         
         gameManager.OnDayChanged += UpdateDay;
-        gameManager.OnActionsChanged += UpdateActions;
-        gameManager.OnCRYChanged += UpdateCRY;
+        gameManager.ActionSystem.OnActionsChanged += UpdateActions;
+        gameManager.EconomySystem.OnCRYChanged += UpdateCRY;
     }
 
     private void UnsubscribeFromEvents()
@@ -110,8 +110,8 @@ public class HUDController : MonoBehaviour
         if (gameManager == null) return;
         
         gameManager.OnDayChanged -= UpdateDay;
-        gameManager.OnActionsChanged -= UpdateActions;
-        gameManager.OnCRYChanged -= UpdateCRY;
+        gameManager.ActionSystem.OnActionsChanged -= UpdateActions;
+        gameManager.EconomySystem.OnCRYChanged -= UpdateCRY;
     }
 
     private void UpdateAllUI()

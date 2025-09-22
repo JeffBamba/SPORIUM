@@ -1,67 +1,57 @@
 ﻿using System;
 using _Project;
+using _Project.Scripts.Core;
 using UnityEngine;
 using Sporae.Core;
 using UnityEngine.Serialization;
 
 public class  GameManager : MonoBehaviour
 {
-    [Header("Day & Actions")]
-    [Min(1)] public int startingDay = 1;
-    [Min(1)] public int actionsPerDay = 4; // BLK-01.02: 4 azioni per test completo
-    public int CurrentDay { get; private set; }
-    public int ActionsLeft { get; private set; }
-
-    [Header("Economy (CRY)")]
-    [Tooltip("CRY iniziali per test BLK-01.03A (aumentato per permettere loop completo)")]
-    public int startingCRY = 250;
-    public int CurrentCRY { get; private set; }
-
-    [Header("Inventory")]
-    [SerializeField] private Inventory inventory = new Inventory();
+    [SerializeField] private bool _showDebugLogs = true;
     
-    [Header("Debug")]
-    [SerializeField] private bool showDebugLogs = true;
+    [Header("Day & Actions")]
+    
+    [SerializeField] [Min(1)] private int _startingDay = 1;
+    [SerializeField] [Min(1)] private int _actionsPerDay = 4;
+    [SerializeField] private int _startingCRY = 250;
+    
+    public int CurrentDay { get; private set; }
+    public int ActionsLeft => _actionSystem.ActionsLeft;
+    public int CurrentCRY => _economySystem.CurrentCRY;
+    
+    private readonly Inventory _inventory = new();
 
-    // Eventi per la UI
     public event Action<int> OnDayChanged;
-    public event Action<int> OnActionsChanged;
-    public event Action<int> OnCRYChanged;
     public event Action<float> OnCondensationChanged;
     
-    // Sistema di azioni separato
-    private ActionSystem actionSystem;
-    private EconomySystem economySystem;
-    private CondensationSystem condensationSystem;
+    private ActionSystem _actionSystem;
+    private EconomySystem _economySystem;
+    private CondensationSystem _condensationSystem;
+    private DeteriorationSystem _deteriorationSystem;
+    
+    public EconomySystem EconomySystem => _economySystem;
+    public ActionSystem ActionSystem => _actionSystem;
+    public CondensationSystem CondensationSystem => _condensationSystem;
     
     void Awake()
     {
         // Inizializza sistemi
-        actionSystem = new ActionSystem(actionsPerDay);
-        economySystem = new EconomySystem(startingCRY);
-        condensationSystem = new CondensationSystem();
+        _actionSystem = new ActionSystem(_actionsPerDay);
+        _economySystem = new EconomySystem(_startingCRY);
+        _condensationSystem = new CondensationSystem();
+        _deteriorationSystem = new DeteriorationSystem(this);
         
         // Setup iniziale
-        CurrentDay = startingDay;
-        ActionsLeft = actionsPerDay;
-        CurrentCRY = startingCRY;
+        CurrentDay = _startingDay;
 
         // Inventario iniziale
-        AddItem("SDE-001", 3); // Generic Seed per BLK-01.02
+        AddItem("SDE-001", 4);
         AddItem("SPORE_GENERIC", 2);
         AddItem("WAT-Raw", 2);
         
-        // BLK-01.03A: CRY aumentati per permettere test completo (Plant+Water+Light+EndDay × 5 giorni)
-
-        // BLK-01.03A: Default HUD 4 azioni / 250 CRY
-        ActionsLeft = 4; OnActionsChanged?.Invoke(ActionsLeft);
-        CurrentCRY = 250; OnCRYChanged?.Invoke(CurrentCRY);
-        
         // Sincronizza sistemi interni con valori esterni
-        if (actionSystem != null) actionSystem.ResetActions(4);
-        if (economySystem != null) economySystem.SetCRY(250);
-        
-        Debug.Log("[BLK-01.03A] Defaults set: Actions=4, CRY=250 (sistemi sincronizzati)");
+        if (_showDebugLogs)
+            Debug.Log($"[{nameof(GameManager)}] Defaults set: Actions={_actionsPerDay}, CRY={_startingCRY}");
         
         // Notifica UI
         NotifyUI();
@@ -69,126 +59,76 @@ public class  GameManager : MonoBehaviour
 
     public bool TrySpendCry(int amount)
     {
-        if (!economySystem.CanAfford(amount))
+        if (!_economySystem.CanAfford(amount))
             return false;
 
-        economySystem.Spend(amount);
-        
-        CurrentCRY = economySystem.CurrentCRY;
-        
-        OnCRYChanged?.Invoke(CurrentCRY);
+        _economySystem.Spend(amount);
         
         return true;
     }
     
     public bool TrySpendAction(int amount = 0)
     {
-        if (!actionSystem.CanSpendAction(amount)) 
+        if (!_actionSystem.CanSpendAction(amount)) 
             return false;
 
-        actionSystem.SpendAction(amount);
-
-        // Aggiorna stati locali
-        ActionsLeft = actionSystem.ActionsLeft;
-
-        // Notifica UI
-        OnActionsChanged?.Invoke(ActionsLeft);
+        _actionSystem.SpendAction(amount);
 
         return true;
     }
 
     public bool TrySpendActionAndCry(int amountAction, int amountCry)
     {
-        if (!actionSystem.CanSpendAction(amountAction))
+        if (!_actionSystem.CanSpendAction(amountAction))
             return false;
 
-        if (!economySystem.CanAfford(amountCry))
+        if (!_economySystem.CanAfford(amountCry))
             return false;
 
-        actionSystem.SpendAction(amountAction);
-        economySystem.Spend(amountCry);
-        
-        // Aggiorna stati locali
-        ActionsLeft = actionSystem.ActionsLeft;
-        CurrentCRY = economySystem.CurrentCRY;
-        
-        // Notifica UI
-        OnCRYChanged?.Invoke(CurrentCRY);
-        OnActionsChanged?.Invoke(ActionsLeft);
+        _actionSystem.SpendAction(amountAction);
+        _economySystem.Spend(amountCry);
         
         return true;
     }
 
     public float CollectCondensation()
     {
-        var amount = condensationSystem.CondensationAmount;
+        var amount = _condensationSystem.CondensationAmount;
         
-        condensationSystem.Reset();
-        OnCondensationChanged?.Invoke(condensationSystem.CondensationAmount);
+        _condensationSystem.Reset();
+        OnCondensationChanged?.Invoke(_condensationSystem.CondensationAmount);
         
         return amount;
     }
 
     public float GetMaxCondensation()
     {
-        return condensationSystem.GetMax();
+        return _condensationSystem.GetMax();
     }
 
     public void EndDay(int dailyPowerCost = 20)
     {
         CurrentDay++;
-        OnDayChanged?.Invoke(CurrentDay);         // 1) growth tick
+        OnDayChanged?.Invoke(CurrentDay); 
         
-        // 2) costo giornaliero usando sistema interno (sempre 20)
-        int dailyCost = 20; // Costo fisso per BLK-01.03A
-        if (economySystem != null) economySystem.Spend(dailyCost);
-        CurrentCRY = economySystem?.CurrentCRY ?? CurrentCRY;
-        OnCRYChanged?.Invoke(CurrentCRY);
+        _economySystem.Spend(dailyPowerCost);
+        _actionSystem.ResetActions(_actionsPerDay);
         
-        // 3) reset azioni usando sistema interno
-        if (actionSystem != null) actionSystem.ResetActions(4);
-        ActionsLeft = actionSystem?.ActionsLeft ?? 4;
-        OnActionsChanged?.Invoke(ActionsLeft);
+        _condensationSystem.DayChanged();
+        OnCondensationChanged?.Invoke(_condensationSystem.CondensationAmount);
         
-        // 4) accumulation of condensation
-        condensationSystem.DayChanged();
-        OnCondensationChanged?.Invoke(condensationSystem.CondensationAmount);
-        
-        Debug.Log($"[BLK-01.03A] EndDay -> Day={CurrentDay}, CRY={CurrentCRY}, Actions={ActionsLeft}");
+        Debug.Log($"[{nameof(GameManager)}] EndDay -> Day={CurrentDay}, CRY={CurrentCRY}, Actions={ActionsLeft}");
     }
 
-    public void AddCRY(int amount)
-    {
-        if (amount <= 0) return;
-        
-        economySystem.Add(amount);
-        CurrentCRY = economySystem.CurrentCRY;
-        OnCRYChanged?.Invoke(CurrentCRY);
-    }
 
-    public void SpendCRY(int amount)
-    {
-        if (amount <= 0) return;
-        
-        if (economySystem.CanAfford(amount))
-        {
-            economySystem.Spend(amount);
-            CurrentCRY = economySystem.CurrentCRY;
-            OnCRYChanged?.Invoke(CurrentCRY);
-        }
-    }
-
-    // Wrappers inventario
-    public bool HasItem(string id, int qty = 1) => inventory.Has(id, qty);
-    public void AddItem(string id, int qty = 1) => inventory.Add(id, qty);
-    public bool ConsumeItem(string id, int qty = 1) => inventory.Consume(id, qty);
-    public Inventory GetInventory() => inventory;
+    public bool HasItem(string id, int qty = 1) => _inventory.Has(id, qty);
+    public void AddItem(string id, int qty = 1) => _inventory.Add(id, qty);
+    public bool ConsumeItem(string id, int qty = 1) => _inventory.Consume(id, qty);
+    public Inventory GetInventory() => _inventory;
 
     private void NotifyUI()
     {
         OnDayChanged?.Invoke(CurrentDay);
-        OnActionsChanged?.Invoke(ActionsLeft);
-        OnCRYChanged?.Invoke(CurrentCRY);
     }
     
     /// <summary>
@@ -196,10 +136,8 @@ public class  GameManager : MonoBehaviour
     /// </summary>
     public void ForceUIUpdate()
     {
-        if (showDebugLogs)
-        {
-            Debug.Log($"[GameManager] Force UI Update - Day: {CurrentDay}, Actions: {ActionsLeft}, CRY: {CurrentCRY}");
-        }
+        if (_showDebugLogs)
+            Debug.Log($"[{nameof(GameManager)}] Force UI Update - Day: {CurrentDay}, Actions: {ActionsLeft}, CRY: {CurrentCRY}");
         
         NotifyUI();
     }
@@ -211,10 +149,10 @@ public class  GameManager : MonoBehaviour
     public void DebugGameManagerStatus()
     {
         Debug.Log("=== GAMEMANAGER DEBUG STATUS ===");
-        Debug.Log($"Starting Values - Day: {startingDay}, Actions: {actionsPerDay}, CRY: {startingCRY}");
+        Debug.Log($"Starting Values - Day: {_startingDay}, Actions: {_actionsPerDay}, CRY: {_startingCRY}");
         Debug.Log($"Current Values - Day: {CurrentDay}, Actions: {ActionsLeft}, CRY: {CurrentCRY}");
-        Debug.Log($"ActionSystem - Max: {actionSystem?.MaxActions}, Left: {actionSystem?.ActionsLeft}");
-        Debug.Log($"EconomySystem - Current: {economySystem?.CurrentCRY}");
+        Debug.Log($"ActionSystem - Max: {_actionSystem?.MaxActions}, Left: {_actionSystem?.ActionsLeft}");
+        Debug.Log($"EconomySystem - Current: {_economySystem?.CurrentCRY}");
         Debug.Log("================================");
     }
 }

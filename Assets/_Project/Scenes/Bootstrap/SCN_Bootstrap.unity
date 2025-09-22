@@ -742,7 +742,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b769cadd5ec534ebaeafa55e4eb146, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetScene: SCN_VaultMap
+  targetScene: SCN_Intro
   loadMode: 0
   allowSceneActivation: 1
   loadingText: {fileID: 711398877}
@@ -1032,7 +1032,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d916f54319371544c8ea23a5fdd8f43e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstScene: SCN_VaultMap
+  firstScene: SCN_MainMenu
   delayBeforeLoad: 0.1
   loadOnStart: 1
   validateOnStart: 1

@@ -8,27 +8,32 @@ using UnityEngine.UI;
 
 namespace _Project
 {
+    [RequireComponent(typeof(HUDItemContainer))]
     public class HUDInventory : MonoBehaviour
     {
         [SerializeField] private GameObject _inventoryPage;
-        [SerializeField] private List<HUDInventoryItem> _items;
-
+        
         [SerializeField] private Button _showInventoryButton;
         [SerializeField] private Button _closeInventoryButton;
         
         private GameManager _gameManager;
         private Inventory _inventory;
+        private HUDItemContainer _hudItemContainer;
+        
+        public event Action OnClose;
         
         private void Awake()
         {
+            _hudItemContainer = GetComponent<HUDItemContainer>();
             _gameManager = FindObjectOfType<GameManager>();
             _inventory = _gameManager.GetInventory();
         }
 
         private void Start()
         {
-            _showInventoryButton.onClick.AddListener(Show);
+            _showInventoryButton.onClick.AddListener(Toggle);
             _closeInventoryButton.onClick.AddListener(Close);
+            
             _inventory.OnInventoryChanged += UpdateInventory;
         }
 
@@ -37,28 +42,34 @@ namespace _Project
             _inventory.OnInventoryChanged -= UpdateInventory;
         }
 
+        private void Toggle()
+        {
+            if (_inventoryPage.activeSelf)
+                Close();
+            else 
+                Show();
+        }
+        
         private void Close()
         {
+            OnClose?.Invoke();
             _inventoryPage.SetActive(false);
         }
         
-        private void Show()
+        public void Show()
         {
-            _inventoryPage.SetActive(!_inventoryPage.activeSelf);
+            _inventoryPage.SetActive(true);
             UpdateInventory();
-        }
+        } 
 
         private void UpdateInventory()
-        {
-            foreach (HUDInventoryItem item in _items)
-                item.gameObject.SetActive(false);
-
-            for (int i = 0; i < _inventory.UniqueItems; i++)
+        {   
+            _hudItemContainer.DisableAllSlots();
+            
+            for (var i = 0; i < _inventory.UniqueItems; i++)
             {
-                _items[i].gameObject.SetActive(true);
-                
                 var item = _inventory.Items.ElementAt(i);
-                _items[i].SetItem(item.Id, item.Quantity);
+               _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
             }
         }
     }
