@@ -4,13 +4,13 @@ using UnityEngine;
 namespace _Project
 {
     [RequireComponent(typeof(Interactable))]
-    public class Microscope : Storage
+    public class Extractor : Storage
     {
-        [SerializeField] private LabMicroscope _labMiniGame;
+        [SerializeField] private LabMinigameExtractor _labMiniGame;
 
         private readonly Inventory _inventory = new();
         private Interactable _interactable;
-        
+
         private void Awake()
         {
             _interactable = GetComponent<Interactable>();
@@ -22,12 +22,11 @@ namespace _Project
             _interactable.OnInteract -= HandleInteract;
         }
         
-        
         private void HandleInteract()
         {
             _labMiniGame.Show();
         }
-        
+
         public override Inventory GetInventory()
         {
             return _inventory;

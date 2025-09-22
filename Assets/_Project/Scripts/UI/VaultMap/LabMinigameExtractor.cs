@@ -3,11 +3,12 @@ using System.Linq;
 using Sporae.Core;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace _Project
 {
-    public class LabMinigame : MonoBehaviour
+    public class LabMinigameExtractor : MonoBehaviour
     {
         [SerializeField] private RectTransform _panel;
         [SerializeField] private RectTransform _playerBar;
@@ -31,7 +32,7 @@ namespace _Project
         
         [SerializeField] private DragDropUI _dragDropUI;
         [SerializeField] private HUDInventory _inventory;
-        [SerializeField] private Microscope _microscope;
+        [FormerlySerializedAs("_microscope")] [SerializeField] private Extractor _extractor;
 
         [SerializeField] private GameObject _gameView;
         
@@ -61,12 +62,13 @@ namespace _Project
             _startButtonLabel = _startButton.GetComponentInChildren<TextMeshProUGUI>();
 
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
-            _storage = _microscope.GetInventory();
-            _storage.OnInventoryChanged += UpdateStorage;
+            _storage = _extractor.GetInventory();
         }
         
         private void Start()
         {
+            _storage.OnInventoryChanged += UpdateStorage;
+            
             _startButton.onClick.AddListener(TryLaunch);
             _closeButton.onClick.AddListener(() =>
             {
@@ -136,7 +138,7 @@ namespace _Project
                 targetMaxX > playerMaxX;
             
             if (_isWon)
-                _storage.Add("SDE-001");
+                _storage.Add("SPORE_GENERIC");
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;
