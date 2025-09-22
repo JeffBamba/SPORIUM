@@ -19,9 +19,9 @@ namespace _Project
 
         [SerializeField] private GameObject _page;
         
-        private PotSlot currentSelectedPot;
-        private PlantGrowthConfig growthConfig;
-        private GameManager gameManager;
+        private PotSlot _currentSelectedPot;
+        private PlantGrowthConfig _growthConfig;
+        private GameManager _gameManager;
         
         private void Awake()
         {
@@ -32,24 +32,36 @@ namespace _Project
             _page.SetActive(false);
         }
 
+        private void OnDestroy()
+        {
+            Unsubscribes();
+        }
+        
         private void Update()
         {
-            _page.SetActive(currentSelectedPot && currentSelectedPot.InRange);
+            _page.SetActive(_currentSelectedPot && _currentSelectedPot.Interactable.PlayerInRange);
         }
         
         private void Subscribes()
         {
-            // Sottoscrivi agli eventi del sistema dei vasi
             PotSlot.OnPotSelected += OnPotSelected;
             PotEvents.OnPotStateChanged += OnPotStateChanged;
             PotEvents.OnPlantGrew += OnPlantGrew;
             PotEvents.OnPlantStageChanged += OnPlantStageChanged;
         }
+
+        private void Unsubscribes()
+        {
+            PotSlot.OnPotSelected -= OnPotSelected;
+            PotEvents.OnPotStateChanged -= OnPotStateChanged;
+            PotEvents.OnPlantGrew -= OnPlantGrew;
+            PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
+        }
         
         private void Initialize()
         {
-            gameManager = FindObjectOfType<GameManager>();
-            gameManager.OnDayChanged += HandleDayChanged;
+            _gameManager = FindObjectOfType<GameManager>();
+            _gameManager.OnDayChanged += HandleDayChanged;
             
             _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
             _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
@@ -59,42 +71,31 @@ namespace _Project
         
         private void LoadGrowthConfig()
         {
-            // Carica la configurazione di crescita
-            growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
-            if (growthConfig == null)
-            {
-                Debug.LogWarning("[BLK-01.03B] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
-                // Crea configurazione di fallback
-                growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
-            }
+            _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
+            if (_growthConfig != null)
+                return;
+            
+            Debug.LogWarning($"[{nameof(PotDetailsWidget)}] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
+            _growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
         }
 
         private void HandleDayChanged(int obj)
         { 
-            if (!currentSelectedPot)
+            if (!_currentSelectedPot)
                 return;
         
-            UpdateActionButtons(currentSelectedPot);
-            UpdateStageAndProgressUI(currentSelectedPot);
-        }
-
-        private void OnDestroy()
-        {
-            // Annulla sottoscrizioni
-            PotSlot.OnPotSelected -= OnPotSelected;
-            PotEvents.OnPotStateChanged -= OnPotStateChanged;
-            PotEvents.OnPlantGrew -= OnPlantGrew;
-            PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
+            UpdateActionButtons(_currentSelectedPot);
+            UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
         private void OnPotSelected(PotSlot pot)
         {
             Debug.Log($"[BLK-01.03B] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
             Debug.Log($"[BLK-01.03B] PotActions presente: {pot.PotActions != null}");
-            Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
+            // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
             // Salva il vaso selezionato corrente
-            currentSelectedPot = pot;
+            _currentSelectedPot = pot;
         
             // BLK-01.03B: Aggiorna tutti gli elementi UI del nuovo sistema
             UpdateStageAndProgressUI(pot);
@@ -201,7 +202,7 @@ namespace _Project
             if (!pot || !pot.PotActions)
                 return;
         
-            _page.SetActive(pot.InRange);
+            // _page.SetActive(pot.InRange);
             
             // Aggiorna lo stato di ogni pulsante
             UpdateButtonState(_plantButton, pot.PotActions.CanPlant(), "Piantare");
@@ -242,11 +243,11 @@ namespace _Project
         /// </summary>
         private void OnPlantGrew(string potId, PlantStage stage, int oldPoints, int newPoints)
         {
-            if (!currentSelectedPot || currentSelectedPot.PotId != potId)
+            if (!_currentSelectedPot || _currentSelectedPot.PotId != potId)
                 return;
         
             Debug.Log($"[BLK-01.03B] Pianta cresciuta su {potId}: {oldPoints} → {newPoints} punti. Aggiornamento progress bar...");
-            UpdateStageAndProgressUI(currentSelectedPot);
+            UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
         /// <summary>
@@ -254,11 +255,11 @@ namespace _Project
         /// </summary>
         private void OnPlantStageChanged(string potId, PlantStage stage)
         {
-            if (!currentSelectedPot || currentSelectedPot.PotId != potId)
+            if (!_currentSelectedPot || _currentSelectedPot.PotId != potId)
                 return;
         
             Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
-            UpdateStageAndProgressUI(currentSelectedPot);
+            UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
         /// <summary>
@@ -306,15 +307,15 @@ namespace _Project
         private int CalculateCurrentGrowthPoints(PotStateModel state)
         {
             int points = state.GrowthPoints;
-            bool hadHydration = (state.LastWateredDay == gameManager.CurrentDay);
-            bool hadLight = (state.LastLitDay == gameManager.CurrentDay);
+            bool hadHydration = (state.LastWateredDay == _gameManager.CurrentDay);
+            bool hadLight = (state.LastLitDay == _gameManager.CurrentDay);
 
             points += (hadHydration, hadLight) switch
             {
-                (true, true)   => growthConfig.pointsIdealCare,
-                (true, false)  => growthConfig.pointsPartialCare,
-                (false, true)  => growthConfig.pointsPartialCare,
-                (false, false) => growthConfig.pointsNoCare
+                (true, true)   => _growthConfig.pointsIdealCare,
+                (true, false)  => _growthConfig.pointsPartialCare,
+                (false, true)  => _growthConfig.pointsPartialCare,
+                (false, false) => _growthConfig.pointsNoCare
             };
 
             return points;
@@ -322,7 +323,7 @@ namespace _Project
         
          private float CalculateProgressPercentage(PotStateModel state)
         {
-            if (!growthConfig) 
+            if (!_growthConfig) 
                 return 0f;
     
             int points = CalculateCurrentGrowthPoints(state);
@@ -333,14 +334,14 @@ namespace _Project
                     return 0f; // Nessun progresso per vasi vuoti
                     
                 case (int)PlantStage.Seed:
-                    if (points >= growthConfig.pointsSeedToSprout)
+                    if (points >= _growthConfig.pointsSeedToSprout)
                         return 100f; // Pronto per avanzare
-                    return (float)points / growthConfig.pointsSeedToSprout * 100f;
+                    return (float)points / _growthConfig.pointsSeedToSprout * 100f;
                     
                 case (int)PlantStage.Sprout:
-                    if (points >= growthConfig.pointsSproutToMature)
+                    if (points >= _growthConfig.pointsSproutToMature)
                         return 100f; // Pronto per avanzare
-                    return (float)points / growthConfig.pointsSproutToMature * 100f;
+                    return (float)points / _growthConfig.pointsSproutToMature * 100f;
                     
                 case (int)PlantStage.Mature:
                     return 100f; // Pianta completamente matura

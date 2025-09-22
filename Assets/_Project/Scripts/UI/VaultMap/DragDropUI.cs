@@ -32,6 +32,8 @@ namespace _Project
         private readonly Dictionary<string, int> _movedToLeft = new();
         private readonly Dictionary<string, int> _movedToRight = new();
 
+        public event Action OnConfirm;
+        public event Action<string> OnInCorrectItem;
         
         private void Awake()
         {
@@ -52,6 +54,8 @@ namespace _Project
         {
             _movedToLeft.Clear();
             _movedToRight.Clear();
+            
+            OnConfirm?.Invoke();
         }
 
         private void Start()
@@ -92,8 +96,11 @@ namespace _Project
             
             var item = _playerInventory.Items.ElementAt(id);
             if (!_allowedItemsIds.Contains(item.Id) && _allowedItemsIds.Count > 0)
+            {
+                OnInCorrectItem?.Invoke(item.Id);
                 return;
-                
+            }
+
             ExecuteCommand(item.Id, 1, false);
         }
 

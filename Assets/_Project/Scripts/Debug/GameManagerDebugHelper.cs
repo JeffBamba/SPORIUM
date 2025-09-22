@@ -73,26 +73,19 @@ public class GameManagerDebugHelper : MonoBehaviour
     {
         Debug.Log("=== GAMEMANAGER DEBUG HELPER ===");
         
-        if (gameManager != null)
+        if (gameManager)
         {
-            Debug.Log($"GameManager - Starting CRY: {gameManager.startingCRY}, Current CRY: {gameManager.CurrentCRY}");
-            Debug.Log($"GameManager - Starting Actions: {gameManager.actionsPerDay}, Current Actions: {gameManager.ActionsLeft}");
+            Debug.Log($"GameManager - Current CRY: {gameManager.CurrentCRY}");
+            Debug.Log($"GameManager - Current Actions: {gameManager.ActionsLeft}");
             Debug.Log($"GameManager - Current Day: {gameManager.CurrentDay}");
         }
         else
         {
             Debug.Log("GameManager: NULL");
         }
-        
-        if (hudController != null)
-        {
-            Debug.Log("HUDController: Trovato");
-        }
-        else
-        {
-            Debug.Log("HUDController: NULL");
-        }
-        
+
+        Debug.Log(hudController ? "HUDController: Trovato" : "HUDController: NULL");
+
         Debug.Log("================================");
     }
     

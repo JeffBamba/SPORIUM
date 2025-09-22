@@ -28,17 +28,11 @@ namespace Sporae.Core
             OnActionsChanged?.Invoke(ActionsLeft);
             return true;
         }
-
-        public void ResetActions()
-        {
-            ActionsLeft = MaxActions;
-            OnActionsChanged?.Invoke(ActionsLeft);
-        }
-
+        
         public void ResetActions(int specificAmount)
         {
-            ActionsLeft = specificAmount;
-            MaxActions = specificAmount;
+            ActionsLeft += specificAmount;
+            MaxActions += specificAmount;
             OnActionsChanged?.Invoke(ActionsLeft);
         }
 

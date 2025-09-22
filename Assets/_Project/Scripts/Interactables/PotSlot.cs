@@ -15,24 +15,12 @@ public class PotSlot : MonoBehaviour
     [SerializeField] private string potId = "POT-001";
     [SerializeField] private PotState state = PotState.Empty;
     
-    [Header("Visual Feedback")]
-    [SerializeField] private Color highlightColor = Color.yellow;
-    [SerializeField] private Color baseColor = Color.white;
-    [SerializeField] private float interactDistance = 2.0f; // Sincronizzato con PotSystemConfig
-    
     [Header("Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
-
     [SerializeField] private TextMeshProUGUI _amountOfFruits;
     
     // Evento statico per la selezione del vaso
     public static event Action<PotSlot> OnPotSelected;
-    
-    // Riferimento alla pianta (null per ora, da implementare in BLK-01.04)
-    private GameObject plantInstance;
-    
-    // Riferimento al PotActions (BLK-01.02)
-    private PotActions potActions;
     
     // Proprietà pubbliche
     public string PotId => potId;
@@ -40,50 +28,41 @@ public class PotSlot : MonoBehaviour
     public bool IsEmpty => state == PotState.Empty;
     
     // Proprietà per BLK-01.02
-    public PotActions PotActions => potActions;
-    public bool InRange => IsPlayerInRange();
+    public PotActions PotActions => _potActions;
+    public Interactable Interactable => _interactable;
+    
     public bool IsSelected { get; private set; } = false;
     
-    // Cache del player per controllo distanza
-    private Transform playerTransform;
+    private GameObject _plantInstance;
+    private PotActions _potActions;
+    private GameManager _gameManager;
+    private UINotification _uiNotification;
+    private Interactable _interactable;
     
-    private GameManager gameManager;
-    private UINotification uiNotification;
     
-    void Awake()
+    private void Awake()
     {
-        gameManager = FindObjectOfType<GameManager>();
-        uiNotification = FindObjectOfType<UINotification>();
-        
-        // Trova il player se presente
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
-        {
-            playerTransform = player.transform;
-        }
-        else
-        {
-            Debug.LogWarning($"[PotSlot] Player non trovato con tag 'Player'. Selezione sempre permessa.");
-        }
-        
-        // Trova SpriteRenderer se non assegnato
-        if (spriteRenderer == null)
-        {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-        }
-        
-        // Trova PotActions se presente
-        potActions = GetComponent<PotActions>();
-        
-        // Imposta colore base
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = baseColor;
-        }
+        _gameManager = FindObjectOfType<GameManager>();
+        _uiNotification = FindObjectOfType<UINotification>();
+        _interactable = GetComponent<Interactable>();
+        _potActions = GetComponent<PotActions>();
     }
     
-    private void Start() {
-        gameManager.OnDayChanged += HandleDayChanged;   
+    private void Start()
+    {
+        _interactable.OnInteract += HandleInteract;
+        _gameManager.OnDayChanged += HandleDayChanged;   
+    }
+
+    private void OnDestroy()
+    {
+        _interactable.OnInteract -= HandleInteract;
+        _gameManager.OnDayChanged -= HandleDayChanged;
+    }
+
+    private void HandleInteract()
+    {
+        SelectPot();
     }
 
     private void HandleDayChanged(int obj)
@@ -95,63 +74,21 @@ public class PotSlot : MonoBehaviour
                 $"{(int)PotActions.PotState.AmountFruits}+" : "";
     }
 
-    void OnMouseEnter()
+    private void CollectFruits()
     {
-        // Evidenzia il vaso al passaggio del mouse
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = highlightColor;
-        }
-    }
-    
-    void OnMouseExit()
-    {
-        // Ripristina colore base
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = baseColor;
-        }
-    }
-    
-    void OnMouseDown()
-    {
-        // Gestisce il click sul vaso
-        HandlePotClick();
-    }
-    
-    private void HandlePotClick()
-    {
-        // IMPORTANTE: Blocca selezione se il click è sopra UI
-        if (UIBlocker.IsPointerOverUI())
-        {
-            Debug.Log($"[{potId}] Click bloccato: sopra UI");
+        if (PotActions.PotState.AmountFruits < 1)
             return;
-        }
         
-        // Controlla distanza dal player se disponibile
-        if (playerTransform != null)
-        {
-            float distance = Vector2.Distance(playerTransform.position, transform.position);
-            Debug.Log($"[{potId}] Click rilevato - Distanza: {distance:F2}, Max: {interactDistance}");
-            if (distance > interactDistance)
-            {
-                Debug.Log($"[{potId}] Troppo lontano (>= {interactDistance})");
-                return;
-            }
-        }
-        else
-        {
-            Debug.Log($"[{potId}] Click rilevato - Player non trovato, selezione permessa");
-        }
-        
-        // Seleziona il vaso
-        SelectPot();
+        _uiNotification.ShowNotification($"New Fruit added to Inventory: {(int)PotActions.PotState.AmountFruits}", 3f, Color.green);
+        _gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
+        PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
+        _amountOfFruits.text = "";
     }
     
     /// <summary>
     /// Seleziona il vaso (pubblico per testing)
     /// </summary>
-    public void SelectPot()
+    private void SelectPot()
     {
         Debug.Log($"[{potId}] Selected (state: {state})");
         
@@ -160,20 +97,9 @@ public class PotSlot : MonoBehaviour
         
         // Imposta questo vaso come selezionato
         IsSelected = true;
-        
-        // Evidenzia visivamente
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = highlightColor;
-        }
 
-        if (PotActions.PotState.AmountFruits >= 1)
-        {
-            uiNotification.ShowNotification($"New Fruit added to Inventory: {(int)PotActions.PotState.AmountFruits}", 3f, Color.green);
-            gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
-            PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
-            _amountOfFruits.text = "";
-        }
+        //
+        CollectFruits();
 
         // Notifica la selezione
         OnPotSelected?.Invoke(this);
@@ -202,10 +128,7 @@ public class PotSlot : MonoBehaviour
     public void ClearSelection()
     {
         IsSelected = false;
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = baseColor;
-        }
+        _interactable.Deselect();
     }
     
     /// <summary>
@@ -223,27 +146,6 @@ public class PotSlot : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Verifica se il player è in range per interagire
-    /// </summary>
-    public bool IsPlayerInRange()
-    {
-        if (playerTransform == null) return true; // Se non c'è player, sempre in range
-        
-        float distance = Vector2.Distance(playerTransform.position, transform.position);
-        return distance <= interactDistance;
-    }
-    
-    /// <summary>
-    /// Restituisce la distanza dal player
-    /// </summary>
-    public float GetDistanceFromPlayer()
-    {
-        if (playerTransform == null) return 0f;
-        
-        return Vector2.Distance(playerTransform.position, transform.position);
-    }
-    
     #if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
@@ -253,10 +155,6 @@ public class PotSlot : MonoBehaviour
         
         // Disegna label con ID del vaso
         UnityEditor.Handles.Label(transform.position + Vector3.up * 0.7f, potId);
-        
-        // Disegna raggio di interazione
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, interactDistance);
     }
     #endif
 }

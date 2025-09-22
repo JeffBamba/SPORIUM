@@ -250,6 +250,7 @@ GameObject:
   - component: {fileID: 871008503983651716}
   - component: {fileID: 5043254523307738949}
   - component: {fileID: 8828960649072428577}
+  - component: {fileID: 7328423360637404467}
   m_Layer: 8
   m_Name: Pot_POT
   m_TagString: Untagged
@@ -384,9 +385,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   potId: POT-001
   state: 0
-  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  baseColor: {r: 1, g: 1, b: 1, a: 1}
-  interactDistance: 1.5
   spriteRenderer: {fileID: 0}
   _amountOfFruits: {fileID: 7712485458464971865}
 --- !u!114 &5043254523307738949
@@ -438,3 +436,18 @@ MonoBehaviour:
   s2_sprout: {fileID: 21300000, guid: 12345678901234567890123456789013, type: 3}
   s3_mature: {fileID: 21300000, guid: 12345678901234567890123456789014, type: 3}
   enableDebugLogs: 1
+--- !u!114 &7328423360637404467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4060257016458266256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dec6573ed88f466eab692b7a15eaa2e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactDistance: 1
+  _normalColor: {r: 1, g: 1, b: 1, a: 1}
+  _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}

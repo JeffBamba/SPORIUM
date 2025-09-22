@@ -7,49 +7,28 @@ namespace _Project
     {
         [SerializeField] private HUDInventory _inventoryUI;
         [SerializeField] private SeedStorageUI _seedStorageUI;
-        [SerializeField] private float _interactDistance;
-
-        [SerializeField] private Color _normalColor;
-        [SerializeField] private Color _highlightColor;
-        
-        private Transform _playerTransform;
-        private SpriteRenderer _spriteRenderer;
-        private Inventory _inventory = new Inventory();
+       
+        private readonly Inventory _inventory = new();
+        private Interactable _interactable;
         
         public Inventory Storage => _inventory;
 
         private void Awake()
         {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-                _playerTransform = player.transform;
+            _interactable = GetComponent<Interactable>();
+            _interactable.OnInteract += HandleInteract;
+        }
+
+        private void OnDestroy()
+        {
+            _interactable.OnInteract -= HandleInteract;
         }
         
-        public void OnMouseDown()
-        {
-            if (UIBlocker.IsPointerOverUI())
-                return;
-            
-            float distance = Vector2.Distance(_playerTransform.position, transform.position);
-            if (distance > _interactDistance)
-                return;
-            
+        private void HandleInteract() {
             _inventoryUI.Show();
             _seedStorageUI.Show();
         }
         
-        private void OnMouseEnter()
-        {
-            _spriteRenderer.color = _highlightColor;
-        }
-    
-        private void OnMouseExit()
-        {
-            _spriteRenderer.color = _normalColor;
-        }
-
         public override Inventory GetInventory()
         {
             return _inventory;

@@ -12,7 +12,9 @@ namespace _Project.Scripts.Core
 
         private static readonly List<string> k_itemsToDeterioration = new()
         {
-            "SDE-001", "SPORE_GENERIC"
+            "SDE-001", 
+            "SPORE_GENERIC",
+            "Whole-Plant"
         };
         
         public DeteriorationSystem(GameManager gameManager)

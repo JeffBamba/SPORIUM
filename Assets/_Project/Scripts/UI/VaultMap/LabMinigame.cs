@@ -70,6 +70,7 @@ namespace _Project
             _startButton.onClick.AddListener(TryLaunch);
             _closeButton.onClick.AddListener(() =>
             {
+                _dragDropUI.ConfirmOperation();
                 _gameInProgress = false;
                 gameObject.SetActive(false);
             });
@@ -99,7 +100,7 @@ namespace _Project
         
         private void Update()
         {
-            _startButton.interactable = !_gameInProgress;
+            UpdateUI();
             
             if (!_gameInProgress)
                 return;
@@ -138,15 +139,15 @@ namespace _Project
                 _storage.Add("SDE-001");
 
             StartCoroutine(HideRoutine());
-            UpdateUI();
+            _textLabel.text = _isWon ? _wonText : _loseText;
         }
 
         private void UpdateUI()
         {
+            _startButton.interactable = !_gameInProgress;
+
             var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
-            
-            _textLabel.text = _isWon ? _wonText : _loseText;
         }
         
         private void UpdateStorage()

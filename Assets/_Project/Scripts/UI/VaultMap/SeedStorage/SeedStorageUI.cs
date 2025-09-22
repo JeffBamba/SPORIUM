@@ -13,21 +13,39 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _capacityLabel;
         [SerializeField] private Button _closeButton;
         [SerializeField] private HUDInventory _playerInventory;
+
+        [SerializeField] private string _incorrectItemMessage;
         
+        private DragDropUI _dragDropUI;
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
-
+        private UINotification _notification;
+        
         private void Awake()
         {
+            _notification = FindObjectOfType<UINotification>();
+            _dragDropUI = GetComponent<DragDropUI>();
             _hudItemContainer = GetComponent<HUDItemContainer>();
             _storage = _seedStorage.Storage;
         }
 
         private void Start()
         {
+            _dragDropUI.OnInCorrectItem += HandleIncorrectItem;
+            _dragDropUI.OnConfirm += HandleConfirm;
             _playerInventory.OnClose += HandleClose;
-            _closeButton.onClick.AddListener(HandleClose);
             _storage.OnInventoryChanged += UpdateStorage;
+            _closeButton.onClick.AddListener(HandleClose);
+        }
+
+        private void HandleIncorrectItem(string obj)
+        {
+            _notification.ShowNotification(_incorrectItemMessage, 2, Color.red);
+        }
+
+        private void HandleConfirm()
+        {
+            Hide();
         }
 
         private void HandleClose()
@@ -37,6 +55,8 @@ namespace _Project
 
         private void OnDestroy()
         {
+            _dragDropUI.OnInCorrectItem -= HandleIncorrectItem;
+            _dragDropUI.OnConfirm -= HandleConfirm;
             _storage.OnInventoryChanged -= UpdateStorage;
             _playerInventory.OnClose -= HandleClose;
         }

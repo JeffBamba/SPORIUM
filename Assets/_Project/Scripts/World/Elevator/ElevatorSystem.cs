@@ -70,10 +70,10 @@ public class ElevatorSystem : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             GoToLevel((currentLevelIndex + 1) % levels.Length);
         
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
             GoToLevel((currentLevelIndex - 1) % levels.Length);
     }
 
@@ -120,6 +120,15 @@ public class ElevatorSystem : MonoBehaviour
     {
         foreach (var item in levelsButtons)
             item.interactable = false;
+    }
+
+    public void SetLevel(int levelIndex)
+    {
+        currentLevelIndex = levelIndex; 
+        elevatorSection.transform.position = new Vector3(
+            elevatorSection.transform.position.x,
+            levels[levelIndex].position.y,
+            elevatorSection.transform.position.z);
     }
     
     public void GoToLevel(int levelIndex)

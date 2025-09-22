@@ -385,7 +385,7 @@ public class PotHUDWidget : MonoBehaviour
         
         Debug.Log($"[BLK-01.03B] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
         Debug.Log($"[BLK-01.03B] PotActions presente: {pot.PotActions != null}");
-        Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
+        // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
         // Salva il vaso selezionato corrente
         currentSelectedPot = pot;
@@ -737,7 +737,7 @@ public class PotHUDWidget : MonoBehaviour
         }
         
         // Mostra i pulsanti solo se il player è in range
-        bool inRange = pot.InRange;
+        bool inRange = false;//pot.InRange;
         SetActionButtonsVisible(inRange);
         
         if (inRange)
