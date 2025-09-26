@@ -18,7 +18,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     [SerializeField] private List<string> testResults = new List<string>();
     
     [Header("Component References")]
-    [SerializeField] private SPOR_BLK_01_03A_DayCycleController dayCycleController;
+    [SerializeField] private DayCycleController dayCycleController;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private PotSystemConfig potSystemConfig;
     
@@ -87,7 +87,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
         // Verifica DayCycleController
         if (dayCycleController == null)
         {
-            dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
+            dayCycleController = FindObjectOfType<DayCycleController>();
         }
         
         if (dayCycleController != null)

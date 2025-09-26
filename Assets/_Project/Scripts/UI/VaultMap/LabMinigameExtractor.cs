@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using TMPro;
 using UnityEngine;
@@ -84,14 +85,14 @@ namespace _Project
         {
             var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
 
-            if (!_storage.Has("Fruits"))
+            if (!_storage.Has(Items.Fruits))
                 return;
             
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
 
             _dragDropUI.ConfirmOperation();
-            _storage.Remove("Fruits", 1);
+            _storage.Consume(Items.Fruits);
 
             _textLabel.text = _defaultText;
             _gameView.SetActive(true);
@@ -138,7 +139,7 @@ namespace _Project
                 targetMaxX > playerMaxX;
             
             if (_isWon)
-                _storage.Add("SPORE_GENERIC");
+                _storage.Add(Items.SporeGeneric);
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;
@@ -159,7 +160,7 @@ namespace _Project
             for (var i = 0; i < _storage.UniqueItems; i++)
             {
                 var item = _storage.Items.ElementAt(i);
-                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+                _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
 

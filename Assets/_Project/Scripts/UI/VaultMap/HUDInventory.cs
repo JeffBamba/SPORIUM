@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Core;
 
 using UnityEngine;
@@ -26,7 +27,7 @@ namespace _Project
         {
             _hudItemContainer = GetComponent<HUDItemContainer>();
             _gameManager = FindObjectOfType<GameManager>();
-            _inventory = _gameManager.GetInventory();
+            _inventory = _gameManager.PlayerInventory;
         }
 
         private void Start()
@@ -69,7 +70,7 @@ namespace _Project
             for (var i = 0; i < _inventory.UniqueItems; i++)
             {
                 var item = _inventory.Items.ElementAt(i);
-               _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+               _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
     }

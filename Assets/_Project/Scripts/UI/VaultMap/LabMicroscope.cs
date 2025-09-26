@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,8 +47,8 @@ namespace _Project
         private void HandleConfirm()
         {
             _dragDropUI.ConfirmOperation();
-            _storage.Remove("SPORE_GENERIC", 1);
-            _storage.Add("SDE-001", 1);
+            _storage.Consume("SPORE_GENERIC", 1);
+            // _storage.Add("SDE-001", 1);
         }
 
         private void UpdateStorage()
@@ -57,7 +58,7 @@ namespace _Project
             for (var i = 0; i < _storage.UniqueItems; i++)
             {
                 var item = _storage.Items.ElementAt(i);
-                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+                _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
 

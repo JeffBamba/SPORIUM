@@ -337,7 +337,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     /// </summary>
     private void RegisterPotsWithGrowthSystem()
     {
-        var dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
+        var dayCycleController = FindObjectOfType<DayCycleController>();
         if (dayCycleController != null)
         {
             int registeredCount = 0;

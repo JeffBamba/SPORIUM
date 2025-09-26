@@ -1,4 +1,5 @@
 using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using TMPro;
 using UnityEngine;
@@ -70,7 +71,7 @@ namespace _Project
             for (var i = 0; i < _storage.UniqueItems; i++)
             {
                 var item = _storage.Items.ElementAt(i);
-                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+                _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using Sporae.Core;
+﻿using _Project.Sporae.Core;
+using Sporae.Core;
 using UnityEngine;
 
 namespace _Project

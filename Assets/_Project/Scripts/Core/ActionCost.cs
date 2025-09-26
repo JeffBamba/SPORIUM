@@ -10,9 +10,9 @@ public class ActionCost : MonoBehaviour
     [Header("Validation")]
     [SerializeField] private bool validateOnStart = true;
 
-    private GameManager gameManager;
+    private GameManager _gameManager;
 
-    void Start()
+    private void Start()
     {
         if (validateOnStart)
         {
@@ -39,9 +39,9 @@ public class ActionCost : MonoBehaviour
 
     private void InitializeActionCost()
     {
-        gameManager = FindObjectOfType<GameManager>();
+        _gameManager = FindObjectOfType<GameManager>();
         
-        if (gameManager == null)
+        if (_gameManager == null)
         {
             Debug.LogWarning("[ActionCost] GameManager non trovato nella scena!");
         }
@@ -49,7 +49,7 @@ public class ActionCost : MonoBehaviour
 
     public bool TryPerform()
     {
-        if (gameManager == null)
+        if (_gameManager == null)
         {
             Debug.LogWarning("[ActionCost] GameManager non disponibile!");
             return false;
@@ -58,26 +58,26 @@ public class ActionCost : MonoBehaviour
         if (requireBothResources)
         {
             // Richiede sia azioni che CRY
-            return gameManager.TrySpendAction(cryCost);
+            return _gameManager.TrySpendAction(cryCost);
         }
         else
         {
             // Richiede solo azioni, CRY è opzionale
-            return gameManager.TrySpendAction(cryCost);
+            return _gameManager.TrySpendAction(cryCost);
         }
     }
 
     public bool CanPerform()
     {
-        if (gameManager == null) return false;
+        if (_gameManager == null) return false;
         
         if (requireBothResources)
         {
-            return gameManager.ActionsLeft >= actionCost && gameManager.CurrentCRY >= cryCost;
+            return _gameManager.ActionsLeft >= actionCost && _gameManager.CurrentCRY >= cryCost;
         }
         else
         {
-            return gameManager.ActionsLeft >= actionCost;
+            return _gameManager.ActionsLeft >= actionCost;
         }
     }
 

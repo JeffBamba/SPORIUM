@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Sporae.Core;
+using _Project.Sporae.Core;
 
 namespace _Project.Scripts.Core
 {
@@ -12,15 +11,15 @@ namespace _Project.Scripts.Core
 
         private static readonly List<string> k_itemsToDeterioration = new()
         {
-            "SDE-001", 
-            "SPORE_GENERIC",
-            "Whole-Plant"
+            Items.Seed001, 
+            Items.SporeGeneric,
+            Items.WholePlant
         };
         
         public DeteriorationSystem(GameManager gameManager)
         {
             _gameManager = gameManager;
-            _inventory = _gameManager.GetInventory();
+            _inventory = _gameManager.PlayerInventory;
             _gameManager.OnDayChanged += HandleDayChanged;
         }
 
@@ -32,16 +31,23 @@ namespace _Project.Scripts.Core
         private void HandleDayChanged(int day)
         {
             foreach (
-                var item in _inventory.Items
+                var inventorySlot in _inventory.Items
                     .ToList()
-                    .Where(item => k_itemsToDeterioration.Contains(item.Id)))
+                    .Where(item => k_itemsToDeterioration.Contains(item.TypeId))
+            )
+                DeteriorateInventorySlot(inventorySlot);
+        }
+
+        private void DeteriorateInventorySlot(InventorySlot slot)
+        {
+            foreach (var item in slot.Items)
             {
                 item.Quality -= 1;
                 if (item.Quality > 0)
                     continue;
-                    
-                _inventory.Add("ORG-SCR-001", item.Quantity);
-                _inventory.Remove(item.Id, item.Quantity);
+
+                _inventory.Add(Items.OrganicScrap001);
+                _inventory.Consume(item.TypeId);
             }
         }
     }

@@ -12,7 +12,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
     [SerializeField] private bool enableHotkeys = true;
     
     [Header("References")]
-    [SerializeField] private SPOR_BLK_01_03A_DayCycleController dayCycleController;
+    [SerializeField] private DayCycleController dayCycleController;
     
     private List<PotStateModel> allPots = new List<PotStateModel>();
 
@@ -21,7 +21,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         // Trova il DayCycleController se non assegnato
         if (dayCycleController == null)
         {
-            dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
+            dayCycleController = FindObjectOfType<DayCycleController>();
         }
         
         if (enableDebugLogs)

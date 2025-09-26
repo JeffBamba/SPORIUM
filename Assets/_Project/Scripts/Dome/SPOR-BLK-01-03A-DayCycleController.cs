@@ -8,7 +8,7 @@ using Sporae.Dome.PotSystem.Growth;
 /// Implementa il sistema deterministico basato su timestamp invece di flag volatili.
 /// Si iscrive a GameManager.OnDayChanged e gestisce la crescita di tutti i vasi registrati.
 /// </summary>
-public class SPOR_BLK_01_03A_DayCycleController : MonoBehaviour
+public class DayCycleController : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private PlantGrowthConfig growthConfig;

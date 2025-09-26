@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using _Project;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using TMPro;
 
@@ -38,11 +39,13 @@ public class PotSlot : MonoBehaviour
     private GameManager _gameManager;
     private UINotification _uiNotification;
     private Interactable _interactable;
-    
+    private Inventory _inventory;
     
     private void Awake()
     {
         _gameManager = FindObjectOfType<GameManager>();
+        _inventory = _gameManager.PlayerInventory;
+        
         _uiNotification = FindObjectOfType<UINotification>();
         _interactable = GetComponent<Interactable>();
         _potActions = GetComponent<PotActions>();
@@ -80,7 +83,7 @@ public class PotSlot : MonoBehaviour
             return;
         
         _uiNotification.ShowNotification($"New Fruit added to Inventory: {(int)PotActions.PotState.AmountFruits}", 3f, Color.green);
-        _gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
+        _inventory.Add(Items.Fruits, (int)PotActions.PotState.AmountFruits);
         PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
         _amountOfFruits.text = "";
     }

@@ -1,11 +1,11 @@
 ﻿using System;
 using _Project;
 using _Project.Scripts.Core;
+using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
-using UnityEngine.Serialization;
 
-public class  GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
     [SerializeField] private bool _showDebugLogs = true;
     
@@ -19,7 +19,7 @@ public class  GameManager : MonoBehaviour
     public int ActionsLeft => _actionSystem.ActionsLeft;
     public int CurrentCRY => _economySystem.CurrentCRY;
     
-    private readonly Inventory _inventory = new();
+    private readonly Inventory _playerInventory = new();
 
     public event Action<int> OnDayChanged;
     public event Action<float> OnCondensationChanged;
@@ -32,6 +32,7 @@ public class  GameManager : MonoBehaviour
     public EconomySystem EconomySystem => _economySystem;
     public ActionSystem ActionSystem => _actionSystem;
     public CondensationSystem CondensationSystem => _condensationSystem;
+    public Inventory PlayerInventory => _playerInventory;
     
     void Awake()
     {
@@ -45,9 +46,9 @@ public class  GameManager : MonoBehaviour
         CurrentDay = _startingDay;
 
         // Inventario iniziale
-        AddItem("SDE-001", 4);
-        AddItem("SPORE_GENERIC", 2);
-        AddItem("WAT-Raw", 2);
+        _playerInventory.Add(Items.Seed001, 4);
+        _playerInventory.Add(Items.SporeGeneric, 2);
+        _playerInventory.Add(Items.Water, 2);
         
         // Sincronizza sistemi interni con valori esterni
         if (_showDebugLogs)
@@ -119,13 +120,7 @@ public class  GameManager : MonoBehaviour
         
         Debug.Log($"[{nameof(GameManager)}] EndDay -> Day={CurrentDay}, CRY={CurrentCRY}, Actions={ActionsLeft}");
     }
-
-
-    public bool HasItem(string id, int qty = 1) => _inventory.Has(id, qty);
-    public void AddItem(string id, int qty = 1) => _inventory.Add(id, qty);
-    public bool ConsumeItem(string id, int qty = 1) => _inventory.Consume(id, qty);
-    public Inventory GetInventory() => _inventory;
-
+    
     private void NotifyUI()
     {
         OnDayChanged?.Invoke(CurrentDay);
