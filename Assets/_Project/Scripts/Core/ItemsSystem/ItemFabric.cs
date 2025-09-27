@@ -8,7 +8,7 @@ namespace _Project.Sporae.Core
         
         public static Item CreateItemByType(string typeId)
         {
-            var config = Resources.Load<ItemData>("Items/" + typeId);
+            var config = Resources.Load<ItemConfig>("Items/" + typeId);
             if (!config)
             {
                 Debug.LogError($"Cannot find item config by id: {typeId}");

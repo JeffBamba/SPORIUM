@@ -5,9 +5,9 @@ namespace _Project.Sporae.Core
     [Serializable]
     public class Item
     {
-        public ItemData ItemConfig { get; private set; }
+        public ItemConfig ItemConfig { get; private set; }
 
-        public Item(ItemData config, int itemId)
+        public Item(ItemConfig config, int itemId)
         {
             ItemConfig = config;
             
