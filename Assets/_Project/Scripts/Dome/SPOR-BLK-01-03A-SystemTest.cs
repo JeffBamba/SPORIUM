@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
@@ -21,8 +22,10 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     [SerializeField] private DayCycleController dayCycleController;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private PotSystemConfig potSystemConfig;
+
+    private DayCycleSystem _dayCycleSystem;
     
-    void Start()
+    private void Start()
     {
         if (runTestsOnStart)
         {
@@ -68,6 +71,8 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     private void TestEssentialComponents()
     {
         Debug.Log("--- Test 1: Componenti Essenziali ---");
+
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         
         // Verifica GameManager
         if (gameManager == null)
@@ -343,7 +348,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
         
         if (gameManager != null)
         {
-            Debug.Log($"Giorno corrente: {gameManager.CurrentDay}");
+            Debug.Log($"Giorno corrente: {_dayCycleSystem.CurrentDay}");
             Debug.Log($"Azioni rimanenti: {gameManager.ActionsLeft}");
             Debug.Log($"CRY disponibili: {gameManager.CurrentCRY}");
         }
@@ -360,7 +365,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
         if (gameManager != null)
         {
             Debug.Log($"Forzando EndDay per test crescita...");
-            gameManager.EndDay();
+            _dayCycleSystem.EndDay();
         }
         else
         {

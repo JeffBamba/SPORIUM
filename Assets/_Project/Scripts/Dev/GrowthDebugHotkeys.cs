@@ -1,3 +1,4 @@
+using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem;
@@ -18,8 +19,14 @@ namespace Sporae.Dev
         [SerializeField] private GameManager gameManager;
         
         private PotSlot selectedPot;
+        private DayCycleSystem _dayCycleSystem;
+
+        private void Awake()
+        {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        }
         
-        void Start()
+        private void Start()
         {
             // Trova il GameManager se non assegnato
             if (gameManager == null)
@@ -72,15 +79,9 @@ namespace Sporae.Dev
         /// </summary>
         private void SimulateEndDay()
         {
-            if (gameManager == null)
-            {
-                Debug.LogWarning("[BLK-01.03B] GameManager non disponibile per End Day");
-                return;
-            }
-            
             Debug.Log("[BLK-01.03B] 🔄 Simulazione End Day...");
-            gameManager.EndDay();
-            Debug.Log($"[BLK-01.03B] ✅ End Day completato. Nuovo giorno: {gameManager.CurrentDay}");
+            _dayCycleSystem.EndDay();
+            Debug.Log($"[BLK-01.03B] ✅ End Day completato. Nuovo giorno: {_dayCycleSystem.CurrentDay}");
         }
         
         /// <summary>
@@ -114,7 +115,7 @@ namespace Sporae.Dev
         private void LightSelectedPot()
         {
             selectedPot = FindSelectedPot();
-            if (selectedPot == null || selectedPot.PotActions == null)
+            if (!selectedPot || !selectedPot.PotActions)
             {
                 Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per illuminare");
                 return;

@@ -30,10 +30,10 @@ public class CRYDebugHelper : MonoBehaviour
     
     private void ShowDebugInfo()
     {
-        if (gameManager == null) return;
+        if (!gameManager)
+            return;
         
         Debug.Log($"[CRYDebugHelper] === STATO RISORSE ===");
-        Debug.Log($"[CRYDebugHelper] Giorno: {gameManager.CurrentDay}");
         Debug.Log($"[CRYDebugHelper] Azioni rimanenti: {gameManager.ActionsLeft}");
         Debug.Log($"[CRYDebugHelper] CRY disponibili: {gameManager.CurrentCRY}");
         Debug.Log($"[CRYDebugHelper] End Day possibile: {gameManager.CurrentCRY >= 20}");

@@ -1,3 +1,4 @@
+using _Project.Sporae.Core;
 using UnityEngine;
 
 /// <summary>
@@ -10,38 +11,40 @@ public class GameManagerDebugHelper : MonoBehaviour
     [SerializeField] private KeyCode debugKey = KeyCode.F2;
     [SerializeField] private KeyCode forceUpdateKey = KeyCode.F3;
     
-    private GameManager gameManager;
-    private HUDController hudController;
+    private GameManager _gameManager;
+    private HUDController _hudController;
+    private DayCycleSystem _dayCycleSystem;
     
-    void Start()
+    private void Start()
     {
         Debug.Log("[GameManagerDebugHelper] Start() chiamato - Inizializzazione...");
         
-        gameManager = FindObjectOfType<GameManager>();
-        hudController = FindObjectOfType<HUDController>();
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        _gameManager = FindObjectOfType<GameManager>();
+        _hudController = FindObjectOfType<HUDController>();
         
-        if (gameManager == null)
+        if (_gameManager == null)
         {
             Debug.LogWarning("[GameManagerDebugHelper] GameManager non trovato!");
         }
         else
         {
-            Debug.Log($"[GameManagerDebugHelper] GameManager trovato: {gameManager.name}");
+            Debug.Log($"[GameManagerDebugHelper] GameManager trovato: {_gameManager.name}");
         }
         
-        if (hudController == null)
+        if (_hudController == null)
         {
             Debug.LogWarning("[GameManagerDebugHelper] HUDController non trovato!");
         }
         else
         {
-            Debug.Log($"[GameManagerDebugHelper] HUDController trovato: {hudController.name}");
+            Debug.Log($"[GameManagerDebugHelper] HUDController trovato: {_hudController.name}");
         }
         
         Debug.Log("[GameManagerDebugHelper] Inizializzazione completata. Premi F2 per debug, F3 per sync.");
     }
     
-    void Update()
+    private void Update()
     {
         if (!enableDebug) return;
         
@@ -73,18 +76,18 @@ public class GameManagerDebugHelper : MonoBehaviour
     {
         Debug.Log("=== GAMEMANAGER DEBUG HELPER ===");
         
-        if (gameManager)
+        if (_gameManager)
         {
-            Debug.Log($"GameManager - Current CRY: {gameManager.CurrentCRY}");
-            Debug.Log($"GameManager - Current Actions: {gameManager.ActionsLeft}");
-            Debug.Log($"GameManager - Current Day: {gameManager.CurrentDay}");
+            Debug.Log($"GameManager - Current CRY: {_gameManager.CurrentCRY}");
+            Debug.Log($"GameManager - Current Actions: {_gameManager.ActionsLeft}");
+            Debug.Log($"GameManager - Current Day: {_dayCycleSystem.CurrentDay}");
         }
         else
         {
             Debug.Log("GameManager: NULL");
         }
 
-        Debug.Log(hudController ? "HUDController: Trovato" : "HUDController: NULL");
+        Debug.Log(_hudController ? "HUDController: Trovato" : "HUDController: NULL");
 
         Debug.Log("================================");
     }
@@ -93,15 +96,9 @@ public class GameManagerDebugHelper : MonoBehaviour
     {
         Debug.Log("=== FORZATURA SINCRONIZZAZIONE ===");
         
-        if (gameManager != null)
+        if (_hudController != null)
         {
-            gameManager.ForceUIUpdate();
-            Debug.Log("GameManager.ForceUIUpdate() chiamato");
-        }
-        
-        if (hudController != null)
-        {
-            hudController.ForceUpdateAllUI();
+            _hudController.ForceUpdateAllUI();
             Debug.Log("HUDController.ForceUpdateAllUI() chiamato");
         }
         

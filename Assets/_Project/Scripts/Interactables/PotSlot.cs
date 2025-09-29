@@ -40,10 +40,13 @@ public class PotSlot : MonoBehaviour
     private UINotification _uiNotification;
     private Interactable _interactable;
     private Inventory _inventory;
+    private DayCycleSystem _dayCycleSystem;
     
     private void Awake()
     {
         _gameManager = FindObjectOfType<GameManager>();
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        
         _inventory = _gameManager.PlayerInventory;
         
         _uiNotification = FindObjectOfType<UINotification>();
@@ -54,13 +57,13 @@ public class PotSlot : MonoBehaviour
     private void Start()
     {
         _interactable.OnInteract += HandleInteract;
-        _gameManager.OnDayChanged += HandleDayChanged;   
+        _dayCycleSystem.OnDayChanged += HandleDayChanged;   
     }
 
     private void OnDestroy()
     {
         _interactable.OnInteract -= HandleInteract;
-        _gameManager.OnDayChanged -= HandleDayChanged;
+        _dayCycleSystem.OnDayChanged -= HandleDayChanged;
     }
 
     private void HandleInteract()

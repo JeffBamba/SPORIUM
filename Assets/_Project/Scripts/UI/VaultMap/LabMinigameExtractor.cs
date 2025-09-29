@@ -43,6 +43,7 @@ namespace _Project
 
         private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
+        private DayCycleSystem _dayCycleSystem;
         
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
@@ -56,6 +57,8 @@ namespace _Project
         
         private void Awake()
         {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
                 Debug.LogWarning("There is no GameManager in the scene");
@@ -83,7 +86,7 @@ namespace _Project
 
         private void TryLaunch()
         {
-            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+            var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
 
             if (!_storage.Has(Items.Fruits))
                 return;
@@ -97,7 +100,7 @@ namespace _Project
             _textLabel.text = _defaultText;
             _gameView.SetActive(true);
             
-            _lastPlayingDay = _gameManager.CurrentDay;
+            _lastPlayingDay = _dayCycleSystem.CurrentDay;
             _gameInProgress = true;
         }
         
@@ -149,7 +152,7 @@ namespace _Project
         {
             _startButton.interactable = !_gameInProgress;
 
-            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+            var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
         }
         

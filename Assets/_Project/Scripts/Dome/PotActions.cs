@@ -22,6 +22,7 @@ public class PotActions : MonoBehaviour
     private GameManager _gameManager;
     private Inventory _playerInventory;
     private PotStateModel _potState;
+    private DayCycleSystem _dayCycleSystem;
     
     // Proprietà pubbliche
     public PotSlot PotSlot => potSlot;
@@ -30,6 +31,8 @@ public class PotActions : MonoBehaviour
     
     private void Awake()
     {
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        
         // Trova il PotSlot se non assegnato
         if (potSlot == null)
             potSlot = GetComponent<PotSlot>();
@@ -96,7 +99,7 @@ public class PotActions : MonoBehaviour
             hasSeed = _playerInventory.Has(Items.Seed001),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
-            notWateredOnThisDay = _potState.LastWateredDay != _gameManager.CurrentDay;
+            notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
@@ -127,7 +130,7 @@ public class PotActions : MonoBehaviour
             hydrationNotMax = !_potState.IsHydrationMax(GetMaxHydration()),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
-            notWateredOnThisDay = _potState.LastWateredDay != _gameManager.CurrentDay,
+            notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay,
             hasWater = _playerInventory.Has(Items.Water);
         
         if (showDebugLogs)
@@ -150,8 +153,8 @@ public class PotActions : MonoBehaviour
             lightNotMax = !_potState.IsLightExposureMax(GetMaxLightExposure()),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
-            notPlantedOnThisDay = _potState.PlantedDay != _gameManager.CurrentDay,
-            notLightedOnThisDay = _potState.LastLitDay != _gameManager.CurrentDay;
+            notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay,
+            notLightedOnThisDay = _potState.LastLitDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, LightNotMax={lightNotMax}, Range={inRange}, Resources={hasResources}");
@@ -190,7 +193,7 @@ public class PotActions : MonoBehaviour
         }
         
         // Aggiorna lo stato del vaso (Stage 1 = Seed)
-        _potState.PlantSeed(_gameManager.CurrentDay);
+        _potState.PlantSeed(_dayCycleSystem.CurrentDay);
         
         // Notifica il sistema di crescita (BLK-01.03A)
         if (potGrowthController)
@@ -262,7 +265,7 @@ public class PotActions : MonoBehaviour
             return false;
         
         // Imposta timestamp per crescita 
-        _potState.UpdateWateringDay(_gameManager.CurrentDay);
+        _potState.UpdateWateringDay(_dayCycleSystem.CurrentDay);
             
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
@@ -299,7 +302,7 @@ public class PotActions : MonoBehaviour
             return false;
         
         // Imposta timestamp per crescita
-        _potState.UpdateLightingDay(_gameManager.CurrentDay);
+        _potState.UpdateLightingDay(_dayCycleSystem.CurrentDay);
             
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);

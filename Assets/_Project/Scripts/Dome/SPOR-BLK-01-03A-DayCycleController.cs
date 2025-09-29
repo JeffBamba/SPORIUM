@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
@@ -17,20 +18,16 @@ public class DayCycleController : MonoBehaviour
     [SerializeField] private bool enableDebugLogs = true;
 
     // Lista dei vasi registrati per la crescita
-    private List<PotStateModel> registeredPots = new List<PotStateModel>();
-    private bool isInitialized = false;
+    private readonly List<PotStateModel> _registeredPots = new();
+    private bool _isInitialized;
+    
+    private DayCycleSystem _dayCycleSystem;
 
     private void Awake()
     {
-        // Cerca la configurazione se non assegnata
-        if (growthConfig == null)
-        {
-            growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
-            if (growthConfig == null)
-            {
-                Debug.LogWarning("[BLK-01.03A] PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
-            }
-        }
+        growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
+        if (!growthConfig)
+            Debug.LogWarning($"[{nameof(DayCycleSystem)}] PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
     }
 
     private void Start()
@@ -58,20 +55,9 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void InitializeSystem()
     {
-        if (isInitialized) return;
-
-        // Cerca GameManager e si iscrive
-        GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
-        {
-            if (enableDebugLogs)
-                Debug.Log("[BLK-01.03A] DayCycleController: Iscritto a GameManager.OnDayChanged");
-        }
-        else
-        {
-            Debug.LogError("[BLK-01.03A] DayCycleController: GameManager non trovato!");
-        }
-
+        if (_isInitialized)
+            return;
+        
         // Cerca configurazione in PotSystemConfig se non trovata
         if (growthConfig == null)
         {
@@ -91,7 +77,7 @@ public class DayCycleController : MonoBehaviour
             return;
         }
 
-        isInitialized = true;
+        _isInitialized = true;
         if (enableDebugLogs)
             Debug.Log($"[BLK-01.03A] DayCycleController: Inizializzato con config '{growthConfig.name}'");
     }
@@ -101,11 +87,9 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void SubscribeToEvents()
     {
-        GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
-        {
-            gameManager.OnDayChanged += HandleDayChanged;
-        }
+        _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
     }
 
     /// <summary>
@@ -113,13 +97,8 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void UnsubscribeFromEvents()
     {
-        GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
-        {
-            gameManager.OnDayChanged -= HandleDayChanged;
-            if (enableDebugLogs)
-                Debug.Log("[BLK-01.03A] DayCycleController: Disiscritto da GameManager.OnDayChanged");
-        }
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
     }
 
     /// <summary>
@@ -129,9 +108,9 @@ public class DayCycleController : MonoBehaviour
     {
         if (pot == null) return;
 
-        if (!registeredPots.Contains(pot))
+        if (!_registeredPots.Contains(pot))
         {
-            registeredPots.Add(pot);
+            _registeredPots.Add(pot);
             if (enableDebugLogs)
                 Debug.Log($"[BLK-01.03A] DayCycleController: Registrato vaso {pot.PotId}");
         }
@@ -144,7 +123,7 @@ public class DayCycleController : MonoBehaviour
     {
         if (pot == null) return;
 
-        if (registeredPots.Remove(pot))
+        if (_registeredPots.Remove(pot))
         {
             if (enableDebugLogs)
                 Debug.Log($"[BLK-01.03A] DayCycleController: Rimosso vaso {pot.PotId}");
@@ -184,9 +163,9 @@ public class DayCycleController : MonoBehaviour
     private void ResolveGrowthForAllPots(int dayIndex)
     {
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Applicazione crescita a {registeredPots.Count} vasi per Day {dayIndex}");
+            Debug.Log($"[BLK-01.03A] DayCycleController: Applicazione crescita a {_registeredPots.Count} vasi per Day {dayIndex}");
 
-        foreach (var pot in registeredPots)
+        foreach (var pot in _registeredPots)
         {
             if (pot is { HasPlant: true })
             {
@@ -311,7 +290,7 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void ApplyDecayAndCleanup(int dayIndex)
     {
-        foreach (var pot in registeredPots)
+        foreach (var pot in _registeredPots)
         {
             if (pot != null && pot.HasPlant)
             {
@@ -334,7 +313,7 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     public int GetRegisteredPotCount()
     {
-        return registeredPots.Count;
+        return _registeredPots.Count;
     }
 
     /// <summary>
@@ -359,10 +338,10 @@ public class DayCycleController : MonoBehaviour
     [ContextMenu("Log Registered Pots")]
     private void EditorLogRegisteredPots()
     {
-        Debug.Log($"[BLK-01.03A] DayCycleController: Vasi registrati ({registeredPots.Count}):");
-        for (int i = 0; i < registeredPots.Count; i++)
+        Debug.Log($"[BLK-01.03A] DayCycleController: Vasi registrati ({_registeredPots.Count}):");
+        for (int i = 0; i < _registeredPots.Count; i++)
         {
-            var pot = registeredPots[i];
+            var pot = _registeredPots[i];
             if (pot != null)
             {
                 string plantInfo = pot.HasPlant 
@@ -380,9 +359,9 @@ public class DayCycleController : MonoBehaviour
     [ContextMenu("Cleanup Null Pots")]
     private void EditorCleanupNullPots()
     {
-        registeredPots.RemoveAll(pot => pot == null);
+        _registeredPots.RemoveAll(pot => pot == null);
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Cleanup completato, {registeredPots.Count} vasi validi");
+            Debug.Log($"[BLK-01.03A] DayCycleController: Cleanup completato, {_registeredPots.Count} vasi validi");
     }
     #endif
     

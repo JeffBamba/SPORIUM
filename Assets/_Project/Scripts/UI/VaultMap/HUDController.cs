@@ -1,3 +1,4 @@
+using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,10 +14,16 @@ public class HUDController : MonoBehaviour
     [SerializeField] private bool validateOnStart = true;
     [SerializeField] private bool showDebugLogs = false;
 
-    private GameManager gameManager;
-    private bool isInitialized = false;
+    private DayCycleSystem _dayCycleSystem;
+    private GameManager _gameManager;
+    private bool _isInitialized = false;
 
-    void Start()
+    private void Awake()
+    {
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+    }
+    
+    private void Start()
     {
         if (validateOnStart)
         {
@@ -59,9 +66,9 @@ public class HUDController : MonoBehaviour
     private void InitializeHUD()
     {
         // Cerca il GameManager nella scena
-        gameManager = FindObjectOfType<GameManager>();
+        _gameManager = FindObjectOfType<GameManager>();
         
-        if (gameManager == null)
+        if (_gameManager == null)
         {
             Debug.LogWarning("[HUDController] GameManager non trovato nella scena. HUD in modalità offline.");
             SetOfflineMode();
@@ -74,7 +81,7 @@ public class HUDController : MonoBehaviour
         // Aggiorna UI iniziale con delay per assicurarsi che GameManager sia pronto
         StartCoroutine(InitializeWithDelay());
         
-        isInitialized = true;
+        _isInitialized = true;
         
         if (showDebugLogs)
         {
@@ -98,29 +105,32 @@ public class HUDController : MonoBehaviour
 
     private void SubscribeToEvents()
     {
-        if (gameManager == null) return;
+        if (!_gameManager)
+            return;
         
-        gameManager.OnDayChanged += UpdateDay;
-        gameManager.ActionSystem.OnActionsChanged += UpdateActions;
-        gameManager.EconomySystem.OnCRYChanged += UpdateCRY;
+        _dayCycleSystem.OnDayChanged += UpdateDay;
+        _gameManager.ActionSystem.OnActionsChanged += UpdateActions;
+        _gameManager.EconomySystem.OnCRYChanged += UpdateCRY;
     }
 
     private void UnsubscribeFromEvents()
     {
-        if (gameManager == null) return;
+        if (!_gameManager)
+            return;
         
-        gameManager.OnDayChanged -= UpdateDay;
-        gameManager.ActionSystem.OnActionsChanged -= UpdateActions;
-        gameManager.EconomySystem.OnCRYChanged -= UpdateCRY;
+        _dayCycleSystem.OnDayChanged -= UpdateDay;
+        _gameManager.ActionSystem.OnActionsChanged -= UpdateActions;
+        _gameManager.EconomySystem.OnCRYChanged -= UpdateCRY;
     }
 
     private void UpdateAllUI()
     {
-        if (gameManager == null) return;
+        if (!_gameManager)
+            return;
         
-        UpdateDay(gameManager.CurrentDay);
-        UpdateActions(gameManager.ActionsLeft);
-        UpdateCRY(gameManager.CurrentCRY);
+        UpdateDay(_dayCycleSystem.CurrentDay);
+        UpdateActions(_gameManager.ActionsLeft);
+        UpdateCRY(_gameManager.CurrentCRY);
     }
 
     private void UpdateDay(int day)
@@ -189,7 +199,7 @@ public class HUDController : MonoBehaviour
 
     public void RefreshHUD()
     {
-        if (isInitialized && gameManager != null)
+        if (_isInitialized && _gameManager != null)
         {
             UpdateAllUI();
         }
@@ -200,16 +210,16 @@ public class HUDController : MonoBehaviour
     /// </summary>
     public void ForceUpdateAllUI()
     {
-        if (gameManager == null) return;
+        if (_gameManager == null) return;
         
         if (showDebugLogs)
         {
-            Debug.Log($"[HUDController] Force Update - Day: {gameManager.CurrentDay}, Actions: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
+            Debug.Log($"[HUDController] Force Update - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
         }
         
-        UpdateDay(gameManager.CurrentDay);
-        UpdateActions(gameManager.ActionsLeft);
-        UpdateCRY(gameManager.CurrentCRY);
+        UpdateDay(_dayCycleSystem.CurrentDay);
+        UpdateActions(_gameManager.ActionsLeft);
+        UpdateCRY(_gameManager.CurrentCRY);
     }
     
     /// <summary>
@@ -219,12 +229,12 @@ public class HUDController : MonoBehaviour
     public void DebugHUDStatus()
     {
         Debug.Log("=== HUD DEBUG STATUS ===");
-        Debug.Log($"HUD Initialized: {isInitialized}");
-        Debug.Log($"GameManager Found: {gameManager != null}");
+        Debug.Log($"HUD Initialized: {_isInitialized}");
+        Debug.Log($"GameManager Found: {_gameManager != null}");
         
-        if (gameManager != null)
+        if (_gameManager != null)
         {
-            Debug.Log($"GameManager Values - Day: {gameManager.CurrentDay}, Actions: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
+            Debug.Log($"GameManager Values - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
         }
         
         if (dayText != null) Debug.Log($"Day Text: {dayText.text}");
@@ -245,7 +255,7 @@ public class HUDController : MonoBehaviour
 
     void OnEnable()
     {
-        if (isInitialized && gameManager != null)
+        if (_isInitialized && _gameManager != null)
         {
             SubscribeToEvents();
         }

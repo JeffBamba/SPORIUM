@@ -22,7 +22,8 @@ namespace Sporae.Core
 
         public bool SpendAction(int amount = 1)
         {
-            if (!CanSpendAction()) return false;
+            if (!CanSpendAction()) 
+                return false;
             
             ActionsLeft -= amount;
             OnActionsChanged?.Invoke(ActionsLeft);

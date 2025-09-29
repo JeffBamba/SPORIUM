@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using _Project.Sporae.Core;
 
 /// <summary>
 /// Debug script per il sistema di crescita BLK-01.03A.
@@ -16,8 +17,12 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
     
     private List<PotStateModel> allPots = new List<PotStateModel>();
 
-    void Start()
+    private DayCycleSystem _dayCycleSystem;
+
+    private void Start()
     {
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        
         // Trova il DayCycleController se non assegnato
         if (dayCycleController == null)
         {
@@ -30,15 +35,14 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         }
     }
 
-    void Update()
+    private void Update()
     {
-        if (!enableHotkeys) return;
+        if (!enableHotkeys) 
+            return;
 
         // F6: Stampa stato di tutti i vasi
         if (Input.GetKeyDown(KeyCode.F6))
-        {
             PrintAllPotsStatus();
-        }
     }
 
     /// <summary>
@@ -216,7 +220,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
-            Debug.Log($"[BLK-01.03A] Simulazione tick crescita per giorno {gameManager.CurrentDay}");
+            Debug.Log($"[BLK-01.03A] Simulazione tick crescita per giorno {_dayCycleSystem.CurrentDay}");
             // Il DayCycleController si iscrive automaticamente a OnDayChanged
             // quindi questo è solo per debug
         }

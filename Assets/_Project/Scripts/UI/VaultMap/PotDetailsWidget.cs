@@ -1,4 +1,5 @@
-﻿using Sporae.Dome.PotSystem.Growth;
+﻿using _Project.Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,7 @@ namespace _Project
         private PotSlot _currentSelectedPot;
         private PlantGrowthConfig _growthConfig;
         private GameManager _gameManager;
+        private DayCycleSystem _dayCycleSystem;
         
         private void Awake()
         {
@@ -60,8 +62,10 @@ namespace _Project
         
         private void Initialize()
         {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            
             _gameManager = FindObjectOfType<GameManager>();
-            _gameManager.OnDayChanged += HandleDayChanged;
             
             _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
             _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
@@ -307,8 +311,9 @@ namespace _Project
         private int CalculateCurrentGrowthPoints(PotStateModel state)
         {
             int points = state.GrowthPoints;
-            bool hadHydration = (state.LastWateredDay == _gameManager.CurrentDay);
-            bool hadLight = (state.LastLitDay == _gameManager.CurrentDay);
+            bool
+                hadHydration = (state.LastWateredDay == _dayCycleSystem.CurrentDay),
+                hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
 
             points += (hadHydration, hadLight) switch
             {

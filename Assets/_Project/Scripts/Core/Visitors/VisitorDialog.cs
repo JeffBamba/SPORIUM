@@ -1,4 +1,6 @@
-﻿using _Project.Sporae.Core;
+﻿using System;
+using System.Collections;
+using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +19,9 @@ namespace _Project
         private MissionConfig _missionConfig;
         private MissionManager _missionManager;
         
+        public event Action OnAccept;
+        public event Action OnReject;
+        
         private void Awake()
         {
             _missionManager = ServiceContainer.Instance.Get<MissionManager>();
@@ -27,12 +32,14 @@ namespace _Project
 
         private void HandleAccept()
         {
+            OnAccept?.Invoke();
             _missionManager.Append(_missionConfig);
             Hide();
         }
 
         private void HandleReject()
         {
+            OnReject?.Invoke();
             Hide();
         }
 
@@ -41,11 +48,29 @@ namespace _Project
             gameObject.SetActive(true);
             _missionConfig = missionConfig;
             _titleLabel.text = missionConfig.Title;
+
+            StartCoroutine(TypewriteRoutine(missionConfig.Description));
         }
 
         public void Hide()
         {
             gameObject.SetActive(false);
+        }
+
+        private IEnumerator TypewriteRoutine(string text)
+        {
+            string currentText = "";
+            int index = 0;
+            
+            while (currentText != text)
+            {
+                currentText += text[index];
+                index++;
+                
+                _descriptionLabel.text = currentText;
+
+                yield return new WaitForSeconds(0.1f);
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,22 +40,22 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private bool createFallbackCanvas = true;
     [SerializeField] private string fallbackCanvasName = "PotHUD_Fallback";
     
-    private GameObject widgetContainer;
-    private Canvas parentCanvas;
-    private bool isInitialized = false;
-    private PotSlot currentSelectedPot;
-    private PlantGrowthConfig growthConfig;
+    private GameObject _widgetContainer;
+    private Canvas _parentCanvas;
+    private bool _isInitialized;
+    private PotSlot _currentSelectedPot;
+    private PlantGrowthConfig _growthConfig;
+    private GameManager _gameManager;
+    private DayCycleSystem _dayCycleSystem;
     
-    private GameManager gameManager;
-    
-    void Start()
+    private void Start()
     {
         gameObject.SetActive(false);
         InitializeWidget();
         LoadGrowthConfig();
     }
     
-    void OnEnable()
+    private void OnEnable()
     {
         // Sottoscrivi agli eventi del sistema dei vasi
         PotSlot.OnPotSelected += OnPotSelected;
@@ -64,7 +65,7 @@ public class PotHUDWidget : MonoBehaviour
         PotEvents.OnPlantStageChanged += OnPlantStageChanged;
     }
     
-    void OnDisable()
+    private void OnDisable()
     {
         // Annulla sottoscrizioni
         PotSlot.OnPotSelected -= OnPotSelected;
@@ -77,38 +78,36 @@ public class PotHUDWidget : MonoBehaviour
     private void LoadGrowthConfig()
     {
         // Carica la configurazione di crescita
-        growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
-        if (growthConfig == null)
+        _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
+        if (_growthConfig == null)
         {
             Debug.LogWarning("[BLK-01.03B] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
             // Crea configurazione di fallback
-            growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
+            _growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
         }
     }
     
     private void InitializeWidget()
     {
-        // Cerca GameManager e si iscrive
-        gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
-        {
-            gameManager.OnDayChanged += HandleDayChanged;
-        }
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        
+        _gameManager = FindObjectOfType<GameManager>();
+        if (_gameManager != null)
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
         else
         {
             Debug.LogError("[BLK-01.03A] DayCycleController: GameManager non trovato!");
         }
         
-        // Cerca un Canvas esistente (preferibilmente quello dell'HUD)
-        parentCanvas = FindParentCanvas();
+        _parentCanvas = FindParentCanvas();
         
-        if (parentCanvas == null && createFallbackCanvas)
+        if (_parentCanvas == null && createFallbackCanvas)
         {
             // Crea un Canvas di fallback se non ne trova nessuno
             CreateFallbackCanvas();
         }
         
-        if (parentCanvas == null)
+        if (_parentCanvas == null)
         {
             Debug.LogError("[PotHUDWidget] Impossibile trovare o creare un Canvas. Widget disabilitato.");
             enabled = false;
@@ -121,17 +120,17 @@ public class PotHUDWidget : MonoBehaviour
         // Imposta testo iniziale
         UpdatePotInfo("Nessun POT selezionato");
         
-        isInitialized = true;
+        _isInitialized = true;
         Debug.Log("[PotHUDWidget] Widget inizializzato correttamente.");
     }
 
     private void HandleDayChanged(int currentDay)
     {
-        if (currentSelectedPot == null)
+        if (!_currentSelectedPot)
             return;
         
-        UpdateActionButtons(currentSelectedPot);
-        UpdateStageAndProgressUI(currentSelectedPot);
+        UpdateActionButtons(_currentSelectedPot);
+        UpdateStageAndProgressUI(_currentSelectedPot);
     }
 
     private Canvas FindParentCanvas()
@@ -168,9 +167,9 @@ public class PotHUDWidget : MonoBehaviour
     {
         // Crea un GameObject per il Canvas
         GameObject canvasGO = new GameObject(fallbackCanvasName);
-        parentCanvas = canvasGO.AddComponent<Canvas>();
-        parentCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        parentCanvas.sortingOrder = 100; // Alto z-order per essere sopra tutto
+        _parentCanvas = canvasGO.AddComponent<Canvas>();
+        _parentCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        _parentCanvas.sortingOrder = 100; // Alto z-order per essere sopra tutto
         
         // Aggiungi CanvasScaler per responsive design
         CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
@@ -186,11 +185,11 @@ public class PotHUDWidget : MonoBehaviour
     private void CreateWidgetUI()
     {
         // Crea il container del widget
-        widgetContainer = new GameObject("UI_PotInfo");
-        widgetContainer.transform.SetParent(parentCanvas.transform, false);
+        _widgetContainer = new GameObject("UI_PotInfo");
+        _widgetContainer.transform.SetParent(_parentCanvas.transform, false);
         
         // Aggiungi RectTransform
-        RectTransform rectTransform = widgetContainer.AddComponent<RectTransform>();
+        RectTransform rectTransform = _widgetContainer.AddComponent<RectTransform>();
         
         // Posiziona in basso-sinistra
         rectTransform.anchorMin = new Vector2(0, 0);
@@ -200,17 +199,17 @@ public class PotHUDWidget : MonoBehaviour
         rectTransform.sizeDelta = widgetSize;
         
         // IMPORTANTE: Assicurati che il Canvas abbia GraphicRaycaster per i click UI
-        if (parentCanvas.GetComponent<GraphicRaycaster>() == null)
+        if (_parentCanvas.GetComponent<GraphicRaycaster>() == null)
         {
             Debug.LogWarning("[PotHUDWidget] Aggiungendo GraphicRaycaster al Canvas per i click UI");
-            parentCanvas.gameObject.AddComponent<GraphicRaycaster>();
+            _parentCanvas.gameObject.AddComponent<GraphicRaycaster>();
         }
         
         // Crea background (opzionale)
         if (backgroundImage == null)
         {
             GameObject bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(widgetContainer.transform, false);
+            bgGO.transform.SetParent(_widgetContainer.transform, false);
             
             backgroundImage = bgGO.AddComponent<Image>();
             backgroundImage.color = backgroundColor;
@@ -226,7 +225,7 @@ public class PotHUDWidget : MonoBehaviour
         if (potInfoText == null)
         {
             GameObject textGO = new GameObject("PotInfoText");
-            textGO.transform.SetParent(widgetContainer.transform, false);
+            textGO.transform.SetParent(_widgetContainer.transform, false);
             
             potInfoText = textGO.AddComponent<TextMeshProUGUI>();
             potInfoText.color = textColor;
@@ -257,7 +256,7 @@ public class PotHUDWidget : MonoBehaviour
         if (potIdText == null)
         {
             GameObject potIdGO = new GameObject("PotIdText");
-            potIdGO.transform.SetParent(widgetContainer.transform, false);
+            potIdGO.transform.SetParent(_widgetContainer.transform, false);
             
             potIdText = potIdGO.AddComponent<TextMeshProUGUI>();
             potIdText.color = textColor;
@@ -277,7 +276,7 @@ public class PotHUDWidget : MonoBehaviour
         if (stageIcon == null)
         {
             GameObject stageIconGO = new GameObject("StageIcon");
-            stageIconGO.transform.SetParent(widgetContainer.transform, false);
+            stageIconGO.transform.SetParent(_widgetContainer.transform, false);
             
             stageIcon = stageIconGO.AddComponent<Image>();
             stageIcon.color = Color.white;
@@ -295,7 +294,7 @@ public class PotHUDWidget : MonoBehaviour
         if (stageLabel == null)
         {
             GameObject stageLabelGO = new GameObject("StageLabel");
-            stageLabelGO.transform.SetParent(widgetContainer.transform, false);
+            stageLabelGO.transform.SetParent(_widgetContainer.transform, false);
             
             stageLabel = stageLabelGO.AddComponent<TextMeshProUGUI>();
             stageLabel.color = textColor;
@@ -316,7 +315,7 @@ public class PotHUDWidget : MonoBehaviour
         if (progressBar == null)
         {
             GameObject progressBarGO = new GameObject("ProgressBar");
-            progressBarGO.transform.SetParent(widgetContainer.transform, false);
+            progressBarGO.transform.SetParent(_widgetContainer.transform, false);
             
             progressBar = progressBarGO.AddComponent<Slider>();
             progressBar.minValue = 0f;
@@ -362,7 +361,7 @@ public class PotHUDWidget : MonoBehaviour
         if (progressText == null)
         {
             GameObject progressTextGO = new GameObject("ProgressText");
-            progressTextGO.transform.SetParent(widgetContainer.transform, false);
+            progressTextGO.transform.SetParent(_widgetContainer.transform, false);
             
             progressText = progressTextGO.AddComponent<TextMeshProUGUI>();
             progressText.color = textColor;
@@ -381,14 +380,14 @@ public class PotHUDWidget : MonoBehaviour
     
     private void OnPotSelected(PotSlot pot)
     {
-        if (!isInitialized) return;
+        if (!_isInitialized) return;
         
         Debug.Log($"[BLK-01.03B] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
         Debug.Log($"[BLK-01.03B] PotActions presente: {pot.PotActions != null}");
         // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
         // Salva il vaso selezionato corrente
-        currentSelectedPot = pot;
+        _currentSelectedPot = pot;
         
         // BLK-01.03B: Aggiorna tutti gli elementi UI del nuovo sistema
         UpdateStageAndProgressUI(pot);
@@ -442,13 +441,13 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     public void HideWidget()
     {
-        if (widgetContainer != null)
+        if (_widgetContainer != null)
         {
-            widgetContainer.SetActive(false);
+            _widgetContainer.SetActive(false);
         }
         
         // BLK-01.03B: Reset selezione corrente
-        currentSelectedPot = null;
+        _currentSelectedPot = null;
     }
     
     /// <summary>
@@ -456,9 +455,9 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     public void ShowWidget()
     {
-        if (widgetContainer != null)
+        if (_widgetContainer != null)
         {
-            widgetContainer.SetActive(true);
+            _widgetContainer.SetActive(true);
         }
     }
     
@@ -467,13 +466,13 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     public void SetWidgetVisible(bool visible)
     {
-        if (widgetContainer != null)
+        if (_widgetContainer != null)
         {
-            widgetContainer.SetActive(visible);
+            _widgetContainer.SetActive(visible);
         }
         
         // BLK-01.03B: Nascondi anche il widget se non c'è selezione
-        if (!visible && currentSelectedPot == null)
+        if (!visible && _currentSelectedPot == null)
         {
             // Reset UI elements
             if (potIdText != null) potIdText.text = "POT-ID";
@@ -490,9 +489,9 @@ public class PotHUDWidget : MonoBehaviour
     public void SetWidgetPosition(Vector2 newPosition)
     {
         widgetPosition = newPosition;
-        if (widgetContainer != null)
+        if (_widgetContainer != null)
         {
-            RectTransform rectTransform = widgetContainer.GetComponent<RectTransform>();
+            RectTransform rectTransform = _widgetContainer.GetComponent<RectTransform>();
             if (rectTransform != null)
             {
                 rectTransform.anchoredPosition = widgetPosition;
@@ -502,7 +501,7 @@ public class PotHUDWidget : MonoBehaviour
 
     public void DeselectPot()
     {
-        currentSelectedPot = null;
+        _currentSelectedPot = null;
         
         potIdText.text = "POT-ID";
 
@@ -537,7 +536,7 @@ public class PotHUDWidget : MonoBehaviour
         if (txtCosts == null)
         {
             GameObject costsGO = new GameObject("CostsText");
-            costsGO.transform.SetParent(widgetContainer.transform, false);
+            costsGO.transform.SetParent(_widgetContainer.transform, false);
             
             txtCosts = costsGO.AddComponent<TextMeshProUGUI>();
             txtCosts.color = textColor;
@@ -563,7 +562,7 @@ public class PotHUDWidget : MonoBehaviour
     private Button CreateActionButton(string buttonName, string buttonText, PotEvents.PotActionType actionType)
     {
         GameObject buttonGO = new GameObject($"Btn_{buttonName}");
-        buttonGO.transform.SetParent(widgetContainer.transform, false);
+        buttonGO.transform.SetParent(_widgetContainer.transform, false);
         
         // Aggiungi Button
         Button button = buttonGO.AddComponent<Button>();
@@ -793,7 +792,7 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OnPotStateChanged(PotSlot pot)
     {
-        if (!isInitialized) return;
+        if (!_isInitialized) return;
         
         // Aggiorna i pulsanti se questo è il vaso selezionato
         UpdateActionButtons(pot);
@@ -804,7 +803,7 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OnPotActionFailed(PotEvents.PotActionType actionType, PotSlot pot, string reason)
     {
-        if (!isInitialized) return;
+        if (!_isInitialized) return;
         
         // Mostra il motivo del fallimento
         string failureMessage = $"Azione {PotEvents.GetActionName(actionType)} fallita: {reason}";
@@ -818,10 +817,10 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OnPlantGrew(string potId, PlantStage stage, int oldPoints, int newPoints)
     {
-        if (!isInitialized || currentSelectedPot == null || currentSelectedPot.PotId != potId) return;
+        if (!_isInitialized || _currentSelectedPot == null || _currentSelectedPot.PotId != potId) return;
         
         Debug.Log($"[BLK-01.03B] Pianta cresciuta su {potId}: {oldPoints} → {newPoints} punti. Aggiornamento progress bar...");
-        UpdateStageAndProgressUI(currentSelectedPot);
+        UpdateStageAndProgressUI(_currentSelectedPot);
     }
     
     /// <summary>
@@ -829,10 +828,10 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OnPlantStageChanged(string potId, PlantStage stage)
     {
-        if (!isInitialized || currentSelectedPot == null || currentSelectedPot.PotId != potId) return;
+        if (!_isInitialized || _currentSelectedPot == null || _currentSelectedPot.PotId != potId) return;
         
         Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
-        UpdateStageAndProgressUI(currentSelectedPot);
+        UpdateStageAndProgressUI(_currentSelectedPot);
     }
     
     /// <summary>
@@ -891,15 +890,16 @@ public class PotHUDWidget : MonoBehaviour
     private int CalculateCurrentGrowthPoints(PotStateModel state)
     {
         int points = state.GrowthPoints;
-        bool hadHydration = (state.LastWateredDay == gameManager.CurrentDay);
-        bool hadLight = (state.LastLitDay == gameManager.CurrentDay);
+        bool 
+            hadHydration = (state.LastWateredDay == _dayCycleSystem.CurrentDay),
+            hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
 
         points += (hadHydration, hadLight) switch
         {
-            (true, true)   => growthConfig.pointsIdealCare,
-            (true, false)  => growthConfig.pointsPartialCare,
-            (false, true)  => growthConfig.pointsPartialCare,
-            (false, false) => growthConfig.pointsNoCare
+            (true, true)   => _growthConfig.pointsIdealCare,
+            (true, false)  => _growthConfig.pointsPartialCare,
+            (false, true)  => _growthConfig.pointsPartialCare,
+            (false, false) => _growthConfig.pointsNoCare
         };
 
         return points;
@@ -910,7 +910,7 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private float CalculateProgressPercentage(PotStateModel state)
     {
-        if (growthConfig == null) return 0f;
+        if (_growthConfig == null) return 0f;
 
         int points = CalculateCurrentGrowthPoints(state);
         
@@ -920,14 +920,14 @@ public class PotHUDWidget : MonoBehaviour
                 return 0f; // Nessun progresso per vasi vuoti
                 
             case (int)PlantStage.Seed:
-                if (points >= growthConfig.pointsSeedToSprout)
+                if (points >= _growthConfig.pointsSeedToSprout)
                     return 100f; // Pronto per avanzare
-                return (float)points / growthConfig.pointsSeedToSprout * 100f;
+                return (float)points / _growthConfig.pointsSeedToSprout * 100f;
                 
             case (int)PlantStage.Sprout:
-                if (points >= growthConfig.pointsSproutToMature)
+                if (points >= _growthConfig.pointsSproutToMature)
                     return 100f; // Pronto per avanzare
-                return (float)points / growthConfig.pointsSproutToMature * 100f;
+                return (float)points / _growthConfig.pointsSproutToMature * 100f;
                 
             case (int)PlantStage.Mature:
                 return 100f; // Pianta completamente matura

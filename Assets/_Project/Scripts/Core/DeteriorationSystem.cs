@@ -6,6 +6,7 @@ namespace _Project.Scripts.Core
 {
     public class DeteriorationSystem
     {
+        private readonly DayCycleSystem _dayCycleSystem;
         private readonly GameManager _gameManager;
         private readonly Inventory _inventory;
 
@@ -20,12 +21,14 @@ namespace _Project.Scripts.Core
         {
             _gameManager = gameManager;
             _inventory = _gameManager.PlayerInventory;
-            _gameManager.OnDayChanged += HandleDayChanged;
+            
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
         }
 
         ~DeteriorationSystem()
         {
-            _gameManager.OnDayChanged -= HandleDayChanged;
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
 
         private void HandleDayChanged(int day)
@@ -40,7 +43,7 @@ namespace _Project.Scripts.Core
 
         private void DeteriorateInventorySlot(InventorySlot slot)
         {
-            foreach (var item in slot.Items)
+            foreach (var item in slot.Items.ToList())
             {
                 item.Quality -= 1;
                 if (item.Quality > 0)
