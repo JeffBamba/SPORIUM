@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <TypeId>k__BackingField: spore-generic
   <MaxQuality>k__BackingField: 4
+  <SellPrice>k__BackingField: 15
+  <BuyPrice>k__BackingField: 30

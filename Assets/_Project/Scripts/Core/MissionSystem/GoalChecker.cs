@@ -1,9 +1,7 @@
 ﻿namespace _Project.Sporae.Core
 {
-    public class GoalChecker
+    public abstract class GoalChecker
     {
-        public GoalConfig Config;
-
-        public virtual bool Check() => false;
+        public abstract bool Check();
     }
 }

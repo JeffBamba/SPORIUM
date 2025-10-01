@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ebab2b3c6b01364592773ac570dc3f6, type: 3}
   m_Name: InventoryGoal
   m_EditorClassIdentifier: 
-  <Title>k__BackingField: 
+  <Title>k__BackingField: complete the Dome + Lab flow in order to obtain a new plant
+    (different from the starter one).
   <Slots>k__BackingField:
   - Item: {fileID: 11400000, guid: ec7bbb90780b2a04181d436d387a01d3, type: 2}
     Quantity: 1

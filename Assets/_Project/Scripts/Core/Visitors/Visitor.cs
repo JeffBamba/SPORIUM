@@ -14,6 +14,7 @@ namespace _Project
             Animating,
             WaitingForPlayer,
             WaitingForComplete,
+            WaitingForFinish,
         }
 
         public VisitorState State { get; set; } = VisitorState.Despawned;
@@ -26,20 +27,27 @@ namespace _Project
         [SerializeField] private float _speed;
 
         [SerializeField] private VisitorDialog _visitorDialog;
+        [SerializeField] private UIAwardPopup _uiAwardPopup;
         
         private Interactable _interactable;
         private UINotification _notificationSystem;
-
+        
         private Action _clearNotification;
 
         private void Awake()
         {
             _notificationSystem = ServiceContainer.Instance.Get<UINotification>();
-            
+         
             _interactable = GetComponent<Interactable>();
             _interactable.OnInteract += HandleInteract;
             _visitorDialog.OnAccept += HandleAccept;
             _visitorDialog.OnReject += HandleReject;
+            _uiAwardPopup.OnCollect += HandleCollect;
+        }
+
+        private void HandleCollect()
+        {
+            Disappear(VisitorState.Despawned);
         }
 
         private void OnDestroy()
@@ -47,44 +55,54 @@ namespace _Project
             _interactable.OnInteract -= HandleInteract;
             _visitorDialog.OnAccept -= HandleAccept;
             _visitorDialog.OnReject -= HandleReject;
+            _uiAwardPopup.OnCollect -= HandleCollect;
         }
-
+        
         private void HandleAccept()
         {
-            State = VisitorState.WaitingForComplete;
+            Disappear(VisitorState.WaitingForComplete); 
         }
 
         private void HandleReject()
         {
-            Disappear();
+            Disappear(VisitorState.Despawned);
         }
         
         private void HandleInteract()
         {
-            if (State != VisitorState.WaitingForPlayer)
+            if (State is not (VisitorState.WaitingForPlayer or VisitorState.WaitingForFinish))
                 return;
             
             _clearNotification?.Invoke();
-            _visitorDialog.Show(_missionConfig);
+
+            switch (State)
+            {
+                case VisitorState.WaitingForPlayer:
+                    _visitorDialog.Show(_missionConfig);
+                    break;
+                case VisitorState.WaitingForFinish:
+                    _uiAwardPopup.Show(_missionConfig);
+                    break;
+            }
         }
         
-        public void Appear()
+        public void Appear(VisitorState stateAfterAppear)
         {
             State = VisitorState.Animating;
             StartCoroutine(MoveRoutine(_appearPosition, () =>
             {
                 _notificationSystem.ShowBanner("Visitor waiting for player!", Color.magenta, out _clearNotification);
-                State = VisitorState.WaitingForPlayer;
+                State = stateAfterAppear;
             }));
         }
 
-        public void Disappear()
+        private void Disappear(VisitorState stateAfterDisappear)
         {
             State = VisitorState.Animating;
             StartCoroutine(MoveRoutine(_disappearPosition, () =>
             {
+                State = stateAfterDisappear;
                 OnDisappear?.Invoke();
-                State = VisitorState.Despawned;
             }));
         }
 

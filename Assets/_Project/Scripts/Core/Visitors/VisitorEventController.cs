@@ -24,7 +24,8 @@ namespace _Project
 
         private void HandleDisappear()
         {
-            _nextDayAppear += Random.Range(_interval.x, _interval.y);
+            if (_visitor.State == Visitor.VisitorState.Despawned)
+                _nextDayAppear += Random.Range(_interval.x, _interval.y);
         }
 
         private void OnDestroy()
@@ -42,7 +43,7 @@ namespace _Project
 
         private void Appear()
         {
-            _visitor.Appear();   
+            _visitor.Appear(Visitor.VisitorState.WaitingForPlayer);   
         }
     }
 }

@@ -23,10 +23,10 @@ namespace _Project
             _image = GetComponent<Image>();
         }
         
-        public void SetItem(string itemName, int score)
+        public void SetItem(string itemName, int quantity)
         {
             _nameLabel.text = itemName;
-            _scoreLabel.text = score.ToString();
+            _scoreLabel.text = quantity == -1 ? "" : quantity.ToString();
         }
 
         public void OnPointerClick(PointerEventData eventData)

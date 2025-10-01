@@ -62,7 +62,7 @@ namespace _Project
             string currentText = "";
             int index = 0;
             
-            while (currentText != text)
+            while (currentText != text && index < text.Length)
             {
                 currentText += text[index];
                 index++;

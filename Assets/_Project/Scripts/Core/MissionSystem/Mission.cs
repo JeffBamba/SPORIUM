@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace _Project.Sporae.Core
 {
     public class MissionChecker
     {
-        public MissionConfig Config;
+        public readonly MissionConfig Config;
+        public bool IsCompleted;
         
         [Serializable]
         public struct OptionChecker
@@ -34,10 +36,14 @@ namespace _Project.Sporae.Core
             var optionChecker = new OptionChecker() {
                 Checkers = new()
             };
-                
+
             foreach (var option in goal.Options)
-                optionChecker.Checkers.Add(_checkers.CreateNewCheckerForGoal(option.GetType()));
+            {
+                var checker = _checkers.CreateNewCheckerForGoal(option.GetType(), option);
                 
+                optionChecker.Checkers.Add(checker);
+            }
+
             _optionCheckers.Add(optionChecker);
         }
         

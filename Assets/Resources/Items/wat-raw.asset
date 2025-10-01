@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <TypeId>k__BackingField: wat-raw
   <MaxQuality>k__BackingField: 0
+  <SellPrice>k__BackingField: 5
+  <BuyPrice>k__BackingField: 8

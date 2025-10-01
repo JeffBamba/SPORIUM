@@ -10,6 +10,7 @@ namespace _Project
         
         private HUDInventoryItem _selectedItem;
         
+        public List<HUDInventoryItem> Items => _items;
         public int SelectedId => _items.IndexOf(_selectedItem);
         public int Capacity => _items.Count;
         
@@ -43,10 +44,10 @@ namespace _Project
             _items[id].gameObject.SetActive(false);
         }
         
-        public void SetItemData(int id, string name, int quantity)
+        public void SetItemData(int id, string itemName, int quantity)
         {
             _items[id].gameObject.SetActive(true);
-            _items[id].SetItem(name, quantity);
+            _items[id].SetItem(itemName, quantity);
         }
     }
 }

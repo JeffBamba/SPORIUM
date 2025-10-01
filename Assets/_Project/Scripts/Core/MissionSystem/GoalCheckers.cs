@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 namespace _Project.Sporae.Core
 {
@@ -23,22 +24,23 @@ namespace _Project.Sporae.Core
                     typeof(GoalChecker).IsAssignableFrom(t)
                 );
 
-            foreach (var casterType in types)
+            var checkerTypes = types as Type[] ?? types.ToArray();
+            foreach (var checkerType in checkerTypes)
             {
-                var spellType = casterType.GetCustomAttribute<SpecificGoalCheckerAttribute>().SpellType;
-                _checkers.Add(spellType, casterType);
+                var goalType = checkerType.GetCustomAttribute<SpecificGoalCheckerAttribute>().GoalType;
+                _checkers.Add(goalType, checkerType);
             }
         }
         
-        public GoalChecker CreateNewCheckerForGoal(Type type)
+        public GoalChecker CreateNewCheckerForGoal(Type type, GoalConfig goalConfig)
         {
-            if (!type.IsAssignableFrom(typeof(GoalChecker)))
+            if (typeof(GoalChecker).IsAssignableFrom(type))
                 return null;
                 
             if (!_checkers.TryGetValue(type, out var checker))
                 return null;
 
-            return (GoalChecker)Activator.CreateInstance(checker);
+            return (GoalChecker)Activator.CreateInstance(checker, new object[] { goalConfig });
         }
     }
 }

@@ -7,5 +7,7 @@ namespace _Project.Sporae.Core
     {
         [field: SerializeField] public string TypeId { get; private set; }
         [field: SerializeField] public int MaxQuality { get; private set; }
+        [field: SerializeField] public int SellPrice { get; private set; }
+        [field: SerializeField] public int BuyPrice { get; private set; }
     }
 }

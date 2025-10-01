@@ -3,6 +3,7 @@ using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Controller per il ciclo giornaliero del sistema di crescita delle piante.
@@ -28,6 +29,11 @@ public class DayCycleController : MonoBehaviour
         growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
         if (!growthConfig)
             Debug.LogWarning($"[{nameof(DayCycleSystem)}] PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
+
+        SceneManager.sceneLoaded += (_, _) =>
+        {
+            SubscribeToEvents();
+        };
     }
 
     private void Start()

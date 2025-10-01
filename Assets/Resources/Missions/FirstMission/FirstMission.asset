@@ -13,6 +13,17 @@ MonoBehaviour:
   m_Name: FirstMission
   m_EditorClassIdentifier: 
   <Title>k__BackingField: First
+  <Description>k__BackingField: This is first mission
   <Goals>k__BackingField:
   - Options:
     - {fileID: 11400000, guid: 4c90adf78e51ba244a614c27c72b9b3b, type: 2}
+  <QuickPathReward>k__BackingField:
+    CryReward: 20
+    Rewards:
+    - Item: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
+      Quantity: 1
+  <FullPathReward>k__BackingField:
+    CryReward: 40
+    Rewards:
+    - Item: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
+      Quantity: 1
