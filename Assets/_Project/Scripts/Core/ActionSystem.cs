@@ -1,4 +1,6 @@
 using System;
+using _Project;
+using _Project.Sporae.Core;
 
 namespace Sporae.Core
 {
@@ -8,9 +10,13 @@ namespace Sporae.Core
         public int MaxActions { get; private set; }
         
         public event Action<int> OnActionsChanged;
+        
+        private readonly DiaryStatistics _diaryStatistics;
 
         public ActionSystem(int maxActions)
         {
+            _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
+            
             MaxActions = maxActions;
             ActionsLeft = maxActions;
         }
@@ -24,16 +30,19 @@ namespace Sporae.Core
         {
             if (!CanSpendAction()) 
                 return false;
+
+            _diaryStatistics.ActionsSpent += amount;
             
             ActionsLeft -= amount;
             OnActionsChanged?.Invoke(ActionsLeft);
+            
             return true;
         }
         
         public void ResetActions(int specificAmount)
         {
-            ActionsLeft += specificAmount;
-            MaxActions += specificAmount;
+            ActionsLeft = specificAmount;
+            MaxActions = specificAmount;
             OnActionsChanged?.Invoke(ActionsLeft);
         }
 

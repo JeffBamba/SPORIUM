@@ -44,6 +44,7 @@ namespace _Project
         private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
         private DayCycleSystem _dayCycleSystem;
+        private DiaryStatistics _diaryStatistics;
         
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
@@ -58,6 +59,7 @@ namespace _Project
         private void Awake()
         {
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
             
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
@@ -140,9 +142,11 @@ namespace _Project
             _isWon =
                 targetMinX < playerMinX &&
                 targetMaxX > playerMaxX;
-            
+
             if (_isWon)
+            {
                 _storage.Add(Items.SporeGeneric);
+            }
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;

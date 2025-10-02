@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using _Project.Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 

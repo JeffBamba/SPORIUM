@@ -1,9 +1,13 @@
 using System;
+using _Project;
+using _Project.Sporae.Core;
 
 namespace Sporae.Core
 {
     public class EconomySystem
     {
+        private readonly DiaryStatistics _diaryStatistics;
+        
         public int CurrentCRY { get; private set; }
         public int MaxCRY { get; private set; } = 999999; // Limite massimo ragionevole
         
@@ -11,6 +15,7 @@ namespace Sporae.Core
 
         public EconomySystem(int startingCRY)
         {
+            _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
             CurrentCRY = Math.Max(0, startingCRY);
         }
 
@@ -21,21 +26,29 @@ namespace Sporae.Core
 
         public bool Add(int amount)
         {
-            if (amount <= 0) return false;
+            if (amount <= 0) 
+                return false;
+            
+            _diaryStatistics.CryEarned += amount;
             
             int newAmount = Math.Min(CurrentCRY + amount, MaxCRY);
             if (newAmount != CurrentCRY)
             {
                 CurrentCRY = newAmount;
+            
                 OnCRYChanged?.Invoke(CurrentCRY);
                 return true;
             }
+            
             return false;
         }
 
         public bool Spend(int amount)
         {
-            if (!CanAfford(amount)) return false;
+            if (!CanAfford(amount))
+                return false;
+            
+            _diaryStatistics.CrySpent += amount;
             
             CurrentCRY -= amount;
             OnCRYChanged?.Invoke(CurrentCRY);

@@ -130,13 +130,12 @@ public class PotActions : MonoBehaviour
             hydrationNotMax = !_potState.IsHydrationMax(GetMaxHydration()),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
-            notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay,
             hasWater = _playerInventory.Has(Items.Water);
         
         if (showDebugLogs)
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
         
-        return hasPlant && hydrationNotMax && hasWater && inRange && hasResources && notWateredOnThisDay;
+        return hasPlant && hydrationNotMax && hasWater && inRange && hasResources;
     }
     
     /// <summary>
@@ -148,18 +147,17 @@ public class PotActions : MonoBehaviour
             return false;
         
         // Precondizioni: vaso ha pianta, luce non al massimo, player in range, risorse sufficienti
-        bool 
+        bool
             hasPlant = _potState.HasPlantGrowing,
             lightNotMax = !_potState.IsLightExposureMax(GetMaxLightExposure()),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
-            notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay,
-            notLightedOnThisDay = _potState.LastLitDay != _dayCycleSystem.CurrentDay;
+            notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, LightNotMax={lightNotMax}, Range={inRange}, Resources={hasResources}");
         
-        return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay && notLightedOnThisDay;
+        return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay;
     }
     
     #endregion

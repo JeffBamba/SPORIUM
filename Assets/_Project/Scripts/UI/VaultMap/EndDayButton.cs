@@ -1,3 +1,4 @@
+using _Project;
 using _Project.Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,8 @@ public class EndDayButton : MonoBehaviour
     [SerializeField] private bool validateOnStart = true;
     [SerializeField] private bool showDebugLogs = true;
 
+    [SerializeField] private DiaryUI _diaryUI;
+    
     private DayCycleSystem _dayCycleSystem;
     private GameManager _gameManager;
     private bool _isInitialized;
@@ -120,13 +123,10 @@ public class EndDayButton : MonoBehaviour
         if (!_isInitialized || !_gameManager)
             return;
         
-        if (!_gameManager.TrySpendCry(dailyPowerCost))
-        {
+        if (_dayCycleSystem.CanEndDay())
+            _diaryUI.Show();
+        else 
             OnEndDayFailed("CRY insufficienti");
-            return;
-        }
-        
-        _dayCycleSystem.EndDay();
         
         if (showDebugLogs)
         {

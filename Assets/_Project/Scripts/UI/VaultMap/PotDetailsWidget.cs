@@ -265,6 +265,11 @@ namespace _Project
             Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
             UpdateStageAndProgressUI(_currentSelectedPot);
         }
+
+        private Sprite GetStageSprite()
+        {
+            return _currentSelectedPot.Sprite;
+        }
         
         /// <summary>
         /// BLK-01.04: Aggiorna tutti gli elementi UI per stage e progresso
@@ -293,7 +298,7 @@ namespace _Project
             // BLK-01.04: Aggiorna Stage Icon con colore appropriato
             if (_stageImage != null)
             {
-                _stageImage.color = GetStageColor(state.Stage);
+                _stageImage.sprite = GetStageSprite();
                 // TODO: Sostituire con sprite reali quando disponibili
             }
     
