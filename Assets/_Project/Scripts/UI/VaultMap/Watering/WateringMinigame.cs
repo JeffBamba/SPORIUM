@@ -34,34 +34,25 @@ namespace _Project.Watering
         private void Start()
         {
             _rectTransform = _soilImage.rectTransform;
-            _soilTexture = new Texture2D(_textureSize, _textureSize, TextureFormat.RGBA32, false);
-            
-            var pixels = new Color[_textureSize * _textureSize];
-            for (var i = 0; i < pixels.Length; i++)
-                pixels[i] = _dryColor;
-            
-            _soilTexture.SetPixels(pixels);
-            _soilTexture.Apply();
-
-            _soilImage.texture = _soilTexture;
-            
             _finishButton.onClick.AddListener(HandleFinish);
             
             Reset();
         }
 
+        
         private void HandleFinish()
         {
             if (_coverageAmount > 50f)
                 _pot.PotActions.DoWater();
+            Hide();
         }
 
         private void Update()
         {
             _coverageAmount = CalculateCoverage();
             
-            _wateringLabel.text = $"{(int)_waterAmount}%";
-            _coverageLabel.text = $"{(int)_coverageAmount}%";
+            _wateringLabel.text = $"Water amount: {(int)_waterAmount}%";
+            _coverageLabel.text = $"Coverage: {(int)_coverageAmount}%";
             
             PaintUpdate();
         }
@@ -78,7 +69,6 @@ namespace _Project.Watering
                     _rectTransform, Input.mousePosition, null, out var localPoint)) 
                 return;
             
-            var pivot = _rectTransform.pivot;
             var xNorm = (localPoint.x / _rectTransform.rect.width) + 0.5f;
             var yNorm = (localPoint.y / _rectTransform.rect.height) + 0.5f;
 
@@ -127,10 +117,26 @@ namespace _Project.Watering
 
         public void Reset()
         {
+            ResetTexture();
+            
             _waterAmount = 100;
             _coverageAmount = 0;
         }
 
+        private void ResetTexture()
+        {
+            _soilTexture = new Texture2D(_textureSize, _textureSize, TextureFormat.RGBA32, false);
+            
+            var pixels = new Color[_textureSize * _textureSize];
+            for (var i = 0; i < pixels.Length; i++)
+                pixels[i] = _dryColor;
+            
+            _soilTexture.SetPixels(pixels);
+            _soilTexture.Apply();
+
+            _soilImage.texture = _soilTexture;   
+        }
+        
         public void Show(PotSlot pot)
         {
             gameObject.SetActive(true);

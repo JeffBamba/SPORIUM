@@ -1,5 +1,4 @@
 ﻿using _Project.Sporae.Core;
-using Sporae.Core;
 using UnityEngine;
 
 namespace _Project
@@ -7,8 +6,8 @@ namespace _Project
     [RequireComponent(typeof(Interactable))]
     public class Microscope : Storage
     {
-        [SerializeField] private LabMicroscope _labMiniGame;
-
+        [SerializeField] private MicroscopeMinigameController _labMiniGame;
+        
         private readonly Inventory _inventory = new();
         private Interactable _interactable;
         
@@ -23,10 +22,9 @@ namespace _Project
             _interactable.OnInteract -= HandleInteract;
         }
         
-        
         private void HandleInteract()
         {
-            _labMiniGame.Show();
+            _labMiniGame.StartRun();
         }
         
         public override Inventory GetInventory()

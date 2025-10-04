@@ -1,4 +1,5 @@
 ﻿using _Project.Sporae.Core;
+using _Project.Watering;
 using Sporae.Dome.PotSystem.Growth;
 using TMPro;
 using UnityEngine;
@@ -19,6 +20,8 @@ namespace _Project
         [SerializeField] private Image _stageImage;
 
         [SerializeField] private GameObject _page;
+
+        [SerializeField] private WateringMinigame _wateringMinigame;
         
         private PotSlot _currentSelectedPot;
         private PlantGrowthConfig _growthConfig;
@@ -134,12 +137,19 @@ namespace _Project
                 case PotEvents.PotActionType.Plant:
                     success = selectedPot.PotActions.DoPlant();
                     break;
+                
                 case PotEvents.PotActionType.Water:
-                    success = selectedPot.PotActions.DoWater();
+                    
+                    success = selectedPot.PotActions.CanWater();
+                    if (success)
+                        _wateringMinigame.Show(selectedPot);
+                    
                     break;
+                
                 case PotEvents.PotActionType.Light:
                     success = selectedPot.PotActions.DoLight();
                     break;
+                
                 case PotEvents.PotActionType.Uproot:
                     success = selectedPot.PotActions.DoUproot();
                     break;

@@ -27,7 +27,7 @@ public class PlayerClickMover2D : MonoBehaviour
     private bool isMoving;
     private bool suspendMovement;
 
-    void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         targetPosition = rb.position;
@@ -38,12 +38,12 @@ public class PlayerClickMover2D : MonoBehaviour
         rb.angularDrag = 0f;
     }
 
-    void Update()
+    private void Update()
     {
         HandleInput();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (hasTarget)
         {
