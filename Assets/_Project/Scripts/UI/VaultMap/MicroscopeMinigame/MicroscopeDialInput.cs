@@ -11,10 +11,10 @@ namespace _Project
         private void Update()
         {
             var horiz = Input.GetAxisRaw("Horizontal"); 
-            if (horiz > 0)
+            if (horiz < 0)
                 horiz *= _config.RightMultiplier;
             
-            var delta = horiz * _config.Sensitivity * Time.deltaTime;
+            var delta = -horiz * _config.Sensitivity * Time.deltaTime;
 
             delta += _config.AutoDriftSpeed * Time.deltaTime;
 

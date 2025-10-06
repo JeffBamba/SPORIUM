@@ -12,7 +12,7 @@ namespace _Project
         [SerializeField] private MicroscopeHUDView _hudView;
         [SerializeField] private MicroscopeDialInput _dialInput;
         [SerializeField] private PlayerClickMover2D _player;
-        
+      
         [SerializeField] private int _levels;
 
         private int _currentLevel;

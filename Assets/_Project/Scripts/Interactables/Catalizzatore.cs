@@ -4,9 +4,9 @@ using UnityEngine;
 namespace _Project
 {
     [RequireComponent(typeof(Interactable))]
-    public class Microscope : Storage
+    public class Catalizzatore : Storage
     {
-        [SerializeField] private LabMicroscope _labMiniGame;
+        [SerializeField] private LabCatalizzatore _labMiniGame;
         
         private readonly Inventory _inventory = new();
         private Interactable _interactable;

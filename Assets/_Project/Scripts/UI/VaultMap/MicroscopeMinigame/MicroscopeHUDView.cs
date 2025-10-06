@@ -14,17 +14,17 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _precisionBanner;
         
         [SerializeField] private Button _confirmButton;
+        [SerializeField] private Button _cancelButton;
 
+        [SerializeField] private LabMicroscope _labMicroscope;
+        
         private MicroscopeMinigameController _controller;
 
         private ActionSystem _actionsService;
-        private Inventory _inventoryService;
         
         private void Awake()
         {
             var gameManager = FindObjectOfType<GameManager>();
-            
-            _inventoryService = gameManager.PlayerInventory;
             _actionsService = gameManager.ActionSystem;
             
             _controller = GetComponent<MicroscopeMinigameController>();
@@ -33,17 +33,23 @@ namespace _Project
         private void Start()
         {
             _confirmButton.onClick.AddListener(HandleConfirm);
+            _cancelButton.onClick.AddListener(HandleCancel);
         }
-        
+
+        private void HandleCancel()
+        {
+            Hide();
+        }
+
         private void HandleConfirm()
         {
-            if (_actionsService.CanSpendAction() && _inventoryService.Has(Items.SporeGeneric))
-            {
-                _actionsService.SpendAction();
-                _inventoryService.Consume(Items.SporeGeneric, 1);
+            if (!_actionsService.CanSpendAction()) 
+                return;
+            
+            _labMicroscope.ConsumeSpore();
+            _actionsService.SpendAction();
                 
-                _controller.CancelRun();
-            }
+            _controller.CancelRun();
         }
 
         public void UpdateArrow(float angle)
@@ -59,7 +65,7 @@ namespace _Project
 
         public void SetPrecision(float precision)
         {
-            _precisionBanner.text = $"Precision: {precision}%";
+            _precisionBanner.text = $"Precision: {precision:F0}%";
         }
 
         public void Show()

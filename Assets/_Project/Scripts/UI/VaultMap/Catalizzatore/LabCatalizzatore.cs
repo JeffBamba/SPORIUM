@@ -1,12 +1,13 @@
 ﻿using System.Linq;
+
 using _Project.Sporae.Core;
-using Sporae.Core;
+
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace _Project
 {
-    public class LabMicroscope : MonoBehaviour
+    public class LabCatalizzatore : MonoBehaviour
     {
         [SerializeField] private Button _startButton;
         [SerializeField] private Button _closeButton;
@@ -14,8 +15,9 @@ namespace _Project
         [SerializeField] private DragDropUI _dragDropUI;
         [SerializeField] private HUDInventory _inventory;
         
-        [SerializeField] private Microscope _microscope;
-
+        [SerializeField] private Catalizzatore _catalizzatore;
+        [SerializeField] private CatalizzatoreUI _catalizzatoreUI;
+        
         private GameManager _gameManager;
         
         private Inventory _storage;
@@ -28,7 +30,7 @@ namespace _Project
                 Debug.LogWarning("There is no GameManager in the scene");
            
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
-            _storage = _microscope.GetInventory();
+            _storage = _catalizzatore.GetInventory();
         }
 
         private void Start()
@@ -47,10 +49,14 @@ namespace _Project
         private void HandleConfirm()
         {
             _dragDropUI.ConfirmOperation();
-            _storage.Consume("SPORE_GENERIC", 1);
-            // _storage.Add("SDE-001", 1);
+            _catalizzatoreUI.Run();
         }
 
+        public void ConsumeSpore()
+        {
+            _storage.Consume(Items.SporeGeneric, 1);
+        }
+        
         private void UpdateStorage()
         {
             _hudItemContainer.DisableAllSlots();
@@ -62,6 +68,11 @@ namespace _Project
             }
         }
 
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+        
         public void Show()
         {
             _inventory.Show();
