@@ -35,7 +35,7 @@ namespace _Project
         {
             _dragDropUI.OnInCorrectItem += HandleIncorrectItem;
             _dragDropUI.OnConfirm += HandleConfirm;
-            _playerInventory.OnClose += HandleClose;
+            _playerInventory.OnClose += Hide;
             _storage.OnInventoryChanged += UpdateStorage;
             _closeButton.onClick.AddListener(HandleClose);
         }
@@ -85,6 +85,7 @@ namespace _Project
         public void Hide()
         {
             gameObject.SetActive(false);
+            _playerInventory.Hide();
         }
     }
 }

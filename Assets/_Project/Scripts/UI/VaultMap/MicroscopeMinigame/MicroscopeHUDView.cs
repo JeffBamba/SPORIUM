@@ -15,7 +15,11 @@ namespace _Project
         
         [SerializeField] private Button _confirmButton;
         [SerializeField] private Button _cancelButton;
-
+        [SerializeField] private Button _continueButton;
+        
+        [SerializeField] private GameObject _tutorialGroup;
+        [SerializeField] private GameObject _minigameGroup;
+        
         [SerializeField] private LabMicroscope _labMicroscope;
         
         private MicroscopeMinigameController _controller;
@@ -34,6 +38,7 @@ namespace _Project
         {
             _confirmButton.onClick.AddListener(HandleConfirm);
             _cancelButton.onClick.AddListener(HandleCancel);
+            _continueButton.onClick.AddListener(ShowGame);
         }
 
         private void HandleCancel()
@@ -43,12 +48,7 @@ namespace _Project
 
         private void HandleConfirm()
         {
-            if (!_actionsService.CanSpendAction()) 
-                return;
-            
             _labMicroscope.ConsumeSpore();
-            _actionsService.SpendAction();
-                
             _controller.CancelRun();
         }
 
@@ -68,10 +68,22 @@ namespace _Project
             _precisionBanner.text = $"Precision: {precision:F0}%";
         }
 
-        public void Show()
+        private void ShowGame()
         {
-            gameObject.SetActive(true);
             _confirmButton.interactable = _actionsService.ActionsLeft >= 1;
+            
+            _tutorialGroup.SetActive(false);
+            _minigameGroup.SetActive(true);
+            
+            gameObject.SetActive(true);
+            _controller.StartRun();
+        }
+        
+        public void ShowTutorial()
+        {
+            _tutorialGroup.SetActive(true);
+            _minigameGroup.SetActive(false);
+            gameObject.SetActive(true);
         }
 
         public void Hide()

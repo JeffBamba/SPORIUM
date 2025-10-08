@@ -6,6 +6,7 @@ namespace _Project.Sporae.Core.Installers
     public class GamePlayInstaller : MonoBehaviour
     {
         [SerializeField] private UINotification _uiNotification;
+        [SerializeField] private FadeToBlackAnimation _fadeToBlack;
         
         private MissionManager _missionManager;
         
@@ -13,7 +14,7 @@ namespace _Project.Sporae.Core.Installers
         {
             ServiceContainer.Init();
             ServiceContainer.Instance.Register(_uiNotification);
-            ServiceContainer.Instance.Register(new DayCycleSystem());
+            ServiceContainer.Instance.Register(new DayCycleSystem(_fadeToBlack));
             ServiceContainer.Instance.Register(new GoalCheckers());
             ServiceContainer.Instance.Register(new DiaryStatistics());
 

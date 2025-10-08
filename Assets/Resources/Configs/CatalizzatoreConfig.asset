@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b92a286066dcb649b57a4bc217c6a2b, type: 3}
   m_Name: CatalizzatoreConfig
   m_EditorClassIdentifier: 
-  <MinInterval>k__BackingField: 0.2
-  <MaxInterval>k__BackingField: 2
-  <MinDuration>k__BackingField: 0.4
-  <MaxDuration>k__BackingField: 1.5
+  <MinInterval>k__BackingField: 0.4
+  <MaxInterval>k__BackingField: 1.4
+  <MinDuration>k__BackingField: 0.6
+  <MaxDuration>k__BackingField: 1.3
   <Session>k__BackingField: 20
   <FieldSize>k__BackingField: {x: 500, y: 250}

@@ -12,6 +12,8 @@ namespace _Project
         
         public List<HUDInventoryItem> Items => _items;
         public int SelectedId => _items.IndexOf(_selectedItem);
+        public string SelectedItemName => 
+            SelectedId < 0 || SelectedId >= Items.Count ? "" : _items[SelectedId].ItemName;
         public int Capacity => _items.Count;
         
         private void Start()

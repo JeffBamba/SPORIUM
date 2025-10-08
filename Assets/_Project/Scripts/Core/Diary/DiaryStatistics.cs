@@ -1,4 +1,6 @@
-﻿namespace _Project
+﻿using _Project.Sporae.Core;
+
+namespace _Project
 {
     public class DiaryStatistics
     {
@@ -8,8 +10,21 @@
         public int FruitsHarvested { get; set; }
         public int SporesExtracted { get; set; }
         public int PlantsWatered { get; set; }
+
+        private readonly DayCycleSystem _dayCycleSystem;
         
-        public void Reset()
+        public DiaryStatistics()
+        {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _dayCycleSystem.OnDayChanged += Reset;
+        }
+
+        ~DiaryStatistics()
+        {
+            _dayCycleSystem.OnDayChanged -= Reset;
+        }
+
+        private void Reset(int i)
         {
             ActionsSpent = 0;
             CrySpent = 0;

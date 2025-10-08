@@ -1,3 +1,4 @@
+using System.Linq;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
@@ -85,6 +86,13 @@ public class PotActions : MonoBehaviour
     }
     
     #region Action Validation Methods
+
+    public bool IsPlayerHasSeed()
+    {
+        return _playerInventory.Items.Any(
+            item => item.Items.Count > 0 && item.Items.ElementAt(0).ItemConfig.IsSeed
+        );
+    }
     
     /// <summary>
     /// Verifica se è possibile piantare un seme
@@ -96,7 +104,7 @@ public class PotActions : MonoBehaviour
         
         bool
             isEmpty = _potState.IsEmpty,
-            hasSeed = _playerInventory.Has(Items.Seed001),
+            hasSeed = IsPlayerHasSeed(),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
             notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
@@ -163,6 +171,14 @@ public class PotActions : MonoBehaviour
     #endregion
     
     #region Action Execution Methods
+
+    private bool ConsumeSeed()
+    {
+        foreach (var item in _playerInventory.Items.ToList())
+            if (item.Items.Count > 0 && item.Items.ElementAt(0).ItemConfig.IsSeed)
+                return _playerInventory.Consume(item.TypeId);
+        return false;
+    }
     
     /// <summary>
     /// Esegue l'azione di piantare un seme
@@ -184,9 +200,9 @@ public class PotActions : MonoBehaviour
         }
         
         // Consuma il seme dall'inventario
-        if (!_playerInventory.Consume(Items.Seed001))
+        if (!ConsumeSeed())
         {
-            Debug.LogError($"[PotActions] Impossible to consume seed {Items.Seed001}");
+            Debug.LogError($"[PotActions] Impossible to consume seed");
             return false;
         }
         

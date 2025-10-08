@@ -48,7 +48,6 @@ namespace _Project
             _isPlaying = true;
             _targetAngle = Random.Range(0, 360);
             
-            _hudView.Show();
             _hudView.UpdateInRangeArc(_targetAngle);
             _player.SuspendMovement(_isPlaying);   
         }

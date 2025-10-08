@@ -13,6 +13,10 @@ namespace _Project
 
         [SerializeField] private Color _normalColor;
         [SerializeField] private Color _selectedColor;
+
+        private string _itemName;
+        
+        public string ItemName => _itemName;
         
         private Image _image;
         
@@ -25,6 +29,7 @@ namespace _Project
         
         public void SetItem(string itemName, int quantity)
         {
+            _itemName = itemName;
             _nameLabel.text = itemName;
             _scoreLabel.text = quantity == -1 ? "" : quantity.ToString();
         }

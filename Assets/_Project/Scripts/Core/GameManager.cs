@@ -48,6 +48,7 @@ public class GameManager : MonoBehaviour
         _playerInventory.Add(Items.Seed001, 4);
         _playerInventory.Add(Items.SporeGeneric, 2);
         _playerInventory.Add(Items.Water, 2);
+        _playerInventory.Add(Items.Fruits, 5);
         
         // Sincronizza sistemi interni con valori esterni
         if (_showDebugLogs)

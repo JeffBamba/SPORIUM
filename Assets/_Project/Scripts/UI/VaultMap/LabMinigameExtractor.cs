@@ -36,6 +36,11 @@ namespace _Project
         [FormerlySerializedAs("_microscope")] [SerializeField] private Extractor _extractor;
 
         [SerializeField] private GameObject _gameView;
+
+        [SerializeField] private GameObject _minigameGroup;
+        [SerializeField] private GameObject _tutorialGroup;
+
+        [SerializeField] private Button _continueButton;
         
         private bool _gameInProgress;
         private bool _isWon;
@@ -46,6 +51,7 @@ namespace _Project
         private DayCycleSystem _dayCycleSystem;
         private DiaryStatistics _diaryStatistics;
         
+        private Inventory _playerInventory;
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
         
@@ -54,6 +60,13 @@ namespace _Project
             _textLabel.text = _defaultText;
             _inventory.Show();
             gameObject.SetActive(true);
+        }
+
+        private void Hide()
+        {
+            _gameInProgress = false;
+            gameObject.SetActive(false);
+            _inventory.Hide();
         }
         
         private void Awake()
@@ -69,23 +82,25 @@ namespace _Project
 
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
             _storage = _extractor.GetInventory();
+            _playerInventory = _gameManager.PlayerInventory;
         }
         
         private void Start()
         {
             _storage.OnInventoryChanged += UpdateStorage;
+            _inventory.OnClose += Hide;
             
+            _continueButton.onClick.AddListener(ShowMinigame);
             _startButton.onClick.AddListener(TryLaunch);
             _closeButton.onClick.AddListener(() =>
             {
                 _dragDropUI.ConfirmOperation();
-                _gameInProgress = false;
-                gameObject.SetActive(false);
+                Hide();
             });
 
             UpdateStorage();
         }
-
+        
         private void TryLaunch()
         {
             var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
@@ -100,10 +115,28 @@ namespace _Project
             _storage.Consume(Items.Fruits);
 
             _textLabel.text = _defaultText;
-            _gameView.SetActive(true);
-            
+
             _lastPlayingDay = _dayCycleSystem.CurrentDay;
+            
+            ShowTutorial();
+        }
+
+        private void ShowTutorial()
+        {
+            _tutorialGroup.SetActive(true);
+            _minigameGroup.SetActive(false);
+            
+            _gameView.SetActive(true);   
+        }
+        
+        private void ShowMinigame()
+        {
             _gameInProgress = true;
+            
+            _tutorialGroup.SetActive(false);
+            _minigameGroup.SetActive(true);
+            
+            _gameView.SetActive(true);
         }
         
         private void Update()
@@ -144,9 +177,7 @@ namespace _Project
                 targetMaxX > playerMaxX;
 
             if (_isWon)
-            {
-                _storage.Add(Items.SporeGeneric);
-            }
+                _playerInventory.Add(Items.SporeGeneric);
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;

@@ -23,6 +23,18 @@ namespace _Project
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
         
+        public void Show()
+        {
+            _inventory.Show();
+            gameObject.SetActive(true);
+        }
+        
+        private void Hide()
+        {
+            gameObject.SetActive(false);
+            _inventory.Hide();
+        }
+        
         private void Awake()
         {
             _gameManager = FindObjectOfType<GameManager>();
@@ -36,11 +48,13 @@ namespace _Project
         private void Start()
         {
             _storage.OnInventoryChanged += UpdateStorage;
+            _inventory.OnClose += Hide;
+            
             _startButton.onClick.AddListener(HandleConfirm);
             _closeButton.onClick.AddListener(() =>
             {
                 _dragDropUI.ConfirmOperation();
-                gameObject.SetActive(false);
+                Hide();
             });
             
             UpdateStorage();
@@ -48,8 +62,7 @@ namespace _Project
 
         private void HandleConfirm()
         {
-            _dragDropUI.ConfirmOperation();
-            _catalizzatoreUI.Run();
+            _catalizzatoreUI.ShowTutorial();
         }
 
         public void ConsumeSpore()
@@ -66,17 +79,6 @@ namespace _Project
                 var item = _storage.Items.ElementAt(i);
                 _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
-        }
-
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
-        
-        public void Show()
-        {
-            _inventory.Show();
-            gameObject.SetActive(true);
         }
     }
 }

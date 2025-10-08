@@ -15,7 +15,6 @@ namespace _Project
         [SerializeField] private GameObject _inventoryPage;
         
         [SerializeField] private Button _showInventoryButton;
-        [SerializeField] private Button _closeInventoryButton;
         
         private GameManager _gameManager;
         private Inventory _inventory;
@@ -33,7 +32,6 @@ namespace _Project
         private void Start()
         {
             _showInventoryButton.onClick.AddListener(Toggle);
-            _closeInventoryButton.onClick.AddListener(Close);
             
             _inventory.OnInventoryChanged += UpdateInventory;
         }
@@ -54,6 +52,11 @@ namespace _Project
         private void Close()
         {
             OnClose?.Invoke();
+            Hide();
+        }
+
+        public void Hide()
+        {
             _inventoryPage.SetActive(false);
         }
         
@@ -66,11 +69,13 @@ namespace _Project
         private void UpdateInventory()
         {   
             _hudItemContainer.DisableAllSlots();
-            
+
+            int index = 0;
             for (var i = 0; i < _inventory.UniqueItems; i++)
             {
-                var item = _inventory.Items.ElementAt(i);
-               _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
+                var slot = _inventory.Items.ElementAt(i);
+                foreach (var item in slot.Items)
+                    _hudItemContainer.SetItemData(index++, item.TypeId, -1);
             }
         }
     }

@@ -17,11 +17,25 @@ namespace _Project
         
         [SerializeField] private Microscope _microscope;
         [SerializeField] private MicroscopeMinigameController _microscopeMinigameController;
+        [SerializeField] private MicroscopeHUDView _hudView;
+        [SerializeField] private int _costAction;
         
         private GameManager _gameManager;
         
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
+
+        public void Hide()
+        {
+            _inventory.Hide();
+            gameObject.SetActive(false);
+        }
+        
+        public void Show()
+        {
+            _inventory.Show();
+            gameObject.SetActive(true);
+        }
         
         private void Awake()
         {
@@ -35,7 +49,9 @@ namespace _Project
 
         private void Start()
         {
+            _inventory.OnClose += Hide;
             _storage.OnInventoryChanged += UpdateStorage;
+            
             _startButton.onClick.AddListener(HandleConfirm);
             _closeButton.onClick.AddListener(() =>
             {
@@ -48,8 +64,11 @@ namespace _Project
 
         private void HandleConfirm()
         {
+            if (!_gameManager.TrySpendAction(_costAction))
+                return;
+            
             _dragDropUI.ConfirmOperation();
-            _microscopeMinigameController.StartRun();
+            _hudView.ShowTutorial();
         }
 
         public void ConsumeSpore()
@@ -66,17 +85,6 @@ namespace _Project
                 var item = _storage.Items.ElementAt(i);
                 _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
-        }
-
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
-        
-        public void Show()
-        {
-            _inventory.Show();
-            gameObject.SetActive(true);
         }
     }
 }

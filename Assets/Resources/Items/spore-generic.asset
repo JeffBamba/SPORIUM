@@ -16,3 +16,4 @@ MonoBehaviour:
   <MaxQuality>k__BackingField: 4
   <SellPrice>k__BackingField: 15
   <BuyPrice>k__BackingField: 30
+  <IsPerishable>k__BackingField: 1

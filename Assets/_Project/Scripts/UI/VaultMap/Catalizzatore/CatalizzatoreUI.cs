@@ -13,6 +13,13 @@ namespace _Project
         [SerializeField] private CatalizzatoreCircle _circlePrefab;
         [SerializeField] private CatalizzatoreConfig _config;
 
+        [SerializeField] private GameObject _minigameGroup;
+        [SerializeField] private GameObject _tutorialGroup;
+
+        [SerializeField] private Button _continueButton;
+        
+        [SerializeField] private IncubatorUI _incubatorUI;
+        
         private TextMeshProUGUI _scoreLabel;
         private TextMeshProUGUI _resultLabel;
         private Button _closeButton;
@@ -20,6 +27,7 @@ namespace _Project
         private const string k_scoreId = "ScoreLabel";
         private const string k_resultId = "ResultLabel";
         private const string k_closeButtonId = "CloseButton";
+        private const string k_miniGameGroup = "Minigame";
 
         private readonly List<CatalizzatoreCircle> _circles = new();
 
@@ -35,32 +43,55 @@ namespace _Project
                 _scoreLabel.text = $"Score: {_scores}";
             }
         }
+        
+        private bool _empowered = false;
 
         private void Awake()
         {
-            _scoreLabel = transform.Find(k_scoreId).GetComponent<TextMeshProUGUI>();
-            _resultLabel = transform.Find(k_resultId).GetComponent<TextMeshProUGUI>();
-            _closeButton = transform.Find(k_closeButtonId).GetComponent<Button>();
+            var minigame = transform.Find(k_miniGameGroup);
+            _scoreLabel  = minigame.Find(k_scoreId).GetComponent<TextMeshProUGUI>();
+            _resultLabel = minigame.Find(k_resultId).GetComponent<TextMeshProUGUI>();
+            _closeButton = minigame.Find(k_closeButtonId).GetComponent<Button>();
         }
         
         private void Start()
         {
             _closeButton.onClick.AddListener(HandleClose);
+            _continueButton.onClick.AddListener(ShowMinigame);
         }
 
         private void HandleClose()
         {
+            if (_empowered)
+                _incubatorUI.ShowEvening();
+            
             gameObject.SetActive(false);
         }
-
-        public void Run() 
+        
+        public void ShowTutorial()
         {
             gameObject.SetActive(true);
+            
+            _minigameGroup.SetActive(false);
+            _tutorialGroup.SetActive(true);
+            
+            _resultLabel.gameObject.SetActive(false);
+            _closeButton.gameObject.SetActive(false);
+        }
+        
+        private void ShowMinigame() 
+        {
+            gameObject.SetActive(true);
+            
+            _tutorialGroup.SetActive(false);
+            _minigameGroup.SetActive(true);
             
             _resultLabel.gameObject.SetActive(false);
             _closeButton.gameObject.SetActive(false);
             
             Scores = 0;
+            _amountOfCircles = 0;
+            
             _circles.Clear();
         
             StartCoroutine(SpawnRoutine());
@@ -88,11 +119,12 @@ namespace _Project
 
         private void CalcResult()
         {
-            if (_scores > _amountOfCircles * 0.95f) 
+            _empowered = _scores > _amountOfCircles * 0.8f; 
+            if (_empowered)
                 _resultLabel.text = "Empowered seed, Level consistent with origin.";
-            
-            _resultLabel.text = _scores > _amountOfCircles * 0.5f ?
-                "Unstable seed, Level degraded." : "Penalized seed, Level lost.";
+            else 
+                _resultLabel.text = _scores > _amountOfCircles * 0.5f ?
+                    "Unstable seed, Level degraded." : "Penalized seed, Level lost.";
             
             _resultLabel.gameObject.SetActive(true);
             _closeButton.gameObject.SetActive(true);
