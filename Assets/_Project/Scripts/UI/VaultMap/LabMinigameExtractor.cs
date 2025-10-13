@@ -55,6 +55,8 @@ namespace _Project
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
         
+        private UINotification _notification;
+        
         public void Show()
         {
             _textLabel.text = _defaultText;
@@ -73,6 +75,7 @@ namespace _Project
         {
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
             _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
+            _notification = FindObjectOfType<UINotification>();
             
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
@@ -177,7 +180,10 @@ namespace _Project
                 targetMaxX > playerMaxX;
 
             if (_isWon)
+            {
                 _playerInventory.Add(Items.SporeGeneric);
+                _notification.ShowNotification("You got a spore!", 2, Color.green);
+            }
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;
@@ -206,6 +212,7 @@ namespace _Project
         {
             yield return new WaitForSeconds(_playerDuration);
             _gameView.SetActive(false);
+            Hide();
         }
     }
 }

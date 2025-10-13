@@ -16,25 +16,29 @@ namespace _Project.Watering
         [SerializeField] private Color _dryColor;
 
         [SerializeField] private Button _finishButton;
+
+        [SerializeField] private GameObject _minigameGroup;
+        [SerializeField] private GameObject _resultGroup;
+        
+        [SerializeField] private TextMeshProUGUI _resultLabel;
+        [SerializeField] private Button _closeButton;
+        
+        [SerializeField] private RawImage _soilImage;
         
         private float _waterAmount;
         private float _coverageAmount;
         
-        private RawImage _soilImage;
         private Texture2D _soilTexture;
         private RectTransform _rectTransform;
 
         private PotSlot _pot;
         
-        private void Awake()
-        {
-            _soilImage = GetComponentInChildren<RawImage>();
-        }
-        
         private void Start()
         {
             _rectTransform = _soilImage.rectTransform;
-            _finishButton.onClick.AddListener(HandleFinish);
+            
+            _finishButton.onClick.AddListener(ShowResult);
+            _closeButton.onClick.AddListener(HandleFinish);
             
             Reset();
         }
@@ -44,6 +48,9 @@ namespace _Project.Watering
         {
             if (_coverageAmount > 50f)
                 _pot.PotActions.DoWater();
+            else 
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, _pot, "Failed minigame");
+            
             Hide();
         }
 
@@ -143,8 +150,20 @@ namespace _Project.Watering
             
             Reset();
             _pot = pot;
+            
+            _minigameGroup.SetActive(true);
+            _resultGroup.SetActive(false);
         }
 
+        public void ShowResult()
+        {
+            _resultLabel.text = _coverageAmount > 50f ?
+                "You have successfully watered the plant." : "You failed to water the plant";
+                
+            _minigameGroup.SetActive(false);
+            _resultGroup.SetActive(true);
+        }
+        
         public void Hide()
         {
             gameObject.SetActive(false);

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using _Project.Pot;
+using UnityEngine;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -17,6 +18,7 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new DayCycleSystem(_fadeToBlack));
             ServiceContainer.Instance.Register(new GoalCheckers());
             ServiceContainer.Instance.Register(new DiaryStatistics());
+            ServiceContainer.Instance.Register(new PotNotifications());
 
             _missionManager = new MissionManager();
             ServiceContainer.Instance.Register(_missionManager);

@@ -10,13 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 701043c8150147ce996a2136edbfcc94, type: 3}
-  m_Name: wat-raw
+  m_Name: black-market
   m_EditorClassIdentifier: 
-  <TypeId>k__BackingField: wat-raw
+  <TypeId>k__BackingField: black-market
   <MaxQuality>k__BackingField: 0
-  <SellPrice>k__BackingField: 5
-  <BuyPrice>k__BackingField: 8
+  <SellPrice>k__BackingField: 0
+  <BuyPrice>k__BackingField: 50
   <IsPerishable>k__BackingField: 0
   <Stability>k__BackingField: 0
   <IsSeed>k__BackingField: 0
-  <CanStack>k__BackingField: 1

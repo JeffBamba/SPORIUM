@@ -74,8 +74,12 @@ namespace _Project
             for (var i = 0; i < _inventory.UniqueItems; i++)
             {
                 var slot = _inventory.Items.ElementAt(i);
-                foreach (var item in slot.Items)
-                    _hudItemContainer.SetItemData(index++, item.TypeId, -1);
+
+                if (slot.Items.Count > 0 && slot.Items.ElementAt(0).ItemConfig.CanStack)
+                    _hudItemContainer.SetItemData(index++, slot.TypeId, slot.Quantity);
+                else 
+                    foreach (var item in slot.Items)
+                        _hudItemContainer.SetItemData(index++, item.TypeId, -1);
             }
         }
     }

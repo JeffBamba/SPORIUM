@@ -10,6 +10,8 @@ namespace _Project.BlackMarket
     {
         [SerializeField] private List<ItemConfig> _itemsCatalog;
         
+        [SerializeField] private GameObject _catalyst;
+        
         private HUDItemContainer _hudItemContainer;
         private readonly List<UIBlackMarketBuyItem> _items = new();
 
@@ -43,7 +45,14 @@ namespace _Project.BlackMarket
             var selectedItem = _itemsCatalog.ElementAt(index);
 
             if (_economySystem.Spend(selectedItem.BuyPrice))
-                _storage.Add(selectedItem.TypeId, 1);
+                if (selectedItem.TypeId == "black-market")
+                {
+                    _itemsCatalog.Remove(selectedItem);
+                    _catalyst.gameObject.SetActive(true);
+                    UpdateStorage();
+                }
+                else
+                    _storage.Add(selectedItem.TypeId, 1);
         }
 
         private void UpdateStorage()

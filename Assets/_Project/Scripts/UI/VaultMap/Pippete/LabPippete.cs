@@ -1,14 +1,12 @@
 ﻿using System.Linq;
-
-using _Project.Sporae.Core;
-using Sporae.Core;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+using _Project.Sporae.Core;
+
 namespace _Project
 {
-    public class LabMicroscope : MonoBehaviour
+    public class LabPipette : MonoBehaviour
     {
         [SerializeField] private Button _startButton;
         [SerializeField] private Button _closeButton;
@@ -16,18 +14,15 @@ namespace _Project
         [SerializeField] private DragDropUI _dragDropUI;
         [SerializeField] private HUDInventory _inventory;
         
-        [SerializeField] private Microscope _microscope;
-        [SerializeField] private MicroscopeMinigameController _microscopeMinigameController;
-        [SerializeField] private MicroscopeHUDView _hudView;
+        [SerializeField] private Pipette _pipette;
         [SerializeField] private int _costAction;
 
-        [SerializeField] private TextMeshProUGUI _startButtonLabel;
+        [SerializeField] private PipetteView _view;
         
         private GameManager _gameManager;
         
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
-        private ActionSystem _actionSystem;
 
         public void Hide()
         {
@@ -39,8 +34,6 @@ namespace _Project
         {
             _inventory.Show();
             gameObject.SetActive(true);
-            
-            UpdateStorage();
         }
         
         private void Awake()
@@ -48,10 +41,9 @@ namespace _Project
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
                 Debug.LogWarning("There is no GameManager in the scene");
-
-            _actionSystem = _gameManager.ActionSystem;
+           
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
-            _storage = _microscope.GetInventory();
+            _storage = _pipette.GetInventory();
         }
 
         private void Start()
@@ -74,9 +66,12 @@ namespace _Project
         {
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
+
+            if (!_storage.Consume(Items.SporeGeneric))
+                return;
             
             _dragDropUI.ConfirmOperation();
-            _hudView.ShowTutorial();
+            _view.ShowTutorial();
         }
 
         public void ConsumeSpore()
@@ -93,13 +88,6 @@ namespace _Project
                 var item = _storage.Items.ElementAt(i);
                 _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
-
-            bool hasSpore = _storage.Has(Items.SporeGeneric), 
-                 hasActions = _actionSystem.ActionsLeft > 0;
-            _startButtonLabel.text = hasSpore && hasActions ? "Start" :
-                                     !hasActions ? "No Actions remaining" : "No sample available" ;
-            
-            _startButton.interactable = hasSpore && hasActions;
         }
     }
 }

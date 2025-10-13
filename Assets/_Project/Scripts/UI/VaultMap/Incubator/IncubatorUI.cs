@@ -10,6 +10,8 @@ namespace _Project
         [SerializeField] private GameObject _morningGroup;
 
         [SerializeField] private Button _continueButton;
+
+        [SerializeField] private Button _dragLeftButton;
         
         private DayCycleSystem _dayCycleSystem;
         private bool _processLaunched;
@@ -20,6 +22,7 @@ namespace _Project
             
             _eveningGroup.SetActive(true);
             _morningGroup.SetActive(false);
+            _dragLeftButton.interactable = false;
             
             gameObject.SetActive(true);
         }
@@ -33,6 +36,7 @@ namespace _Project
         {
             _processLaunched = false;
             
+            _dragLeftButton.interactable = true;
             _eveningGroup.SetActive(false);
             _morningGroup.SetActive(true);
             
