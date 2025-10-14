@@ -1,0 +1,62 @@
+DEV REPORT 
+
+Bug001 — Microscope retry cost
+
+Fix: 
+Implemented correct retry cost logic. 
+First daily attempt now consumes only 1 Action, while subsequent retries deduct 2 CRY + 1 Action consistently.
+
+Bug002 — Lab minigame box position
+
+Fix:
+Adjusted the Lab Minigame UI placeholder. Elevator exits are now mapped correctly: left → Dome, right → Laboratory. 
+
+Bug003 — Level –2 missing message
+
+Fix: 
+Added proper popup message trigger. Attempting to access Level –2 before unlock now displays: “Sorry, out of order.”
+
+Bug004 — Water button active without RAW WATER
+
+Fix: 
+If WAT-RAW = 0, the button is disabled and unclickable.
+
+Bug005 — Fruit production rate incorrect
+
+Fix:
+Corrected growth cycle logic. Mature plants now produce 1 Fruit every 2 days
+
+Bug006 — Inventory HUD toggle not working
+
+Fix: 
+Implemented toggle functionality
+
+Bug007 — Inventory counter not updating after item use
+
+Fix:
+Added live update for item counters. Inventory HUD reflects resource changes immediately after usage
+
+Bug008 — Fruit produced on same day of maturity
+
+Fix:
+Adjusted production timing. First Fruit now spawns the day after the plant reaches maturity, not on the same day.
+
+Bug009 — Missing feedback when collecting resources
+
+Fix:
+Added on-screen notifications for resource collection, e.g. “You collected Rainwater!” / “New Fruit added to Inventory!”
+
+Bug010 — Elevator acceleration spike (–2 to +1)
+
+Fix:
+Synced elevator and camera motion.
+
+Bug011 — Elevator shaft and door placeholder missing
+
+Fix:
+Implemented proper placeholders using assets from VaultMap_01 PSD.
+
+Bug012 — Day counter mismatch between HUD and Pot details
+
+Fix:
+Unified day-tracking logic across HUD and Pot detail views.

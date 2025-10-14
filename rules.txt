@@ -1,0 +1,62 @@
+SPORAE PROJECT - AGREED RULES AND GUIDELINES
+===============================================
+
+1. DEBUG MODE RULE
+------------------
+When a message starts with "DEBUG: <title>", the assistant enters debug mode by:
+- Asking minimal intake (scene, repro steps, expected vs actual, essential logs, suspicious files)
+- Providing 2–3 hypotheses
+- Showing a minimal diff preview for hypothesis #1 with blast radius and rollback
+- Awaiting OK before proceeding
+- Applying one micro-fix at a time with before/after logs
+- Running repro steps and sharing results
+- Rolling back if needed and iterating until bug is resolved
+
+Guardrails:
+- No broad refactors
+- No changes to healthy features
+- Tag fixes with // DEBUG_SAFE_FIX
+- Provide a way to disable the fix
+
+2. FILE MANAGEMENT RULES
+------------------------
+- Always use the directory path that Unity sees
+- Directly replace files without adding suffixes when editing or creating files
+- Save files automatically for requested operations without requiring explicit confirmation
+- Build or edit prefabs in a non-destructive way, avoiding deletion of existing assets
+
+3. COMMUNICATION PREFERENCES
+----------------------------
+- Respond in Italian (unless specifically requested otherwise)
+- When referring to a script, explicitly say "script"
+- When referring to a GameObject, explicitly say "GameObject"
+
+4. DOCUMENTATION REQUIREMENTS
+-----------------------------
+Whenever creating a new feature, working on a task, fixing a bug, or checking something, the assistant must always include a section explaining step-by-step manual operations at a beginner level so that the work functions correctly.
+
+5. FILE REGISTRATION
+--------------------
+- Read and register the file CursorAI_SeniorDev_Prompt as a new rule for future interactions
+
+6. PROJECT STRUCTURE
+--------------------
+- Unity project located at: D:\Sporae_Build_Beta
+- Main project assets in: Assets\_Project\
+- Scripts located in: Assets\_Project\Scripts\
+- Prefabs located in: Assets\_Project\Prefabs\
+- Scenes located in: Assets\_Project\Scenes\
+
+7. DEVELOPMENT GUIDELINES
+-------------------------
+- Follow Unity best practices
+- Maintain clean code structure
+- Use appropriate naming conventions
+- Ensure compatibility with Unity's systems
+- Test changes thoroughly before finalizing
+
+Last Updated: Current Session
+
+
+
+

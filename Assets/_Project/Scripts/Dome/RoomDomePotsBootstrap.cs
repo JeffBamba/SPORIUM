@@ -11,10 +11,14 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     [Header("Pot Configuration")]
     [SerializeField] private string pot1Id = "POT-001";
     [SerializeField] private string pot2Id = "POT-002";
+    [SerializeField] private string pot3Id = "POT-003";
+    [SerializeField] private string pot4Id = "POT-004";
 
     [Header("Pot Positions")]
-    [SerializeField] private Vector2 pot1Offset = new Vector2(-1.5f, 0f);
-    [SerializeField] private Vector2 pot2Offset = new Vector2(1.5f, 0f);
+    [SerializeField] private Vector2 pot1Offset = new Vector2(-2.25f, 0f);
+    [SerializeField] private Vector2 pot2Offset = new Vector2(-0.75f, 0f);
+    [SerializeField] private Vector2 pot3Offset = new Vector2(0.75f, 0f);
+    [SerializeField] private Vector2 pot4Offset = new Vector2(2.25f, 0f);
 
     [Header("Pot Settings")]
     [SerializeField] private float potScale = 1f;
@@ -30,6 +34,8 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     private GameObject potsAnchor;
     private PotSlot pot1;
     private PotSlot pot2;
+    private PotSlot pot3;
+    private PotSlot pot4;
 
     void Start()
     {
