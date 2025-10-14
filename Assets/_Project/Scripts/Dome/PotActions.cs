@@ -1,5 +1,6 @@
+using System.Linq;
+using _Project.Sporae.Core;
 using UnityEngine;
-using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 
 /// <summary>
@@ -13,127 +14,113 @@ public class PotActions : MonoBehaviour
     [SerializeField] private PotSlot potSlot;
     [SerializeField] private PotSystemConfig config;
     [SerializeField] private PotGrowthController potGrowthController;
-    [SerializeField] private SPOR_BLK_01_03A_DayCycleController dayCycleController;
-    
-    [Header("Seed Configuration")]
-    [SerializeField] private string genericSeedCode = "SDE-001";
+    [SerializeField] private DayCycleController dayCycleController;
     
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true;
     
     // Riferimenti ai sistemi
-    private GameManager gameManager;
-    private PotStateModel potState;
+    private GameManager _gameManager;
+    private Inventory _playerInventory;
+    private PotStateModel _potState;
+    private DayCycleSystem _dayCycleSystem;
     
     // Proprietà pubbliche
     public PotSlot PotSlot => potSlot;
-    public PotStateModel PotState => potState;
-    public bool HasPlant => potState?.HasPlant ?? false;
+    public PotStateModel PotState => _potState;
+    public bool HasPlant => _potState?.HasPlant ?? false;
     
-    void Awake()
+    private void Awake()
     {
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        
         // Trova il PotSlot se non assegnato
         if (potSlot == null)
-        {
             potSlot = GetComponent<PotSlot>();
-        }
         
         // Trova il PotGrowthController se non assegnato
         if (potGrowthController == null)
-        {
             potGrowthController = GetComponent<PotGrowthController>();
-        }
         
         // Trova il DayCycleController se non assegnato
         if (dayCycleController == null)
-        {
-            dayCycleController = FindObjectOfType<SPOR_BLK_01_03A_DayCycleController>();
-        }
+            dayCycleController = FindObjectOfType<DayCycleController>();
         
         // Trova il GameManager
-        gameManager = FindObjectOfType<GameManager>();
-        if (gameManager == null)
-        {
-            Debug.LogError("[PotActions] GameManager non trovato! Componente disabilitato.");
-            enabled = false;
-            return;
-        }
+        _gameManager = FindObjectOfType<GameManager>();
+        _playerInventory = _gameManager.PlayerInventory;
         
         // Inizializza lo stato del vaso
         InitializePotState();
         
         if (showDebugLogs)
-        {
             Debug.Log($"[PotActions] Inizializzato per {potSlot?.PotId ?? "vaso sconosciuto"}");
-        }
         
         // Registra il vaso nel sistema di crescita (BLK-01.03A)
         // NON registrare qui per evitare duplicazione con DoPlant
         if (showDebugLogs)
-        {
             Debug.Log($"[PotActions] {potSlot?.PotId} inizializzato, registrazione gestita da DoPlant");
-        }
     }
     
     private void InitializePotState()
     {
-        if (potSlot != null)
+        if (potSlot == null) 
+            return;
+        
+        // Cerca PotStateModel esistente prima di crearne uno nuovo
+        var existingPotGrowthController = GetComponent<PotGrowthController>();
+        if (existingPotGrowthController != null)
         {
-            // Cerca PotStateModel esistente prima di crearne uno nuovo
-            var existingPotGrowthController = GetComponent<PotGrowthController>();
-            if (existingPotGrowthController != null)
-            {
-                potState = existingPotGrowthController.GetPotState();
-                if (showDebugLogs && potState != null)
-                {
-                    Debug.Log($"[PotActions] Stato esistente trovato per {potSlot.PotId}: {potState}");
-                }
-            }
-            
-            // Crea nuovo solo se non esiste
-            if (potState == null)
-            {
-                Debug.LogError($"create new pot state model: {potSlot.PotId}");
-                potState = new PotStateModel(potSlot.PotId);
-                if (showDebugLogs)
-                {
-                    Debug.Log($"[PotActions] Nuovo stato creato per {potSlot.PotId}: {potState}");
-                }
-            }
+            _potState = existingPotGrowthController.GetPotState();
+            if (showDebugLogs && _potState != null)
+                Debug.Log($"[PotActions] Stato esistente trovato per {potSlot.PotId}: {_potState}");
         }
+            
+        // Crea nuovo solo se non esiste
+        if (_potState != null)
+            return;
+        
+        _potState = new PotStateModel(potSlot.PotId);
+        if (showDebugLogs)
+            Debug.Log($"[PotActions] Nuovo stato creato per {potSlot.PotId}: {_potState}");
     }
     
     #region Action Validation Methods
+
+    public bool IsPlayerHasSeed()
+    {
+        return _playerInventory.Items.Any(
+            item => item.Items.Count > 0 && item.Items.ElementAt(0).ItemConfig.IsSeed
+        );
+    }
     
     /// <summary>
     /// Verifica se è possibile piantare un seme
     /// </summary>
     public bool CanPlant()
     {
-        if (potState == null) return false;
+        if (_potState == null) 
+            return false;
         
-        // Precondizioni: vaso vuoto, seme disponibile, player in range, risorse sufficienti
-        bool isEmpty = potState.IsEmpty;
-        bool hasSeed = gameManager.HasItem(genericSeedCode, 1);
-        bool inRange = IsPlayerInRange();
-        bool hasResources = CanConsumeResources();
-        bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
+        bool
+            isEmpty = _potState.IsEmpty,
+            hasSeed = IsPlayerHasSeed(),
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources(),
+            notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
-        {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
-        }
         
         return isEmpty && hasSeed && inRange && hasResources && notWateredOnThisDay;
     }
 
-
     public bool CanUproot()
     {
-        if (potState == null)
+        if (_potState == null)
             return false;
         
-        bool hasPlant = potState.HasPlantGrowing;
+        bool hasPlant = _potState.HasPlantGrowing;
         return hasPlant;
     }
     
@@ -142,22 +129,21 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanWater()
     {
-        if (potState == null) return false;
+        if (_potState == null) 
+            return false;
         
         // Precondizioni: vaso ha pianta, idratazione non al massimo, player in range, risorse sufficienti
-        bool hasPlant = potState.HasPlantGrowing;
-        bool hydrationNotMax = !potState.IsHydrationMax(GetMaxHydration());
-        bool inRange = IsPlayerInRange();
-        bool hasResources = CanConsumeResources();
-        bool notWateredOnThisDay = potState.LastWateredDay != gameManager.CurrentDay;
-        bool hasWater = gameManager.HasItem("WAT-Raw", 1);
+        bool 
+            hasPlant = _potState.HasPlantGrowing,
+            hydrationNotMax = !_potState.IsHydrationMax(GetMaxHydration()),
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources(),
+            hasWater = _playerInventory.Has(Items.Water);
         
         if (showDebugLogs)
-        {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
-        }
         
-        return hasPlant && hydrationNotMax && hasWater && inRange && hasResources && notWateredOnThisDay;
+        return hasPlant && hydrationNotMax && hasWater && inRange && hasResources;
     }
     
     /// <summary>
@@ -165,27 +151,34 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanLight()
     {
-        if (potState == null) return false;
+        if (_potState == null)
+            return false;
         
         // Precondizioni: vaso ha pianta, luce non al massimo, player in range, risorse sufficienti
-        bool hasPlant = potState.HasPlantGrowing;
-        bool lightNotMax = !potState.IsLightExposureMax(GetMaxLightExposure());
-        bool inRange = IsPlayerInRange();
-        bool hasResources = CanConsumeResources();
-        bool notPlantedOnThisDay = potState.PlantedDay != gameManager.CurrentDay; 
-        bool notLightedOnThisDay = potState.LastLitDay != gameManager.CurrentDay;
+        bool
+            hasPlant = _potState.HasPlantGrowing,
+            lightNotMax = !_potState.IsLightExposureMax(GetMaxLightExposure()),
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources(),
+            notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
-        {
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, LightNotMax={lightNotMax}, Range={inRange}, Resources={hasResources}");
-        }
         
-        return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay && notLightedOnThisDay;
+        return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay;
     }
     
     #endregion
     
     #region Action Execution Methods
+
+    private bool ConsumeSeed()
+    {
+        foreach (var item in _playerInventory.Items.ToList())
+            if (item.Items.Count > 0 && item.Items.ElementAt(0).ItemConfig.IsSeed)
+                return _playerInventory.Consume(item.TypeId);
+        return false;
+    }
     
     /// <summary>
     /// Esegue l'azione di piantare un seme
@@ -202,40 +195,34 @@ public class PotActions : MonoBehaviour
         // Consuma le risorse
         if (!TryConsumeResources())
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Risorse insufficienti");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
             return false;
         }
         
         // Consuma il seme dall'inventario
-        if (!gameManager.ConsumeItem(genericSeedCode, 1))
+        if (!ConsumeSeed())
         {
-            Debug.LogError($"[PotActions] Impossibile consumare seme {genericSeedCode}");
+            Debug.LogError($"[PotActions] Impossible to consume seed");
             return false;
         }
         
         // Aggiorna lo stato del vaso (Stage 1 = Seed)
-        potState.PlantSeed(gameManager.CurrentDay);
+        _potState.PlantSeed(_dayCycleSystem.CurrentDay);
         
         // Notifica il sistema di crescita (BLK-01.03A)
-        if (potGrowthController != null)
-        {
+        if (potGrowthController)
             potGrowthController.OnPlanted();
-        }
         
         // Registra il vaso nel sistema di crescita se non già fatto
-        if (dayCycleController != null)
-        {
-            dayCycleController.RegisterPot(potState);
-        }
+        if (dayCycleController)
+            dayCycleController.RegisterPot(_potState);
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
         PotEvents.EmitChanged(potSlot);
         
         if (showDebugLogs)
-        {
-            Debug.Log($"[ACT-001][{potSlot.PotId}] Plant OK: seme piantato, stato={potState}");
-        }
+            Debug.Log($"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}");
         
         return true;
     }
@@ -245,15 +232,15 @@ public class PotActions : MonoBehaviour
         if (!CanUproot())
             return false;
         
-        potState.Stage = 0;
+        _potState.Stage = 0;
      
         if (dayCycleController != null)
-            dayCycleController.UnregisterPot(potState);
+            dayCycleController.UnregisterPot(_potState);
         
         if (potGrowthController != null)
             potGrowthController.OnUprooted();
 
-        gameManager.GetInventory().AddItem("Whole-Plant", 1);
+        _playerInventory.Add(Items.WholePlant);
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Uproot, potSlot);
@@ -277,35 +264,32 @@ public class PotActions : MonoBehaviour
         // Consuma le risorse
         if (!TryConsumeResources())
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
             return false;
         }
 
-        if (!gameManager.ConsumeItem("WAT-Raw", 1))
+        if (!_gameManager.PlayerInventory.Consume(Items.Water))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
             return false;
         }
         
         // Aumenta l'idratazione
-        if (potState.IncreaseHydration(GetMaxHydration()))
-        {
-            // Imposta timestamp per crescita (BLK-01.03A)
-            potState.UpdateWateringDay(gameManager.CurrentDay);
-            
-            // Notifica il cambio stato
-            PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
-            PotEvents.EmitChanged(potSlot);
-            
-            if (showDebugLogs)
-            {
-                Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={potState.Hydration}/{GetMaxHydration()}, timestamp aggiornato");
-            }
-            
-            return true;
-        }
+        if (!_potState.IncreaseHydration(GetMaxHydration()))
+            return false;
         
-        return false;
+        // Imposta timestamp per crescita 
+        _potState.UpdateWateringDay(_dayCycleSystem.CurrentDay);
+            
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
+        PotEvents.EmitChanged(potSlot);
+            
+        if (showDebugLogs)
+            Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={_potState.Hydration}/{GetMaxHydration()}, timestamp aggiornato");
+        
+        return true;
+
     }
     
     /// <summary>
@@ -323,29 +307,26 @@ public class PotActions : MonoBehaviour
         // Consuma le risorse
         if (!TryConsumeResources())
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Risorse insufficienti");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Insufficient resources");
             return false;
         }
         
         // Aumenta l'esposizione alla luce
-        if (potState.IncreaseLightExposure(GetMaxLightExposure()))
-        {
-            // Imposta timestamp per crescita (BLK-01.03A)
-            potState.UpdateLightingDay(gameManager.CurrentDay);
-            
-            // Notifica il cambio stato
-            PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
-            PotEvents.EmitChanged(potSlot);
-            
-            if (showDebugLogs)
-            {
-                Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato");
-            }
-            
-            return true;
-        }
+        if (!_potState.IncreaseLightExposure(GetMaxLightExposure()))
+            return false;
         
-        return false;
+        // Imposta timestamp per crescita
+        _potState.UpdateLightingDay(_dayCycleSystem.CurrentDay);
+            
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
+        PotEvents.EmitChanged(potSlot);
+            
+        if (showDebugLogs)
+            Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={_potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato");
+        
+        return true;
+
     }
     
     #endregion
@@ -357,14 +338,16 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool IsPlayerInRange()
     {
-        if (potSlot == null) return false;
+        if (!potSlot)
+            return false;
         
         // Usa la distanza di interazione dal PotSlot
-        float interactDistance = config != null ? config.InteractDistance : 2.0f;
+        float interactDistance = config ? config.InteractDistance : 2.0f;
         
         // Trova il player
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player == null) return false;
+        if (!player)
+            return false;
         
         float distance = Vector2.Distance(player.transform.position, transform.position);
         return distance <= interactDistance;
@@ -375,12 +358,13 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool CanConsumeResources()
     {
-        if (gameManager == null) return false;
+        if (!_gameManager) 
+            return false;
         
         int actionsCost = GetActionsCost();
         int cryCost = GetCryCost();
         
-        return gameManager.ActionsLeft >= actionsCost && gameManager.CurrentCRY >= cryCost;
+        return _gameManager.ActionsLeft >= actionsCost && _gameManager.CurrentCRY >= cryCost;
     }
     
     /// <summary>
@@ -388,12 +372,13 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool TryConsumeResources()
     {
-        if (gameManager == null) return false;
+        if (!_gameManager) 
+            return false;
         
         int actionsCost = GetActionsCost();
         
         // Usa il metodo TrySpendAction del GameManager esistente
-        return gameManager.TrySpendAction(actionsCost);
+        return _gameManager.TrySpendAction(actionsCost);
     }
     
     /// <summary>
@@ -401,7 +386,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private int GetActionsCost()
     {
-        return config != null ? config.CostActionsPerPotAction : 1;
+        return config ? config.CostActionsPerPotAction : 1;
     }
     
     /// <summary>
@@ -409,7 +394,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private int GetCryCost()
     {
-        return config != null ? config.CostCryPerPotAction : 1;
+        return config ? config.CostCryPerPotAction : 1;
     }
     
     /// <summary>
@@ -417,7 +402,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private int GetMaxHydration()
     {
-        return config != null ? config.MaxHydration : 3;
+        return config ? config.MaxHydration : 3;
     }
     
     /// <summary>
@@ -425,7 +410,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private int GetMaxLightExposure()
     {
-        return config != null ? config.MaxLightExposure : 3;
+        return config ? config.MaxLightExposure : 3;
     }
     
     #endregion
@@ -434,9 +419,9 @@ public class PotActions : MonoBehaviour
     
     private string GetPlantFailureReason()
     {
-        if (potState == null) return "Stato vaso non valido";
-        if (!potState.IsEmpty) return "Vaso non vuoto";
-        if (!gameManager.HasItem(genericSeedCode, 1)) return "Nessun seme disponibile";
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.IsEmpty) return "Vaso non vuoto";
+        if (!_playerInventory.Has(Items.Seed001)) return "Nessun seme disponibile";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";
@@ -444,9 +429,9 @@ public class PotActions : MonoBehaviour
     
     private string GetWaterFailureReason()
     {
-        if (potState == null) return "Stato vaso non valido";
-        if (!potState.HasPlantGrowing) return "Vaso vuoto";
-        if (potState.IsHydrationMax(GetMaxHydration())) return "Idratazione al massimo";
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (_potState.IsHydrationMax(GetMaxHydration())) return "Idratazione al massimo";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";
@@ -454,9 +439,9 @@ public class PotActions : MonoBehaviour
     
     private string GetLightFailureReason()
     {
-        if (potState == null) return "Stato vaso non valido";
-        if (!potState.HasPlantGrowing) return "Vaso vuoto";
-        if (potState.IsLightExposureMax(GetMaxLightExposure())) return "Luce al massimo";
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (_potState.IsLightExposureMax(GetMaxLightExposure())) return "Luce al massimo";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";
@@ -483,33 +468,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public PotStateModel GetCurrentState()
     {
-        return potState;
-    }
-    
-    /// <summary>
-    /// Forza l'aggiornamento dello stato (utile per debugging)
-    /// </summary>
-    public void ForceStateUpdate()
-    {
-        if (potState != null)
-        {
-            PotEvents.EmitChanged(potSlot);
-        }
-    }
-    
-    /// <summary>
-    /// DEPRECATO - La registrazione è ora gestita da DoPlant per evitare duplicazione
-    /// </summary>
-    [System.Obsolete("Usa la registrazione automatica in DoPlant invece")]
-    private void RegisterPotInGrowthSystem()
-    {
-        if (showDebugLogs)
-        {
-            Debug.LogWarning($"[PotActions] {potSlot?.PotId} - RegisterPotInGrowthSystem è deprecato!");
-        }
-        
-        // La registrazione è ora gestita automaticamente da DoPlant
-        // per evitare duplicazione con RoomDomePotsBootstrap
+        return _potState;
     }
     
     #endregion
@@ -525,10 +484,10 @@ public class PotActions : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, interactDistance);
         
         // Disegna stato del vaso
-        if (potState != null)
+        if (_potState != null)
         {
             UnityEditor.Handles.Label(transform.position + Vector3.up * 0.8f, 
-                $"H:{potState.Hydration}/{GetMaxHydration()} L:{potState.LightExposure}/{GetMaxLightExposure()}");
+                $"H:{_potState.Hydration}/{GetMaxHydration()} L:{_potState.LightExposure}/{GetMaxLightExposure()}");
         }
     }
     #endif

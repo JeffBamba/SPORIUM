@@ -1,4 +1,5 @@
-﻿using Sporae.Core;
+﻿using _Project.Sporae.Core;
+using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,7 +50,7 @@ namespace _Project
             if (amountToCollect != 0)
             {
                 _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
-                _gameManager.AddItem("WAT-Raw", amountToCollect);
+                _gameManager.PlayerInventory.Add(Items.Water, amountToCollect);
             }
         }
     }

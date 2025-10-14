@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using TMPro;
 using UnityEngine;
@@ -35,6 +36,11 @@ namespace _Project
         [FormerlySerializedAs("_microscope")] [SerializeField] private Extractor _extractor;
 
         [SerializeField] private GameObject _gameView;
+
+        [SerializeField] private GameObject _minigameGroup;
+        [SerializeField] private GameObject _tutorialGroup;
+
+        [SerializeField] private Button _continueButton;
         
         private bool _gameInProgress;
         private bool _isWon;
@@ -42,9 +48,14 @@ namespace _Project
 
         private TextMeshProUGUI _startButtonLabel;
         private GameManager _gameManager;
+        private DayCycleSystem _dayCycleSystem;
+        private DiaryStatistics _diaryStatistics;
         
+        private Inventory _playerInventory;
         private Inventory _storage;
         private HUDItemContainer _hudItemContainer;
+        
+        private UINotification _notification;
         
         public void Show()
         {
@@ -52,9 +63,20 @@ namespace _Project
             _inventory.Show();
             gameObject.SetActive(true);
         }
+
+        private void Hide()
+        {
+            _gameInProgress = false;
+            gameObject.SetActive(false);
+            _inventory.Hide();
+        }
         
         private void Awake()
         {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
+            _notification = FindObjectOfType<UINotification>();
+            
             _gameManager = FindObjectOfType<GameManager>();
             if (_gameManager == null)
                 Debug.LogWarning("There is no GameManager in the scene");
@@ -63,41 +85,61 @@ namespace _Project
 
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
             _storage = _extractor.GetInventory();
+            _playerInventory = _gameManager.PlayerInventory;
         }
         
         private void Start()
         {
             _storage.OnInventoryChanged += UpdateStorage;
+            _inventory.OnClose += Hide;
             
+            _continueButton.onClick.AddListener(ShowMinigame);
             _startButton.onClick.AddListener(TryLaunch);
             _closeButton.onClick.AddListener(() =>
             {
                 _dragDropUI.ConfirmOperation();
-                _gameInProgress = false;
-                gameObject.SetActive(false);
+                Hide();
             });
 
             UpdateStorage();
         }
-
+        
         private void TryLaunch()
         {
-            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+            var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
 
-            if (!_storage.Has("Fruits"))
+            if (!_storage.Has(Items.Fruits))
                 return;
             
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
 
             _dragDropUI.ConfirmOperation();
-            _storage.Remove("Fruits", 1);
+            _storage.Consume(Items.Fruits);
 
             _textLabel.text = _defaultText;
-            _gameView.SetActive(true);
+
+            _lastPlayingDay = _dayCycleSystem.CurrentDay;
             
-            _lastPlayingDay = _gameManager.CurrentDay;
+            ShowTutorial();
+        }
+
+        private void ShowTutorial()
+        {
+            _tutorialGroup.SetActive(true);
+            _minigameGroup.SetActive(false);
+            
+            _gameView.SetActive(true);   
+        }
+        
+        private void ShowMinigame()
+        {
             _gameInProgress = true;
+            
+            _tutorialGroup.SetActive(false);
+            _minigameGroup.SetActive(true);
+            
+            _gameView.SetActive(true);
         }
         
         private void Update()
@@ -136,9 +178,12 @@ namespace _Project
             _isWon =
                 targetMinX < playerMinX &&
                 targetMaxX > playerMaxX;
-            
+
             if (_isWon)
-                _storage.Add("SPORE_GENERIC");
+            {
+                _playerInventory.Add(Items.SporeGeneric);
+                _notification.ShowNotification("You got a spore!", 2, Color.green);
+            }
 
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;
@@ -148,7 +193,7 @@ namespace _Project
         {
             _startButton.interactable = !_gameInProgress;
 
-            var wasTryingInThisDay = _lastPlayingDay == _gameManager.CurrentDay;
+            var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
         }
         
@@ -159,7 +204,7 @@ namespace _Project
             for (var i = 0; i < _storage.UniqueItems; i++)
             {
                 var item = _storage.Items.ElementAt(i);
-                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+                _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
 
@@ -167,6 +212,7 @@ namespace _Project
         {
             yield return new WaitForSeconds(_playerDuration);
             _gameView.SetActive(false);
+            Hide();
         }
     }
 }

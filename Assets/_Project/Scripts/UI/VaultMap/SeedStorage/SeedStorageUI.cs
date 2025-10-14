@@ -1,5 +1,7 @@
 using System.Linq;
-using Sporae.Core;
+
+using _Project.Sporae.Core;
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,7 +35,7 @@ namespace _Project
         {
             _dragDropUI.OnInCorrectItem += HandleIncorrectItem;
             _dragDropUI.OnConfirm += HandleConfirm;
-            _playerInventory.OnClose += HandleClose;
+            _playerInventory.OnClose += Hide;
             _storage.OnInventoryChanged += UpdateStorage;
             _closeButton.onClick.AddListener(HandleClose);
         }
@@ -70,7 +72,7 @@ namespace _Project
             for (var i = 0; i < _storage.UniqueItems; i++)
             {
                 var item = _storage.Items.ElementAt(i);
-                _hudItemContainer.SetItemData(i, item.Id, item.Quantity);
+                _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
         }
 
@@ -83,6 +85,7 @@ namespace _Project
         public void Hide()
         {
             gameObject.SetActive(false);
+            _playerInventory.Hide();
         }
     }
 }

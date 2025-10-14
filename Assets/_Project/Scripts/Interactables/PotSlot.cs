@@ -1,7 +1,10 @@
 using UnityEngine;
+
 using System;
+
 using _Project;
-using Sporae.Core;
+using _Project.Sporae.Core;
+
 using TMPro;
 
 /// <summary>
@@ -16,8 +19,10 @@ public class PotSlot : MonoBehaviour
     [SerializeField] private PotState state = PotState.Empty;
     
     [Header("Components")]
-    [SerializeField] private SpriteRenderer spriteRenderer;
+    private SpriteRenderer _spriteRenderer;
     [SerializeField] private TextMeshProUGUI _amountOfFruits;
+    
+    public Sprite Sprite => _spriteRenderer.sprite;
     
     // Evento statico per la selezione del vaso
     public static event Action<PotSlot> OnPotSelected;
@@ -38,12 +43,20 @@ public class PotSlot : MonoBehaviour
     private GameManager _gameManager;
     private UINotification _uiNotification;
     private Interactable _interactable;
-    
+    private Inventory _inventory;
+    private DayCycleSystem _dayCycleSystem;
+    private DiaryStatistics _diaryStatistics;
     
     private void Awake()
     {
         _gameManager = FindObjectOfType<GameManager>();
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
+        
+        _inventory = _gameManager.PlayerInventory;
+        
         _uiNotification = FindObjectOfType<UINotification>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
         _interactable = GetComponent<Interactable>();
         _potActions = GetComponent<PotActions>();
     }
@@ -51,13 +64,13 @@ public class PotSlot : MonoBehaviour
     private void Start()
     {
         _interactable.OnInteract += HandleInteract;
-        _gameManager.OnDayChanged += HandleDayChanged;   
+        _dayCycleSystem.OnDayChanged += HandleDayChanged;   
     }
 
     private void OnDestroy()
     {
         _interactable.OnInteract -= HandleInteract;
-        _gameManager.OnDayChanged -= HandleDayChanged;
+        _dayCycleSystem.OnDayChanged -= HandleDayChanged;
     }
 
     private void HandleInteract()
@@ -78,10 +91,14 @@ public class PotSlot : MonoBehaviour
     {
         if (PotActions.PotState.AmountFruits < 1)
             return;
+
+        int amount = (int)PotActions.PotState.AmountFruits;
+
+        _diaryStatistics.FruitsHarvested += amount;
         
-        _uiNotification.ShowNotification($"New Fruit added to Inventory: {(int)PotActions.PotState.AmountFruits}", 3f, Color.green);
-        _gameManager.AddItem("Fruits", (int)PotActions.PotState.AmountFruits);
-        PotActions.PotState.AmountFruits -= (int)PotActions.PotState.AmountFruits;
+        _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
+        _inventory.Add(Items.Fruits, amount);
+        PotActions.PotState.AmountFruits -= amount;
         _amountOfFruits.text = "";
     }
     

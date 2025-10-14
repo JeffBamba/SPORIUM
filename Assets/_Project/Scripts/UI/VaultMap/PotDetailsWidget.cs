@@ -1,4 +1,7 @@
-﻿using Sporae.Dome.PotSystem.Growth;
+﻿using System.Linq;
+using _Project.Sporae.Core;
+using _Project.Watering;
+using Sporae.Dome.PotSystem.Growth;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,10 +21,13 @@ namespace _Project
         [SerializeField] private Image _stageImage;
 
         [SerializeField] private GameObject _page;
+
+        [SerializeField] private WateringMinigame _wateringMinigame;
         
         private PotSlot _currentSelectedPot;
         private PlantGrowthConfig _growthConfig;
         private GameManager _gameManager;
+        private DayCycleSystem _dayCycleSystem;
         
         private void Awake()
         {
@@ -39,7 +45,11 @@ namespace _Project
         
         private void Update()
         {
-            _page.SetActive(_currentSelectedPot && _currentSelectedPot.Interactable.PlayerInRange);
+            if (_currentSelectedPot && !_currentSelectedPot.Interactable.PlayerInRange)
+            {
+                _currentSelectedPot = null;
+                _page.SetActive(false);
+            }
         }
         
         private void Subscribes()
@@ -60,8 +70,10 @@ namespace _Project
         
         private void Initialize()
         {
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            
             _gameManager = FindObjectOfType<GameManager>();
-            _gameManager.OnDayChanged += HandleDayChanged;
             
             _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
             _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
@@ -95,7 +107,9 @@ namespace _Project
             // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
             // Salva il vaso selezionato corrente
+            
             _currentSelectedPot = pot;
+            _page.SetActive(true);
         
             // BLK-01.03B: Aggiorna tutti gli elementi UI del nuovo sistema
             UpdateStageAndProgressUI(pot);
@@ -130,12 +144,19 @@ namespace _Project
                 case PotEvents.PotActionType.Plant:
                     success = selectedPot.PotActions.DoPlant();
                     break;
+                
                 case PotEvents.PotActionType.Water:
-                    success = selectedPot.PotActions.DoWater();
+                    
+                    success = selectedPot.PotActions.CanWater();
+                    if (success)
+                        _wateringMinigame.Show(selectedPot);
+                    
                     break;
+                
                 case PotEvents.PotActionType.Light:
                     success = selectedPot.PotActions.DoLight();
                     break;
+                
                 case PotEvents.PotActionType.Uproot:
                     success = selectedPot.PotActions.DoUproot();
                     break;
@@ -160,33 +181,11 @@ namespace _Project
         /// <summary>
         /// Trova il vaso attualmente selezionato
         /// </summary>
-        private PotSlot FindSelectedPot()
-        {
-            // Trova il vaso che ha emesso l'evento OnPotSelected
-            // Usa il sistema di eventi per tracciare la selezione
-            PotSlot[] allPots = FindObjectsOfType<PotSlot>();
-            foreach (PotSlot pot in allPots)
-            {
-                if (pot.PotActions != null && pot.IsSelected)
-                {
-                    Debug.Log($"[PotHUDWidget] Trovato vaso selezionato: {pot.PotId}");
-                    return pot;
-                }
-            }
+        private PotSlot FindSelectedPot() =>
+            FindObjectsOfType<PotSlot>().FirstOrDefault(
+                pot => pot.PotActions != null && pot.IsSelected
+            );
         
-            // Fallback: cerca il primo vaso con PotActions
-            foreach (PotSlot pot in allPots)
-            {
-                if (pot.PotActions != null)
-                {
-                    Debug.LogWarning($"[PotHUDWidget] Fallback: usando primo vaso disponibile {pot.PotId}");
-                    return pot;
-                }
-            }
-        
-            Debug.LogError("[PotHUDWidget] Nessun vaso trovato!");
-            return null;
-        }
         
         /// <summary>
         /// Gestisce il cambio di stato di un vaso
@@ -261,6 +260,11 @@ namespace _Project
             Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
             UpdateStageAndProgressUI(_currentSelectedPot);
         }
+
+        private Sprite GetStageSprite()
+        {
+            return _currentSelectedPot.Sprite;
+        }
         
         /// <summary>
         /// BLK-01.04: Aggiorna tutti gli elementi UI per stage e progresso
@@ -289,7 +293,7 @@ namespace _Project
             // BLK-01.04: Aggiorna Stage Icon con colore appropriato
             if (_stageImage != null)
             {
-                _stageImage.color = GetStageColor(state.Stage);
+                _stageImage.sprite = GetStageSprite();
                 // TODO: Sostituire con sprite reali quando disponibili
             }
     
@@ -307,8 +311,9 @@ namespace _Project
         private int CalculateCurrentGrowthPoints(PotStateModel state)
         {
             int points = state.GrowthPoints;
-            bool hadHydration = (state.LastWateredDay == _gameManager.CurrentDay);
-            bool hadLight = (state.LastLitDay == _gameManager.CurrentDay);
+            bool
+                hadHydration = (state.LastWateredDay == _dayCycleSystem.CurrentDay),
+                hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
 
             points += (hadHydration, hadLight) switch
             {
@@ -370,25 +375,7 @@ namespace _Project
         
         private string GetStageInfo(PotStateModel state)
         {
-            if (state.IsEmpty)
-            {
-                return "Pronto per piantare";
-            }
-
-            int points = CalculateCurrentGrowthPoints(state);
-            int daysSincePlant = state.DaysSincePlant + 1;
-        
-            switch (state.Stage)
-            {
-                case (int)PlantStage.Seed:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 2)}/2 punti";
-                case (int)PlantStage.Sprout:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 3)}/3 punti";
-                case (int)PlantStage.Mature:
-                    return $"Giorno {daysSincePlant} - Pronta per raccolta!";
-                default:
-                    return $"Stadio {state.Stage}";
-            }
+            return "Pronto per piantare";
         }
         
         private string GetStageName(int stage)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _Project.Sporae.Core;
 
 namespace Sporae.Core.Interfaces
 {
@@ -42,7 +43,7 @@ namespace Sporae.Core.Interfaces
         /// Ottiene tutti gli item nell'inventario
         /// </summary>
         /// <returns>Lista di tutti gli item</returns>
-        IReadOnlyCollection<InventoryItem> GetAllItems();
+        IReadOnlyCollection<InventorySlot> GetAllItems();
         
         /// <summary>
         /// Ottiene tutti gli ID degli item

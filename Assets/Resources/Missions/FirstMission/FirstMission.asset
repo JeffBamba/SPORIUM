@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50b94201582c40b4acbe6674257bf38d, type: 3}
+  m_Name: FirstMission
+  m_EditorClassIdentifier: 
+  <Title>k__BackingField: First
+  <Description>k__BackingField: This is first mission
+  <Goals>k__BackingField:
+  - Options:
+    - {fileID: 11400000, guid: 4c90adf78e51ba244a614c27c72b9b3b, type: 2}
+  <QuickPathReward>k__BackingField:
+    CryReward: 20
+    Rewards:
+    - Item: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
+      Quantity: 1
+  <FullPathReward>k__BackingField:
+    CryReward: 40
+    Rewards:
+    - Item: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
+      Quantity: 1

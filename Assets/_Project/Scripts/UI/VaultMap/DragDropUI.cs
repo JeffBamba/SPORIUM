@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sporae.Core;
+using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,7 +14,8 @@ namespace _Project
         [SerializeField] private Button _toRightButton;
 
         [SerializeField] private Storage _storage;
-        
+
+        [SerializeField] private bool OnlyIsPerishable;
         [SerializeField] private List<string> _allowedItemsIds;
         [SerializeField] private int _containerCapacity; 
         
@@ -40,7 +41,7 @@ namespace _Project
             _storageInventory = _storage.GetInventory();
                 
             var gameManager = FindObjectOfType<GameManager>();
-            _playerInventory = gameManager.GetInventory();
+            _playerInventory = gameManager.PlayerInventory;
 
             if (!_confirmOperation)
                 return;
@@ -90,18 +91,25 @@ namespace _Project
 
         private void HandleRight()
         {
-            var id = _hudPlayerContainer.SelectedId;
-            if (id < 0 || id >= _playerInventory.Items.Count)
+            var id = _hudPlayerContainer.SelectedItemName;
+            if (id == "")
                 return;
             
-            var item = _playerInventory.Items.ElementAt(id);
-            if (!_allowedItemsIds.Contains(item.Id) && _allowedItemsIds.Count > 0)
+            var item = _playerInventory.Items.First(item => item.TypeId == id);
+            
+            if (!_allowedItemsIds.Contains(item.TypeId) && _allowedItemsIds.Count > 0)
             {
-                OnInCorrectItem?.Invoke(item.Id);
+                OnInCorrectItem?.Invoke(item.TypeId);
                 return;
             }
 
-            ExecuteCommand(item.Id, 1, false);
+            if (OnlyIsPerishable && !item.Items.ElementAt(0).ItemConfig.IsPerishable)
+            {
+                OnInCorrectItem?.Invoke(item.TypeId);
+                return;
+            }
+
+            ExecuteCommand(item.TypeId, 1, false);
         }
 
         private void HandleLeft()
@@ -111,7 +119,7 @@ namespace _Project
                 return;
             
             var item = _storageInventory.Items.ElementAt(id);
-            ExecuteCommand(item.Id, 1, true);
+            ExecuteCommand(item.TypeId, 1, true);
         }
 
         private void ExecuteCommand(string itemId, int amount, bool isMoveToLeft)

@@ -84,16 +84,6 @@ namespace Sporae.Core
                 return;
             }
             
-            // Crea GameManager se necessario
-            if (autoCreateGameManager && gameManagerPrefab != null)
-            {
-                CreateGameManager();
-            }
-            else if (autoCreateGameManager)
-            {
-                Debug.LogWarning("[AppRoot] Impossibile creare GameManager: prefab non assegnato!");
-            }
-            
             _isInitialized = true;
             
             if (showDebugLogs)
@@ -101,30 +91,7 @@ namespace Sporae.Core
                 Debug.Log("[AppRoot] AppRoot inizializzato correttamente.");
             }
         }
-
-        private void CreateGameManager()
-        {
-            if (FindObjectOfType<GameManager>() != null)
-            {
-                if (showDebugLogs)
-                {
-                    Debug.Log("[AppRoot] GameManager già presente nella scena.");
-                }
-                return;
-            }
-            
-            GameManager newGameManager = Instantiate(gameManagerPrefab);
-            newGameManager.name = "GameManager";
-            
-            // 🚨 CRITICO: Rendi GameManager persistente tra le scene
-            DontDestroyOnLoad(newGameManager.gameObject);
-            
-            if (showDebugLogs)
-            {
-                Debug.Log("[AppRoot] GameManager creato automaticamente e reso persistente.");
-            }
-        }
-
+        
         // Metodi per gestire dati globali
         public void SetGlobalData(string key, object value)
         {

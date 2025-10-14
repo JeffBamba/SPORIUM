@@ -1,3 +1,5 @@
+using _Project;
+using _Project.Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,10 +18,19 @@ public class EndDayButton : MonoBehaviour
     [SerializeField] private bool validateOnStart = true;
     [SerializeField] private bool showDebugLogs = true;
 
-    private GameManager gameManager;
-    private bool isInitialized = false;
+    [SerializeField] private DiaryUI _diaryUI;
+    
+    private DayCycleSystem _dayCycleSystem;
+    private GameManager _gameManager;
+    private bool _isInitialized;
 
-    void Start()
+    private void Awake()
+    {
+        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        _gameManager = FindObjectOfType<GameManager>();
+    }
+    
+    private void Start()
     {
         if (validateOnStart)
         {
@@ -64,21 +75,10 @@ public class EndDayButton : MonoBehaviour
 
     private void InitializeEndDayButton()
     {
-        gameManager = FindObjectOfType<GameManager>();
+        endDayButton.onClick.AddListener(OnEndDayButtonClicked);
+        UpdateButtonState();
         
-        if (gameManager == null)
-        {
-            Debug.LogWarning("[EndDayButton] GameManager non trovato nella scena!");
-        }
-        
-        // Configura il button
-        if (endDayButton != null)
-        {
-            endDayButton.onClick.AddListener(OnEndDayButtonClicked);
-            UpdateButtonState();
-        }
-        
-        isInitialized = true;
+        _isInitialized = true;
         
         if (showDebugLogs)
         {
@@ -88,18 +88,12 @@ public class EndDayButton : MonoBehaviour
 
     private void OnEndDayButtonClicked()
     {
-        if (!isInitialized)
+        if (!_isInitialized)
         {
             Debug.LogWarning("[EndDayButton] EndDayButton non inizializzato!");
             return;
         }
-
-        if (gameManager == null)
-        {
-            Debug.LogWarning("[EndDayButton] GameManager non disponibile!");
-            return;
-        }
-
+        
         if (confirmBeforeEnding)
         {
             ShowConfirmationDialog();
@@ -126,28 +120,20 @@ public class EndDayButton : MonoBehaviour
 
     public void EndDay()
     {
-        if (!isInitialized || gameManager == null) return;
-
-        // Verifica se il giocatore può permettersi di finire la giornata
-        if (gameManager.CurrentCRY < dailyPowerCost)
-        {
-            Debug.LogWarning($"[EndDayButton] Non hai abbastanza CRY per finire la giornata! " +
-                           $"Richiesto: {dailyPowerCost}, Disponibile: {gameManager.CurrentCRY}");
-            
-            // Mostra feedback visivo (rosso, shake, etc.)
-            OnEndDayFailed("CRY insufficienti");
+        if (!_isInitialized || !_gameManager)
             return;
-        }
-
-        // Finisce la giornata
-        gameManager.EndDay(dailyPowerCost);
+        
+        if (_dayCycleSystem.CanEndDay())
+            _diaryUI.Show();
+        else 
+            OnEndDayFailed("CRY insufficienti");
         
         if (showDebugLogs)
         {
             Debug.Log($"[EndDayButton] Giornata finita! " +
-                     $"Giorno: {gameManager.CurrentDay}, " +
-                     $"Azioni: {gameManager.ActionsLeft}, " +
-                     $"CRY: {gameManager.CurrentCRY}");
+                     $"Giorno: {_dayCycleSystem.CurrentDay}, " +
+                     $"Azioni: {_gameManager.ActionsLeft}, " +
+                     $"CRY: {_gameManager.CurrentCRY}");
         }
         
         OnEndDaySuccess();
@@ -198,12 +184,13 @@ public class EndDayButton : MonoBehaviour
 
     private void UpdateButtonState()
     {
-        if (endDayButton == null || gameManager == null) return;
+        if (!endDayButton || !_gameManager)
+            return;
         
-        bool canEndDay = gameManager.CurrentCRY >= dailyPowerCost;
+        bool canEndDay = _gameManager.CurrentCRY >= dailyPowerCost;
         endDayButton.interactable = canEndDay;
         
-        if (buttonText != null)
+        if (buttonText)
         {
             buttonText.text = canEndDay ? 
                 $"Fine Giornata ({dailyPowerCost} CRY)" : 
@@ -235,7 +222,7 @@ public class EndDayButton : MonoBehaviour
 
     public bool CanEndDay()
     {
-        return isInitialized && gameManager != null && gameManager.CurrentCRY >= dailyPowerCost;
+        return _isInitialized && _gameManager != null && _gameManager.CurrentCRY >= dailyPowerCost;
     }
 
     void OnDestroy()
@@ -249,7 +236,7 @@ public class EndDayButton : MonoBehaviour
     void Update()
     {
         // Aggiorna stato del button in tempo reale
-        if (isInitialized && gameManager != null)
+        if (_isInitialized && _gameManager != null)
         {
             UpdateButtonState();
         }

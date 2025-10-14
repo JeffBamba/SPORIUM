@@ -1,17 +1,18 @@
-using System;
+using _Project.Sporae.Core;
 using UnityEngine;
 
 namespace _Project
 {
     public class PlayerEndDayHandler : MonoBehaviour
     {
+        private DayCycleSystem _dayCycleSystem;
         private ElevatorSystem _elevatorSystem;
         private GameManager _gameManager;
         private Vector3 _startPosition;
 
         private void Awake()
         {
-            _gameManager = FindObjectOfType<GameManager>();
+            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
             _elevatorSystem = FindObjectOfType<ElevatorSystem>();
             
             _startPosition = transform.position;
@@ -19,12 +20,12 @@ namespace _Project
 
         private void Start()
         {
-            _gameManager.OnDayChanged += HandleDayChanged;
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
         }
 
         private void OnDestroy()
         {
-            _gameManager.OnDayChanged -= HandleDayChanged;
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
 
         private void HandleDayChanged(int obj)

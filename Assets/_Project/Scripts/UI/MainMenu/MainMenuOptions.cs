@@ -13,6 +13,7 @@ namespace _Project
         [SerializeField] private Button _loadButton;
         [SerializeField] private Button _optionsButton;
         [SerializeField] private Button _quitButton;
+        [SerializeField] private Button _hideButton;
 
         [SerializeField] private string _newGameSceneName;
         
@@ -22,6 +23,12 @@ namespace _Project
             _optionsButton.onClick.AddListener(HandleOptions);
             _loadButton.onClick.AddListener(HandleLoad);
             _quitButton.onClick.AddListener(HandleQuit);
+            _hideButton?.onClick.AddListener(HandleHide);
+        }
+
+        private void HandleHide()
+        {
+            _menuScreens.Hide();
         }
 
         private void HandleLoad()
