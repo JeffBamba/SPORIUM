@@ -1,9 +1,10 @@
 ================================================================================
 ANALISI SISTEMA CRESCITA PIANTE - STATO ATTUALE
 ================================================================================
-Data Analisi: 2025-01-XX
+Data Analisi: 2025-11-26 (Aggiornato)
 Versione Repository: main
 Analista: AI Assistant
+Ultimo Aggiornamento: BLK-02.02 (Integrazione pH + Selezione Semi)
 
 ================================================================================
 1. PANORAMICA GENERALE
@@ -12,11 +13,12 @@ Analista: AI Assistant
 Il sistema di crescita delle piante è implementato con una struttura base 
 funzionante ma INCOMPLETA rispetto alle specifiche del GDD.
 
-STATO: ⚠️ PARZIALMENTE IMPLEMENTATO
+STATO: ⚠️ PARZIALMENTE IMPLEMENTATO + INTEGRAZIONE pH ✅
 - ✅ Sistema base funzionante (3 stadi placeholder)
+- ✅ Sistema tipi piante implementato (PlantData, PlantDatabase, PlantFamily)
+- ✅ Integrazione con sistema pH (drift giornaliero da piante)
+- ✅ Sistema selezione semi da inventario
 - ❌ Mancano 3 stadi rispetto al GDD (Growth, Flowering, HarvestReady, Resting)
-- ❌ Nessun sistema di tipi piante (PURE/EVIL/STANDARD)
-- ❌ Nessuna integrazione con sistema pH
 - ❌ Nessun sistema livelli (1-5)
 - ❌ Nessun sistema mutazioni
 
@@ -30,7 +32,10 @@ STATO: ⚠️ PARZIALMENTE IMPLEMENTATO
 📁 Assets/_Project/Scripts/Dome/PotSystem/Growth/
    ├── PlantStage.cs                    ✅ Enum stadi (4 valori)
    ├── PlantGrowthConfig.cs             ✅ Configurazione ScriptableObject
-   └── PotGrowthController.cs            ✅ Controller crescita singolo vaso
+   ├── PotGrowthController.cs           ✅ Controller crescita singolo vaso
+   ├── PlantFamily.cs                   ✅ Enum famiglie (Standard/Pure/Evil) - NUOVO
+   ├── PlantData.cs                     ✅ ScriptableObject dati pianta - NUOVO
+   └── PlantDatabase.cs                 ✅ Singleton database piante - NUOVO
 
 📁 Assets/_Project/Scripts/Dome/
    ├── PotStateModel.cs                 ✅ Modello dati stato vaso
@@ -40,28 +45,36 @@ STATO: ⚠️ PARZIALMENTE IMPLEMENTATO
 2.2 FLUSSO DI CRESCITA ATTUALE
 -------------------------------
 
-1. PLANTING (Piantare)
-   └─> PotActions.DoPlant()
-       ├─> Consuma seme dall'inventario
-       ├─> Crea PotStateModel con Stage = Seed (1)
-       ├─> Imposta timestamp PlantedDay = CurrentDay
-       ├─> Registra vaso in DayCycleController
-       └─> Notifica PotGrowthController.OnPlanted()
+1. PLANTING (Piantare) - AGGIORNATO BLK-02.02
+   └─> Player clicca "Plant" → UISeedSelector si apre
+       └─> Player seleziona seme → PotActions.DoPlant(seedTypeId)
+           ├─> Cerca PlantData dal PlantDatabase usando seedTypeId
+           ├─> Consuma seme dall'inventario
+           ├─> Crea PotStateModel con Stage = Seed (1)
+           ├─> Assegna PlantCode al PotStateModel
+           ├─> Imposta timestamp PlantedDay = CurrentDay
+           ├─> Registra vaso in DayCycleController
+           └─> Notifica PotGrowthController.OnPlanted()
 
-2. DAILY GROWTH (Crescita Giornaliera)
+2. DAILY GROWTH (Crescita Giornaliera) - AGGIORNATO BLK-02.02
    └─> DayCycleController.HandleDayChanged(day)
-       └─> ResolveGrowthForAllPots(day)
-           └─> Per ogni vaso con pianta:
-               ├─> Verifica timestamp LastWateredDay e LastLitDay
-               ├─> Calcola punti crescita:
-               │   ├─> Cura ideale (acqua + luce) = +2 punti
-               │   ├─> Cura parziale (una delle due) = +1 punto
-               │   └─> Nessuna cura = +0 punti
-               ├─> Aggiorna GrowthPoints
-               ├─> Controlla avanzamento stadi:
-               │   ├─> Seed → Sprout: se GrowthPoints >= 2
-               │   └─> Sprout → Mature: se GrowthPoints >= 3
-               └─> Notifica cambio stadio (eventi + visuali)
+       ├─> ResolveGrowthForAllPots(day)
+       │   └─> Per ogni vaso con pianta:
+       │       ├─> Verifica timestamp LastWateredDay e LastLitDay
+       │       ├─> Calcola punti crescita:
+       │       │   ├─> Cura ideale (acqua + luce) = +2 punti
+       │       │   ├─> Cura parziale (una delle due) = +1 punto
+       │       │   └─> Nessuna cura = +0 punti
+       │       ├─> Aggiorna GrowthPoints
+       │       ├─> Controlla avanzamento stadi:
+       │       │   ├─> Seed → Sprout: se GrowthPoints >= 2
+       │       │   └─> Sprout → Mature: se GrowthPoints >= 3
+       │       └─> Notifica cambio stadio (eventi + visuali)
+       └─> CalculateAndApplyPhDrift() - NUOVO BLK-02.02
+           ├─> Per ogni vaso con pianta:
+           │   ├─> Ottiene PlantData da PotStateModel.GetPlantData()
+           │   └─> Somma DailyPhDrift alla somma totale
+           └─> Registra drift totale in PhSystem.RegisterPlantDrift()
 
 3. ACTIONS (Azioni Player)
    ├─> PotActions.DoWater()
@@ -147,34 +160,37 @@ DIFFERENZE:
 
 ATTUALE:
 --------
-- ❌ NESSUN sistema di tipi piante implementato
-- ❌ Tutte le piante sono trattate allo stesso modo
-- ❌ Nessuna distinzione tra PURE/EVIL/STANDARD
-- ❌ Nessun PlantData ScriptableObject
-- ❌ Nessun PlantDatabase
+- ✅ Sistema tipi piante IMPLEMENTATO (BLK-02.02)
+- ✅ PlantFamily enum: Standard, Pure, Evil
+- ✅ PlantData ScriptableObject con dati pianta
+- ✅ PlantDatabase singleton per lookup piante
+- ✅ Distinzione tra PURE/EVIL/STANDARD funzionante
+- ✅ PlantData assets creati: PLT-STD-001, PLT-PURE-001, PLT-EVIL-001
+- ✅ Selezione semi da inventario implementata
 
 GDD RICHIESTO:
 --------------
 - Sistema di famiglie:
-  * STANDARD: piante neutre, drift pH minimo
-  * PURE: drift pH +2/giorno (range +2 a +3)
-  * EVIL: drift pH -2/giorno (range -1 a -3)
+  * STANDARD: piante neutre, drift pH minimo ✅ IMPLEMENTATO
+  * PURE: drift pH +2/giorno (range +2 a +3) ✅ IMPLEMENTATO
+  * EVIL: drift pH -2/giorno (range -1 a -3) ✅ IMPLEMENTATO
 - Ogni pianta ha:
-  * Codice univoco (PLT-STD-001, PLT-PURE-001, ecc.)
-  * Rarità (Comune, Non comune, Rara, Epica, Leggendaria)
-  * Fazione preferita
-  * pH Drift specifico
-  * Range pH ottimale
-  * Bonus Attivi/Passivi
-  * Outputs (Prodotto, Frutto, Seme)
-  * Effetto Commestibile
+  * Codice univoco (PLT-STD-001, PLT-PURE-001, ecc.) ✅ IMPLEMENTATO
+  * Rarità (Comune, Non comune, Rara, Epica, Leggendaria) ⚠️ Placeholder
+  * Fazione preferita ⚠️ Placeholder
+  * pH Drift specifico ✅ IMPLEMENTATO
+  * Range pH ottimale ✅ IMPLEMENTATO
+  * Bonus Attivi/Passivi ❌ NON IMPLEMENTATO
+  * Outputs (Prodotto, Frutto, Seme) ❌ NON IMPLEMENTATO
+  * Effetto Commestibile ❌ NON IMPLEMENTATO
 
 DIFFERENZE:
 -----------
-- ❌ Sistema completamente mancante
-- ❌ Impossibile integrare pH drift senza tipi piante
-- ❌ Impossibile gestire bonus attivi/passivi
-- ❌ Impossibile differenziare requisiti crescita per tipo
+- ✅ Sistema base implementato e funzionante
+- ✅ Integrazione pH drift implementata
+- ⚠️ Alcune proprietà ancora placeholder (rarità, fazione)
+- ❌ Bonus attivi/passivi non ancora implementati
+- ❌ Outputs e effetti commestibili non ancora implementati
 
 ================================================================================
 6. INTEGRAZIONE CON SISTEMA pH
@@ -182,11 +198,13 @@ DIFFERENZE:
 
 ATTUALE:
 --------
-- ❌ NESSUNA integrazione con PhSystem
+- ✅ Integrazione con PhSystem IMPLEMENTATA (BLK-02.02)
+- ✅ DayCycleController calcola drift pH giornaliero da piante piantate
+- ✅ PhSystem.RegisterPlantDrift() chiamato automaticamente ogni giorno
+- ✅ Tracciamento contributi pH per pianta funzionante
 - ⚠️ PlantGrowthConfig.phGrowthMultiplier = 1.0f (placeholder, non usato)
-- ❌ Nessun calcolo pH drift dalle piante
-- ❌ Nessun controllo pH per avanzamento stadi
-- ❌ Nessun effetto pH su crescita/produzione
+- ❌ Nessun controllo pH per avanzamento stadi (solo drift implementato)
+- ❌ Nessun effetto pH su crescita/produzione (solo drift implementato)
 
 GDD RICHIESTO:
 --------------
@@ -399,22 +417,22 @@ DIFFERENZE:
 
 ❌ SISTEMA INCOMPLETO RISPETTO AL GDD:
 - Solo 3 stadi invece di 7
-- Nessun sistema tipi piante
-- Nessuna integrazione pH
 - Nessun sistema livelli
 - Nessun sistema mutazioni
 - Nessun sistema produzione frutti completo
 
-❌ IMPOSSIBILE INTEGRARE pH SENZA:
-- Sistema tipi piante (PURE/EVIL/STANDARD)
-- Tracking tipo seme piantato
-- Calcolo drift pH per pianta
+✅ IMPLEMENTAZIONI COMPLETATE (BLK-02.02):
+- Sistema tipi piante (PlantData, PlantDatabase) ✅
+- Integrazione pH (drift giornaliero) ✅
+- Tracking tipo seme piantato (PlantCode) ✅
+- Calcolo drift pH per pianta ✅
+- Selezione semi da inventario ✅
 
-❌ IMPOSSIBILE IMPLEMENTARE GDD SENZA:
+❌ DA IMPLEMENTARE PER COMPLETARE GDD:
 - Estendere stadi a 7 (aggiungere Growth, Flowering, HarvestReady, Resting)
-- Creare PlantData ScriptableObject
-- Creare PlantDatabase
-- Integrare PhSystem con DayCycleController
+- Implementare effetti pH su crescita/produzione (non solo drift)
+- Implementare sistema livelli (1-5)
+- Implementare sistema mutazioni
 
 ================================================================================
 14. ROADMAP INTEGRAZIONE CON pH SYSTEM
@@ -423,11 +441,12 @@ DIFFERENZE:
 PRIORITÀ ALTA (necessario per integrazione pH):
 ------------------------------------------------
 1. ✅ PhSystem implementato (già fatto)
-2. ❌ Creare PlantData ScriptableObject con famiglia (PURE/EVIL/STANDARD)
-3. ❌ Creare PlantDatabase per registrare tutte le piante
-4. ❌ Modificare PotStateModel per referenziare PlantData
-5. ❌ Modificare DayCycleController per calcolare pH drift dalle piante
-6. ❌ Collegare PhSystem.RegisterDailyDrift() nel DayCycleController
+2. ✅ Creare PlantData ScriptableObject con famiglia (PURE/EVIL/STANDARD) - COMPLETATO
+3. ✅ Creare PlantDatabase per registrare tutte le piante - COMPLETATO
+4. ✅ Modificare PotStateModel per referenziare PlantData - COMPLETATO
+5. ✅ Modificare DayCycleController per calcolare pH drift dalle piante - COMPLETATO
+6. ✅ Collegare PhSystem.RegisterPlantDrift() nel DayCycleController - COMPLETATO
+7. ✅ Sistema selezione semi da inventario - COMPLETATO
 
 PRIORITÀ MEDIA (per completare sistema):
 ------------------------------------------
@@ -457,18 +476,23 @@ Il sistema di crescita attuale è una BASE FUNZIONANTE ma INCOMPLETA.
 
 ❌ LIMITAZIONI CRITICHE:
 - Solo 3 stadi invece di 7 richiesti dal GDD
-- Nessun sistema tipi piante (PURE/EVIL/STANDARD)
-- Nessuna integrazione con sistema pH
 - Nessun sistema livelli/mutazioni/produzione frutti
 
+✅ IMPLEMENTAZIONI RECENTI (BLK-02.02):
+- Sistema tipi piante (PlantData, PlantDatabase, PlantFamily) ✅
+- Integrazione pH-crescita (drift giornaliero) ✅
+- Selezione semi da inventario ✅
+- Tracciamento PlantCode per ogni pianta ✅
+
 🎯 PROSSIMI PASSI RACCOMANDATI:
-1. Creare PlantData ScriptableObject e PlantDatabase
-2. Modificare PotStateModel per referenziare PlantData
-3. Integrare PhSystem con DayCycleController per calcolare drift pH
+1. ✅ Creare PlantData ScriptableObject e PlantDatabase - COMPLETATO
+2. ✅ Modificare PotStateModel per referenziare PlantData - COMPLETATO
+3. ✅ Integrare PhSystem con DayCycleController per calcolare drift pH - COMPLETATO
 4. Estendere stadi a 7 (aggiungere Growth, Flowering, HarvestReady, Resting)
 5. Implementare requisiti pH per avanzamento stadi
-
-Senza questi passi, l'integrazione con il sistema pH è IMPOSSIBILE.
+6. Implementare effetti pH su crescita/produzione (non solo drift)
+7. Implementare sistema livelli (1-5)
+8. Implementare sistema mutazioni
 
 ================================================================================
 FINE ANALISI

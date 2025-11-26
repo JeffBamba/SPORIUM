@@ -1,8 +1,8 @@
 # Sistema Selezione Semi - Implementazione Completata
 
-**Data:** 2025-01-XX  
-**Versione:** 1.0  
-**Stato:** ✅ COMPLETATO
+**Data:** 2025-11-26  
+**Versione:** 1.1  
+**Stato:** ✅ COMPLETATO + CREAZIONE AUTOMATICA UI
 
 ---
 
@@ -54,14 +54,25 @@ Modificato per aprire UISeedSelector:
 - Gestisce selezione e annullamento
 
 ### 5. **UISeedSelectorAutoSetup.cs**
-**File:** `Assets/_Project/Scripts/Editor/UISeedSelectorAutoSetup.cs`
+**File:** `Assets/_Project/Scripts/Debug/UISeedSelectorAutoSetup.cs`
 
-Script editor per creare automaticamente la UI:
+Script runtime per creare automaticamente la UI:
+- MonoBehaviour eseguibile in Play Mode (non Editor script)
 - Crea Canvas se non esiste
 - Crea Panel principale con sfondo
 - Crea Container con GridLayoutGroup per organizzare i pulsanti
 - Crea Title, NoSeedsText, CloseButton
-- Configura automaticamente tutti i riferimenti
+- Configura automaticamente tutti i riferimenti usando reflection
+- Metodo ContextMenu per creazione manuale
+
+### 6. **Creazione Automatica UI (CreateUI())**
+**File:** `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs`
+
+Metodo integrato in UISeedSelector per creare UI se mancante:
+- Chiamato automaticamente in Show() se selectorPanel è null
+- Crea struttura UI completa runtime
+- Configura tutti i riferimenti automaticamente
+- Sottoscrive eventi correttamente
 
 ---
 
@@ -264,13 +275,24 @@ Ora quando il giocatore clicca "Plant":
 ## 📚 File Modificati/Creati
 
 ### Nuovi File
-- `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs`
-- `Assets/_Project/Scripts/Editor/UISeedSelectorAutoSetup.cs`
+- `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs` (UI selezione semi)
+- `Assets/_Project/Scripts/UI/VaultMap/UISeedItem.cs` (Componente UI singolo seme)
+- `Assets/_Project/Scripts/Debug/UISeedSelectorAutoSetup.cs` (Auto-setup runtime)
+- `Assets/Resources/Items/seed-003.asset` (ItemConfig seme Evil)
 
 ### File Modificati
-- `Assets/_Project/Scripts/Dome/PotActions.cs` (+ parametro seedTypeId a DoPlant)
-- `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (+ integrazione UISeedSelector)
-- `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (+ integrazione UISeedSelector)
+- `Assets/_Project/Scripts/Dome/PotActions.cs` (+ parametro seedTypeId a DoPlant, + ricerca PlantData)
+- `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (+ integrazione UISeedSelector, + creazione automatica)
+- `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (+ integrazione UISeedSelector, + creazione automatica)
+- `Assets/_Project/Scripts/Core/GameManager.cs` (+ seed-003 inventario iniziale)
+- `Assets/_Project/Scripts/Core/ItemsSystem/Items.cs` (+ Seed003 costante)
+
+### Nuove Funzionalità (BLK-02.02)
+- ✅ Creazione automatica UI se mancante (metodo CreateUI() in UISeedSelector)
+- ✅ Aggiornamento automatico quantità semi quando inventario cambia (OnInventoryChanged)
+- ✅ Integrazione con PlantDatabase per mostrare informazioni pianta
+- ✅ Mostra famiglia, quantità, drift pH per ogni seme
+- ✅ Feedback visivo hover/selected per pulsanti semi
 
 ---
 

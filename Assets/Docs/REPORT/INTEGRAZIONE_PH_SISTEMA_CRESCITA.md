@@ -1,8 +1,8 @@
 # Integrazione pH Sistema Crescita - Implementazione Completata
 
-**Data:** 2025-01-XX  
-**Versione:** 1.0  
-**Stato:** ✅ COMPLETATO
+**Data:** 2025-11-26  
+**Versione:** 1.1  
+**Stato:** ✅ COMPLETATO + SELEZIONE SEMI INTEGRATA
 
 ---
 
@@ -97,13 +97,16 @@ Aggiunto calcolo e registrazione pH drift:
 5. Salvare in Resources/Plants/ o assegnare manualmente a PlantDatabase
 ```
 
-### 2. Piantare Seme
+### 2. Piantare Seme (CON SELEZIONE SEMI)
 ```
-1. Player esegue PotActions.DoPlant()
-2. PotActions trova seme nell'inventario (TypeId)
-3. PotActions cerca PlantData dal PlantDatabase usando TypeId
-4. PotActions assegna PlantCode al PotStateModel
-5. Vaso registrato in DayCycleController
+1. Player clicca "Plant" su vaso vuoto
+2. Si apre UISeedSelector con tutti i semi disponibili dall'inventario
+3. Player seleziona seme desiderato (vede famiglia, quantità, drift pH)
+4. UISeedSelector emette OnSeedSelected(seedTypeId)
+5. PotActions.DoPlant(seedTypeId) viene chiamato con seme specifico
+6. PotActions cerca PlantData dal PlantDatabase usando seedTypeId
+7. PotActions assegna PlantCode al PotStateModel
+8. Vaso registrato in DayCycleController
 ```
 
 ### 3. Fine Giorno (pH Drift)
@@ -204,6 +207,14 @@ Il sistema produce log dettagliati:
 - ⚠️ Sistema livelli (1-5) non ancora implementato
 - ⚠️ Sistema mutazioni non ancora implementato
 
+### Nuove Funzionalità (BLK-02.02)
+- ✅ Sistema selezione semi da inventario implementato
+- ✅ UISeedSelector mostra famiglia, quantità, drift pH per ogni seme
+- ✅ Creazione automatica UI se mancante (CreateUI())
+- ✅ Aggiornamento automatico quantità quando inventario cambia
+- ✅ PlantData assets creati: PLT-STD-001, PLT-PURE-001, PLT-EVIL-001
+- ✅ seed-003 aggiunto all'inventario iniziale
+
 ---
 
 ## 📝 Prossimi Passi
@@ -251,8 +262,21 @@ Ora quando si pianta un seme:
 
 ### File Modificati
 - `Assets/_Project/Scripts/Dome/PotStateModel.cs` (+ PlantCode, GetPlantData())
-- `Assets/_Project/Scripts/Dome/PotActions.cs` (+ ricerca PlantData in DoPlant())
+- `Assets/_Project/Scripts/Dome/PotActions.cs` (+ ricerca PlantData in DoPlant(), + parametro seedTypeId)
 - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs` (+ CalculateAndRegisterPhDrift())
+- `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (+ integrazione UISeedSelector)
+- `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (+ integrazione UISeedSelector)
+- `Assets/_Project/Scripts/Core/GameManager.cs` (+ seed-003 inventario iniziale)
+- `Assets/_Project/Scripts/Core/ItemsSystem/Items.cs` (+ Seed003 costante)
+
+### Nuovi File (BLK-02.02)
+- `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs` (UI selezione semi)
+- `Assets/_Project/Scripts/UI/VaultMap/UISeedItem.cs` (Componente UI singolo seme)
+- `Assets/_Project/Scripts/Debug/UISeedSelectorAutoSetup.cs` (Auto-setup runtime)
+- `Assets/Resources/Plants/PLT-STD-001.asset` (PlantData Standard)
+- `Assets/Resources/Plants/PLT-PURE-001.asset` (PlantData Pure)
+- `Assets/Resources/Plants/PLT-EVIL-001.asset` (PlantData Evil)
+- `Assets/Resources/Items/seed-003.asset` (ItemConfig seme Evil)
 
 ---
 
