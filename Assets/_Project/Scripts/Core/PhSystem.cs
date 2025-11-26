@@ -19,8 +19,8 @@ namespace _Project
         }
 
         private float _currentPh = 0f; // Neutro di default
-        private const float MIN_PH = -100f;
-        private const float MAX_PH = 100f;
+        public const float MIN_PH = -100f;
+        public const float MAX_PH = 100f;
         
         // Tracciamento contributi per tooltip
         private float _basePh = 0f;
@@ -28,8 +28,11 @@ namespace _Project
         private float _actionsDrift = 0f;
         private float _eventsDrift = 0f;
         private float _dailyDrift = 0f;
+        
+        // Oscillazione idle (variazione organica continua)
+        private float _idleOscillation = 0f;
 
-        public float CurrentPh => _currentPh;
+        public float CurrentPh => _currentPh + _idleOscillation; // Include oscillazione nel valore mostrato
         
         public event Action<float, float> OnPhChanged; // (newPh, delta)
         
@@ -68,14 +71,16 @@ namespace _Project
         /// </summary>
         public void ApplyInstantDelta(float delta, string source = "Unknown")
         {
-            float oldPh = _currentPh;
+            float oldBasePh = _currentPh;
+            float oldPh = CurrentPh;
             _currentPh = Mathf.Clamp(_currentPh + delta, MIN_PH, MAX_PH);
-            float actualDelta = _currentPh - oldPh;
+            float actualDelta = CurrentPh - oldPh;
+            float baseDelta = _currentPh - oldBasePh;
             
-            // Traccia contributo in base alla sorgente
-            TrackContribution(actualDelta, source);
+            // Traccia contributo in base alla sorgente (solo il delta del valore base)
+            TrackContribution(baseDelta, source);
             
-            OnPhChanged?.Invoke(_currentPh, actualDelta);
+            OnPhChanged?.Invoke(CurrentPh, actualDelta);
         }
         
         /// <summary>
@@ -114,11 +119,11 @@ namespace _Project
         /// </summary>
         public void SetPh(float newPh)
         {
-            float oldPh = _currentPh;
+            float oldPh = CurrentPh;
             _currentPh = Mathf.Clamp(newPh, MIN_PH, MAX_PH);
-            float delta = _currentPh - oldPh;
+            float delta = CurrentPh - oldPh;
             
-            OnPhChanged?.Invoke(_currentPh, delta);
+            OnPhChanged?.Invoke(CurrentPh, delta);
         }
 
         /// <summary>
@@ -154,14 +159,15 @@ namespace _Project
         }
 
         /// <summary>
-        /// Determina la banda pH corrente
+        /// Determina la banda pH corrente (usa CurrentPh che include oscillazione)
         /// </summary>
         public PhBand EvaluateState()
         {
-            if (_currentPh <= -80f) return PhBand.UltraAcid;
-            if (_currentPh <= -30f) return PhBand.StableAcid;
-            if (_currentPh <= 29f) return PhBand.Neutral;
-            if (_currentPh <= 79f) return PhBand.StableBasic;
+            float ph = CurrentPh;
+            if (ph <= -80f) return PhBand.UltraAcid;
+            if (ph <= -30f) return PhBand.StableAcid;
+            if (ph <= 29f) return PhBand.Neutral;
+            if (ph <= 79f) return PhBand.StableBasic;
             return PhBand.UltraBasic;
         }
 
@@ -198,6 +204,24 @@ namespace _Project
         }
 
         /// <summary>
+        /// Imposta l'oscillazione idle (variazione organica continua)
+        /// Non viene tracciata come contributo permanente
+        /// </summary>
+        public void SetIdleOscillation(float oscillation)
+        {
+            float oldPh = CurrentPh;
+            _idleOscillation = Mathf.Clamp(oscillation, MIN_PH - _currentPh, MAX_PH - _currentPh);
+            float delta = CurrentPh - oldPh;
+            
+            // Notifica cambio pH (con oscillazione inclusa) anche per piccoli cambiamenti
+            // Ridotta soglia per rendere l'oscillazione più visibile
+            if (Mathf.Abs(delta) > 0.001f)
+            {
+                OnPhChanged?.Invoke(CurrentPh, delta);
+            }
+        }
+        
+        /// <summary>
         /// Reset pH a neutro
         /// </summary>
         public void Reset()
@@ -208,6 +232,7 @@ namespace _Project
             _actionsDrift = 0f;
             _eventsDrift = 0f;
             _dailyDrift = 0f;
+            _idleOscillation = 0f;
         }
         
         /// <summary>
@@ -255,12 +280,20 @@ namespace _Project
                 hasContributions = true;
             }
             
+            // Mostra oscillazione idle se presente
+            if (Mathf.Abs(_idleOscillation) > 0.01f)
+            {
+                string oscillationValue = _idleOscillation.ToString("+#0,0;-#0,0;0", culture);
+                breakdown += $"<color=gray>Oscillazione:</color> {oscillationValue}\n";
+                hasContributions = true;
+            }
+            
             if (!hasContributions)
             {
                 breakdown += "<color=gray>(Nessun contributo attivo)</color>\n";
             }
             
-            breakdown += $"<b>Total: {contrib.Total.ToString("F1", culture)}</b>";
+            breakdown += $"<b>Total: {CurrentPh.ToString("F1", culture)}</b>";
             
             return breakdown;
         }

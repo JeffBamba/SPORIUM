@@ -13,6 +13,7 @@ namespace _Project
         [Header("Auto Setup Settings")]
         [SerializeField] private bool createDebugConsole = true;
         [SerializeField] private bool createHUDDisplay = true;
+        [SerializeField] private bool createIdleOscillation = true;
         [SerializeField] private bool showDebugLogs = true;
         
         [Header("Debug Console Settings")]
@@ -45,6 +46,12 @@ namespace _Project
             if (createHUDDisplay)
             {
                 SetupHUDDisplay();
+            }
+            
+            // Crea PhSystemIdleOscillation se richiesto e mancante
+            if (createIdleOscillation)
+            {
+                SetupIdleOscillation();
             }
             
             if (showDebugLogs)
@@ -107,6 +114,30 @@ namespace _Project
             // L'HUD creerà automaticamente gli elementi UI se autoCreateUI è true
         }
         
+        private void SetupIdleOscillation()
+        {
+            // Cerca se esiste già
+            PhSystemIdleOscillation existingOscillation = FindObjectOfType<PhSystemIdleOscillation>();
+            
+            if (existingOscillation != null)
+            {
+                if (showDebugLogs)
+                {
+                    Debug.Log("[PhSystemAutoSetup] PhSystemIdleOscillation già presente nella scena");
+                }
+                return;
+            }
+            
+            // Crea GameObject per l'oscillazione
+            GameObject oscillationGO = new GameObject("pH_IdleOscillation");
+            PhSystemIdleOscillation oscillation = oscillationGO.AddComponent<PhSystemIdleOscillation>();
+            
+            if (showDebugLogs)
+            {
+                Debug.Log($"[PhSystemAutoSetup] Creato PhSystemIdleOscillation su {oscillationGO.name}");
+            }
+        }
+        
         /// <summary>
         /// Metodo pubblico per ricreare il setup manualmente
         /// </summary>
@@ -130,6 +161,15 @@ namespace _Project
                     Destroy(hud.gameObject);
                 else
                     DestroyImmediate(hud.gameObject);
+            }
+            
+            PhSystemIdleOscillation[] existingOscillations = FindObjectsOfType<PhSystemIdleOscillation>();
+            foreach (var oscillation in existingOscillations)
+            {
+                if (Application.isPlaying)
+                    Destroy(oscillation.gameObject);
+                else
+                    DestroyImmediate(oscillation.gameObject);
             }
             
             // Ricrea

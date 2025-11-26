@@ -21,7 +21,7 @@ namespace _Project
     
     [Header("Settings")]
     [SerializeField] private bool updateOnStart = true;
-    [SerializeField] private float updateInterval = 0.5f; // Aggiorna ogni 0.5 secondi
+    [SerializeField] private float updateInterval = 0.1f; // Aggiorna ogni 0.1 secondi per catturare oscillazioni
     [SerializeField] private bool autoCreateUI = true; // Crea UI automaticamente se mancante
     [SerializeField] private Vector2 uiPosition = new Vector2(0f, -30f); // Posizione alto-centro
     
