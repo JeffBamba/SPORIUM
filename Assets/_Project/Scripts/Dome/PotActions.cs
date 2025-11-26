@@ -172,18 +172,35 @@ public class PotActions : MonoBehaviour
     
     #region Action Execution Methods
 
-    private bool ConsumeSeed()
+    /// <summary>
+    /// Trova il primo seme disponibile nell'inventario e restituisce il suo TypeId
+    /// </summary>
+    private string FindSeedTypeId()
     {
         foreach (var item in _playerInventory.Items.ToList())
+        {
             if (item.Items.Count > 0 && item.Items.ElementAt(0).ItemConfig.IsSeed)
-                return _playerInventory.Consume(item.TypeId);
-        return false;
+            {
+                return item.TypeId;
+            }
+        }
+        return null;
+    }
+    
+    private bool ConsumeSeed()
+    {
+        string seedTypeId = FindSeedTypeId();
+        if (string.IsNullOrEmpty(seedTypeId))
+            return false;
+        
+        return _playerInventory.Consume(seedTypeId);
     }
     
     /// <summary>
     /// Esegue l'azione di piantare un seme
     /// </summary>
-    public bool DoPlant()
+    /// <param name="seedTypeId">TypeId del seme da piantare. Se null, cerca automaticamente il primo seme disponibile.</param>
+    public bool DoPlant(string seedTypeId = null)
     {
         if (!CanPlant())
         {
@@ -199,15 +216,48 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
+        // Se seedTypeId non specificato, cerca automaticamente (compatibilità retroattiva)
+        if (string.IsNullOrEmpty(seedTypeId))
+        {
+            seedTypeId = FindSeedTypeId();
+            if (string.IsNullOrEmpty(seedTypeId))
+            {
+                Debug.LogError($"[PotActions] Impossible to find seed in inventory");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Nessun seme disponibile");
+                return false;
+            }
+        }
+        
+        // Verifica che il seme specificato esista nell'inventario
+        if (!_playerInventory.Has(seedTypeId))
+        {
+            Debug.LogError($"[PotActions] Seme '{seedTypeId}' non disponibile nell'inventario");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
+            return false;
+        }
+        
+        // Cerca PlantData dal database usando il TypeId del seme
+        PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+        string plantCode = plantData?.PlantCode;
+        
+        if (plantData == null && showDebugLogs)
+        {
+            Debug.LogWarning($"[PotActions] Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
+        }
+        else if (showDebugLogs)
+        {
+            Debug.Log($"[PotActions] PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+        }
+        
         // Consuma il seme dall'inventario
-        if (!ConsumeSeed())
+        if (!_playerInventory.Consume(seedTypeId))
         {
             Debug.LogError($"[PotActions] Impossible to consume seed");
             return false;
         }
         
-        // Aggiorna lo stato del vaso (Stage 1 = Seed)
-        _potState.PlantSeed(_dayCycleSystem.CurrentDay);
+        // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
+        _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
         
         // Notifica il sistema di crescita (BLK-01.03A)
         if (potGrowthController)
@@ -222,7 +272,10 @@ public class PotActions : MonoBehaviour
         PotEvents.EmitChanged(potSlot);
         
         if (showDebugLogs)
-            Debug.Log($"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}");
+        {
+            string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
+            Debug.Log($"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
+        }
         
         return true;
     }

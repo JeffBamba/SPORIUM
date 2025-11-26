@@ -19,6 +19,10 @@ public class PotStateModel
     public int Stage;             // 0=Seeded (placeholder BLK-01.02), 1-3 per crescita futura
     public float AmountFruits;
     
+    [Header("Plant Data (pH Integration)")]
+    [Tooltip("Codice pianta (es. PLT-STD-001) per lookup PlantData")]
+    public string PlantCode;      // Codice pianta per lookup PlantData
+    
     [Header("Resource Levels")]
     public int Hydration;         // 0..MaxHydration
     public int LightExposure;     // 0..MaxLightExposure
@@ -49,6 +53,7 @@ public class PotStateModel
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
+        PlantCode = null;
     }
     
     /// <summary>
@@ -67,6 +72,7 @@ public class PotStateModel
         PlantedDay = plantedDay;
         LastWateredDay = 0;
         LastLitDay = 0;
+        PlantCode = null;
     }
     
     /// <summary>
@@ -118,7 +124,7 @@ public class PotStateModel
     /// <summary>
     /// Piantare un seme nel vaso
     /// </summary>
-    public void PlantSeed(int currentDay)
+    public void PlantSeed(int currentDay, string plantCode = null)
     {
         HasPlant = true;
         Stage = 1; // Seeded (1 = Seed, non 0 = Empty)
@@ -130,6 +136,7 @@ public class PotStateModel
         PlantedDay = currentDay;
         LastWateredDay = 0;
         LastLitDay = 0;
+        PlantCode = plantCode;
     }
     
     /// <summary>
@@ -163,6 +170,18 @@ public class PotStateModel
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
+        PlantCode = null;
+    }
+    
+    /// <summary>
+    /// Ottiene il PlantData associato a questa pianta (se disponibile)
+    /// </summary>
+    public PlantData GetPlantData()
+    {
+        if (string.IsNullOrEmpty(PlantCode))
+            return null;
+        
+        return PlantDatabase.Instance?.GetPlantDataByCode(PlantCode);
     }
     
     /// <summary>

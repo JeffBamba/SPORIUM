@@ -17679,6 +17679,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 830996907}
   m_CullTransparentMesh: 1
+--- !u!1 &834461677
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 834461679}
+  - component: {fileID: 834461678}
+  - component: {fileID: 834461680}
+  m_Layer: 0
+  m_Name: AUTO SCRIPTS RUNTIME
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &834461678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 834461677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636a257a9278308429fad38896229377, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  createDebugConsole: 1
+  createHUDDisplay: 1
+  showDebugLogs: 1
+  enableDebugConsole: 1
+  toggleKey: 122
+  showConsoleOnStart: 0
+  autoCreateUI: 1
+  hudPosition: {x: 0, y: -30}
+--- !u!4 &834461679
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 834461677}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.14631563, y: 0.84751874, z: -0.115308315}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &834461680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 834461677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f2eb4f8e383d1441b6ff88309d1b9e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autoFixOnStart: 1
+  showDebugLogs: 1
 --- !u!224 &838836687 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8115058986010150476, guid: acabf2ac12e0a4e41a758c8a3f563a37, type: 3}
@@ -17896,7 +17963,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -47.001953, y: 252}
+  m_AnchoredPosition: {x: -47.002075, y: 252}
   m_SizeDelta: {x: -869.80005, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &840661158
@@ -18450,7 +18517,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -16.489868, y: 15.655518}
+  m_AnchoredPosition: {x: -16.489746, y: 15.655518}
   m_SizeDelta: {x: -705.7606, y: -324.8672}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &902466182
@@ -25559,7 +25626,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -47, y: -17.999939}
+  m_AnchoredPosition: {x: -47.000122, y: -18}
   m_SizeDelta: {x: -869.792, y: -455.023}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1274124396
@@ -33884,7 +33951,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -49.329834, y: -28.171082}
+  m_AnchoredPosition: {x: -49.329956, y: -28.171143}
   m_SizeDelta: {x: -956.905, y: -589.739}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1717659568
@@ -34685,7 +34752,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 17.758667, y: -18.135742}
+  m_AnchoredPosition: {x: 17.75879, y: -18.135742}
   m_SizeDelta: {x: 400, y: 150}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1782181133
@@ -39982,7 +40049,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -30.000366, y: -334}
+  m_AnchoredPosition: {x: -30.000488, y: -334}
   m_SizeDelta: {x: -1014.243, y: -818.104}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2037802973
@@ -41074,6 +41141,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2074554800}
   m_CullTransparentMesh: 1
+--- !u!1 &2080942769
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2080942771}
+  - component: {fileID: 2080942770}
+  m_Layer: 0
+  m_Name: PH DEBUG
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2080942770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080942769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d31512a607b6ae243a9b9fee623409e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  phValueText: {fileID: 0}
+  phBandText: {fileID: 0}
+  phIndicatorImage: {fileID: 0}
+  updateOnStart: 1
+  updateInterval: 0.5
+  autoCreateUI: 1
+  uiPosition: {x: -50, y: -30}
+  enableHoverTooltip: 1
+  tooltipPanel: {fileID: 0}
+  tooltipText: {fileID: 0}
+--- !u!4 &2080942771
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080942769}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.14631563, y: 0.84751874, z: -0.115308315}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2088061520
 GameObject:
   m_ObjectHideFlags: 0
@@ -43591,3 +43712,5 @@ SceneRoots:
   - {fileID: 4564781181328286076}
   - {fileID: 756311531}
   - {fileID: 228800911}
+  - {fileID: 2080942771}
+  - {fileID: 834461679}

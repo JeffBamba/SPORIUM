@@ -20,12 +20,14 @@ namespace _Project
 
         private void Start()
         {
-            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged += HandleDayChanged;
         }
 
         private void OnDestroy()
         {
-            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
 
         private void HandleDayChanged(int obj)

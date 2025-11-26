@@ -26,7 +26,8 @@ namespace _Project.Sporae.Core.Installers
 
         private void Update()
         {
-            _missionManager.Check();
+            if (_missionManager != null)
+                _missionManager.Check();
         }
     }
 }

@@ -1,0 +1,337 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-02.02: SELEZIONE SEMI + INTEGRAZIONE pH-CRESCITA
+                    Versione: 0014
+                    Data: 2025-11-26
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Sistema Selezione Semi da Inventario + Integrazione pH-Sistema Crescita + Correzioni NullReference
+- **BLK Code:** BLK-02.02
+- **Tipo Report:** Development Report
+- **Data Generazione:** 2025-11-26 14:30:27
+- **Versione Report:** 0014
+- **Status Sistema:** ✅ FUNZIONANTE - Pronto per Testing
+- **Sviluppatore:** Senior Developer Mode (AI Assistant)
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Sistema Selezione Semi da Inventario (UISeedSelector.cs)**
+- **Codice:** BLK-02.02-SEED-001
+- **Descrizione:** UI per selezionare seme specifico dall'inventario quando si pianta
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs`
+- **Evidenze Tecniche:**
+  - Pannello modale con lista semi disponibili
+  - Mostra: nome seme, quantità inventario, famiglia pianta, drift pH giornaliero
+  - Integrazione con PlantDatabase per informazioni pianta
+  - Creazione automatica UI se mancante (metodo CreateUI())
+  - Aggiornamento automatico quando inventario cambia (OnInventoryChanged)
+  - Pulsanti semi creati dinamicamente da inventario
+  - Close button per annullare selezione
+  - Eventi: OnSeedSelected, OnCancelled
+  - Namespace: _Project
+
+**TASK 2: Componente UI Singolo Seme (UISeedItem.cs)**
+- **Codice:** BLK-02.02-SEED-002
+- **Descrizione:** Componente UI per singolo seme selezionabile
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/UI/VaultMap/UISeedItem.cs`
+- **Evidenze Tecniche:**
+  - Implementa IPointerClickHandler per click
+  - Mostra: nome seme, quantità, informazioni pianta
+  - Feedback visivo: colori normal/hover/selected
+  - Evento OnSeedSelected per comunicare selezione
+  - Namespace: _Project
+
+**TASK 3: Modifica PotActions.DoPlant() per Accettare seedTypeId**
+- **Codice:** BLK-02.02-SEED-003
+- **Descrizione:** Modifica azione Plant per accettare seme specifico
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/Dome/PotActions.cs`
+- **Evidenze Tecniche:**
+  - Parametro opzionale `seedTypeId` aggiunto a DoPlant()
+  - Se non specificato, trova primo seme disponibile (comportamento legacy)
+  - Recupera PlantData da PlantDatabase usando seedTypeId
+  - Passa PlantCode a PotStateModel.PlantSeed()
+  - Log debug per tracciare seme selezionato e PlantData associato
+
+**TASK 4: Integrazione PotHUDWidget con UISeedSelector**
+- **Codice:** BLK-02.02-SEED-004
+- **Descrizione:** Modifica widget HUD per aprire selettore semi invece di piantare direttamente
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs`
+- **Evidenze Tecniche:**
+  - Campo SerializeField `seedSelector` aggiunto
+  - Metodo InitializeSeedSelector() per trovare/creare UISeedSelector
+  - Metodo OpenSeedSelector() per aprire pannello
+  - Metodo OnSeedSelected() per gestire selezione seme
+  - Metodo OnSeedSelectionCancelled() per gestire annullamento
+  - Sottoscrizione eventi UISeedSelector
+  - Aggiunto `using _Project;` per namespace UISeedSelector
+  - Fallback: crea UISeedSelector automaticamente se non trovato
+
+**TASK 5: Integrazione PotDetailsWidget con UISeedSelector**
+- **Codice:** BLK-02.02-SEED-005
+- **Descrizione:** Modifica widget dettagli vaso per aprire selettore semi
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+- **Evidenze Tecniche:**
+  - Campo SerializeField `_seedSelector` aggiunto
+  - Metodo OpenSeedSelector() per aprire pannello
+  - Metodo OnSeedSelected() per gestire selezione seme
+  - Metodo OnSeedSelectionCancelled() per gestire annullamento
+  - Sottoscrizione eventi UISeedSelector
+  - Fallback: crea UISeedSelector automaticamente se non trovato
+
+**TASK 6: Script Auto-Setup UISeedSelector (UISeedSelectorAutoSetup.cs)**
+- **Codice:** BLK-02.02-SEED-006
+- **Descrizione:** Script runtime per creare automaticamente UI selettore semi
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/Debug/UISeedSelectorAutoSetup.cs`
+- **Evidenze Tecniche:**
+  - MonoBehaviour eseguibile in Play Mode (non Editor script)
+  - Crea Canvas se mancante
+  - Crea struttura UI completa: Panel, Container, Title, Close Button, NoSeeds Text
+  - Usa reflection per assegnare riferimenti SerializeField privati
+  - Metodo ContextMenu per creazione manuale
+  - Namespace: _Project (non Sporae.Editor)
+
+**TASK 7: Integrazione pH-Sistema Crescita Piante (PlantData, PlantDatabase)**
+- **Codice:** BLK-02.02-PH-INT-001
+- **Descrizione:** Integrazione sistema pH con sistema crescita piante tramite PlantData
+- **Status:** ✅ COMPLETATO
+- **File Creati:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantFamily.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantDatabase.cs`
+- **Evidenze Tecniche:**
+  - PlantFamily enum: Standard (0), Pure (+pH), Evil (-pH)
+  - PlantData ScriptableObject: plantCode, seedItemConfig, family, dailyPhDrift, optimalPhMin/Max
+  - PlantDatabase singleton: carica PlantData da Resources/Plants
+  - Dizionari lookup: byPlantCode, bySeedTypeId
+  - Metodi: GetPlantDataByPlantCode(), GetPlantDataBySeedTypeId()
+  - Auto-inizializzazione al primo accesso
+  - Log debug opzionali
+
+**TASK 8: Modifica PotStateModel per Referenziare PlantData**
+- **Codice:** BLK-02.02-PH-INT-002
+- **Descrizione:** Aggiunta campo PlantCode a PotStateModel per tracciare pianta piantata
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+- **Evidenze Tecniche:**
+  - Campo pubblico `PlantCode` aggiunto
+  - Metodo PlantSeed() modificato per accettare plantCode opzionale
+  - Metodo GetPlantData() aggiunto per recuperare PlantData associato
+  - Compatibilità retroattiva: plantCode può essere null
+
+**TASK 9: Integrazione DayCycleController con PhSystem**
+- **Codice:** BLK-02.02-PH-INT-003
+- **Descrizione:** Calcolo e registrazione drift pH giornaliero da piante piantate
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Riferimento _phSystem aggiunto
+  - Metodo TryGetPhSystem() per recupero sicuro da ServiceContainer
+  - Sottoscrizione OnServiceRegistered per late binding
+  - Metodo CalculateAndApplyPhDrift() aggiunto
+  - Somma DailyPhDrift da tutte le piante piantate
+  - Registrazione con _phSystem.RegisterPlantDrift()
+  - Log debug per tracciare contributi pH per pianta
+  - Chiamato in HandleDayChanged() dopo calcolo crescita
+
+**TASK 10: Creazione Asset PlantData per 3 Famiglie**
+- **Codice:** BLK-02.02-PH-INT-004
+- **Descrizione:** Creazione PlantData assets per Standard, Pure, Evil
+- **Status:** ✅ COMPLETATO
+- **File Creati:**
+  - `Assets/Resources/Plants/PLT-STD-001.asset`
+  - `Assets/Resources/Plants/PLT-PURE-001.asset`
+  - `Assets/Resources/Plants/PLT-EVIL-001.asset`
+- **Evidenze Tecniche:**
+  - PLT-STD-001: Standard, drift pH 0/giorno, seed-001
+  - PLT-PURE-001: Pure, drift pH +2/giorno, seed-002
+  - PLT-EVIL-001: Evil, drift pH -2/giorno, seed-003
+  - Editor script CreatePlantDataAssets.cs per creazione automatica
+  - Editor script UpdatePlantDataSeeds.cs per aggiornamento riferimenti
+
+**TASK 11: Aggiunta seed-003 e Aggiornamento Inventario Iniziale**
+- **Codice:** BLK-02.02-SEED-007
+- **Descrizione:** Aggiunta terzo seme (Evil) e aggiornamento inventario iniziale
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Core/ItemsSystem/Items.cs`
+  - `Assets/_Project/Scripts/Core/GameManager.cs`
+  - `Assets/Resources/Items/seed-003.asset` (creato)
+- **Evidenze Tecniche:**
+  - Items.Seed003 = "seed-003" aggiunto
+  - GameManager aggiunge seed-001, seed-002, seed-003 all'inventario iniziale
+  - seed-003.asset creato con ItemConfig corretto
+
+**TASK 12: Correzioni NullReferenceException**
+- **Codice:** BLK-02.02-FIX-001
+- **Descrizione:** Aggiunta controlli null in OnDestroy() e Update() per evitare crash
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/UI/VaultMap/HUDController.cs`
+  - `Assets/_Project/Scripts/Core/Installers/GamePlayInstaller.cs`
+  - `Assets/_Project/Scripts/Player/PlayerEndDayHandler.cs`
+  - `Assets/_Project/Scripts/Interactables/PotSlot.cs`
+  - `Assets/_Project/Scripts/Core/Visitors/VisitorEventController.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/HUDInventory.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/UIMission.cs`
+- **Evidenze Tecniche:**
+  - Controlli null prima di accedere a riferimenti in OnDestroy()
+  - Controlli null prima di sottoscrivere/rimuovere eventi
+  - Controlli null in Update() per _missionManager
+  - Cleanup corretto di sottoscrizioni eventi
+  - Prevenzione crash durante distruzione oggetti
+
+**TASK 13: Rimozione Campo Non Utilizzato (PhSystemAutoSetup.cs)**
+- **Codice:** BLK-02.02-FIX-002
+- **Descrizione:** Rimozione campo autoCreateUI non utilizzato
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/Debug/PhSystemAutoSetup.cs`
+- **Evidenze Tecniche:**
+  - Campo autoCreateUI rimosso (warning CS0414 risolto)
+  - HUDPhDisplay gestisce autonomamente creazione UI
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: Errore Compilazione UISeedSelector in PotHUDWidget**
+- **Numero:** BUG-0014-001
+- **Descrizione:** CS0246 - UISeedSelector non trovato in PotHUDWidget
+- **Causa:** Mancava `using _Project;` per namespace UISeedSelector
+- **Soluzione:** Aggiunto `using _Project;` in PotHUDWidget.cs
+- **Test:** ✅ Compilazione corretta, nessun errore
+
+**BUG 2: selectorPanel null quando UISeedSelector creato automaticamente**
+- **Numero:** BUG-0014-002
+- **Descrizione:** NullReferenceException quando si apre selettore semi
+- **Causa:** UISeedSelector creato senza struttura UI completa
+- **Soluzione:** Aggiunto metodo CreateUI() che crea automaticamente struttura UI se mancante
+- **Test:** ✅ Pannello si apre correttamente anche se creato automaticamente
+
+**BUG 3: Multiple NullReferenceException in OnDestroy()**
+- **Numero:** BUG-0014-003
+- **Descrizione:** Crash durante distruzione oggetti quando riferimenti null
+- **Causa:** Mancavano controlli null prima di accedere a riferimenti distrutti
+- **Soluzione:** Aggiunti controlli null in tutti i metodi OnDestroy() e Update()
+- **Test:** ✅ Nessun crash durante distruzione oggetti
+
+**BUG 4: Warning CS0414 campo autoCreateUI non utilizzato**
+- **Numero:** BUG-0014-004
+- **Descrizione:** Warning compilazione per campo non utilizzato
+- **Causa:** Campo dichiarato ma mai utilizzato nel codice
+- **Soluzione:** Rimosso campo autoCreateUI da PhSystemAutoSetup.cs
+- **Test:** ✅ Nessun warning compilazione
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**Modifiche Struttura Codice:**
+- Aggiunto namespace `_Project` per UISeedSelector e UISeedItem
+- Creato sistema PlantData/PlantDatabase per gestione dati piante
+- Integrazione pH-crescita tramite DayCycleController
+- Modificato flusso Plant action per includere selezione seme
+
+**Modifiche UI:**
+- Creato pannello modale UISeedSelector con lista semi
+- Implementato sistema creazione automatica UI se mancante
+- Aggiunto aggiornamento automatico quando inventario cambia
+- Tooltip e feedback visivo per selezione semi
+
+**Modifiche Integrazione:**
+- PotActions.DoPlant() ora accetta seedTypeId opzionale
+- PotStateModel traccia PlantCode per ogni pianta
+- DayCycleController calcola drift pH da piante piantate
+- PlantDatabase fornisce lookup rapido PlantData
+
+**Test Cases:**
+- ✅ Selezione seme da inventario funziona correttamente
+- ✅ Piantare seme specifico assegna PlantData corretto
+- ✅ Drift pH giornaliero calcolato correttamente da piante
+- ✅ Aggiornamento quantità semi quando inventario cambia
+- ✅ Nessun crash durante distruzione oggetti
+- ✅ Compilazione senza errori o warning
+
+**Soluzioni Implementate:**
+- Creazione automatica UI se mancante (CreateUI())
+- Late binding PhSystem tramite OnServiceRegistered
+- Controlli null robusti in tutti i metodi critici
+- Reflection per assegnazione campi SerializeField privati
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**Pattern Architetturali:**
+- Creazione automatica UI runtime quando mancante migliora UX
+- Late binding tramite eventi ServiceContainer per dipendenze circolari
+- Controlli null sempre necessari in OnDestroy() e Update()
+- Reflection utile per assegnazione campi privati in auto-setup
+
+**Best Practices:**
+- Sempre verificare null prima di accedere a riferimenti in metodi lifecycle
+- Usare eventi per comunicazione tra sistemi invece di dipendenze dirette
+- Creare metodi di fallback per creazione automatica componenti mancanti
+- Log debug opzionali per tracciare flusso esecuzione
+
+**Pattern Ricorrenti:**
+- Singleton pattern per PlantDatabase (simile a ServiceContainer)
+- ScriptableObject per dati configurabili (PlantData)
+- Event-driven architecture per aggiornamenti UI (OnInventoryChanged)
+- Auto-setup pattern per componenti UI runtime
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+=================
+
+**Prossime Task Pianificate:**
+1. Integrazione pH con azioni giocatore (Overwatering, LED, Spray)
+2. Integrazione pH con eventi casuali (Pioggia Acida, Muffa)
+3. Implementazione effetti pH su crescita/mutazioni
+4. Sistema reputazione fazioni basato su pH
+5. Completamento sistema crescita (6 stadi invece di 3)
+
+**Dipendenze:**
+- Sistema pH base ✅ (completato)
+- Sistema selezione semi ✅ (completato)
+- Integrazione pH-crescita ✅ (completato)
+- Sistema eventi casuali (da implementare)
+- Sistema azioni giocatore avanzate (da implementare)
+
+**Prerequisiti:**
+- PlantData assets creati ✅
+- PlantDatabase funzionante ✅
+- DayCycleController integrato con pH ✅
+- UISeedSelector funzionante ✅
+
+================================================================================
+
+📊 METADATA FOOTER
+==================
+- **Versione Report:** 0014
+- **Data Generazione:** 2025-11-26 14:30:27
+- **Status Sistema:** ✅ FUNZIONANTE
+- **File Modificati:** 15
+- **File Creati:** 8
+- **Bug Fixati:** 4
+- **Task Completati:** 13
+
+================================================================================
+FINE REPORT
+================================================================================
+

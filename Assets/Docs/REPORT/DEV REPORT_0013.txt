@@ -1,0 +1,405 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-02.01: SISTEMA pH COMPLETO + DEBUG TOOLS
+                    Versione: 0013
+                    Data: 2025-01-XX
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Implementazione Sistema pH Completo + Debug Tools + HUD Integration
+- **BLK Code:** BLK-02.01
+- **Tipo Report:** Development Report
+- **Data Generazione:** 2025-01-XX
+- **Versione Report:** 0013
+- **Status Sistema:** ✅ FUNZIONANTE - Pronto per Testing
+- **Sviluppatore:** Senior Developer Mode (AI Assistant)
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Sistema pH Base (PhSystem.cs)**
+- **Codice:** BLK-02.01-PH-001
+- **Descrizione:** Implementazione sistema gestione pH globale della Dome
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/Core/PhSystem.cs`
+- **Evidenze Tecniche:**
+  - Range pH: -100 (Ultra Acido) → +100 (Ultra Basico)
+  - 5 Bande pH: UltraAcid, StableAcid, Neutral, StableBasic, UltraBasic
+  - Metodi: ApplyInstantDelta(), SetPh(), RegisterDailyDrift()
+  - Tracciamento contributi: Base, Piante, Azioni, Eventi, Daily Drift
+  - Eventi: OnPhChanged per comunicazione con altri sistemi
+  - Metodo GetCalculationBreakdown() per tooltip dettagliato
+  - Formato italiano con virgole per decimali
+
+**TASK 2: Console Debug pH (PhSystemDebugConsole.cs)**
+- **Codice:** BLK-02.01-PH-002
+- **Descrizione:** Console di debug completa per testare sistema pH
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Evidenze Tecniche:**
+  - Tasto Z per aprire/chiudere console
+  - UI visuale con OnGUI
+  - Comandi: Set pH, modifiche incrementali, valori rapidi
+  - Simulazione azioni: Overwatering, LED Blu/Rosso
+  - Simulazione drift giornaliero
+  - Log operazioni con storico
+  - Tracciamento contributi per ogni modifica
+  - Namespace: Sporae.DevTools (evita conflitti con UnityEngine.Debug)
+
+**TASK 3: HUD pH Display (HUDPhDisplay.cs)**
+- **Codice:** BLK-02.01-PH-003
+- **Descrizione:** Placeholder HUD funzionale per visualizzare pH in-game
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/UI/VaultMap/HUDPhDisplay.cs`
+- **Evidenze Tecniche:**
+  - Auto-setup completo: crea Canvas, EventSystem, elementi UI automaticamente
+  - Posizione: Top Center (configurabile)
+  - Mostra: valore pH corrente, banda pH, colore indicativo
+  - Aggiornamento automatico ogni 0.5 secondi
+  - Integrazione con ServiceContainer per PhSystem
+  - Fallback: crea sistema temporaneo se non trovato
+  - Hover detection con EventTrigger
+  - Tooltip dedicato con riquadro nero semi-trasparente
+
+**TASK 4: Tooltip Hover pH (Integrato in HUDPhDisplay.cs)**
+- **Codice:** BLK-02.01-PH-004
+- **Descrizione:** Tooltip che mostra calcolo dettagliato pH al passaggio mouse
+- **Status:** ✅ COMPLETATO
+- **Evidenze Tecniche:**
+  - Riquadro tooltip dedicato (non toast temporaneo)
+  - Appare sempre quando mouse passa sopra HUD pH
+  - Scompare quando mouse esce
+  - Aggiornamento in tempo reale mentre hover attivo
+  - Formato evidenziato: colori per Piante (giallo), Azioni (cyan), Eventi (magenta), Drift (arancione)
+  - Mostra solo contributi significativi (>0.01)
+  - Formato italiano con virgole
+  - Posizione: sotto HUD pH, centrato
+
+**TASK 5: Auto-Setup Script (PhSystemAutoSetup.cs)**
+- **Codice:** BLK-02.01-PH-005
+- **Descrizione:** Script che crea automaticamente setup pH al Play Mode
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/Debug/PhSystemAutoSetup.cs`
+- **Evidenze Tecniche:**
+  - Crea PhSystemDebugConsole se mancante
+  - Crea HUDPhDisplay se mancante
+  - Configurazione automatica valori default
+  - Evita duplicati: controlla esistenza prima di creare
+  - Metodo ContextMenu per ricreare setup manualmente
+  - Log debug opzionali
+
+**TASK 6: AudioListener Manager (AudioListenerManager.cs)**
+- **Codice:** BLK-02.01-AUDIO-001
+- **Descrizione:** Risoluzione warning AudioListener duplicati
+- **Status:** ✅ COMPLETATO
+- **File Creato:** `Assets/_Project/Scripts/Core/AudioListenerManager.cs`
+- **Evidenze Tecniche:**
+  - Rileva AudioListener duplicati nella scena
+  - Mantiene solo quello sulla Main Camera
+  - Rimuove automaticamente duplicati
+  - Esecuzione prioritaria (DefaultExecutionOrder -200)
+  - Metodo ContextMenu per fix manuale
+
+**TASK 7: Documentazione**
+- **Codice:** BLK-02.01-DOC-001
+- **Descrizione:** Documentazione completa sistema pH
+- **Status:** ✅ COMPLETATO
+- **File Creati:**
+  - `Assets/Docs/REPORT/PH_DEBUG_CONSOLE_INSTRUCTIONS.md`
+  - `Assets/Docs/REPORT/MAPPA_INTERAZIONI_PH_SISTEMI.md`
+  - `Assets/Docs/REPORT/PIANO_IMPLEMENTAZIONE_SISTEMI.md`
+  - `Assets/Docs/REPORT/SEQUENZA_IMPLEMENTAZIONE_RAPIDA.md`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: Conflitto Namespace Sporae.Debug**
+- **Numero:** BUG-PH-001
+- **Descrizione:** Namespace Sporae.Debug causava conflitto con UnityEngine.Debug
+- **Causa:** Namespace personalizzato con stesso nome di classe Unity
+- **Soluzione:** Rinominato namespace in Sporae.DevTools
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Test Verifica:** ✅ Compilazione senza errori
+- **Tag:** // DEBUG_SAFE_FIX
+
+**BUG 2: PlantStage non nel contesto**
+- **Numero:** BUG-PH-002
+- **Descrizione:** PlantStage non trovato in PhSystemDebugConsole
+- **Causa:** Namespace mancante
+- **Soluzione:** Aggiunto `using Sporae.Dome.PotSystem.Growth;`
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Test Verifica:** ✅ Compilazione senza errori
+
+**BUG 3: Warning Campi Non Utilizzati**
+- **Numero:** BUG-PH-003
+- **Descrizione:** pot3Id e pot4Id assegnati ma mai utilizzati
+- **Causa:** Campi preparati per futuro ma non implementati
+- **Soluzione:** Commentati con note esplicative
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/RoomDomePotsBootstrap.cs`
+- **Test Verifica:** ✅ Nessun warning compilazione
+
+**BUG 4: AudioListener Duplicati**
+- **Numero:** BUG-AUDIO-001
+- **Descrizione:** Warning Unity "There are 2 audio listeners in the scene"
+- **Causa:** Multiple Main Camera con AudioListener
+- **Soluzione:** Creato AudioListenerManager che rimuove duplicati automaticamente
+- **File Creati:**
+  - `Assets/_Project/Scripts/Core/AudioListenerManager.cs`
+- **Test Verifica:** ✅ Warning risolto, solo 1 AudioListener attivo
+
+**BUG 5: Tooltip Appare Solo Una Volta**
+- **Numero:** BUG-PH-004
+- **Descrizione:** Tooltip hover appariva solo una volta, poi non funzionava più
+- **Causa:** Flag _isHovering bloccava visualizzazioni successive
+- **Soluzione:** Rimosso controllo bloccante, tooltip ora appare sempre su hover
+- **File Modificati:**
+  - `Assets/_Project/Scripts/UI/VaultMap/HUDPhDisplay.cs`
+- **Test Verifica:** ✅ Tooltip appare sempre quando mouse passa sopra
+
+================================================================================
+
+⚠️ BUG NON FIXATI / PENDENTI
+=============================
+
+**Nessun bug pendente al momento.**
+
+================================================================================
+
+🔧 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**1. ARCHITETTURA SISTEMA pH**
+- Progettato sistema modulare e estendibile
+- Integrazione con ServiceContainer pattern esistente
+- Event-driven architecture per comunicazione tra sistemi
+- Tracciamento contributi per tooltip dettagliato
+
+**2. IMPLEMENTAZIONE CODICE**
+- **PhSystem.cs:** 120+ righe, sistema completo con 5 bande pH
+- **PhSystemDebugConsole.cs:** 400+ righe, console debug completa
+- **HUDPhDisplay.cs:** 350+ righe, HUD con auto-setup e tooltip
+- **PhSystemAutoSetup.cs:** 150+ righe, setup automatico
+- **AudioListenerManager.cs:** 80+ righe, gestione AudioListener
+
+**3. INTEGRAZIONE UI**
+- Auto-creazione Canvas e EventSystem se mancanti
+- Hover detection con EventTrigger
+- Tooltip panel dedicato con background semi-trasparente
+- Formato testo evidenziato con colori TextMeshPro
+
+**4. TESTING E DEBUG**
+- Console debug con tasto Z
+- Log operazioni per tracciamento
+- Simulazione azioni e drift
+- Visualizzazione stato in tempo reale
+
+**5. DOCUMENTAZIONE**
+- Istruzioni uso console debug
+- Mappa interazioni pH con altri sistemi (15 aree)
+- Piano implementazione sistemi (6 fasi, 25 settimane)
+- Sequenza implementazione rapida
+
+**6. FIX E OTTIMIZZAZIONI**
+- Risolti conflitti namespace
+- Eliminati warning compilazione
+- Migliorata leggibilità tooltip
+- Formato italiano con virgole
+
+**RISULTATI TEST:**
+- ✅ Compilazione senza errori
+- ✅ Sistema pH funzionante
+- ✅ Console debug operativa (tasto Z)
+- ✅ HUD pH visibile in-game
+- ✅ Tooltip hover funzionante
+- ✅ Auto-setup operativo
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**1. NAMESPACE MANAGEMENT**
+- Evitare namespace con nomi che confliggono con classi Unity (es. Debug)
+- Usare namespace specifici per evitare ambiguità (es. Sporae.DevTools)
+- Verificare sempre namespace corretti prima di compilare
+
+**2. AUTO-SETUP PATTERN**
+- Creare script di auto-setup migliora workflow sviluppo
+- Evita configurazione manuale ripetitiva
+- Pattern riutilizzabile per altri sistemi futuri
+
+**3. TOOLTIP VS TOAST**
+- Tooltip persistenti richiedono panel dedicato, non toast temporanei
+- Hover detection deve essere sempre reattiva, non bloccata da flag
+- Aggiornamento in tempo reale migliora UX
+
+**4. FORMATO LOCALIZZAZIONE**
+- Usare CultureInfo per formato numeri locale-specifico
+- Formato italiano: virgole per decimali, punti per migliaia
+- Evidenziare elementi con colori migliora leggibilità
+
+**5. DEBUG TOOLS**
+- Console debug essenziale per test rapidi
+- Hotkeys configurabili migliorano workflow
+- Log operazioni aiutano debugging
+
+**BEST PRACTICES ADOTTATE:**
+- ✅ ServiceContainer pattern per dependency injection
+- ✅ Event-driven per comunicazione tra sistemi
+- ✅ Auto-setup per ridurre configurazione manuale
+- ✅ Namespace organizzati per evitare conflitti
+- ✅ Documentazione completa per ogni sistema
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+=================
+
+**FASE IMMEDIATA (Prossima Sessione):**
+1. **Integrazione pH con Piante**
+   - Collegare drift pH giornaliero alle piante coltivate
+   - Implementare calcolo drift basato su famiglia pianta (PURE +2, EVIL -2, STANDARD ±1)
+   - Testare con piante esistenti
+
+2. **Integrazione pH con Azioni**
+   - Collegare modifiche pH alle azioni giocatore
+   - Implementare: Watering (overwatering -5), LED Blu (+5), LED Rosso (-5), Spray Antifungino (+5)
+   - Testare modifiche in tempo reale
+
+3. **Integrazione pH con Eventi**
+   - Collegare eventi casuali a modifiche pH
+   - Implementare eventi: Pioggia Acida, Drift pH, ecc.
+   - Testare trigger eventi
+
+**FASE BREVE TERMINE (1-2 Settimane):**
+4. **Sistema Livelli Piante**
+   - Implementare sistema livelli (1-5) per slot passivi
+   - Collegare livello a drift pH modificato
+   - Testare progressione livelli
+
+5. **Sistema Reputazione Fazioni**
+   - Implementare sistema reputazione base
+   - Collegare pH a modifiche reputazione fazioni
+   - Testare interazioni Custodi/Culto/Mercanti
+
+**FASE MEDIO TERMINE (3-4 Settimane):**
+6. **Sistema Mutazioni**
+   - Implementare trigger mutazioni basati su pH
+   - Polarità mutazioni: Acido→Corrotte, Basico→Armoniche, Neutro→Adattive
+   - Testare generazione mutazioni
+
+7. **UI/HUD Completa**
+   - Sostituire placeholder con UI definitiva
+   - Implementare barra pH visiva completa
+   - Aggiungere indicatori stati piante (Thriving/Weakening/Collapsing)
+
+**DIPENDENZE:**
+- Sistema pH base: ✅ COMPLETATO
+- Console debug: ✅ COMPLETATO
+- HUD placeholder: ✅ COMPLETATO
+- Sistema piante: ⚠️ PARZIALE (manca catalog completo)
+- Sistema azioni: ✅ ESISTENTE (manca integrazione pH)
+- Sistema eventi: ❌ NON IMPLEMENTATO
+
+**PREREQUISITI:**
+- Catalog piante completo (per drift corretto)
+- Sistema eventi base (per eventi casuali)
+- Sistema reputazione base (per modifiche fazioni)
+
+================================================================================
+
+📊 STATISTICHE IMPLEMENTAZIONE
+===============================
+
+**File Creati:** 5
+- PhSystem.cs
+- PhSystemDebugConsole.cs
+- HUDPhDisplay.cs
+- PhSystemAutoSetup.cs
+- AudioListenerManager.cs
+
+**File Modificati:** 3
+- RoomDomePotsBootstrap.cs (fix warning)
+- UINotification.cs (metodo ClearNotification)
+- PhSystemDebugConsole.cs (fix namespace, tracciamento sorgenti)
+
+**File Documentazione:** 4
+- PH_DEBUG_CONSOLE_INSTRUCTIONS.md
+- MAPPA_INTERAZIONI_PH_SISTEMI.md
+- PIANO_IMPLEMENTAZIONE_SISTEMI.md
+- SEQUENZA_IMPLEMENTAZIONE_RAPIDA.md
+
+**Righe di Codice:** ~1200+ righe
+**Bande pH Implementate:** 5/5 (100%)
+**Sistema Base:** ✅ COMPLETO
+**Debug Tools:** ✅ COMPLETO
+**HUD Integration:** ✅ COMPLETO
+**Tooltip Hover:** ✅ COMPLETO
+
+**Tempo Stimato Implementazione:** 1 giorno
+**Tempo Reale:** 1 sessione
+
+================================================================================
+
+✅ CHECKLIST FINALE
+===================
+
+**Sistema pH Base:**
+- ✅ Range -100 a +100 implementato
+- ✅ 5 bande pH implementate
+- ✅ Metodi modifica pH implementati
+- ✅ Tracciamento contributi implementato
+- ✅ Eventi comunicazione implementati
+
+**Debug Tools:**
+- ✅ Console debug con tasto Z
+- ✅ Comandi modifica pH
+- ✅ Simulazione azioni
+- ✅ Simulazione drift
+- ✅ Log operazioni
+
+**HUD Integration:**
+- ✅ HUD pH visibile in-game
+- ✅ Posizione Top Center
+- ✅ Auto-setup completo
+- ✅ Aggiornamento automatico
+- ✅ Tooltip hover funzionante
+
+**Fix e Ottimizzazioni:**
+- ✅ Conflitti namespace risolti
+- ✅ Warning compilazione risolti
+- ✅ AudioListener duplicati risolti
+- ✅ Tooltip sempre funzionante
+
+**Documentazione:**
+- ✅ Istruzioni uso console
+- ✅ Mappa interazioni sistemi
+- ✅ Piano implementazione
+- ✅ Report sviluppo
+
+================================================================================
+
+📝 NOTE FINALI
+===============
+
+Il sistema pH è stato implementato completamente e funziona correttamente. 
+La console debug permette test rapidi, l'HUD è visibile in-game e il tooltip 
+fornisce informazioni dettagliate al passaggio del mouse.
+
+**Prossimo step critico:** Integrare il sistema pH con le piante esistenti 
+per calcolare il drift giornaliero basato sulle piante coltivate.
+
+**Sistema pronto per:** Testing completo, integrazione con altri sistemi, 
+iterazione basata su feedback.
+
+================================================================================
+

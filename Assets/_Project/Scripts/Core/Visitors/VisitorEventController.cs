@@ -17,20 +17,27 @@ namespace _Project
         {
             _nextDayAppear = _firstAppear;
             
-            _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
-            _dayCycleSystem.OnDayChanged += HandleDayChanged;
-            _visitor.OnDisappear += HandleDisappear;
+            _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            
+            if (_visitor != null)
+                _visitor.OnDisappear += HandleDisappear;
         }
 
         private void HandleDisappear()
         {
-            if (_visitor.State == Visitor.VisitorState.Despawned)
+            if (_visitor != null && _visitor.State == Visitor.VisitorState.Despawned)
                 _nextDayAppear += Random.Range(_interval.x, _interval.y);
         }
 
         private void OnDestroy()
         {
-            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+            
+            if (_visitor != null)
+                _visitor.OnDisappear -= HandleDisappear;
         }
         
         private void HandleDayChanged(int day)

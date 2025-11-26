@@ -35,15 +35,23 @@ namespace _Project
 
         private void Start()
         {
-            _callButton.onClick.AddListener(HandleCall);
-            _missionManager.OnMissionsChanged += HandleMissionsChanged;
-            _missionManager.OnMissionComplete += HandleMissionComplete;
+            if (_callButton != null)
+                _callButton.onClick.AddListener(HandleCall);
+            
+            if (_missionManager != null)
+            {
+                _missionManager.OnMissionsChanged += HandleMissionsChanged;
+                _missionManager.OnMissionComplete += HandleMissionComplete;
+            }
         }
         
         private void OnDestroy()
         {
-            _missionManager.OnMissionComplete -= HandleMissionComplete;
-            _missionManager.OnMissionsChanged -= HandleMissionsChanged;
+            if (_missionManager != null)
+            {
+                _missionManager.OnMissionComplete -= HandleMissionComplete;
+                _missionManager.OnMissionsChanged -= HandleMissionsChanged;
+            }
         }
         
         private void HandleCall()

@@ -108,19 +108,29 @@ public class HUDController : MonoBehaviour
         if (!_gameManager)
             return;
         
-        _dayCycleSystem.OnDayChanged += UpdateDay;
-        _gameManager.ActionSystem.OnActionsChanged += UpdateActions;
-        _gameManager.EconomySystem.OnCRYChanged += UpdateCRY;
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged += UpdateDay;
+        
+        if (_gameManager.ActionSystem != null)
+            _gameManager.ActionSystem.OnActionsChanged += UpdateActions;
+        
+        if (_gameManager.EconomySystem != null)
+            _gameManager.EconomySystem.OnCRYChanged += UpdateCRY;
     }
 
     private void UnsubscribeFromEvents()
     {
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged -= UpdateDay;
+        
         if (!_gameManager)
             return;
         
-        _dayCycleSystem.OnDayChanged -= UpdateDay;
-        _gameManager.ActionSystem.OnActionsChanged -= UpdateActions;
-        _gameManager.EconomySystem.OnCRYChanged -= UpdateCRY;
+        if (_gameManager.ActionSystem != null)
+            _gameManager.ActionSystem.OnActionsChanged -= UpdateActions;
+        
+        if (_gameManager.EconomySystem != null)
+            _gameManager.EconomySystem.OnCRYChanged -= UpdateCRY;
     }
 
     private void UpdateAllUI()

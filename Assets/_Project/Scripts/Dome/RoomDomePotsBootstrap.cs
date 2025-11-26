@@ -11,14 +11,16 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     [Header("Pot Configuration")]
     [SerializeField] private string pot1Id = "POT-001";
     [SerializeField] private string pot2Id = "POT-002";
-    [SerializeField] private string pot3Id = "POT-003";
-    [SerializeField] private string pot4Id = "POT-004";
+    // pot3Id e pot4Id rimossi - non utilizzati attualmente
+    // [SerializeField] private string pot3Id = "POT-003";
+    // [SerializeField] private string pot4Id = "POT-004";
 
     [Header("Pot Positions")]
     [SerializeField] private Vector2 pot1Offset = new Vector2(-2.25f, 0f);
     [SerializeField] private Vector2 pot2Offset = new Vector2(-0.75f, 0f);
-    [SerializeField] private Vector2 pot3Offset = new Vector2(0.75f, 0f);
-    [SerializeField] private Vector2 pot4Offset = new Vector2(2.25f, 0f);
+    // pot3Offset e pot4Offset rimossi - non utilizzati attualmente
+    // [SerializeField] private Vector2 pot3Offset = new Vector2(0.75f, 0f);
+    // [SerializeField] private Vector2 pot4Offset = new Vector2(2.25f, 0f);
 
     [Header("Pot Settings")]
     [SerializeField] private float potScale = 1f;

@@ -4,6 +4,7 @@ using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using UnityEngine.SceneManagement;
+using _Project;
 
 /// <summary>
 /// Controller per il ciclo giornaliero del sistema di crescita delle piante.
@@ -23,6 +24,7 @@ public class DayCycleController : MonoBehaviour
     private bool _isInitialized;
     
     private DayCycleSystem _dayCycleSystem;
+    private PhSystem _phSystem;
 
     private void Awake()
     {
@@ -96,6 +98,53 @@ public class DayCycleController : MonoBehaviour
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
         if (_dayCycleSystem != null)
             _dayCycleSystem.OnDayChanged += HandleDayChanged;
+        
+        // Cerca PhSystem per integrazione pH (con retry se non disponibile subito)
+        TryGetPhSystem();
+        
+        // Sottoscrivi all'evento OnServiceRegistered per quando PhSystem viene registrato dopo
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+        }
+    }
+    
+    /// <summary>
+    /// Tenta di ottenere PhSystem dal ServiceContainer
+    /// </summary>
+    private void TryGetPhSystem()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+        
+        try
+        {
+            _phSystem = ServiceContainer.Instance.Get<PhSystem>();
+            if (_phSystem != null && enableDebugLogs)
+            {
+                Debug.Log("[DayCycleController] PhSystem trovato e collegato!");
+            }
+        }
+        catch
+        {
+            // PhSystem non ancora registrato, sarà recuperato quando viene registrato
+            _phSystem = null;
+        }
+    }
+    
+    /// <summary>
+    /// Chiamato quando un servizio viene registrato nel ServiceContainer
+    /// </summary>
+    private void OnServiceRegistered(object service)
+    {
+        if (service is PhSystem phSystem && _phSystem == null)
+        {
+            _phSystem = phSystem;
+            if (enableDebugLogs)
+            {
+                Debug.Log("[DayCycleController] PhSystem registrato! Collegato al sistema di crescita.");
+            }
+        }
     }
 
     /// <summary>
@@ -105,6 +154,12 @@ public class DayCycleController : MonoBehaviour
     {
         if (_dayCycleSystem != null)
             _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+        
+        // Rimuovi sottoscrizione a OnServiceRegistered
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+        }
     }
 
     /// <summary>
@@ -154,10 +209,13 @@ public class DayCycleController : MonoBehaviour
         // 1. ResolveGrowthForAllPots(D)
         ResolveGrowthForAllPots(dayIndex);
         
-        // 2. ApplyDecayAndCleanup(D)
+        // 2. Calcola e registra pH drift dalle piante (integrazione pH)
+        CalculateAndRegisterPhDrift();
+        
+        // 3. ApplyDecayAndCleanup(D)
         ApplyDecayAndCleanup(dayIndex);
         
-        // 3. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
+        // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
         if (enableDebugLogs)
             Debug.Log($"[BLK-01.03A] DayCycleController: Growth tick completato per Day {dayIndex}");
@@ -389,6 +447,54 @@ public class DayCycleController : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Calcola il drift pH totale da tutte le piante e lo registra nel PhSystem
+    /// </summary>
+    private void CalculateAndRegisterPhDrift()
+    {
+        if (_phSystem == null)
+            return;
+        
+        float totalPhDrift = 0f;
+        int plantCount = 0;
+        
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant)
+                continue;
+            
+            // Ottieni PlantData dalla pianta
+            PlantData plantData = pot.GetPlantData();
+            if (plantData == null)
+                continue;
+            
+            // Calcola drift pH per questa pianta
+            float plantDrift = plantData.GetDailyPhDrift();
+            totalPhDrift += plantDrift;
+            plantCount++;
+            
+            if (enableDebugLogs && plantDrift != 0f)
+            {
+                Debug.Log($"[DayCycleController] {pot.PotId}: {plantData.PlantCode} ({plantData.Family}) → drift pH: {plantDrift:F2}/giorno");
+            }
+        }
+        
+        // Registra il drift totale nel PhSystem
+        if (totalPhDrift != 0f)
+        {
+            _phSystem.RegisterPlantDrift(totalPhDrift);
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[DayCycleController] pH Drift totale da {plantCount} piante: {totalPhDrift:F2} → pH attuale: {_phSystem.CurrentPh:F2}");
+            }
+        }
+        else if (enableDebugLogs && plantCount > 0)
+        {
+            Debug.Log($"[DayCycleController] Nessun drift pH da {plantCount} piante (tutte Standard o drift = 0)");
+        }
+    }
+    
     /// <summary>
     /// Restituisce il nome localizzato per uno stadio
     /// </summary>

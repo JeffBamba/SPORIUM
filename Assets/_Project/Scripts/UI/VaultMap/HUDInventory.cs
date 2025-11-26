@@ -31,14 +31,17 @@ namespace _Project
 
         private void Start()
         {
-            _showInventoryButton.onClick.AddListener(Toggle);
+            if (_showInventoryButton != null)
+                _showInventoryButton.onClick.AddListener(Toggle);
             
-            _inventory.OnInventoryChanged += UpdateInventory;
+            if (_inventory != null)
+                _inventory.OnInventoryChanged += UpdateInventory;
         }
 
         private void OnDestroy()
         {
-            _inventory.OnInventoryChanged -= UpdateInventory;
+            if (_inventory != null)
+                _inventory.OnInventoryChanged -= UpdateInventory;
         }
 
         private void Toggle()

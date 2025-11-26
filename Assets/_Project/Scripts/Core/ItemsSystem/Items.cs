@@ -7,7 +7,8 @@
         public const string WholePlant = "whole-plant";
         public const string OrganicScrap001 = "org-scr-001";
         public const string SporeGeneric = "spore-generic";
-        public const string Seed001 = "seed-001";
-        public const string Seed002 = "seed-002";
+        public const string Seed001 = "seed-001";  // Standard
+        public const string Seed002 = "seed-002";  // Pure
+        public const string Seed003 = "seed-003";  // Evil
     }
 }

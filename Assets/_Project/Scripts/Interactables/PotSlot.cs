@@ -63,14 +63,20 @@ public class PotSlot : MonoBehaviour
     
     private void Start()
     {
-        _interactable.OnInteract += HandleInteract;
-        _dayCycleSystem.OnDayChanged += HandleDayChanged;   
+        if (_interactable != null)
+            _interactable.OnInteract += HandleInteract;
+        
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;   
     }
 
     private void OnDestroy()
     {
-        _interactable.OnInteract -= HandleInteract;
-        _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+        if (_interactable != null)
+            _interactable.OnInteract -= HandleInteract;
+        
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
     }
 
     private void HandleInteract()

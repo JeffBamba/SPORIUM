@@ -1,0 +1,476 @@
+================================================================================
+ANALISI SISTEMA CRESCITA PIANTE - STATO ATTUALE
+================================================================================
+Data Analisi: 2025-01-XX
+Versione Repository: main
+Analista: AI Assistant
+
+================================================================================
+1. PANORAMICA GENERALE
+================================================================================
+
+Il sistema di crescita delle piante è implementato con una struttura base 
+funzionante ma INCOMPLETA rispetto alle specifiche del GDD.
+
+STATO: ⚠️ PARZIALMENTE IMPLEMENTATO
+- ✅ Sistema base funzionante (3 stadi placeholder)
+- ❌ Mancano 3 stadi rispetto al GDD (Growth, Flowering, HarvestReady, Resting)
+- ❌ Nessun sistema di tipi piante (PURE/EVIL/STANDARD)
+- ❌ Nessuna integrazione con sistema pH
+- ❌ Nessun sistema livelli (1-5)
+- ❌ Nessun sistema mutazioni
+
+================================================================================
+2. ARCHITETTURA ATTUALE
+================================================================================
+
+2.1 COMPONENTI PRINCIPALI
+--------------------------
+
+📁 Assets/_Project/Scripts/Dome/PotSystem/Growth/
+   ├── PlantStage.cs                    ✅ Enum stadi (4 valori)
+   ├── PlantGrowthConfig.cs             ✅ Configurazione ScriptableObject
+   └── PotGrowthController.cs            ✅ Controller crescita singolo vaso
+
+📁 Assets/_Project/Scripts/Dome/
+   ├── PotStateModel.cs                 ✅ Modello dati stato vaso
+   ├── PotActions.cs                    ✅ Azioni player (Plant/Water/Light)
+   └── SPOR-BLK-01-03A-DayCycleController.cs  ✅ Controller ciclo giornaliero
+
+2.2 FLUSSO DI CRESCITA ATTUALE
+-------------------------------
+
+1. PLANTING (Piantare)
+   └─> PotActions.DoPlant()
+       ├─> Consuma seme dall'inventario
+       ├─> Crea PotStateModel con Stage = Seed (1)
+       ├─> Imposta timestamp PlantedDay = CurrentDay
+       ├─> Registra vaso in DayCycleController
+       └─> Notifica PotGrowthController.OnPlanted()
+
+2. DAILY GROWTH (Crescita Giornaliera)
+   └─> DayCycleController.HandleDayChanged(day)
+       └─> ResolveGrowthForAllPots(day)
+           └─> Per ogni vaso con pianta:
+               ├─> Verifica timestamp LastWateredDay e LastLitDay
+               ├─> Calcola punti crescita:
+               │   ├─> Cura ideale (acqua + luce) = +2 punti
+               │   ├─> Cura parziale (una delle due) = +1 punto
+               │   └─> Nessuna cura = +0 punti
+               ├─> Aggiorna GrowthPoints
+               ├─> Controlla avanzamento stadi:
+               │   ├─> Seed → Sprout: se GrowthPoints >= 2
+               │   └─> Sprout → Mature: se GrowthPoints >= 3
+               └─> Notifica cambio stadio (eventi + visuali)
+
+3. ACTIONS (Azioni Player)
+   ├─> PotActions.DoWater()
+   │   ├─> Consuma acqua dall'inventario
+   │   ├─> Aumenta Hydration (max 3)
+   │   └─> Imposta LastWateredDay = CurrentDay
+   │
+   └─> PotActions.DoLight()
+       ├─> Consuma risorse (azioni/CRY)
+       ├─> Aumenta LightExposure (max 3)
+       └─> Imposta LastLitDay = CurrentDay
+
+4. DECAY (Decadimento Fine Giorno)
+   └─> DayCycleController.ApplyDecayAndCleanup(day)
+       ├─> Hydration -= dailyHydrationDecay (default: -1)
+       └─> LightExposure = 0 (reset giornaliero)
+
+================================================================================
+3. STADI DI CRESCITA IMPLEMENTATI
+================================================================================
+
+ATTUALE (4 stadi):
+------------------
+0. Empty    = Vaso vuoto
+1. Seed     = Seme piantato
+2. Sprout   = Germoglio
+3. Mature   = Pianta matura
+
+GDD RICHIESTO (7 stadi):
+------------------------
+1. Seed         ✅ IMPLEMENTATO
+2. Sprout       ✅ IMPLEMENTATO
+3. Growth       ❌ MANCANTE (accrescimento vegetativo)
+4. Flowering    ❌ MANCANTE (fioritura attiva)
+5. HarvestReady ❌ MANCANTE (finestra raccolta multi-giorno)
+6. Resting      ❌ MANCANTE (riposo post-raccolta)
+0. Empty        ✅ IMPLEMENTATO
+
+DIFFERENZE:
+-----------
+- ❌ Manca stadio Growth (transizione Sprout → Flowering)
+- ❌ Manca stadio Flowering (richiede Red LED per accelerare)
+- ❌ Manca stadio HarvestReady (produzione frutti, max 3 frutti/giorno)
+- ❌ Manca stadio Resting (riposo dopo raccolta)
+- ⚠️ Mature attuale è un placeholder, non corrisponde a HarvestReady del GDD
+
+================================================================================
+4. SISTEMA PUNTI CRESCITA
+================================================================================
+
+ATTUALE:
+--------
+- GrowthPoints: accumulo punti per avanzamento stadi
+- Calcolo giornaliero basato su cura ricevuta:
+  * Cura ideale (acqua + luce) = +2 punti
+  * Cura parziale (una delle due) = +1 punto
+  * Nessuna cura = +0 punti
+- Soglie configurabili:
+  * Seed → Sprout: 2 punti (PlantGrowthConfig.pointsSeedToSprout)
+  * Sprout → Mature: 3 punti (PlantGrowthConfig.pointsSproutToMature)
+
+GDD RICHIESTO:
+--------------
+- Sistema più complesso con requisiti per stadio:
+  * Seed → Sprout: richiede acqua/luce/pH nella banda corretta
+  * Sprout → Growth: richiede idratazione 40-60%, Blue LED moderato
+  * Growth → Flowering: richiede parametri soddisfatti per 2 giorni consecutivi
+  * Flowering → HarvestReady: richiede Red LED (accelera), rischio Burn Stress
+  * HarvestReady: produzione frutti (1 frutto iniziale, +1/giorno fino a 3 max)
+  * Resting: nessuna crescita/produzione dopo Harvest
+
+DIFFERENZE:
+-----------
+- ⚠️ Sistema attuale troppo semplificato
+- ❌ Non considera pH per avanzamento stadi
+- ❌ Non considera requisiti specifici per stadio (idratazione range, LED tipo)
+- ❌ Non gestisce produzione frutti incrementale
+- ❌ Non gestisce ciclo Resting
+
+================================================================================
+5. TIPI DI PIANTE
+================================================================================
+
+ATTUALE:
+--------
+- ❌ NESSUN sistema di tipi piante implementato
+- ❌ Tutte le piante sono trattate allo stesso modo
+- ❌ Nessuna distinzione tra PURE/EVIL/STANDARD
+- ❌ Nessun PlantData ScriptableObject
+- ❌ Nessun PlantDatabase
+
+GDD RICHIESTO:
+--------------
+- Sistema di famiglie:
+  * STANDARD: piante neutre, drift pH minimo
+  * PURE: drift pH +2/giorno (range +2 a +3)
+  * EVIL: drift pH -2/giorno (range -1 a -3)
+- Ogni pianta ha:
+  * Codice univoco (PLT-STD-001, PLT-PURE-001, ecc.)
+  * Rarità (Comune, Non comune, Rara, Epica, Leggendaria)
+  * Fazione preferita
+  * pH Drift specifico
+  * Range pH ottimale
+  * Bonus Attivi/Passivi
+  * Outputs (Prodotto, Frutto, Seme)
+  * Effetto Commestibile
+
+DIFFERENZE:
+-----------
+- ❌ Sistema completamente mancante
+- ❌ Impossibile integrare pH drift senza tipi piante
+- ❌ Impossibile gestire bonus attivi/passivi
+- ❌ Impossibile differenziare requisiti crescita per tipo
+
+================================================================================
+6. INTEGRAZIONE CON SISTEMA pH
+================================================================================
+
+ATTUALE:
+--------
+- ❌ NESSUNA integrazione con PhSystem
+- ⚠️ PlantGrowthConfig.phGrowthMultiplier = 1.0f (placeholder, non usato)
+- ❌ Nessun calcolo pH drift dalle piante
+- ❌ Nessun controllo pH per avanzamento stadi
+- ❌ Nessun effetto pH su crescita/produzione
+
+GDD RICHIESTO:
+--------------
+- pH Drift giornaliero per pianta:
+  * PURE: +2/giorno (range +2 a +3)
+  * EVIL: -2/giorno (range -1 a -3)
+  * STANDARD: 0 o minimo
+- pH influenza crescita:
+  * Ultra Acido (≤ -80): Pure collassano, Evil +50% resa
+  * Neutrale (-29...+29): nessun bonus/malus
+  * Ultra Basico (≥ +80): Evil collassano, Pure iper-produttive ma sterili
+- Requisiti pH per stadi:
+  * Seed → Sprout: pH nella banda corretta
+  * Altri stadi: pH influenza velocità crescita
+
+DIFFERENZE:
+-----------
+- ❌ Integrazione completamente mancante
+- ❌ PhSystem esiste ma non è collegato alle piante
+- ❌ Impossibile calcolare drift pH senza tipi piante
+- ❌ Impossibile applicare effetti pH su crescita
+
+================================================================================
+7. SISTEMA LIVELLI (1-5)
+================================================================================
+
+ATTUALE:
+--------
+- ❌ NESSUNA implementazione livelli
+- ❌ Tutte le piante sono considerate "livello base"
+- ❌ Nessun tracking livello per pianta
+
+GDD RICHIESTO:
+--------------
+- Piante salgono di livello completando cicli di produzione
+- Mutazioni possibili solo a Lvl 1-3
+- A Lvl 4-5 non si verificano nuove mutazioni spontanee
+- Resa frutti:
+  * Lvl 1-2: invariata
+  * Lvl 3+: quantità cala -15%/livello, qualità/valore crescono
+- Solo piante Lvl 5 possono essere spostate negli slot Passivi
+
+DIFFERENZE:
+-----------
+- ❌ Sistema completamente mancante
+- ❌ Nessun tracking cicli produzione
+- ❌ Nessun calcolo resa basato su livello
+
+================================================================================
+8. SISTEMA MUTAZIONI
+================================================================================
+
+ATTUALE:
+--------
+- ❌ NESSUNA implementazione mutazioni
+- ❌ Nessun sistema di trigger mutazioni
+- ❌ Nessun tracking mutazioni applicate
+
+GDD RICHIESTO:
+--------------
+- Mutazioni Armoniche (Pure/Basiche):
+  * MUT-101: Respiro di Luce (+rigenerazione, -muffe)
+  * MUT-102: Vena Cristallina (+seed viability, +stabilità pH)
+  * MUT-103: Pure Overgrowth (+crescita, -consumo acqua)
+  * MUT-104: Halo Bloom (+efficienza LED, +photosynthesis)
+- Mutazioni Corrotte (Evil/Acide):
+  * MUT-301: Mildew Bloom (muffe↑, crescita↑, drift-)
+  * MUT-302: Ferric Rot (resa↑, stabilità↓)
+  * MUT-303: Spore Hunger (produzione↑, frutti durano meno)
+  * MUT-304: Toxic Synergy (mutation rate Lab↑)
+- Mutazioni Adattive (Neutre/Ibride):
+  * MUT-401: Spiral Growth (crescita↑, stabilità↓)
+  * MUT-402: Radice Errante (diffusione↑, drift ± casuale)
+  * MUT-403: Nullphase Bloom (output oscillante giorno/notte)
+  * MUT-404: Chromatic Shift (sensibilità LED variabile)
+- Trigger mutazioni:
+  * pH mismatch (Neutral=0, Stable=+10, Ultra=+20)
+  * Uso reagenti proibiti
+  * Condizioni stress (Overwatered, Overlit, Burned)
+  * Eventi casuali
+
+DIFFERENZE:
+-----------
+- ❌ Sistema completamente mancante
+- ❌ Nessun MutationSystem
+- ❌ Nessun MutationData ScriptableObject
+- ❌ Nessun calcolo mutation score
+
+================================================================================
+9. PRODUZIONE FRUTTI
+================================================================================
+
+ATTUALE:
+--------
+- ⚠️ PotStateModel.AmountFruits esiste ma logica incompleta
+- ⚠️ Solo incremento placeholder: AmountFruits = (AmountFruits + 0.5f) % 10
+- ❌ Nessun sistema di raccolta frutti
+- ❌ Nessun tracking frutti per pianta
+- ❌ Nessun sistema di decay frutti on-plant
+
+GDD RICHIESTO:
+--------------
+- HarvestReady stage:
+  * All'ingresso: 1 frutto disponibile
+  * Se non raccolto: +1 frutto/giorno fino a 3 max
+  * Decay on-plant: dopo 3 giorni i frutti iniziano a marcire (-1 Livello frutto/giorno)
+- Harvest: raccoglie tutti i frutti disponibili
+- Dopo Harvest: pianta entra in Resting
+
+DIFFERENZE:
+-----------
+- ❌ Sistema produzione completamente mancante
+- ❌ Nessun tracking frutti incrementale
+- ❌ Nessun sistema decay frutti
+- ❌ Nessun sistema raccolta
+
+================================================================================
+10. CONDIZIONI E STRESS
+================================================================================
+
+ATTUALE:
+--------
+- ⚠️ PotStateModel.DaysNeglectedStreak esiste ma non usato per effetti
+- ❌ Nessun sistema condizioni (Rigogliosa, Sana, Stressata, Appassita, Infestata)
+- ❌ Nessun tracking Overwatered/Thirsty
+- ❌ Nessun tracking Overlit/Light-starved
+- ❌ Nessun tracking Burned
+- ❌ Nessun tracking Sterile
+
+GDD RICHIESTO:
+--------------
+- Condizioni (transitorie, influenzano resa/ritmi/health):
+  * Rigogliosa: crescita +20%, produzione +15%
+  * Sana: normale
+  * Stressata: crescita -10%, produzione -15%
+  * Appassita: crescita -30%, rischio collasso
+  * Infestata: produzione -50%, rischio muffe
+- Overwatered/Thirsty: da idratazione fuori range
+- Overlit/Light-starved: da esposizione luce fuori range
+- Burned: da overuse LED, regressione Stage e -1 Livello
+- Sterile: pH fuori range ottimale per tipo pianta
+
+DIFFERENZE:
+-----------
+- ❌ Sistema condizioni completamente mancante
+- ❌ Nessun calcolo condizioni basato su parametri
+- ❌ Nessun effetto condizioni su crescita/produzione
+
+================================================================================
+11. INTEGRAZIONE CON ALTRI SISTEMI
+================================================================================
+
+11.1 AZIONI PLAYER
+------------------
+✅ INTEGRATO:
+- PotActions.DoPlant() → registra vaso in DayCycleController
+- PotActions.DoWater() → imposta LastWateredDay timestamp
+- PotActions.DoLight() → imposta LastLitDay timestamp
+
+❌ MANCANTE:
+- Overwatering → dovrebbe diminuire pH di -5 (non implementato)
+- Blue LED → dovrebbe aumentare pH di +5 (non implementato)
+- Red LED → dovrebbe diminuire pH di -5 (non implementato)
+- Nessun tracking tipo LED usato
+
+11.2 EVENTI GIORNALIERI
+------------------------
+❌ MANCANTE:
+- Pioggia Acida → dovrebbe diminuire pH di -20
+- Muffa non trattata → dovrebbe diminuire pH di -10/giorno
+- Nessun sistema eventi collegato a crescita
+
+11.3 INVENTARIO
+---------------
+✅ INTEGRATO:
+- Consumo semi dall'inventario
+- Consumo acqua dall'inventario
+- Aggiunta WholePlant all'inventario dopo Uproot
+
+❌ MANCANTE:
+- Aggiunta frutti all'inventario dopo Harvest
+- Tracking tipo seme piantato (PURE/EVIL/STANDARD)
+
+================================================================================
+12. PUNTI DI FORZA DEL SISTEMA ATTUALE
+================================================================================
+
+✅ ARCHITETTURA SOLIDA:
+- Separazione responsabilità chiara (PotStateModel, PotActions, DayCycleController)
+- Sistema timestamp deterministico (BLK-01.03A) risolve problemi flag volatili
+- Configurazione centralizzata (PlantGrowthConfig ScriptableObject)
+- Eventi per comunicazione tra sistemi (PotEvents)
+
+✅ FUNZIONALITÀ BASE FUNZIONANTI:
+- Piantare semi funziona
+- Annaffiare funziona
+- Illuminare funziona
+- Crescita giornaliera funziona
+- Avanzamento stadi base funziona (Seed → Sprout → Mature)
+- Visuali aggiornate automaticamente (PotGrowthController)
+
+✅ DEBUG E TESTING:
+- Logging dettagliato per debug
+- Context menu Unity Editor per testing
+- Script di test (SPOR-BLK-01-03A-SystemTest.cs)
+
+================================================================================
+13. LIMITAZIONI CRITICHE
+================================================================================
+
+❌ SISTEMA INCOMPLETO RISPETTO AL GDD:
+- Solo 3 stadi invece di 7
+- Nessun sistema tipi piante
+- Nessuna integrazione pH
+- Nessun sistema livelli
+- Nessun sistema mutazioni
+- Nessun sistema produzione frutti completo
+
+❌ IMPOSSIBILE INTEGRARE pH SENZA:
+- Sistema tipi piante (PURE/EVIL/STANDARD)
+- Tracking tipo seme piantato
+- Calcolo drift pH per pianta
+
+❌ IMPOSSIBILE IMPLEMENTARE GDD SENZA:
+- Estendere stadi a 7 (aggiungere Growth, Flowering, HarvestReady, Resting)
+- Creare PlantData ScriptableObject
+- Creare PlantDatabase
+- Integrare PhSystem con DayCycleController
+
+================================================================================
+14. ROADMAP INTEGRAZIONE CON pH SYSTEM
+================================================================================
+
+PRIORITÀ ALTA (necessario per integrazione pH):
+------------------------------------------------
+1. ✅ PhSystem implementato (già fatto)
+2. ❌ Creare PlantData ScriptableObject con famiglia (PURE/EVIL/STANDARD)
+3. ❌ Creare PlantDatabase per registrare tutte le piante
+4. ❌ Modificare PotStateModel per referenziare PlantData
+5. ❌ Modificare DayCycleController per calcolare pH drift dalle piante
+6. ❌ Collegare PhSystem.RegisterDailyDrift() nel DayCycleController
+
+PRIORITÀ MEDIA (per completare sistema):
+------------------------------------------
+7. ❌ Estendere stadi a 7 (aggiungere Growth, Flowering, HarvestReady, Resting)
+8. ❌ Implementare requisiti pH per avanzamento stadi
+9. ❌ Implementare effetti pH su crescita/produzione
+10. ❌ Implementare sistema livelli (1-5)
+11. ❌ Implementare sistema mutazioni
+
+PRIORITÀ BASSA (raffinatezze):
+-------------------------------
+12. ❌ Implementare condizioni e stress
+13. ❌ Implementare sistema produzione frutti completo
+14. ❌ Implementare sistema raccolta frutti
+
+================================================================================
+15. CONCLUSIONI
+================================================================================
+
+Il sistema di crescita attuale è una BASE FUNZIONANTE ma INCOMPLETA.
+
+✅ PUNTI DI FORZA:
+- Architettura solida e ben strutturata
+- Sistema timestamp deterministico funzionante
+- Funzionalità base (plant/water/light) implementate
+- Crescita giornaliera funzionante per 3 stadi placeholder
+
+❌ LIMITAZIONI CRITICHE:
+- Solo 3 stadi invece di 7 richiesti dal GDD
+- Nessun sistema tipi piante (PURE/EVIL/STANDARD)
+- Nessuna integrazione con sistema pH
+- Nessun sistema livelli/mutazioni/produzione frutti
+
+🎯 PROSSIMI PASSI RACCOMANDATI:
+1. Creare PlantData ScriptableObject e PlantDatabase
+2. Modificare PotStateModel per referenziare PlantData
+3. Integrare PhSystem con DayCycleController per calcolare drift pH
+4. Estendere stadi a 7 (aggiungere Growth, Flowering, HarvestReady, Resting)
+5. Implementare requisiti pH per avanzamento stadi
+
+Senza questi passi, l'integrazione con il sistema pH è IMPOSSIBILE.
+
+================================================================================
+FINE ANALISI
+================================================================================
+

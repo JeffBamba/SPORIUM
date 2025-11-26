@@ -39,6 +39,17 @@ namespace _Project
                 Color = color
             });
         }
+        
+        /// <summary>
+        /// Cancella immediatamente la notifica corrente
+        /// </summary>
+        public void ClearNotification()
+        {
+            if (_notificationText != null)
+            {
+                _notificationText.text = "";
+            }
+        }
 
         private IEnumerator NotificationRoutine()
         {

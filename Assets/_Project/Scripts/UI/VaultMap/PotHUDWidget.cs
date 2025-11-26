@@ -1,4 +1,5 @@
 using _Project.Sporae.Core;
+using _Project;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,9 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private Button btnLight;
     [SerializeField] private TextMeshProUGUI txtCosts;
     
+    [Header("Seed Selector")]
+    [SerializeField] private UISeedSelector seedSelector;
+    
     [Header("Widget Settings")]
     [SerializeField] private Vector2 widgetPosition = new Vector2(12, 12);
     [SerializeField] private Vector2 widgetSize = new Vector2(300, 120); // Aumentato per nuovi elementi
@@ -53,6 +57,99 @@ public class PotHUDWidget : MonoBehaviour
         gameObject.SetActive(false);
         InitializeWidget();
         LoadGrowthConfig();
+        InitializeSeedSelector();
+    }
+    
+    /// <summary>
+    /// Inizializza il selettore semi se non assegnato
+    /// </summary>
+    private void InitializeSeedSelector()
+    {
+        if (seedSelector == null)
+        {
+            // Cerca UISeedSelector nella scena
+            seedSelector = FindObjectOfType<UISeedSelector>();
+            
+            if (seedSelector == null)
+            {
+                Debug.LogWarning("[PotHUDWidget] UISeedSelector non trovato nella scena. Creazione automatica...");
+                // Crea UISeedSelector automaticamente
+                GameObject seedSelectorGO = new GameObject("UISeedSelector");
+                seedSelector = seedSelectorGO.AddComponent<UISeedSelector>();
+                
+                // Sottoscrivi agli eventi
+                seedSelector.OnSeedSelected += OnSeedSelected;
+                seedSelector.OnCancelled += OnSeedSelectionCancelled;
+            }
+            else
+            {
+                // Sottoscrivi agli eventi se già esistente
+                seedSelector.OnSeedSelected += OnSeedSelected;
+                seedSelector.OnCancelled += OnSeedSelectionCancelled;
+            }
+        }
+        else
+        {
+            // Sottoscrivi agli eventi
+            seedSelector.OnSeedSelected += OnSeedSelected;
+            seedSelector.OnCancelled += OnSeedSelectionCancelled;
+        }
+    }
+    
+    /// <summary>
+    /// Apre il selettore semi per il vaso specificato
+    /// </summary>
+    private void OpenSeedSelector(PotSlot targetPot)
+    {
+        if (seedSelector == null)
+        {
+            Debug.LogError("[PotHUDWidget] UISeedSelector non disponibile!");
+            return;
+        }
+        
+        seedSelector.Show(targetPot);
+    }
+    
+    /// <summary>
+    /// Gestisce la selezione di un seme
+    /// </summary>
+    private void OnSeedSelected(string seedTypeId)
+    {
+        PotSlot selectedPot = FindSelectedPot();
+        if (selectedPot == null || selectedPot.PotActions == null)
+        {
+            Debug.LogWarning("[PotHUDWidget] Nessun vaso selezionato quando seme selezionato!");
+            return;
+        }
+        
+        Debug.Log($"[PotHUDWidget] Piantando seme {seedTypeId} nel vaso {selectedPot.PotId}");
+        
+        // Piantare il seme selezionato
+        bool success = selectedPot.PotActions.DoPlant(seedTypeId);
+        
+        if (success)
+        {
+            Debug.Log($"[PotHUDWidget] Seme {seedTypeId} piantato con successo!");
+            // Aggiorna l'UI
+            UpdateActionButtons(selectedPot);
+            
+            var growthController = selectedPot.GetComponent<PotGrowthController>();
+            if (growthController != null)
+                UpdateStageAndProgressUI(selectedPot);
+        }
+        else
+        {
+            Debug.LogWarning($"[PotHUDWidget] Fallito piantare seme {seedTypeId}!");
+        }
+    }
+    
+    /// <summary>
+    /// Gestisce l'annullamento della selezione seme
+    /// </summary>
+    private void OnSeedSelectionCancelled()
+    {
+        Debug.Log("[PotHUDWidget] Selezione seme annullata");
+        // Nessuna azione necessaria
     }
     
     private void OnEnable()
@@ -667,8 +764,10 @@ public class PotHUDWidget : MonoBehaviour
         switch (actionType)
         {
             case PotEvents.PotActionType.Plant:
-                success = selectedPot.PotActions.DoPlant();
-                break;
+                // Apri selettore semi invece di piantare direttamente
+                OpenSeedSelector(selectedPot);
+                return; // Esci subito, DoPlant verrà chiamato quando l'utente seleziona un seme
+                
             case PotEvents.PotActionType.Water:
                 success = selectedPot.PotActions.DoWater();
                 break;
