@@ -34,6 +34,10 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("Range massimo pH ottimale")]
         [SerializeField] private float optimalPhMax = 29f;
         
+        [Header("Stage Requirements (BLK-02.05)")]
+        [Tooltip("Requisiti di crescita per ogni stadio (Seed, Sprout, Growth, Flowering, HarvestReady, Resting)")]
+        [SerializeField] private StageRequirements[] stageRequirements = new StageRequirements[0];
+        
         [Header("Futuro (placeholder per feature avanzate)")]
         [Tooltip("Fazione preferita (per vendita/baratto)")]
         [SerializeField] private string preferredFaction = "";
@@ -47,6 +51,48 @@ namespace Sporae.Dome.PotSystem.Growth
         public float OptimalPhMin => optimalPhMin;
         public float OptimalPhMax => optimalPhMax;
         public string PreferredFaction => preferredFaction;
+        public StageRequirements[] StageRequirements => stageRequirements;
+        
+        /// <summary>
+        /// Ottiene i requisiti per uno stadio specifico
+        /// </summary>
+        public StageRequirements GetStageRequirements(PlantStage stage)
+        {
+            if (stageRequirements == null || stageRequirements.Length == 0)
+                return null;
+            
+            foreach (var req in stageRequirements)
+            {
+                if (req != null && req.stage == stage)
+                    return req;
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Verifica se i requisiti per uno stadio sono soddisfatti
+        /// </summary>
+        public bool AreStageRequirementsMet(PlantStage stage, int currentHydration, LedType? lastUsedLed)
+        {
+            var req = GetStageRequirements(stage);
+            if (req == null)
+                return true; // Se non ci sono requisiti specifici, considera soddisfatti
+            
+            bool hydrationOk = req.IsHydrationInRange(currentHydration);
+            bool ledOk = req.IsLedRequirementMet(lastUsedLed);
+            
+            return hydrationOk && ledOk;
+        }
+        
+        /// <summary>
+        /// Ottiene la durata tipica in giorni per uno stadio specifico
+        /// </summary>
+        public int GetStageDurationDays(PlantStage stage)
+        {
+            var req = GetStageRequirements(stage);
+            return req != null ? req.durationDays : 2; // Default 2 giorni
+        }
         
         /// <summary>
         /// Verifica se il pH è nella banda ottimale per questa pianta

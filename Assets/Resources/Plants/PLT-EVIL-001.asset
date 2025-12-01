@@ -19,4 +19,59 @@ MonoBehaviour:
   dailyPhDrift: -2
   optimalPhMin: -100
   optimalPhMax: -50
+  stageRequirements:
+  - stage: 1
+    hydrationMin: 25
+    hydrationMed: 40
+    hydrationMax: 55
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: "Pianta Evil pi\xF9 tollerante"
+  - stage: 2
+    hydrationMin: 30
+    hydrationMed: 45
+    hydrationMax: 60
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Germoglio Evil, tollerante
+  - stage: 3
+    hydrationMin: 30
+    hydrationMed: 50
+    hydrationMax: 70
+    requiredLed:
+      hasValue: 1
+      value: 0
+    durationDays: 3
+    notes: Crescita Evil, Blue LED accelera
+  - stage: 4
+    hydrationMin: 35
+    hydrationMed: 50
+    hydrationMax: 65
+    requiredLed:
+      hasValue: 1
+      value: 1
+    durationDays: 3
+    notes: Fioritura Evil, Red LED richiesto
+  - stage: 5
+    hydrationMin: 0
+    hydrationMed: 45
+    hydrationMax: 100
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 3
+    notes: Raccolta Evil, tollerante a condizioni variabili
+  - stage: 6
+    hydrationMin: 0
+    hydrationMed: 40
+    hydrationMax: 100
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Riposo Evil, riattivabile con fertilizzante
   preferredFaction: 

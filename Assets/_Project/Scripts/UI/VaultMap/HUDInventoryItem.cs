@@ -47,9 +47,19 @@ namespace _Project
                 // Colore bianco brillante per massimo contrasto
                 _nameLabel.color = new Color(1f, 1f, 1f, 1f);
                 
-                // Aggiungi outline spesso per massimo contrasto
-                _nameLabel.outlineWidth = 0.4f;
-                _nameLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                // Aggiungi outline spesso per massimo contrasto (solo se materiale disponibile)
+                if (_nameLabel.fontMaterial != null)
+                {
+                    try
+                    {
+                        _nameLabel.outlineWidth = 0.4f;
+                        _nameLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _nameLabel in ImproveReadability: {ex.Message}");
+                    }
+                }
                 
                 // Assicura che il testo sia sempre visibile
                 _nameLabel.enabled = true;
@@ -67,9 +77,19 @@ namespace _Project
                 // Colore giallo/arancione brillante per le quantità
                 _scoreLabel.color = new Color(1f, 0.95f, 0.7f, 1f);
                 
-                // Outline spesso per quantità
-                _scoreLabel.outlineWidth = 0.4f;
-                _scoreLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                // Outline spesso per quantità (solo se materiale disponibile)
+                if (_scoreLabel.fontMaterial != null)
+                {
+                    try
+                    {
+                        _scoreLabel.outlineWidth = 0.4f;
+                        _scoreLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _scoreLabel in ImproveReadability: {ex.Message}");
+                    }
+                }
                 
                 // Assicura che il testo sia sempre visibile
                 _scoreLabel.enabled = true;
@@ -144,8 +164,21 @@ namespace _Project
                 _nameLabel.enabled = true;
                 // Colore bianco brillante con outline nero spesso per massimo contrasto
                 _nameLabel.color = new Color(1f, 1f, 1f, 1f);
-                _nameLabel.outlineWidth = 0.4f;
-                _nameLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                
+                // Verifica che il materiale sia disponibile prima di impostare outline
+                if (_nameLabel.fontMaterial != null)
+                {
+                    try
+                    {
+                        _nameLabel.outlineWidth = 0.4f;
+                        _nameLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _nameLabel: {ex.Message}");
+                    }
+                }
+                
                 // Forza aggiornamento del rendering
                 _nameLabel.SetAllDirty();
                 _nameLabel.ForceMeshUpdate();
@@ -181,8 +214,21 @@ namespace _Project
                 _scoreLabel.enabled = true;
                 // Colore giallo brillante con outline nero spesso
                 _scoreLabel.color = new Color(1f, 0.95f, 0.7f, 1f);
-                _scoreLabel.outlineWidth = 0.4f;
-                _scoreLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                
+                // Verifica che il materiale sia disponibile prima di impostare outline
+                if (_scoreLabel.fontMaterial != null)
+                {
+                    try
+                    {
+                        _scoreLabel.outlineWidth = 0.4f;
+                        _scoreLabel.outlineColor = new Color(0f, 0f, 0f, 1f);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _scoreLabel: {ex.Message}");
+                    }
+                }
+                
                 // Forza aggiornamento del rendering
                 _scoreLabel.SetAllDirty();
                 _scoreLabel.ForceMeshUpdate();

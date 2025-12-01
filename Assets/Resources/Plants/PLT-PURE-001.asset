@@ -19,4 +19,59 @@ MonoBehaviour:
   dailyPhDrift: 2
   optimalPhMin: 50
   optimalPhMax: 100
+  stageRequirements:
+  - stage: 1
+    hydrationMin: 35
+    hydrationMed: 50
+    hydrationMax: 65
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Pianta Pure richiede cura attenta
+  - stage: 2
+    hydrationMin: 45
+    hydrationMed: 55
+    hydrationMax: 65
+    requiredLed:
+      hasValue: 1
+      value: 0
+    durationDays: 3
+    notes: Germoglio Pure, Blue LED consigliato
+  - stage: 3
+    hydrationMin: 40
+    hydrationMed: 55
+    hydrationMax: 70
+    requiredLed:
+      hasValue: 1
+      value: 0
+    durationDays: 3
+    notes: Crescita Pure, Blue LED richiesto
+  - stage: 4
+    hydrationMin: 45
+    hydrationMed: 55
+    hydrationMax: 65
+    requiredLed:
+      hasValue: 1
+      value: 1
+    durationDays: 3
+    notes: Fioritura Pure, Red LED richiesto
+  - stage: 5
+    hydrationMin: 40
+    hydrationMed: 55
+    hydrationMax: 70
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 3
+    notes: Raccolta Pure, mantenere idratazione ottimale
+  - stage: 6
+    hydrationMin: 0
+    hydrationMed: 50
+    hydrationMax: 100
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Riposo Pure, riattivabile con fertilizzante
   preferredFaction: 

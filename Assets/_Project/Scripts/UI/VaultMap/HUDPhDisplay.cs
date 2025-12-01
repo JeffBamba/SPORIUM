@@ -387,6 +387,13 @@ namespace _Project
     private void OnPhChanged(float newPh, float delta)
     {
         UpdatePhDisplay();
+        
+        // IMPORTANTE: Aggiorna anche il tooltip se è visibile, per riflettere immediatamente i cambiamenti
+        // (es. quando vengono rimosse piante con UPROOT, i contributi devono sparire dal tooltip)
+        if (_isHovering && tooltipPanel != null && tooltipPanel.activeSelf)
+        {
+            UpdateTooltipContent();
+        }
     }
     
     public void UpdatePhDisplay()

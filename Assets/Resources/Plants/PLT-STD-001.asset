@@ -16,7 +16,62 @@ MonoBehaviour:
   seedItemConfig: {fileID: 11400000, guid: 57f01ae6a642c52408a589fb6538ae4c, type: 2}
   family: 0
   rarity: 0
-  dailyPhDrift: 1
+  dailyPhDrift: 0
   optimalPhMin: -30
   optimalPhMax: 50
+  stageRequirements:
+  - stage: 1
+    hydrationMin: 30
+    hydrationMed: 45
+    hydrationMax: 60
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Ampia tolleranza
+  - stage: 2
+    hydrationMin: 40
+    hydrationMed: 50
+    hydrationMax: 60
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Germoglio attivo
+  - stage: 3
+    hydrationMin: 35
+    hydrationMed: 55
+    hydrationMax: 75
+    requiredLed:
+      hasValue: 1
+      value: 0
+    durationDays: 3
+    notes: Accrescimento vegetativo
+  - stage: 4
+    hydrationMin: 40
+    hydrationMed: 50
+    hydrationMax: 70
+    requiredLed:
+      hasValue: 1
+      value: 1
+    durationDays: 3
+    notes: Fioritura attiva
+  - stage: 5
+    hydrationMin: 0
+    hydrationMed: 50
+    hydrationMax: 100
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 3
+    notes: Finestra di raccolta multi-giorno
+  - stage: 6
+    hydrationMin: 0
+    hydrationMed: 50
+    hydrationMax: 100
+    requiredLed:
+      hasValue: 0
+      value: 0
+    durationDays: 2
+    notes: Riposo post-raccolta, riattivabile con fertilizzante
   preferredFaction: 

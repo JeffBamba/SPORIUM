@@ -402,8 +402,17 @@ public class PotActions : MonoBehaviour
         if (!CanUproot())
             return false;
         
-        _potState.Stage = 0;
-     
+        // BLK-02.03: Rimuovi contributi pH della pianta prima di rimuoverla
+        if (_phSystem != null && !string.IsNullOrEmpty(_potState.PlantCode))
+        {
+            _phSystem.RemovePlantContributions(potSlot.PotId);
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] ✅ Contributi pH rimossi per pianta nel vaso {potSlot.PotId} (PlantCode: {_potState.PlantCode})");
+        }
+        
+        // Reset completo dello stato del vaso (importante per evitare che la pianta continui a influenzare il pH)
+        _potState.ResetToEmpty();
+        
         if (dayCycleController != null)
             dayCycleController.UnregisterPot(_potState);
         
@@ -415,6 +424,9 @@ public class PotActions : MonoBehaviour
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Uproot, potSlot);
         PotEvents.EmitChanged(potSlot);
+        
+        if (showDebugLogs)
+            Debug.Log($"[PotActions] ✅ UPROOT completato per vaso {potSlot.PotId}. Vaso resettato completamente.");
         
         return true;
     }

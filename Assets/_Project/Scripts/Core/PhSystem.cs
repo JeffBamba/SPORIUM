@@ -212,6 +212,113 @@ namespace _Project
         }
         
         /// <summary>
+        /// Rimuove i contributi delle piante che non sono più nei vasi attivi
+        /// IMPORTANTE: Solo le piante nei POT hanno impatto sul pH, non quelle in Inventory o Seed Storage
+        /// </summary>
+        public void CleanupPlantContributions(System.Collections.Generic.HashSet<string> activePotIds)
+        {
+            if (activePotIds == null)
+                return;
+            
+            float totalDriftToRemove = 0f;
+            int removedCount = 0;
+            
+            // Rimuovi tutti i contributi delle piante che non sono più nei vasi attivi
+            for (int i = _plantContributions.Count - 1; i >= 0; i--)
+            {
+                if (!activePotIds.Contains(_plantContributions[i].PotId))
+                {
+                    totalDriftToRemove += _plantContributions[i].DailyDrift;
+                    Debug.Log($"[PhSystem] 🧹 Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}");
+                    _plantContributions.RemoveAt(i);
+                    removedCount++;
+                }
+            }
+            
+            // Applica correzione se necessario
+            if (Mathf.Abs(totalDriftToRemove) > 0.01f)
+            {
+                _plantsDrift -= totalDriftToRemove;
+                // IMPORTANTE: Se non ci sono più contributi dopo il cleanup, azzera anche _plantsDrift
+                if (_plantContributions.Count == 0)
+                {
+                    _plantsDrift = 0f;
+                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup, azzerato _plantsDrift");
+                }
+                ApplyInstantDelta(-totalDriftToRemove, "PlantCleanup");
+                Debug.Log($"[PhSystem] ✅ Cleanup completato: rimossi {removedCount} contributi obsoleti, drift totale rimosso = {totalDriftToRemove:F2}, _plantsDrift = {_plantsDrift:F2}");
+            }
+            else if (removedCount > 0)
+            {
+                // IMPORTANTE: Anche se il drift è piccolo, sincronizza se la lista è vuota
+                if (_plantContributions.Count == 0)
+                {
+                    _plantsDrift = 0f;
+                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup, azzerato _plantsDrift");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Rimuove i contributi di una pianta specifica quando viene rimossa (es. UPROOT)
+        /// IMPORTANTE: Solo le piante nei POT hanno impatto sul pH, non quelle in Inventory o Seed Storage
+        /// </summary>
+        public void RemovePlantContributions(string potId)
+        {
+            if (string.IsNullOrEmpty(potId))
+            {
+                Debug.LogWarning("[PhSystem] ⚠️ RemovePlantContributions chiamato con potId NULL o vuoto!");
+                return;
+            }
+            
+            // Trova tutti i contributi di questa pianta (potrebbero esserci più entry se registrata più volte)
+            float totalDriftToRemove = 0f;
+            int removedCount = 0;
+            
+            for (int i = _plantContributions.Count - 1; i >= 0; i--)
+            {
+                if (_plantContributions[i].PotId == potId)
+                {
+                    totalDriftToRemove += _plantContributions[i].DailyDrift;
+                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: PotId={potId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}");
+                    _plantContributions.RemoveAt(i);
+                    removedCount++;
+                }
+            }
+            
+            // Rimuovi il drift dal totale delle piante e applica la correzione
+            if (Mathf.Abs(totalDriftToRemove) > 0.01f)
+            {
+                _plantsDrift -= totalDriftToRemove;
+                // IMPORTANTE: Se non ci sono più contributi, azzera anche _plantsDrift per sincronizzazione
+                if (_plantContributions.Count == 0)
+                {
+                    _plantsDrift = 0f;
+                    Debug.Log($"[PhSystem] 🔄 Sincronizzazione: _plantContributions è vuoto, azzerato _plantsDrift");
+                }
+                
+                // Applica correzione istantanea per rimuovere il drift della pianta rimossa
+                ApplyInstantDelta(-totalDriftToRemove, "PlantRemoved");
+                
+                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH per pianta nel vaso {potId}: drift totale rimosso = {totalDriftToRemove:F2}, pH attuale = {CurrentPh:F2}, _plantsDrift = {_plantsDrift:F2}");
+            }
+            else if (removedCount > 0)
+            {
+                // IMPORTANTE: Anche se il drift è piccolo, sincronizza se la lista è vuota
+                if (_plantContributions.Count == 0)
+                {
+                    _plantsDrift = 0f;
+                    Debug.Log($"[PhSystem] 🔄 Sincronizzazione: _plantContributions è vuoto dopo rimozione, azzerato _plantsDrift");
+                }
+                Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per vaso {potId} ma drift totale era 0 o molto piccolo");
+            }
+            else
+            {
+                Debug.LogWarning($"[PhSystem] ⚠️ Nessun contributo trovato per vaso {potId} da rimuovere!");
+            }
+        }
+        
+        /// <summary>
         /// Registra drift da azioni con dettagli pot
         /// </summary>
         public void RegisterActionDrift(float drift, string actionName = "", string potId = null)
@@ -340,12 +447,13 @@ namespace _Project
             }
             
             // Mostra dettagli delle piante individuali per pot
+            // IMPORTANTE: Mostra solo le piante che sono ancora nei POT (non quelle rimosse)
             if (_plantContributions.Count > 0)
             {
                 foreach (var plant in _plantContributions)
                 {
                     if (Mathf.Abs(plant.DailyDrift) > 0.01f)
-            {
+                    {
                         // Formato con 1 decimale: mostra 2 come "2,0" e -2 come "-2,0"
                         string plantValue = plant.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
                         string potInfo = !string.IsNullOrEmpty(plant.PotId) && plant.PotId != "Unknown" 
@@ -359,13 +467,15 @@ namespace _Project
                     }
                 }
             }
-            // Fallback: mostra totale piante se non ci sono dettagli individuali
-            else if (Mathf.Abs(contrib.PlantsDrift) > 0.01f)
+            // Fallback: mostra totale piante SOLO se non ci sono dettagli individuali E se il totale è diverso da 0
+            // IMPORTANTE: Non mostrare il fallback se la lista è vuota ma il totale è ancora diverso da 0
+            // (questo può accadere se i contributi sono stati rimossi ma _plantsDrift non è stato aggiornato correttamente)
+            else if (Mathf.Abs(contrib.PlantsDrift) > 0.01f && _plantContributions.Count == 0)
             {
-                // Formato con 1 decimale: mostra 2 come "2,0" e -2 come "-2,0"
-                string plantsValue = contrib.PlantsDrift.ToString("+#0.0;-#0.0;0", culture);
-                breakdown += $"<color=#FFFF00>Piante:</color> {plantsValue}\n";
-                hasContributions = true;
+                // Se la lista è vuota ma il totale è ancora diverso da 0, potrebbe essere un problema di sincronizzazione
+                // In questo caso, non mostriamo il fallback per evitare confusione
+                // Il totale verrà corretto al prossimo calcolo giornaliero
+                Debug.LogWarning($"[PhSystem] ⚠️ Discrepanza: _plantContributions è vuoto ma _plantsDrift = {contrib.PlantsDrift:F2}. Questo potrebbe indicare un problema di sincronizzazione.");
             }
             
             // Mostra dettagli delle azioni individuali per pot

@@ -106,11 +106,32 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OpenSeedSelector(PotSlot targetPot)
     {
+        Debug.Log($"[PotHUDWidget] 🔵 OpenSeedSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+        
+        // Assicurati che il selettore sia inizializzato
         if (seedSelector == null)
         {
-            Debug.LogError("[PotHUDWidget] UISeedSelector non disponibile!");
+            Debug.Log("[PotHUDWidget] 🔵 Inizializzazione seed selector...");
+            InitializeSeedSelector();
+        }
+        
+        if (seedSelector == null)
+        {
+            Debug.LogError("[PotHUDWidget] ❌ UISeedSelector non disponibile dopo inizializzazione!");
             return;
         }
+        
+        // Rassicurati che gli eventi siano sempre sottoscritti (in caso di ricreazione)
+        seedSelector.OnSeedSelected -= OnSeedSelected; // Rimuovi prima per evitare duplicati
+        seedSelector.OnSeedSelected += OnSeedSelected;
+        seedSelector.OnCancelled -= OnSeedSelectionCancelled;
+        seedSelector.OnCancelled += OnSeedSelectionCancelled;
+        
+        Debug.Log($"[PotHUDWidget] 🔵 Eventi sottoscritti correttamente");
+        Debug.Log($"[PotHUDWidget] 🔵 Apertura selettore semi per vaso {targetPot?.PotId}");
+        
+        // Salva il vaso corrente prima di aprire il selettore
+        _currentSelectedPot = targetPot;
         
         seedSelector.Show(targetPot);
     }
@@ -120,31 +141,40 @@ public class PotHUDWidget : MonoBehaviour
     /// </summary>
     private void OnSeedSelected(string seedTypeId)
     {
-        PotSlot selectedPot = FindSelectedPot();
-        if (selectedPot == null || selectedPot.PotActions == null)
+        Debug.Log($"[PotHUDWidget] 🟢 OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
+        Debug.Log($"[PotHUDWidget] 🟢 _currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
+        
+        // Usa _currentSelectedPot invece di FindSelectedPot() per evitare problemi di timing
+        if (_currentSelectedPot == null)
         {
-            Debug.LogWarning("[PotHUDWidget] Nessun vaso selezionato quando seme selezionato!");
+            Debug.LogError("[PotHUDWidget] ⚠️ _currentSelectedPot è NULL quando seme selezionato!");
             return;
         }
         
-        Debug.Log($"[PotHUDWidget] Piantando seme {seedTypeId} nel vaso {selectedPot.PotId}");
+        if (_currentSelectedPot.PotActions == null)
+        {
+            Debug.LogError("[PotHUDWidget] ⚠️ PotActions è NULL quando seme selezionato!");
+            return;
+        }
+        
+        Debug.Log($"[PotHUDWidget] 🟢 Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
         
         // Piantare il seme selezionato
-        bool success = selectedPot.PotActions.DoPlant(seedTypeId);
+        bool success = _currentSelectedPot.PotActions.DoPlant(seedTypeId);
         
         if (success)
         {
-            Debug.Log($"[PotHUDWidget] Seme {seedTypeId} piantato con successo!");
+            Debug.Log($"[PotHUDWidget] ✅ Seme {seedTypeId} piantato con successo!");
             // Aggiorna l'UI
-            UpdateActionButtons(selectedPot);
+            UpdateActionButtons(_currentSelectedPot);
             
-            var growthController = selectedPot.GetComponent<PotGrowthController>();
+            var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
             if (growthController != null)
-                UpdateStageAndProgressUI(selectedPot);
+                UpdateStageAndProgressUI(_currentSelectedPot);
         }
         else
         {
-            Debug.LogWarning($"[PotHUDWidget] Fallito piantare seme {seedTypeId}!");
+            Debug.LogError($"[PotHUDWidget] ❌ Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
         }
     }
     
@@ -1141,7 +1171,7 @@ public class PotHUDWidget : MonoBehaviour
                     return 100f; // Pronto per avanzare
                 return (float)points / _growthConfig.pointsSproutToMature * 100f;
                 
-            case (int)PlantStage.Mature:
+            case (int)PlantStage.HarvestReady:
                 return 100f; // Pianta completamente matura
                 
             default:
@@ -1162,7 +1192,7 @@ public class PotHUDWidget : MonoBehaviour
                 return new Color(0.6f, 0.4f, 0.2f); // Brown color
             case (int)PlantStage.Sprout:
                 return Color.green;
-            case (int)PlantStage.Mature:
+            case (int)PlantStage.HarvestReady:
                 return Color.yellow;
             default:
                 return Color.white;
@@ -1181,7 +1211,10 @@ public class PotHUDWidget : MonoBehaviour
             case 0: return "Empty";
             case 1: return "Seed";
             case 2: return "Sprout";
-            case 3: return "Mature";
+            case 3: return "HarvestReady";
+            case 4: return "Flowering";
+            case 5: return "HarvestReady";
+            case 6: return "Resting";
             default: return $"Stadio {stage}";
         }
     }
@@ -1195,8 +1228,11 @@ public class PotHUDWidget : MonoBehaviour
         {
             case 0: return "0"; // Empty (nessun avanzamento)
             case 1: return "2"; // Seed to Sprout
-            case 2: return "3"; // Sprout to Mature
-            case 3: return "∞"; // Mature (nessun avanzamento)
+            case 2: return "3"; // Sprout to HarvestReady (temporaneo)
+            case 3: return "?"; // Growth (da implementare)
+            case 4: return "?"; // Flowering (da implementare)
+            case 5: return "∞"; // HarvestReady (nessun avanzamento)
+            case 6: return "∞"; // Resting (nessun avanzamento)
             default: return "?";
         }
     }
@@ -1220,7 +1256,7 @@ public class PotHUDWidget : MonoBehaviour
                 return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 2)}/2 punti";
             case (int)PlantStage.Sprout:
                 return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 3)}/3 punti";
-            case (int)PlantStage.Mature:
+            case (int)PlantStage.HarvestReady:
                 return $"Giorno {daysSincePlant} - Pronta per raccolta!";
             default:
                 return $"Stadio {state.Stage}";
@@ -1244,9 +1280,9 @@ public class PotHUDWidget : MonoBehaviour
             case (int)PlantStage.Seed:
                 return $"{Mathf.RoundToInt(percentage)}% → Sprout";
             case (int)PlantStage.Sprout:
-                return $"{Mathf.RoundToInt(percentage)}% → Mature";
-            case (int)PlantStage.Mature:
-                return "100% - Mature!";
+                return $"{Mathf.RoundToInt(percentage)}% → HarvestReady";
+            case (int)PlantStage.HarvestReady:
+                return "100% - HarvestReady!";
             default:
                 return $"{Mathf.RoundToInt(percentage)}%";
         }

@@ -139,9 +139,9 @@ namespace Sporae.Dome.PotSystem.Growth
                     result = s2_sprout;
                     stageName = "Sprout";
                     break;
-                case (int)PlantStage.Mature:
+                case (int)PlantStage.HarvestReady:
                     result = s3_mature;
-                    stageName = "Mature";
+                    stageName = "HarvestReady";
                     break;
                 default:
                     result = s0_empty; // Fallback
@@ -170,7 +170,7 @@ namespace Sporae.Dome.PotSystem.Growth
                     return 1.05f;
                 case (int)PlantStage.Sprout:
                     return 1.12f;
-                case (int)PlantStage.Mature:
+                case (int)PlantStage.HarvestReady:
                     return 1.20f;
                 default:
                     return 1.00f; // Fallback

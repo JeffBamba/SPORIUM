@@ -32,6 +32,14 @@ public class PotStateModel
     public int DaysSincePlant;            // Giorni dalla semina
     public int DaysNeglectedStreak;       // Giorni consecutivi senza cura
     
+    [Header("Stage Requirements Tracking (BLK-02.02)")]
+    [Tooltip("Giorni consecutivi nello stesso stadio (per transizioni che richiedono più giorni)")]
+    public int DaysInCurrentStage;        // Giorni consecutivi nello stadio corrente
+    [Tooltip("Giorni in HarvestReady (per produzione frutti incrementale)")]
+    public int DaysInHarvestReady;        // Giorni consecutivi in HarvestReady
+    [Tooltip("Giorni frutti non raccolti (per decay dopo 3 giorni)")]
+    public int DaysFruitsUnharvested;     // Giorni consecutivi con frutti non raccolti
+    
     [Header("Timestamps (BLK-01.03A)")]
     public int PlantedDay;        // Giorno in cui è stato piantato il seme
     public int LastWateredDay;    // Ultimo giorno di annaffiatura
@@ -54,6 +62,9 @@ public class PotStateModel
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
+        DaysInCurrentStage = 0;
+        DaysInHarvestReady = 0;
+        DaysFruitsUnharvested = 0;
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -74,6 +85,9 @@ public class PotStateModel
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
+        DaysInCurrentStage = 0;
+        DaysInHarvestReady = 0;
+        DaysFruitsUnharvested = 0;
         PlantedDay = plantedDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -88,7 +102,7 @@ public class PotStateModel
     /// <summary>
     /// Verifica se il vaso ha una pianta
     /// </summary>
-    public bool HasPlantGrowing => HasPlant && Stage >= 1; // 1 = Seed, 2 = Sprout, 3 = Mature
+    public bool HasPlantGrowing => HasPlant && Stage >= 1; // 1 = Seed, 2 = Sprout, 3 = Growth, 4 = Flowering, 5 = HarvestReady, 6 = Resting
     
     /// <summary>
     /// Verifica se l'idratazione è al massimo
@@ -138,6 +152,9 @@ public class PotStateModel
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
+        DaysInCurrentStage = 0;
+        DaysInHarvestReady = 0;
+        DaysFruitsUnharvested = 0;
         PlantedDay = currentDay;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -176,6 +193,9 @@ public class PotStateModel
         GrowthPoints = 0;
         DaysSincePlant = 0;
         DaysNeglectedStreak = 0;
+        DaysInCurrentStage = 0;
+        DaysInHarvestReady = 0;
+        DaysFruitsUnharvested = 0;
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
@@ -237,7 +257,10 @@ public class PotStateModel
             case 0: return "Empty";
             case 1: return "Seed";
             case 2: return "Sprout";
-            case 3: return "Mature";
+            case 3: return "Growth";
+            case 4: return "Flowering";
+            case 5: return "HarvestReady";
+            case 6: return "Resting";
             default: return $"Stadio {stage}";
         }
     }

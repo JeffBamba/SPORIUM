@@ -13,7 +13,8 @@ namespace _Project
     {
         [SerializeField] private Button _plantButton;
         [SerializeField] private Button _wateringButton;
-        [SerializeField] private Button _lightButton;
+        [SerializeField] private Button _blueLedButton;
+        [SerializeField] private Button _redLedButton;
         [SerializeField] private Button _sprayButton;
         [SerializeField] private Button _uprootButton;
 
@@ -27,7 +28,6 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _lightStressText;
         [SerializeField] private ProgressBar _hydrationProgressBar;
         [SerializeField] private ProgressBar _lightProgressBar;
-        [SerializeField] private TextMeshProUGUI _phStateText;
         [SerializeField] private TextMeshProUGUI _phAffinityText;
         [SerializeField] private TextMeshProUGUI _rarityText;
 
@@ -98,7 +98,10 @@ namespace _Project
             
             _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
             _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
-            _lightButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Light));
+            if (_blueLedButton != null)
+                _blueLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Blue));
+            if (_redLedButton != null)
+                _redLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Red));
             if (_sprayButton != null)
                 _sprayButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Spray));
             _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
@@ -139,20 +142,29 @@ namespace _Project
         /// </summary>
         private void OnSeedSelected(string seedTypeId)
         {
-            if (_currentSelectedPot == null || _currentSelectedPot.PotActions == null)
+            Debug.Log($"[PotDetailsWidget] 🟢 OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
+            Debug.Log($"[PotDetailsWidget] 🟢 _currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
+            
+            if (_currentSelectedPot == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato quando seme selezionato!");
+                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando seme selezionato!");
                 return;
             }
             
-            Debug.Log($"[PotDetailsWidget] Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
+            if (_currentSelectedPot.PotActions == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ⚠️ PotActions è NULL quando seme selezionato!");
+                return;
+            }
+            
+            Debug.Log($"[PotDetailsWidget] 🟢 Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
             
             // Piantare il seme selezionato
             bool success = _currentSelectedPot.PotActions.DoPlant(seedTypeId);
             
             if (success)
             {
-                Debug.Log($"[PotDetailsWidget] Seme {seedTypeId} piantato con successo!");
+                Debug.Log($"[PotDetailsWidget] ✅ Seme {seedTypeId} piantato con successo!");
                 // Aggiorna l'UI
                 UpdateActionButtons(_currentSelectedPot);
                 
@@ -162,7 +174,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning($"[PotDetailsWidget] Fallito piantare seme {seedTypeId}!");
+                Debug.LogError($"[PotDetailsWidget] ❌ Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
             }
         }
         
@@ -180,11 +192,32 @@ namespace _Project
         /// </summary>
         private void OpenSeedSelector(PotSlot targetPot)
         {
+            Debug.Log($"[PotDetailsWidget] 🔵 OpenSeedSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            
+            // Assicurati che il selettore sia inizializzato
             if (_seedSelector == null)
             {
-                Debug.LogError("[PotDetailsWidget] UISeedSelector non disponibile!");
+                Debug.Log("[PotDetailsWidget] 🔵 Inizializzazione seed selector...");
+                InitializeSeedSelector();
+            }
+            
+            if (_seedSelector == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ❌ UISeedSelector non disponibile dopo inizializzazione!");
                 return;
             }
+            
+            // Rassicurati che gli eventi siano sempre sottoscritti (in caso di ricreazione)
+            _seedSelector.OnSeedSelected -= OnSeedSelected; // Rimuovi prima per evitare duplicati
+            _seedSelector.OnSeedSelected += OnSeedSelected;
+            _seedSelector.OnCancelled -= OnSeedSelectionCancelled;
+            _seedSelector.OnCancelled += OnSeedSelectionCancelled;
+            
+            Debug.Log($"[PotDetailsWidget] 🔵 Eventi sottoscritti correttamente");
+            Debug.Log($"[PotDetailsWidget] 🔵 Apertura selettore semi per vaso {targetPot?.PotId}");
+            
+            // Salva il vaso corrente prima di aprire il selettore
+            _currentSelectedPot = targetPot;
             
             _seedSelector.Show(targetPot);
         }
@@ -262,9 +295,7 @@ namespace _Project
                     
                     break;
                 
-                case PotEvents.PotActionType.Light:
-                    success = selectedPot.PotActions.DoLight();
-                    break;
+                // Light action gestita separatamente con OnLedButtonClicked
                 
                 case PotEvents.PotActionType.Spray:
                     success = selectedPot.PotActions.DoSprayAntifungal();
@@ -288,6 +319,42 @@ namespace _Project
             else
             {
                 Debug.LogWarning($"[PotHUDWidget] Azione {actionType} fallita!");
+            }
+        }
+        
+        /// <summary>
+        /// Gestisce il click su un pulsante LED (Blue o Red)
+        /// </summary>
+        private void OnLedButtonClicked(LedType ledType)
+        {
+            Debug.Log($"[PotDetailsWidget] Click su pulsante LED {ledType} intercettato!");
+            
+            // Trova il vaso selezionato
+            PotSlot selectedPot = FindSelectedPot();
+            if (selectedPot == null || selectedPot.PotActions == null)
+            {
+                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato o PotActions mancante");
+                return;
+            }
+            
+            Debug.Log($"[PotDetailsWidget] Eseguendo {ledType} LED su vaso {selectedPot.PotId}");
+            
+            // Esegui l'azione LED con il tipo specificato
+            bool success = selectedPot.PotActions.DoLight(ledType);
+            
+            if (success)
+            {
+                Debug.Log($"[PotDetailsWidget] {ledType} LED eseguito con successo!");
+                // Aggiorna l'UI
+                UpdateActionButtons(selectedPot);
+
+                var growthController = selectedPot.GetComponent<PotGrowthController>();
+                if (growthController != null)
+                    UpdateStageAndProgressUI(selectedPot);
+            }
+            else
+            {
+                Debug.LogWarning($"[PotDetailsWidget] {ledType} LED fallito!");
             }
         }
         
@@ -325,7 +392,10 @@ namespace _Project
             // Aggiorna lo stato di ogni pulsante
             UpdateButtonState(_plantButton, pot.PotActions.CanPlant(), "Piantare");
             UpdateButtonState(_wateringButton, pot.PotActions.CanWater(), "Annaffiare");
-            UpdateButtonState(_lightButton, pot.PotActions.CanLight(), "Illuminare");
+            if (_blueLedButton != null)
+                UpdateButtonState(_blueLedButton, pot.PotActions.CanLight(), "Blue LED");
+            if (_redLedButton != null)
+                UpdateButtonState(_redLedButton, pot.PotActions.CanLight(), "Red LED");
             if (_sprayButton != null)
                 UpdateButtonState(_sprayButton, pot.PotActions.CanSprayAntifungal(), "Spray");
             UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Uproot");
@@ -420,9 +490,12 @@ namespace _Project
             // BLK-01.04: Aggiorna Stage Label con informazioni dettagliate
             if (_stageLabel)
             {
+                // Assicurati che richText sia abilitato
+                _stageLabel.richText = true;
+                
                 string stageName = GetStageName(state.Stage);
                 string stageInfo = GetStageInfo(state);
-                _stageLabel.text = $"{stageName} - {stageInfo}";
+                _stageLabel.text = $"<color=#CCCCCC>Stage:</color> <color=#00FF00>{stageName}</color> <color=#CCCCCC>-</color> <color=#FFFF00>{stageInfo}</color>";
             }
             
             // BLK-01.04: Aggiorna Stage Icon con colore appropriato
@@ -467,11 +540,6 @@ namespace _Project
                 _lightProgressBar = FindProgressBarInChildren("Lighting Progress");
             }
             
-            if (_phStateText == null)
-            {
-                _phStateText = FindTextInChildren("pH State");
-            }
-            
             if (_phAffinityText == null)
             {
                 _phAffinityText = FindTextInChildren("pH Affinity");
@@ -482,63 +550,18 @@ namespace _Project
                 _rarityText = FindTextInChildren("Rarity");
             }
             
-            // Aggiorna Hydration Stress (mostra idratazione)
+            // Aggiorna Hydration Stress (mostra percentuale e range ideale per lo stadio corrente)
             int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 3;
+            float hydrationPercentage = maxHydration > 0 ? (float)state.Hydration / maxHydration * 100f : 0f;
+            
             if (_hydrationStressText != null)
             {
-                _hydrationStressText.text = $"Hydration stress: {state.Hydration}/{maxHydration}";
-                Debug.Log($"[PotDetailsWidget] Aggiornato Hydration stress: {state.Hydration}/{maxHydration}");
-            }
-            else
-            {
-                Debug.LogWarning("[PotDetailsWidget] _hydrationStressText non trovato! Collega il riferimento nella scena Unity.");
-            }
-            
-            // Aggiorna Hydration Progress Bar
-            if (_hydrationProgressBar != null)
-            {
-                float hydrationValue = maxHydration > 0 ? (float)state.Hydration / maxHydration : 0f;
-                _hydrationProgressBar.Value = hydrationValue;
-            }
-            
-            // Aggiorna Light Stress (mostra light exposure)
-            int maxLight = _currentSelectedPot?.PotActions?.GetMaxLightExposure() ?? 3;
-            if (_lightStressText != null)
-            {
-                _lightStressText.text = $"Light stress: {state.LightExposure}/{maxLight}";
-                Debug.Log($"[PotDetailsWidget] Aggiornato Light stress: {state.LightExposure}/{maxLight}");
-            }
-            else
-            {
-                Debug.LogWarning("[PotDetailsWidget] _lightStressText non trovato! Collega il riferimento nella scena Unity.");
-            }
-            
-            // Aggiorna Light Progress Bar
-            if (_lightProgressBar != null)
-            {
-                float lightValue = maxLight > 0 ? (float)state.LightExposure / maxLight : 0f;
-                _lightProgressBar.Value = lightValue;
-            }
-            
-            // Aggiorna pH State (mostra pH corrente se disponibile)
-            if (_phStateText != null)
-            {
-                var phSystem = ServiceContainer.Instance?.Get<PhSystem>();
-                if (phSystem != null)
-                {
-                    float currentPh = phSystem.CurrentPh;
-                    string bandName = phSystem.GetBandName();
-                    _phStateText.text = $"pH State: {currentPh:F1} ({bandName})";
-                }
-                else
-                {
-                    _phStateText.text = "pH State: N/A";
-                }
-            }
-            
-            // Aggiorna pH Affinity (mostra pH ottimale della pianta se disponibile)
-            if (_phAffinityText != null)
-            {
+                // Assicurati che richText sia abilitato
+                _hydrationStressText.richText = true;
+                
+                string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color=#FFFF00>{hydrationPercentage:F0}%</color>";
+                
+                // Se c'è una pianta, mostra anche il range ideale per lo stadio corrente
                 if (!string.IsNullOrEmpty(state.PlantCode))
                 {
                     var plantDatabase = PlantDatabase.Instance;
@@ -547,24 +570,115 @@ namespace _Project
                         var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
                         if (plantData != null)
                         {
-                            _phAffinityText.text = $"pH Affinity: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}";
+                            var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
+                            if (stageReq != null)
+                            {
+                                // Mostra il range ideale (min-med-max) per lo stadio corrente
+                                hydrationText += $" <color=#CCCCCC>(Range:</color> <color=#00FF00>{stageReq.hydrationMin}%-{stageReq.hydrationMed}%-{stageReq.hydrationMax}%</color><color=#CCCCCC>)</color>";
+                            }
+                        }
+                    }
+                }
+                
+                _hydrationStressText.text = hydrationText;
+                Debug.Log($"[PotDetailsWidget] Aggiornato Hydration: {hydrationPercentage:F0}%");
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] _hydrationStressText non trovato! Collega il riferimento nella scena Unity.");
+            }
+            
+            // Nascondi la progress bar come richiesto (il player deve vedere la percentuale invece)
+            if (_hydrationProgressBar != null)
+            {
+                _hydrationProgressBar.gameObject.SetActive(false);
+            }
+            
+            // Aggiorna Light Stress (mostra percentuale e LED richiesto per lo stadio corrente)
+            int maxLight = _currentSelectedPot?.PotActions?.GetMaxLightExposure() ?? 3;
+            float lightPercentage = maxLight > 0 ? (float)state.LightExposure / maxLight * 100f : 0f;
+            
+            if (_lightStressText != null)
+            {
+                // Assicurati che richText sia abilitato
+                _lightStressText.richText = true;
+                
+                string lightText = $"<color=#CCCCCC>Light Exposure:</color> <color=#FFFF00>{lightPercentage:F0}%</color>";
+                
+                // Se c'è una pianta, mostra anche il LED richiesto per lo stadio corrente
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
+                            if (stageReq != null)
+                            {
+                                var requiredLed = stageReq.GetRequiredLed();
+                                if (requiredLed.HasValue)
+                                {
+                                    // Mostra il LED richiesto per lo stadio corrente
+                                    lightText += $" <color=#CCCCCC>(Required LED:</color> <color=#00FFFF>{requiredLed.Value}</color><color=#CCCCCC>)</color>";
+                                }
+                                else
+                                {
+                                    // Nessun LED richiesto
+                                    lightText += $" <color=#CCCCCC>(No LED required)</color>";
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                _lightStressText.text = lightText;
+                Debug.Log($"[PotDetailsWidget] Aggiornato Light Exposure: {lightPercentage:F0}%");
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] _lightStressText non trovato! Collega il riferimento nella scena Unity.");
+            }
+            
+            // Nascondi la progress bar come richiesto (il player deve vedere la percentuale invece)
+            if (_lightProgressBar != null)
+            {
+                _lightProgressBar.gameObject.SetActive(false);
+            }
+            
+            // Aggiorna pH Affinity (mostra pH ottimale della pianta se disponibile)
+            if (_phAffinityText != null)
+            {
+                // Assicurati che richText sia abilitato
+                _phAffinityText.richText = true;
+                
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            _phAffinityText.text = $"<color=#CCCCCC>pH Affinity:</color> <color=#00FF00>{plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}</color>";
                             Debug.Log($"[PotDetailsWidget] ✅ pH Affinity aggiornato per {state.PlantCode}: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}");
                         }
                         else
                         {
-                            _phAffinityText.text = "pH Affinity: N/A";
+                            _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>N/A</color>";
                             Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
-                        _phAffinityText.text = "pH Affinity: {}";
+                        _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>{}</color>";
                         Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
-                    _phAffinityText.text = "pH Affinity: {}";
+                    _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>{}</color>";
                     Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
@@ -572,6 +686,9 @@ namespace _Project
             // Aggiorna Rarity (mostra rarità della pianta se disponibile)
             if (_rarityText != null)
             {
+                // Assicurati che richText sia abilitato
+                _rarityText.richText = true;
+                
                 if (!string.IsNullOrEmpty(state.PlantCode))
                 {
                     var plantDatabase = PlantDatabase.Instance;
@@ -580,21 +697,21 @@ namespace _Project
                         var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
                         if (plantData != null)
                         {
-                            _rarityText.text = $"Rarity: {plantData.Rarity}";
+                            _rarityText.text = $"<color=#CCCCCC>Rarity:</color> <color=#FFD700>{plantData.Rarity}</color>";
                         }
                         else
                         {
-                            _rarityText.text = "Rarity: {}";
+                            _rarityText.text = "<color=#CCCCCC>Rarity:</color> <color=#FF0000>{}</color>";
                         }
                     }
                     else
                     {
-                        _rarityText.text = "Rarity: {}";
+                        _rarityText.text = "<color=#CCCCCC>Rarity:</color> <color=#FF0000>{}</color>";
                     }
                 }
                 else
                 {
-                    _rarityText.text = "Rarity: {}";
+                    _rarityText.text = "<color=#CCCCCC>Rarity:</color> <color=#FF0000>{}</color>";
                 }
             }
         }
@@ -647,7 +764,7 @@ namespace _Project
                         return 100f; // Pronto per avanzare
                     return (float)points / _growthConfig.pointsSproutToMature * 100f;
                     
-                case (int)PlantStage.Mature:
+                case (int)PlantStage.HarvestReady:
                     return 100f; // Pianta completamente matura
                     
                 default:
@@ -665,7 +782,7 @@ namespace _Project
                     return new Color(0.6f, 0.4f, 0.2f); // Brown color
                 case (int)PlantStage.Sprout:
                     return Color.green;
-                case (int)PlantStage.Mature:
+                case (int)PlantStage.HarvestReady:
                     return Color.yellow;
                 default:
                     return Color.white;
@@ -690,7 +807,7 @@ namespace _Project
                     return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSeedToSprout ?? 2)}/{_growthConfig?.pointsSeedToSprout ?? 2} punti";
                 case (int)PlantStage.Sprout:
                     return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSproutToMature ?? 3)}/{_growthConfig?.pointsSproutToMature ?? 3} punti";
-                case (int)PlantStage.Mature:
+                case (int)PlantStage.HarvestReady:
                     return $"Giorno {daysSincePlant} - Pronta per raccolta!";
                 default:
                     return $"Stadio {state.Stage}";
@@ -704,7 +821,10 @@ namespace _Project
                 case 0: return "Empty";
                 case 1: return "Seed";
                 case 2: return "Sprout";
-                case 3: return "Mature";
+                case 3: return "Growth";
+                case 4: return "Flowering";
+                case 5: return "HarvestReady";
+                case 6: return "Resting";
                 default: return $"Stadio {stage}";
             }
         }
@@ -723,9 +843,9 @@ namespace _Project
                 case (int)PlantStage.Seed:
                     return $"{Mathf.RoundToInt(percentage)}% → Sprout";
                 case (int)PlantStage.Sprout:
-                    return $"{Mathf.RoundToInt(percentage)}% → Mature";
-                case (int)PlantStage.Mature:
-                    return "100% - Mature!";
+                    return $"{Mathf.RoundToInt(percentage)}% → HarvestReady";
+                case (int)PlantStage.HarvestReady:
+                    return "100% - HarvestReady!";
                 default:
                     return $"{Mathf.RoundToInt(percentage)}%";
             }

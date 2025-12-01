@@ -351,9 +351,20 @@ namespace _Project
         /// </summary>
         private void OnSeedButtonClicked(string seedTypeId)
         {
-            Debug.Log($"[UISeedSelector] Seme selezionato: {seedTypeId}");
+            Debug.Log($"[UISeedSelector] 🔵 Seme selezionato: {seedTypeId}, TargetPot: {_targetPot?.PotId ?? "NULL"}");
             
+            // Verifica che ci sia un target pot
+            if (_targetPot == null)
+            {
+                Debug.LogError("[UISeedSelector] ⚠️ TargetPot è NULL! Impossibile piantare seme.");
+                return;
+            }
+            
+            // Emetti evento PRIMA di nascondere il pannello
+            Debug.Log($"[UISeedSelector] 🔵 Emettendo evento OnSeedSelected per seme {seedTypeId}");
             OnSeedSelected?.Invoke(seedTypeId);
+            
+            // Nascondi dopo aver emesso l'evento
             Hide();
         }
         
