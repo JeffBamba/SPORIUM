@@ -16,7 +16,7 @@ MonoBehaviour:
   seedItemConfig: {fileID: 11400000, guid: 57f01ae6a642c52408a589fb6538ae4c, type: 2}
   family: 0
   rarity: 0
-  dailyPhDrift: 0
-  optimalPhMin: -29
-  optimalPhMax: 29
+  dailyPhDrift: 1
+  optimalPhMin: -30
+  optimalPhMax: 50
   preferredFaction: 

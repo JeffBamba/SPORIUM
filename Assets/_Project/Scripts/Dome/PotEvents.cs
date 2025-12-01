@@ -17,7 +17,8 @@ public static class PotEvents
         Plant,      // ACT-001: Piantare seme
         Water,      // ACT-002: Annaffiare pianta
         Light,       // ACT-003: Illuminare pianta
-        Uproot       // ACT-004: Uproot pianta
+        Uproot,      // ACT-004: Uproot pianta
+        Spray        // ACT-014: Spray Antifungino (BLK-02.03)
     }
     
     /// <summary>
@@ -132,6 +133,8 @@ public static class PotEvents
                 return "Annaffiare";
             case PotActionType.Light:
                 return "Illuminare";
+            case PotActionType.Spray:
+                return "Spray Antifungino";
             default:
                 return "Sconosciuto";
         }
@@ -152,6 +155,8 @@ public static class PotEvents
                 return "ACT-002";
             case PotActionType.Light:
                 return "ACT-003";
+            case PotActionType.Spray:
+                return "ACT-014";
             default:
                 return "ACT-000";
         }
@@ -172,6 +177,8 @@ public static class PotEvents
                 return "Aumentare l'idratazione della pianta";
             case PotActionType.Light:
                 return "Aumentare l'esposizione alla luce della pianta";
+            case PotActionType.Spray:
+                return "Applicare spray antifungino (rimuove muffe, pH +5)";
             default:
                 return "Azione non riconosciuta";
         }

@@ -1,0 +1,222 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-02.03: MIGLIORAMENTI UI + INIZIALIZZAZIONE pH
+                    Versione: 0015
+                    Data: 2025-11-26
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Miglioramenti Leggibilità UI (SelectorPanel + Console Debug pH) + Inizializzazione pH sempre a 0.0
+- **BLK Code:** BLK-02.03
+- **Tipo Report:** Development Report
+- **Data Generazione:** 2025-11-26 (Sessione Sera)
+- **Versione Report:** 0015
+- **Status Sistema:** ✅ FUNZIONANTE - Pronto per Testing
+- **Sviluppatore:** Senior Developer Mode (AI Assistant)
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Scalatura SelectorPanel (Selettore Semi) del 100%**
+- **Codice:** BLK-02.03-UI-001
+- **Descrizione:** Raddoppiato tutte le dimensioni del pannello selettore semi per migliorare leggibilità
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs`
+- **Evidenze Tecniche:**
+  - Pannello principale: 700x500 → 1400x1000 (raddoppiato)
+  - Pulsanti semi: 200x150 → 400x300 (raddoppiato)
+  - Spaziatura tra pulsanti: 20 → 40 (raddoppiato)
+  - Padding container: 15,60 → 30,120 (raddoppiato)
+  - Font titolo: 28 → 56 (raddoppiato)
+  - Font pulsanti: 18 → 36 (raddoppiato)
+  - Font messaggio "Nessun seme": 16 → 32 (raddoppiato)
+  - Outline titolo: 0.4 → 0.8 (raddoppiato)
+  - Outline pulsanti: 0.3 → 0.6 (raddoppiato)
+  - Area titolo: 50 → 100 (raddoppiato)
+  - Pulsante chiudi: 30x30 → 60x60 (raddoppiato)
+  - Messaggio "Nessun seme": 300x50 → 600x100 (raddoppiato)
+  - Verifica dimensioni in Show() per assicurare dimensioni minime corrette
+
+**TASK 2: Scalatura Console Debug pH del 30%**
+- **Codice:** BLK-02.03-UI-002
+- **Descrizione:** Aumentato dimensioni console debug pH del 30% per migliorare leggibilità
+- **Status:** ✅ COMPLETATO
+- **File Modificato:** `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Evidenze Tecniche:**
+  - Console principale: 600x500 → 780x650 (+30%)
+  - Margini console: 10 → 13 (+30%)
+  - Font label principale: 12 → 16 (+30%)
+  - Font pulsanti: 11 → 14 (+30%)
+  - Font effetti piante: 11 → 14 (+30%)
+  - Font hotkeys info: 10 → 13 (+30%)
+  - Label "Imposta pH": 100 → 130 (+30%)
+  - Campo input pH: 100 → 130 (+30%)
+  - Pulsante "Applica": 80 → 104 (+30%)
+  - Pulsanti valori rapidi: 110 → 143 (+30%)
+  - Pulsanti incrementali: 60 → 78 (+30%)
+  - Pulsante "Reset": 80 → 104 (+30%)
+  - Pulsanti simulazioni: 120 → 156 (+30%)
+  - Area log scroll: 150 → 195 (+30%)
+  - Tutti gli spazi: 5 → 7 (+30%)
+  - Spazio principale: 10 → 13 (+30%)
+
+**TASK 3: Inizializzazione pH sempre a 0.0 all'avvio**
+- **Codice:** BLK-02.03-PH-001
+- **Descrizione:** Garantire che il pH sia sempre inizializzato a 0.0 quando si preme PLAY
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+  - `Assets/_Project/Scripts/Core/PhSystemIdleOscillation.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/HUDPhDisplay.cs`
+- **Evidenze Tecniche:**
+  - PhSystemDebugConsole.Awake(): Aggiunta chiamata esplicita a Reset() dopo creazione sistema pH
+  - Reset() garantisce: pH base = 0.0, oscillazione = 0.0, tutti i contributi = 0.0
+  - PhSystemIdleOscillation.InitializeOscillation(): Oscillazione inizia sempre da 0.0 invece di valore casuale
+  - PhSystemIdleOscillation.ResetOscillation(): Resetta sempre oscillazione a 0.0
+  - HUDPhDisplay.TryGetPhSystem(): Aggiunto Reset() anche per sistemi pH temporanei
+  - Log debug aggiunto per tracciare inizializzazione pH a 0.0
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: SelectorPanel troppo piccolo e poco leggibile**
+- **Numero:** BUG-0015-001
+- **Descrizione:** Pannello selettore semi troppo piccolo e difficile da leggere
+- **Causa:** Dimensioni originali insufficienti per leggibilità ottimale
+- **Soluzione:** Scalato tutte le dimensioni del 100% (raddoppiato)
+- **Test:** ✅ Pannello ora molto più grande e leggibile, font e pulsanti chiaramente visibili
+
+**BUG 2: Console Debug pH troppo piccola e difficile da leggere**
+- **Numero:** BUG-0015-002
+- **Descrizione:** Console debug pH troppo piccola quando aperta con tasto Z
+- **Causa:** Dimensioni originali insufficienti per leggibilità ottimale
+- **Soluzione:** Scalato tutte le dimensioni del 30%
+- **Test:** ✅ Console ora più grande e leggibile, tutti i testi e pulsanti chiaramente visibili
+
+**BUG 3: pH non sempre inizializzato a 0.0 all'avvio**
+- **Numero:** BUG-0015-003
+- **Descrizione:** pH poteva avere valori diversi da 0.0 quando si preme PLAY
+- **Causa:** Mancava reset esplicito dopo creazione sistema pH e oscillazione iniziava da valore casuale
+- **Soluzione:** 
+  - Aggiunto Reset() esplicito in PhSystemDebugConsole.Awake()
+  - Modificato InitializeOscillation() per iniziare sempre da 0.0
+  - Modificato ResetOscillation() per resettare sempre a 0.0
+  - Aggiunto Reset() anche in HUDPhDisplay per sistemi temporanei
+- **Test:** ✅ pH sempre a 0.0 quando si preme PLAY, oscillazione parte sempre da 0.0
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**Modifiche Struttura Codice:**
+- Scalato tutte le dimensioni UI del SelectorPanel (selettore semi) del 100%
+- Scalato tutte le dimensioni UI della Console Debug pH del 30%
+- Aggiunto reset esplicito pH in tutti i punti di creazione sistema
+- Modificato inizializzazione oscillazione per partire sempre da 0.0
+
+**Modifiche UI:**
+- SelectorPanel: Dimensioni raddoppiate (1400x1000), font raddoppiati, pulsanti raddoppiati
+- Console Debug pH: Dimensioni aumentate del 30%, font aumentati del 30%, pulsanti aumentati del 30%
+- Migliorata leggibilità generale di entrambe le UI
+
+**Modifiche Sistema pH:**
+- Garantita inizializzazione sempre a 0.0 quando si preme PLAY
+- Oscillazione parte sempre da 0.0 invece di valore casuale
+- Reset completo di tutti i contributi (piante, azioni, eventi, drift giornaliero)
+- Log debug per tracciare inizializzazione corretta
+
+**Test Cases:**
+- ✅ SelectorPanel ora molto più grande e leggibile
+- ✅ Console Debug pH ora più grande e leggibile
+- ✅ pH sempre a 0.0 quando si preme PLAY
+- ✅ Oscillazione parte sempre da 0.0
+- ✅ Reset completo funziona correttamente
+- ✅ Nessun errore di compilazione
+
+**Soluzioni Implementate:**
+- Scalatura proporzionale di tutte le dimensioni UI
+- Reset esplicito sistema pH in tutti i punti di creazione
+- Inizializzazione oscillazione sempre da 0.0
+- Verifica dimensioni minime in Show() per SelectorPanel
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**Pattern Architetturali:**
+- Scalatura proporzionale di tutte le dimensioni UI migliora leggibilità senza rompere layout
+- Reset esplicito sistema all'inizializzazione garantisce stato consistente
+- Verifica dimensioni minime in metodi Show() previene problemi di ridimensionamento
+
+**Best Practices:**
+- Sempre scalare proporzionalmente tutte le dimensioni UI (font, padding, spacing, dimensioni elementi)
+- Reset esplicito sistema all'avvio garantisce stato iniziale consistente
+- Log debug utili per tracciare inizializzazione corretta
+- Inizializzazione oscillazione da valore fisso (0.0) invece di casuale migliora UX
+
+**Pattern Ricorrenti:**
+- Scalatura UI: sempre proporzionale su tutti gli assi per mantenere proporzioni
+- Reset sistema: sempre chiamare Reset() dopo creazione per garantire stato iniziale
+- Inizializzazione: sempre partire da valori noti invece di casuali per UX migliore
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+=================
+
+**Prossime Task Pianificate:**
+1. Continuare integrazione pH con azioni giocatore (già parzialmente implementato)
+2. Integrazione pH con eventi casuali (Pioggia Acida, Muffa)
+3. Implementazione effetti pH su crescita/mutazioni
+4. Sistema reputazione fazioni basato su pH
+5. Completamento sistema crescita (6 stadi invece di 3)
+6. Testing completo sistema pH con tutte le azioni
+
+**Dipendenze:**
+- Sistema pH base ✅ (completato)
+- Sistema selezione semi ✅ (completato)
+- Integrazione pH-crescita ✅ (completato)
+- Miglioramenti UI ✅ (completato)
+- Inizializzazione pH ✅ (completato)
+- Sistema eventi casuali (da implementare)
+- Sistema azioni giocatore avanzate (parzialmente implementato)
+
+**Prerequisiti:**
+- PlantData assets creati ✅
+- PlantDatabase funzionante ✅
+- DayCycleController integrato con pH ✅
+- UISeedSelector funzionante ✅
+- Console Debug pH funzionante ✅
+- Inizializzazione pH a 0.0 ✅
+
+**Note per Prossima Sessione:**
+- SelectorPanel ora molto più grande e leggibile (1400x1000)
+- Console Debug pH ora più grande e leggibile (780x650)
+- pH sempre inizializzato a 0.0 quando si preme PLAY
+- Oscillazione parte sempre da 0.0
+- Tutti i sistemi funzionanti e pronti per testing
+
+================================================================================
+
+📊 METADATA FOOTER
+==================
+- **Versione Report:** 0015
+- **Data Generazione:** 2025-11-26 (Sessione Sera)
+- **Status Sistema:** ✅ FUNZIONANTE
+- **File Modificati:** 3
+- **File Creati:** 0
+- **Bug Fixati:** 3
+- **Task Completati:** 3
+
+================================================================================
+FINE REPORT
+================================================================================
+

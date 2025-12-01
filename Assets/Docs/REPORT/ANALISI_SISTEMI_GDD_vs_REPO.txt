@@ -3,7 +3,7 @@ ANALISI SISTEMI IMPLEMENTATI vs GDD COMPLETO UNIFICATO
 SPORIUM - Build Beta
 Data Analisi: 2025-11-26 (Aggiornato)
 Analista: Senior Developer Mode
-Ultimo Aggiornamento: BLK-02.02 (Selezione Semi + Integrazione pH-Crescita)
+Ultimo Aggiornamento: BLK-02.04 (Miglioramenti Inventory HUD + Background Blocker)
 ================================================================================
 
 SCOPO
@@ -85,11 +85,15 @@ CONFORME AL GDD: ✅
 
 1.5 SISTEMA INVENTARIO / ITEMS
 -------------------------------
-✅ IMPLEMENTATO (Completo)
+✅ IMPLEMENTATO (Completo + Miglioramenti UI)
 - Inventory system con slot multipli
 - ItemConfig con proprietà (TypeId, MaxQuality, SellPrice, BuyPrice, IsPerishable)
 - Sistema qualità items
 - Tracking deterioramento
+- ✅ HUD Inventory migliorata: Testo leggibile con contrasto ottimizzato (BLK-02.04)
+- ✅ Background blocker full screen per chiusura click fuori (BLK-02.04)
+- ✅ Leggibilità testo: Font size aumentato, outline spesso, contrasto massimo (BLK-02.04)
+- ✅ Chiusura inventory: ESC key e click fuori panel funzionanti (BLK-02.04)
 
 CONFORME AL GDD: ✅
 
@@ -532,6 +536,7 @@ Note Aggiornamento:
 - Sistema pH: Base completa + Integrazione crescita ✅
 - Sistema Crescita: Base + Integrazione pH ✅
 - Sistema Pot: Base + Selezione semi ✅
+- Sistema Inventory: Completo + Miglioramenti UI leggibilità (BLK-02.04) ✅
 
 ================================================================================
 5. CONCLUSIONI
@@ -548,12 +553,13 @@ al GDD completo. Per raggiungere la visione completa del GDD sono necessari:
 
 1. ✅ Integrazione sistema pH con piante reali (drift giornaliero basato su famiglia) - COMPLETATO
 2. ✅ Sistema selezione semi da inventario - COMPLETATO
-3. Integrazione sistema pH con azioni giocatore (Watering, LED, Spray)
-4. Integrazione sistema pH con eventi casuali
-5. Implementazione sistema Fazioni/Reputazione (blocca missioni e narrativa)
-6. Completamento sistema crescita piante (6 stadi invece di 3)
-7. Implementazione sistema livelli e slot passivi
-8. Implementazione catalog piante base
+3. ✅ Miglioramenti UI Inventory (leggibilità testo, background blocker) - COMPLETATO
+4. Integrazione sistema pH con azioni giocatore (Watering, LED, Spray)
+5. Integrazione sistema pH con eventi casuali
+6. Implementazione sistema Fazioni/Reputazione (blocca missioni e narrativa)
+7. Completamento sistema crescita piante (6 stadi invece di 3)
+8. Implementazione sistema livelli e slot passivi
+9. Implementazione catalog piante base
 
 La struttura del codice è ben organizzata e modulare, facilitando l'implementazione
 dei sistemi mancanti.

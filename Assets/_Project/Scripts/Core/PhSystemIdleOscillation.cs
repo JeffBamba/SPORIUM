@@ -73,14 +73,20 @@ namespace _Project
         {
             // Inizializza con il valore base del pH (senza oscillazione)
             _basePhValue = GetBasePhValue();
-            // Inizia con oscillazione casuale nel range
-            _currentOscillation = Random.Range(minOscillation, maxOscillation);
+            // Inizia sempre con oscillazione a 0.0 quando si preme PLAY
+            _currentOscillation = 0f;
             _targetOscillation = Random.Range(minOscillation, maxOscillation);
             _lastRandomChangeTime = Time.time;
             
+            // Assicura che il sistema pH sia a 0.0
+            if (_phSystem != null)
+            {
+                _phSystem.SetIdleOscillation(0f);
+            }
+            
             if (showDebugLogs)
             {
-                Debug.Log($"[PhSystemIdleOscillation] ✅ Inizializzato. Base pH: {_basePhValue:F2}, Oscillazione iniziale: {_currentOscillation:F2}");
+                Debug.Log($"[PhSystemIdleOscillation] ✅ Inizializzato. Base pH: {_basePhValue:F2}, Oscillazione iniziale: 0.00 (sempre da 0.0)");
             }
         }
         
@@ -262,21 +268,22 @@ namespace _Project
         }
         
         /// <summary>
-        /// Resetta l'oscillazione al valore corrente del pH
+        /// Resetta l'oscillazione a 0.0 (sempre parte da 0 quando si preme PLAY)
         /// </summary>
         public void ResetOscillation()
         {
             if (_phSystem != null)
             {
                 _basePhValue = GetBasePhValue();
-                _currentOscillation = Random.Range(minOscillation, maxOscillation);
+                // Oscillazione sempre parte da 0.0 quando si preme PLAY
+                _currentOscillation = 0f;
                 _targetOscillation = Random.Range(minOscillation, maxOscillation);
                 _lastRandomChangeTime = Time.time;
-                _phSystem.SetIdleOscillation(_currentOscillation);
+                _phSystem.SetIdleOscillation(0f);
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[PhSystemIdleOscillation] Oscillazione resettata. Base pH: {_basePhValue:F2}");
+                    Debug.Log($"[PhSystemIdleOscillation] Oscillazione resettata a 0.0. Base pH: {_basePhValue:F2}");
                 }
             }
         }

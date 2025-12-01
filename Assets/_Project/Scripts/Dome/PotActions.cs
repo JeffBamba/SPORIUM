@@ -2,6 +2,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using _Project;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -24,6 +25,7 @@ public class PotActions : MonoBehaviour
     private Inventory _playerInventory;
     private PotStateModel _potState;
     private DayCycleSystem _dayCycleSystem;
+    private PhSystem _phSystem;
     
     // Proprietà pubbliche
     public PotSlot PotSlot => potSlot;
@@ -50,6 +52,15 @@ public class PotActions : MonoBehaviour
         _gameManager = FindObjectOfType<GameManager>();
         _playerInventory = _gameManager.PlayerInventory;
         
+        // Tenta di ottenere PhSystem dal ServiceContainer (BLK-02.03)
+        TryGetPhSystem();
+        
+        // Sottoscrivi evento per late binding PhSystem
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+        }
+        
         // Inizializza lo stato del vaso
         InitializePotState();
         
@@ -57,9 +68,68 @@ public class PotActions : MonoBehaviour
             Debug.Log($"[PotActions] Inizializzato per {potSlot?.PotId ?? "vaso sconosciuto"}");
         
         // Registra il vaso nel sistema di crescita (BLK-01.03A)
-        // NON registrare qui per evitare duplicazione con DoPlant
-        if (showDebugLogs)
-            Debug.Log($"[PotActions] {potSlot?.PotId} inizializzato, registrazione gestita da DoPlant");
+        // IMPORTANTE: Registra anche se ha già una pianta (per piante esistenti)
+        RegisterPotIfNeeded();
+    }
+    
+    /// <summary>
+    /// Registra il vaso nel DayCycleController se ha una pianta o quando viene piantata
+    /// </summary>
+    private void RegisterPotIfNeeded()
+    {
+        if (_potState == null || dayCycleController == null)
+            return;
+        
+        // Registra se ha già una pianta (per piante esistenti caricate)
+        if (_potState.HasPlant)
+        {
+            dayCycleController.RegisterPot(_potState);
+            if (showDebugLogs)
+            {
+                Debug.Log($"[PotActions] ✅ Vaso {potSlot?.PotId} con pianta esistente registrato nel DayCycleController (Stage: {_potState.Stage}, PlantCode: {_potState.PlantCode ?? "NULL"})");
+            }
+        }
+        else if (showDebugLogs)
+        {
+            Debug.Log($"[PotActions] Vaso {potSlot?.PotId} vuoto, registrazione quando si pianta un seme");
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+        }
+    }
+    
+    /// <summary>
+    /// Tenta di ottenere PhSystem dal ServiceContainer
+    /// </summary>
+    private void TryGetPhSystem()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+        
+        if (ServiceContainer.Instance.Contains(typeof(PhSystem)))
+        {
+            _phSystem = ServiceContainer.Instance.Get<PhSystem>();
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] PhSystem trovato per {potSlot?.PotId}");
+        }
+    }
+    
+    /// <summary>
+    /// Chiamato quando un servizio viene registrato nel ServiceContainer
+    /// </summary>
+    private void OnServiceRegistered(object service)
+    {
+        if (service is PhSystem && _phSystem == null)
+        {
+            _phSystem = service as PhSystem;
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] PhSystem registrato, collegato a {potSlot?.PotId}");
+        }
     }
     
     private void InitializePotState()
@@ -168,6 +238,27 @@ public class PotActions : MonoBehaviour
         return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay;
     }
     
+    /// <summary>
+    /// Verifica se è possibile applicare Spray Antifungino (AZ-14)
+    /// </summary>
+    public bool CanSprayAntifungal()
+    {
+        if (_potState == null)
+            return false;
+        
+        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
+        // Nota: Spray può essere applicato anche se non ci sono muffe (preventivo)
+        bool
+            hasPlant = _potState.HasPlantGrowing,
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources();
+        
+        if (showDebugLogs)
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanSprayAntifungal: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+        
+        return hasPlant && inRange && hasResources;
+    }
+    
     #endregion
     
     #region Action Execution Methods
@@ -240,13 +331,27 @@ public class PotActions : MonoBehaviour
         PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
         string plantCode = plantData?.PlantCode;
         
-        if (plantData == null && showDebugLogs)
+        if (plantData == null)
         {
-            Debug.LogWarning($"[PotActions] Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
+            if (showDebugLogs)
+            {
+                Debug.LogWarning($"[PotActions] ⚠️ Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
+            }
+            // IMPORTANTE: Anche se PlantData non è trovato, piantiamo comunque il seme
+            // ma senza PlantCode, quindi non avrà drift pH
         }
-        else if (showDebugLogs)
+        else
         {
-            Debug.Log($"[PotActions] PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+            if (showDebugLogs)
+            {
+                Debug.Log($"[PotActions] ✅ PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+            }
+            
+            // Verifica che PlantCode non sia null o vuoto
+            if (string.IsNullOrEmpty(plantCode))
+            {
+                Debug.LogError($"[PotActions] ⚠️ PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
+            }
         }
         
         // Consuma il seme dall'inventario
@@ -259,13 +364,25 @@ public class PotActions : MonoBehaviour
         // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
         _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
         
+        // DEBUG: Verifica che PlantCode sia stato salvato correttamente
+        if (showDebugLogs)
+        {
+            if (string.IsNullOrEmpty(_potState.PlantCode))
+            {
+                Debug.LogWarning($"[PotActions] ⚠️ PlantCode NON salvato correttamente nel PotStateModel! PotId: {potSlot.PotId}, PlantCode passato: '{plantCode}'");
+            }
+            else
+            {
+                Debug.Log($"[PotActions] ✅ PlantCode salvato correttamente: {_potState.PlantCode} per vaso {potSlot.PotId}");
+            }
+        }
+        
         // Notifica il sistema di crescita (BLK-01.03A)
         if (potGrowthController)
             potGrowthController.OnPlanted();
         
-        // Registra il vaso nel sistema di crescita se non già fatto
-        if (dayCycleController)
-            dayCycleController.RegisterPot(_potState);
+        // Registra il vaso nel sistema di crescita (ora ha una pianta)
+        RegisterPotIfNeeded();
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
@@ -327,8 +444,22 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
+        // Rileva overwatering: se l'idratazione è già al massimo o molto alta, è overwatering
+        int maxHydration = GetMaxHydration();
+        bool isOverwatering = _potState.Hydration >= maxHydration - 1; // Già al massimo o quasi
+        
         // Aumenta l'idratazione
-        if (!_potState.IncreaseHydration(GetMaxHydration()))
+        bool hydrationIncreased = _potState.IncreaseHydration(maxHydration);
+        
+        // Se overwatering, applica pH -5 (BLK-02.03)
+        if (isOverwatering && _phSystem != null)
+        {
+            _phSystem.RegisterActionDrift(-5f, "Overwatering", potSlot.PotId);
+            if (showDebugLogs)
+                Debug.Log($"[ACT-002][{potSlot.PotId}] Overwatering rilevato! pH -5 applicato");
+        }
+        
+        if (!hydrationIncreased)
             return false;
         
         // Imposta timestamp per crescita 
@@ -339,16 +470,20 @@ public class PotActions : MonoBehaviour
         PotEvents.EmitChanged(potSlot);
             
         if (showDebugLogs)
-            Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={_potState.Hydration}/{GetMaxHydration()}, timestamp aggiornato");
+        {
+            string overwateringMsg = isOverwatering ? " (OVERWATERING - pH -5)" : "";
+            Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={_potState.Hydration}/{maxHydration}, timestamp aggiornato{overwateringMsg}");
+        }
         
         return true;
 
     }
     
     /// <summary>
-    /// Esegue l'azione di illuminare la pianta
+    /// Esegue l'azione di illuminare la pianta con LED
     /// </summary>
-    public bool DoLight()
+    /// <param name="ledType">Tipo di LED utilizzato (Blue o Red). Se null, usa Blue di default per retrocompatibilità.</param>
+    public bool DoLight(LedType? ledType = null)
     {
         if (!CanLight())
         {
@@ -364,22 +499,80 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
+        // Default a Blue LED per retrocompatibilità (BLK-02.03)
+        LedType actualLedType = ledType ?? LedType.Blue;
+        
         // Aumenta l'esposizione alla luce
         if (!_potState.IncreaseLightExposure(GetMaxLightExposure()))
             return false;
         
-        // Imposta timestamp per crescita
-        _potState.UpdateLightingDay(_dayCycleSystem.CurrentDay);
+        // Applica modifiche pH in base al tipo LED (BLK-02.03)
+        if (_phSystem != null)
+        {
+            float phDelta = actualLedType == LedType.Blue ? 5f : -5f;
+            string actionName = actualLedType == LedType.Blue ? "BlueLED" : "RedLED";
+            _phSystem.RegisterActionDrift(phDelta, actionName, potSlot.PotId);
+            
+            if (showDebugLogs)
+                Debug.Log($"[ACT-003][{potSlot.PotId}] {actualLedType} LED utilizzato: pH {(phDelta > 0 ? "+" : "")}{phDelta}");
+        }
+        
+        // Imposta timestamp per crescita e tipo LED
+        _potState.UpdateLightingDay(_dayCycleSystem.CurrentDay, actualLedType);
             
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
         PotEvents.EmitChanged(potSlot);
             
         if (showDebugLogs)
-            Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={_potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato");
+        {
+            string ledInfo = actualLedType == LedType.Blue ? " (Blue LED, pH +5)" : " (Red LED, pH -5)";
+            Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={_potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato{ledInfo}");
+        }
         
         return true;
 
+    }
+    
+    /// <summary>
+    /// Esegue l'azione Spray Antifungino (AZ-14)
+    /// Rimuove muffe e applica pH +5
+    /// </summary>
+    public bool DoSprayAntifungal()
+    {
+        if (!CanSprayAntifungal())
+        {
+            string reason = GetSprayAntifungalFailureReason();
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, reason);
+            return false;
+        }
+        
+        // Consuma le risorse
+        if (!TryConsumeResources())
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Insufficient resources");
+            return false;
+        }
+        
+        // Applica pH +5 (BLK-02.03)
+        if (_phSystem != null)
+        {
+            _phSystem.RegisterActionDrift(5f, "SprayAntifungal", potSlot.PotId);
+            if (showDebugLogs)
+                Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino applicato: pH +5");
+        }
+        
+        // TODO: Rimuovere muffe quando sistema muffe sarà implementato
+        // Per ora solo applica pH
+        
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Spray, potSlot);
+        PotEvents.EmitChanged(potSlot);
+            
+        if (showDebugLogs)
+            Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino OK: muffe rimosse (se presenti), pH +5 applicato");
+        
+        return true;
     }
     
     #endregion
@@ -450,22 +643,6 @@ public class PotActions : MonoBehaviour
         return config ? config.CostCryPerPotAction : 1;
     }
     
-    /// <summary>
-    /// Restituisce il limite massimo di idratazione
-    /// </summary>
-    private int GetMaxHydration()
-    {
-        return config ? config.MaxHydration : 3;
-    }
-    
-    /// <summary>
-    /// Restituisce il limite massimo di esposizione alla luce
-    /// </summary>
-    private int GetMaxLightExposure()
-    {
-        return config ? config.MaxLightExposure : 3;
-    }
-    
     #endregion
     
     #region Failure Reason Methods
@@ -500,6 +677,15 @@ public class PotActions : MonoBehaviour
         return "Azione non permessa";
     }
     
+    private string GetSprayAntifungalFailureReason()
+    {
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (!IsPlayerInRange()) return "Troppo lontano";
+        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
+        return "Azione non permessa";
+    }
+    
     #endregion
     
     #region Public Interface
@@ -514,6 +700,22 @@ public class PotActions : MonoBehaviour
         {
             Debug.Log($"[PotActions] Configurazione aggiornata per {potSlot?.PotId}");
         }
+    }
+    
+    /// <summary>
+    /// Restituisce il limite massimo di idratazione
+    /// </summary>
+    public int GetMaxHydration()
+    {
+        return config ? config.MaxHydration : 3;
+    }
+    
+    /// <summary>
+    /// Restituisce il limite massimo di esposizione alla luce
+    /// </summary>
+    public int GetMaxLightExposure()
+    {
+        return config ? config.MaxLightExposure : 3;
     }
     
     /// <summary>

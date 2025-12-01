@@ -29,8 +29,48 @@ namespace _Project
         private float _eventsDrift = 0f;
         private float _dailyDrift = 0f;
         
+        // Tracking azioni individuali per tooltip dettagliato
+        private System.Collections.Generic.List<ActionContribution> _actionContributions = new System.Collections.Generic.List<ActionContribution>();
+        
+        // Tracking piante individuali per tooltip dettagliato
+        private System.Collections.Generic.List<PlantContribution> _plantContributions = new System.Collections.Generic.List<PlantContribution>();
+        
+        /// <summary>
+        /// Struttura per tracciare contributi di piante individuali
+        /// </summary>
+        private struct PlantContribution
+        {
+            public string PlantCode;   // "PLT-STD-001", etc.
+            public string PotId;       // "POT-001", "POT-002", etc.
+            public float DailyDrift;   // Drift giornaliero di questa pianta
+            
+            public PlantContribution(string plantCode, string potId, float dailyDrift)
+            {
+                PlantCode = plantCode ?? "Unknown";
+                PotId = potId ?? "Unknown";
+                DailyDrift = dailyDrift;
+            }
+        }
+        
         // Oscillazione idle (variazione organica continua)
         private float _idleOscillation = 0f;
+        
+        /// <summary>
+        /// Struttura per tracciare contributi di azioni individuali
+        /// </summary>
+        private struct ActionContribution
+        {
+            public string ActionName;  // "Overwatering", "BlueLED", "RedLED", "SprayAntifungal"
+            public string PotId;       // "POT-001", "POT-002", etc.
+            public float Delta;        // Valore del drift applicato
+            
+            public ActionContribution(string actionName, string potId, float delta)
+            {
+                ActionName = actionName;
+                PotId = potId ?? "Unknown";
+                Delta = delta;
+            }
+        }
 
         public float CurrentPh => _currentPh + _idleOscillation; // Include oscillazione nel valore mostrato
         
@@ -135,18 +175,59 @@ namespace _Project
         }
         
         /// <summary>
-        /// Registra drift da piante
+        /// Registra drift da piante con dettagli individuali
         /// </summary>
-        public void RegisterPlantDrift(float drift)
+        public void RegisterPlantDrift(float drift, string plantCode = null, string potId = null)
         {
+            // Traccia pianta individuale per tooltip dettagliato
+            if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(plantCode))
+            {
+                // Aggiorna contributo esistente se già presente (stessa pianta stesso pot)
+                bool found = false;
+                for (int i = 0; i < _plantContributions.Count; i++)
+                {
+                    var plant = _plantContributions[i];
+                    if (plant.PlantCode == plantCode && plant.PotId == potId)
+                    {
+                        // Aggiorna drift (sostituisce invece di sommare per mostrare drift corrente)
+                        _plantContributions[i] = new PlantContribution(plantCode, potId, drift);
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found)
+                {
+                    _plantContributions.Add(new PlantContribution(plantCode, potId, drift));
+                    
+                    // Limita a 20 piante per evitare accumulo eccessivo
+                    if (_plantContributions.Count > 20)
+                    {
+                        _plantContributions.RemoveAt(0);
+                    }
+                }
+            }
+            
             ApplyInstantDelta(drift, "Plants");
         }
         
         /// <summary>
-        /// Registra drift da azioni
+        /// Registra drift da azioni con dettagli pot
         /// </summary>
-        public void RegisterActionDrift(float drift, string actionName = "")
+        public void RegisterActionDrift(float drift, string actionName = "", string potId = null)
         {
+            // Traccia azione individuale per tooltip dettagliato
+            if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(actionName))
+            {
+                _actionContributions.Add(new ActionContribution(actionName, potId, drift));
+                
+                // Limita a 20 azioni per evitare accumulo eccessivo
+                if (_actionContributions.Count > 20)
+        {
+                    _actionContributions.RemoveAt(0);
+                }
+            }
+            
             ApplyInstantDelta(drift, $"Action_{actionName}");
         }
         
@@ -233,11 +314,14 @@ namespace _Project
             _eventsDrift = 0f;
             _dailyDrift = 0f;
             _idleOscillation = 0f;
+            _actionContributions.Clear();
+            _plantContributions.Clear();
         }
         
         /// <summary>
         /// Genera stringa di calcolo per tooltip (formato italiano, stile HUD esistente)
         /// Evidenzia gli elementi che contribuiscono al valore
+        /// MODIFICATO: Non mostra pBase se 0, non mostra oscillazione, mostra dettagli azioni per pot
         /// </summary>
         public string GetCalculationBreakdown()
         {
@@ -246,56 +330,121 @@ namespace _Project
             
             string breakdown = "<b>pH Calculation:</b>\n";
             
-            // Formato italiano con virgole, stile "pBase: 0,0"
-            breakdown += $"pBase: {contrib.BasePh.ToString("F1", culture)}\n";
-            
-            // Evidenzia solo gli elementi che contribuiscono significativamente
             bool hasContributions = false;
             
-            if (Mathf.Abs(contrib.PlantsDrift) > 0.01f)
+            // Mostra pBase solo se diverso da 0
+            if (Mathf.Abs(contrib.BasePh) > 0.01f)
             {
-                string plantsValue = contrib.PlantsDrift.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=yellow>Piante:</color> {plantsValue}\n";
+                breakdown += $"pBase: {contrib.BasePh.ToString("F1", culture)}\n";
                 hasContributions = true;
             }
             
-            if (Mathf.Abs(contrib.ActionsDrift) > 0.01f)
+            // Mostra dettagli delle piante individuali per pot
+            if (_plantContributions.Count > 0)
+            {
+                foreach (var plant in _plantContributions)
+                {
+                    if (Mathf.Abs(plant.DailyDrift) > 0.01f)
+            {
+                        // Formato con 1 decimale: mostra 2 come "2,0" e -2 come "-2,0"
+                        string plantValue = plant.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
+                        string potInfo = !string.IsNullOrEmpty(plant.PotId) && plant.PotId != "Unknown" 
+                            ? $" ({plant.PotId})" 
+                            : "";
+                        string plantInfo = !string.IsNullOrEmpty(plant.PlantCode) && plant.PlantCode != "Unknown"
+                            ? $" - {plant.PlantCode}"
+                            : "";
+                        breakdown += $"<color=#FFFF00>Pianta{plantInfo}:</color> {plantValue}/giorno{potInfo}\n";
+                        hasContributions = true;
+                    }
+                }
+            }
+            // Fallback: mostra totale piante se non ci sono dettagli individuali
+            else if (Mathf.Abs(contrib.PlantsDrift) > 0.01f)
+            {
+                // Formato con 1 decimale: mostra 2 come "2,0" e -2 come "-2,0"
+                string plantsValue = contrib.PlantsDrift.ToString("+#0.0;-#0.0;0", culture);
+                breakdown += $"<color=#FFFF00>Piante:</color> {plantsValue}\n";
+                hasContributions = true;
+            }
+            
+            // Mostra dettagli delle azioni individuali per pot
+            if (_actionContributions.Count > 0)
+            {
+                foreach (var action in _actionContributions)
+                {
+                    if (Mathf.Abs(action.Delta) > 0.01f)
+                    {
+                        // Formato con 1 decimale: mostra 5 come "5,0" e -5 come "-5,0"
+                        string actionValue = action.Delta.ToString("+#0.0;-#0.0;0", culture);
+                        string actionDisplayName = GetActionDisplayName(action.ActionName);
+                        string potInfo = !string.IsNullOrEmpty(action.PotId) && action.PotId != "Unknown" 
+                            ? $" ({action.PotId})" 
+                            : "";
+                        breakdown += $"<color=#00FFFF>{actionDisplayName}:</color> {actionValue}{potInfo}\n";
+                        hasContributions = true;
+                    }
+                }
+            }
+            // Fallback: mostra totale azioni se non ci sono dettagli individuali
+            else if (Mathf.Abs(contrib.ActionsDrift) > 0.01f)
             {
                 string actionsValue = contrib.ActionsDrift.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=cyan>Azioni:</color> {actionsValue}\n";
+                breakdown += $"<color=#00FFFF>Azioni:</color> {actionsValue}\n";
                 hasContributions = true;
             }
             
             if (Mathf.Abs(contrib.EventsDrift) > 0.01f)
             {
                 string eventsValue = contrib.EventsDrift.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=magenta>Eventi:</color> {eventsValue}\n";
+                breakdown += $"<color=#FF00FF>Eventi:</color> {eventsValue}\n";
                 hasContributions = true;
             }
             
             if (Mathf.Abs(contrib.DailyDrift) > 0.01f)
             {
                 string dailyValue = contrib.DailyDrift.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=orange>Drift:</color> {dailyValue}\n";
+                breakdown += $"<color=#FFA500>Drift:</color> {dailyValue}\n";
                 hasContributions = true;
             }
             
-            // Mostra oscillazione idle se presente
-            if (Mathf.Abs(_idleOscillation) > 0.01f)
-            {
-                string oscillationValue = _idleOscillation.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=gray>Oscillazione:</color> {oscillationValue}\n";
-                hasContributions = true;
-            }
+            // NOTA: Oscillazione NON viene mostrata (come richiesto)
+            // ma continua a funzionare per l'animazione visiva
             
             if (!hasContributions)
             {
-                breakdown += "<color=gray>(Nessun contributo attivo)</color>\n";
+                breakdown += "<color=#808080>(Nessun contributo attivo)</color>\n";
             }
             
             breakdown += $"<b>Total: {CurrentPh.ToString("F1", culture)}</b>";
             
             return breakdown;
+        }
+        
+        /// <summary>
+        /// Converte nome azione tecnico in nome display italiano
+        /// </summary>
+        private string GetActionDisplayName(string actionName)
+        {
+            if (string.IsNullOrEmpty(actionName))
+                return "Azione";
+            
+            actionName = actionName.ToLower();
+            
+            if (actionName.Contains("overwatering") || actionName.Contains("over"))
+                return "Overwatering";
+            if (actionName.Contains("blueled") || actionName.Contains("blue"))
+                return "LED Blu";
+            if (actionName.Contains("redled") || actionName.Contains("red"))
+                return "LED Rosso";
+            if (actionName.Contains("spray") || actionName.Contains("antifungal"))
+                return "Spray Antifungino";
+            if (actionName.Contains("water"))
+                return "Annaffiatura";
+            if (actionName.Contains("light"))
+                return "Illuminazione";
+            
+            return actionName;
         }
     }
 }

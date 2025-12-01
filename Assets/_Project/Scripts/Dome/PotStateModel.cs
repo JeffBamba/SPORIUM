@@ -37,6 +37,10 @@ public class PotStateModel
     public int LastWateredDay;    // Ultimo giorno di annaffiatura
     public int LastLitDay;        // Ultimo giorno di illuminazione
     
+    [Header("LED Tracking (BLK-02.03)")]
+    [Tooltip("Ultimo tipo LED utilizzato (Blue/Red)")]
+    public LedType? LastLedType;  // Null se mai usato LED, Blue o Red se usato
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -53,6 +57,7 @@ public class PotStateModel
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
+        LastLedType = null;
         PlantCode = null;
     }
     
@@ -148,11 +153,15 @@ public class PotStateModel
     }
     
     /// <summary>
-    /// Aggiorna il timestamp dell'ultima illuminazione
+    /// Aggiorna il timestamp dell'ultima illuminazione e il tipo LED utilizzato
     /// </summary>
-    public void UpdateLightingDay(int currentDay)
+    public void UpdateLightingDay(int currentDay, LedType? ledType = null)
     {
         LastLitDay = currentDay;
+        if (ledType.HasValue)
+        {
+            LastLedType = ledType.Value;
+        }
     }
     
     /// <summary>
@@ -170,6 +179,7 @@ public class PotStateModel
         PlantedDay = 0;
         LastWateredDay = 0;
         LastLitDay = 0;
+        LastLedType = null;
         PlantCode = null;
     }
     

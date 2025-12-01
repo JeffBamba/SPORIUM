@@ -25,10 +25,15 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private TextMeshProUGUI potIdText;
     [SerializeField] private TextMeshProUGUI progressText;
     
+    [Header("Plant Stats UI")]
+    [SerializeField] private TextMeshProUGUI hydrationText;
+    [SerializeField] private TextMeshProUGUI lightExposureText;
+    
     [Header("Action Buttons (BLK-01.02)")]
     [SerializeField] private Button btnPlant;
     [SerializeField] private Button btnWater;
     [SerializeField] private Button btnLight;
+    [SerializeField] private Button btnSpray;
     [SerializeField] private TextMeshProUGUI txtCosts;
     
     [Header("Seed Selector")]
@@ -36,7 +41,7 @@ public class PotHUDWidget : MonoBehaviour
     
     [Header("Widget Settings")]
     [SerializeField] private Vector2 widgetPosition = new Vector2(12, 12);
-    [SerializeField] private Vector2 widgetSize = new Vector2(300, 120); // Aumentato per nuovi elementi
+    [SerializeField] private Vector2 widgetSize = new Vector2(370, 120); // Aumentato per contenere pulsante Spray
     [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.8f);
     [SerializeField] private Color textColor = Color.white;
     
@@ -342,6 +347,9 @@ public class PotHUDWidget : MonoBehaviour
         
         // BLK-01.03B: Crea i nuovi elementi UI per stage e progresso
         CreateStageAndProgressUI();
+        
+        // Crea elementi UI per Idratazione e Light Exposure
+        CreatePlantStatsUI();
     }
     
     /// <summary>
@@ -475,6 +483,52 @@ public class PotHUDWidget : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Crea gli elementi UI per Idratazione e Light Exposure
+    /// </summary>
+    private void CreatePlantStatsUI()
+    {
+        // Crea Hydration Text
+        if (hydrationText == null)
+        {
+            GameObject hydrationGO = new GameObject("HydrationText");
+            hydrationGO.transform.SetParent(_widgetContainer.transform, false);
+            
+            hydrationText = hydrationGO.AddComponent<TextMeshProUGUI>();
+            hydrationText.color = new Color(0.3f, 0.6f, 1f); // Blu acqua
+            hydrationText.fontSize = 14;
+            hydrationText.alignment = TextAlignmentOptions.Left;
+            hydrationText.text = "💧 Idratazione: 0/3";
+            
+            RectTransform hydrationRect = hydrationGO.GetComponent<RectTransform>();
+            hydrationRect.anchorMin = new Vector2(0, 0.5f);
+            hydrationRect.anchorMax = new Vector2(0.5f, 0.5f);
+            hydrationRect.pivot = new Vector2(0, 0.5f);
+            hydrationRect.anchoredPosition = new Vector2(10, -45);
+            hydrationRect.sizeDelta = new Vector2(140, 20);
+        }
+        
+        // Crea Light Exposure Text
+        if (lightExposureText == null)
+        {
+            GameObject lightGO = new GameObject("LightExposureText");
+            lightGO.transform.SetParent(_widgetContainer.transform, false);
+            
+            lightExposureText = lightGO.AddComponent<TextMeshProUGUI>();
+            lightExposureText.color = new Color(1f, 0.9f, 0.3f); // Giallo
+            lightExposureText.fontSize = 14;
+            lightExposureText.alignment = TextAlignmentOptions.Left;
+            lightExposureText.text = "💡 Luce: 0/3";
+            
+            RectTransform lightRect = lightGO.GetComponent<RectTransform>();
+            lightRect.anchorMin = new Vector2(0.5f, 0.5f);
+            lightRect.anchorMax = new Vector2(1f, 0.5f);
+            lightRect.pivot = new Vector2(0, 0.5f);
+            lightRect.anchoredPosition = new Vector2(10, -45);
+            lightRect.sizeDelta = new Vector2(140, 20);
+        }
+    }
+    
     private void OnPotSelected(PotSlot pot)
     {
         if (!_isInitialized) return;
@@ -577,6 +631,8 @@ public class PotHUDWidget : MonoBehaviour
             if (stageIcon != null) stageIcon.color = Color.gray;
             if (progressBar != null) progressBar.value = 0f;
             if (progressText != null) progressText.text = "0%";
+            if (hydrationText != null) hydrationText.text = "💧 Idratazione: 0/3";
+            if (lightExposureText != null) lightExposureText.text = "💡 Luce: 0/3";
         }
     }
     
@@ -627,6 +683,11 @@ public class PotHUDWidget : MonoBehaviour
         if (btnLight == null)
         {
             btnLight = CreateActionButton("Light", "Illuminare", PotEvents.PotActionType.Light);
+        }
+        
+        if (btnSpray == null)
+        {
+            btnSpray = CreateActionButton("Spray", "Spray", PotEvents.PotActionType.Spray);
         }
         
         // Crea il testo dei costi
@@ -704,6 +765,9 @@ public class PotHUDWidget : MonoBehaviour
             case PotEvents.PotActionType.Light:
                 buttonRect.anchoredPosition = new Vector2(190, 50);
                 break;
+            case PotEvents.PotActionType.Spray:
+                buttonRect.anchoredPosition = new Vector2(280, 50);
+                break;
         }
         
         // Aggiungi listener per l'azione
@@ -774,17 +838,17 @@ public class PotHUDWidget : MonoBehaviour
             case PotEvents.PotActionType.Light:
                 success = selectedPot.PotActions.DoLight();
                 break;
+            case PotEvents.PotActionType.Spray:
+                success = selectedPot.PotActions.DoSprayAntifungal();
+                break;
         }
         
         if (success)
         {
             Debug.Log($"[PotHUDWidget] Azione {actionType} eseguita con successo!");
-            // Aggiorna l'UI
+            // Aggiorna l'UI - inclusi Stage, Idratazione e Light Exposure
             UpdateActionButtons(selectedPot);
-
-            var growthController = selectedPot.GetComponent<PotGrowthController>();
-            if (growthController != null)
-                UpdateStageAndProgressUI(selectedPot);
+            UpdateStageAndProgressUI(selectedPot);
         }
         else
         {
@@ -844,6 +908,7 @@ public class PotHUDWidget : MonoBehaviour
             UpdateButtonState(btnPlant, pot.PotActions.CanPlant(), "Piantare");
             UpdateButtonState(btnWater, pot.PotActions.CanWater(), "Annaffiare");
             UpdateButtonState(btnLight, pot.PotActions.CanLight(), "Illuminare");
+            UpdateButtonState(btnSpray, pot.PotActions.CanSprayAntifungal(), "Spray");
         }
     }
     
@@ -881,6 +946,7 @@ public class PotHUDWidget : MonoBehaviour
         if (btnPlant != null) btnPlant.gameObject.SetActive(visible);
         if (btnWater != null) btnWater.gameObject.SetActive(visible);
         if (btnLight != null) btnLight.gameObject.SetActive(visible);
+        if (btnSpray != null) btnSpray.gameObject.SetActive(visible);
         if (txtCosts != null) txtCosts.gameObject.SetActive(visible);
 
         if (visible) SetCustomMessage("");
@@ -895,6 +961,12 @@ public class PotHUDWidget : MonoBehaviour
         
         // Aggiorna i pulsanti se questo è il vaso selezionato
         UpdateActionButtons(pot);
+        
+        // Aggiorna anche Stage, Idratazione e Light Exposure se è il vaso selezionato
+        if (_currentSelectedPot != null && _currentSelectedPot.PotId == pot.PotId)
+        {
+            UpdateStageAndProgressUI(pot);
+        }
     }
     
     /// <summary>
@@ -964,7 +1036,48 @@ public class PotHUDWidget : MonoBehaviour
             // TODO: Sostituire con sprite reali quando disponibili
         }
 
+        // Aggiorna Idratazione e Light Exposure
+        UpdatePlantStatsUI(state);
+
         UpdateProgressUI(state);
+    }
+    
+    /// <summary>
+    /// Aggiorna gli elementi UI per Idratazione e Light Exposure
+    /// </summary>
+    private void UpdatePlantStatsUI(PotStateModel state)
+    {
+        if (state == null) return;
+        
+        // Aggiorna Hydration Text
+        if (hydrationText != null)
+        {
+            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 3;
+            hydrationText.text = $"💧 Idratazione: {state.Hydration}/{maxHydration}";
+            
+            // Cambia colore in base al livello di idratazione
+            if (state.Hydration >= maxHydration)
+                hydrationText.color = new Color(0.2f, 1f, 0.2f); // Verde quando al massimo
+            else if (state.Hydration == 0)
+                hydrationText.color = new Color(1f, 0.3f, 0.3f); // Rosso quando vuoto
+            else
+                hydrationText.color = new Color(0.3f, 0.6f, 1f); // Blu normale
+        }
+        
+        // Aggiorna Light Exposure Text
+        if (lightExposureText != null)
+        {
+            int maxLight = _currentSelectedPot?.PotActions?.GetMaxLightExposure() ?? 3;
+            lightExposureText.text = $"💡 Luce: {state.LightExposure}/{maxLight}";
+            
+            // Cambia colore in base al livello di luce
+            if (state.LightExposure >= maxLight)
+                lightExposureText.color = new Color(1f, 1f, 0.2f); // Giallo brillante quando al massimo
+            else if (state.LightExposure == 0)
+                lightExposureText.color = new Color(0.5f, 0.5f, 0.5f); // Grigio quando vuoto
+            else
+                lightExposureText.color = new Color(1f, 0.9f, 0.3f); // Giallo normale
+        }
     }
 
     private void UpdateProgressUI(PotStateModel state)

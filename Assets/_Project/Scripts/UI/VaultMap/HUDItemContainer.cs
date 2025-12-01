@@ -37,19 +37,60 @@ namespace _Project
 
         public void DisableAllSlots()
         {
+            if (_items == null) return;
+            
             for (var i = 0; i < _items.Count; i++)
-                DisableItemSlot(i);
+            {
+                if (_items[i] != null)
+                    DisableItemSlot(i);
+            }
         }
         
         public void DisableItemSlot(int id)
         {
-            _items[id].gameObject.SetActive(false);
+            if (_items == null || id < 0 || id >= _items.Count)
+            {
+                Debug.LogWarning($"[HUDItemContainer] ⚠️ Tentativo di disabilitare slot invalido: {id} (capacità: {_items?.Count ?? 0})");
+                return;
+            }
+            
+            if (_items[id] != null)
+            {
+                _items[id].gameObject.SetActive(false);
+            }
         }
         
         public void SetItemData(int id, string itemName, int quantity)
         {
+            if (_items == null)
+            {
+                Debug.LogError("[HUDItemContainer] ⚠️ Lista _items è null! Assicurati che gli item siano assegnati nell'Inspector.");
+                return;
+            }
+            
+            if (id < 0 || id >= _items.Count)
+            {
+                Debug.LogError($"[HUDItemContainer] ⚠️ Tentativo di impostare item con indice invalido: {id} (capacità: {_items.Count}). Item: {itemName}");
+                return;
+            }
+            
+            if (_items[id] == null)
+            {
+                Debug.LogError($"[HUDItemContainer] ⚠️ Item slot {id} è null! Assicurati che tutti gli slot siano assegnati nell'Inspector.");
+                return;
+            }
+            
             _items[id].gameObject.SetActive(true);
             _items[id].SetItem(itemName, quantity);
+            
+            // Assicurati che l'item sia visibile
+            CanvasGroup canvasGroup = _items[id].GetComponent<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
         }
     }
 }

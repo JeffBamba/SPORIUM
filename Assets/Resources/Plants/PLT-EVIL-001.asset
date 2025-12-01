@@ -17,6 +17,6 @@ MonoBehaviour:
   family: 2
   rarity: 0
   dailyPhDrift: -2
-  optimalPhMin: -29
-  optimalPhMax: 29
+  optimalPhMin: -100
+  optimalPhMax: -50
   preferredFaction: 

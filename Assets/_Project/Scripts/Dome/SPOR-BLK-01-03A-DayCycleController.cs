@@ -453,45 +453,86 @@ public class DayCycleController : MonoBehaviour
     private void CalculateAndRegisterPhDrift()
     {
         if (_phSystem == null)
+        {
+            if (enableDebugLogs)
+                Debug.LogWarning("[DayCycleController] PhSystem non disponibile, impossibile calcolare drift pH");
             return;
+        }
         
         float totalPhDrift = 0f;
         int plantCount = 0;
+        int skippedCount = 0;
+        
+        if (enableDebugLogs)
+            Debug.Log($"[DayCycleController] Calcolo drift pH per {_registeredPots.Count} vasi registrati...");
         
         foreach (var pot in _registeredPots)
         {
-            if (pot == null || !pot.HasPlant)
+            if (pot == null)
+            {
+                skippedCount++;
                 continue;
+            }
+            
+            if (!pot.HasPlant)
+            {
+                if (enableDebugLogs)
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Vaso vuoto, saltato");
+                skippedCount++;
+                continue;
+            }
+            
+            // DEBUG: Verifica PlantCode
+            if (string.IsNullOrEmpty(pot.PlantCode))
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning($"[DayCycleController] ⚠️ {pot.PotId}: PlantCode è NULL o vuoto! Stage: {pot.Stage} (HasPlant: {pot.HasPlant})");
+                skippedCount++;
+                continue;
+            }
             
             // Ottieni PlantData dalla pianta
             PlantData plantData = pot.GetPlantData();
             if (plantData == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning($"[DayCycleController] ⚠️ {pot.PotId}: PlantData non trovato per PlantCode '{pot.PlantCode}'");
+                skippedCount++;
                 continue;
+            }
             
             // Calcola drift pH per questa pianta
             float plantDrift = plantData.GetDailyPhDrift();
             totalPhDrift += plantDrift;
             plantCount++;
             
-            if (enableDebugLogs && plantDrift != 0f)
+            // Registra ogni pianta individualmente per tooltip dettagliato
+            if (plantDrift != 0f)
             {
-                Debug.Log($"[DayCycleController] {pot.PotId}: {plantData.PlantCode} ({plantData.Family}) → drift pH: {plantDrift:F2}/giorno");
+                _phSystem.RegisterPlantDrift(plantDrift, plantData.PlantCode, pot.PotId);
             }
-        }
-        
-        // Registra il drift totale nel PhSystem
-        if (totalPhDrift != 0f)
-        {
-            _phSystem.RegisterPlantDrift(totalPhDrift);
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[DayCycleController] pH Drift totale da {plantCount} piante: {totalPhDrift:F2} → pH attuale: {_phSystem.CurrentPh:F2}");
+                Debug.Log($"[DayCycleController] ✅ {pot.PotId}: {plantData.PlantCode} ({plantData.Family}) Stage:{pot.Stage} → drift pH: {plantDrift:F2}/giorno");
             }
         }
-        else if (enableDebugLogs && plantCount > 0)
+        
+        // Log riepilogativo
+        if (totalPhDrift != 0f && enableDebugLogs)
         {
-            Debug.Log($"[DayCycleController] Nessun drift pH da {plantCount} piante (tutte Standard o drift = 0)");
+            Debug.Log($"[DayCycleController] ✅ pH Drift totale da {plantCount} piante: {totalPhDrift:F2} → pH attuale: {_phSystem.CurrentPh:F2}");
+        }
+        else if (enableDebugLogs)
+        {
+            if (plantCount > 0)
+            {
+                Debug.Log($"[DayCycleController] ⚠️ Nessun drift pH da {plantCount} piante (tutte Standard o drift = 0)");
+            }
+            else if (skippedCount > 0)
+            {
+                Debug.LogWarning($"[DayCycleController] ⚠️ Nessuna pianta valida trovata! {skippedCount} vasi saltati (vuoti o senza PlantCode)");
+            }
         }
     }
     
@@ -510,3 +551,4 @@ public class DayCycleController : MonoBehaviour
         }
     }
 }
+

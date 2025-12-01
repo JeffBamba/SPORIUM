@@ -27,6 +27,8 @@ namespace _Project
         [Header("Settings")]
         [SerializeField] private string titleTextFormat = "Seleziona Seme";
         [SerializeField] private string noSeedsMessage = "Nessun seme disponibile nell'inventario";
+        [SerializeField] private int canvasSortingOrder = 200; // Sopra la HUD della pianta (100) e inventario (150)
+        [SerializeField] private bool improveReadability = true;
         
         private GameManager _gameManager;
         private Inventory _playerInventory;
@@ -130,6 +132,12 @@ namespace _Project
             
             selectorPanel.SetActive(true);
             
+            // Configura Canvas e leggibilità quando viene mostrato
+            if (improveReadability)
+            {
+                SetupCanvasAndReadability();
+            }
+            
             if (titleText != null)
             {
                 titleText.text = titleTextFormat;
@@ -219,6 +227,11 @@ namespace _Project
                 GameObject buttonGO = CreateSeedButton(seedTypeId, quantity, plantData);
                 if (buttonGO != null)
                 {
+                    // Migliora leggibilità del pulsante appena creato
+                    if (improveReadability)
+                    {
+                        ImproveSeedButtonReadability(buttonGO);
+                    }
                     _seedButtons.Add(buttonGO);
                 }
             }
@@ -243,7 +256,7 @@ namespace _Project
                 
                 // Aggiungi componenti base
                 Image image = buttonGO.AddComponent<Image>();
-                image.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+                image.color = new Color(0.15f, 0.15f, 0.15f, 0.95f); // Sfondo più scuro e opaco
                 
                 Button button = buttonGO.AddComponent<Button>();
                 button.targetGraphic = image;
@@ -260,8 +273,10 @@ namespace _Project
                 TextMeshProUGUI text = textGO.AddComponent<TextMeshProUGUI>();
                 text.text = seedTypeId;
                 text.alignment = TextAlignmentOptions.Center;
-                text.color = Color.white;
-                text.fontSize = 14;
+                text.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
+                text.fontSize = 36; // Font scalato del 100% (raddoppiato)
+                text.outlineWidth = 0.6f; // Outline scalato del 100%
+                text.outlineColor = new Color(0f, 0f, 0f, 1f);
             }
             
             // Configura pulsante
@@ -276,6 +291,21 @@ namespace _Project
                 if (buttonTextComponent != null)
                 {
                     buttonTextComponent.text = buttonText;
+                // Migliora leggibilità del testo
+                if (buttonTextComponent.fontSize < 36)
+                {
+                    buttonTextComponent.fontSize = 36; // Font scalato del 100%
+                }
+                buttonTextComponent.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
+                buttonTextComponent.outlineWidth = 0.6f; // Outline scalato del 100%
+                buttonTextComponent.outlineColor = new Color(0f, 0f, 0f, 1f);
+                }
+                
+                // Migliora anche il background del pulsante
+                Image btnImage = buttonGO.GetComponent<Image>();
+                if (btnImage != null)
+                {
+                    btnImage.color = new Color(0.15f, 0.15f, 0.15f, 0.95f);
                 }
                 
                 // Aggiungi listener
@@ -382,6 +412,138 @@ namespace _Project
         public bool IsVisible => selectorPanel != null && selectorPanel.activeSelf;
         
         /// <summary>
+        /// Configura il Canvas per renderlo sopra la HUD della pianta
+        /// </summary>
+        private void SetupCanvasAndReadability()
+        {
+            if (selectorPanel == null) return;
+            
+            // Trova il Canvas del selettore
+            Canvas selectorCanvas = selectorPanel.GetComponentInParent<Canvas>();
+            if (selectorCanvas == null)
+            {
+                selectorCanvas = selectorPanel.GetComponent<Canvas>();
+                if (selectorCanvas == null)
+                {
+                    Transform parent = selectorPanel.transform.parent;
+                    while (parent != null && selectorCanvas == null)
+                    {
+                        selectorCanvas = parent.GetComponent<Canvas>();
+                        parent = parent.parent;
+                    }
+                }
+            }
+            
+            // Se trovato, imposta sorting order più alto
+            if (selectorCanvas != null)
+            {
+                selectorCanvas.sortingOrder = canvasSortingOrder;
+                Debug.Log($"[UISeedSelector] Canvas sorting order impostato a {canvasSortingOrder} per renderlo sopra la HUD della pianta");
+            }
+            
+            // Migliora leggibilità del pannello
+            ImprovePanelReadability();
+        }
+        
+        /// <summary>
+        /// Migliora la leggibilità del pannello e dei pulsanti
+        /// </summary>
+        private void ImprovePanelReadability()
+        {
+            if (selectorPanel == null) return;
+            
+            // Migliora il background del pannello
+            Image panelImage = selectorPanel.GetComponent<Image>();
+            if (panelImage != null)
+            {
+                // Sfondo più scuro e opaco per maggiore contrasto
+                panelImage.color = new Color(0.05f, 0.05f, 0.05f, 0.98f);
+            }
+            
+            // Migliora il titolo
+            if (titleText != null)
+            {
+                if (titleText.fontSize < 56)
+                {
+                    titleText.fontSize = 56; // Font scalato del 100%
+                }
+                titleText.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
+                // Aggiungi outline più spesso se supportato
+                if (titleText.fontMaterial != null)
+                {
+                    titleText.outlineWidth = 0.8f; // Outline scalato del 100%
+                    titleText.outlineColor = new Color(0f, 0f, 0f, 1f);
+                }
+            }
+            
+            // Aumenta le dimensioni del pannello se troppo piccolo
+            RectTransform panelRect = selectorPanel.GetComponent<RectTransform>();
+            if (panelRect != null)
+            {
+                Vector2 currentSize = panelRect.sizeDelta;
+                if (currentSize.x < 1400 || currentSize.y < 1000)
+                {
+                    panelRect.sizeDelta = new Vector2(1400, 1000); // Dimensioni scalate del 100%
+                    Debug.Log("[UISeedSelector] Dimensioni pannello aumentate a 1400x1000");
+                }
+            }
+            
+            // Migliora i pulsanti dei semi esistenti
+            if (seedButtonContainer != null)
+            {
+                foreach (Transform child in seedButtonContainer)
+                {
+                    ImproveSeedButtonReadability(child.gameObject);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Migliora la leggibilità di un singolo pulsante seme
+        /// </summary>
+        private void ImproveSeedButtonReadability(GameObject buttonGO)
+        {
+            if (buttonGO == null) return;
+            
+            // Migliora tutti i testi nel pulsante
+            TextMeshProUGUI[] texts = buttonGO.GetComponentsInChildren<TextMeshProUGUI>();
+            foreach (var text in texts)
+            {
+                if (text != null)
+                {
+                    // Aumenta font size se troppo piccolo
+                    if (text.fontSize < 36)
+                    {
+                        text.fontSize = 36; // Font scalato del 100%
+                    }
+                    
+                    // Colore bianco brillante per massimo contrasto
+                    text.color = new Color(1f, 1f, 1f, 1f);
+                    
+                    // Aggiungi outline più spesso per maggiore leggibilità
+                    if (text.fontMaterial != null)
+                    {
+                        text.outlineWidth = 0.6f; // Outline scalato del 100%
+                        text.outlineColor = new Color(0f, 0f, 0f, 1f);
+                    }
+                }
+            }
+            
+            // Migliora il background del pulsante
+            Image buttonImage = buttonGO.GetComponent<Image>();
+            if (buttonImage != null)
+            {
+                // Sfondo più scuro e opaco
+                Color bgColor = buttonImage.color;
+                bgColor.a = 0.95f;
+                bgColor.r = Mathf.Min(bgColor.r, 0.2f);
+                bgColor.g = Mathf.Min(bgColor.g, 0.2f);
+                bgColor.b = Mathf.Min(bgColor.b, 0.2f);
+                buttonImage.color = bgColor;
+            }
+        }
+        
+        /// <summary>
         /// Crea automaticamente la struttura UI se mancante
         /// </summary>
         private void CreateUI()
@@ -390,12 +552,22 @@ namespace _Project
             Canvas canvas = FindObjectOfType<Canvas>();
             if (canvas == null)
             {
-                GameObject canvasGO = new GameObject("Canvas");
+                GameObject canvasGO = new GameObject("Canvas_SeedSelector");
                 canvas = canvasGO.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = canvasSortingOrder; // Imposta sorting order alto
                 canvasGO.AddComponent<CanvasScaler>();
                 canvasGO.AddComponent<GraphicRaycaster>();
-                Debug.Log("[UISeedSelector] Creato Canvas per UISeedSelector");
+                Debug.Log($"[UISeedSelector] Creato Canvas per UISeedSelector con sorting order {canvasSortingOrder}");
+            }
+            else
+            {
+                // Se esiste già un Canvas, assicurati che abbia sorting order alto
+                if (canvas.sortingOrder < canvasSortingOrder)
+                {
+                    canvas.sortingOrder = canvasSortingOrder;
+                    Debug.Log($"[UISeedSelector] Canvas esistente aggiornato con sorting order {canvasSortingOrder}");
+                }
             }
             
             // Assicurati che questo GameObject sia figlio del Canvas
@@ -411,11 +583,11 @@ namespace _Project
             RectTransform panelRect = panelGO.AddComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(400, 300);
+            panelRect.sizeDelta = new Vector2(1400, 1000); // Pannello scalato del 100% (raddoppiato)
             panelRect.anchoredPosition = Vector2.zero;
             
             Image panelImage = panelGO.AddComponent<Image>();
-            panelImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+            panelImage.color = new Color(0.05f, 0.05f, 0.05f, 0.98f); // Sfondo molto scuro e opaco per massimo contrasto
             
             selectorPanel = panelGO;
             
@@ -426,13 +598,13 @@ namespace _Project
             RectTransform containerRect = containerGO.AddComponent<RectTransform>();
             containerRect.anchorMin = new Vector2(0f, 0f);
             containerRect.anchorMax = new Vector2(1f, 1f);
-            containerRect.offsetMin = new Vector2(10, 50);
-            containerRect.offsetMax = new Vector2(-10, -10);
+            containerRect.offsetMin = new Vector2(30, 120); // Padding scalato del 100%
+            containerRect.offsetMax = new Vector2(-30, -30);
             
             // Aggiungi GridLayoutGroup per organizzare i pulsanti
             GridLayoutGroup gridLayout = containerGO.AddComponent<GridLayoutGroup>();
-            gridLayout.cellSize = new Vector2(120, 100);
-            gridLayout.spacing = new Vector2(10, 10);
+            gridLayout.cellSize = new Vector2(400, 300); // Pulsanti scalati del 100% (raddoppiati)
+            gridLayout.spacing = new Vector2(40, 40); // Spazio tra pulsanti scalato del 100%
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gridLayout.constraintCount = 3;
             gridLayout.childAlignment = TextAnchor.UpperLeft;
@@ -446,14 +618,17 @@ namespace _Project
             RectTransform titleRect = titleGO.AddComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0f, 1f);
             titleRect.anchorMax = new Vector2(1f, 1f);
-            titleRect.sizeDelta = new Vector2(0, 40);
-            titleRect.anchoredPosition = new Vector2(0, -5);
+            titleRect.sizeDelta = new Vector2(0, 100); // Area titolo scalata del 100%
+            titleRect.anchoredPosition = new Vector2(0, -20);
             
             TextMeshProUGUI titleTextComponent = titleGO.AddComponent<TextMeshProUGUI>();
             titleTextComponent.text = titleTextFormat;
             titleTextComponent.alignment = TextAlignmentOptions.Center;
-            titleTextComponent.fontSize = 20;
-            titleTextComponent.color = Color.white;
+            titleTextComponent.fontSize = 56; // Font scalato del 100% (raddoppiato)
+            titleTextComponent.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
+            // Aggiungi outline più spesso per maggiore leggibilità
+            titleTextComponent.outlineWidth = 0.8f; // Outline scalato del 100%
+            titleTextComponent.outlineColor = new Color(0f, 0f, 0f, 1f);
             
             titleText = titleTextComponent;
             
@@ -464,13 +639,13 @@ namespace _Project
             RectTransform noSeedsRect = noSeedsGO.AddComponent<RectTransform>();
             noSeedsRect.anchorMin = new Vector2(0.5f, 0.5f);
             noSeedsRect.anchorMax = new Vector2(0.5f, 0.5f);
-            noSeedsRect.sizeDelta = new Vector2(300, 50);
+            noSeedsRect.sizeDelta = new Vector2(600, 100); // Scalato del 100%
             noSeedsRect.anchoredPosition = Vector2.zero;
             
             TextMeshProUGUI noSeedsTextComponent = noSeedsGO.AddComponent<TextMeshProUGUI>();
             noSeedsTextComponent.text = noSeedsMessage;
             noSeedsTextComponent.alignment = TextAlignmentOptions.Center;
-            noSeedsTextComponent.fontSize = 16;
+            noSeedsTextComponent.fontSize = 32; // Font scalato del 100%
             noSeedsTextComponent.color = Color.yellow;
             noSeedsGO.SetActive(false);
             
@@ -483,8 +658,8 @@ namespace _Project
             RectTransform closeButtonRect = closeButtonGO.AddComponent<RectTransform>();
             closeButtonRect.anchorMin = new Vector2(1f, 1f);
             closeButtonRect.anchorMax = new Vector2(1f, 1f);
-            closeButtonRect.sizeDelta = new Vector2(30, 30);
-            closeButtonRect.anchoredPosition = new Vector2(-5, -5);
+            closeButtonRect.sizeDelta = new Vector2(60, 60); // Pulsante chiudi scalato del 100%
+            closeButtonRect.anchoredPosition = new Vector2(-10, -10);
             
             Image closeButtonImage = closeButtonGO.AddComponent<Image>();
             closeButtonImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
@@ -505,7 +680,7 @@ namespace _Project
             TextMeshProUGUI closeText = closeTextGO.AddComponent<TextMeshProUGUI>();
             closeText.text = "X";
             closeText.alignment = TextAlignmentOptions.Center;
-            closeText.fontSize = 18;
+            closeText.fontSize = 36; // Font scalato del 100%
             closeText.color = Color.white;
             
             closeButton = closeButtonComponent;

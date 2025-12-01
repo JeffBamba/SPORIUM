@@ -51,8 +51,10 @@ namespace Sporae.DevTools
 
         private void Awake()
         {
-            // Crea sistema pH se non esiste
+            // Crea sistema pH se non esiste - sempre inizializzato a 0.0
             _phSystem = new PhSystem(0f);
+            // Reset esplicito per assicurarsi che tutto sia a 0.0 (pH base, oscillazione, contributi)
+            _phSystem.Reset();
             _phSystem.OnPhChanged += OnPhChanged;
 
             _isConsoleOpen = showOnStart;
@@ -62,6 +64,7 @@ namespace Sporae.DevTools
             #endif
             
             Debug.Log($"[pH Debug Console] Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
+            Debug.Log($"[pH Debug Console] pH inizializzato a 0.0 (Reset completo)");
         }
 
         private void Start()
@@ -198,22 +201,22 @@ namespace Sporae.DevTools
 
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
             labelStyle.normal.textColor = Color.white;
-            labelStyle.fontSize = 12;
+            labelStyle.fontSize = 16; // Scalato del 30% (12 * 1.3)
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = 11;
+            buttonStyle.fontSize = 14; // Scalato del 30% (11 * 1.3)
 
             // Area console principale
-            float consoleWidth = 600f;
-            float consoleHeight = 500f;
-            Rect consoleRect = new Rect(Screen.width - consoleWidth - 10, 10, consoleWidth, consoleHeight);
+            float consoleWidth = 780f; // Scalato del 30% (600 * 1.3)
+            float consoleHeight = 650f; // Scalato del 30% (500 * 1.3)
+            Rect consoleRect = new Rect(Screen.width - consoleWidth - 13, 13, consoleWidth, consoleHeight); // Margini scalati del 30%
 
             GUILayout.BeginArea(consoleRect, boxStyle);
             GUILayout.BeginVertical();
 
             // Header
             GUILayout.Label("🧪 pH SYSTEM DEBUG CONSOLE", labelStyle);
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Stato corrente pH
             var bandColor = _phSystem.GetBandColor();
@@ -222,13 +225,13 @@ namespace Sporae.DevTools
             GUILayout.Label($"pH Corrente: {_phSystem.CurrentPh:F2}", labelStyle);
             GUI.color = oldColor;
             GUILayout.Label($"Banda: {_phSystem.GetBandName()}", labelStyle);
-            GUILayout.Space(10);
+            GUILayout.Space(13); // Scalato del 30% (10 * 1.3)
 
             // Input manuale pH
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Imposta pH:", labelStyle, GUILayout.Width(100));
-            _phInputValue = GUILayout.TextField(_phInputValue, GUILayout.Width(100));
-            if (GUILayout.Button("Applica", buttonStyle, GUILayout.Width(80)))
+            GUILayout.Label("Imposta pH:", labelStyle, GUILayout.Width(130)); // Scalato del 30% (100 * 1.3)
+            _phInputValue = GUILayout.TextField(_phInputValue, GUILayout.Width(130)); // Scalato del 30% (100 * 1.3)
+            if (GUILayout.Button("Applica", buttonStyle, GUILayout.Width(104))) // Scalato del 30% (80 * 1.3)
             {
                 if (float.TryParse(_phInputValue, out float newPh))
                 {
@@ -241,56 +244,56 @@ namespace Sporae.DevTools
                 }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Valori rapidi
             GUILayout.Label("Valori Rapidi:", labelStyle);
             GUILayout.BeginHorizontal();
             foreach (var kvp in _quickValues)
             {
-                if (GUILayout.Button(kvp.Key, buttonStyle, GUILayout.Width(110)))
+                if (GUILayout.Button(kvp.Key, buttonStyle, GUILayout.Width(143))) // Scalato del 30% (110 * 1.3)
                 {
                     SetQuickPh(kvp.Key);
                 }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Modifiche incrementali
             GUILayout.Label("Modifiche Incrementali:", labelStyle);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("-10", buttonStyle, GUILayout.Width(60))) _phSystem.ApplyInstantDelta(-10f, "Debug_Manual");
-            if (GUILayout.Button("-5", buttonStyle, GUILayout.Width(60))) _phSystem.ApplyInstantDelta(-5f, "Debug_Manual");
-            if (GUILayout.Button("+5", buttonStyle, GUILayout.Width(60))) _phSystem.ApplyInstantDelta(+5f, "Debug_Manual");
-            if (GUILayout.Button("+10", buttonStyle, GUILayout.Width(60))) _phSystem.ApplyInstantDelta(+10f, "Debug_Manual");
-            if (GUILayout.Button("Reset", buttonStyle, GUILayout.Width(80))) _phSystem.Reset();
+            if (GUILayout.Button("-10", buttonStyle, GUILayout.Width(78))) _phSystem.ApplyInstantDelta(-10f, "Debug_Manual"); // Scalato del 30% (60 * 1.3)
+            if (GUILayout.Button("-5", buttonStyle, GUILayout.Width(78))) _phSystem.ApplyInstantDelta(-5f, "Debug_Manual"); // Scalato del 30% (60 * 1.3)
+            if (GUILayout.Button("+5", buttonStyle, GUILayout.Width(78))) _phSystem.ApplyInstantDelta(+5f, "Debug_Manual"); // Scalato del 30% (60 * 1.3)
+            if (GUILayout.Button("+10", buttonStyle, GUILayout.Width(78))) _phSystem.ApplyInstantDelta(+10f, "Debug_Manual"); // Scalato del 30% (60 * 1.3)
+            if (GUILayout.Button("Reset", buttonStyle, GUILayout.Width(104))) _phSystem.Reset(); // Scalato del 30% (80 * 1.3)
             GUILayout.EndHorizontal();
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Simulazioni
             GUILayout.Label("Simulazioni:", labelStyle);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Drift Giornaliero", buttonStyle, GUILayout.Width(120)))
+            if (GUILayout.Button("Drift Giornaliero", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 SimulateDailyDrift();
             }
-            if (GUILayout.Button("Overwatering", buttonStyle, GUILayout.Width(120)))
+            if (GUILayout.Button("Overwatering", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 _phSystem.ApplyInstantDelta(-5f, "Action_Watering_Over");
                 AddLog("Simulato Overwatering: pH -5");
             }
-            if (GUILayout.Button("LED Blu", buttonStyle, GUILayout.Width(120)))
+            if (GUILayout.Button("LED Blu", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 _phSystem.ApplyInstantDelta(+5f, "Action_LED_Blue");
                 AddLog("Simulato LED Blu: pH +5");
             }
-            if (GUILayout.Button("LED Rosso", buttonStyle, GUILayout.Width(120)))
+            if (GUILayout.Button("LED Rosso", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 _phSystem.ApplyInstantDelta(-5f, "Action_LED_Red");
                 AddLog("Simulato LED Rosso: pH -5");
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Effetti su piante
             GUILayout.Label("Effetti su Piante:", labelStyle);
@@ -299,7 +302,7 @@ namespace Sporae.DevTools
 
             // Log debug
             GUILayout.Label("Log:", labelStyle);
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(150));
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(195)); // Scalato del 30% (150 * 1.3)
             foreach (var logEntry in _debugLog)
             {
                 GUILayout.Label(logEntry, labelStyle);
@@ -307,9 +310,9 @@ namespace Sporae.DevTools
             GUILayout.EndScrollView();
 
             // Hotkeys info
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
             GUILayout.Label("Hotkeys: 1-5=Valori rapidi | +/- = ±5 | R=Reset | D=Drift", 
-                new GUIStyle(GUI.skin.label) { fontSize = 10, normal = { textColor = Color.gray } });
+                new GUIStyle(GUI.skin.label) { fontSize = 13, normal = { textColor = Color.gray } }); // Scalato del 30% (10 * 1.3)
 
             GUILayout.EndVertical();
             GUILayout.EndArea();
@@ -377,7 +380,7 @@ namespace Sporae.DevTools
                 _ => "Unknown"
             };
 
-            GUILayout.Label($"  {effects}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+            GUILayout.Label($"  {effects}", new GUIStyle(GUI.skin.label) { fontSize = 14 }); // Scalato del 30% (11 * 1.3)
         }
 
         private void AddLog(string message)

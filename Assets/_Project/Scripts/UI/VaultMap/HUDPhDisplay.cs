@@ -122,7 +122,16 @@ namespace _Project
     {
         if (_targetCanvas == null)
         {
-            _targetCanvas = FindObjectOfType<Canvas>();
+            // Cerca un Canvas Screen Space Overlay esistente
+            Canvas[] allCanvases = FindObjectsOfType<Canvas>();
+            foreach (Canvas canvas in allCanvases)
+            {
+                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+                {
+                    _targetCanvas = canvas;
+                    break;
+                }
+            }
             if (_targetCanvas == null) return;
         }
         
@@ -145,6 +154,7 @@ namespace _Project
             tooltipText.color = Color.white;
             tooltipText.alignment = TextAlignmentOptions.TopLeft;
             tooltipText.raycastTarget = false;
+            tooltipText.richText = true; // Abilita rich text per interpretare i tag <color>, <b>, ecc.
             
             // Configura RectTransform del testo
             RectTransform textRect = tooltipText.GetComponent<RectTransform>();
@@ -163,6 +173,12 @@ namespace _Project
             panelRect.sizeDelta = new Vector2(300f, 150f);
             
             tooltipPanel = _tooltipInstance;
+        }
+        
+        // Assicurati che il rich text sia abilitato (anche se tooltipText è assegnato manualmente)
+        if (tooltipText != null)
+        {
+            tooltipText.richText = true;
         }
         
         // Nascondi inizialmente
@@ -213,6 +229,9 @@ namespace _Project
     {
         if (_phSystem == null || tooltipText == null) return;
         
+        // Assicurati che il rich text sia sempre abilitato
+        tooltipText.richText = true;
+        
         string calculation = _phSystem.GetCalculationBreakdown();
         Color tooltipColor = _phSystem.GetBandColor();
         
@@ -226,15 +245,32 @@ namespace _Project
     /// </summary>
     private void AutoSetupUI()
     {
-        // Trova o crea Canvas
-        _targetCanvas = FindObjectOfType<Canvas>();
+        // Trova o crea Canvas - IMPORTANTE: deve essere Screen Space Overlay per non seguire il player
+        Canvas[] allCanvases = FindObjectsOfType<Canvas>();
+        _targetCanvas = null;
+        
+        // Cerca un Canvas Screen Space Overlay esistente
+        foreach (Canvas canvas in allCanvases)
+        {
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            {
+                _targetCanvas = canvas;
+                Debug.Log($"[HUDPhDisplay] Trovato Canvas Screen Space Overlay: {canvas.name}");
+                break;
+            }
+        }
+        
+        // Se non trovato, crea un nuovo Canvas Screen Space Overlay
         if (_targetCanvas == null)
         {
-            GameObject canvasGO = new GameObject("Canvas");
+            GameObject canvasGO = new GameObject("Canvas_HUDpH");
             _targetCanvas = canvasGO.AddComponent<Canvas>();
             _targetCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _targetCanvas.sortingOrder = 100; // Alto z-order per essere sopra tutto
             canvasGO.AddComponent<UnityEngine.UI.CanvasScaler>();
             canvasGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            
+            Debug.Log("[HUDPhDisplay] Creato nuovo Canvas Screen Space Overlay per pH HUD");
             
             // Crea EventSystem se mancante
             if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -330,11 +366,13 @@ namespace _Project
                     // Il debug console ha accesso al sistema pH
                     // Per ora creiamo un sistema temporaneo
                     _phSystem = new PhSystem(0f);
+                    _phSystem.Reset(); // Reset esplicito per assicurarsi che sia a 0.0
                 }
                 else
                 {
                     // Crea sistema temporaneo
                     _phSystem = new PhSystem(0f);
+                    _phSystem.Reset(); // Reset esplicito per assicurarsi che sia a 0.0
                 }
             }
         }
@@ -342,6 +380,7 @@ namespace _Project
         {
             // Fallback: sistema temporaneo
             _phSystem = new PhSystem(0f);
+            _phSystem.Reset(); // Reset esplicito per assicurarsi che sia a 0.0
         }
     }
     

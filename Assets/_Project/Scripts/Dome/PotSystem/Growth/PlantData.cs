@@ -68,6 +68,44 @@ namespace Sporae.Dome.PotSystem.Growth
         
         private void OnValidate()
         {
+            // Validazione e correzione valori pH drift in base alla famiglia
+            // Assicura che Pure abbia drift positivo e Evil abbia drift negativo
+            if (family == PlantFamily.Pure && dailyPhDrift <= 0)
+            {
+                // Se Pure ma drift non positivo, imposta valore di default +2
+                if (dailyPhDrift == 0 || dailyPhDrift < 0)
+                {
+                    dailyPhDrift = 2f;
+                }
+            }
+            else if (family == PlantFamily.Evil && dailyPhDrift >= 0)
+            {
+                // Se Evil ma drift non negativo, imposta valore di default -2
+                if (dailyPhDrift == 0 || dailyPhDrift > 0)
+                {
+                    dailyPhDrift = -2f;
+                }
+            }
+            else if (family == PlantFamily.Standard && dailyPhDrift != 0)
+            {
+                // Standard dovrebbe avere drift 0
+                dailyPhDrift = 0f;
+            }
+            
+            // Correzione valori comuni errati (0,2 invece di 2, -0,2 invece di -2)
+            // Se il valore assoluto è tra 0,1 e 0,9, probabilmente è un errore di input
+            if (Mathf.Abs(dailyPhDrift) > 0.1f && Mathf.Abs(dailyPhDrift) < 1f)
+            {
+                // Moltiplica per 10 se sembra essere un errore di virgola decimale
+                if (family == PlantFamily.Pure && dailyPhDrift > 0)
+                {
+                    dailyPhDrift = 2f; // Corregge 0,2 -> 2
+                }
+                else if (family == PlantFamily.Evil && dailyPhDrift < 0)
+                {
+                    dailyPhDrift = -2f; // Corregge -0,2 -> -2
+                }
+            }
             // Validazione parametri
             if (string.IsNullOrEmpty(plantCode))
             {
