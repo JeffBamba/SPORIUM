@@ -24,10 +24,10 @@ namespace Sporae.Core
             {
                 if (_instance == null)
                 {
-                    // Prova a ottenere da ServiceContainer
+                    // Prova a ottenere da ServiceContainer (suppress warning durante inizializzazione)
                     if (ServiceContainer.Instance != null)
                     {
-                        _instance = ServiceContainer.Instance.Get<SaveManager>();
+                        _instance = ServiceContainer.Instance.Get<SaveManager>(suppressWarning: true);
                     }
                     
                     // Se non trovato, crea nuova istanza
@@ -53,6 +53,13 @@ namespace Sporae.Core
             if (_instance == null)
             {
                 _instance = this;
+                
+                // DEBUG_SAFE_FIX: DontDestroyOnLoad funziona solo su root GameObjects
+                // Se questo GameObject non è root, spostalo alla root prima di chiamare DontDestroyOnLoad
+                if (transform.parent != null)
+                {
+                    transform.SetParent(null);
+                }
                 DontDestroyOnLoad(gameObject);
                 
                 // Registra nel ServiceContainer se disponibile
@@ -247,8 +254,9 @@ namespace Sporae.Core
         private void ApplySaveData(GameSaveData saveData)
         {
             // Stato del gioco
-            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
-            var dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
+            // DEBUG_SAFE_FIX: Suppress warning durante inizializzazione (GameManager potrebbe non essere ancora registrato)
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            var dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
             
             if (dayCycleSystem != null && saveData.gameState.currentDay > 0)
             {

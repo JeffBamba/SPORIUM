@@ -835,7 +835,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public int GetMaxHydration()
     {
-        return config ? config.MaxHydration : 3;
+        return config ? config.MaxHydration : 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
     }
     
     /// <summary>

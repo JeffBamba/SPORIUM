@@ -45,18 +45,28 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(_missionManager);
             
             // Registra AssetManager e precarica asset critici
+            // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo
             var assetManager = AssetManager.Instance;
             if (assetManager != null)
             {
-                ServiceContainer.Instance.Register(assetManager);
+                // Registra solo se non è già registrato (evita doppia registrazione)
+                if (!ServiceContainer.Instance.Contains(typeof(AssetManager)))
+                {
+                    ServiceContainer.Instance.Register(assetManager);
+                }
                 assetManager.PreloadCriticalAssets();
             }
             
             // Registra SaveManager e carica salvataggio se esiste
+            // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo
             var saveManager = SaveManager.Instance;
             if (saveManager != null)
             {
-                ServiceContainer.Instance.Register(saveManager);
+                // Registra solo se non è già registrato (evita doppia registrazione)
+                if (!ServiceContainer.Instance.Contains(typeof(SaveManager)))
+                {
+                    ServiceContainer.Instance.Register(saveManager);
+                }
                 
                 // Carica salvataggio automatico se esiste
                 if (saveManager.SaveExists("default"))

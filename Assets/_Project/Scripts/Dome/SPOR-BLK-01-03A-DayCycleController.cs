@@ -104,7 +104,7 @@ public class DayCycleController : MonoBehaviour
         
         if (_potSystemConfig == null && enableDebugLogs)
         {
-            Debug.LogWarning("[BLK-01.03A] DayCycleController: PotSystemConfig non trovato in Resources/Configs/, userò valori di default (MaxHydration=3, MaxLightExposure=3)");
+            Debug.LogWarning("[BLK-01.03A] DayCycleController: PotSystemConfig non trovato in Resources/Configs/, userò valori di default (MaxHydration=4, MaxLightExposure=3)"); // DEBUG_SAFE_FIX: MaxHydration aggiornato da 3 a 4
         }
         else if (_potSystemConfig != null && enableDebugLogs)
         {
@@ -282,7 +282,7 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Calcola idratazione percentuale (0-100%)
-        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 3;
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
         int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
         
         // BLK-02.02: Fix - Confronta con il giorno precedente perché i timestamp

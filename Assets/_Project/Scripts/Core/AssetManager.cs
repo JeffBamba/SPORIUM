@@ -25,10 +25,10 @@ namespace _Project.Sporae.Core
             {
                 if (_instance == null)
                 {
-                    // Prova a ottenere da ServiceContainer
+                    // Prova a ottenere da ServiceContainer (suppress warning durante inizializzazione)
                     if (ServiceContainer.Instance != null)
                     {
-                        _instance = ServiceContainer.Instance.Get<AssetManager>();
+                        _instance = ServiceContainer.Instance.Get<AssetManager>(suppressWarning: true);
                     }
                     
                     // Se non trovato, crea nuova istanza
@@ -57,6 +57,13 @@ namespace _Project.Sporae.Core
             if (_instance == null)
             {
                 _instance = this;
+                
+                // DEBUG_SAFE_FIX: DontDestroyOnLoad funziona solo su root GameObjects
+                // Se questo GameObject non è root, spostalo alla root prima di chiamare DontDestroyOnLoad
+                if (transform.parent != null)
+                {
+                    transform.SetParent(null);
+                }
                 DontDestroyOnLoad(gameObject);
                 
                 // Registra nel ServiceContainer se disponibile

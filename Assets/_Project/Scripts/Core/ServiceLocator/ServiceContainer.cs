@@ -65,6 +65,13 @@ namespace  _Project.Sporae.Core
             
             if (_services.ContainsKey(typeof(T)))
             {
+                // DEBUG_SAFE_FIX: Se è la stessa istanza, non loggare warning e non sostituire
+                if (ReferenceEquals(_services[typeof(T)], service))
+                {
+                    // Stessa istanza già registrata, ignora
+                    return;
+                }
+                
                 Debug.LogWarning($"[ServiceContainer] Servizio {typeof(T)} già registrato. Sostituito con nuova istanza.");
                 _services[typeof(T)] = service;
             }
@@ -82,8 +89,8 @@ namespace  _Project.Sporae.Core
 
         public bool ContainsGlobal(Type type) => _globalInstance != null && _globalInstance._services.ContainsKey(type);
         public bool Contains(Type type) => _services.ContainsKey(type);
-        public T Get<T>() => (T)Get(typeof(T));
-        public object Get(Type type)
+        public T Get<T>(bool suppressWarning = false) => (T)Get(typeof(T), suppressWarning);
+        public object Get(Type type, bool suppressWarning = false)
         {
             if (Contains(type))
                 return _services[type];
@@ -91,8 +98,18 @@ namespace  _Project.Sporae.Core
             if (_globalInstance != null && _globalInstance._services.ContainsKey(type))
                 return _globalInstance._services[type];
             
-            Debug.LogWarning($"[ServiceContainer] Servizio di tipo {type} non trovato!");
+            // DEBUG_SAFE_FIX: Non loggare warning se suppressWarning è true (utile durante inizializzazione)
+            if (!suppressWarning)
+            {
+                Debug.LogWarning($"[ServiceContainer] Servizio di tipo {type} non trovato!");
+            }
             return null;
+        }
+        
+        // Overload per compatibilità retroattiva
+        public object Get(Type type)
+        {
+            return Get(type, suppressWarning: false);
         }
     }
 }

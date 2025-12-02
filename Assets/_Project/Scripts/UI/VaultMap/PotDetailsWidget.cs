@@ -31,6 +31,7 @@ namespace _Project
         [SerializeField] private ProgressBar _hydrationProgressBar;
         [SerializeField] private ProgressBar _lightProgressBar;
         [SerializeField] private TextMeshProUGUI _phAffinityText;
+        [SerializeField] private TextMeshProUGUI _phDriftText;
         [SerializeField] private TextMeshProUGUI _rarityText;
         [SerializeField] private TextMeshProUGUI _effectsText;
 
@@ -614,6 +615,11 @@ namespace _Project
                 _phAffinityText = FindTextInChildren("pH Affinity");
             }
             
+            if (_phDriftText == null)
+            {
+                _phDriftText = FindTextInChildren("pH Drift");
+            }
+            
             if (_rarityText == null)
             {
                 _rarityText = FindTextInChildren("Rarity");
@@ -626,7 +632,7 @@ namespace _Project
             }
             
             // Aggiorna Hydration Stress (mostra percentuale e range ideale per lo stadio corrente)
-            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 3;
+            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
             float hydrationPercentage = maxHydration > 0 ? (float)state.Hydration / maxHydration * 100f : 0f;
             
             if (_hydrationStressText != null)
@@ -755,6 +761,52 @@ namespace _Project
                 {
                     _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>{}</color>";
                     Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                }
+            }
+            
+            // Aggiorna pH Drift (mostra drift pH giornaliero della pianta se disponibile)
+            if (_phDriftText != null)
+            {
+                // Assicurati che richText sia abilitato
+                _phDriftText.richText = true;
+                
+                if (!string.IsNullOrEmpty(state.PlantCode) && !state.IsEmpty)
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            float phDrift = plantData.GetDailyPhDrift();
+                            
+                            // Determina il colore in base al valore del drift
+                            string colorTag;
+                            if (phDrift > 0)
+                                colorTag = "<color=#4DCC4D>"; // Verde per drift positivo (Pure)
+                            else if (phDrift < 0)
+                                colorTag = "<color=#CC4D4D>"; // Rosso per drift negativo (Evil)
+                            else
+                                colorTag = "<color=#999999>"; // Grigio per drift zero (Standard)
+                            
+                            _phDriftText.text = $"<color=#CCCCCC>pH Drift:</color> {colorTag}{phDrift:+#;-#;0}/giorno</color>";
+                            Debug.Log($"[PotDetailsWidget] ✅ pH Drift aggiornato per {state.PlantCode}: {phDrift:+#;-#;0}/giorno");
+                        }
+                        else
+                        {
+                            _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
+                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData non trovato per PlantCode: {state.PlantCode}");
+                        }
+                    }
+                    else
+                    {
+                        _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
+                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                    }
+                }
+                else
+                {
+                    _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#888888>-/giorno</color>";
                 }
             }
             

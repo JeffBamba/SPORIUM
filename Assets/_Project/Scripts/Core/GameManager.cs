@@ -67,11 +67,15 @@ public class GameManager : MonoBehaviour
     {
         if (ServiceContainer.Instance != null)
         {
-            ServiceContainer.Instance.Register(this);
+            // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo
+            if (!ServiceContainer.Instance.Contains(typeof(GameManager)))
+            {
+                ServiceContainer.Instance.Register(this);
 #if UNITY_EDITOR
-            if (_showDebugLogs)
-                Debug.Log("[GameManager] ✅ Registrato nel ServiceContainer");
+                if (_showDebugLogs)
+                    Debug.Log("[GameManager] ✅ Registrato nel ServiceContainer");
 #endif
+            }
         }
         else
         {

@@ -28,6 +28,7 @@ public class PotHUDWidget : MonoBehaviour
     [Header("Plant Stats UI")]
     [SerializeField] private TextMeshProUGUI hydrationText;
     [SerializeField] private TextMeshProUGUI lightExposureText;
+    [SerializeField] private TextMeshProUGUI phDriftText;
     
     [Header("Action Buttons (BLK-01.02)")]
     [SerializeField] private Button btnPlant;
@@ -377,7 +378,7 @@ public class PotHUDWidget : MonoBehaviour
         // BLK-01.03B: Crea i nuovi elementi UI per stage e progresso
         CreateStageAndProgressUI();
         
-        // Crea elementi UI per Idratazione e Light Exposure
+        // Crea elementi UI per Idratazione, Light Exposure e pH Drift
         CreatePlantStatsUI();
     }
     
@@ -513,7 +514,7 @@ public class PotHUDWidget : MonoBehaviour
     }
     
     /// <summary>
-    /// Crea gli elementi UI per Idratazione e Light Exposure
+    /// Crea gli elementi UI per Idratazione, Light Exposure e pH Drift
     /// </summary>
     private void CreatePlantStatsUI()
     {
@@ -555,6 +556,26 @@ public class PotHUDWidget : MonoBehaviour
             lightRect.pivot = new Vector2(0, 0.5f);
             lightRect.anchoredPosition = new Vector2(10, -45);
             lightRect.sizeDelta = new Vector2(140, 20);
+        }
+        
+        // Crea pH Drift Text
+        if (phDriftText == null)
+        {
+            GameObject phDriftGO = new GameObject("PhDriftText");
+            phDriftGO.transform.SetParent(_widgetContainer.transform, false);
+            
+            phDriftText = phDriftGO.AddComponent<TextMeshProUGUI>();
+            phDriftText.color = new Color(0.8f, 0.3f, 0.8f); // Viola
+            phDriftText.fontSize = 14;
+            phDriftText.alignment = TextAlignmentOptions.Left;
+            phDriftText.text = "⚗️ pH Drift: 0/giorno";
+            
+            RectTransform phDriftRect = phDriftGO.GetComponent<RectTransform>();
+            phDriftRect.anchorMin = new Vector2(0, 0.3f);
+            phDriftRect.anchorMax = new Vector2(1f, 0.3f);
+            phDriftRect.pivot = new Vector2(0, 0.5f);
+            phDriftRect.anchoredPosition = new Vector2(10, 0);
+            phDriftRect.sizeDelta = new Vector2(-20, 20);
         }
     }
     
@@ -662,6 +683,7 @@ public class PotHUDWidget : MonoBehaviour
             if (progressText != null) progressText.text = "0%";
             if (hydrationText != null) hydrationText.text = "💧 Idratazione: 0/3";
             if (lightExposureText != null) lightExposureText.text = "💡 Luce: 0/3";
+            if (phDriftText != null) phDriftText.text = "⚗️ pH Drift: -/giorno";
         }
     }
     
@@ -1076,14 +1098,14 @@ public class PotHUDWidget : MonoBehaviour
             // TODO: Sostituire con sprite reali quando disponibili
         }
 
-        // Aggiorna Idratazione e Light Exposure
+        // Aggiorna Idratazione, Light Exposure e pH Drift
         UpdatePlantStatsUI(state);
 
         UpdateProgressUI(state);
     }
     
     /// <summary>
-    /// Aggiorna gli elementi UI per Idratazione e Light Exposure
+    /// Aggiorna gli elementi UI per Idratazione, Light Exposure e pH Drift
     /// </summary>
     private void UpdatePlantStatsUI(PotStateModel state)
     {
@@ -1092,7 +1114,7 @@ public class PotHUDWidget : MonoBehaviour
         // Aggiorna Hydration Text
         if (hydrationText != null)
         {
-            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 3;
+            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
             hydrationText.text = $"💧 Idratazione: {state.Hydration}/{maxHydration}";
             
             // Cambia colore in base al livello di idratazione
@@ -1117,6 +1139,41 @@ public class PotHUDWidget : MonoBehaviour
                 lightExposureText.color = new Color(0.5f, 0.5f, 0.5f); // Grigio quando vuoto
             else
                 lightExposureText.color = new Color(1f, 0.9f, 0.3f); // Giallo normale
+        }
+        
+        // Aggiorna pH Drift Text
+        if (phDriftText != null)
+        {
+            // Ottieni PlantData dal vaso selezionato
+            PlantData plantData = null;
+            if (_currentSelectedPot != null && _currentSelectedPot.PotActions != null)
+            {
+                PotStateModel potState = _currentSelectedPot.PotActions.PotState;
+                if (potState != null)
+                {
+                    plantData = potState.GetPlantData();
+                }
+            }
+            
+            if (plantData != null && !state.IsEmpty)
+            {
+                float phDrift = plantData.GetDailyPhDrift();
+                phDriftText.text = $"⚗️ pH Drift: {phDrift:+#;-#;0}/giorno";
+                
+                // Cambia colore in base al valore del drift
+                if (phDrift > 0)
+                    phDriftText.color = new Color(0.3f, 0.8f, 0.3f); // Verde per drift positivo (Pure)
+                else if (phDrift < 0)
+                    phDriftText.color = new Color(0.8f, 0.3f, 0.3f); // Rosso per drift negativo (Evil)
+                else
+                    phDriftText.color = new Color(0.6f, 0.6f, 0.6f); // Grigio per drift zero (Standard)
+            }
+            else
+            {
+                // Nessuna pianta o PlantData non disponibile
+                phDriftText.text = "⚗️ pH Drift: -/giorno";
+                phDriftText.color = new Color(0.5f, 0.5f, 0.5f); // Grigio
+            }
         }
     }
 

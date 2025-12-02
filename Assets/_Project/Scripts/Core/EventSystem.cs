@@ -66,6 +66,13 @@ namespace Sporae.Core
             {
                 ServiceContainer.Instance.Register(this);
             }
+            
+            // DEBUG_SAFE_FIX: DontDestroyOnLoad funziona solo su root GameObjects
+            // Se questo GameObject non è root, spostalo alla root prima di chiamare DontDestroyOnLoad
+            if (transform.parent != null)
+            {
+                transform.SetParent(null);
+            }
             DontDestroyOnLoad(gameObject);
             
             if (showDebugLogs)
