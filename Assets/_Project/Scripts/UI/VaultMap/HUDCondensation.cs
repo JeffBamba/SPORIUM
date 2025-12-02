@@ -16,40 +16,109 @@ namespace _Project
         
         private void Awake()
         { 
-            _gameManager = FindObjectOfType<GameManager>();
-            _uiNotification = FindObjectOfType<UINotification>();
+            // Usa ServiceContainer invece di FindObjectOfType
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            _uiNotification = ServiceContainer.Instance?.Get<UINotification>();
             
             if (_gameManager == null)
-                Debug.LogWarning("There is no GameManager in the scene");
+            {
+                Debug.LogWarning("[HUDCondensation] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+                }
+            }
             
             if (_uiNotification == null)
-                Debug.LogWarning("There is no UiNotification in the scene");
+                Debug.LogWarning("[HUDCondensation] UINotification non disponibile via ServiceContainer");
+        }
+        
+        /// <summary>
+        /// Late binding per servizi quando vengono registrati
+        /// </summary>
+        private void OnServiceRegistered(object service)
+        {
+            if (service is GameManager gameManager && _gameManager == null)
+            {
+                _gameManager = gameManager;
+                if (_gameManager != null)
+                {
+                    _gameManager.OnCondensationChanged += HandleChangeCondensation;
+                    HandleChangeCondensation(_gameManager.CondensationSystem?.CondensationAmount ?? 0f);
+                }
+                
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+                }
+            }
         }
 
         private void Start()
         {
-            _gameManager.OnCondensationChanged += HandleChangeCondensation;
-            _collectButton.onClick.AddListener(HandleCollect);
-
-            HandleChangeCondensation(0);
+            // Prova a ottenere GameManager se non ancora disponibile
+            if (_gameManager == null)
+            {
+                _gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            }
+            
+            if (_gameManager != null)
+            {
+                _gameManager.OnCondensationChanged += HandleChangeCondensation;
+                HandleChangeCondensation(_gameManager.CondensationSystem?.CondensationAmount ?? 0f);
+            }
+            else
+            {
+                Debug.LogWarning("[HUDCondensation] GameManager non disponibile in Start(). Verrà sottoscritto quando disponibile.");
+            }
+            
+            if (_collectButton != null)
+            {
+                _collectButton.onClick.AddListener(HandleCollect);
+            }
         }
 
         private void OnDestroy()
         {
-            _gameManager.OnCondensationChanged -= HandleChangeCondensation;
+            if (_gameManager != null)
+                _gameManager.OnCondensationChanged -= HandleChangeCondensation;
+            
+            // Cleanup ServiceContainer subscriptions
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+            }
         }
 
         private void HandleChangeCondensation(float value)
         {
+            if (_gameManager == null || _progressBar == null)
+                return;
+                
             _progressBar.Value = value / _gameManager.GetMaxCondensation();
         }
 
         private void HandleCollect()
         {
+            // Prova a ottenere GameManager se non ancora disponibile
+            if (_gameManager == null)
+            {
+                _gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            }
+            
+            if (_gameManager == null)
+            {
+                Debug.LogWarning("[HUDCondensation] GameManager non disponibile per raccogliere condensa.");
+                return;
+            }
+            
             int amountToCollect = (int)_gameManager.CollectCondensation();
             if (amountToCollect != 0)
             {
-                _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                if (_uiNotification != null)
+                {
+                    _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                }
                 _gameManager.PlayerInventory.Add(Items.Water, amountToCollect);
             }
         }

@@ -1,5 +1,6 @@
 using _Project;
 using _Project.Sporae.Core;
+using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -124,7 +125,23 @@ public class EndDayButton : MonoBehaviour
             return;
         
         if (_dayCycleSystem.CanEndDay())
+        {
+            // Salvataggio automatico prima di finire il giorno
+            var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
+            if (saveManager != null)
+            {
+                bool saveSuccess = saveManager.SaveGame("default");
+                if (showDebugLogs)
+                {
+                    if (saveSuccess)
+                        Debug.Log("[EndDayButton] ✅ Salvataggio automatico eseguito con successo");
+                    else
+                        Debug.LogWarning("[EndDayButton] ⚠️ Errore durante il salvataggio automatico");
+                }
+            }
+            
             _diaryUI.Show();
+        }
         else 
             OnEndDayFailed("CRY insufficienti");
         

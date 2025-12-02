@@ -29,7 +29,13 @@ namespace _Project
         {
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
             _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
-            _actionSystem = FindObjectOfType<GameManager>().ActionSystem;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            _actionSystem = gameManager?.ActionSystem;
+            if (_actionSystem == null)
+            {
+                Debug.LogWarning("[DiaryUI] ActionSystem non disponibile via ServiceContainer!");
+            }
             
             _buttonGoToSleep.onClick.AddListener(HandleGoToSleep);
         }

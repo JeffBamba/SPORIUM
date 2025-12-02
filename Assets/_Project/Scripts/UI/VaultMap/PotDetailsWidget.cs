@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using _Project.Sporae.Core;
 using _Project.Watering;
 using Sporae.Dome.PotSystem.Growth;

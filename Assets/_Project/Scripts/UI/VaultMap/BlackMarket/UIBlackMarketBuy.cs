@@ -20,11 +20,19 @@ namespace _Project.BlackMarket
         
         private void Awake()
         {
-            var gameManager = FindObjectOfType<GameManager>();
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
             _hudItemContainer = GetComponent<HUDItemContainer>();
 
-            _storage = gameManager.PlayerInventory;
-            _economySystem = gameManager.EconomySystem;
+            if (gameManager != null)
+            {
+                _storage = gameManager.PlayerInventory;
+                _economySystem = gameManager.EconomySystem;
+            }
+            else
+            {
+                Debug.LogWarning("[UIBlackMarketBuy] GameManager non disponibile via ServiceContainer!");
+            }
             
             foreach (var item in _hudItemContainer.Items)
                 _items.Add(item.GetComponent<UIBlackMarketBuyItem>());

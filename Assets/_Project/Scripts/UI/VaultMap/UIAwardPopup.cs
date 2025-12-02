@@ -21,7 +21,12 @@ namespace _Project
         private void Awake()
         {
             _missionManager = ServiceContainer.Instance.Get<MissionManager>();
-            _gameManager = FindObjectOfType<GameManager>();
+            // Usa ServiceContainer invece di FindObjectOfType
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (_gameManager == null)
+            {
+                Debug.LogWarning("[UIAwardPopup] GameManager non disponibile via ServiceContainer!");
+            }
             _collectButton.onClick.AddListener(HandleCollect);
         }
 

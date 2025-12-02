@@ -1,4 +1,5 @@
 using UnityEngine;
+using _Project.Sporae.Core;
 
 public class ActionCost : MonoBehaviour
 {
@@ -39,11 +40,41 @@ public class ActionCost : MonoBehaviour
 
     private void InitializeActionCost()
     {
-        _gameManager = FindObjectOfType<GameManager>();
+        // Usa ServiceContainer invece di FindObjectOfType
+        _gameManager = ServiceContainer.Instance?.Get<GameManager>();
         
         if (_gameManager == null)
         {
-            Debug.LogWarning("[ActionCost] GameManager non trovato nella scena!");
+            Debug.LogWarning("[ActionCost] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Late binding per GameManager quando viene registrato
+    /// </summary>
+    private void OnGameManagerRegistered(object service)
+    {
+        if (service is GameManager gameManager && _gameManager == null)
+        {
+            _gameManager = gameManager;
+            
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            }
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Cleanup ServiceContainer subscriptions
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
         }
     }
 

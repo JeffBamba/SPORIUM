@@ -63,5 +63,14 @@ namespace _Project.Sporae.Core
         }
         
         public bool IsEmpty => _slots.Count == 0;
+        
+        /// <summary>
+        /// Pulisce completamente l'inventario.
+        /// </summary>
+        public void Clear()
+        {
+            _slots.Clear();
+            OnInventoryChanged?.Invoke();
+        }
     }
 }

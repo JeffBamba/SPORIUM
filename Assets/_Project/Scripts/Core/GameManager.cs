@@ -1,10 +1,16 @@
-﻿using System;
+using System;
+using System.Collections;
 using _Project;
 using _Project.Scripts.Core;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 
+/// <summary>
+/// GameManager principale del gioco.
+/// Eseguito con priorità -50 per essere dopo GamePlayInstaller (-100) ma prima degli altri componenti.
+/// </summary>
+[DefaultExecutionOrder(-50)]
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private bool _showDebugLogs = true;
@@ -35,14 +41,96 @@ public class GameManager : MonoBehaviour
     
     private void Awake()
     {
+        // Garantisce inizializzazione ServiceContainer
+        ServiceContainer.Init();
+        
+        // Attendi un frame per assicurarsi che ServiceContainer sia completamente inizializzato
+        // (necessario se GameManager viene creato prima di GamePlayInstaller)
+        if (ServiceContainer.Instance == null)
+        {
+            Debug.LogWarning("[GameManager] ServiceContainer.Instance è ancora null dopo Init(). Tentativo di registrazione ritardata...");
+            StartCoroutine(RegisterWhenReady());
+            return;
+        }
+        
+        // Registra GameManager nel ServiceContainer per dependency injection
+        RegisterInServiceContainer();
+        
+        // Inizializza sistemi
+        InitializeSystems();
+    }
+    
+    /// <summary>
+    /// Registra GameManager nel ServiceContainer
+    /// </summary>
+    private void RegisterInServiceContainer()
+    {
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.Register(this);
+#if UNITY_EDITOR
+            if (_showDebugLogs)
+                Debug.Log("[GameManager] ✅ Registrato nel ServiceContainer");
+#endif
+        }
+        else
+        {
+            Debug.LogError("[GameManager] ❌ ServiceContainer.Instance è null! Impossibile registrare GameManager.");
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine per registrare GameManager quando ServiceContainer è pronto
+    /// </summary>
+    private IEnumerator RegisterWhenReady()
+    {
+        int maxAttempts = 10;
+        int attempts = 0;
+        
+        while (ServiceContainer.Instance == null && attempts < maxAttempts)
+        {
+            yield return null;
+            attempts++;
+        }
+        
+        if (ServiceContainer.Instance != null)
+        {
+            RegisterInServiceContainer();
+            
+            // Inizializza sistemi dopo la registrazione
+            InitializeSystems();
+        }
+        else
+        {
+            Debug.LogError("[GameManager] ❌ ServiceContainer.Instance rimane null dopo " + maxAttempts + " tentativi!");
+        }
+    }
+    
+    /// <summary>
+    /// Inizializza i sistemi del GameManager
+    /// </summary>
+    private void InitializeSystems()
+    {
         // Inizializza sistemi
         _actionSystem = new ActionSystem(_actionsPerDay);
         _economySystem = new EconomySystem(_startingCRY);
         _condensationSystem = new CondensationSystem();
         _deteriorationSystem = new DeteriorationSystem(this);
-        _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
+        _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
 
-        _dayCycleSystem.OnDayChanged += HandleDayChanged;
+        if (_dayCycleSystem != null)
+        {
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] DayCycleSystem non disponibile al momento. Verrà sottoscritto quando disponibile.");
+            // Late binding: sottoscrivi quando disponibile
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+            }
+        }
         
         // Inventario iniziale
         _playerInventory.Add(Items.Seed001, 2);  // Standard
@@ -53,8 +141,10 @@ public class GameManager : MonoBehaviour
         _playerInventory.Add(Items.Fruits, 5);
         
         // Sincronizza sistemi interni con valori esterni
+#if UNITY_EDITOR
         if (_showDebugLogs)
             Debug.Log($"[{nameof(GameManager)}] Defaults set: Actions={_actionsPerDay}, CRY={_startingCRY}");
+#endif
     }
 
     private void HandleDayChanged(int day)
@@ -65,7 +155,10 @@ public class GameManager : MonoBehaviour
         _condensationSystem.DayChanged();
         OnCondensationChanged?.Invoke(_condensationSystem.CondensationAmount);
         
-        Debug.Log($"[{nameof(GameManager)}] EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
+#if UNITY_EDITOR
+        if (_showDebugLogs)
+            Debug.Log($"[{nameof(GameManager)}] EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
+#endif
     }
 
     public bool TrySpendCry(int amount)
@@ -118,14 +211,53 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Late binding: sottoscrive DayCycleSystem quando viene registrato
+    /// </summary>
+    private void OnServiceRegistered(object service)
+    {
+        if (service is DayCycleSystem dayCycle && _dayCycleSystem == null)
+        {
+            _dayCycleSystem = dayCycle;
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+            }
+            
+#if UNITY_EDITOR
+            if (_showDebugLogs)
+                Debug.Log("[GameManager] DayCycleSystem sottoscritto con successo (late binding)");
+#endif
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Cleanup event subscription
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+        }
+        
+        if (_dayCycleSystem != null)
+        {
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+        }
+    }
+    
+    /// <summary>
     /// Debug: mostra stato attuale del GameManager
     /// </summary>
     [ContextMenu("Debug GameManager Status")]
     public void DebugGameManagerStatus()
     {
+#if UNITY_EDITOR
         Debug.Log("=== GAMEMANAGER DEBUG STATUS ===");
         Debug.Log($"ActionSystem - Max: {_actionSystem?.MaxActions}, Left: {_actionSystem?.ActionsLeft}");
         Debug.Log($"EconomySystem - Current: {_economySystem?.CurrentCRY}");
+        Debug.Log($"DayCycleSystem - Available: {_dayCycleSystem != null}");
         Debug.Log("================================");
+#endif
     }
 }

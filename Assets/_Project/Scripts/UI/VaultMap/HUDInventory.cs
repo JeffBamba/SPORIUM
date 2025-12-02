@@ -36,8 +36,42 @@ namespace _Project
         private void Awake()
         {
             _hudItemContainer = GetComponent<HUDItemContainer>();
-            _gameManager = FindObjectOfType<GameManager>();
-            _inventory = _gameManager.PlayerInventory;
+            // Usa ServiceContainer invece di FindObjectOfType
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (_gameManager != null)
+            {
+                _inventory = _gameManager.PlayerInventory;
+            }
+            else
+            {
+                Debug.LogWarning("[HUDInventory] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Late binding per GameManager quando viene registrato
+        /// </summary>
+        private void OnGameManagerRegistered(object service)
+        {
+            if (service is GameManager gameManager && _gameManager == null)
+            {
+                _gameManager = gameManager;
+                _inventory = _gameManager.PlayerInventory;
+                
+                if (_inventory != null)
+                {
+                    _inventory.OnInventoryChanged += UpdateInventory;
+                }
+                
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+                }
+            }
         }
 
         private void Start()
@@ -74,6 +108,12 @@ namespace _Project
         {
             if (_inventory != null)
                 _inventory.OnInventoryChanged -= UpdateInventory;
+            
+            // Cleanup ServiceContainer subscriptions
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            }
         }
 
         private void Toggle()

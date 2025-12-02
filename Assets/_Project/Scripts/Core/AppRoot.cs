@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using _Project.Sporae.Core;
 
 namespace Sporae.Core
 {
@@ -262,6 +263,23 @@ namespace Sporae.Core
 
         void OnApplicationPause(bool pauseStatus)
         {
+            if (pauseStatus)
+            {
+                // Salva automaticamente quando l'app va in pausa (mobile)
+                var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
+                if (saveManager != null)
+                {
+                    bool saveSuccess = saveManager.SaveGame("default");
+                    if (showDebugLogs)
+                    {
+                        if (saveSuccess)
+                            Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (pausa applicazione)");
+                        else
+                            Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (pausa)");
+                    }
+                }
+            }
+            
             if (showDebugLogs)
             {
                 Debug.Log($"[AppRoot] Applicazione {(pauseStatus ? "in pausa" : "ripresa")}.");
@@ -270,9 +288,43 @@ namespace Sporae.Core
 
         void OnApplicationFocus(bool hasFocus)
         {
+            if (!hasFocus)
+            {
+                // Salva automaticamente quando l'app perde focus (desktop/mobile)
+                var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
+                if (saveManager != null)
+                {
+                    bool saveSuccess = saveManager.SaveGame("default");
+                    if (showDebugLogs)
+                    {
+                        if (saveSuccess)
+                            Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (perso focus)");
+                        else
+                            Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (focus)");
+                    }
+                }
+            }
+            
             if (showDebugLogs)
             {
                 Debug.Log($"[AppRoot] Applicazione {(hasFocus ? "in focus" : "perso focus")}.");
+            }
+        }
+        
+        void OnApplicationQuit()
+        {
+            // Salva automaticamente quando l'app viene chiusa
+            var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
+            if (saveManager != null)
+            {
+                bool saveSuccess = saveManager.SaveGame("default");
+                if (showDebugLogs)
+                {
+                    if (saveSuccess)
+                        Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (chiusura applicazione)");
+                    else
+                        Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (quit)");
+                }
             }
         }
     }

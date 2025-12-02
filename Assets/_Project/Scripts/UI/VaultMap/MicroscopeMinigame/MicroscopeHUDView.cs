@@ -39,11 +39,19 @@ namespace _Project
         
         private void Awake()
         {
-            var gameManager = FindObjectOfType<GameManager>();
-            _actionsService = gameManager.ActionSystem;
-            _playerInventory = gameManager.PlayerInventory;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (gameManager != null)
+            {
+                _actionsService = gameManager.ActionSystem;
+                _playerInventory = gameManager.PlayerInventory;
+            }
+            else
+            {
+                Debug.LogWarning("[MicroscopeHUDView] GameManager non disponibile via ServiceContainer!");
+            }
             
-            _notification = FindObjectOfType<UINotification>();
+            _notification = ServiceContainer.Instance?.Get<UINotification>();
             
             _controller = GetComponent<MicroscopeMinigameController>();
         }

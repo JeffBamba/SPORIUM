@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using _Project.Sporae.Core;
 
 namespace Sporae.Core
 {
@@ -26,8 +27,19 @@ namespace Sporae.Core
             {
                 if (_instance == null)
                 {
-                    _instance = FindObjectOfType<EventSystem>();
+                    // Prova a ottenere da ServiceContainer
+                    if (ServiceContainer.Instance != null)
+                    {
+                        _instance = ServiceContainer.Instance.Get<EventSystem>();
+                    }
                     
+                    // Fallback a FindObjectOfType se ServiceContainer non disponibile
+                    if (_instance == null)
+                    {
+                        _instance = FindObjectOfType<EventSystem>();
+                    }
+                    
+                    // Se non trovato, crea nuova istanza
                     if (_instance == null)
                     {
                         GameObject go = new GameObject("EventSystem");
@@ -48,6 +60,12 @@ namespace Sporae.Core
             }
 
             _instance = this;
+            
+            // Registra nel ServiceContainer se disponibile
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.Register(this);
+            }
             DontDestroyOnLoad(gameObject);
             
             if (showDebugLogs)

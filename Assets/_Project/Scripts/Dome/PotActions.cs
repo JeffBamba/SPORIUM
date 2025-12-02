@@ -77,8 +77,20 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private void RegisterPotIfNeeded()
     {
-        if (_potState == null || dayCycleController == null)
+        if (_potState == null)
             return;
+        
+        // DEBUG_SAFE_FIX: Tenta di trovare DayCycleController se non disponibile
+        // Questo risolve il problema dove dayCycleController è null durante le ottimizzazioni
+        if (dayCycleController == null)
+        {
+            dayCycleController = FindObjectOfType<DayCycleController>();
+            if (dayCycleController == null && showDebugLogs)
+            {
+                Debug.LogWarning($"[PotActions] ⚠️ DayCycleController non trovato per {potSlot?.PotId}. Il vaso non verrà registrato.");
+                return;
+            }
+        }
         
         // Registra se ha già una pianta (per piante esistenti caricate)
         if (_potState.HasPlant)
@@ -382,7 +394,16 @@ public class PotActions : MonoBehaviour
             potGrowthController.OnPlanted();
         
         // Registra il vaso nel sistema di crescita (ora ha una pianta)
+        // DEBUG_SAFE_FIX: Assicurati che il vaso venga registrato dopo aver piantato
+        // Questo è critico per il calcolo del pH a fine giornata
         RegisterPotIfNeeded();
+        
+        // DEBUG_SAFE_FIX: Verifica che la registrazione sia avvenuta correttamente
+        if (showDebugLogs && dayCycleController != null && _potState.HasPlant)
+        {
+            // Verifica che il vaso sia stato registrato (controllo indiretto)
+            Debug.Log($"[PotActions] ✅ Verifica post-piantagione: HasPlant={_potState.HasPlant}, Stage={_potState.Stage}, PlantCode={_potState.PlantCode ?? "NULL"}, dayCycleController disponibile");
+        }
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);

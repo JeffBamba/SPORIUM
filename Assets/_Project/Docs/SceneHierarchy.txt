@@ -41,6 +41,33 @@
     [Component] TextMeshProUGUI
     [Component] EndDayButton
     [Component] Button
+  - UISeedSelector
+    [Component] RectTransform
+    [Component] UISeedSelector
+    - SelectorPanel
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] Image
+      - Title
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+      - SeedButtonContainer
+        [Component] RectTransform
+        [Component] GridLayoutGroup
+      - NoSeedsText
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+      - CloseButton
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] Image
+        [Component] Button
+        - Text (TMP)
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
   - UI_Inventory
     [Component] RectTransform
     [Component] HUDInventory

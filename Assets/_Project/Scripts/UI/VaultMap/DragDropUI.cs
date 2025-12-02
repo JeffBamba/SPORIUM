@@ -40,8 +40,16 @@ namespace _Project
         {
             _storageInventory = _storage.GetInventory();
                 
-            var gameManager = FindObjectOfType<GameManager>();
-            _playerInventory = gameManager.PlayerInventory;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (gameManager != null)
+            {
+                _playerInventory = gameManager.PlayerInventory;
+            }
+            else
+            {
+                Debug.LogWarning("[DragDropUI] GameManager non disponibile via ServiceContainer!");
+            }
 
             if (!_confirmOperation)
                 return;

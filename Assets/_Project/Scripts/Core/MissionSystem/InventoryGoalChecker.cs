@@ -13,8 +13,16 @@ namespace _Project.Sporae.Core
         {
             _goalConfig = (InventoryGoal)goalConfig;
 
-            var gameManager = Object.FindObjectOfType<GameManager>();
-            _playerInventory = gameManager.PlayerInventory;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (gameManager != null)
+            {
+                _playerInventory = gameManager.PlayerInventory;
+            }
+            else
+            {
+                Debug.LogWarning("[InventoryGoalChecker] GameManager non disponibile via ServiceContainer!");
+            }
         }
         
         public override bool Check() =>

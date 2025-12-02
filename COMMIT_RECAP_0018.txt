@@ -1,0 +1,51 @@
+================================================================================
+                    COMMIT RECAP - DEV REPORT #0018
+                    Data: 2025-01-XX
+================================================================================
+
+📝 COMMIT MESSAGE SUGGERITO
+===========================
+
+Fix: Registrazione vasi nel calcolo pH dopo ottimizzazioni ServiceContainer
+
+- Fix bug introdotto durante ottimizzazioni migrazione FindObjectOfType
+  * Durante ottimizzazioni, PotActions cercava DayCycleController con FindObjectOfType in Awake()
+  * Se DayCycleController non era ancora inizializzato, dayCycleController rimaneva null
+  * Quando si piantava una pianta, RegisterPotIfNeeded() ritornava senza registrare il vaso
+  * Le piante piantate non venivano incluse nel calcolo pH a fine giornata
+  
+- Soluzione: Tentativo di recupero DayCycleController se null
+  * Aggiunto tentativo di recupero FindObjectOfType se dayCycleController è null in RegisterPotIfNeeded()
+  * Risolve problema di timing durante inizializzazione dopo ottimizzazioni
+  * Nessuna modifica al comportamento sistema pH (calcolo sempre a fine giornata)
+  * Fix minimale che ripristina comportamento originale senza cambiare struttura
+
+- Note sulle ottimizzazioni effettuate:
+  * Migrazione FindObjectOfType → ServiceContainer (68% riduzione, 234→75 occorrenze)
+  * Migrazione Resources.Load → AssetManager (centralizzazione con cache)
+  * Implementazione SaveManager completo
+  * Migrazione Singleton legacy → ServiceContainer
+  * Durante queste ottimizzazioni, alcuni riferimenti FindObjectOfType rimasti hanno causato problemi di timing
+
+Files modified:
+- Assets/_Project/Scripts/Dome/PotActions.cs
+
+================================================================================
+
+📋 BREVE RECAP PER COMMIT
+=========================
+
+**Titolo:** Fix: Registrazione vasi nel calcolo pH dopo ottimizzazioni
+
+**Cambiamenti Principali:**
+1. ✅ Fix bug registrazione vasi causato da ottimizzazioni ServiceContainer
+2. ✅ Tentativo di recupero DayCycleController se null durante inizializzazione
+3. ✅ Nessuna modifica al comportamento sistema pH (calcolo sempre a fine giornata)
+
+**File Modificati:** 1 file
+**Bug Fixati:** 1 (causato da ottimizzazioni)
+**Breaking Changes:** Nessuno
+**Ottimizzazioni Citate:** Migrazione FindObjectOfType → ServiceContainer
+
+================================================================================
+

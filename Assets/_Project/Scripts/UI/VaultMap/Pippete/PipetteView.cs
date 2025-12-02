@@ -29,8 +29,16 @@ namespace _Project
 
         private void Awake()
         {
-            var gameManager = FindObjectOfType<GameManager>();
-            _inventory = gameManager.PlayerInventory;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (gameManager != null)
+            {
+                _inventory = gameManager.PlayerInventory;
+            }
+            else
+            {
+                Debug.LogWarning("[PipetteView] GameManager non disponibile via ServiceContainer!");
+            }
         }
         
         private void Start()

@@ -41,13 +41,49 @@ namespace _Project
         
         private void Awake()
         {
-            _gameManager = FindObjectOfType<GameManager>();
+            // Usa ServiceContainer invece di FindObjectOfType
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (_gameManager == null)
-                Debug.LogWarning("There is no GameManager in the scene");
+            {
+                Debug.LogWarning("[LabCatalizzatore] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+                }
+            }
+            else
+            {
+                _actionSystem = _gameManager.ActionSystem;
+            }
 
-            _actionSystem = _gameManager.ActionSystem;
             _hudItemContainer = GetComponentInChildren<HUDItemContainer>();
             _storage = _catalizzatore.GetInventory();
+        }
+        
+        /// <summary>
+        /// Late binding per GameManager quando viene registrato
+        /// </summary>
+        private void OnGameManagerRegistered(object service)
+        {
+            if (service is GameManager gameManager && _gameManager == null)
+            {
+                _gameManager = gameManager;
+                _actionSystem = _gameManager.ActionSystem;
+                
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+                }
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            // Cleanup ServiceContainer subscriptions
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            }
         }
 
         private void Start()

@@ -75,11 +75,22 @@ namespace _Project
         {
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
             _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
-            _notification = FindObjectOfType<UINotification>();
+            // Usa ServiceContainer invece di FindObjectOfType
+            _notification = ServiceContainer.Instance?.Get<UINotification>();
             
-            _gameManager = FindObjectOfType<GameManager>();
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (_gameManager == null)
-                Debug.LogWarning("There is no GameManager in the scene");
+            {
+                Debug.LogWarning("[LabMinigameExtractor] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+                }
+            }
+            else
+            {
+                _playerInventory = _gameManager.PlayerInventory;
+            }
             
             _startButtonLabel = _startButton.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -195,6 +206,32 @@ namespace _Project
 
             var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
             _startButtonLabel.text = wasTryingInThisDay ? _anotherAttemptButtonText : _firstAttemptButtonText; 
+        }
+        
+        /// <summary>
+        /// Late binding per GameManager quando viene registrato
+        /// </summary>
+        private void OnGameManagerRegistered(object service)
+        {
+            if (service is GameManager gameManager && _gameManager == null)
+            {
+                _gameManager = gameManager;
+                _playerInventory = _gameManager.PlayerInventory;
+                
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+                }
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            // Cleanup ServiceContainer subscriptions
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            }
         }
         
         private void UpdateStorage()

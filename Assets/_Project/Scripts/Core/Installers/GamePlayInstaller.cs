@@ -1,5 +1,7 @@
-﻿using _Project.Pot;
+using _Project.Pot;
 using UnityEngine;
+using _Project.Sporae.Core;
+using Sporae.Core;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -41,6 +43,48 @@ namespace _Project.Sporae.Core.Installers
 
             _missionManager = new MissionManager();
             ServiceContainer.Instance.Register(_missionManager);
+            
+            // Registra AssetManager e precarica asset critici
+            var assetManager = AssetManager.Instance;
+            if (assetManager != null)
+            {
+                ServiceContainer.Instance.Register(assetManager);
+                assetManager.PreloadCriticalAssets();
+            }
+            
+            // Registra SaveManager e carica salvataggio se esiste
+            var saveManager = SaveManager.Instance;
+            if (saveManager != null)
+            {
+                ServiceContainer.Instance.Register(saveManager);
+                
+                // Carica salvataggio automatico se esiste
+                if (saveManager.SaveExists("default"))
+                {
+                    bool loadSuccess = saveManager.LoadGame("default");
+#if UNITY_EDITOR
+                    if (loadSuccess)
+                    {
+                        Debug.Log("[GamePlayInstaller] ✅ Salvataggio caricato automaticamente");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[GamePlayInstaller] ⚠️ Errore durante il caricamento automatico del salvataggio");
+                    }
+#else
+                    if (!loadSuccess)
+                    {
+                        Debug.LogWarning("[GamePlayInstaller] ⚠️ Errore durante il caricamento automatico del salvataggio");
+                    }
+#endif
+                }
+#if UNITY_EDITOR
+                else
+                {
+                    Debug.Log("[GamePlayInstaller] Nessun salvataggio trovato, partita nuova");
+                }
+#endif
+            }
         }
 
         private void Update()

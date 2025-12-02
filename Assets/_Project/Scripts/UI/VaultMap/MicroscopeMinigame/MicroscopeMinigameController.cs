@@ -56,10 +56,17 @@ namespace _Project
 
         private void Initialize(string sporeId)
         {
-            var gameManager = FindObjectOfType<GameManager>();
-            
-            _inventoryService = gameManager.PlayerInventory;
-            _actionsService = gameManager.ActionSystem;
+            // Usa ServiceContainer invece di FindObjectOfType
+            var gameManager = ServiceContainer.Instance?.Get<GameManager>();
+            if (gameManager != null)
+            {
+                _inventoryService = gameManager.PlayerInventory;
+                _actionsService = gameManager.ActionSystem;
+            }
+            else
+            {
+                Debug.LogWarning("[MicroscopeMinigameController] GameManager non disponibile via ServiceContainer!");
+            }
             
             _currentSporeId = sporeId;
         }

@@ -69,5 +69,15 @@ namespace Sporae.Core
                 OnCRYChanged?.Invoke(CurrentCRY);
             }
         }
+        
+        /// <summary>
+        /// Ripristina lo stato del sistema economico da dati salvati.
+        /// Usato durante il caricamento del gioco.
+        /// </summary>
+        /// <param name="cryAmount">Quantità di CRY da ripristinare</param>
+        public void RestoreState(int cryAmount)
+        {
+            SetCRY(cryAmount);
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using _Project;
+using _Project.Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,9 +34,27 @@ public class ElevatorSystem : MonoBehaviour
         ValidateConfiguration();
         
         // Trova il GameManager nella scena
-        gameManager = FindObjectOfType<GameManager>();
+        // Usa ServiceContainer invece di FindObjectOfType
+        gameManager = ServiceContainer.Instance?.Get<GameManager>();
+        if (gameManager == null)
+        {
+            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+            }
+        }
         playerMover = FindObjectOfType<PlayerClickMover2D>();
-        uiNotification = FindObjectOfType<UINotification>();
+        // Usa ServiceContainer invece di FindObjectOfType per UINotification
+        uiNotification = ServiceContainer.Instance?.Get<UINotification>();
+        if (uiNotification == null)
+        {
+            Debug.LogWarning("[ElevatorSystem] UINotification non disponibile via ServiceContainer. Tentativo late binding...");
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnUINotificationRegistered;
+            }
+        }
         
         if (uiPanel != null)
         {
@@ -138,14 +157,22 @@ public class ElevatorSystem : MonoBehaviour
 
         if (!IsLevelUnlocked(levelIndex))
         {
-            uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+            if (uiNotification != null)
+            {
+                uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+            }
             return;
         }
-            
+        
+        // Prova a ottenere GameManager se non ancora disponibile
+        if (gameManager == null)
+        {
+            gameManager = ServiceContainer.Instance?.Get<GameManager>();
+        }
         
         if (gameManager == null)
         {
-            Debug.LogWarning("[ElevatorSystem] GameManager non trovato!");
+            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer!");
             return;
         }
 
@@ -259,10 +286,61 @@ public class ElevatorSystem : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Late binding per GameManager quando viene registrato
+    /// </summary>
+    private void OnGameManagerRegistered(object service)
+    {
+        if (service is GameManager gm && gameManager == null)
+        {
+            gameManager = gm;
+            
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Late binding per UINotification quando viene registrato
+    /// </summary>
+    private void OnUINotificationRegistered(object service)
+    {
+        if (service is UINotification notification && uiNotification == null)
+        {
+            uiNotification = notification;
+            
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
+            }
+        }
+    }
+    
     // Metodo per aggiornare il riferimento al GameManager
     public void RefreshGameManagerReference()
     {
-        gameManager = FindObjectOfType<GameManager>();
+        // Usa ServiceContainer invece di FindObjectOfType
+        gameManager = ServiceContainer.Instance?.Get<GameManager>();
+        if (gameManager == null)
+        {
+            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+            }
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Cleanup ServiceContainer subscriptions
+        if (ServiceContainer.Instance != null)
+        {
+            ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+            ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
+        }
     }
 
     // Gizmos per debug

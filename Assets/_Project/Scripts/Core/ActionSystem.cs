@@ -58,5 +58,18 @@ namespace Sporae.Core
         {
             return (float)ActionsLeft / MaxActions;
         }
+        
+        /// <summary>
+        /// Ripristina lo stato del sistema di azioni da dati salvati.
+        /// Usato durante il caricamento del gioco.
+        /// </summary>
+        /// <param name="actionsLeft">Azioni rimanenti da ripristinare</param>
+        /// <param name="maxActions">Azioni massime da ripristinare</param>
+        public void RestoreState(int actionsLeft, int maxActions)
+        {
+            MaxActions = Math.Max(1, maxActions);
+            ActionsLeft = Math.Max(0, Math.Min(actionsLeft, MaxActions));
+            OnActionsChanged?.Invoke(ActionsLeft);
+        }
     }
 }

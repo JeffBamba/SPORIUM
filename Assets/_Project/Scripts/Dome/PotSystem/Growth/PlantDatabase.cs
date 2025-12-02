@@ -31,7 +31,19 @@ namespace Sporae.Dome.PotSystem.Growth
             {
                 if (_instance == null)
                 {
-                    _instance = FindObjectOfType<PlantDatabase>();
+                    // Prova a ottenere da ServiceContainer
+                    if (ServiceContainer.Instance != null)
+                    {
+                        _instance = ServiceContainer.Instance.Get<PlantDatabase>();
+                    }
+                    
+                    // Fallback a FindObjectOfType se ServiceContainer non disponibile
+                    if (_instance == null)
+                    {
+                        _instance = FindObjectOfType<PlantDatabase>();
+                    }
+                    
+                    // Se non trovato, crea nuova istanza
                     if (_instance == null)
                     {
                         GameObject go = new GameObject("PlantDatabase");
@@ -49,6 +61,13 @@ namespace Sporae.Dome.PotSystem.Growth
             {
                 _instance = this;
                 DontDestroyOnLoad(gameObject);
+                
+                // Registra nel ServiceContainer se disponibile
+                if (ServiceContainer.Instance != null)
+                {
+                    ServiceContainer.Instance.Register(this);
+                }
+                
                 InitializeDatabase();
             }
             else if (_instance != this)
@@ -65,10 +84,10 @@ namespace Sporae.Dome.PotSystem.Growth
             if (_isInitialized)
                 return;
             
-            // Se la lista è vuota, prova a caricare da Resources
+            // Se la lista è vuota, prova a caricare da Resources tramite AssetManager
             if (allPlantData.Count == 0)
             {
-                PlantData[] loadedData = Resources.LoadAll<PlantData>("Plants");
+                PlantData[] loadedData = AssetManager.Instance.LoadAllAssets<PlantData>("Plants");
                 allPlantData.AddRange(loadedData);
                 
                 if (loadedData.Length > 0)
