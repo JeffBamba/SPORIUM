@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   plantCode: PLT-EVIL-001
   seedItemConfig: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8583, type: 2}
+  description: Fungo malvagio che abbassa il pH ambientale, ideale per condizioni
+    acide
+  activePower: "Allucinogeno: +10% probabilit\xE0 di mutazione Spore globali"
   family: 2
   rarity: 0
   dailyPhDrift: -2

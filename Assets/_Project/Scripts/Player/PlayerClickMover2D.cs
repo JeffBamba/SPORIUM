@@ -95,7 +95,21 @@ public class PlayerClickMover2D : MonoBehaviour
     private Vector2 GetMouseWorldPosition()
     {
         Vector3 mouseScreenPos = Input.mousePosition;
-        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+        
+        // Controlla se la camera principale esiste
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            // Prova a trovare una camera alternativa
+            mainCamera = FindObjectOfType<Camera>();
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("[PlayerClickMover2D] Nessuna camera trovata! Impossibile convertire posizione mouse.");
+                return Vector2.zero;
+            }
+        }
+        
+        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
         return new Vector2(mouseWorldPos.x, mouseWorldPos.y);
     }
 

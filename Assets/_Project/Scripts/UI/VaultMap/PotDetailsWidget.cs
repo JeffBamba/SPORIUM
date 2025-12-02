@@ -20,6 +20,7 @@ namespace _Project
 
         [SerializeField] private TextMeshProUGUI _idLabel;
         [SerializeField] private TextMeshProUGUI _stageLabel;
+        [SerializeField] private TextMeshProUGUI _plantDescriptionLabel;
         [SerializeField] private ProgressBar _progressBar;
         [SerializeField] private Image _stageImage;
         
@@ -30,6 +31,7 @@ namespace _Project
         [SerializeField] private ProgressBar _lightProgressBar;
         [SerializeField] private TextMeshProUGUI _phAffinityText;
         [SerializeField] private TextMeshProUGUI _rarityText;
+        [SerializeField] private TextMeshProUGUI _effectsText;
 
         [SerializeField] private GameObject _page;
 
@@ -121,13 +123,15 @@ namespace _Project
                 
                 if (_seedSelector == null)
                 {
-                    Debug.Log("[PotDetailsWidget] UISeedSelector non trovato nella scena. Creazione automatica...");
-                    // Crea UISeedSelector automaticamente
-                    GameObject seedSelectorGO = new GameObject("UISeedSelector");
-                    _seedSelector = seedSelectorGO.AddComponent<UISeedSelector>();
-                    Debug.Log("[PotDetailsWidget] ✅ UISeedSelector creato automaticamente con successo.");
+                    Debug.LogError("[PotDetailsWidget] ⚠️ UISeedSelector non trovato nella scena! " +
+                        "Devi creare un GameObject 'UISeedSelector' nella scena con il componente UISeedSelector " +
+                        "e collegare tutti i riferimenti UI necessari. Vedi le istruzioni in Assets/Docs/UISeedSelector_Setup.md");
+                    return;
                 }
             }
+            
+            // Nota: La verifica dei riferimenti UI viene fatta direttamente in UISeedSelector.Show()
+            // Se i riferimenti non sono assegnati, vedrai un errore nella Console quando provi ad aprire il selettore
             
             // Sottoscrivi agli eventi
             if (_seedSelector != null)
@@ -226,6 +230,10 @@ namespace _Project
         {
             _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
             if (_growthConfig != null)
+            {
+                Debug.Log($"[PotDetailsWidget] ✅ Config caricata: pointsSeedToSprout={_growthConfig.pointsSeedToSprout}, pointsSproutToMature={_growthConfig.pointsSproutToMature}");
+            }
+            else
                 return;
             
             Debug.LogWarning($"[{nameof(PotDetailsWidget)}] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
@@ -486,7 +494,53 @@ namespace _Project
                 
                 _idLabel.text = potIdText;
             }
+
+            // Aggiorna descrizione pianta
+            // Auto-trova PlantDescription se non è stato collegato manualmente
+            if (_plantDescriptionLabel == null)
+            {
+                _plantDescriptionLabel = FindTextInChildren("PlantDescription");
+            }
             
+            if (_plantDescriptionLabel != null)
+            {
+                // Assicurati che richText sia abilitato
+                _plantDescriptionLabel.richText = true;
+
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null && !string.IsNullOrEmpty(plantData.Description))
+                        {
+                            _plantDescriptionLabel.text = $"<color=#FFFFFF>{plantData.Description}</color>";
+                            Debug.Log($"[PotDetailsWidget] ✅ Descrizione pianta aggiornata per {state.PlantCode}: {plantData.Description}");
+                        }
+                        else
+                        {
+                            _plantDescriptionLabel.text = "<color=#888888>Nessuna descrizione disponibile</color>";
+                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Descrizione non trovata per pianta {state.PlantCode} (PlantData null o Description vuota)");
+                        }
+                    }
+                    else
+                    {
+                        _plantDescriptionLabel.text = "<color=#FF0000>Errore database piante</color>";
+                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                    }
+                }
+                else
+                {
+                    _plantDescriptionLabel.text = "<color=#888888>Nessuna pianta selezionata</color>";
+                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ _plantDescriptionLabel non trovato! Verifica che esista un GameObject 'PlantDescription' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Left/");
+            }
+
             // BLK-01.04: Aggiorna Stage Label con informazioni dettagliate
             if (_stageLabel)
             {
@@ -518,6 +572,12 @@ namespace _Project
         {
             if (state == null) return;
             
+            // Auto-trova PlantDescription se non è stato collegato manualmente
+            if (_plantDescriptionLabel == null)
+            {
+                _plantDescriptionLabel = FindTextInChildren("PlantDescription");
+            }
+            
             // Auto-trova i riferimenti se non sono stati collegati manualmente
             if (_hydrationStressText == null)
             {
@@ -548,6 +608,12 @@ namespace _Project
             if (_rarityText == null)
             {
                 _rarityText = FindTextInChildren("Rarity");
+            }
+
+            // Auto-trova Effects se non è stato collegato manualmente
+            if (_effectsText == null)
+            {
+                _effectsText = FindTextInChildren("Effects");
             }
             
             // Aggiorna Hydration Stress (mostra percentuale e range ideale per lo stadio corrente)
@@ -714,6 +780,64 @@ namespace _Project
                     _rarityText.text = "<color=#CCCCCC>Rarity:</color> <color=#FF0000>{}</color>";
                 }
             }
+
+            // Aggiorna Effects (mostra potere attivo della pianta)
+            if (_effectsText != null)
+            {
+                // Assicurati che richText sia abilitato
+                _effectsText.richText = true;
+
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            // Debug dettagliato per capire il problema
+                            string activePowerValue = plantData.ActivePower;
+                            bool isNullOrEmpty = string.IsNullOrEmpty(activePowerValue);
+                            
+                            Debug.Log($"[PotDetailsWidget] 🔍 DEBUG ActivePower per {state.PlantCode}: " +
+                                $"PlantData trovato={plantData != null}, " +
+                                $"ActivePower null/empty={isNullOrEmpty}, " +
+                                $"ActivePower length={activePowerValue?.Length ?? 0}, " +
+                                $"ActivePower value='{activePowerValue}'");
+                            
+                            if (!isNullOrEmpty)
+                            {
+                                _effectsText.text = $"<color=#CCCCCC>Potere Attivo:</color>\n<color=#FFD700>{activePowerValue}</color>";
+                                Debug.Log($"[PotDetailsWidget] ✅ Potere attivo aggiornato per {state.PlantCode}: {activePowerValue}");
+                            }
+                            else
+                            {
+                                _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessun potere attivo disponibile</color>";
+                                Debug.LogWarning($"[PotDetailsWidget] ⚠️ Potere attivo vuoto per pianta {state.PlantCode}. Verifica l'asset PlantData in Unity Editor e ricarica l'asset (Ctrl+R o Assets > Refresh).");
+                            }
+                        }
+                        else
+                        {
+                            _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessun potere attivo disponibile</color>";
+                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData null per PlantCode: {state.PlantCode}");
+                        }
+                    }
+                    else
+                    {
+                        _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#FF0000>Errore database piante</color>";
+                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                    }
+                }
+                else
+                {
+                    _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessuna pianta selezionata</color>";
+                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ _effectsText non trovato! Verifica che esista un GameObject 'Effects' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Right/");
+            }
         }
         
         private void UpdateProgressUI(PotStateModel state)
@@ -755,14 +879,18 @@ namespace _Project
                     return 0f; // Nessun progresso per vasi vuoti
                     
                 case (int)PlantStage.Seed:
+                    float seedProgress = (float)points / _growthConfig.pointsSeedToSprout * 100f;
+                    Debug.Log($"[PotDetailsWidget] 🔍 DEBUG Progress Seed: points={points}, threshold={_growthConfig.pointsSeedToSprout}, progress={seedProgress:F1}%");
                     if (points >= _growthConfig.pointsSeedToSprout)
                         return 100f; // Pronto per avanzare
-                    return (float)points / _growthConfig.pointsSeedToSprout * 100f;
+                    return seedProgress;
                     
                 case (int)PlantStage.Sprout:
+                    float sproutProgress = (float)points / _growthConfig.pointsSproutToMature * 100f;
+                    Debug.Log($"[PotDetailsWidget] 🔍 DEBUG Progress Sprout: points={points}, threshold={_growthConfig.pointsSproutToMature}, progress={sproutProgress:F1}%");
                     if (points >= _growthConfig.pointsSproutToMature)
                         return 100f; // Pronto per avanzare
-                    return (float)points / _growthConfig.pointsSproutToMature * 100f;
+                    return sproutProgress;
                     
                 case (int)PlantStage.HarvestReady:
                     return 100f; // Pianta completamente matura
@@ -804,9 +932,9 @@ namespace _Project
             switch (state.Stage)
             {
                 case (int)PlantStage.Seed:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSeedToSprout ?? 2)}/{_growthConfig?.pointsSeedToSprout ?? 2} punti";
+                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSeedToSprout ?? 4)}/{_growthConfig?.pointsSeedToSprout ?? 4} punti";
                 case (int)PlantStage.Sprout:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSproutToMature ?? 3)}/{_growthConfig?.pointsSproutToMature ?? 3} punti";
+                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSproutToMature ?? 4)}/{_growthConfig?.pointsSproutToMature ?? 4} punti";
                 case (int)PlantStage.HarvestReady:
                     return $"Giorno {daysSincePlant} - Pronta per raccolta!";
                 default:
@@ -852,13 +980,26 @@ namespace _Project
         }
         
         /// <summary>
-        /// Trova un TextMeshProUGUI nei figli cercando per testo contenuto
+        /// Trova un TextMeshProUGUI nei figli cercando per testo contenuto o nome GameObject
         /// </summary>
         private TextMeshProUGUI FindTextInChildren(string containsText)
         {
             // Cerca prima nel GameObject _page se disponibile
             GameObject searchRoot = _page != null ? _page : gameObject;
             
+            // Prima cerca per nome GameObject (più affidabile)
+            Transform foundByName = FindTransformRecursive(searchRoot.transform, containsText.Replace(" ", ""));
+            if (foundByName != null)
+            {
+                TextMeshProUGUI textComp = foundByName.GetComponent<TextMeshProUGUI>();
+                if (textComp != null)
+                {
+                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per nome GameObject '{containsText}': {foundByName.name}");
+                    return textComp;
+                }
+            }
+            
+            // Poi cerca per testo contenuto
             TextMeshProUGUI[] allTexts = searchRoot.GetComponentsInChildren<TextMeshProUGUI>(true);
             foreach (var text in allTexts)
             {
@@ -869,19 +1010,17 @@ namespace _Project
                 }
             }
             
-            // Se non trovato per testo, cerca per nome GameObject
-            Transform found = searchRoot.transform.Find(containsText.Replace(" ", ""));
-            if (found != null)
+            // Ultimo tentativo: cerca per nome parziale (case-insensitive)
+            foreach (var text in allTexts)
             {
-                TextMeshProUGUI textComp = found.GetComponent<TextMeshProUGUI>();
-                if (textComp != null)
+                if (text != null && text.name.Contains(containsText, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per nome GameObject '{containsText}': {found.name}");
-                    return textComp;
+                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per nome parziale '{containsText}': {text.name}");
+                    return text;
                 }
             }
             
-            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il testo contenga questa stringa o che il GameObject abbia questo nome.");
+            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il GameObject abbia questo nome o che il testo contenga questa stringa.");
             return null;
         }
         

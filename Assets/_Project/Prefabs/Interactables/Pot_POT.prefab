@@ -385,7 +385,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   potId: POT-001
   state: 0
-  spriteRenderer: {fileID: 0}
   _amountOfFruits: {fileID: 7712485458464971865}
 --- !u!114 &5043254523307738949
 MonoBehaviour:
@@ -403,7 +402,6 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
   potGrowthController: {fileID: 8828960649072428577}
   dayCycleController: {fileID: 0}
-  genericSeedCode: SDE-001
   showDebugLogs: 1
 --- !u!114 &8828960649072428577
 MonoBehaviour:
@@ -422,11 +420,15 @@ MonoBehaviour:
     HasPlant: 0
     Stage: 0
     AmountFruits: 0
+    PlantCode: 
     Hydration: 0
     LightExposure: 0
     GrowthPoints: 0
     DaysSincePlant: 0
     DaysNeglectedStreak: 0
+    DaysInCurrentStage: 0
+    DaysInHarvestReady: 0
+    DaysFruitsUnharvested: 0
     PlantedDay: 0
     LastWateredDay: 0
     LastLitDay: 0

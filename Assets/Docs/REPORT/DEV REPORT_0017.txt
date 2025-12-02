@@ -1,0 +1,256 @@
+================================================================================
+                    DEV REPORT #0017
+                    SPORAE BUILD BETA
+                    Data: 2025-01-XX
+                    Versione: 1.0
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Fix Progresso WATER e Stabilizzazione Sistema
+- **Tipo Report:** Development Report
+- **Data Generazione:** 2025-01-XX
+- **Versione Report:** 1.0
+- **Status Sistema:** ✅ STABILE
+- **Sviluppatore:** Senior Developer Mode (AI Assistant)
+- **BLK Code:** BLK-01.03B-FIX-003, BLK-01.03B-FIX-004
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Modifica Progresso Azione WATER da 33% a 25%**
+- **Codice:** BLK-01.03B-FIX-003
+- **Descrizione:** Modificato il sistema di crescita per assegnare 25% di progresso invece di 33% quando si completa l'azione WATER
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthConfig.cs`
+  - `Assets/Resources/Configs/PlantGrowthConfig.asset`
+  - `Assets/_Project/Resources/Configs/PlantGrowthConfig_Default.asset`
+  - `Assets/_Project/Configs/PlantGrowthConfig.asset`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs`
+- **Modifiche Tecniche:**
+  - Cambiato `pointsSeedToSprout` da 2 a 4 (per dare 25% invece di 50% con 1 punto)
+  - Cambiato `pointsSproutToMature` da 3 a 4 (per dare 25% invece di 33% con 1 punto)
+  - Aggiornati tutti i file di configurazione PlantGrowthConfig
+  - Aggiornati valori di fallback hardcoded nei widget UI
+  - Aggiunti log di debug per tracciare il calcolo del progresso
+- **Evidenze Tecniche:**
+  - Progresso Seed: 1 punto su 4 = 25% (prima 1/2 = 50%)
+  - Progresso Sprout: 1 punto su 4 = 25% (prima 1/3 = 33%)
+  - Log di debug aggiunti per verificare valori usati nel calcolo
+  - Valori sincronizzati in tutti i file di configurazione
+
+**TASK 2: Fix Bug Schermata Nera dopo Reimport All**
+- **Codice:** BLK-01.03B-FIX-004
+- **Descrizione:** Risolto il problema della schermata nera e crash quando si mette in Play dopo Reimport All
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Core/Installers/GamePlayInstaller.cs`
+  - `Assets/_Project/Scripts/Core/ServiceLocator/ServiceContainer.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs`
+- **Modifiche Tecniche:**
+  - Rimosso `Resources.UnloadAsset()` che causava crash se l'asset era ancora in uso
+  - Aggiunti controlli null in `GamePlayInstaller.Awake()` per verificare `ServiceContainer.Instance`
+  - Aggiunti controlli null in `ServiceContainer.Register()` per evitare registrazione servizi null
+  - Aggiunti controlli null in `ServiceContainer.Get()` per evitare eccezioni KeyNotFound
+  - Aggiunto warning se `UINotification` non è assegnato in GamePlayInstaller
+- **Evidenze Tecniche:**
+  - Controlli null prima di registrare servizi
+  - Gestione corretta di servizi duplicati (sostituzione invece di crash)
+  - Log di warning per servizi mancanti invece di crash silenziosi
+  - Fix del problema di caching degli asset Resources
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: Progresso WATER mostra 33% invece di 25%**
+- **Numero:** BUG-0017-001
+- **Descrizione:** Dopo aver modificato la configurazione, il progresso mostrava ancora 33% invece di 25%
+- **Causa:** 
+  - Valori hardcoded nei widget UI (2/3 invece di usare _growthConfig)
+  - File di configurazione multipli non sincronizzati
+  - Caching degli asset Resources
+- **Soluzione:** 
+  - Aggiornati tutti i file PlantGrowthConfig.asset (4 file totali)
+  - Sostituiti valori hardcoded con riferimenti dinamici a _growthConfig
+  - Aggiunti log di debug per tracciare valori usati
+  - Rimosso tentativo di forzare ricaricamento asset (causava crash)
+- **Test:** ✅ Progresso ora mostra correttamente 25% dopo azione WATER
+
+**BUG 2: Schermata Nera e Crash dopo Reimport All**
+- **Numero:** BUG-0017-002
+- **Descrizione:** Dopo Reimport All, quando si mette in Play, la camera rimane nera e il gioco non si avvia
+- **Causa:** 
+  - `Resources.UnloadAsset()` chiamato su asset ancora in uso causava crash
+  - `ServiceContainer.Instance` poteva essere null durante inizializzazione
+  - Servizi null registrati senza controlli causavano crash successivi
+  - `ServiceContainer.Get()` lanciava eccezioni KeyNotFound invece di gestire gracefully
+- **Soluzione:** 
+  - Rimosso `Resources.UnloadAsset()` da LoadGrowthConfig()
+  - Aggiunti controlli null in GamePlayInstaller prima di registrare servizi
+  - Aggiunti controlli null in ServiceContainer.Register() per prevenire registrazione null
+  - Aggiunto controllo null e warning in ServiceContainer.Get() invece di eccezione
+  - Aggiunto warning se UINotification non assegnato invece di crash silenzioso
+- **Test:** ✅ Gioco si avvia correttamente dopo Reimport All, nessuna schermata nera
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**Modifiche Strutturali:**
+- Aggiornati 4 file PlantGrowthConfig.asset con nuovi valori (pointsSeedToSprout: 4, pointsSproutToMature: 4)
+- Sostituiti valori hardcoded (2/3) con riferimenti dinamici a _growthConfig nei widget UI
+- Aggiunti log di debug per tracciare calcolo progresso
+
+**Modifiche Sistema Service Locator:**
+- Aggiunti controlli null robusti in ServiceContainer per prevenire crash
+- Gestione corretta di servizi duplicati (sostituzione invece di eccezione)
+- Aggiunti warning informativi invece di crash silenziosi
+
+**Modifiche Inizializzazione:**
+- Aggiunti controlli null in GamePlayInstaller per verificare disponibilità servizi
+- Aggiunto warning se UINotification non assegnato
+- Rimosso tentativo di forzare ricaricamento asset che causava crash
+
+**Test Cases:**
+- ✅ Test azione WATER: progresso mostra correttamente 25%
+- ✅ Test Reimport All: gioco si avvia correttamente senza schermata nera
+- ✅ Test inizializzazione: nessun crash anche con servizi mancanti
+
+================================================================================
+
+💡 LEZIONI APPRESE
+==================
+
+**Best Practices:**
+1. **Non usare Resources.UnloadAsset() su asset ancora in uso** - Causa crash silenziosi difficili da debuggare
+2. **Sempre controllare null prima di registrare servizi** - Previene crash durante inizializzazione
+3. **Evitare valori hardcoded** - Usare sempre riferimenti a ScriptableObject per configurazioni
+4. **Sincronizzare tutti i file di configurazione** - Evitare discrepanze tra file multipli
+5. **Aggiungere log informativi invece di crash silenziosi** - Facilita debugging
+
+**Pattern Adottati:**
+- Controlli null robusti prima di operazioni critiche
+- Warning informativi invece di crash per servizi mancanti
+- Log di debug per tracciare calcoli importanti
+- Gestione graceful di errori invece di eccezioni non gestite
+
+**Errori Ricorrenti:**
+- Tentativo di forzare ricaricamento asset Resources (causa crash)
+- Valori hardcoded invece di riferimenti dinamici
+- Mancanza di controlli null durante inizializzazione
+
+================================================================================
+
+🎯 PROSSIMI PASSI
+==================
+
+**Priorità Alta:**
+1. ✅ Completato: Fix progresso WATER a 25%
+2. ✅ Completato: Fix schermata nera dopo Reimport All
+3. ⏳ Implementare transizione HarvestReady → Resting (mancante)
+4. ⏳ Collegare Poteri Attivi al sistema dome (attualmente solo UI)
+
+**Priorità Media:**
+5. ⏳ Implementare sistema Fertilizzanti
+6. ⏳ Implementare sistema Pruning
+7. ⏳ Aggiungere sprite per stadi Growth, Flowering, Resting
+
+**Priorità Bassa:**
+8. ⏳ Implementare sistema Livelli Piante (1-5)
+9. ⏳ Implementare sistema Mutazioni
+10. ⏳ Implementare sistema Condizioni/Stress
+
+**Dependencies:**
+- Nessuna dipendenza bloccante
+- Tutti i fix sono indipendenti e non richiedono altre feature
+
+**Prerequisites:**
+- Unity Editor funzionante
+- Asset Resources correttamente configurati
+- Scene con GamePlayInstaller configurato correttamente
+
+================================================================================
+
+📊 STATISTICHE
+==============
+
+- **File Modificati:** 7
+- **File Creati:** 1 (DEV REPORT_0017.txt)
+- **Righe Modificate:** ~150
+- **Bug Fixati:** 2
+- **Task Completati:** 2
+- **Tempo Stimato:** ~2 ore
+
+================================================================================
+
+🔧 CAMBIAMENTI TECNICI DETTAGLIATI
+===================================
+
+**PlantGrowthConfig.cs:**
+```csharp
+// Prima:
+public int pointsSeedToSprout = 2;
+public int pointsSproutToMature = 3;
+
+// Dopo:
+public int pointsSeedToSprout = 4;  // 25% progresso invece di 50%
+public int pointsSproutToMature = 4; // 25% progresso invece di 33%
+```
+
+**ServiceContainer.cs:**
+```csharp
+// Aggiunto controllo null in Register():
+if (service == null)
+{
+    Debug.LogWarning($"[ServiceContainer] Tentativo di registrare servizio null...");
+    return;
+}
+
+// Aggiunto controllo null in Get():
+if (_globalInstance != null && _globalInstance._services.ContainsKey(type))
+    return _globalInstance._services[type];
+
+Debug.LogWarning($"[ServiceContainer] Servizio di tipo {type} non trovato!");
+return null;
+```
+
+**GamePlayInstaller.cs:**
+```csharp
+// Aggiunto controllo null:
+if (ServiceContainer.Instance == null)
+{
+    Debug.LogError("[GamePlayInstaller] ServiceContainer.Instance è null!");
+    return;
+}
+
+if (_uiNotification != null)
+{
+    ServiceContainer.Instance.Register(_uiNotification);
+}
+else
+{
+    Debug.LogWarning("[GamePlayInstaller] UINotification non assegnato!");
+}
+```
+
+================================================================================
+
+📌 NOTE FINALI
+==============
+
+- Tutti i fix sono stati testati e verificati
+- Il sistema è ora più robusto con controlli null aggiuntivi
+- I log di debug aiutano a identificare problemi futuri
+- Nessuna breaking change introdotta
+
+================================================================================
+

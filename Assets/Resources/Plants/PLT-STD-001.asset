@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   plantCode: PLT-STD-001
   seedItemConfig: {fileID: 11400000, guid: 57f01ae6a642c52408a589fb6538ae4c, type: 2}
+  description: Una pianta standard robusta che mantiene l'equilibrio del pH ambientale
+  activePower: "Purificatrice: \u221210% rischio muffe Dome"
   family: 0
   rarity: 0
   dailyPhDrift: 0

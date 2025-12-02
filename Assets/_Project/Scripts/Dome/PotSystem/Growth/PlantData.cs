@@ -13,9 +13,15 @@ namespace Sporae.Dome.PotSystem.Growth
         [Header("Identificazione")]
         [Tooltip("Codice univoco pianta (es. PLT-STD-001, PLT-PURE-001, PLT-EVIL-001)")]
         [SerializeField] private string plantCode;
-        
+
         [Tooltip("Riferimento all'ItemConfig del seme corrispondente")]
         [SerializeField] private ItemConfig seedItemConfig;
+
+        [Tooltip("Descrizione one-liner della pianta (per UI e tooltip)")]
+        [SerializeField, TextArea(2, 4)] private string description;
+
+        [Tooltip("Potere attivo della pianta (effetto speciale quando attiva)")]
+        [SerializeField, TextArea(2, 4)] private string activePower;
         
         [Header("Famiglia e Caratteristiche")]
         [Tooltip("Famiglia di appartenenza (Standard/Pure/Evil)")]
@@ -51,6 +57,8 @@ namespace Sporae.Dome.PotSystem.Growth
         public float OptimalPhMin => optimalPhMin;
         public float OptimalPhMax => optimalPhMax;
         public string PreferredFaction => preferredFaction;
+        public string Description => description;
+        public string ActivePower => activePower;
         public StageRequirements[] StageRequirements => stageRequirements;
         
         /// <summary>

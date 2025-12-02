@@ -1,0 +1,55 @@
+================================================================================
+                    COMMIT RECAP - DEV REPORT #0017
+                    Data: 2025-01-XX
+================================================================================
+
+📝 COMMIT MESSAGE SUGGERITO
+===========================
+
+Fix: Progresso WATER 25% e stabilizzazione sistema inizializzazione
+
+- Modificato sistema crescita: progresso WATER da 33% a 25%
+  * Aggiornati pointsSeedToSprout e pointsSproutToMature da 2/3 a 4/4
+  * Sincronizzati tutti i file PlantGrowthConfig.asset (4 file)
+  * Sostituiti valori hardcoded con riferimenti dinamici a _growthConfig
+  * Aggiunti log di debug per tracciare calcolo progresso
+
+- Fix schermata nera dopo Reimport All
+  * Rimosso Resources.UnloadAsset() che causava crash
+  * Aggiunti controlli null robusti in ServiceContainer
+  * Aggiunti controlli null in GamePlayInstaller per servizi mancanti
+  * Gestione graceful di errori invece di eccezioni non gestite
+
+- Miglioramenti robustezza sistema
+  * Controlli null prima di registrare servizi
+  * Warning informativi invece di crash silenziosi
+  * Gestione corretta servizi duplicati (sostituzione)
+
+Files modified:
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthConfig.cs
+- Assets/Resources/Configs/PlantGrowthConfig.asset
+- Assets/_Project/Resources/Configs/PlantGrowthConfig_Default.asset
+- Assets/_Project/Configs/PlantGrowthConfig.asset
+- Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs
+- Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs
+- Assets/_Project/Scripts/Core/Installers/GamePlayInstaller.cs
+- Assets/_Project/Scripts/Core/ServiceLocator/ServiceContainer.cs
+
+================================================================================
+
+📋 BREVE RECAP PER COMMIT
+=========================
+
+**Titolo:** Fix: Progresso WATER 25% e stabilizzazione sistema
+
+**Cambiamenti Principali:**
+1. ✅ Progresso WATER ora 25% invece di 33% (soglie aggiornate a 4 punti)
+2. ✅ Fix schermata nera dopo Reimport All (rimosso UnloadAsset, aggiunti controlli null)
+3. ✅ Sistema più robusto con controlli null e gestione errori graceful
+
+**File Modificati:** 8 file
+**Bug Fixati:** 2
+**Breaking Changes:** Nessuno
+
+================================================================================
+

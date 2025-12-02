@@ -29,6 +29,7 @@ namespace _Project
         [SerializeField] private string noSeedsMessage = "Nessun seme disponibile nell'inventario";
         [SerializeField] private int canvasSortingOrder = 200; // Sopra la HUD della pianta (100) e inventario (150)
         [SerializeField] private bool improveReadability = true;
+        [SerializeField] private float seedButtonFontSize = 22f; // Dimensione font per i pulsanti semi (modificabile dall'Inspector)
         
         private GameManager _gameManager;
         private Inventory _playerInventory;
@@ -116,27 +117,27 @@ namespace _Project
         {
             _targetPot = targetPot;
             
-            // Se la UI non è stata creata, creala automaticamente
+            // Verifica che i riferimenti UI siano assegnati
             if (selectorPanel == null)
             {
-                Debug.LogWarning("[UISeedSelector] selectorPanel non assegnato. Creazione automatica UI...");
-                CreateUI();
-                
-                // Se ancora null dopo la creazione, c'è un problema
-                if (selectorPanel == null)
-                {
-                    Debug.LogError("[UISeedSelector] Impossibile creare la UI automaticamente!");
-                    return;
-                }
+                Debug.LogError("[UISeedSelector] ⚠️ selectorPanel non assegnato! " +
+                    "Devi assegnare il GameObject del pannello principale nell'Inspector. " +
+                    "Vedi le istruzioni in Assets/Docs/UISeedSelector_Setup.md");
+                return;
+            }
+            
+            if (seedButtonContainer == null)
+            {
+                Debug.LogError("[UISeedSelector] ⚠️ seedButtonContainer non assegnato! " +
+                    "Devi assegnare il Transform del container per i pulsanti semi nell'Inspector.");
+                return;
             }
             
             selectorPanel.SetActive(true);
             
-            // Configura Canvas e leggibilità quando viene mostrato
-            if (improveReadability)
-            {
-                SetupCanvasAndReadability();
-            }
+            // Configura solo il Canvas sorting order (non modifica colori o dimensioni)
+            // Le modifiche visive devono essere fatte manualmente nella scena Unity
+            SetupCanvasSortingOrder();
             
             if (titleText != null)
             {
@@ -274,7 +275,7 @@ namespace _Project
                 text.text = seedTypeId;
                 text.alignment = TextAlignmentOptions.Center;
                 text.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
-                text.fontSize = 36; // Font scalato del 100% (raddoppiato)
+                text.fontSize = seedButtonFontSize; // Font configurabile dall'Inspector
                 text.outlineWidth = 0.6f; // Outline scalato del 100%
                 text.outlineColor = new Color(0f, 0f, 0f, 1f);
             }
@@ -292,9 +293,9 @@ namespace _Project
                 {
                     buttonTextComponent.text = buttonText;
                 // Migliora leggibilità del testo
-                if (buttonTextComponent.fontSize < 36)
+                if (buttonTextComponent.fontSize < seedButtonFontSize)
                 {
-                    buttonTextComponent.fontSize = 36; // Font scalato del 100%
+                    buttonTextComponent.fontSize = seedButtonFontSize; // Font configurabile dall'Inspector
                 }
                 buttonTextComponent.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
                 buttonTextComponent.outlineWidth = 0.6f; // Outline scalato del 100%
@@ -425,7 +426,10 @@ namespace _Project
         /// <summary>
         /// Configura il Canvas per renderlo sopra la HUD della pianta
         /// </summary>
-        private void SetupCanvasAndReadability()
+        /// <summary>
+        /// Imposta solo il sorting order del Canvas (senza modificare colori o dimensioni)
+        /// </summary>
+        private void SetupCanvasSortingOrder()
         {
             if (selectorPanel == null) return;
             
@@ -451,9 +455,13 @@ namespace _Project
                 selectorCanvas.sortingOrder = canvasSortingOrder;
                 Debug.Log($"[UISeedSelector] Canvas sorting order impostato a {canvasSortingOrder} per renderlo sopra la HUD della pianta");
             }
-            
-            // Migliora leggibilità del pannello
-            ImprovePanelReadability();
+        }
+        
+        [System.Obsolete("Usa SetupCanvasSortingOrder() invece. Le modifiche visive devono essere fatte manualmente nella scena Unity.")]
+        private void SetupCanvasAndReadability()
+        {
+            SetupCanvasSortingOrder();
+            // NON chiamare più ImprovePanelReadability() - interferisce con la personalizzazione manuale
         }
         
         /// <summary>
@@ -463,44 +471,16 @@ namespace _Project
         {
             if (selectorPanel == null) return;
             
-            // Migliora il background del pannello
-            Image panelImage = selectorPanel.GetComponent<Image>();
-            if (panelImage != null)
-            {
-                // Sfondo più scuro e opaco per maggiore contrasto
-                panelImage.color = new Color(0.05f, 0.05f, 0.05f, 0.98f);
-            }
+            // NON modificare il colore del pannello - usa quello impostato manualmente nella scena
+            // Il colore del pannello deve essere personalizzabile dall'utente
             
-            // Migliora il titolo
-            if (titleText != null)
-            {
-                if (titleText.fontSize < 56)
-                {
-                    titleText.fontSize = 56; // Font scalato del 100%
-                }
-                titleText.color = new Color(1f, 1f, 1f, 1f); // Bianco puro
-                // Aggiungi outline più spesso se supportato
-                if (titleText.fontMaterial != null)
-                {
-                    titleText.outlineWidth = 0.8f; // Outline scalato del 100%
-                    titleText.outlineColor = new Color(0f, 0f, 0f, 1f);
-                }
-            }
+            // NON modificare automaticamente titolo, dimensioni o altri elementi UI
+            // Tutti gli aspetti visivi devono essere personalizzabili dall'utente nella scena Unity
+            // Le modifiche automatiche interferiscono con la personalizzazione manuale
             
-            // Aumenta le dimensioni del pannello se troppo piccolo
-            RectTransform panelRect = selectorPanel.GetComponent<RectTransform>();
-            if (panelRect != null)
-            {
-                Vector2 currentSize = panelRect.sizeDelta;
-                if (currentSize.x < 1400 || currentSize.y < 1000)
-                {
-                    panelRect.sizeDelta = new Vector2(1400, 1000); // Dimensioni scalate del 100%
-                    Debug.Log("[UISeedSelector] Dimensioni pannello aumentate a 1400x1000");
-                }
-            }
-            
-            // Migliora i pulsanti dei semi esistenti
-            if (seedButtonContainer != null)
+            // Migliora solo i pulsanti dei semi se improveReadability è attivo
+            // (questi vengono creati dinamicamente, quindi è accettabile modificarli)
+            if (improveReadability && seedButtonContainer != null)
             {
                 foreach (Transform child in seedButtonContainer)
                 {
@@ -523,9 +503,9 @@ namespace _Project
                 if (text != null)
                 {
                     // Aumenta font size se troppo piccolo
-                    if (text.fontSize < 36)
+                    if (text.fontSize < seedButtonFontSize)
                     {
-                        text.fontSize = 36; // Font scalato del 100%
+                        text.fontSize = seedButtonFontSize; // Font configurabile dall'Inspector
                     }
                     
                     // Colore bianco brillante per massimo contrasto
@@ -555,8 +535,11 @@ namespace _Project
         }
         
         /// <summary>
-        /// Crea automaticamente la struttura UI se mancante
+        /// [DEPRECATO] Crea automaticamente la struttura UI se mancante
+        /// Questo metodo non viene più chiamato - la UI deve essere creata manualmente nella scena Unity.
+        /// Vedi Assets/Docs/UISeedSelector_Setup.md per le istruzioni.
         /// </summary>
+        [System.Obsolete("La UI deve essere creata manualmente nella scena Unity. Vedi Assets/Docs/UISeedSelector_Setup.md")]
         private void CreateUI()
         {
             // Trova o crea Canvas

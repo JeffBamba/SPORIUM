@@ -77,21 +77,15 @@ public class PotHUDWidget : MonoBehaviour
             
             if (seedSelector == null)
             {
-                Debug.LogWarning("[PotHUDWidget] UISeedSelector non trovato nella scena. Creazione automatica...");
-                // Crea UISeedSelector automaticamente
-                GameObject seedSelectorGO = new GameObject("UISeedSelector");
-                seedSelector = seedSelectorGO.AddComponent<UISeedSelector>();
-                
-                // Sottoscrivi agli eventi
-                seedSelector.OnSeedSelected += OnSeedSelected;
-                seedSelector.OnCancelled += OnSeedSelectionCancelled;
+                Debug.LogError("[PotHUDWidget] ⚠️ UISeedSelector non trovato nella scena! " +
+                    "Devi creare un GameObject 'UISeedSelector' nella scena con il componente UISeedSelector " +
+                    "e collegare tutti i riferimenti UI necessari. Vedi le istruzioni in Assets/Docs/UISeedSelector_Setup.md");
+                return;
             }
-            else
-            {
-                // Sottoscrivi agli eventi se già esistente
-                seedSelector.OnSeedSelected += OnSeedSelected;
-                seedSelector.OnCancelled += OnSeedSelectionCancelled;
-            }
+            
+            // Sottoscrivi agli eventi se già esistente
+            seedSelector.OnSeedSelected += OnSeedSelected;
+            seedSelector.OnCancelled += OnSeedSelectionCancelled;
         }
         else
         {
@@ -211,7 +205,11 @@ public class PotHUDWidget : MonoBehaviour
     {
         // Carica la configurazione di crescita
         _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
-        if (_growthConfig == null)
+        if (_growthConfig != null)
+        {
+            Debug.Log($"[PotHUDWidget] ✅ Config caricata: pointsSeedToSprout={_growthConfig.pointsSeedToSprout}, pointsSproutToMature={_growthConfig.pointsSproutToMature}");
+        }
+        else
         {
             Debug.LogWarning("[BLK-01.03B] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
             // Crea configurazione di fallback
@@ -1253,9 +1251,11 @@ public class PotHUDWidget : MonoBehaviour
         switch (state.Stage)
         {
             case (int)PlantStage.Seed:
-                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 2)}/2 punti";
+                int seedThreshold = _growthConfig != null ? _growthConfig.pointsSeedToSprout : 4;
+                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, seedThreshold)}/{seedThreshold} punti";
             case (int)PlantStage.Sprout:
-                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, 3)}/3 punti";
+                int sproutThreshold = _growthConfig != null ? _growthConfig.pointsSproutToMature : 4;
+                return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, sproutThreshold)}/{sproutThreshold} punti";
             case (int)PlantStage.HarvestReady:
                 return $"Giorno {daysSincePlant} - Pronta per raccolta!";
             default:

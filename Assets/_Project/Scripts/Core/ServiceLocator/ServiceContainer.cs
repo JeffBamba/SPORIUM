@@ -57,7 +57,21 @@ namespace  _Project.Sporae.Core
 
         public void Register<T>(T service) 
         {
-            _services.Add(typeof(T), service);
+            if (service == null)
+            {
+                Debug.LogWarning($"[ServiceContainer] Tentativo di registrare servizio null di tipo {typeof(T)}. Ignorato.");
+                return;
+            }
+            
+            if (_services.ContainsKey(typeof(T)))
+            {
+                Debug.LogWarning($"[ServiceContainer] Servizio {typeof(T)} già registrato. Sostituito con nuova istanza.");
+                _services[typeof(T)] = service;
+            }
+            else
+            {
+                _services.Add(typeof(T), service);
+            }
             
 #if UNITY_EDITOR
             Debug.Log($"Register new local service: {typeof(T)}");
@@ -66,9 +80,19 @@ namespace  _Project.Sporae.Core
             OnServiceRegistered?.Invoke(service);
         }
 
-        public bool ContainsGlobal(Type type) => _globalInstance._services.ContainsKey(type);
+        public bool ContainsGlobal(Type type) => _globalInstance != null && _globalInstance._services.ContainsKey(type);
         public bool Contains(Type type) => _services.ContainsKey(type);
         public T Get<T>() => (T)Get(typeof(T));
-        public object Get(Type type) => Contains(type) ? _services[type] : _globalInstance._services[type];
+        public object Get(Type type)
+        {
+            if (Contains(type))
+                return _services[type];
+            
+            if (_globalInstance != null && _globalInstance._services.ContainsKey(type))
+                return _globalInstance._services[type];
+            
+            Debug.LogWarning($"[ServiceContainer] Servizio di tipo {type} non trovato!");
+            return null;
+        }
     }
 }

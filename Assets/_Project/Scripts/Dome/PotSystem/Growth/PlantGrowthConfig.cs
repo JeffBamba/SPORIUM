@@ -6,11 +6,11 @@ namespace Sporae.Dome.PotSystem.Growth
     public class PlantGrowthConfig : ScriptableObject
     {
         [Header("Soglie Avanzamento")]
-        [Tooltip("Punti richiesti per passare da Seed a Sprout (~giorno 1-2 con cura ideale)")]
-        public int pointsSeedToSprout = 2;
+        [Tooltip("Punti richiesti per passare da Seed a Sprout (~giorno 1-2 con cura ideale). Modificato per dare 25% progresso per azione WATER invece di 50%")]
+        public int pointsSeedToSprout = 4;
         
-        [Tooltip("Punti richiesti per passare da Sprout a Mature (~giorni 3-5 con cura ideale)")]
-        public int pointsSproutToMature = 3;
+        [Tooltip("Punti richiesti per passare da Sprout a Mature (~giorni 3-5 con cura ideale). Modificato per dare 25% progresso per azione WATER invece di 33%")]
+        public int pointsSproutToMature = 4;
 
         [Header("Punti Giornalieri")]
         [Tooltip("Punti per cura ideale (acqua + luce nello stesso giorno)")]

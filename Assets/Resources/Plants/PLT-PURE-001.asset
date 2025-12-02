@@ -14,6 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   plantCode: PLT-PURE-001
   seedItemConfig: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
+  description: Pianta pura che eleva il pH dell'ambiente, perfetta per ecosistemi
+    alcalini
+  activePower: 'Arctic Purification: rigenera +5 global pH e cura muffe Dome ogni
+    2 giorni'
   family: 1
   rarity: 0
   dailyPhDrift: 2

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5845b624332d8d64fb759a55bb2d8df2, type: 3}
   m_Name: PlantGrowthConfig
   m_EditorClassIdentifier: 
-  pointsSeedToSprout: 2
-  pointsSproutToMature: 3
+  pointsSeedToSprout: 4
+  pointsSproutToMature: 4
   pointsIdealCare: 2
   pointsPartialCare: 1
   pointsNoCare: 0
