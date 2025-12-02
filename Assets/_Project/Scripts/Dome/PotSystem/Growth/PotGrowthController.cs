@@ -143,6 +143,11 @@ namespace Sporae.Dome.PotSystem.Growth
                     result = s3_mature;
                     stageName = "HarvestReady";
                     break;
+                case (int)PlantStage.Resting:
+                    // BLK-02.05: Resting usa lo stesso sprite di HarvestReady (pianta matura ma in riposo)
+                    result = s3_mature;
+                    stageName = "Resting";
+                    break;
                 default:
                     result = s0_empty; // Fallback
                     stageName = "Fallback";
@@ -171,6 +176,9 @@ namespace Sporae.Dome.PotSystem.Growth
                 case (int)PlantStage.Sprout:
                     return 1.12f;
                 case (int)PlantStage.HarvestReady:
+                    return 1.20f;
+                case (int)PlantStage.Resting:
+                    // BLK-02.05: Resting mantiene la stessa scala di HarvestReady
                     return 1.20f;
                 default:
                     return 1.00f; // Fallback

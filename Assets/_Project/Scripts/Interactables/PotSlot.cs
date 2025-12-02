@@ -4,6 +4,7 @@ using System;
 
 using _Project;
 using _Project.Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 
 using TMPro;
 
@@ -67,7 +68,15 @@ public class PotSlot : MonoBehaviour
             _interactable.OnInteract += HandleInteract;
         
         if (_dayCycleSystem != null)
-            _dayCycleSystem.OnDayChanged += HandleDayChanged;   
+            _dayCycleSystem.OnDayChanged += HandleDayChanged;
+        
+        // BLK-02.05: Sottoscrivi agli eventi per aggiornare il display dei frutti
+        PotEvents.OnPotStateChanged += OnPotStateChanged;
+        PotEvents.OnPotAction += OnPotAction;
+        PotEvents.OnPlantStageChanged += OnPlantStageChanged;
+        
+        // Aggiorna il display iniziale
+        UpdateFruitDisplay();
     }
 
     private void OnDestroy()
@@ -77,6 +86,11 @@ public class PotSlot : MonoBehaviour
         
         if (_dayCycleSystem != null)
             _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+        
+        // BLK-02.05: Annulla sottoscrizioni eventi
+        PotEvents.OnPotStateChanged -= OnPotStateChanged;
+        PotEvents.OnPotAction -= OnPotAction;
+        PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
     }
 
     private void HandleInteract()
@@ -86,11 +100,80 @@ public class PotSlot : MonoBehaviour
 
     private void HandleDayChanged(int obj)
     {
-        bool isMature = PotActions.PotState.Stage == (int)PotState.Mature;
-        bool hasFruits = PotActions.PotState.AmountFruits >= 1;
+        // BLK-02.05: Aggiorna il display dei frutti quando cambia il giorno
+        UpdateFruitDisplay();
+    }
+    
+    /// <summary>
+    /// BLK-02.05: Gestisce il cambio di stato del vaso
+    /// </summary>
+    private void OnPotStateChanged(PotSlot pot)
+    {
+        // Aggiorna solo se è questo vaso
+        if (pot == this)
+        {
+            UpdateFruitDisplay();
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.05: Gestisce le azioni sul vaso (es. Harvest)
+    /// </summary>
+    private void OnPotAction(PotEvents.PotActionType actionType, PotSlot pot)
+    {
+        // Aggiorna solo se è questo vaso e l'azione è Harvest
+        if (pot == this && actionType == PotEvents.PotActionType.Harvest)
+        {
+            UpdateFruitDisplay();
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.05: Gestisce il cambio di stadio della pianta
+    /// </summary>
+    private void OnPlantStageChanged(string potId, PlantStage stage)
+    {
+        // Aggiorna solo se è questo vaso
+        if (potId == this.potId)
+        {
+            UpdateFruitDisplay();
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.05: Aggiorna il display del numero di frutti sopra il pot
+    /// Mostra "+1", "+2", "+3" quando la pianta è in HarvestReady e ha frutti disponibili
+    /// </summary>
+    private void UpdateFruitDisplay()
+    {
+        if (_amountOfFruits == null || _potActions == null || _potActions.PotState == null)
+        {
+            return;
+        }
         
-        _amountOfFruits.text = (isMature && hasFruits) ? 
-                $"{(int)PotActions.PotState.AmountFruits}+" : "";
+        var potState = _potActions.PotState;
+        
+        // Mostra il numero di frutti solo se:
+        // 1. La pianta è in HarvestReady
+        // 2. Ci sono frutti disponibili (>= 1)
+        bool isHarvestReady = potState.Stage == (int)PlantStage.HarvestReady;
+        bool hasFruits = potState.AmountFruits >= 1f;
+        
+        if (isHarvestReady && hasFruits)
+        {
+            int fruitCount = Mathf.RoundToInt(potState.AmountFruits);
+            fruitCount = Mathf.Clamp(fruitCount, 1, 3); // Limita a max 3
+            
+            // Mostra "+1", "+2", "+3" sopra il pot
+            _amountOfFruits.text = $"+{fruitCount}";
+            _amountOfFruits.gameObject.SetActive(true);
+        }
+        else
+        {
+            // Nascondi il testo se non ci sono frutti o non è in HarvestReady
+            _amountOfFruits.text = "";
+            _amountOfFruits.gameObject.SetActive(false);
+        }
     }
 
     private void CollectFruits()
@@ -121,10 +204,12 @@ public class PotSlot : MonoBehaviour
         // Imposta questo vaso come selezionato
         IsSelected = true;
 
-        //
-        CollectFruits();
+        // NOTA: Non raccogliere automaticamente i frutti qui!
+        // L'harvest deve essere gestito tramite il widget UI (PotHUDWidget/PotDetailsWidget)
+        // quando l'utente clicca esplicitamente sul pulsante "Harvest"
+        // CollectFruits() è stato rimosso per permettere all'utente di scegliere se fare harvest o vedere i dettagli
 
-        // Notifica la selezione
+        // Notifica la selezione - questo farà apparire il widget con i pulsanti di azione
         OnPotSelected?.Invoke(this);
     }
     

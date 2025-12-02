@@ -18,6 +18,7 @@ public static class PotEvents
         Water,      // ACT-002: Annaffiare pianta
         Light,       // ACT-003: Illuminare pianta
         Uproot,      // ACT-004: Uproot pianta
+        Harvest,     // ACT-005: Raccogliere frutti (BLK-02.06)
         Spray        // ACT-014: Spray Antifungino (BLK-02.03)
     }
     
@@ -133,6 +134,10 @@ public static class PotEvents
                 return "Annaffiare";
             case PotActionType.Light:
                 return "Illuminare";
+            case PotActionType.Uproot:
+                return "Estrai Pianta";
+            case PotActionType.Harvest:
+                return "Raccogli";
             case PotActionType.Spray:
                 return "Spray Antifungino";
             default:
@@ -155,6 +160,10 @@ public static class PotEvents
                 return "ACT-002";
             case PotActionType.Light:
                 return "ACT-003";
+            case PotActionType.Uproot:
+                return "ACT-004";
+            case PotActionType.Harvest:
+                return "ACT-005";
             case PotActionType.Spray:
                 return "ACT-014";
             default:
@@ -177,6 +186,10 @@ public static class PotEvents
                 return "Aumentare l'idratazione della pianta";
             case PotActionType.Light:
                 return "Aumentare l'esposizione alla luce della pianta";
+            case PotActionType.Uproot:
+                return "Estrai la pianta dal vaso (ottieni WholePlant)";
+            case PotActionType.Harvest:
+                return "Raccogli tutti i frutti disponibili dalla pianta";
             case PotActionType.Spray:
                 return "Applicare spray antifungino (rimuove muffe, pH +5)";
             default:

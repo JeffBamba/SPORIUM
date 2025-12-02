@@ -66,6 +66,16 @@ public class PlayerClickMover2D : MonoBehaviour
 
     private void HandleInput()
     {
+        // IMPORTANTE: Blocca movimento se la console di debug POT è aperta
+        if (Sporae.DevTools.PotDebugConsole.IsConsoleOpen)
+        {
+            // Se il mouse è sopra la console, blocca completamente gli input
+            if (Sporae.DevTools.PotDebugConsole.IsMouseOverConsole())
+            {
+                return;
+            }
+        }
+        
         if (Input.GetMouseButtonDown(0))
         {
             // IMPORTANTE: Blocca movimento se il click è sopra UI

@@ -271,6 +271,27 @@ public class PotActions : MonoBehaviour
         return hasPlant && inRange && hasResources;
     }
     
+    /// <summary>
+    /// Verifica se è possibile raccogliere frutti dalla pianta
+    /// </summary>
+    public bool CanHarvest()
+    {
+        if (_potState == null)
+            return false;
+        
+        // Precondizioni: vaso ha pianta in HarvestReady, ci sono frutti disponibili, player in range, risorse sufficienti
+        bool
+            isHarvestReady = _potState.Stage == (int)PlantStage.HarvestReady,
+            hasFruits = _potState.AmountFruits > 0f,
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources();
+        
+        if (showDebugLogs)
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}");
+        
+        return isHarvestReady && hasFruits && inRange && hasResources;
+    }
+    
     #endregion
     
     #region Action Execution Methods
@@ -608,6 +629,70 @@ public class PotActions : MonoBehaviour
         return true;
     }
     
+    /// <summary>
+    /// Esegue l'azione di raccogliere frutti dalla pianta (BLK-02.06)
+    /// Raccoglie tutti i frutti disponibili e aggiunge all'inventario
+    /// </summary>
+    public bool DoHarvest()
+    {
+        if (!CanHarvest())
+        {
+            string reason = GetHarvestFailureReason();
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, reason);
+            return false;
+        }
+        
+        // Consuma le risorse
+        if (!TryConsumeResources())
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Insufficient resources");
+            return false;
+        }
+        
+        // Calcola quantità frutti da raccogliere
+        int fruitsToHarvest = Mathf.RoundToInt(_potState.AmountFruits);
+        if (fruitsToHarvest <= 0)
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Nessun frutto disponibile");
+            return false;
+        }
+        
+        // Aggiungi frutti all'inventario
+        for (int i = 0; i < fruitsToHarvest; i++)
+        {
+            _playerInventory.Add(Items.Fruits);
+        }
+        
+        // Reset frutti nel vaso
+        _potState.AmountFruits = 0f;
+        _potState.DaysFruitsUnharvested = 0;
+        
+        // BLK-02.05: Dopo la raccolta, la pianta entra in Resting
+        int oldStage = _potState.Stage;
+        _potState.Stage = (int)PlantStage.Resting;
+        _potState.DaysInHarvestReady = 0; // Reset contatore HarvestReady
+        _potState.DaysInCurrentStage = 0; // Reset contatore stadio corrente
+        
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Harvest, potSlot);
+        PotEvents.EmitChanged(potSlot);
+        
+        // Notifica il cambio di stadio (HarvestReady → Resting)
+        if (potGrowthController != null)
+        {
+            potGrowthController.OnStageChanged(PlantStage.Resting);
+        }
+        
+        PotEvents.EmitPlantStageChanged(potSlot.PotId, PlantStage.Resting);
+        
+        if (showDebugLogs)
+        {
+            Debug.Log($"[ACT-005][{potSlot.PotId}] Harvest OK: raccolti {fruitsToHarvest} frutti, aggiunti all'inventario. Stadio cambiato: {oldStage} (HarvestReady) → {(int)PlantStage.Resting} (Resting)");
+        }
+        
+        return true;
+    }
+    
     #endregion
     
     #region Helper Methods
@@ -714,6 +799,16 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null) return "Stato vaso non valido";
         if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (!IsPlayerInRange()) return "Troppo lontano";
+        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
+        return "Azione non permessa";
+    }
+    
+    private string GetHarvestFailureReason()
+    {
+        if (_potState == null) return "Stato vaso non valido";
+        if (_potState.Stage != (int)PlantStage.HarvestReady) return "Pianta non in HarvestReady";
+        if (_potState.AmountFruits <= 0f) return "Nessun frutto disponibile";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";

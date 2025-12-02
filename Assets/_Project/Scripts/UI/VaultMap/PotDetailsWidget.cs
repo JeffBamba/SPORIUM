@@ -16,6 +16,7 @@ namespace _Project
         [SerializeField] private Button _blueLedButton;
         [SerializeField] private Button _redLedButton;
         [SerializeField] private Button _sprayButton;
+        [SerializeField] private Button _harvestButton;
         [SerializeField] private Button _uprootButton;
 
         [SerializeField] private TextMeshProUGUI _idLabel;
@@ -106,6 +107,8 @@ namespace _Project
                 _redLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Red));
             if (_sprayButton != null)
                 _sprayButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Spray));
+            if (_harvestButton != null)
+                _harvestButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Harvest));
             _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
             
             InitializeSeedSelector();
@@ -309,6 +312,10 @@ namespace _Project
                     success = selectedPot.PotActions.DoSprayAntifungal();
                     break;
                 
+                case PotEvents.PotActionType.Harvest:
+                    success = selectedPot.PotActions.DoHarvest();
+                    break;
+                
                 case PotEvents.PotActionType.Uproot:
                     success = selectedPot.PotActions.DoUproot();
                     break;
@@ -406,6 +413,8 @@ namespace _Project
                 UpdateButtonState(_redLedButton, pot.PotActions.CanLight(), "Red LED");
             if (_sprayButton != null)
                 UpdateButtonState(_sprayButton, pot.PotActions.CanSprayAntifungal(), "Spray");
+            if (_harvestButton != null)
+                UpdateButtonState(_harvestButton, pot.PotActions.CanHarvest(), "Raccogli");
             UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Uproot");
         }
         

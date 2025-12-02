@@ -301,29 +301,96 @@ public class DayCycleController : MonoBehaviour
         {
             pot.DaysInHarvestReady++;
             
+            // BLK-02.05: Logica corretta per produzione e decay frutti incrementale
+            // Il decay graduale inizia DOPO 3 giorni completi con frutti non raccolti
+            // Sequenza corretta:
+            // - Giorno 1: AmountFruits = 1, DaysFruitsUnharvested = 1
+            // - Giorno 2: AmountFruits = 2, DaysFruitsUnharvested = 2
+            // - Giorno 3: AmountFruits = 3, DaysFruitsUnharvested = 3
+            // - Giorno 4: DaysFruitsUnharvested = 4 → decay graduale: AmountFruits = 2 (perde 1)
+            // - Giorno 5: DaysFruitsUnharvested = 5 → decay graduale: AmountFruits = 1 (perde 1)
+            // - Giorno 6: DaysFruitsUnharvested = 6 → decay graduale: AmountFruits = 0 (perde 1)
+            
             // Produzione frutti incrementale: +1 frutto/giorno fino a 3 max
-            if (pot.DaysInHarvestReady == 1)
+            // IMPORTANTE: Produciamo PRIMA i frutti, poi gestiamo il decay
+            bool isFirstFruit = false;
+            if (pot.AmountFruits == 0f)
             {
-                // Primo giorno: inizializza a 1 frutto
-                pot.AmountFruits = 1f;
+                // Se i frutti sono appena decaduti o è il primo giorno, inizializza
+                if (pot.DaysInHarvestReady == 1 || pot.DaysFruitsUnharvested == 0)
+                {
+                    // Primo giorno o dopo decay completo: inizializza a 1 frutto
+                    pot.AmountFruits = 1f;
+                    pot.DaysFruitsUnharvested = 0; // Reset contatore quando si produce il primo frutto
+                    isFirstFruit = true;
+                }
             }
-            else if (pot.DaysInHarvestReady > 1 && pot.AmountFruits < 3f)
+            else if (pot.AmountFruits > 0f && pot.AmountFruits < 3f)
             {
                 // Giorni successivi: +1 frutto/giorno fino a 3 max
                 pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f, 3f);
             }
             
-            // Decay frutti dopo 3 giorni non raccolti
+            // DOPO la produzione, gestisci il decay se ci sono frutti
             if (pot.AmountFruits > 0f)
             {
-                pot.DaysFruitsUnharvested++;
-                if (pot.DaysFruitsUnharvested >= 3)
+                // Incrementa il contatore dei giorni con frutti non raccolti
+                // Questo contatore viene incrementato ogni giorno che ci sono frutti
+                // IMPORTANTE: Se è stato prodotto il primo frutto in questo ciclo, il contatore è già stato resettato a 0
+                // quindi l'incremento lo porta a 1 (primo giorno con frutti)
+                // Altrimenti, viene semplicemente incrementato
+                if (!isFirstFruit)
                 {
-                    // Decay: perde tutti i frutti dopo 3 giorni
-                    pot.AmountFruits = 0f;
-                    pot.DaysFruitsUnharvested = 0;
+                    pot.DaysFruitsUnharvested++;
+                }
+                else
+                {
+                    // Se è stato prodotto il primo frutto, il contatore è già stato resettato a 0
+                    // quindi lo impostiamo a 1 per indicare il primo giorno con frutti
+                    pot.DaysFruitsUnharvested = 1;
+                }
+                
+                // Controlla decay graduale DOPO aver incrementato il contatore
+                // Il decay graduale inizia dopo 3 giorni completi (DaysFruitsUnharvested > 3)
+                // Sequenza corretta:
+                // - Giorno 1: DaysFruitsUnharvested = 0 → incrementa a 1 → controlla (1 > 3? NO) → OK, AmountFruits = 1
+                // - Giorno 2: DaysFruitsUnharvested = 1 → incrementa a 2 → controlla (2 > 3? NO) → OK, AmountFruits = 2
+                // - Giorno 3: DaysFruitsUnharvested = 2 → incrementa a 3 → controlla (3 > 3? NO) → OK, AmountFruits = 3
+                // - Giorno 4: DaysFruitsUnharvested = 3 → incrementa a 4 → controlla (4 > 3? SÌ) → decay -1, AmountFruits = 2
+                // - Giorno 5: DaysFruitsUnharvested = 4 → incrementa a 5 → controlla (5 > 3? SÌ) → decay -1, AmountFruits = 1
+                // - Giorno 6: DaysFruitsUnharvested = 5 → incrementa a 6 → controlla (6 > 3? SÌ) → decay -1, AmountFruits = 0
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[BLK-02.02] {pot.PotId}: Giorno {pot.DaysInHarvestReady}, Frutti: {pot.AmountFruits:F0}, DaysFruitsUnharvested: {pot.DaysFruitsUnharvested} (prima incremento)");
+                }
+                
+                if (pot.DaysFruitsUnharvested > 3)
+                {
+                    // Decay graduale: perde 1 frutto al giorno dopo 3 giorni completi
+                    float oldAmount = pot.AmountFruits;
+                    pot.AmountFruits = Mathf.Max(0f, pot.AmountFruits - 1f);
+                    
+                    // Se i frutti sono finiti, resetta i contatori
+                    if (pot.AmountFruits <= 0f)
+                    {
+                        pot.AmountFruits = 0f;
+                        pot.DaysFruitsUnharvested = 0;
+                        pot.DaysInHarvestReady = 0; // Reset anche questo contatore per ripartire da capo
+                        if (enableDebugLogs)
+                            Debug.Log($"[BLK-02.02] {pot.PotId}: ⚠️ Tutti i frutti decaduti dopo {pot.DaysFruitsUnharvested + 1} giorni non raccolti");
+                    }
+                    else
+                    {
+                        if (enableDebugLogs)
+                            Debug.Log($"[BLK-02.02] {pot.PotId}: ⚠️ DECAY GRADUALE applicato! Giorno {pot.DaysFruitsUnharvested}, {oldAmount:F0} → {pot.AmountFruits:F0} frutti (perso 1)");
+                    }
+                }
+                else
+                {
                     if (enableDebugLogs)
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: ⚠️ Frutti decaduti dopo 3 giorni non raccolti");
+                    {
+                        Debug.Log($"[BLK-02.02] {pot.PotId}: Nessun decay (DaysFruitsUnharvested={pot.DaysFruitsUnharvested} <= 3)");
+                    }
                 }
             }
         }

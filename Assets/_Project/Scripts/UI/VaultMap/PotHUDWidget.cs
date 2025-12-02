@@ -34,6 +34,7 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private Button btnWater;
     [SerializeField] private Button btnLight;
     [SerializeField] private Button btnSpray;
+    [SerializeField] private Button btnHarvest;
     [SerializeField] private TextMeshProUGUI txtCosts;
     
     [Header("Seed Selector")]
@@ -41,7 +42,7 @@ public class PotHUDWidget : MonoBehaviour
     
     [Header("Widget Settings")]
     [SerializeField] private Vector2 widgetPosition = new Vector2(12, 12);
-    [SerializeField] private Vector2 widgetSize = new Vector2(370, 120); // Aumentato per contenere pulsante Spray
+    [SerializeField] private Vector2 widgetSize = new Vector2(460, 120); // Aumentato per contenere pulsanti Spray e Harvest
     [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.8f);
     [SerializeField] private Color textColor = Color.white;
     
@@ -718,6 +719,11 @@ public class PotHUDWidget : MonoBehaviour
             btnSpray = CreateActionButton("Spray", "Spray", PotEvents.PotActionType.Spray);
         }
         
+        if (btnHarvest == null)
+        {
+            btnHarvest = CreateActionButton("Harvest", "Raccogli", PotEvents.PotActionType.Harvest);
+        }
+        
         // Crea il testo dei costi
         if (txtCosts == null)
         {
@@ -796,6 +802,9 @@ public class PotHUDWidget : MonoBehaviour
             case PotEvents.PotActionType.Spray:
                 buttonRect.anchoredPosition = new Vector2(280, 50);
                 break;
+            case PotEvents.PotActionType.Harvest:
+                buttonRect.anchoredPosition = new Vector2(370, 50);
+                break;
         }
         
         // Aggiungi listener per l'azione
@@ -869,6 +878,9 @@ public class PotHUDWidget : MonoBehaviour
             case PotEvents.PotActionType.Spray:
                 success = selectedPot.PotActions.DoSprayAntifungal();
                 break;
+            case PotEvents.PotActionType.Harvest:
+                success = selectedPot.PotActions.DoHarvest();
+                break;
         }
         
         if (success)
@@ -926,18 +938,17 @@ public class PotHUDWidget : MonoBehaviour
             return;
         }
         
-        // Mostra i pulsanti solo se il player è in range
-        bool inRange = false;//pot.InRange;
-        SetActionButtonsVisible(inRange);
+        // Mostra sempre i pulsanti quando un POT è selezionato
+        // Il controllo del range e delle condizioni è gestito da CanXxx() per ogni azione
+        // Questo permette all'utente di vedere tutte le azioni disponibili e capire perché alcune sono disabilitate
+        SetActionButtonsVisible(true);
         
-        if (inRange)
-        {
-            // Aggiorna lo stato di ogni pulsante
-            UpdateButtonState(btnPlant, pot.PotActions.CanPlant(), "Piantare");
-            UpdateButtonState(btnWater, pot.PotActions.CanWater(), "Annaffiare");
-            UpdateButtonState(btnLight, pot.PotActions.CanLight(), "Illuminare");
-            UpdateButtonState(btnSpray, pot.PotActions.CanSprayAntifungal(), "Spray");
-        }
+        // Aggiorna lo stato di ogni pulsante (abilitato/disabilitato in base alle condizioni)
+        UpdateButtonState(btnPlant, pot.PotActions.CanPlant(), "Piantare");
+        UpdateButtonState(btnWater, pot.PotActions.CanWater(), "Annaffiare");
+        UpdateButtonState(btnLight, pot.PotActions.CanLight(), "Illuminare");
+        UpdateButtonState(btnSpray, pot.PotActions.CanSprayAntifungal(), "Spray");
+        UpdateButtonState(btnHarvest, pot.PotActions.CanHarvest(), "Raccogli");
     }
     
     /// <summary>
@@ -975,6 +986,7 @@ public class PotHUDWidget : MonoBehaviour
         if (btnWater != null) btnWater.gameObject.SetActive(visible);
         if (btnLight != null) btnLight.gameObject.SetActive(visible);
         if (btnSpray != null) btnSpray.gameObject.SetActive(visible);
+        if (btnHarvest != null) btnHarvest.gameObject.SetActive(visible);
         if (txtCosts != null) txtCosts.gameObject.SetActive(visible);
 
         if (visible) SetCustomMessage("");
@@ -1172,6 +1184,10 @@ public class PotHUDWidget : MonoBehaviour
             case (int)PlantStage.HarvestReady:
                 return 100f; // Pianta completamente matura
                 
+            case (int)PlantStage.Resting:
+                // BLK-02.05: Pianta in riposo, nessun progresso fino a fertilizzazione
+                return 0f;
+                
             default:
                 return 0f;
         }
@@ -1192,6 +1208,9 @@ public class PotHUDWidget : MonoBehaviour
                 return Color.green;
             case (int)PlantStage.HarvestReady:
                 return Color.yellow;
+            case (int)PlantStage.Resting:
+                // BLK-02.05: Resting usa un colore grigio-bluastro per indicare riposo
+                return new Color(0.6f, 0.6f, 0.8f); // Grigio-blu
             default:
                 return Color.white;
         }
@@ -1258,6 +1277,9 @@ public class PotHUDWidget : MonoBehaviour
                 return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, sproutThreshold)}/{sproutThreshold} punti";
             case (int)PlantStage.HarvestReady:
                 return $"Giorno {daysSincePlant} - Pronta per raccolta!";
+            case (int)PlantStage.Resting:
+                // BLK-02.05: Pianta in riposo dopo la raccolta
+                return $"Giorno {daysSincePlant} - In riposo (usa Fertilizzante per riattivare)";
             default:
                 return $"Stadio {state.Stage}";
         }
@@ -1283,6 +1305,9 @@ public class PotHUDWidget : MonoBehaviour
                 return $"{Mathf.RoundToInt(percentage)}% → HarvestReady";
             case (int)PlantStage.HarvestReady:
                 return "100% - HarvestReady!";
+            case (int)PlantStage.Resting:
+                // BLK-02.05: Pianta in riposo, nessun progresso fino a fertilizzazione
+                return "Riposo";
             default:
                 return $"{Mathf.RoundToInt(percentage)}%";
         }
