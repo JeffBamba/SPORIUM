@@ -328,7 +328,11 @@ namespace Sporae.Core
                         plantedDay = potState.PlantedDay,
                         lastWateredDay = potState.LastWateredDay,
                         lastLitDay = potState.LastLitDay,
-                        lastLedType = potState.LastLedType?.ToString()
+                        lastLedType = potState.LastLedType?.ToString(),
+                        // GDD AZ-11: Nuovi campi per sistema irrigazione toggle
+                        wateringSystemOn = potState.WateringSystemOn,
+                        daysWateringSystemOn = potState.DaysWateringSystemOn,
+                        wateringRawWaterAccumulator = potState.WateringRawWaterAccumulator
                     });
                 }
             }
@@ -375,6 +379,12 @@ namespace Sporae.Core
                                 potState.LastLedType = ledType;
                             }
                         }
+                        
+                        // GDD AZ-11: Applica nuovi campi sistema irrigazione (con default per migration)
+                        // JSON serialization gestisce automaticamente i default se i campi mancano
+                        potState.WateringSystemOn = potStateData.wateringSystemOn;
+                        potState.DaysWateringSystemOn = potStateData.daysWateringSystemOn;
+                        potState.WateringRawWaterAccumulator = potStateData.wateringRawWaterAccumulator;
                         
                         break;
                     }
@@ -503,6 +513,11 @@ namespace Sporae.Core
             public int lastWateredDay;
             public int lastLitDay;
             public string lastLedType;
+            
+            // GDD AZ-11: Nuovi campi per sistema irrigazione toggle persistente
+            public bool wateringSystemOn = false;  // Default per migration salvataggi vecchi
+            public int daysWateringSystemOn = 0;
+            public float wateringRawWaterAccumulator = 0f;
         }
         
         [Serializable]

@@ -266,6 +266,9 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
                         LogTestResult($"     LastWateredDay: {potState.LastWateredDay}", true);
                         LogTestResult($"     LastLitDay: {potState.LastLitDay}", true);
                         LogTestResult($"     GrowthPoints: {potState.GrowthPoints}", true);
+                        LogTestResult($"     WateringSystemOn: {potState.WateringSystemOn} (GDD AZ-11)", true);
+                        LogTestResult($"     DaysWateringSystemOn: {potState.DaysWateringSystemOn}", true);
+                        LogTestResult($"     WateringRawWaterAccumulator: {potState.WateringRawWaterAccumulator:F1}", true);
                     }
                 }
             }

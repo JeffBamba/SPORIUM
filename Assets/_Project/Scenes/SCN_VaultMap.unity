@@ -16405,14 +16405,27 @@ MonoBehaviour:
   _coverageLabel: {fileID: 723157696}
   _textureSize: 128
   _brushSize: 30
-  _wetColor: {r: 0.3, g: 0.2, b: 0.1, a: 1}
-  _dryColor: {r: 0.6, g: 0.4, b: 0.2, a: 1}
+  _wetColor:
+    r: 0.3
+    g: 0.2
+    b: 0.1
+    a: 1
+  _dryColor:
+    r: 0.6
+    g: 0.4
+    b: 0.2
+    a: 1
   _finishButton: {fileID: 922565497}
   _minigameGroup: {fileID: 246135350}
   _resultGroup: {fileID: 122388870}
   _resultLabel: {fileID: 28110689}
   _closeButton: {fileID: 1170252840}
   _soilImage: {fileID: 441440284}
+  _waterAmount: 0
+  _coverageAmount: 0
+  _soilTexture: {fileID: 0}
+  _rectTransform: {fileID: 0}
+  _pot: {fileID: 0}
 --- !u!1001 &753494753
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32479,7 +32492,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -70, y: 489.7}
+  m_AnchoredPosition: {x: -74, y: 485}
   m_SizeDelta: {x: 488, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1545106242
@@ -33060,7 +33073,6 @@ MonoBehaviour:
   _rarityText: {fileID: 0}
   _effectsText: {fileID: 2114767474}
   _page: {fileID: 958749510}
-  _wateringMinigame: {fileID: 753415338}
   _seedSelector: {fileID: 0}
 --- !u!1 &1575367872
 GameObject:
@@ -34987,7 +34999,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -70, y: 321.4}
+  m_AnchoredPosition: {x: 424, y: 483}
   m_SizeDelta: {x: 488, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1661300068
@@ -42724,7 +42736,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -200.23, y: 331}
+  m_AnchoredPosition: {x: -203, y: 318}
   m_SizeDelta: {x: 427, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2051918728
@@ -42810,7 +42822,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -62.42958, w: 0}
+  m_margin: {x: 0, y: 7.224182, z: -62.42958, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -44720,7 +44732,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 60.6, y: -90.9}
+  m_AnchoredPosition: {x: 59, y: -110}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2114767474

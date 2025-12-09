@@ -22,26 +22,53 @@ namespace _Project.Pot
 
         private void HandlePotFailed(PotEvents.PotActionType type, PotSlot pot, string message)
         {
-            var text = type switch
+            string text;
+            
+            // GDD AZ-11: Usa il messaggio specifico se disponibile, altrimenti usa messaggio generico
+            if (!string.IsNullOrEmpty(message))
             {
-                PotEvents.PotActionType.Light => "You cannot illuminate the plant.",
-                PotEvents.PotActionType.Plant => "You cannot plant the plant.",
-                PotEvents.PotActionType.Water => "You failed to water the plant",
-                _ => "You cannot uproot the plant."
-            };
+                text = message;
+            }
+            else
+            {
+                // Fallback a messaggi generici se message è vuoto
+                text = type switch
+                {
+                    PotEvents.PotActionType.Light => "You cannot illuminate the plant.",
+                    PotEvents.PotActionType.Plant => "You cannot plant the plant.",
+                    PotEvents.PotActionType.Water => "You failed to water the plant",
+                    _ => "You cannot uproot the plant."
+                };
+            }
 
             _notification.ShowNotification(text, 2, Color.red);
         }
 
         private void HandlePotAction(PotEvents.PotActionType type, PotSlot pot)
         {
-            var text = type switch
+            string text;
+            
+            if (type == PotEvents.PotActionType.Water)
             {
-                PotEvents.PotActionType.Light => "You have successfully illuminated the plant.",
-                PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
-                PotEvents.PotActionType.Water => "You have successfully watered the plant.",
-                _ => "You have successfully uprooted the plant."
-            };
+                // GDD AZ-11: Messaggio per toggle sistema irrigazione
+                if (pot != null && pot.PotActions != null && pot.PotActions.IsWateringSystemOn())
+                {
+                    text = "Il sistema di Irrigazione a goccia è attivo";
+                }
+                else
+                {
+                    text = "Il sistema di Irrigazione a goccia è disattivato";
+                }
+            }
+            else
+            {
+                text = type switch
+                {
+                    PotEvents.PotActionType.Light => "You have successfully illuminated the plant.",
+                    PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
+                    _ => "You have successfully uprooted the plant."
+                };
+            }
 
             _notification.ShowNotification(text, 2, Color.green);
         }

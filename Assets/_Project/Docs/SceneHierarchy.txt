@@ -737,6 +737,12 @@
               [Component] RectTransform
               [Component] CanvasRenderer
               [Component] TextMeshProUGUI
+        - PhDrift
+          [Component] RectTransform
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
       - Image
         [Component] RectTransform
         [Component] CanvasRenderer
@@ -751,6 +757,10 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
         - Rarity
           [Component] RectTransform
           [Component] CanvasRenderer
@@ -797,6 +807,15 @@
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
         - Spray Antifungal
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          [Component] Button
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
+        - HarvestButton
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] Image
@@ -1841,7 +1860,6 @@
         [Component] TextMeshProUGUI
   - UI_WateringMinigame
     [Component] RectTransform
-    [Component] WateringMinigame
     - Image
       [Component] RectTransform
       [Component] CanvasRenderer
@@ -2623,3 +2641,6 @@
   [Component] Transform
   [Component] PhSystemAutoSetup
   [Component] AudioListenerManager
+- PotDebugConsole
+  [Component] Transform
+  [Component] PotDebugConsole

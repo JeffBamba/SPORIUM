@@ -40,7 +40,7 @@ namespace Sporae.Dev
             
             Debug.Log("[BLK-01.03B] GrowthDebugHotkeys inizializzato. Hotkeys disponibili:");
             Debug.Log("[BLK-01.03B] G = Simula End Day");
-            Debug.Log("[BLK-01.03B] H = Annaffia vaso selezionato");
+            Debug.Log("[BLK-01.03B] H = Toggle sistema irrigazione (GDD AZ-11)");
             Debug.Log("[BLK-01.03B] L = Illumina vaso selezionato");
             Debug.Log("[BLK-01.03B] P = Pianta su vaso selezionato");
         }
@@ -85,27 +85,29 @@ namespace Sporae.Dev
         }
         
         /// <summary>
-        /// H = Annaffia vaso selezionato
+        /// H = Toggle sistema irrigazione (GDD AZ-11 - Toggle Persistente)
         /// </summary>
         private void WaterSelectedPot()
         {
             selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per annaffiare");
+                Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per toggle irrigazione");
                 return;
             }
             
-            Debug.Log($"[BLK-01.03B] 💧 Tentativo annaffiatura vaso {selectedPot.PotId}...");
+            bool currentState = selectedPot.PotActions.IsWateringSystemOn();
+            Debug.Log($"[BLK-01.03B] 💧 Toggle sistema irrigazione vaso {selectedPot.PotId} (stato attuale: {(currentState ? "ON" : "OFF")})...");
             bool success = selectedPot.PotActions.DoWater();
             
             if (success)
             {
-                Debug.Log($"[BLK-01.03B] ✅ Vaso {selectedPot.PotId} annaffiato con successo!");
+                bool newState = selectedPot.PotActions.IsWateringSystemOn();
+                Debug.Log($"[BLK-01.03B] ✅ Sistema irrigazione vaso {selectedPot.PotId} impostato a {(newState ? "ON" : "OFF")}!");
             }
             else
             {
-                Debug.LogWarning($"[BLK-01.03B] ❌ Annaffiatura vaso {selectedPot.PotId} fallita!");
+                Debug.LogWarning($"[BLK-01.03B] ❌ Toggle sistema irrigazione vaso {selectedPot.PotId} fallito!");
             }
         }
         
@@ -193,7 +195,7 @@ namespace Sporae.Dev
             GUILayout.BeginArea(new Rect(10, 10, 300, 200));
             GUILayout.Label("[BLK-01.03B] Growth Debug Hotkeys", GUI.skin.box);
             GUILayout.Label("G = End Day");
-            GUILayout.Label("H = Water pot");
+            GUILayout.Label("H = Toggle Watering");
             GUILayout.Label("L = Light pot");
             GUILayout.Label("P = Plant pot");
             

@@ -26,6 +26,8 @@ public class DayCycleController : MonoBehaviour
     private DayCycleSystem _dayCycleSystem;
     private PhSystem _phSystem;
     private PotSystemConfig _potSystemConfig;
+    private GameManager _gameManager;
+    private UINotification _uiNotification;
 
     private void Awake()
     {
@@ -128,6 +130,12 @@ public class DayCycleController : MonoBehaviour
         // Cerca PhSystem per integrazione pH (con retry se non disponibile subito)
         TryGetPhSystem();
         
+        // Cerca GameManager per consumo risorse watering system
+        TryGetGameManager();
+        
+        // Cerca UINotification per mostrare warning
+        TryGetUINotification();
+        
         // Sottoscrivi all'evento OnServiceRegistered per quando PhSystem viene registrato dopo
         if (ServiceContainer.Instance != null)
         {
@@ -145,7 +153,8 @@ public class DayCycleController : MonoBehaviour
         
         try
         {
-            _phSystem = ServiceContainer.Instance.Get<PhSystem>();
+            // GDD AZ-11: Prova a ottenere PhSystem senza generare warning se non disponibile
+            _phSystem = ServiceContainer.Instance.Get<PhSystem>(suppressWarning: true);
             if (_phSystem != null && enableDebugLogs)
             {
                 Debug.Log("[DayCycleController] PhSystem trovato e collegato!");
@@ -155,6 +164,60 @@ public class DayCycleController : MonoBehaviour
         {
             // PhSystem non ancora registrato, sarà recuperato quando viene registrato
             _phSystem = null;
+        }
+    }
+    
+    /// <summary>
+    /// Tenta di ottenere GameManager dal ServiceContainer
+    /// </summary>
+    private void TryGetGameManager()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+        
+        try
+        {
+            _gameManager = ServiceContainer.Instance.Get<GameManager>();
+            if (_gameManager != null && enableDebugLogs)
+            {
+                Debug.Log("[DayCycleController] GameManager trovato e collegato!");
+            }
+        }
+        catch
+        {
+            // GameManager non ancora registrato, sarà recuperato quando viene registrato
+            _gameManager = null;
+        }
+    }
+    
+    /// <summary>
+    /// Tenta di ottenere UINotification dal ServiceContainer o FindObjectOfType
+    /// </summary>
+    private void TryGetUINotification()
+    {
+        // Prova prima dal ServiceContainer
+        if (ServiceContainer.Instance != null)
+        {
+            try
+            {
+                _uiNotification = ServiceContainer.Instance.Get<UINotification>(suppressWarning: true);
+                if (_uiNotification != null && enableDebugLogs)
+                {
+                    Debug.Log("[DayCycleController] UINotification trovato dal ServiceContainer!");
+                    return;
+                }
+            }
+            catch
+            {
+                // UINotification non nel ServiceContainer, prova FindObjectOfType
+            }
+        }
+        
+        // Fallback: cerca nella scena
+        _uiNotification = Object.FindObjectOfType<UINotification>();
+        if (_uiNotification != null && enableDebugLogs)
+        {
+            Debug.Log("[DayCycleController] UINotification trovato nella scena!");
         }
     }
     
@@ -169,6 +232,24 @@ public class DayCycleController : MonoBehaviour
             if (enableDebugLogs)
             {
                 Debug.Log("[DayCycleController] PhSystem registrato! Collegato al sistema di crescita.");
+            }
+        }
+        
+        if (service is UINotification uiNotification && _uiNotification == null)
+        {
+            _uiNotification = uiNotification;
+            if (enableDebugLogs)
+            {
+                Debug.Log("[DayCycleController] UINotification registrato! Collegato per warning watering system.");
+            }
+        }
+        
+        if (service is GameManager gameManager && _gameManager == null)
+        {
+            _gameManager = gameManager;
+            if (enableDebugLogs)
+            {
+                Debug.Log("[DayCycleController] GameManager registrato! Collegato per consumo risorse watering.");
             }
         }
     }
@@ -232,13 +313,25 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Pipeline End Day per il giorno D:
-        // 1. ResolveGrowthForAllPots(D)
+        // 1. CheckWateringSystemResources() - Warning preventivo
+        CheckWateringSystemResources();
+        
+        // 2. ResolveGrowthForAllPots(D) - Calcola crescita (usa WateringSystemOn)
         ResolveGrowthForAllPots(dayIndex);
         
-        // 2. Calcola e registra pH drift dalle piante (integrazione pH)
+        // 3. ApplyWateringSystemEffects() - Applica effetti watering + consumo risorse + fallback
+        ApplyWateringSystemEffects();
+        
+        // 4. Calcola e registra pH drift dalle piante (integrazione pH)
         CalculateAndRegisterPhDrift();
         
-        // 3. ApplyDecayAndCleanup(D)
+        // 4b. Applica in un'unica soluzione tutti i drift accodati (piante + azioni + eventi)
+        if (_phSystem != null)
+        {
+            _phSystem.ApplyQueuedDrifts();
+        }
+        
+        // 5. ApplyDecayAndCleanup(D) - Decay naturale
         ApplyDecayAndCleanup(dayIndex);
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
@@ -285,12 +378,10 @@ public class DayCycleController : MonoBehaviour
         int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
         int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
         
-        // BLK-02.02: Fix - Confronta con il giorno precedente perché i timestamp
-        // vengono impostati con gameManager.CurrentDay, ma dayIndex è il giorno corrente
-        // dopo che EndDay ha già incrementato il giorno
-        int previousDay = dayIndex - 1;
-        bool hadHydration = (pot.LastWateredDay == previousDay);
-        bool hadLight = (pot.LastLitDay == previousDay);
+        // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay per determinare idratazione
+        // Il sistema è persistente (toggle ON/OFF), non più basato su timestamp
+        bool hadHydration = pot.WateringSystemOn;
+        bool hadLight = (pot.LastLitDay == dayIndex - 1); // Light rimane basato su timestamp
         
         // Incrementa giorni nello stadio corrente
         int oldStage = pot.Stage;
@@ -537,9 +628,9 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void ResolveGrowthForPotLegacy(PotStateModel pot, int dayIndex)
     {
-        int previousDay = dayIndex - 1;
-        bool hadHydration = (pot.LastWateredDay == previousDay);
-        bool hadLight = (pot.LastLitDay == previousDay);
+        // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay per coerenza
+        bool hadHydration = pot.WateringSystemOn;
+        bool hadLight = (pot.LastLitDay == dayIndex - 1);
         
         int gained = 0;
         if (hadHydration && hadLight)
@@ -602,24 +693,254 @@ public class DayCycleController : MonoBehaviour
     }
 
     /// <summary>
+    /// Verifica risorse disponibili per sistemi irrigazione e mostra warning preventivo (GDD AZ-11)
+    /// </summary>
+    private void CheckWateringSystemResources()
+    {
+        if (_gameManager == null)
+        {
+            TryGetGameManager();
+            if (_gameManager == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per verifica risorse watering");
+                return;
+            }
+        }
+        
+        int vasiOnCount = 0;
+        int vasiDaDisattivare = 0;
+        List<string> vasiDaDisattivareList = new List<string>();
+        
+        foreach (var pot in _registeredPots)
+        {
+            if (pot != null && pot.HasPlant && pot.WateringSystemOn)
+            {
+                vasiOnCount++;
+                
+                // BUG FIX: Verifica WAT-RAW disponibile (non solo se accumulatore >= 1.0)
+                // Se non c'è WAT-RAW, il sistema verrà disattivato
+                if (!_gameManager.PlayerInventory.Has(Items.Water))
+                {
+                    vasiDaDisattivare++;
+                    vasiDaDisattivareList.Add(pot.PotId);
+                }
+            }
+        }
+        
+        if (vasiDaDisattivare > 0)
+        {
+            // Mostra warning toast (se disponibile sistema UI)
+            string message = $"⚠️ WAT-RAW insufficiente. {vasiDaDisattivare} sistemi irrigazione verranno disattivati.";
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[DayCycleController] {message} Vasi: {string.Join(", ", vasiDaDisattivareList)}");
+            }
+            
+            // Emetti evento per UI (mostra toast warning)
+            if (_uiNotification != null)
+            {
+                _uiNotification.ShowNotification(message, 3f, Color.yellow);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Applica effetti del sistema irrigazione a fine giornata (GDD AZ-11 - Toggle Persistente)
+    /// Gestisce consumo risorse, idratazione, evaporazione, overwatering e fallback automatico
+    /// </summary>
+    private void ApplyWateringSystemEffects()
+    {
+        if (_gameManager == null)
+        {
+            TryGetGameManager();
+            if (_gameManager == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per applicazione effetti watering");
+                return;
+            }
+        }
+        
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4;
+        
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant)
+                continue;
+            
+            // Salva l'idratazione di inizio tick per gestire overwatering persistente
+            int hydrationStart = pot.Hydration;
+            
+            // Sistema ON
+            if (pot.WateringSystemOn)
+            {
+                // BUG FIX: Controlla PRIMA se c'è WAT-RAW disponibile (anche se accumulatore < 1.0)
+                // Se non c'è WAT-RAW, disattiva immediatamente il sistema
+                if (!_gameManager.PlayerInventory.Has(Items.Water))
+                {
+                    // FALLBACK: Disattiva sistema automaticamente - WAT-RAW insufficiente
+                    pot.WateringSystemOn = false;
+                    pot.WateringRawWaterAccumulator = 0f;
+                    pot.DaysWateringSystemOn = 0;
+                    
+                    string message = $"💧 Sistema irrigazione {pot.PotId} disattivato: WAT-RAW insufficiente";
+                    if (enableDebugLogs)
+                        Debug.LogWarning($"[DayCycleController] {message}");
+                    
+                    // Rimuovi eventuali contributi overwatering se presenti
+                    if (_phSystem != null)
+                    {
+                        _phSystem.RemoveActionContribution("Overwatering", pot.PotId);
+                    }
+                    
+                    // Emetti evento per UI (solo se PotSlot trovato)
+                    PotSlot potSlot = FindPotSlot(pot.PotId);
+                    if (potSlot != null)
+                    {
+                        PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, 
+                            potSlot, 
+                            "Sistema disattivato: WAT-RAW insufficiente");
+                    }
+                    else if (enableDebugLogs)
+                    {
+                        Debug.LogWarning($"[DayCycleController] PotSlot non trovato per {pot.PotId}, evento UI non emesso");
+                    }
+                    
+                    // Salta al prossimo vaso (sistema disattivato)
+                    continue;
+                }
+                
+                // Sistema ON: accumula WAT-RAW e applica idratazione
+                pot.WateringRawWaterAccumulator += 0.5f;
+                
+                // Se accumulatore >= 1.0, consuma 1 WAT-RAW
+                if (pot.WateringRawWaterAccumulator >= 1.0f)
+                {
+                    // WAT-RAW già verificato sopra, quindi consuma
+                    _gameManager.PlayerInventory.Consume(Items.Water, 1);
+                    pot.WateringRawWaterAccumulator -= 1.0f;
+                    
+                    if (enableDebugLogs)
+                        Debug.Log($"[DayCycleController] {pot.PotId}: Consumato 1 WAT-RAW (accumulatore: {pot.WateringRawWaterAccumulator:F1})");
+                }
+                
+                // Applica effetti (WAT-RAW già verificato e disponibile)
+                if (pot.WateringSystemOn)
+                {
+                    // Applica +25% idratazione (1 punto se max=4)
+                    bool hydrationIncreased = pot.IncreaseHydration(maxHydration);
+                    
+                    // Consumo CRY (sempre, anche se accumulatore < 1.0)
+                    if (!_gameManager.TrySpendCry(2))
+                    {
+                        if (enableDebugLogs)
+                            Debug.LogWarning($"[DayCycleController] {pot.PotId}: CRY insufficiente per sistema irrigazione (richiesti 2)");
+                    }
+                    
+                    // Incrementa contatore giorni ON
+                    pot.DaysWateringSystemOn++;
+                    
+                    if (enableDebugLogs)
+                    {
+                        string hydrationMsg = hydrationIncreased ? $"Idratazione: {pot.Hydration}/{maxHydration}" : "Idratazione già al massimo";
+                        Debug.Log($"[DayCycleController] {pot.PotId}: Sistema ON - {hydrationMsg}, Giorni ON: {pot.DaysWateringSystemOn}");
+                    }
+                }
+            }
+            else
+            {
+                // Sistema OFF: Evaporazione -25% idratazione (1 punto, min 0)
+                if (pot.Hydration > 0)
+                {
+                    pot.Hydration = Mathf.Max(0, pot.Hydration - 1);
+                    if (enableDebugLogs)
+                        Debug.Log($"[DayCycleController] {pot.PotId}: Sistema OFF - Evaporazione applicata, Idratazione: {pot.Hydration}/{maxHydration}");
+                }
+                
+                // Reset contatori
+                pot.DaysWateringSystemOn = 0;
+                pot.WateringRawWaterAccumulator = 0f;
+            }
+            
+            // Overwatering / rimozione:
+            // - Usa l'idratazione di inizio tick per garantire che l'overwatering persista anche se il sistema è OFF e l'idratazione decresce di 1.
+            // - Per applicare overwatering dovuto a un aumento (sistema ON che porta sopra soglia), considera anche l'idratazione finale.
+            int hydrationForOverCheck = Mathf.Max(hydrationStart, pot.Hydration);
+            int overwateringThreshold = maxHydration - 1; // 75% (3/4)
+            int removalThreshold = maxHydration / 2;      // 50% (2/4)
+            float hydrationPercentForOver = maxHydration > 0 ? (float)hydrationForOverCheck / maxHydration * 100f : 0f;
+            float hydrationPercentStart = maxHydration > 0 ? (float)hydrationStart / maxHydration * 100f : 0f;
+            
+            if (_phSystem != null)
+            {
+                if (hydrationForOverCheck >= overwateringThreshold)
+                {
+                    // Applica drift giornaliero -5 SEMPRE finché condizione attiva
+                    _phSystem.RegisterActionDrift(-5f, "Overwatering", pot.PotId);
+                    
+                    if (enableDebugLogs)
+                        Debug.Log($"[DayCycleController] {pot.PotId}: OVERWATERING attivo → pH -5 accodato (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%, Check:{hydrationForOverCheck}/{maxHydration} = {hydrationPercentForOver:F0}%)");
+                }
+                else if (hydrationStart < removalThreshold)
+                {
+                    _phSystem.RemoveActionContribution("Overwatering", pot.PotId);
+                    if (enableDebugLogs)
+                        Debug.Log($"[DayCycleController] {pot.PotId}: Overwatering rimosso (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%)");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Trova PotSlot per un PotId (helper per eventi)
+    /// </summary>
+    private PotSlot FindPotSlot(string potId)
+    {
+        // Cerca PotSlot nel sistema
+        var allPots = FindObjectsOfType<PotSlot>();
+        foreach (var pot in allPots)
+        {
+            if (pot != null && pot.PotId == potId)
+                return pot;
+        }
+        return null;
+    }
+    
+    /// <summary>
     /// Applica decadimento e pulizia (SENZA reset dei timestamp!)
+    /// GDD AZ-11: Decadimento idratazione applicato SOLO se sistema irrigazione è OFF
     /// </summary>
     private void ApplyDecayAndCleanup(int dayIndex)
     {
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4;
+        
         foreach (var pot in _registeredPots)
         {
             if (pot != null && pot.HasPlant)
             {
-                // Decadimento idratazione
-                pot.Hydration = Mathf.Max(0, pot.Hydration - growthConfig.dailyHydrationDecay);
+                // GDD AZ-11: Decadimento idratazione SOLO se sistema irrigazione è OFF
+                // Se sistema è ON, il decadimento è già compensato dall'aumento di idratazione
+                if (!pot.WateringSystemOn)
+                {
+                    int oldHydration = pot.Hydration;
+                    pot.Hydration = Mathf.Max(0, pot.Hydration - growthConfig.dailyHydrationDecay);
+                    
+                    if (enableDebugLogs && oldHydration != pot.Hydration)
+                    {
+                        Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (sistema OFF) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                    }
+                }
+                else
+                {
+                    if (enableDebugLogs)
+                    {
+                        Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay saltato (sistema ON) - Hydration: {pot.Hydration}/{maxHydration}");
+                    }
+                }
                 
                 // Reset esposizione luce (ma NON i timestamp!)
                 pot.LightExposure = 0;
-
-                if (enableDebugLogs)
-                {
-                    Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato - Hydration: {pot.Hydration}, Light: {pot.LightExposure}");
-                }
             }
         }
     }

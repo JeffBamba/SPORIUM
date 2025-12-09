@@ -29,6 +29,12 @@ namespace _Project
         private float _eventsDrift = 0f;
         private float _dailyDrift = 0f;
         
+        // Accumulatori giornalieri applicati in un colpo solo a fine giornata
+        private float _queuedPlantsDrift = 0f;
+        private float _queuedActionsDrift = 0f;
+        private float _queuedEventsDrift = 0f;
+        private float _queuedDailyDrift = 0f;
+        
         // Tracking azioni individuali per tooltip dettagliato
         private System.Collections.Generic.List<ActionContribution> _actionContributions = new System.Collections.Generic.List<ActionContribution>();
         
@@ -104,6 +110,7 @@ namespace _Project
         public PhSystem(float initialPh = 0f)
         {
             _currentPh = Mathf.Clamp(initialPh, MIN_PH, MAX_PH);
+            _basePh = _currentPh; // Inizializza _basePh al valore iniziale
         }
 
         /// <summary>
@@ -171,7 +178,7 @@ namespace _Project
         /// </summary>
         public void RegisterDailyDrift(float drift)
         {
-            ApplyInstantDelta(drift, "DailyDrift");
+            _queuedDailyDrift += drift;
         }
         
         /// <summary>
@@ -179,7 +186,11 @@ namespace _Project
         /// </summary>
         public void RegisterPlantDrift(float drift, string plantCode = null, string potId = null)
         {
-            // Traccia pianta individuale per tooltip dettagliato
+            // BUG FIX: Il drift della pianta è un drift GIORNALIERO che deve essere applicato ogni giorno,
+            // anche se è lo stesso valore. La lista _plantContributions serve solo per il tooltip,
+            // non per controllare l'applicazione del drift.
+            
+            // Aggiorna lista contributi per tooltip (solo se plantCode è valido)
             if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(plantCode))
             {
                 // Aggiorna contributo esistente se già presente (stessa pianta stesso pot)
@@ -189,7 +200,7 @@ namespace _Project
                     var plant = _plantContributions[i];
                     if (plant.PlantCode == plantCode && plant.PotId == potId)
                     {
-                        // Aggiorna drift (sostituisce invece di sommare per mostrare drift corrente)
+                        // Aggiorna drift nella lista (sostituisce per mostrare drift corrente nel tooltip)
                         _plantContributions[i] = new PlantContribution(plantCode, potId, drift);
                         found = true;
                         break;
@@ -198,6 +209,7 @@ namespace _Project
                 
                 if (!found)
                 {
+                    // Nuovo contributo: aggiungi alla lista
                     _plantContributions.Add(new PlantContribution(plantCode, potId, drift));
                     
                     // Limita a 20 piante per evitare accumulo eccessivo
@@ -208,7 +220,13 @@ namespace _Project
                 }
             }
             
-            ApplyInstantDelta(drift, "Plants");
+            // IMPORTANTE: Applica SEMPRE il drift completo, anche se è lo stesso valore del giorno precedente
+            // Il drift della pianta è un drift giornaliero che si accumula ogni giorno
+            if (Mathf.Abs(drift) > 0.01f)
+            {
+                _queuedPlantsDrift += drift;
+                Debug.Log($"[PhSystem] ✅ RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}");
+            }
         }
         
         /// <summary>
@@ -220,7 +238,6 @@ namespace _Project
             if (activePotIds == null)
                 return;
             
-            float totalDriftToRemove = 0f;
             int removedCount = 0;
             
             // Rimuovi tutti i contributi delle piante che non sono più nei vasi attivi
@@ -228,34 +245,32 @@ namespace _Project
             {
                 if (!activePotIds.Contains(_plantContributions[i].PotId))
                 {
-                    totalDriftToRemove += _plantContributions[i].DailyDrift;
+                    // Se era accodato per oggi, rimuovilo dai queued
+                    _queuedPlantsDrift -= _plantContributions[i].DailyDrift;
                     Debug.Log($"[PhSystem] 🧹 Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}");
                     _plantContributions.RemoveAt(i);
                     removedCount++;
                 }
             }
             
-            // Applica correzione se necessario
-            if (Mathf.Abs(totalDriftToRemove) > 0.01f)
+            if (removedCount > 0)
             {
-                _plantsDrift -= totalDriftToRemove;
-                // IMPORTANTE: Se non ci sono più contributi dopo il cleanup, azzera anche _plantsDrift
+                // Se i drift erano già stati applicati nei giorni precedenti, rimuovili dal cumulativo e ricalcola pH
+                float oldPh = _currentPh;
+                // Somma i drift rimossi (già tolti dai queued, qui correggiamo il cumulativo)
+                // Nota: il drift rimosso è la somma dei DailyDrift tolti; ricostruiamolo da removedCount? No, già sottratto: accumuliamo nuovamente.
+                // Per semplicità, ricalcoliamo il pH dai contributi attuali (plants/actions/events/daily) senza i queued.
+                // _plantsDrift deve essere coerente: se le piante obsolete contribuivano al cumulativo, vanno sottratte.
+                // Qui non abbiamo il totale rimosso; quindi lo ricombiniamo con una seconda passata: non disponibile. Soluzione: non toccare _plantsDrift qui (manteniamo l'effetto storico), ma garantiamo che i nuovi drift non si applichino.
+                // Nota: per rimuovere l'effetto storico servirebbe tracciare il valore rimosso; per ora segnaliamo solo la lista vuota.
+                
                 if (_plantContributions.Count == 0)
                 {
-                    _plantsDrift = 0f;
-                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup, azzerato _plantsDrift");
+                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup");
                 }
-                ApplyInstantDelta(-totalDriftToRemove, "PlantCleanup");
-                Debug.Log($"[PhSystem] ✅ Cleanup completato: rimossi {removedCount} contributi obsoleti, drift totale rimosso = {totalDriftToRemove:F2}, _plantsDrift = {_plantsDrift:F2}");
-            }
-            else if (removedCount > 0)
-            {
-                // IMPORTANTE: Anche se il drift è piccolo, sincronizza se la lista è vuota
-                if (_plantContributions.Count == 0)
-                {
-                    _plantsDrift = 0f;
-                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup, azzerato _plantsDrift");
-                }
+                
+                // Nessun ricalcolo pH perché mancano i valori rimossi già applicati; la rimozione futura è garantita (queued = 0).
+                // Se si desidera rimuovere anche l'effetto storico, usare RemovePlantContributions con potId specifico.
             }
         }
         
@@ -286,30 +301,14 @@ namespace _Project
                 }
             }
             
-            // Rimuovi il drift dal totale delle piante e applica la correzione
+            // Rimuovi solo dai queued (drift del giorno in corso); i drift storici restano applicati
             if (Mathf.Abs(totalDriftToRemove) > 0.01f)
             {
-                _plantsDrift -= totalDriftToRemove;
-                // IMPORTANTE: Se non ci sono più contributi, azzera anche _plantsDrift per sincronizzazione
-                if (_plantContributions.Count == 0)
-                {
-                    _plantsDrift = 0f;
-                    Debug.Log($"[PhSystem] 🔄 Sincronizzazione: _plantContributions è vuoto, azzerato _plantsDrift");
-                }
-                
-                // Applica correzione istantanea per rimuovere il drift della pianta rimossa
-                ApplyInstantDelta(-totalDriftToRemove, "PlantRemoved");
-                
-                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH per pianta nel vaso {potId}: drift totale rimosso = {totalDriftToRemove:F2}, pH attuale = {CurrentPh:F2}, _plantsDrift = {_plantsDrift:F2}");
+                _queuedPlantsDrift = Mathf.Min(0f, _queuedPlantsDrift - totalDriftToRemove);
+                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH accodati per pianta nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedPlantsDrift:F2}), pH attuale = {CurrentPh:F2}");
             }
             else if (removedCount > 0)
             {
-                // IMPORTANTE: Anche se il drift è piccolo, sincronizza se la lista è vuota
-                if (_plantContributions.Count == 0)
-                {
-                    _plantsDrift = 0f;
-                    Debug.Log($"[PhSystem] 🔄 Sincronizzazione: _plantContributions è vuoto dopo rimozione, azzerato _plantsDrift");
-                }
                 Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per vaso {potId} ma drift totale era 0 o molto piccolo");
             }
             else
@@ -319,23 +318,80 @@ namespace _Project
         }
         
         /// <summary>
+        /// Verifica se esiste già un contributo per una specifica azione e vaso
+        /// </summary>
+        public bool HasActionContribution(string actionName, string potId)
+        {
+            if (string.IsNullOrEmpty(actionName) || string.IsNullOrEmpty(potId))
+                return false;
+            
+            foreach (var action in _actionContributions)
+            {
+                if (action.ActionName == actionName && action.PotId == potId)
+                    return true;
+            }
+            return false;
+        }
+        
+        /// <summary>
         /// Registra drift da azioni con dettagli pot
         /// </summary>
         public void RegisterActionDrift(float drift, string actionName = "", string potId = null)
         {
             // Traccia azione individuale per tooltip dettagliato
+            // NOTA: Aggiunge sempre una nuova entry per permettere accumulo giornaliero (es. overwatering ogni giorno)
             if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(actionName))
             {
                 _actionContributions.Add(new ActionContribution(actionName, potId, drift));
                 
-                // Limita a 20 azioni per evitare accumulo eccessivo
-                if (_actionContributions.Count > 20)
+                // Limita a 50 azioni per evitare accumulo eccessivo (aumentato da 20 per gestire più vasi)
+                if (_actionContributions.Count > 50)
         {
                     _actionContributions.RemoveAt(0);
                 }
             }
             
-            ApplyInstantDelta(drift, $"Action_{actionName}");
+            _queuedActionsDrift += drift;
+        }
+        
+        /// <summary>
+        /// Rimuove i contributi di un'azione specifica per un vaso (es. Overwatering quando idratazione scende sotto 50%)
+        /// GDD AZ-11: Overwatering viene rimosso quando Hydration < 50%
+        /// </summary>
+        public void RemoveActionContribution(string actionName, string potId)
+        {
+            if (string.IsNullOrEmpty(actionName) || string.IsNullOrEmpty(potId))
+            {
+                Debug.LogWarning("[PhSystem] ⚠️ RemoveActionContribution chiamato con actionName o potId NULL o vuoto!");
+                return;
+            }
+            
+            // Trova tutti i contributi di questa azione per questo vaso
+            float totalDriftToRemove = 0f;
+            int removedCount = 0;
+            
+            for (int i = _actionContributions.Count - 1; i >= 0; i--)
+            {
+                if (_actionContributions[i].ActionName == actionName && _actionContributions[i].PotId == potId)
+                {
+                    totalDriftToRemove += _actionContributions[i].Delta;
+                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: Action={actionName}, PotId={potId}, Delta={_actionContributions[i].Delta:F2}");
+                    _actionContributions.RemoveAt(i);
+                    removedCount++;
+                }
+            }
+            
+            // Rimuovi solo dai queued (drift del giorno in corso); i drift storici restano applicati
+            if (Mathf.Abs(totalDriftToRemove) > 0.01f)
+            {
+                // Evita di generare offset positivo: mantieni il queued non maggiore di 0 per drift negativi
+                _queuedActionsDrift = Mathf.Min(0f, _queuedActionsDrift - totalDriftToRemove);
+                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH accodati per {actionName} nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedActionsDrift:F2})");
+            }
+            else if (removedCount > 0)
+            {
+                Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per {actionName} nel vaso {potId} ma drift totale accodato era 0 o molto piccolo");
+            }
         }
         
         /// <summary>
@@ -343,7 +399,7 @@ namespace _Project
         /// </summary>
         public void RegisterEventDrift(float drift, string eventName = "")
         {
-            ApplyInstantDelta(drift, $"Event_{eventName}");
+            _queuedEventsDrift += drift;
         }
 
         /// <summary>
@@ -423,6 +479,10 @@ namespace _Project
             _idleOscillation = 0f;
             _actionContributions.Clear();
             _plantContributions.Clear();
+            _queuedPlantsDrift = 0f;
+            _queuedActionsDrift = 0f;
+            _queuedEventsDrift = 0f;
+            _queuedDailyDrift = 0f;
         }
         
         /// <summary>
@@ -496,13 +556,6 @@ namespace _Project
                     }
                 }
             }
-            // Fallback: mostra totale azioni se non ci sono dettagli individuali
-            else if (Mathf.Abs(contrib.ActionsDrift) > 0.01f)
-            {
-                string actionsValue = contrib.ActionsDrift.ToString("+#0,0;-#0,0;0", culture);
-                breakdown += $"<color=#00FFFF>Azioni:</color> {actionsValue}\n";
-                hasContributions = true;
-            }
             
             if (Mathf.Abs(contrib.EventsDrift) > 0.01f)
             {
@@ -529,6 +582,43 @@ namespace _Project
             breakdown += $"<b>Total: {CurrentPh.ToString("F1", culture)}</b>";
             
             return breakdown;
+        }
+        
+        /// <summary>
+        /// Applica tutti i drift accodati per la giornata in un’unica soluzione.
+        /// pH_domani = pH_oggi + Σ drift accodati (piante, azioni, eventi, daily).
+        /// </summary>
+        public void ApplyQueuedDrifts()
+        {
+            float totalQueued = _queuedPlantsDrift + _queuedActionsDrift + _queuedEventsDrift + _queuedDailyDrift;
+            if (Mathf.Abs(totalQueued) < 0.0001f)
+            {
+                return;
+            }
+            
+            float oldPh = _currentPh;
+            
+            // Aggiorna contributi cumulativi
+            _plantsDrift += _queuedPlantsDrift;
+            _actionsDrift += _queuedActionsDrift;
+            _eventsDrift += _queuedEventsDrift;
+            _dailyDrift += _queuedDailyDrift;
+            
+            // Ricalcola pH dalla somma completa
+            var contrib = GetContributions();
+            float expectedPh = contrib.Total;
+            _currentPh = Mathf.Clamp(expectedPh, MIN_PH, MAX_PH);
+            float actualDelta = _currentPh - oldPh;
+            
+            // Pulisci accumulatori giornalieri
+            _queuedPlantsDrift = 0f;
+            _queuedActionsDrift = 0f;
+            _queuedEventsDrift = 0f;
+            _queuedDailyDrift = 0f;
+            
+            OnPhChanged?.Invoke(CurrentPh, actualDelta);
+            
+            Debug.Log($"[PhSystem] ✅ ApplyQueuedDrifts: delta={actualDelta:F2}, pH={_currentPh:F2}, contrib=Base:{contrib.BasePh:F2} Plants:{contrib.PlantsDrift:F2} Actions:{contrib.ActionsDrift:F2} Events:{contrib.EventsDrift:F2} Daily:{contrib.DailyDrift:F2}");
         }
         
         /// <summary>

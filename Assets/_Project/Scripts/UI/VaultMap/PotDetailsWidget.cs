@@ -1,6 +1,7 @@
 using System.Linq;
 using _Project.Sporae.Core;
-using _Project.Watering;
+// GDD AZ-11: Watering namespace rimosso (minigioco deprecato)
+// using _Project.Watering;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem;
 using TMPro;
@@ -36,8 +37,9 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _effectsText;
 
         [SerializeField] private GameObject _page;
-
-        [SerializeField] private WateringMinigame _wateringMinigame;
+        
+        // GDD AZ-11: WateringMinigame rimosso (sistema toggle persistente)
+        // [SerializeField] private WateringMinigame _wateringMinigame; // DEPRECATO
         
         [Header("Seed Selector")]
         [SerializeField] private UISeedSelector _seedSelector;
@@ -100,8 +102,17 @@ namespace _Project
             
             _gameManager = FindObjectOfType<GameManager>();
             
-            _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
-            _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
+            // Verifica che i bottoni siano assegnati prima di aggiungere listener
+            if (_plantButton != null)
+                _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
+            else
+                Debug.LogError("[PotDetailsWidget] ⚠️ _plantButton non assegnato! Collega il riferimento nella scena Unity.");
+            
+            if (_wateringButton != null)
+                _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
+            else
+                Debug.LogError("[PotDetailsWidget] ⚠️ _wateringButton non assegnato! Collega il riferimento nella scena Unity.");
+            
             if (_blueLedButton != null)
                 _blueLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Blue));
             if (_redLedButton != null)
@@ -110,7 +121,11 @@ namespace _Project
                 _sprayButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Spray));
             if (_harvestButton != null)
                 _harvestButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Harvest));
-            _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
+            
+            if (_uprootButton != null)
+                _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
+            else
+                Debug.LogError("[PotDetailsWidget] ⚠️ _uprootButton non assegnato! Collega il riferimento nella scena Unity.");
             
             InitializeSeedSelector();
         }
@@ -300,11 +315,8 @@ namespace _Project
                     return; // Esci subito, DoPlant verrà chiamato quando l'utente seleziona un seme
                 
                 case PotEvents.PotActionType.Water:
-                    
-                    success = selectedPot.PotActions.CanWater();
-                    if (success)
-                        _wateringMinigame.Show(selectedPot);
-                    
+                    // GDD AZ-11: Toggle sistema irrigazione (minigioco rimosso)
+                    success = selectedPot.PotActions.DoWater();
                     break;
                 
                 // Light action gestita separatamente con OnLedButtonClicked
@@ -405,9 +417,17 @@ namespace _Project
         
             // _page.SetActive(pot.InRange);
             
-            // Aggiorna lo stato di ogni pulsante
-            UpdateButtonState(_plantButton, pot.PotActions.CanPlant(), "Piantare");
-            UpdateButtonState(_wateringButton, pot.PotActions.CanWater(), "Annaffiare");
+            // Aggiorna lo stato di ogni pulsante (verifica che esistano prima)
+            if (_plantButton != null)
+                UpdateButtonState(_plantButton, pot.PotActions.CanPlant(), "Piantare");
+            
+            // GDD AZ-11: Mostra stato toggle ON/OFF per sistema irrigazione
+            if (_wateringButton != null)
+            {
+                bool isWateringOn = pot.PotActions != null && pot.PotActions.IsWateringSystemOn();
+                string waterButtonText = isWateringOn ? "Irrigazione ON" : "Irrigazione OFF";
+                UpdateButtonState(_wateringButton, pot.PotActions.CanWater(), waterButtonText);
+            }
             if (_blueLedButton != null)
                 UpdateButtonState(_blueLedButton, pot.PotActions.CanLight(), "Blue LED");
             if (_redLedButton != null)
@@ -635,12 +655,15 @@ namespace _Project
             int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
             float hydrationPercentage = maxHydration > 0 ? (float)state.Hydration / maxHydration * 100f : 0f;
             
+            // GDD AZ-11: Mostra anche lo stato del sistema irrigazione
+            string wateringStatus = state.WateringSystemOn ? " <color=#00FF00>[ON]</color>" : " <color=#FF0000>[OFF]</color>";
+            
             if (_hydrationStressText != null)
             {
                 // Assicurati che richText sia abilitato
                 _hydrationStressText.richText = true;
                 
-                string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color=#FFFF00>{hydrationPercentage:F0}%</color>";
+                string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color=#FFFF00>{hydrationPercentage:F0}%</color>{wateringStatus}";
                 
                 // Se c'è una pianta, mostra anche il range ideale per lo stadio corrente
                 if (!string.IsNullOrEmpty(state.PlantCode))
@@ -662,7 +685,7 @@ namespace _Project
                 }
                 
                 _hydrationStressText.text = hydrationText;
-                Debug.Log($"[PotDetailsWidget] Aggiornato Hydration: {hydrationPercentage:F0}%");
+                Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Hydration: {hydrationPercentage:F0}% (Hydration={state.Hydration}/{maxHydration}, Sistema={state.WateringSystemOn})");
             }
             else
             {
@@ -904,7 +927,17 @@ namespace _Project
         private void UpdateProgressUI(PotStateModel state)
         {
             float progressPercentage = CalculateProgressPercentage(state);
-           _progressBar.Value = progressPercentage / 100f;
+            
+            // GDD AZ-11: Verifica che _progressBar esista prima di aggiornarla
+            if (_progressBar != null)
+            {
+                _progressBar.Value = progressPercentage / 100f;
+                Debug.Log($"[PotDetailsWidget] ✅ Progress Bar aggiornata: {progressPercentage:F1}% (Value: {_progressBar.Value:F2})");
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ _progressBar è null! Collega il riferimento nella scena Unity.");
+            }
         
             Debug.Log($"[BLK-01.04] UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
         }
@@ -912,8 +945,9 @@ namespace _Project
         private int CalculateCurrentGrowthPoints(PotStateModel state)
         {
             int points = state.GrowthPoints;
+            // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay
             bool
-                hadHydration = (state.LastWateredDay == _dayCycleSystem.CurrentDay),
+                hadHydration = state.WateringSystemOn,
                 hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
 
             points += (hadHydration, hadLight) switch

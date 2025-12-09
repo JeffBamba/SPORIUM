@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2579df1c550e48f7bb08ba2a2752ca05, type: 3}
   m_Name: CondensationConfig
   m_EditorClassIdentifier: 
-  <CondensationGrowthPerDay>k__BackingField: 2
+  <CondensationGrowthPerDay>k__BackingField: 3
   <MaxCondensation>k__BackingField: 10

@@ -49,6 +49,14 @@ public class PotStateModel
     [Tooltip("Ultimo tipo LED utilizzato (Blue/Red)")]
     public LedType? LastLedType;  // Null se mai usato LED, Blue o Red se usato
     
+    [Header("Watering System (GDD AZ-11 - Toggle Persistente)")]
+    [Tooltip("Sistema irrigazione a goccia ON/OFF persistente")]
+    public bool WateringSystemOn;  // Stato toggle ON/OFF
+    [Tooltip("Giorni consecutivi con sistema ON (per effetti accumulati)")]
+    public int DaysWateringSystemOn;  // Contatore giorni ON
+    [Tooltip("Accumulatore WAT-RAW per consumo 1 ogni 2 giorni (0.5 per giorno ON)")]
+    public float WateringRawWaterAccumulator;  // Accumulo frazionario
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -70,6 +78,9 @@ public class PotStateModel
         LastLitDay = 0;
         LastLedType = null;
         PlantCode = null;
+        WateringSystemOn = false;
+        DaysWateringSystemOn = 0;
+        WateringRawWaterAccumulator = 0f;
     }
     
     /// <summary>
@@ -92,6 +103,9 @@ public class PotStateModel
         LastWateredDay = 0;
         LastLitDay = 0;
         PlantCode = null;
+        WateringSystemOn = false;
+        DaysWateringSystemOn = 0;
+        WateringRawWaterAccumulator = 0f;
     }
     
     /// <summary>
@@ -159,6 +173,9 @@ public class PotStateModel
         LastWateredDay = 0;
         LastLitDay = 0;
         PlantCode = plantCode;
+        WateringSystemOn = false;  // Nuova pianta = sistema OFF
+        DaysWateringSystemOn = 0;
+        WateringRawWaterAccumulator = 0f;
     }
     
     /// <summary>
@@ -201,6 +218,9 @@ public class PotStateModel
         LastLitDay = 0;
         LastLedType = null;
         PlantCode = null;
+        WateringSystemOn = false;
+        DaysWateringSystemOn = 0;
+        WateringRawWaterAccumulator = 0f;
     }
     
     /// <summary>

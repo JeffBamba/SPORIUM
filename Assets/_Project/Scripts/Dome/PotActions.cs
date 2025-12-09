@@ -207,25 +207,24 @@ public class PotActions : MonoBehaviour
     }
     
     /// <summary>
-    /// Verifica se è possibile annaffiare la pianta
+    /// Verifica se è possibile attivare/disattivare il sistema irrigazione (GDD AZ-11 - Toggle Persistente)
     /// </summary>
     public bool CanWater()
     {
         if (_potState == null) 
             return false;
         
-        // Precondizioni: vaso ha pianta, idratazione non al massimo, player in range, risorse sufficienti
+        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti (1 Azione)
+        // NOTA: Non verifica più idratazione max o WAT-RAW (consumo giornaliero a fine giorno)
         bool 
             hasPlant = _potState.HasPlantGrowing,
-            hydrationNotMax = !_potState.IsHydrationMax(GetMaxHydration()),
             inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources(),
-            hasWater = _playerInventory.Has(Items.Water);
+            hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater: Plant={hasPlant}, HydrationNotMax={hydrationNotMax}, Range={inRange}, Resources={hasResources}");
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater (Toggle): Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.WateringSystemOn}");
         
-        return hasPlant && hydrationNotMax && hasWater && inRange && hasResources;
+        return hasPlant && inRange && hasResources;
     }
     
     /// <summary>
@@ -474,7 +473,8 @@ public class PotActions : MonoBehaviour
     }
 
     /// <summary>
-    /// Esegue l'azione di annaffiare la pianta
+    /// Esegue l'azione di attivare/disattivare il sistema irrigazione (GDD AZ-11 - Toggle Persistente)
+    /// NOTA: Consumo WAT-RAW e CRY avviene a fine giornata, non immediatamente
     /// </summary>
     public bool DoWater()
     {
@@ -485,39 +485,28 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
-        // Consuma le risorse
+        // Consuma solo 1 Azione per il toggle (non WAT-RAW o CRY - consumo giornaliero)
         if (!TryConsumeResources())
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
             return false;
         }
 
-        if (!_gameManager.PlayerInventory.Consume(Items.Water))
+        // Toggle del sistema irrigazione
+        _potState.WateringSystemOn = !_potState.WateringSystemOn;
+        
+        // Aggiorna contatori in base al nuovo stato
+        if (_potState.WateringSystemOn)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
-            return false;
+            // Sistema attivato: incrementa contatore giorni ON
+            // (verrà incrementato anche a fine giornata se rimane ON)
         }
-        
-        // Rileva overwatering: se l'idratazione è già al massimo o molto alta, è overwatering
-        int maxHydration = GetMaxHydration();
-        bool isOverwatering = _potState.Hydration >= maxHydration - 1; // Già al massimo o quasi
-        
-        // Aumenta l'idratazione
-        bool hydrationIncreased = _potState.IncreaseHydration(maxHydration);
-        
-        // Se overwatering, applica pH -5 (BLK-02.03)
-        if (isOverwatering && _phSystem != null)
+        else
         {
-            _phSystem.RegisterActionDrift(-5f, "Overwatering", potSlot.PotId);
-            if (showDebugLogs)
-                Debug.Log($"[ACT-002][{potSlot.PotId}] Overwatering rilevato! pH -5 applicato");
+            // Sistema disattivato: reset contatori
+            _potState.DaysWateringSystemOn = 0;
+            _potState.WateringRawWaterAccumulator = 0f;
         }
-        
-        if (!hydrationIncreased)
-            return false;
-        
-        // Imposta timestamp per crescita 
-        _potState.UpdateWateringDay(_dayCycleSystem.CurrentDay);
             
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
@@ -525,12 +514,19 @@ public class PotActions : MonoBehaviour
             
         if (showDebugLogs)
         {
-            string overwateringMsg = isOverwatering ? " (OVERWATERING - pH -5)" : "";
-            Debug.Log($"[ACT-002][{potSlot.PotId}] Water OK: hydration={_potState.Hydration}/{maxHydration}, timestamp aggiornato{overwateringMsg}");
+            string stateMsg = _potState.WateringSystemOn ? "ON" : "OFF";
+            Debug.Log($"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
         }
         
         return true;
-
+    }
+    
+    /// <summary>
+    /// Restituisce lo stato corrente del sistema irrigazione
+    /// </summary>
+    public bool IsWateringSystemOn()
+    {
+        return _potState != null && _potState.WateringSystemOn;
     }
     
     /// <summary>
@@ -779,9 +775,8 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null) return "Stato vaso non valido";
         if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (_potState.IsHydrationMax(GetMaxHydration())) return "Idratazione al massimo";
         if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
+        if (!CanConsumeResources()) return "Azioni insufficienti";
         return "Azione non permessa";
     }
     

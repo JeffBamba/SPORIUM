@@ -122,6 +122,10 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
             Debug.Log($"    * Piantato: Giorno {pot.PlantedDay}");
             Debug.Log($"    * Ultima acqua: Giorno {pot.LastWateredDay}");
             Debug.Log($"    * Ultima luce: Giorno {pot.LastLitDay}");
+            Debug.Log($"  - Sistema Irrigazione (GDD AZ-11):");
+            Debug.Log($"    * Stato: {(pot.WateringSystemOn ? "ON" : "OFF")}");
+            Debug.Log($"    * Giorni ON: {pot.DaysWateringSystemOn}");
+            Debug.Log($"    * Accumulatore WAT-RAW: {pot.WateringRawWaterAccumulator:F1}");
         }
         
         Debug.Log("  ---");

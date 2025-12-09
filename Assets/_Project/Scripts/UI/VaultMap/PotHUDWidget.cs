@@ -967,7 +967,12 @@ public class PotHUDWidget : MonoBehaviour
         
         // Aggiorna lo stato di ogni pulsante (abilitato/disabilitato in base alle condizioni)
         UpdateButtonState(btnPlant, pot.PotActions.CanPlant(), "Piantare");
-        UpdateButtonState(btnWater, pot.PotActions.CanWater(), "Annaffiare");
+        
+        // GDD AZ-11: Mostra stato toggle ON/OFF per sistema irrigazione
+        bool isWateringOn = pot.PotActions != null && pot.PotActions.IsWateringSystemOn();
+        string waterButtonText = isWateringOn ? "Irrigazione ON" : "Irrigazione OFF";
+        UpdateButtonState(btnWater, pot.PotActions.CanWater(), waterButtonText);
+        
         UpdateButtonState(btnLight, pot.PotActions.CanLight(), "Illuminare");
         UpdateButtonState(btnSpray, pot.PotActions.CanSprayAntifungal(), "Spray");
         UpdateButtonState(btnHarvest, pot.PotActions.CanHarvest(), "Raccogli");
@@ -1199,8 +1204,9 @@ public class PotHUDWidget : MonoBehaviour
     private int CalculateCurrentGrowthPoints(PotStateModel state)
     {
         int points = state.GrowthPoints;
+        // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay
         bool 
-            hadHydration = (state.LastWateredDay == _dayCycleSystem.CurrentDay),
+            hadHydration = state.WateringSystemOn,
             hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
 
         points += (hadHydration, hadLight) switch
