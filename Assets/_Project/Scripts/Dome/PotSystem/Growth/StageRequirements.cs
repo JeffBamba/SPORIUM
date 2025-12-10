@@ -95,7 +95,7 @@ namespace Sporae.Dome.PotSystem.Growth
         }
         
         /// <summary>
-        /// Verifica se il LED richiesto è stato utilizzato
+        /// Verifica se il LED richiesto è stato utilizzato (legacy - usa LastLedType)
         /// </summary>
         public bool IsLedRequirementMet(LedType? lastUsedLed)
         {
@@ -107,6 +107,21 @@ namespace Sporae.Dome.PotSystem.Growth
             
             // Se è richiesto un LED specifico, verifica che sia stato usato
             return lastUsedLed.HasValue && lastUsedLed.Value == required.Value;
+        }
+        
+        /// <summary>
+        /// BLK-02.07: Verifica se il LED richiesto è attivo (nuovo sistema - usa LedSystemState)
+        /// </summary>
+        public bool IsLedRequirementMet(LedSystemState currentState)
+        {
+            LedType? required = GetRequiredLed();
+            if (!required.HasValue) return true;  // Nessun LED richiesto
+            
+            if (currentState == LedSystemState.Off) return false;  // Sistema spento
+            
+            // Converti LedSystemState a LedType per verifica
+            LedType currentLedType = currentState == LedSystemState.Blue ? LedType.Blue : LedType.Red;
+            return currentLedType == required.Value;
         }
         
         /// <summary>

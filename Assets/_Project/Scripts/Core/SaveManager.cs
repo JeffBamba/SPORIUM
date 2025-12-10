@@ -329,6 +329,10 @@ namespace Sporae.Core
                         lastWateredDay = potState.LastWateredDay,
                         lastLitDay = potState.LastLitDay,
                         lastLedType = potState.LastLedType?.ToString(),
+                        // BLK-02.07: Nuovi campi per sistema LED persistente
+                        ledSystemState = potState.LedSystemState.ToString(),
+                        daysLedBlueConsecutive = potState.DaysLedBlueConsecutive,
+                        daysLedRedConsecutive = potState.DaysLedRedConsecutive,
                         // GDD AZ-11: Nuovi campi per sistema irrigazione toggle
                         wateringSystemOn = potState.WateringSystemOn,
                         daysWateringSystemOn = potState.DaysWateringSystemOn,
@@ -372,13 +376,30 @@ namespace Sporae.Core
                         potState.LastWateredDay = potStateData.lastWateredDay;
                         potState.LastLitDay = potStateData.lastLitDay;
                         
+                        // MIGRAZIONE: Converti LastLedType a LedSystemState se presente
                         if (!string.IsNullOrEmpty(potStateData.lastLedType))
                         {
                             if (Enum.TryParse<LedType>(potStateData.lastLedType, out var ledType))
                             {
-                                potState.LastLedType = ledType;
+                                potState.LastLedType = ledType;  // Mantieni per compatibilità
+                                
+                                // Converti a nuovo sistema
+                                if (ledType == LedType.Blue)
+                                    potState.LedSystemState = LedSystemState.Blue;
+                                else if (ledType == LedType.Red)
+                                    potState.LedSystemState = LedSystemState.Red;
+                                // Se null, rimane Off (default)
                             }
                         }
+                        
+                        // BLK-02.07: Applica nuovi campi sistema LED (con default se mancanti - migrazione automatica)
+                        if (Enum.TryParse<LedSystemState>(potStateData.ledSystemState, out var ledState))
+                            potState.LedSystemState = ledState;
+                        else
+                            potState.LedSystemState = LedSystemState.Off;  // Default se parsing fallisce
+                        
+                        potState.DaysLedBlueConsecutive = potStateData.daysLedBlueConsecutive;
+                        potState.DaysLedRedConsecutive = potStateData.daysLedRedConsecutive;
                         
                         // GDD AZ-11: Applica nuovi campi sistema irrigazione (con default per migration)
                         // JSON serialization gestisce automaticamente i default se i campi mancano
@@ -512,7 +533,12 @@ namespace Sporae.Core
             public int plantedDay;
             public int lastWateredDay;
             public int lastLitDay;
-            public string lastLedType;
+            public string lastLedType;  // Legacy
+            
+            // BLK-02.07: Nuovi campi per sistema LED persistente
+            public string ledSystemState = "Off";  // Default per salvataggi vecchi
+            public int daysLedBlueConsecutive = 0;
+            public int daysLedRedConsecutive = 0;
             
             // GDD AZ-11: Nuovi campi per sistema irrigazione toggle persistente
             public bool wateringSystemOn = false;  // Default per migration salvataggi vecchi

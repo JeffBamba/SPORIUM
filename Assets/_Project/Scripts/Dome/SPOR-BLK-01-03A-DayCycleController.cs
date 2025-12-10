@@ -322,8 +322,11 @@ public class DayCycleController : MonoBehaviour
         // 3. ApplyWateringSystemEffects() - Applica effetti watering + consumo risorse + fallback
         ApplyWateringSystemEffects();
         
+        // 3b. ApplyLedSystemEffects() - Applica effetti LED persistente + consumo CRY + scaling (BLK-02.07)
+        ApplyLedSystemEffects();
+        
         // 4. Calcola e registra pH drift dalle piante (integrazione pH)
-        CalculateAndRegisterPhDrift();
+        CalculateAndRegisterPhDrift(dayIndex);
         
         // 4b. Applica in un'unica soluzione tutti i drift accodati (piante + azioni + eventi)
         if (_phSystem != null)
@@ -506,8 +509,8 @@ public class DayCycleController : MonoBehaviour
             // Verifica idratazione nel range
             bool hydrationOk = currentStageReq.IsHydrationInRange(hydrationPercent);
             
-            // Verifica LED richiesto
-            bool ledOk = currentStageReq.IsLedRequirementMet(pot.LastLedType);
+            // Verifica LED richiesto (BLK-02.07: usa LedSystemState invece di LastLedType)
+            bool ledOk = currentStageReq.IsLedRequirementMet(pot.LedSystemState);
             
             // Verifica giorni minimi nello stadio
             bool durationOk = pot.DaysInCurrentStage >= currentStageReq.durationDays;
@@ -516,7 +519,7 @@ public class DayCycleController : MonoBehaviour
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-02.02] {pot.PotId}: Stage {currentStage} requisiti - Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], LED: {pot.LastLedType} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], Durata: {pot.DaysInCurrentStage}/{currentStageReq.durationDays} giorni [{durationOk}]");
+                Debug.Log($"[BLK-02.02] {pot.PotId}: Stage {currentStage} requisiti - Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], Durata: {pot.DaysInCurrentStage}/{currentStageReq.durationDays} giorni [{durationOk}]");
             }
         }
         else
@@ -893,6 +896,215 @@ public class DayCycleController : MonoBehaviour
     }
     
     /// <summary>
+    /// BLK-02.07: Applica effetti sistema LED persistente a fine giornata
+    /// </summary>
+    private void ApplyLedSystemEffects()
+    {
+        if (_gameManager == null)
+        {
+            TryGetGameManager();
+            if (_gameManager == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per applicazione effetti LED");
+                return;
+            }
+        }
+        
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant)
+                continue;
+            
+            ApplyLedSystemEffectsForPot(pot);
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Applica effetti sistema LED persistente per un singolo vaso
+    /// </summary>
+    private void ApplyLedSystemEffectsForPot(PotStateModel pot)
+    {
+        // Salva stato precedente per verificare se è stato spento
+        LedSystemState stateBeforeCheck = pot.LedSystemState;
+        
+        if (pot.LedSystemState == LedSystemState.Off)
+        {
+            // Sistema OFF: decadimento graduale se era acceso
+            bool hadBlueDays = pot.DaysLedBlueConsecutive > 0;
+            bool hadRedDays = pot.DaysLedRedConsecutive > 0;
+            
+            if (pot.DaysLedBlueConsecutive > 0)
+                pot.DaysLedBlueConsecutive = Mathf.Max(0, pot.DaysLedBlueConsecutive - 1);
+            if (pot.DaysLedRedConsecutive > 0)
+                pot.DaysLedRedConsecutive = Mathf.Max(0, pot.DaysLedRedConsecutive - 1);
+            
+            if (enableDebugLogs && (hadBlueDays || hadRedDays))
+            {
+                Debug.Log($"[DayCycleController] {pot.PotId}: LED System OFF - Decadimento contatori (Blue: {pot.DaysLedBlueConsecutive}, Red: {pot.DaysLedRedConsecutive})");
+            }
+            return;
+        }
+        
+        // Incrementa contatori giorni consecutivi
+        pot.IncrementConsecutiveLedDays();
+        int consecutiveDays = pot.GetConsecutiveLedDays();
+        
+        // Calcola scaling effetti
+        float effectMultiplier = GetLedEffectMultiplier(consecutiveDays);
+        float malusMultiplier = GetLedMalusMultiplier(consecutiveDays);
+        
+        // Applica effetti crescita e pH
+        ApplyLedEffects(pot, pot.LedSystemState, effectMultiplier, malusMultiplier, consecutiveDays);
+        
+        // Consumo CRY notturno
+        int cryCost = GetNightlyCryCost(pot.LedSystemState, consecutiveDays);
+        if (cryCost > 0)
+        {
+            if (_gameManager.TrySpendCry(cryCost))
+            {
+                if (enableDebugLogs)
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Consumo CRY notturno LED: {cryCost} CRY");
+            }
+            else
+            {
+                // CRY insufficiente: spegni sistema e notifica
+                LedSystemState oldState = pot.LedSystemState;
+                pot.SetLedSystemState(LedSystemState.Off);
+                
+                // BLK-02.07 BUG FIX: Rimuovi contributo pH quando LED viene spento per CRY insufficiente
+                if (_phSystem != null && oldState != LedSystemState.Off)
+                {
+                    // Rimuovi tutti i contributi LED per questo vaso
+                    _phSystem.RemoveActionContribution("BlueLED", pot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED", pot.PotId);
+                    _phSystem.RemoveActionContribution("BlueLED_x1.5", pot.PotId);
+                    _phSystem.RemoveActionContribution("BlueLED_x2", pot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED_x1.5", pot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED_x2", pot.PotId);
+                    
+                    if (enableDebugLogs)
+                        Debug.Log($"[DayCycleController] {pot.PotId}: Contributo pH LED rimosso (CRY insufficiente, LED spento: {oldState} → Off)");
+                }
+                
+                ShowLedNotification($"LGT-002: Sistema LED {pot.PotId} spento - CRY insufficiente", Color.yellow);
+                if (enableDebugLogs)
+                    Debug.LogWarning($"[DayCycleController] {pot.PotId}: CRY insufficiente per LED, sistema spento");
+            }
+        }
+        
+        // Toast avviso zona rossa (4+ giorni)
+        if (consecutiveDays >= 4)
+        {
+            ShowLedNotification($"LGT-003: LED {pot.LedSystemState} attivo {consecutiveDays} giorni - Zona rossa!", Color.red);
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Calcola moltiplicatore effetti LED in base a giorni consecutivi
+    /// </summary>
+    private float GetLedEffectMultiplier(int consecutiveDays)
+    {
+        if (consecutiveDays == 1) return 1.0f;      // x1
+        if (consecutiveDays >= 2 && consecutiveDays <= 3) return 1.5f;  // x1.5
+        if (consecutiveDays >= 4) return 2.0f;     // x2
+        return 1.0f;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Calcola moltiplicatore malus LED in base a giorni consecutivi
+    /// </summary>
+    private float GetLedMalusMultiplier(int consecutiveDays)
+    {
+        if (consecutiveDays <= 3) return 1.0f;      // Malus base
+        if (consecutiveDays >= 4) return 1.5f + (consecutiveDays - 4) * 0.2f;  // Crescita esponenziale
+        return 1.0f;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Calcola consumo CRY notturno per sistema LED
+    /// </summary>
+    private int GetNightlyCryCost(LedSystemState state, int consecutiveDays)
+    {
+        switch (state)
+        {
+            case LedSystemState.Blue:
+                return 1 + (consecutiveDays / 2);  // 1, 1, 2, 2, 3...
+            case LedSystemState.Red:
+                return 2 + consecutiveDays;        // 2, 3, 4, 5... (più costoso)
+            default:
+                return 0;
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Applica effetti LED (pH, crescita, stress)
+    /// </summary>
+    private void ApplyLedEffects(PotStateModel pot, LedSystemState state, float effectMultiplier, float malusMultiplier, int consecutiveDays)
+    {
+        if (state == LedSystemState.Off) return;
+        
+        // Converti LedSystemState a LedType per compatibilità
+        LedType ledType = state == LedSystemState.Blue ? LedType.Blue : LedType.Red;
+        
+        // Effetti pH (con scaling)
+        if (_phSystem != null)
+        {
+            float basePhDelta = ledType == LedType.Blue ? 5f : -5f;
+            float phDelta = basePhDelta * effectMultiplier;
+            string actionName = ledType == LedType.Blue ? "BlueLED" : "RedLED";
+            
+            // Aggiungi moltiplicatore al nome azione per tooltip
+            if (consecutiveDays >= 4)
+                actionName += "_x2";
+            else if (consecutiveDays >= 2)
+                actionName += "_x1.5";
+            
+            _phSystem.RegisterActionDrift(phDelta, actionName, pot.PotId);
+            
+            if (enableDebugLogs)
+                Debug.Log($"[DayCycleController] {pot.PotId}: LED {state} giorno {consecutiveDays} - pH {(phDelta > 0 ? "+" : "")}{phDelta:F1} (mult: {effectMultiplier:F1})");
+        }
+        
+        // Effetti crescita (Light Exposure)
+        int maxLightExposure = GetMaxLightExposureForPot(pot);
+        if (pot.LightExposure < maxLightExposure)
+        {
+            pot.IncreaseLightExposure(maxLightExposure);
+        }
+        
+        // TODO BLK-02.08: Applicare malus (Burn Stress, Mold Risk) quando sistemi saranno implementati
+        // Per ora solo log
+        if (consecutiveDays >= 4 && enableDebugLogs)
+        {
+            Debug.LogWarning($"[DayCycleController] {pot.PotId}: ⚠️ LED {state} attivo {consecutiveDays} giorni - Zona rossa! (Malus mult: {malusMultiplier:F1})");
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Ottiene max light exposure per un vaso (helper)
+    /// </summary>
+    private int GetMaxLightExposureForPot(PotStateModel pot)
+    {
+        return _potSystemConfig != null ? _potSystemConfig.MaxLightExposure : 3;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Mostra notifica LED (helper per toast)
+    /// </summary>
+    private void ShowLedNotification(string message, Color color)
+    {
+        if (_uiNotification != null)
+        {
+            _uiNotification.ShowNotification(message, 3f, color);
+        }
+        else if (enableDebugLogs)
+        {
+            Debug.LogWarning($"[DayCycleController] UINotification non disponibile per: {message}");
+        }
+    }
+    
+    /// <summary>
     /// Trova PotSlot per un PotId (helper per eventi)
     /// </summary>
     private PotSlot FindPotSlot(string potId)
@@ -1024,7 +1236,7 @@ public class DayCycleController : MonoBehaviour
     /// Calcola il drift pH totale da tutte le piante e lo registra nel PhSystem
     /// IMPORTANTE: Solo le piante nei POT hanno impatto sul pH, non quelle in Inventory o Seed Storage
     /// </summary>
-    private void CalculateAndRegisterPhDrift()
+    private void CalculateAndRegisterPhDrift(int currentDay = 0)
     {
         if (_phSystem == null)
         {
@@ -1094,10 +1306,10 @@ public class DayCycleController : MonoBehaviour
             totalPhDrift += plantDrift;
             plantCount++;
             
-            // Registra ogni pianta individualmente per tooltip dettagliato
+            // Registra ogni pianta individualmente per tooltip dettagliato (con giorno di riferimento)
             if (plantDrift != 0f)
             {
-                _phSystem.RegisterPlantDrift(plantDrift, plantData.PlantCode, pot.PotId);
+                _phSystem.RegisterPlantDrift(plantDrift, plantData.PlantCode, pot.PotId, currentDay);
             }
             
             if (enableDebugLogs)

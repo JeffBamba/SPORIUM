@@ -113,10 +113,11 @@ namespace _Project
             else
                 Debug.LogError("[PotDetailsWidget] ⚠️ _wateringButton non assegnato! Collega il riferimento nella scena Unity.");
             
+            // BLK-02.07: Due pulsanti separati per Blue e Red (ON/OFF)
             if (_blueLedButton != null)
-                _blueLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Blue));
+                _blueLedButton.onClick.AddListener(() => OnBlueLedClicked());
             if (_redLedButton != null)
-                _redLedButton.onClick.AddListener(() => OnLedButtonClicked(LedType.Red));
+                _redLedButton.onClick.AddListener(() => OnRedLedClicked());
             if (_sprayButton != null)
                 _sprayButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Spray));
             if (_harvestButton != null)
@@ -351,38 +352,87 @@ namespace _Project
         }
         
         /// <summary>
-        /// Gestisce il click su un pulsante LED (Blue o Red)
+        /// BLK-02.07: Gestisce il click su pulsante LED (toggle: Off → Blue → Red → Off)
         /// </summary>
-        private void OnLedButtonClicked(LedType ledType)
+        /// <summary>
+        /// BLK-02.07: Gestisce il click sul pulsante LED Blu (ON/OFF)
+        /// </summary>
+        private void OnBlueLedClicked()
         {
-            Debug.Log($"[PotDetailsWidget] Click su pulsante LED {ledType} intercettato!");
-            
-            // Trova il vaso selezionato
             PotSlot selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato o PotActions mancante");
+                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
                 return;
             }
             
-            Debug.Log($"[PotDetailsWidget] Eseguendo {ledType} LED su vaso {selectedPot.PotId}");
-            
-            // Esegui l'azione LED con il tipo specificato
-            bool success = selectedPot.PotActions.DoLight(ledType);
+            // Toggle LED Blu: se è già Blue, spegni. Altrimenti, accendi Blue
+            bool success = selectedPot.PotActions.DoLight(LedType.Blue);
             
             if (success)
             {
-                Debug.Log($"[PotDetailsWidget] {ledType} LED eseguito con successo!");
-                // Aggiorna l'UI
+                LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
+                Debug.Log($"[PotDetailsWidget] LED Blue: {(newState == LedSystemState.Blue ? "ON" : "OFF")}");
                 UpdateActionButtons(selectedPot);
-
-                var growthController = selectedPot.GetComponent<PotGrowthController>();
-                if (growthController != null)
-                    UpdateStageAndProgressUI(selectedPot);
+                UpdateStageAndProgressUI(selectedPot);
             }
-            else
+        }
+        
+        /// <summary>
+        /// BLK-02.07: Gestisce il click sul pulsante LED Rosso (ON/OFF)
+        /// </summary>
+        private void OnRedLedClicked()
+        {
+            PotSlot selectedPot = FindSelectedPot();
+            if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning($"[PotDetailsWidget] {ledType} LED fallito!");
+                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
+                return;
+            }
+            
+            // Toggle LED Rosso: se è già Red, spegni. Altrimenti, accendi Red
+            bool success = selectedPot.PotActions.DoLight(LedType.Red);
+            
+            if (success)
+            {
+                LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
+                Debug.Log($"[PotDetailsWidget] LED Red: {(newState == LedSystemState.Red ? "ON" : "OFF")}");
+                UpdateActionButtons(selectedPot);
+                UpdateStageAndProgressUI(selectedPot);
+            }
+        }
+        
+        /// <summary>
+        /// DEPRECATO (BLK-02.07): Mantenuto per compatibilità temporanea
+        /// </summary>
+        [System.Obsolete("Usare OnBlueLedClicked() o OnRedLedClicked() per nuovo sistema")]
+        private void OnLedToggleClicked()
+        {
+            // Fallback al toggle ciclico se ancora chiamato
+            OnBlueLedClicked();
+        }
+        
+        /// <summary>
+        /// DEPRECATO (BLK-02.07): Mantenuto per compatibilità temporanea
+        /// </summary>
+        [System.Obsolete("Usare OnLedToggleClicked() per nuovo sistema toggle")]
+        private void OnLedButtonClicked(LedType ledType)
+        {
+            // Migrazione automatica: converti LedType a LedSystemState
+            LedSystemState? newState = ledType == LedType.Blue ? LedSystemState.Blue : LedSystemState.Red;
+            PotSlot selectedPot = FindSelectedPot();
+            if (selectedPot == null || selectedPot.PotActions == null)
+            {
+                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
+                return;
+            }
+            
+            bool success = selectedPot.PotActions.DoLight(newState);
+            
+            if (success)
+            {
+                UpdateActionButtons(selectedPot);
+                UpdateStageAndProgressUI(selectedPot);
             }
         }
         
@@ -428,10 +478,21 @@ namespace _Project
                 string waterButtonText = isWateringOn ? "Irrigazione ON" : "Irrigazione OFF";
                 UpdateButtonState(_wateringButton, pot.PotActions.CanWater(), waterButtonText);
             }
+            // BLK-02.07: Due pulsanti separati per Blue e Red (ON/OFF)
             if (_blueLedButton != null)
-                UpdateButtonState(_blueLedButton, pot.PotActions.CanLight(), "Blue LED");
+            {
+                LedSystemState currentState = pot.PotActions.GetLedSystemState();
+                bool isBlueOn = currentState == LedSystemState.Blue;
+                string buttonText = isBlueOn ? "LED Blue ON" : "LED Blue OFF";
+                UpdateButtonState(_blueLedButton, pot.PotActions.CanLight(), buttonText);
+            }
             if (_redLedButton != null)
-                UpdateButtonState(_redLedButton, pot.PotActions.CanLight(), "Red LED");
+            {
+                LedSystemState currentState = pot.PotActions.GetLedSystemState();
+                bool isRedOn = currentState == LedSystemState.Red;
+                string buttonText = isRedOn ? "LED Red ON" : "LED Red OFF";
+                UpdateButtonState(_redLedButton, pot.PotActions.CanLight(), buttonText);
+            }
             if (_sprayButton != null)
                 UpdateButtonState(_sprayButton, pot.PotActions.CanSprayAntifungal(), "Spray");
             if (_harvestButton != null)

@@ -49,12 +49,14 @@ namespace _Project
             public string PlantCode;   // "PLT-STD-001", etc.
             public string PotId;       // "POT-001", "POT-002", etc.
             public float DailyDrift;   // Drift giornaliero di questa pianta
+            public int Day;            // Giorno a cui fa riferimento questo drift
             
-            public PlantContribution(string plantCode, string potId, float dailyDrift)
+            public PlantContribution(string plantCode, string potId, float dailyDrift, int day = 0)
             {
                 PlantCode = plantCode ?? "Unknown";
                 PotId = potId ?? "Unknown";
                 DailyDrift = dailyDrift;
+                Day = day;
             }
         }
         
@@ -180,11 +182,31 @@ namespace _Project
         {
             _queuedDailyDrift += drift;
         }
+
+        /// <summary>
+        /// BLK-02.07: Pulisce il drift giornaliero simulato (debug)
+        /// Rimuove sia il queued che quello già applicato e aggiorna pH
+        /// </summary>
+        public void ClearDailyDrift()
+        {
+            // delta da sottrarre al pH corrente
+            float deltaToRemove = _dailyDrift + _queuedDailyDrift;
+
+            _queuedDailyDrift = 0f;
+            _dailyDrift = 0f;
+
+            if (Mathf.Abs(deltaToRemove) > 0.0001f)
+            {
+                _currentPh = Mathf.Clamp(_currentPh - deltaToRemove, MIN_PH, MAX_PH);
+                OnPhChanged?.Invoke(CurrentPh, -deltaToRemove);
+                Debug.Log($"[PhSystem] 🧹 Drift simulato rimosso: {-deltaToRemove:F2}, pH ora: {_currentPh:F2}");
+            }
+        }
         
         /// <summary>
         /// Registra drift da piante con dettagli individuali
         /// </summary>
-        public void RegisterPlantDrift(float drift, string plantCode = null, string potId = null)
+        public void RegisterPlantDrift(float drift, string plantCode = null, string potId = null, int day = 0)
         {
             // BUG FIX: Il drift della pianta è un drift GIORNALIERO che deve essere applicato ogni giorno,
             // anche se è lo stesso valore. La lista _plantContributions serve solo per il tooltip,
@@ -193,30 +215,14 @@ namespace _Project
             // Aggiorna lista contributi per tooltip (solo se plantCode è valido)
             if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(plantCode))
             {
-                // Aggiorna contributo esistente se già presente (stessa pianta stesso pot)
-                bool found = false;
-                for (int i = 0; i < _plantContributions.Count; i++)
-                {
-                    var plant = _plantContributions[i];
-                    if (plant.PlantCode == plantCode && plant.PotId == potId)
-                    {
-                        // Aggiorna drift nella lista (sostituisce per mostrare drift corrente nel tooltip)
-                        _plantContributions[i] = new PlantContribution(plantCode, potId, drift);
-                        found = true;
-                        break;
-                    }
-                }
+                // BLK-02.07: Crea sempre un nuovo contributo con il giorno corrente (non aggiorna quello esistente)
+                // Questo permette di tracciare ogni giorno come voce singola nel breakdown
+                _plantContributions.Add(new PlantContribution(plantCode, potId, drift, day));
                 
-                if (!found)
+                // Limita a 50 contributi per evitare accumulo eccessivo (aumentato per tracciare più giorni)
+                if (_plantContributions.Count > 50)
                 {
-                    // Nuovo contributo: aggiungi alla lista
-                    _plantContributions.Add(new PlantContribution(plantCode, potId, drift));
-                    
-                    // Limita a 20 piante per evitare accumulo eccessivo
-                    if (_plantContributions.Count > 20)
-                    {
-                        _plantContributions.RemoveAt(0);
-                    }
+                    _plantContributions.RemoveAt(0);
                 }
             }
             
@@ -225,7 +231,7 @@ namespace _Project
             if (Mathf.Abs(drift) > 0.01f)
             {
                 _queuedPlantsDrift += drift;
-                Debug.Log($"[PhSystem] ✅ RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}");
+                Debug.Log($"[PhSystem] ✅ RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}, day={day}");
             }
         }
         
@@ -247,7 +253,7 @@ namespace _Project
                 {
                     // Se era accodato per oggi, rimuovilo dai queued
                     _queuedPlantsDrift -= _plantContributions[i].DailyDrift;
-                    Debug.Log($"[PhSystem] 🧹 Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}");
+                    Debug.Log($"[PhSystem] 🧹 Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
                     _plantContributions.RemoveAt(i);
                     removedCount++;
                 }
@@ -295,7 +301,7 @@ namespace _Project
                 if (_plantContributions[i].PotId == potId)
                 {
                     totalDriftToRemove += _plantContributions[i].DailyDrift;
-                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: PotId={potId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}");
+                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: PotId={potId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
                     _plantContributions.RemoveAt(i);
                     removedCount++;
                 }
@@ -387,10 +393,17 @@ namespace _Project
                 // Evita di generare offset positivo: mantieni il queued non maggiore di 0 per drift negativi
                 _queuedActionsDrift = Mathf.Min(0f, _queuedActionsDrift - totalDriftToRemove);
                 Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH accodati per {actionName} nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedActionsDrift:F2})");
+                
+                // BLK-02.07 BUG FIX: Notifica cambio per aggiornare tooltip quando vengono rimossi contributi
+                // Emetti evento con delta 0 per forzare aggiornamento tooltip senza cambiare pH corrente
+                OnPhChanged?.Invoke(CurrentPh, 0f);
             }
             else if (removedCount > 0)
             {
                 Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per {actionName} nel vaso {potId} ma drift totale accodato era 0 o molto piccolo");
+                
+                // BLK-02.07 BUG FIX: Notifica cambio anche se drift era 0 (per aggiornare tooltip)
+                OnPhChanged?.Invoke(CurrentPh, 0f);
             }
         }
         
@@ -522,7 +535,9 @@ namespace _Project
                         string plantInfo = !string.IsNullOrEmpty(plant.PlantCode) && plant.PlantCode != "Unknown"
                             ? $" - {plant.PlantCode}"
                             : "";
-                        breakdown += $"<color=#FFFF00>Pianta{plantInfo}:</color> {plantValue}/giorno{potInfo}\n";
+                        // BLK-02.07: Mostra anche il giorno di riferimento per identificare ogni voce singola
+                        string dayInfo = plant.Day > 0 ? $" x giorno {plant.Day}" : "";
+                        breakdown += $"<color=#FFFF00>Pianta{plantInfo}:</color> {plantValue}/giorno{potInfo}{dayInfo}\n";
                         hasContributions = true;
                     }
                 }
@@ -579,7 +594,19 @@ namespace _Project
                 breakdown += "<color=#808080>(Nessun contributo attivo)</color>\n";
             }
             
-            breakdown += $"<b>Total: {CurrentPh.ToString("F1", culture)}</b>";
+            // BLK-02.07 BUG FIX: Calcola il totale usando i valori cumulativi reali
+            // (non sommando _plantContributions che potrebbero non contenere tutti i contributi storici)
+            // Il pH reale viene da _plantsDrift, _actionsDrift, etc. che sono cumulativi
+            float calculatedTotal = contrib.BasePh + contrib.PlantsDrift + contrib.ActionsDrift + contrib.EventsDrift;
+            // NOTA: contrib.DailyDrift è un drift generico di test/simulazione, non un contributo reale
+            // quindi NON viene incluso nel totale "da contributi" per evitare confusione
+            
+            // Mostra il totale calcolato dai contributi cumulativi (corrisponde al pH senza oscillazione)
+            breakdown += $"<b>Total (da contributi): {calculatedTotal.ToString("F1", culture)}</b>\n";
+            
+            // Mostra il pH corrente (che include oscillazione, ma NON DailyDrift simulato)
+            // L'oscillazione è solo estetica e non viene mostrata nel breakdown
+            breakdown += $"<b>pH Corrente (con oscillazione): {CurrentPh.ToString("F1", culture)}</b>";
             
             return breakdown;
         }
@@ -623,20 +650,39 @@ namespace _Project
         
         /// <summary>
         /// Converte nome azione tecnico in nome display italiano
+        /// BLK-02.07: Supporta moltiplicatori LED (x1.5, x2)
         /// </summary>
         private string GetActionDisplayName(string actionName)
         {
             if (string.IsNullOrEmpty(actionName))
                 return "Azione";
             
+            string originalActionName = actionName;  // Salva originale prima di ToLower()
             actionName = actionName.ToLower();
             
             if (actionName.Contains("overwatering") || actionName.Contains("over"))
                 return "Overwatering";
+            
+            // BLK-02.07: LED con moltiplicatori
             if (actionName.Contains("blueled") || actionName.Contains("blue"))
-                return "LED Blu";
+            {
+                string multiplier = "";
+                if (originalActionName.Contains("_x2"))
+                    multiplier = " (×2)";
+                else if (originalActionName.Contains("_x1.5"))
+                    multiplier = " (×1.5)";
+                return $"LED Blu{multiplier}";
+            }
+            
             if (actionName.Contains("redled") || actionName.Contains("red"))
-                return "LED Rosso";
+            {
+                string multiplier = "";
+                if (originalActionName.Contains("_x2"))
+                    multiplier = " (×2)";
+                else if (originalActionName.Contains("_x1.5"))
+                    multiplier = " (×1.5)";
+                return $"LED Rosso{multiplier}";
+            }
             if (actionName.Contains("spray") || actionName.Contains("antifungal"))
                 return "Spray Antifungino";
             if (actionName.Contains("water"))

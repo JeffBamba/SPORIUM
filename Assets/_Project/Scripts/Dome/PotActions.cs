@@ -16,6 +16,7 @@ public class PotActions : MonoBehaviour
     [SerializeField] private PotSystemConfig config;
     [SerializeField] private PotGrowthController potGrowthController;
     [SerializeField] private DayCycleController dayCycleController;
+    [SerializeField] private LedLightController ledLightController;
     
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true;
@@ -47,6 +48,10 @@ public class PotActions : MonoBehaviour
         // Trova il DayCycleController se non assegnato
         if (dayCycleController == null)
             dayCycleController = FindObjectOfType<DayCycleController>();
+        
+        // Trova il LedLightController se non assegnato
+        if (ledLightController == null)
+            ledLightController = GetComponent<LedLightController>();
         
         // Trova il GameManager
         _gameManager = FindObjectOfType<GameManager>();
@@ -228,25 +233,25 @@ public class PotActions : MonoBehaviour
     }
     
     /// <summary>
-    /// Verifica se è possibile illuminare la pianta
+    /// Verifica se è possibile illuminare la pianta (BLK-02.07: toggle LED persistente)
     /// </summary>
     public bool CanLight()
     {
         if (_potState == null)
             return false;
         
-        // Precondizioni: vaso ha pianta, luce non al massimo, player in range, risorse sufficienti
+        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
+        // NOTA: BLK-02.07 - Non verifica più lightNotMax (LED è toggle persistente, non incremento immediato)
         bool
             hasPlant = _potState.HasPlantGrowing,
-            lightNotMax = !_potState.IsLightExposureMax(GetMaxLightExposure()),
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources(),
             notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, LightNotMax={lightNotMax}, Range={inRange}, Resources={hasResources}");
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}");
         
-        return hasPlant && lightNotMax && inRange && hasResources && notPlantedOnThisDay;
+        return hasPlant && inRange && hasResources && notPlantedOnThisDay;
     }
     
     /// <summary>
@@ -530,10 +535,30 @@ public class PotActions : MonoBehaviour
     }
     
     /// <summary>
-    /// Esegue l'azione di illuminare la pianta con LED
+    /// DEPRECATO (BLK-02.07): Usare DoLight(LedSystemState?) invece
+    /// Mantenuto per compatibilità temporanea
     /// </summary>
-    /// <param name="ledType">Tipo di LED utilizzato (Blue o Red). Se null, usa Blue di default per retrocompatibilità.</param>
+    [System.Obsolete("Usare DoLight(LedSystemState?) per nuovo sistema persistente. Questo metodo sarà rimosso in BLK-02.08")]
     public bool DoLight(LedType? ledType = null)
+    {
+        if (showDebugLogs)
+            Debug.LogWarning($"[PotActions][{potSlot?.PotId}] ⚠️ DoLight(LedType?) è deprecato. Usare DoLight(LedSystemState?)");
+        
+        // Migrazione automatica: converti LedType a LedSystemState
+        LedSystemState? newState = null;
+        if (ledType.HasValue)
+        {
+            newState = ledType.Value == LedType.Blue ? LedSystemState.Blue : LedSystemState.Red;
+        }
+        return DoLight(newState);
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Toggle sistema LED persistente (Off/Blue/Red)
+    /// Effetti applicati a fine giornata, non immediatamente
+    /// </summary>
+    /// <param name="newState">Stato desiderato. Se null, cicla: Off → Blue → Red → Off</param>
+    public bool DoLight(LedSystemState? newState = null)
     {
         if (!CanLight())
         {
@@ -542,46 +567,119 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
-        // Consuma le risorse
+        // Consuma solo 1 Azione per il toggle (non CRY - consumo giornaliero)
         if (!TryConsumeResources())
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Insufficient resources");
             return false;
         }
         
-        // Default a Blue LED per retrocompatibilità (BLK-02.03)
-        LedType actualLedType = ledType ?? LedType.Blue;
+        // Salva stato precedente per rimuovere contributo pH se necessario
+        LedSystemState oldState = _potState.LedSystemState;
         
-        // Aumenta l'esposizione alla luce
-        if (!_potState.IncreaseLightExposure(GetMaxLightExposure()))
-            return false;
-        
-        // Applica modifiche pH in base al tipo LED (BLK-02.03)
-        if (_phSystem != null)
+        // Toggle o set esplicito
+        if (newState.HasValue)
         {
-            float phDelta = actualLedType == LedType.Blue ? 5f : -5f;
-            string actionName = actualLedType == LedType.Blue ? "BlueLED" : "RedLED";
-            _phSystem.RegisterActionDrift(phDelta, actionName, potSlot.PotId);
-            
-            if (showDebugLogs)
-                Debug.Log($"[ACT-003][{potSlot.PotId}] {actualLedType} LED utilizzato: pH {(phDelta > 0 ? "+" : "")}{phDelta}");
+            _potState.SetLedSystemState(newState.Value);
+        }
+        else
+        {
+            // Ciclo: Off → Blue → Red → Off
+            LedSystemState nextState = (LedSystemState)(((int)_potState.LedSystemState + 1) % 3);
+            _potState.SetLedSystemState(nextState);
         }
         
-        // Imposta timestamp per crescita e tipo LED
-        _potState.UpdateLightingDay(_dayCycleSystem.CurrentDay, actualLedType);
-            
+        // BLK-02.07 BUG FIX: Rimuovi contributo pH se LED è stato spento
+        if (oldState != LedSystemState.Off && _potState.LedSystemState == LedSystemState.Off)
+        {
+            // LED spento: rimuovi contributo pH del LED precedente
+            if (_phSystem != null)
+            {
+                string actionName = oldState == LedSystemState.Blue ? "BlueLED" : "RedLED";
+                // Rimuovi tutti i contributi di questo LED per questo vaso (inclusi quelli con moltiplicatori)
+                _phSystem.RemoveActionContribution("BlueLED", potSlot.PotId);
+                _phSystem.RemoveActionContribution("RedLED", potSlot.PotId);
+                // Rimuovi anche varianti con moltiplicatori
+                _phSystem.RemoveActionContribution("BlueLED_x1.5", potSlot.PotId);
+                _phSystem.RemoveActionContribution("BlueLED_x2", potSlot.PotId);
+                _phSystem.RemoveActionContribution("RedLED_x1.5", potSlot.PotId);
+                _phSystem.RemoveActionContribution("RedLED_x2", potSlot.PotId);
+                
+                if (showDebugLogs)
+                    Debug.Log($"[PotActions] {potSlot.PotId}: Contributo pH LED rimosso (LED spento: {oldState} → Off)");
+            }
+        }
+        
+        // COMPATIBILITÀ: Aggiorna LastLedType per sistemi legacy
+        if (_potState.LedSystemState == LedSystemState.Blue)
+            _potState.LastLedType = LedType.Blue;
+        else if (_potState.LedSystemState == LedSystemState.Red)
+            _potState.LastLedType = LedType.Red;
+        else
+            _potState.LastLedType = null;
+        
+        // BLK-02.07: Aggiorna luci Unity
+        if (ledLightController != null)
+        {
+            ledLightController.UpdateLights(_potState.LedSystemState);
+        }
+        
+        // NOTA: NON applicare effetti pH qui - vengono applicati a fine giornata
+        // NOTA: NON incrementare LightExposure qui - viene fatto a fine giornata
+        
+        // Toast notifica cambio stato (gestito da PotNotifications tramite PotEvents.OnPotAction)
+        // I toast vengono mostrati automaticamente quando viene emesso PotEvents.EmitAction()
+        
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
         PotEvents.EmitChanged(potSlot);
-            
+        
         if (showDebugLogs)
         {
-            string ledInfo = actualLedType == LedType.Blue ? " (Blue LED, pH +5)" : " (Red LED, pH -5)";
-            Debug.Log($"[ACT-003][{potSlot.PotId}] Light OK: light={_potState.LightExposure}/{GetMaxLightExposure()}, timestamp aggiornato{ledInfo}");
+            string stateMsg = _potState.LedSystemState.ToString();
+            Debug.Log($"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
         }
         
         return true;
-
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Attiva/disattiva un LED specifico (Blue o Red)
+    /// </summary>
+    /// <param name="ledType">Tipo di LED da attivare/disattivare</param>
+    /// <returns>True se l'operazione è riuscita</returns>
+    public bool DoLight(LedType ledType)
+    {
+        LedSystemState currentState = _potState.LedSystemState;
+        LedSystemState targetState;
+        
+        // Se il LED richiesto è già attivo, spegnilo. Altrimenti, attivalo
+        if (ledType == LedType.Blue)
+        {
+            targetState = (currentState == LedSystemState.Blue) ? LedSystemState.Off : LedSystemState.Blue;
+        }
+        else // LedType.Red
+        {
+            targetState = (currentState == LedSystemState.Red) ? LedSystemState.Off : LedSystemState.Red;
+        }
+        
+        return DoLight(targetState);
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Restituisce lo stato corrente del sistema LED
+    /// </summary>
+    public LedSystemState GetLedSystemState()
+    {
+        return _potState != null ? _potState.LedSystemState : LedSystemState.Off;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Verifica se sistema LED è attivo (Blue o Red)
+    /// </summary>
+    public bool IsLedSystemOn()
+    {
+        return _potState != null && _potState.LedSystemState != LedSystemState.Off;
     }
     
     /// <summary>

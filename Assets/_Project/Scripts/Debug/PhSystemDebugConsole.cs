@@ -33,9 +33,11 @@ namespace Sporae.DevTools
         [SerializeField] private GameManager gameManager;
         
         private PhSystem _phSystem;
+        private DayCycleSystem _dayCycleSystem;
         private bool _isConsoleOpen = false;
         private string _phInputValue = "0";
         private Vector2 _scrollPosition;
+        private Vector2 _mainScrollPosition; // Scroll per l'intera console
         private List<string> _debugLog = new List<string>();
         private const int MAX_LOG_ENTRIES = 50;
 
@@ -74,12 +76,35 @@ namespace Sporae.DevTools
                 gameManager = FindObjectOfType<GameManager>();
             }
 
+            // Ottieni DayCycleSystem per pulsante End of Day
+            TryGetDayCycleSystem();
+
             // Registra nel ServiceContainer se disponibile (dopo che è stato inizializzato)
             TryRegisterPhSystem();
 
             AddLog("=== pH System Debug Console ===");
             AddLog("Premi Z per aprire/chiudere la console");
             AddLog($"pH iniziale: {_phSystem.CurrentPh:F2} ({_phSystem.GetBandName()})");
+        }
+        
+        private void TryGetDayCycleSystem()
+        {
+            try
+            {
+                var serviceContainer = ServiceContainer.Instance;
+                if (serviceContainer != null)
+                {
+                    _dayCycleSystem = serviceContainer.Get<DayCycleSystem>(suppressWarning: true);
+                    if (_dayCycleSystem != null)
+                    {
+                        AddLog("DayCycleSystem trovato - pulsante End of Day disponibile");
+                    }
+                }
+            }
+            catch
+            {
+                // DayCycleSystem non ancora disponibile
+            }
         }
 
         private void TryRegisterPhSystem()
@@ -201,28 +226,33 @@ namespace Sporae.DevTools
 
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
             labelStyle.normal.textColor = Color.white;
-            labelStyle.fontSize = 16; // Scalato del 30% (12 * 1.3)
+            labelStyle.fontSize = 20; // Aumentato da 16 a 20 per migliore visibilità
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = 14; // Scalato del 30% (11 * 1.3)
+            buttonStyle.fontSize = 18; // Aumentato da 14 a 18 per migliore visibilità
 
-            // Area console principale
+            // Area console principale - adattiva all'altezza dello schermo
             float consoleWidth = 780f; // Scalato del 30% (600 * 1.3)
-            float consoleHeight = 650f; // Scalato del 30% (500 * 1.3)
+            float consoleHeight = Mathf.Min(Screen.height - 26, 900f); // Altezza adattiva, max 900px
             Rect consoleRect = new Rect(Screen.width - consoleWidth - 13, 13, consoleWidth, consoleHeight); // Margini scalati del 30%
 
             GUILayout.BeginArea(consoleRect, boxStyle);
+            
+            // BLK-02.07: Scroll view per l'intera console per adattarsi al contenuto
+            _mainScrollPosition = GUILayout.BeginScrollView(_mainScrollPosition, false, true);
             GUILayout.BeginVertical();
 
             // Header
             GUILayout.Label("🧪 pH SYSTEM DEBUG CONSOLE", labelStyle);
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
-            // Stato corrente pH
+            // Stato corrente pH (escludendo drift simulato dal display principale)
+            var contribHeader = _phSystem.GetContributions();
+            float phDisplay = _phSystem.CurrentPh - contribHeader.DailyDrift; // esclude drift simulato
             var bandColor = _phSystem.GetBandColor();
             var oldColor = GUI.color;
             GUI.color = bandColor;
-            GUILayout.Label($"pH Corrente: {_phSystem.CurrentPh:F2}", labelStyle);
+            GUILayout.Label($"pH Corrente: {phDisplay:F2}", labelStyle);
             GUI.color = oldColor;
             GUILayout.Label($"Banda: {_phSystem.GetBandName()}", labelStyle);
             GUILayout.Space(13); // Scalato del 30% (10 * 1.3)
@@ -294,11 +324,58 @@ namespace Sporae.DevTools
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
+            
+            // BLK-02.07: Pulsante End of Day per testare sequenza cambio giorno
+            GUILayout.Label("Controlli Giorno:", labelStyle);
+            GUILayout.BeginHorizontal();
+            if (_dayCycleSystem != null)
+            {
+                int currentDay = _dayCycleSystem.CurrentDay;
+                bool canEndDay = _dayCycleSystem.CanEndDay();
+                
+                GUI.enabled = canEndDay;
+                if (GUILayout.Button($"End of Day (Giorno {currentDay})", buttonStyle, GUILayout.Width(260)))
+                {
+                    if (_dayCycleSystem.EndDay())
+                    {
+                        AddLog($"✅ End of Day attivato! Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+                    }
+                    else
+                    {
+                        AddLog("❌ End of Day fallito - CRY insufficienti");
+                    }
+                }
+                GUI.enabled = true;
+                
+                if (!canEndDay)
+                {
+                    GUILayout.Label("(CRY insufficienti)", new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.red } });
+                }
+            }
+            else
+            {
+                GUI.enabled = false;
+                GUILayout.Button("End of Day (N/A)", buttonStyle, GUILayout.Width(260));
+                GUI.enabled = true;
+                
+                // Prova a recuperare DayCycleSystem se non disponibile
+                if (GUILayout.Button("Retry", buttonStyle, GUILayout.Width(78)))
+                {
+                    TryGetDayCycleSystem();
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Effetti su piante
             GUILayout.Label("Effetti su Piante:", labelStyle);
             ShowPlantEffects();
-            GUILayout.Space(5);
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
+            
+            // BLK-02.07: Breakdown calcoli pH (sequenza step-by-step)
+            GUILayout.Label("📊 Breakdown Calcoli pH:", labelStyle);
+            ShowCalculationBreakdown();
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
 
             // Log debug
             GUILayout.Label("Log:", labelStyle);
@@ -312,9 +389,10 @@ namespace Sporae.DevTools
             // Hotkeys info
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
             GUILayout.Label("Hotkeys: 1-5=Valori rapidi | +/- = ±5 | R=Reset | D=Drift", 
-                new GUIStyle(GUI.skin.label) { fontSize = 13, normal = { textColor = Color.gray } }); // Scalato del 30% (10 * 1.3)
+                new GUIStyle(GUI.skin.label) { fontSize = 16, normal = { textColor = Color.gray } }); // Aumentato da 13 a 16
 
             GUILayout.EndVertical();
+            GUILayout.EndScrollView(); // Fine scroll view principale
             GUILayout.EndArea();
         }
 
@@ -381,6 +459,69 @@ namespace Sporae.DevTools
             };
 
             GUILayout.Label($"  {effects}", new GUIStyle(GUI.skin.label) { fontSize = 14 }); // Scalato del 30% (11 * 1.3)
+        }
+        
+        /// <summary>
+        /// BLK-02.07: Mostra breakdown dettagliato dei calcoli pH (sequenza step-by-step)
+        /// </summary>
+        private void ShowCalculationBreakdown()
+        {
+            if (_phSystem == null) return;
+            
+            string breakdown = _phSystem.GetCalculationBreakdown();
+            
+            // Rimuovi tag HTML per GUI (mantieni solo testo)
+            breakdown = breakdown.Replace("<b>", "").Replace("</b>", "");
+            breakdown = breakdown.Replace("<color=#FFFF00>", "").Replace("<color=#00FFFF>", "");
+            breakdown = breakdown.Replace("<color=#FF00FF>", "").Replace("<color=#FFA500>", "");
+            breakdown = breakdown.Replace("<color=#808080>", "").Replace("</color>", "");
+            
+            // Mostra pulsante per pulire il drift simulato se presente
+            var contrib = _phSystem.GetContributions();
+            float simulatedDrift = contrib.DailyDrift;
+            if (Mathf.Abs(simulatedDrift) > 0.01f)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Drift simulato: {simulatedDrift:+#0.0;-#0.0}", new GUIStyle(GUI.skin.label) { fontSize = 15, normal = { textColor = Color.yellow } });
+                if (GUILayout.Button("Pulisci drift simulato", GUILayout.Width(210)))
+                {
+                    _phSystem.ClearDailyDrift();
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.Space(4);
+            }
+
+            // BLK-02.07: Calcola altezza dinamica in base al numero di righe
+            int lineCount = breakdown.Split('\n').Length;
+            float dynamicHeight = Mathf.Clamp(lineCount * 20f + 20f, 100f, 400f); // Min 100px, max 400px, ~20px per riga
+            
+            // Mostra in area scrollabile con altezza adattiva
+            var scrollStyle = new GUIStyle(GUI.skin.label) 
+            { 
+                fontSize = 15, // Aumentato da 12 a 15 per migliore visibilità
+                normal = { textColor = Color.cyan },
+                wordWrap = true,
+                alignment = TextAnchor.UpperLeft
+            };
+            
+            var scrollRect = GUILayout.BeginScrollView(new Vector2(0, 0), false, true, GUILayout.Height(dynamicHeight));
+            GUILayout.Label(breakdown, scrollStyle);
+            GUILayout.EndScrollView();
+            
+            // Mostra anche contributi accodati (queued) se disponibili
+            GUILayout.Space(3);
+            GUILayout.Label($"Queued: Plants={contrib.PlantsDrift:+#0.0;-#0.0;0} Actions={contrib.ActionsDrift:+#0.0;-#0.0;0} Events={contrib.EventsDrift:+#0.0;-#0.0;0}", 
+                new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.yellow } }); // Aumentato da 11 a 14
+
+            // pH corrente separato dal drift simulato
+            float phWithoutSim = _phSystem.CurrentPh - simulatedDrift;
+            GUILayout.Space(3);
+            GUILayout.Label($"pH Corrente (senza drift simulato): {phWithoutSim:F1}", new GUIStyle(GUI.skin.label) { fontSize = 15, normal = { textColor = Color.white } });
+            if (Mathf.Abs(simulatedDrift) > 0.01f)
+            {
+                GUILayout.Label($"Drift simulato: {simulatedDrift:+#0.0;-#0.0}", new GUIStyle(GUI.skin.label) { fontSize = 15, normal = { textColor = Color.yellow } });
+                GUILayout.Label($"pH Corrente (con drift simulato): {_phSystem.CurrentPh:F1}", new GUIStyle(GUI.skin.label) { fontSize = 15, normal = { textColor = Color.white } });
+            }
         }
 
         private void AddLog(string message)

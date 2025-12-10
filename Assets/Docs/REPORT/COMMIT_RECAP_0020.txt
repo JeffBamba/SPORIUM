@@ -1,0 +1,131 @@
+================================================================================
+                    COMMIT RECAP - SPORAE BUILD BETA
+                    Versione: 0020
+                    Data: 2025-01-XX
+================================================================================
+
+🎯 COMMIT MESSAGE SUGGERITO
+----------------------------
+
+feat(BLK-02.07): LED persistente con pulsanti separati + Debug Console + Lights Unity
+
+Implementato sistema LED con due pulsanti ON/OFF separati (Blue/Red), componente 
+LedLightController per gestire luci Unity 2D, miglioramenti Debug Console pH, 
+e fix calcolo totale pH.
+
+================================================================================
+
+📦 FILES MODIFICATI/CREATI
+===========================
+
+✨ NUOVI FILE:
+- Assets/_Project/Scripts/Dome/PotSystem/LedLightController.cs
+  → Componente per gestire luci Unity 2D associate ai LED dei vasi
+
+- Assets/Docs/REPORT/ISTRUZIONI_MANUALI_LED_BUTTONS.md
+  → Istruzioni manuali per setup luci Unity e pulsanti in scena
+
+- Assets/Docs/REPORT/DEV REPORT_0020.txt
+  → Report completo sviluppo
+
+📝 FILE MODIFICATI:
+- Assets/_Project/Scripts/Dome/PotActions.cs
+  → Aggiunto riferimento LedLightController
+  → Aggiunto metodo DoLight(LedType) per controllo LED specifico
+  → Integrazione automatica luci Unity quando cambia stato LED
+
+- Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs
+  → Due pulsanti separati: OnBlueLedClicked() e OnRedLedClicked()
+  → UI mostra stato ON/OFF per entrambi i pulsanti
+  → Aggiornamento automatico testi pulsanti
+
+- Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs
+  → Font aumentati (label 20, button 18) per migliore visibilità
+  → Console scrollabile e auto-adattiva (max 900px altezza)
+  → Sezione "Breakdown Calcoli pH" con dettaglio step-by-step
+  → Pulsante "End of Day" per simulazione fine giornata
+  → Pulsante "Pulisci drift simulato"
+
+- Assets/_Project/Scripts/Core/PhSystem.cs
+  → Fix calcolo totale pH: usa valori cumulativi reali
+  → Totale "da contributi" ora corrisponde al pH reale
+  → DailyDrift escluso dal totale (solo simulazione)
+  → Metodo ClearDailyDrift() per reset drift simulato
+
+================================================================================
+
+🔧 FEATURES PRINCIPALI
+======================
+
+1. SISTEMA LED CON PULSANTI SEPARATI
+   - Due pulsanti indipendenti: "LED Blue ON/OFF" e "LED Red ON/OFF"
+   - Toggle indipendente per ogni LED
+   - UI mostra stato corrente (ON/OFF)
+
+2. COMPONENTE LEDLIGHTCONTROLLER
+   - Gestisce due luci Unity 2D (blu e rossa) per ogni vaso
+   - Ricerca automatica luci come figli del vaso
+   - Sincronizzazione automatica con stato LED
+
+3. INTEGRAZIONE LUCI UNITY
+   - Luci si accendono/spengono automaticamente quando LED cambia stato
+   - Supporto per luci assegnate manualmente o automaticamente
+
+4. DEBUG CONSOLE pH MIGLIORATA
+   - Font più grandi per migliore leggibilità
+   - Console scrollabile e auto-adattiva
+   - Breakdown dettagliato calcoli pH
+   - Pulsante "End of Day" per simulazione
+   - Pulsante "Pulisci drift simulato"
+
+5. FIX CALCOLO TOTALE pH
+   - Usa valori cumulativi reali invece di sommare liste limitate
+   - Totale corrisponde correttamente al pH reale
+   - DailyDrift escluso dal totale
+
+================================================================================
+
+🐛 BUG FIXES
+============
+
+- Fix calcolo totale pH: ora usa valori cumulativi reali (contrib.PlantsDrift, 
+  contrib.ActionsDrift, contrib.EventsDrift) invece di sommare _plantContributions
+  che ha limite 50 e può non contenere tutti i contributi storici
+
+================================================================================
+
+📋 SETUP MANUALE RICHIESTO IN UNITY
+====================================
+
+1. Aggiungere componente LedLightController a ogni vaso
+2. Creare due luci Unity 2D (BlueLight e RedLight) per ogni vaso
+3. Assegnare luci al componente LedLightController
+4. Verificare che pulsanti UI siano collegati correttamente
+
+Vedi: Assets/Docs/REPORT/ISTRUZIONI_MANUALI_LED_BUTTONS.md
+
+================================================================================
+
+✅ TESTING
+==========
+
+- [x] Pulsanti LED funzionano correttamente
+- [x] Toggle indipendente Blue/Red funziona
+- [x] Luci Unity si aggiornano automaticamente
+- [x] Debug console mostra breakdown corretto
+- [x] Totale pH corrisponde ai contributi reali
+- [ ] Setup completo luci Unity in scena (da fare manualmente)
+
+================================================================================
+
+📊 STATISTICHE
+==============
+
+- File creati: 3
+- File modificati: 4
+- Righe aggiunte: ~400
+- Componenti nuovi: 1 (LedLightController)
+- Metodi nuovi: 3 (DoLight(LedType), OnBlueLedClicked, OnRedLedClicked)
+
+================================================================================
+

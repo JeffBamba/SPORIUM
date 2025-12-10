@@ -895,7 +895,7 @@ public class PotHUDWidget : MonoBehaviour
                 success = selectedPot.PotActions.DoWater();
                 break;
             case PotEvents.PotActionType.Light:
-                success = selectedPot.PotActions.DoLight();
+                success = selectedPot.PotActions.DoLight((LedSystemState?)null);  // Toggle esplicito
                 break;
             case PotEvents.PotActionType.Spray:
                 success = selectedPot.PotActions.DoSprayAntifungal();

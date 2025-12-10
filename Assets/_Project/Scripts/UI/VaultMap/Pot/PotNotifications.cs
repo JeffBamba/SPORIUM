@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace _Project.Pot
 {
@@ -60,11 +61,37 @@ namespace _Project.Pot
                     text = "Il sistema di Irrigazione a goccia è disattivato";
                 }
             }
+            else if (type == PotEvents.PotActionType.Light)
+            {
+                // BLK-02.07: Messaggio specifico per toggle LED
+                if (pot != null && pot.PotActions != null)
+                {
+                    var ledState = pot.PotActions.GetLedSystemState();
+                    switch (ledState)
+                    {
+                        case LedSystemState.Off:
+                            text = $"Hai spento il LED ({pot.PotId})";
+                            break;
+                        case LedSystemState.Blue:
+                            text = $"Hai acceso il LED Blu ({pot.PotId})";
+                            break;
+                        case LedSystemState.Red:
+                            text = $"Hai acceso il LED Rosso ({pot.PotId})";
+                            break;
+                        default:
+                            text = "Hai modificato il LED";
+                            break;
+                    }
+                }
+                else
+                {
+                    text = "You have successfully illuminated the plant.";
+                }
+            }
             else
             {
                 text = type switch
                 {
-                    PotEvents.PotActionType.Light => "You have successfully illuminated the plant.",
                     PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
                     _ => "You have successfully uprooted the plant."
                 };

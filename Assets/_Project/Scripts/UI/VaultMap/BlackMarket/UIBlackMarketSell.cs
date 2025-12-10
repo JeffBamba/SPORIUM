@@ -50,6 +50,12 @@ namespace _Project.BlackMarket
         private void HandleSellAll(UIBlackMarketSellItem item)
         {
             var index = _items.IndexOf(item);
+            if (index < 0 || index >= _storage.UniqueItems)
+            {
+                Debug.LogWarning($"[UIBlackMarketSell] ⚠️ Indice invalido per HandleSellAll: {index} (UniqueItems: {_storage.UniqueItems})");
+                return;
+            }
+            
             var selectedItem = _storage.Items.ElementAt(index);
 
             int price = 0;
@@ -64,6 +70,12 @@ namespace _Project.BlackMarket
         private void HandleSellOne(UIBlackMarketSellItem item)
         {
             var index = _items.IndexOf(item);
+            if (index < 0 || index >= _storage.UniqueItems)
+            {
+                Debug.LogWarning($"[UIBlackMarketSell] ⚠️ Indice invalido per HandleSellOne: {index} (UniqueItems: {_storage.UniqueItems})");
+                return;
+            }
+            
             var selectedItem = _storage.Items.ElementAt(index);
             
             int price = 0;
@@ -76,14 +88,21 @@ namespace _Project.BlackMarket
         
         private void UpdateStorage()
         {
+            if (_storage == null || _hudItemContainer == null)
+                return;
+            
             _hudItemContainer.DisableAllSlots();
             
-            for (var i = 0; i < _storage.UniqueItems; i++)
+            // BUG FIX: Limita il loop al numero di slot disponibili nel container
+            // per evitare IndexOutOfRangeException quando ci sono più item unici che slot
+            int maxItems = Mathf.Min(_storage.UniqueItems, _hudItemContainer.Capacity, _items.Count);
+            
+            for (var i = 0; i < maxItems; i++)
             {
                 var itemSlot = _storage.Items.ElementAt(i);
                 _hudItemContainer.SetItemData(i, itemSlot.TypeId, itemSlot.Quantity);
 
-                if (itemSlot.Items.Count > 0)
+                if (itemSlot.Items.Count > 0 && i < _items.Count)
                 {
                     var item = itemSlot.Items.ElementAt(0);
                     _items[i].SetData(item.ItemConfig.SellPrice, item.ItemConfig.SellPrice * itemSlot.Quantity);

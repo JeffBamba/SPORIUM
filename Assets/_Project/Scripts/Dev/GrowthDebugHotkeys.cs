@@ -2,6 +2,7 @@ using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace Sporae.Dev
 {
@@ -123,16 +124,18 @@ namespace Sporae.Dev
                 return;
             }
             
-            Debug.Log($"[BLK-01.03B] 💡 Tentativo illuminazione vaso {selectedPot.PotId}...");
-            bool success = selectedPot.PotActions.DoLight();
+            LedSystemState oldState = selectedPot.PotActions.GetLedSystemState();
+            Debug.Log($"[BLK-01.03B] 💡 Toggle LED sistema vaso {selectedPot.PotId} (stato attuale: {oldState})...");
+            bool success = selectedPot.PotActions.DoLight((LedSystemState?)null);  // Toggle esplicito
             
             if (success)
             {
-                Debug.Log($"[BLK-01.03B] ✅ Vaso {selectedPot.PotId} illuminato con successo!");
+                LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
+                Debug.Log($"[BLK-01.03B] ✅ LED sistema vaso {selectedPot.PotId}: {oldState} → {newState}");
             }
             else
             {
-                Debug.LogWarning($"[BLK-01.03B] ❌ Illuminazione vaso {selectedPot.PotId} fallita!");
+                Debug.LogWarning($"[BLK-01.03B] ❌ Toggle LED sistema fallito!");
             }
         }
         

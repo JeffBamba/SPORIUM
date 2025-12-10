@@ -49,6 +49,14 @@ public class PotStateModel
     [Tooltip("Ultimo tipo LED utilizzato (Blue/Red)")]
     public LedType? LastLedType;  // Null se mai usato LED, Blue o Red se usato
     
+    [Header("LED System (BLK-02.07 - Persistent Toggle)")]
+    [Tooltip("Stato sistema LED: Off, Blue, Red")]
+    public LedSystemState LedSystemState = LedSystemState.Off;
+    [Tooltip("Giorni consecutivi con BLUE LED attivo")]
+    public int DaysLedBlueConsecutive = 0;
+    [Tooltip("Giorni consecutivi con RED LED attivo")]
+    public int DaysLedRedConsecutive = 0;
+    
     [Header("Watering System (GDD AZ-11 - Toggle Persistente)")]
     [Tooltip("Sistema irrigazione a goccia ON/OFF persistente")]
     public bool WateringSystemOn;  // Stato toggle ON/OFF
@@ -102,6 +110,10 @@ public class PotStateModel
         PlantedDay = plantedDay;
         LastWateredDay = 0;
         LastLitDay = 0;
+        LastLedType = null;
+        LedSystemState = LedSystemState.Off;
+        DaysLedBlueConsecutive = 0;
+        DaysLedRedConsecutive = 0;
         PlantCode = null;
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
@@ -172,6 +184,10 @@ public class PotStateModel
         PlantedDay = currentDay;
         LastWateredDay = 0;
         LastLitDay = 0;
+        LastLedType = null;
+        LedSystemState = LedSystemState.Off;
+        DaysLedBlueConsecutive = 0;
+        DaysLedRedConsecutive = 0;
         PlantCode = plantCode;
         WateringSystemOn = false;  // Nuova pianta = sistema OFF
         DaysWateringSystemOn = 0;
@@ -217,10 +233,87 @@ public class PotStateModel
         LastWateredDay = 0;
         LastLitDay = 0;
         LastLedType = null;
+        LedSystemState = LedSystemState.Off;
+        DaysLedBlueConsecutive = 0;
+        DaysLedRedConsecutive = 0;
         PlantCode = null;
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Aggiorna stato LED persistente
+    /// </summary>
+    public void SetLedSystemState(LedSystemState newState)
+    {
+        LedSystemState = newState;
+        
+        // Reset contatori se cambiato tipo
+        if (newState == LedSystemState.Blue)
+            DaysLedRedConsecutive = 0;
+        else if (newState == LedSystemState.Red)
+            DaysLedBlueConsecutive = 0;
+        else
+        {
+            DaysLedBlueConsecutive = 0;
+            DaysLedRedConsecutive = 0;
+        }
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Ottiene giorni consecutivi per stato LED corrente
+    /// </summary>
+    public int GetConsecutiveLedDays()
+    {
+        if (LedSystemState == LedSystemState.Blue)
+            return DaysLedBlueConsecutive;
+        if (LedSystemState == LedSystemState.Red)
+            return DaysLedRedConsecutive;
+        return 0;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Incrementa contatore giorni consecutivi (chiamato a fine giornata)
+    /// </summary>
+    public void IncrementConsecutiveLedDays()
+    {
+        if (LedSystemState == LedSystemState.Blue)
+            DaysLedBlueConsecutive++;
+        else if (LedSystemState == LedSystemState.Red)
+            DaysLedRedConsecutive++;
+        // Off non incrementa
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Calcola livello Burn Risk in base a giorni consecutivi
+    /// </summary>
+    /// <returns>0 = Nessun rischio, 1 = Medio, 2 = Alto, 3 = Critico</returns>
+    public int GetBurnRiskLevel()
+    {
+        int consecutiveDays = GetConsecutiveLedDays();
+        
+        if (LedSystemState == LedSystemState.Off || consecutiveDays <= 1)
+            return 0;  // Nessun rischio
+        
+        if (consecutiveDays >= 2 && consecutiveDays <= 3)
+            return 1;  // Rischio medio
+        
+        if (consecutiveDays >= 4 && consecutiveDays <= 5)
+            return 2;  // Rischio alto
+        
+        if (consecutiveDays >= 6)
+            return 3;  // Rischio critico (zona rossa)
+        
+        return 0;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Verifica se pianta è in zona rossa (4+ giorni consecutivi)
+    /// </summary>
+    public bool IsInRedZone()
+    {
+        return GetConsecutiveLedDays() >= 4 && LedSystemState != LedSystemState.Off;
     }
     
     /// <summary>
