@@ -37,6 +37,32 @@ public class PotActions : MonoBehaviour
     {
         _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         
+        // Fallback: carica PotSystemConfig se non assegnato
+        if (config == null)
+        {
+            config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (config == null)
+            {
+                var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
+                if (allConfigs != null && allConfigs.Length > 0)
+                {
+                    config = allConfigs[0];
+                }
+            }
+        }
+        
+        // BUG FIX: Verifica che MaxHydration sia 10 (non 4 del vecchio sistema)
+        if (config != null && config.MaxHydration == 4)
+        {
+            if (showDebugLogs)
+                Debug.LogWarning($"[PotActions] ⚠️ Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
+            // Forza ricaricamento per ottenere il valore aggiornato
+            Resources.UnloadAsset(config);
+            config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (config != null && showDebugLogs)
+                Debug.Log($"[PotActions] ✅ Config ricaricato: MaxHydration={config.MaxHydration}");
+        }
+        
         // Trova il PotSlot se non assegnato
         if (potSlot == null)
             potSlot = GetComponent<PotSlot>();
@@ -241,17 +267,17 @@ public class PotActions : MonoBehaviour
             return false;
         
         // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
+        // MODIFICA: LED può essere acceso anche subito dopo aver piantato (stadio Seed)
         // NOTA: BLK-02.07 - Non verifica più lightNotMax (LED è toggle persistente, non incremento immediato)
         bool
             hasPlant = _potState.HasPlantGrowing,
             inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources(),
-            notPlantedOnThisDay = _potState.PlantedDay != _dayCycleSystem.CurrentDay;
+            hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}");
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}, Stage={(PlantStage)_potState.Stage}");
         
-        return hasPlant && inRange && hasResources && notPlantedOnThisDay;
+        return hasPlant && inRange && hasResources;
     }
     
     /// <summary>
@@ -928,7 +954,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public int GetMaxHydration()
     {
-        return config ? config.MaxHydration : 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
+        return config ? config.MaxHydration : 5; // Fallback a 5 step = 20% ciascuno
     }
     
     /// <summary>

@@ -3,10 +3,12 @@ using _Project.Sporae.Core;
 // GDD AZ-11: Watering namespace rimosso (minigioco deprecato)
 // using _Project.Watering;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace _Project
 {
@@ -35,6 +37,17 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _phDriftText;
         [SerializeField] private TextMeshProUGUI _rarityText;
         [SerializeField] private TextMeshProUGUI _effectsText;
+        
+        [Header("Plant Condition UI")]
+        [SerializeField] private TextMeshProUGUI _conditionLabelText;
+        [SerializeField] private ProgressBar _conditionBar;
+        [SerializeField] private TextMeshProUGUI _conditionForecastText;
+        [SerializeField] private GameObject _conditionTooltipPanel;
+        [SerializeField] private TextMeshProUGUI _conditionTooltipText;
+        
+        [Header("Growth Tooltip UI")]
+        [SerializeField] private GameObject _growthTooltipPanel;
+        [SerializeField] private TextMeshProUGUI _growthTooltipText;
 
         [SerializeField] private GameObject _page;
         
@@ -48,6 +61,8 @@ namespace _Project
         private PlantGrowthConfig _growthConfig;
         private GameManager _gameManager;
         private DayCycleSystem _dayCycleSystem;
+        private PhSystem _phSystem;
+        private PotSystemConfig _potSystemConfig;
         
         private void Awake()
         {
@@ -101,6 +116,21 @@ namespace _Project
             _dayCycleSystem.OnDayChanged += HandleDayChanged;
             
             _gameManager = FindObjectOfType<GameManager>();
+            
+            // Inizializza PhSystem e PotSystemConfig per calcolo condizione
+            _phSystem = ServiceContainer.Instance.Get<PhSystem>(suppressWarning: true);
+            _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (_potSystemConfig == null)
+            {
+                var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
+                if (allConfigs != null && allConfigs.Length > 0)
+                {
+                    _potSystemConfig = allConfigs[0];
+                }
+            }
+            
+            // Setup tooltip per progress bar Growth
+            SetupGrowthTooltip();
             
             // Verifica che i bottoni siano assegnati prima di aggiungere listener
             if (_plantButton != null)
@@ -266,6 +296,7 @@ namespace _Project
                 return;
         
             UpdateActionButtons(_currentSelectedPot);
+            // Aggiorna UI completa per riflettere cambiamenti giorno (es. LastLitDay)
             UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
@@ -654,6 +685,9 @@ namespace _Project
             UpdatePlantStatsUI(state);
     
             UpdateProgressUI(state);
+            
+            // Aggiorna Condizione pianta
+            UpdateConditionUI(state);
         }
         
         /// <summary>
@@ -713,7 +747,7 @@ namespace _Project
             }
             
             // Aggiorna Hydration Stress (mostra percentuale e range ideale per lo stadio corrente)
-            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
+            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 5; // 5 step = 20% ciascuno
             float hydrationPercentage = maxHydration > 0 ? (float)state.Hydration / maxHydration * 100f : 0f;
             
             // GDD AZ-11: Mostra anche lo stato del sistema irrigazione
@@ -759,47 +793,41 @@ namespace _Project
                 _hydrationProgressBar.gameObject.SetActive(false);
             }
             
-            // Aggiorna Light Stress (mostra percentuale e LED richiesto per lo stadio corrente)
-            int maxLight = _currentSelectedPot?.PotActions?.GetMaxLightExposure() ?? 3;
-            float lightPercentage = maxLight > 0 ? (float)state.LightExposure / maxLight * 100f : 0f;
-            
+            // Aggiorna Light Stress (mostra percentuale abuso luce: decresce gradualmente quando LED spento)
             if (_lightStressText != null)
             {
-                // Assicurati che richText sia abilitato
                 _lightStressText.richText = true;
                 
-                string lightText = $"<color=#CCCCCC>Light Exposure:</color> <color=#FFFF00>{lightPercentage:F0}%</color>";
+                float stressPercentage = 0f;
                 
-                // Se c'è una pianta, mostra anche il LED richiesto per lo stadio corrente
-                if (!string.IsNullOrEmpty(state.PlantCode))
+                // Calcola stress basato su giorni consecutivi (sia LED acceso che spento)
+                // Quando LED è spento, i giorni consecutivi decrescono di 1 al giorno (25% di stress)
+                int consecutiveDays = state.GetConsecutiveLedDays();
+                
+                // Stress calcolato sempre in base ai giorni consecutivi residui
+                // 0 giorni = 0% (nessuno stress)
+                // 1 giorno = 25%
+                // 2 giorni = 50%
+                // 3 giorni = 75%
+                // 4+ giorni = 100% (zona rossa, malus attivo)
+                const int maxDaysForFullStress = 4;
+                stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+                
+                // Nota: Quando LED è spento, i giorni consecutivi decrescono gradualmente (25% al giorno)
+                // seguendo la stessa logica della crescita ma al contrario
+                
+                // Colore in base allo stress
+                string stressColor = stressPercentage switch
                 {
-                    var plantDatabase = PlantDatabase.Instance;
-                    if (plantDatabase != null)
-                    {
-                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
-                        if (plantData != null)
-                        {
-                            var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
-                            if (stageReq != null)
-                            {
-                                var requiredLed = stageReq.GetRequiredLed();
-                                if (requiredLed.HasValue)
-                                {
-                                    // Mostra il LED richiesto per lo stadio corrente
-                                    lightText += $" <color=#CCCCCC>(Required LED:</color> <color=#00FFFF>{requiredLed.Value}</color><color=#CCCCCC>)</color>";
-                                }
-                                else
-                                {
-                                    // Nessun LED richiesto
-                                    lightText += $" <color=#CCCCCC>(No LED required)</color>";
-                                }
-                            }
-                        }
-                    }
-                }
+                    >= 100f => "#FF0000",  // Rosso per stress massimo (4+ giorni)
+                    >= 75f => "#FF6600",   // Arancione scuro per stress alto (3 giorni)
+                    >= 50f => "#FFAA00",   // Arancione per stress medio (2 giorni)
+                    >= 25f => "#FFFF00",   // Giallo per stress basso (1 giorno)
+                    _ => "#00FF00"         // Verde per nessuno stress (0 giorni)
+                };
                 
-                _lightStressText.text = lightText;
-                Debug.Log($"[PotDetailsWidget] Aggiornato Light Exposure: {lightPercentage:F0}%");
+                _lightStressText.text = $"<color=#CCCCCC>Light Stress:</color> <color={stressColor}>{stressPercentage:F0}%</color>";
+                Debug.Log($"[PotDetailsWidget] Aggiornato Light Stress: {stressPercentage:F0}% (LED: {state.LedSystemState}, Giorni consecutivi: {state.GetConsecutiveLedDays()})");
             }
             else
             {
@@ -1007,9 +1035,10 @@ namespace _Project
         {
             int points = state.GrowthPoints;
             // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay
+            // BLK-02.07: Usa LedSystemState invece di LastLitDay per verificare stato corrente
             bool
                 hadHydration = state.WateringSystemOn,
-                hadLight = (state.LastLitDay == _dayCycleSystem.CurrentDay);
+                hadLight = (state.LedSystemState != LedSystemState.Off);
 
             points += (hadHydration, hadLight) switch
             {
@@ -1088,9 +1117,9 @@ namespace _Project
             switch (state.Stage)
             {
                 case (int)PlantStage.Seed:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSeedToSprout ?? 4)}/{_growthConfig?.pointsSeedToSprout ?? 4} punti";
+                    return $"Giorno {daysSincePlant}";
                 case (int)PlantStage.Sprout:
-                    return $"Giorno {daysSincePlant} - {Mathf.Clamp(points, 0, _growthConfig?.pointsSproutToMature ?? 4)}/{_growthConfig?.pointsSproutToMature ?? 4} punti";
+                    return $"Giorno {daysSincePlant}";
                 case (int)PlantStage.HarvestReady:
                     return $"Giorno {daysSincePlant} - Pronta per raccolta!";
                 default:
@@ -1132,6 +1161,27 @@ namespace _Project
                     return "100% - HarvestReady!";
                 default:
                     return $"{Mathf.RoundToInt(percentage)}%";
+            }
+        }
+        
+        /// <summary>
+        /// Restituisce la soglia (threshold) di punti per lo stadio corrente
+        /// </summary>
+        private string GetStageThreshold(int stage)
+        {
+            if (_growthConfig == null)
+                return "?";
+                
+            switch (stage)
+            {
+                case (int)PlantStage.Seed:
+                    return _growthConfig.pointsSeedToSprout.ToString();
+                case (int)PlantStage.Sprout:
+                    return _growthConfig.pointsSproutToMature.ToString();
+                case (int)PlantStage.HarvestReady:
+                    return "MAX";
+                default:
+                    return "?";
             }
         }
         
@@ -1313,6 +1363,598 @@ namespace _Project
             }
             
             return null;
+        }
+        
+        /// <summary>
+        /// Setup tooltip per la progress bar Growth
+        /// </summary>
+        private void SetupGrowthTooltip()
+        {
+            if (_progressBar == null)
+                return;
+                
+            // Crea tooltip panel se non esiste
+            if (_growthTooltipPanel == null)
+            {
+                // Trova o crea Canvas con sorting order alto per tooltip
+                Canvas tooltipCanvas = GetOrCreateTooltipCanvas();
+                
+                GameObject tooltipGO = new GameObject("GrowthTooltipPanel");
+                tooltipGO.transform.SetParent(tooltipCanvas.transform, false);
+                
+                RectTransform tooltipRect = tooltipGO.AddComponent<RectTransform>();
+                tooltipRect.anchorMin = new Vector2(0, 1);
+                tooltipRect.anchorMax = new Vector2(0, 1);
+                tooltipRect.pivot = new Vector2(0, 1);
+                
+                // Posiziona il tooltip in base alla posizione della progress bar
+                Vector3 worldPos = _progressBar.transform.position;
+                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(tooltipCanvas.worldCamera ?? Camera.main, worldPos);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    tooltipCanvas.transform as RectTransform, screenPos, tooltipCanvas.worldCamera ?? Camera.main, out Vector2 localPos);
+                tooltipRect.anchoredPosition = new Vector2(localPos.x, localPos.y - 60);
+                
+                // Tooltip più grande per contenuto dettagliato
+                tooltipRect.sizeDelta = new Vector2(450, 300);
+                
+                Image tooltipBg = tooltipGO.AddComponent<Image>();
+                // Verde scuro solido (non trasparente)
+                tooltipBg.color = new Color(0f, 0.3f, 0.15f, 1f);
+                
+                _growthTooltipPanel = tooltipGO;
+                _growthTooltipPanel.SetActive(false);
+            }
+            
+            // Crea testo tooltip se non esiste
+            if (_growthTooltipText == null && _growthTooltipPanel != null)
+            {
+                GameObject textGO = new GameObject("GrowthTooltipText");
+                textGO.transform.SetParent(_growthTooltipPanel.transform, false);
+                
+                _growthTooltipText = textGO.AddComponent<TextMeshProUGUI>();
+                _growthTooltipText.color = Color.white;
+                _growthTooltipText.fontSize = 16; // Testo più grande (era 12)
+                _growthTooltipText.alignment = TextAlignmentOptions.Left;
+                _growthTooltipText.richText = true;
+                
+                RectTransform textRect = textGO.GetComponent<RectTransform>();
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = new Vector2(12, 12);
+                textRect.offsetMax = new Vector2(-12, -12);
+            }
+            
+            // Aggiungi EventTrigger alla progress bar per hover
+            EventTrigger trigger = _progressBar.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = _progressBar.gameObject.AddComponent<EventTrigger>();
+            
+            // PointerEnter - mostra tooltip (aggiorna sempre con dati più recenti)
+            EventTrigger.Entry enterEntry = new EventTrigger.Entry();
+            enterEntry.eventID = EventTriggerType.PointerEnter;
+            enterEntry.callback.AddListener((data) => {
+                if (_currentSelectedPot != null && _currentSelectedPot.PotActions != null)
+                {
+                    // Ottieni stato aggiornato (non cached)
+                    PotStateModel state = _currentSelectedPot.PotActions.GetCurrentState();
+                    if (state != null)
+                    {
+                        // Aggiorna tooltip con dati più recenti prima di mostrarlo
+                        UpdateGrowthTooltip(state);
+                        if (_growthTooltipPanel != null)
+                            _growthTooltipPanel.SetActive(true);
+                    }
+                }
+            });
+            trigger.triggers.Add(enterEntry);
+            
+            // PointerExit - nascondi tooltip
+            EventTrigger.Entry exitEntry = new EventTrigger.Entry();
+            exitEntry.eventID = EventTriggerType.PointerExit;
+            exitEntry.callback.AddListener((data) => {
+                if (_growthTooltipPanel != null)
+                    _growthTooltipPanel.SetActive(false);
+            });
+            trigger.triggers.Add(exitEntry);
+        }
+        
+        /// <summary>
+        /// Aggiorna tooltip Growth con dati attuali
+        /// </summary>
+        private void UpdateGrowthTooltip(PotStateModel state)
+        {
+            if (_growthTooltipText == null || state == null)
+                return;
+                
+            _growthTooltipText.text = BuildGrowthTooltip(state);
+        }
+        
+        /// <summary>
+        /// Costruisce il tooltip di crescita (progress bar Growth)
+        /// </summary>
+        private string BuildGrowthTooltip(PotStateModel state)
+        {
+            var sb = new System.Text.StringBuilder();
+            
+            if (_growthConfig == null)
+            {
+                sb.AppendLine("<b>Growth: Config non disponibile</b>");
+                return sb.ToString();
+            }
+            
+            string stageName = GetStageName(state.Stage);
+            float perc = CalculateProgressPercentage(state);
+            sb.AppendLine($"<b>Growth: {stageName} ({perc:F1}%)</b>");
+            sb.AppendLine();
+            
+            // Calcolo dettagliato passo-passo
+            int basePoints = state.GrowthPoints;
+            bool hadHydration = state.WateringSystemOn;
+            bool hadLight = (state.LedSystemState != LedSystemState.Off);
+            
+            int dailyBonus = (hadHydration, hadLight) switch
+            {
+                (true, true)   => _growthConfig.pointsIdealCare,
+                (true, false)  => _growthConfig.pointsPartialCare,
+                (false, true)  => _growthConfig.pointsPartialCare,
+                (false, false) => _growthConfig.pointsNoCare
+            };
+            
+            int totalPoints = basePoints + dailyBonus;
+            string threshold = GetStageThreshold(state.Stage);
+            int thresholdValue = GetStageThresholdValue(state.Stage);
+            
+            // Mostra calcolo dettagliato
+            sb.AppendLine("<color=#FFFF00>Calcolo Progresso:</color>");
+            sb.AppendLine();
+            sb.AppendLine($"<color=#CCCCCC>1. GrowthPoints accumulati:</color> <color=#FFFFFF>{basePoints}</color>");
+            sb.AppendLine();
+            
+            // Bonus giornaliero dettagliato
+            sb.AppendLine("<color=#CCCCCC>2. Bonus giornaliero (oggi):</color>");
+            if (dailyBonus > 0)
+            {
+                string bonusColor = (hadHydration && hadLight) ? "#00FF00" : "#FFFF00";
+                string bonusType = (hadHydration, hadLight) switch
+                {
+                    (true, true)   => "Cura Ideale",
+                    (true, false)  => "Cura Parziale",
+                    (false, true)  => "Cura Parziale",
+                    (false, false) => "Nessuna Cura"
+                };
+                sb.AppendLine($"   <color={bonusColor}>+{dailyBonus} punti</color> ({bonusType})");
+                sb.AppendLine($"   • Idratazione: <color={(hadHydration ? "#00FF00" : "#FF0000")}>{(hadHydration ? "ON" : "OFF")}</color>");
+                sb.AppendLine($"   • Luce LED: <color={(hadLight ? "#00FF00" : "#FF0000")}>{(hadLight ? "Accesa" : "Spenta")}</color>");
+            }
+            else
+            {
+                sb.AppendLine($"   <color=#FF0000>+{dailyBonus} punti</color> (Nessuna cura attiva)");
+                sb.AppendLine($"   • Idratazione: <color=#FF0000>OFF</color>");
+                sb.AppendLine($"   • Luce LED: <color=#FF0000>Spenta</color>");
+            }
+            sb.AppendLine();
+            
+            sb.AppendLine($"<color=#CCCCCC>3. Totale punti:</color> <color=#FFFFFF>{basePoints} + {dailyBonus} = <b>{totalPoints}</b></color>");
+            sb.AppendLine();
+            sb.AppendLine($"<color=#CCCCCC>4. Soglia per avanzare:</color> <color=#FFFFFF>{thresholdValue} punti</color>");
+            sb.AppendLine();
+            
+            // Calcolo percentuale
+            if (thresholdValue > 0)
+            {
+                float calculatedPerc = (float)totalPoints / thresholdValue * 100f;
+                sb.AppendLine($"<color=#CCCCCC>5. Progresso:</color> <color=#FFFFFF>{totalPoints} / {thresholdValue} × 100% = <b>{calculatedPerc:F1}%</b></color>");
+            }
+            else
+            {
+                sb.AppendLine($"<color=#CCCCCC>5. Progresso:</color> <color=#FFFFFF>N/A (soglia non definita)</color>");
+            }
+            sb.AppendLine();
+            
+            // Spiegazione impatti
+            sb.AppendLine("<color=#FFFF00>Impatti:</color>");
+            if (hadHydration && hadLight)
+            {
+                sb.AppendLine($"<color=#00FF00>• Cura Ideale:</color> +{_growthConfig.pointsIdealCare} punti/giorno");
+                sb.AppendLine("  (Watering ON + LED corretto)");
+            }
+            else if (hadHydration || hadLight)
+            {
+                sb.AppendLine($"<color=#FFFF00>• Cura Parziale:</color> +{_growthConfig.pointsPartialCare} punti/giorno");
+                sb.AppendLine($"  (Solo {(hadHydration ? "Watering" : "LED")} attivo)");
+            }
+            else
+            {
+                sb.AppendLine($"<color=#FF0000>• Nessuna Cura:</color> +{_growthConfig.pointsNoCare} punti/giorno");
+                sb.AppendLine("  (Watering OFF + LED spento)");
+            }
+            
+            int pointsNeeded = Mathf.Max(0, thresholdValue - totalPoints);
+            if (pointsNeeded > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"<color=#CCCCCC>Punti mancanti per avanzare:</color> <color=#FFFFFF>{pointsNeeded}</color>");
+                if (dailyBonus > 0)
+                {
+                    int daysNeeded = Mathf.CeilToInt((float)pointsNeeded / dailyBonus);
+                    sb.AppendLine($"<color=#CCCCCC>Giorni stimati (con cura attuale):</color> <color=#FFFFFF>~{daysNeeded}</color>");
+                }
+            }
+            else if (totalPoints >= thresholdValue)
+            {
+                sb.AppendLine();
+                sb.AppendLine("<color=#00FF00>✓ Pronto per avanzare al prossimo stadio!</color>");
+            }
+            
+            // Sezione Calcolo Condizione
+            sb.AppendLine();
+            sb.AppendLine("<color=#FFFF00>━━━━━━━━━━━━━━━━━━━━━━━━━━━━</color>");
+            sb.AppendLine();
+            sb.AppendLine("<color=#FFFF00>Calcolo Condizione (0-100):</color>");
+            sb.AppendLine();
+            
+            // Calcola condizione per mostrare i contributi
+            PlantData plantData = state.GetPlantData();
+            if (plantData != null && _phSystem != null && _potSystemConfig != null)
+            {
+                ConditionResult conditionResult = PlantConditionSystem.CalculateCondition(
+                    state,
+                    plantData,
+                    _phSystem,
+                    _potSystemConfig,
+                    _dayCycleSystem?.CurrentDay ?? 1,
+                    state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore);
+                
+                string conditionName = PlantConditionSystem.GetConditionName(
+                    conditionResult.Condition,
+                    PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration));
+                
+                sb.AppendLine($"<color=#CCCCCC>Condizione attuale:</color> <color=#FFFFFF><b>{conditionName} ({conditionResult.Score}/100)</b></color>");
+                sb.AppendLine();
+                
+                // Contributi positivi
+                var positiveContribs = System.Array.FindAll(conditionResult.Contributors, c => c.IsPositive);
+                if (positiveContribs.Length > 0)
+                {
+                    sb.AppendLine("<color=#00FF00>Contributi positivi:</color>");
+                    foreach (var contrib in positiveContribs)
+                    {
+                        sb.AppendLine($"  • {contrib.Source}: <color=#00FF00>+{contrib.Value}</color>");
+                    }
+                    sb.AppendLine();
+                }
+                
+                // Contributi negativi
+                var negativeContribs = System.Array.FindAll(conditionResult.Contributors, c => !c.IsPositive);
+                if (negativeContribs.Length > 0)
+                {
+                    sb.AppendLine("<color=#FF0000>Contributi negativi:</color>");
+                    foreach (var contrib in negativeContribs)
+                    {
+                        sb.AppendLine($"  • {contrib.Source}: <color=#FF0000>{contrib.Value}</color>");
+                    }
+                    sb.AppendLine();
+                }
+                
+                // Calcolo totale
+                int baseScore = 50; // BASE_SCORE
+                int totalPositive = 0;
+                int totalNegative = 0;
+                foreach (var contrib in conditionResult.Contributors)
+                {
+                    if (contrib.IsPositive)
+                        totalPositive += contrib.Value;
+                    else
+                        totalNegative += Mathf.Abs(contrib.Value);
+                }
+                
+                sb.AppendLine("<color=#CCCCCC>Calcolo totale:</color>");
+                sb.AppendLine($"  Base: <color=#FFFFFF>{baseScore}</color>");
+                if (totalPositive > 0)
+                    sb.AppendLine($"  Bonus: <color=#00FF00>+{totalPositive}</color>");
+                if (totalNegative > 0)
+                    sb.AppendLine($"  Malus: <color=#FF0000>-{totalNegative}</color>");
+                sb.AppendLine($"  Totale: <color=#FFFFFF><b>{baseScore + totalPositive - totalNegative}</b></color> → clampato a <color=#FFFFFF><b>{conditionResult.Score}/100</b></color>");
+                
+                // Forecast
+                if (conditionResult.ScoreDelta != 0)
+                {
+                    string forecastSymbol = PlantConditionSystem.GetForecastSymbol(conditionResult.Forecast);
+                    string forecastColor = conditionResult.Forecast switch
+                    {
+                        ForecastDirection.Up => "#00FF00",
+                        ForecastDirection.Down => "#FF0000",
+                        _ => "#CCCCCC"
+                    };
+                    sb.AppendLine();
+                    sb.AppendLine($"<color=#CCCCCC>Forecast:</color> <color={forecastColor}>{forecastSymbol}</color> (Δ {conditionResult.ScoreDelta:+0;-0} dal giorno precedente)");
+                }
+            }
+            else
+            {
+                sb.AppendLine("<color=#FF0000>Dati non disponibili per calcolo condizione</color>");
+            }
+            
+            return sb.ToString();
+        }
+        
+        /// <summary>
+        /// Ottiene il valore numerico della soglia per lo stadio corrente
+        /// </summary>
+        private int GetStageThresholdValue(int stage)
+        {
+            if (_growthConfig == null)
+                return 0;
+                
+            switch (stage)
+            {
+                case (int)PlantStage.Seed:
+                    return _growthConfig.pointsSeedToSprout;
+                case (int)PlantStage.Sprout:
+                    return _growthConfig.pointsSproutToMature;
+                default:
+                    return 0;
+            }
+        }
+        
+        /// <summary>
+        /// Aggiorna UI Condizione pianta (label, barra, forecast)
+        /// </summary>
+        private void UpdateConditionUI(PotStateModel state)
+        {
+            if (state == null || !state.HasPlant)
+            {
+                // Nascondi UI condizione se vaso vuoto
+                if (_conditionLabelText != null)
+                    _conditionLabelText.text = "";
+                if (_conditionBar != null)
+                    _conditionBar.gameObject.SetActive(false);
+                if (_conditionForecastText != null)
+                    _conditionForecastText.text = "";
+                return;
+            }
+            
+            // Auto-trova riferimenti se non assegnati
+            if (_conditionLabelText == null)
+                _conditionLabelText = FindTextInChildren("Condition");
+            if (_conditionForecastText == null)
+                _conditionForecastText = FindTextInChildren("ConditionForecast");
+            if (_conditionBar == null)
+            {
+                var barTransform = FindTransformRecursive(_page.transform, "ConditionBar");
+                if (barTransform != null)
+                    _conditionBar = barTransform.GetComponent<ProgressBar>();
+            }
+            
+            // Calcola condizione
+            PlantData plantData = state.GetPlantData();
+            if (plantData == null || _phSystem == null || _potSystemConfig == null)
+            {
+                // Fallback: mostra score base se non possiamo calcolare
+                if (_conditionLabelText != null)
+                    _conditionLabelText.text = $"Condizione: Sana ({state.ConditionScore}/100)";
+                return;
+            }
+            
+            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                state, 
+                plantData, 
+                _phSystem, 
+                _potSystemConfig, 
+                _dayCycleSystem?.CurrentDay ?? 1, 
+                state.PreviousDayConditionScore);
+            
+            // Aggiorna label condizione con forecast
+            if (_conditionLabelText != null)
+            {
+                _conditionLabelText.richText = true;
+                string conditionName = PlantConditionSystem.GetConditionName(result.Condition, 
+                    PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration));
+                string forecastSymbol = PlantConditionSystem.GetForecastSymbol(result.Forecast);
+                string forecastColor = result.Forecast switch
+                {
+                    ForecastDirection.Up => "#00FF00",
+                    ForecastDirection.Down => "#FF0000",
+                    _ => "#CCCCCC"
+                };
+                _conditionLabelText.text = $"<color=#CCCCCC>Condizione:</color> <color=#FFFF00>{conditionName}</color> <color=#CCCCCC>({result.Score}/100)</color> <color={forecastColor}>{forecastSymbol}</color>";
+            }
+            
+            // Aggiorna barra condizione
+            if (_conditionBar != null)
+            {
+                _conditionBar.Value = result.Score / 100f;
+                // Colore barra in base alla condizione
+                var fillImage = _conditionBar.GetComponentInChildren<Image>();
+                if (fillImage != null)
+                {
+                    fillImage.color = result.ConditionColor;
+                }
+                _conditionBar.gameObject.SetActive(true);
+            }
+            
+            // Setup tooltip condizione se non fatto
+            if (_conditionTooltipPanel == null && _progressBar != null)
+            {
+                SetupConditionTooltip();
+            }
+        }
+        
+        /// <summary>
+        /// Setup tooltip per la condizione
+        /// </summary>
+        private void SetupConditionTooltip()
+        {
+            if (_conditionBar == null)
+                return;
+                
+            // Crea tooltip panel se non esiste
+            if (_conditionTooltipPanel == null)
+            {
+                // Trova o crea Canvas con sorting order alto per tooltip
+                Canvas tooltipCanvas = GetOrCreateTooltipCanvas();
+                
+                GameObject tooltipGO = new GameObject("ConditionTooltipPanel");
+                tooltipGO.transform.SetParent(tooltipCanvas.transform, false);
+                
+                RectTransform tooltipRect = tooltipGO.AddComponent<RectTransform>();
+                tooltipRect.anchorMin = new Vector2(0, 1);
+                tooltipRect.anchorMax = new Vector2(0, 1);
+                tooltipRect.pivot = new Vector2(0, 1);
+                
+                // Posiziona il tooltip in base alla posizione della barra condizione
+                Vector3 worldPos = _conditionBar.transform.position;
+                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(tooltipCanvas.worldCamera ?? Camera.main, worldPos);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    tooltipCanvas.transform as RectTransform, screenPos, tooltipCanvas.worldCamera ?? Camera.main, out Vector2 localPos);
+                tooltipRect.anchoredPosition = new Vector2(localPos.x, localPos.y - 80);
+                
+                // Tooltip più grande
+                tooltipRect.sizeDelta = new Vector2(450, 250);
+                
+                Image tooltipBg = tooltipGO.AddComponent<Image>();
+                // Verde scuro solido (non trasparente)
+                tooltipBg.color = new Color(0f, 0.3f, 0.15f, 1f);
+                
+                _conditionTooltipPanel = tooltipGO;
+                _conditionTooltipPanel.SetActive(false);
+            }
+            
+            // Crea testo tooltip se non esiste
+            if (_conditionTooltipText == null && _conditionTooltipPanel != null)
+            {
+                GameObject textGO = new GameObject("ConditionTooltipText");
+                textGO.transform.SetParent(_conditionTooltipPanel.transform, false);
+                
+                _conditionTooltipText = textGO.AddComponent<TextMeshProUGUI>();
+                _conditionTooltipText.color = Color.white;
+                _conditionTooltipText.fontSize = 16; // Testo più grande (era 12)
+                _conditionTooltipText.alignment = TextAlignmentOptions.Left;
+                _conditionTooltipText.richText = true;
+                
+                RectTransform textRect = textGO.GetComponent<RectTransform>();
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = new Vector2(12, 12);
+                textRect.offsetMax = new Vector2(-12, -12);
+            }
+            
+            // Aggiungi EventTrigger alla barra condizione per hover
+            EventTrigger trigger = _conditionBar.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = _conditionBar.gameObject.AddComponent<EventTrigger>();
+            
+            // PointerEnter - mostra tooltip
+            EventTrigger.Entry enterEntry = new EventTrigger.Entry();
+            enterEntry.eventID = EventTriggerType.PointerEnter;
+            enterEntry.callback.AddListener((data) => {
+                if (_currentSelectedPot != null && _currentSelectedPot.PotActions != null)
+                {
+                    PotStateModel state = _currentSelectedPot.PotActions.GetCurrentState();
+                    if (state != null && state.HasPlant)
+                    {
+                        PlantData plantData = state.GetPlantData();
+                        if (plantData != null && _phSystem != null && _potSystemConfig != null)
+                        {
+                            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                                state, plantData, _phSystem, _potSystemConfig, 
+                                _dayCycleSystem?.CurrentDay ?? 1, state.PreviousDayConditionScore);
+                            if (_conditionTooltipText != null)
+                                _conditionTooltipText.text = BuildConditionTooltip(result);
+                            if (_conditionTooltipPanel != null)
+                                _conditionTooltipPanel.SetActive(true);
+                        }
+                    }
+                }
+            });
+            trigger.triggers.Add(enterEntry);
+            
+            // PointerExit - nascondi tooltip
+            EventTrigger.Entry exitEntry = new EventTrigger.Entry();
+            exitEntry.eventID = EventTriggerType.PointerExit;
+            exitEntry.callback.AddListener((data) => {
+                if (_conditionTooltipPanel != null)
+                    _conditionTooltipPanel.SetActive(false);
+            });
+            trigger.triggers.Add(exitEntry);
+        }
+        
+        /// <summary>
+        /// Costruisce il tooltip di condizione con contributi
+        /// </summary>
+        private string BuildConditionTooltip(ConditionResult result)
+        {
+            var sb = new System.Text.StringBuilder();
+            
+            string conditionName = PlantConditionSystem.GetConditionName(result.Condition, false);
+            string forecastSymbol = PlantConditionSystem.GetForecastSymbol(result.Forecast);
+            string forecastText = result.Forecast switch
+            {
+                ForecastDirection.Up => "Tendenza positiva",
+                ForecastDirection.Down => "Tendenza negativa",
+                _ => "Stabile"
+            };
+            
+            sb.AppendLine($"<b>Condizione: {conditionName} ({result.Score}/100) {forecastSymbol}</b>");
+            sb.AppendLine();
+            
+            // Contributi positivi
+            var positiveContribs = System.Array.FindAll(result.Contributors, c => c.IsPositive);
+            if (positiveContribs.Length > 0)
+            {
+                sb.AppendLine("<color=#00FF00>Contributi positivi:</color>");
+                foreach (var contrib in positiveContribs)
+                {
+                    sb.AppendLine($"• {contrib.Source}: +{contrib.Value}");
+                }
+                sb.AppendLine();
+            }
+            
+            // Contributi negativi
+            var negativeContribs = System.Array.FindAll(result.Contributors, c => !c.IsPositive);
+            if (negativeContribs.Length > 0)
+            {
+                sb.AppendLine("<color=#FF0000>Contributi negativi:</color>");
+                foreach (var contrib in negativeContribs)
+                {
+                    sb.AppendLine($"• {contrib.Source}: {contrib.Value}");
+                }
+                sb.AppendLine();
+            }
+            
+            sb.AppendLine($"<color=#FFFF00>Forecast:</color> {forecastText}. {(result.ScoreDelta != 0 ? $"Δ {result.ScoreDelta:+0;-0}" : "")}");
+            
+            return sb.ToString();
+        }
+        
+        /// <summary>
+        /// Trova o crea un Canvas con sorting order alto per i tooltip (sopra tutto)
+        /// </summary>
+        private Canvas GetOrCreateTooltipCanvas()
+        {
+            // Cerca un Canvas esistente con tag "TooltipCanvas" o nome specifico
+            GameObject existingCanvas = GameObject.Find("TooltipCanvas");
+            if (existingCanvas != null)
+            {
+                Canvas existingCanvasComponent = existingCanvas.GetComponent<Canvas>();
+                if (existingCanvasComponent != null)
+                    return existingCanvasComponent;
+            }
+            
+            // Crea nuovo Canvas per tooltip
+            GameObject canvasGO = new GameObject("TooltipCanvas");
+            Canvas tooltipCanvas = canvasGO.AddComponent<Canvas>();
+            tooltipCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            tooltipCanvas.sortingOrder = 9999; // Sorting order molto alto per essere sopra tutto
+            
+            CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+            
+            canvasGO.AddComponent<GraphicRaycaster>();
+            
+            return tooltipCanvas;
         }
     }
 }

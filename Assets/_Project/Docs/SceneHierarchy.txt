@@ -2418,6 +2418,7 @@
       [Component] PotActions
       [Component] PotGrowthController
       [Component] Interactable
+      [Component] LedLightController
       - Canvas
         [Component] RectTransform
         [Component] Canvas
@@ -2427,6 +2428,12 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+      - BlueLight
+        [Component] Transform
+        [Component] Light2D
+      - RedLight
+        [Component] Transform
+        [Component] Light2D
     - Pot_POT-002
       [Component] Transform
       [Component] SpriteRenderer
@@ -2435,6 +2442,7 @@
       [Component] PotActions
       [Component] PotGrowthController
       [Component] Interactable
+      [Component] LedLightController
       - Canvas
         [Component] RectTransform
         [Component] Canvas
@@ -2444,6 +2452,12 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+      - BlueLight
+        [Component] Transform
+        [Component] Light2D
+      - RedLight
+        [Component] Transform
+        [Component] Light2D
     - Pot_POT-003
       [Component] Transform
       [Component] SpriteRenderer
@@ -2452,6 +2466,7 @@
       [Component] PotActions
       [Component] PotGrowthController
       [Component] Interactable
+      [Component] LedLightController
       - Canvas
         [Component] RectTransform
         [Component] Canvas
@@ -2461,6 +2476,12 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+      - BlueLight
+        [Component] Transform
+        [Component] Light2D
+      - RedLight
+        [Component] Transform
+        [Component] Light2D
     - Pot_POT-004
       [Component] Transform
       [Component] SpriteRenderer
@@ -2469,6 +2490,7 @@
       [Component] PotActions
       [Component] PotGrowthController
       [Component] Interactable
+      [Component] LedLightController
       - Canvas
         [Component] RectTransform
         [Component] Canvas
@@ -2478,6 +2500,12 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+      - BlueLight
+        [Component] Transform
+        [Component] Light2D
+      - RedLight
+        [Component] Transform
+        [Component] Light2D
   - Extractor
     [Component] Transform
     [Component] SpriteRenderer

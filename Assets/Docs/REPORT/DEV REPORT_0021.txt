@@ -1,0 +1,287 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-01.03A + BLK-02.07: GROWTH SYSTEM + LIGHT STRESS
+                    Versione: 0021
+                    Data: 2025-01-XX
+                    Status: ⚠️ COMPLETATO CON BUG NOTI
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Sistema Growth + Light Stress - Implementazione e Bug Fix
+- **BLK Code:** BLK-01.03A (Growth System) + BLK-02.07 (Light Stress)
+- **Tipo Report:** Development Report + Bug Analysis
+- **Data Generazione:** 2025-01-XX
+- **Versione Report:** 0021
+- **Status Sistema:** ⚠️ FUNZIONANTE - Bug UI da risolvere
+- **Sviluppatore:** Senior Developer Mode (AI Assistant)
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Sistema Growth Deterministico (BLK-01.03A)**
+- **Codice:** BLK-01.03A-GROWTH-001
+- **Descrizione:** Implementazione sistema crescita basato su timestamp e punti crescita giornalieri
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantGrowthConfig.cs`
+  - `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+- **Evidenze Tecniche:**
+  - Sistema crescita basato su timestamp invece di flag volatili
+  - Calcolo punti crescita: +2 (cura ideale), +1 (cura parziale), +0 (nessuna cura)
+  - Soglie avanzamento: 4 punti Seed→Sprout, 4 punti Sprout→Mature
+  - Verifica idratazione tramite `WateringSystemOn` (toggle persistente)
+  - Verifica luce tramite `LedSystemState` (sistema LED persistente)
+  - Calcolo condizione pianta integrato con sistema crescita
+  - Tooltip Growth mostra calcolo dettagliato passo-passo
+
+**TASK 2: Sistema Light Stress / Burn Risk (BLK-02.07)**
+- **Codice:** BLK-02.07-LIGHT-STRESS-001
+- **Descrizione:** Implementazione sistema Light Stress con Burn Risk basato su giorni consecutivi LED
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Tracking giorni consecutivi LED: `DaysLedBlueConsecutive`, `DaysLedRedConsecutive`
+  - Metodo `GetConsecutiveLedDays()` per ottenere giorni consecutivi residui
+  - Metodo `GetBurnRiskLevel()`: 0=Nessun rischio, 1=Medio, 2=Alto, 3=Critico
+  - Calcolo stress percentuale: 0 giorni=0%, 1=25%, 2=50%, 3=75%, 4+=100%
+  - UI Light Stress mostra percentuale con colori progressivi (verde→giallo→arancione→rosso)
+  - Decadimento graduale quando LED spento: -1 giorno al giorno
+  - Integrazione con PlantConditionSystem: malus -20 punti per Burn Stress (livello 2+)
+  - Scaling effetti pH LED: x1 (1 giorno), x1.5 (2-3 giorni), x2 (4+ giorni)
+
+**TASK 3: Tooltip Growth Dettagliato**
+- **Codice:** BLK-01.03A-TOOLTIP-001
+- **Descrizione:** Implementazione tooltip Growth con calcolo dettagliato progresso e condizione
+- **Status:** ✅ COMPLETATO (parzialmente - manca info condizione)
+- **File Modificati:**
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs`
+- **Evidenze Tecniche:**
+  - Tooltip mostra calcolo passo-passo: GrowthPoints accumulati + bonus giornaliero
+  - Dettaglio bonus: Cura Ideale (+2), Cura Parziale (+1), Nessuna Cura (+0)
+  - Calcolo percentuale progresso: (totalPoints / threshold) × 100%
+  - Stima giorni necessari per avanzare stadio
+  - Sezione calcolo condizione (parzialmente implementata - da completare)
+
+**TASK 4: Sistema Condizione Pianta Integrato**
+- **Codice:** BLK-01.03A-CONDITION-001
+- **Descrizione:** Integrazione sistema calcolo condizione con crescita e Light Stress
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Calcolo condizione a fine giornata per ogni vaso
+  - Score 0-100 basato su: idratazione, luce, pH, watering, mold risk, burn stress
+  - Mappatura score→condizione: Rigogliosa (90+), Sana (70+), Stressata (40+), Appassita (20+), Critica (<20)
+  - Forecast (tendenza): Up (Δ>+5), Stable (Δ tra -5 e +5), Down (Δ<-5)
+  - Toast notifications per cambi condizione significativi (Δ≥20)
+  - Salvataggio score precedente per calcolo forecast
+
+================================================================================
+
+🐛 BUG PRESENTI
+===============
+
+**BUG 1: Label Condizione non si aggiorna nel Testo (rimane sempre SANA)**
+- **Numero:** BUG-0021-001
+- **Descrizione:** Il label "Condizione" nell'UI non si aggiorna correttamente, rimanendo sempre "Sana" anche quando la condizione cambia
+- **Causa Identificata:**
+  - In `PotHUDWidget.cs` linea 1442-1457: quando `plantData == null || _phSystem == null || _potSystemConfig == null`, viene usato il fallback con `state.ConditionLabel` che potrebbe non essere aggiornato
+  - Il metodo `UpdateConditionUI()` potrebbe non essere chiamato quando la condizione cambia
+  - Possibile desincronizzazione tra calcolo condizione (a fine giornata) e aggiornamento UI (on-demand)
+- **Soluzione Proposta:**
+  1. Verificare che `UpdateConditionUI()` venga chiamato ogni volta che si aggiorna la UI del vaso
+  2. Assicurarsi che il calcolo condizione venga eseguito anche quando si apre il widget (non solo a fine giornata)
+  3. Rimuovere il fallback statico e forzare sempre il ricalcolo quando possibile
+  4. Aggiungere log di debug per tracciare quando viene aggiornato il label
+- **Test Verifica:**
+  - Cambiare pH Dome per forzare cambio condizione
+  - Verificare che il label si aggiorni immediatamente
+  - Verificare che il label mostri la condizione corretta dopo End Day
+- **File Coinvolti:**
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (linee 1440-1477)
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (linee 1703-1781)
+
+**BUG 2: Tooltip Growth va aggiornato con info sul calcolo progresso Condizione / Crescita**
+- **Numero:** BUG-0021-002
+- **Descrizione:** Il tooltip Growth mostra il calcolo dettagliato della crescita ma manca una sezione chiara che spieghi come la condizione influisce sulla crescita
+- **Causa Identificata:**
+  - Il tooltip mostra già una sezione "Calcolo Condizione" (linee 1667-1703 in PotHUDWidget.cs) ma potrebbe non essere abbastanza chiara
+  - Manca spiegazione su come la condizione influisce meccanicamente sulla crescita (attualmente non implementato, ma dovrebbe essere documentato)
+  - Il tooltip mostra i contributi ma non spiega la relazione tra condizione e moltiplicatori crescita
+- **Soluzione Proposta:**
+  1. Aggiungere sezione esplicativa nel tooltip che spieghi:
+     - Come viene calcolata la condizione (score 0-100)
+     - Quali sono i contributi positivi/negativi
+     - Come la condizione influirà sulla crescita (quando implementato)
+  2. Separare visivamente le sezioni "Crescita" e "Condizione" con separatori
+  3. Aggiungere tooltip per la barra condizione che mostri i contributi dettagliati
+  4. Semplificare il calcolo mostrato per renderlo più leggibile
+- **Test Verifica:**
+  - Verificare che il tooltip mostri tutte le informazioni necessarie
+  - Verificare che la sezione condizione sia chiara e leggibile
+  - Testare con diverse condizioni (Rigogliosa, Stressata, Critica)
+- **File Coinvolti:**
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (linee 1554-1720)
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (linee 1475-1575)
+
+**BUG 3: Va semplificato il calcolo GROWTH**
+- **Numero:** BUG-0021-003
+- **Descrizione:** Il calcolo Growth mostrato nel tooltip è troppo dettagliato e complesso, rendendo difficile la comprensione per l'utente
+- **Causa Identificata:**
+  - Il tooltip mostra 5 passaggi dettagliati (linee 1508-1551 in PotDetailsWidget.cs) che possono confondere
+  - Calcolo mostra: GrowthPoints + bonus giornaliero + soglia + percentuale + punti mancanti
+  - Troppe informazioni tecniche esposte all'utente
+- **Soluzione Proposta:**
+  1. Semplificare il tooltip mostrando solo:
+     - Stadio corrente e percentuale progresso
+     - Punti attuali / punti necessari
+     - Bonus giornaliero attuale (semplificato)
+     - Stima giorni per avanzare
+  2. Spostare i dettagli tecnici in una sezione "Dettagli Avanzati" (collassabile o separata)
+  3. Usare linguaggio più user-friendly invece di termini tecnici
+  4. Ridurre il numero di passaggi mostrati da 5 a 2-3 essenziali
+- **Test Verifica:**
+  - Verificare che il tooltip sia più leggibile e comprensibile
+  - Testare con utenti per feedback sulla chiarezza
+  - Verificare che le informazioni essenziali siano sempre visibili
+- **File Coinvolti:**
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs` (linee 1475-1575)
+  - `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (linee 1554-1666)
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**Modifiche Strutturali:**
+- Implementato sistema crescita deterministico basato su timestamp
+- Aggiunto tracking giorni consecutivi LED in PotStateModel
+- Integrato calcolo condizione con sistema crescita
+- Creato tooltip Growth dettagliato con calcolo passo-passo
+- Implementato sistema Light Stress con Burn Risk
+
+**Modifiche Codice:**
+- `PotStateModel.cs`: Aggiunti campi `DaysLedBlueConsecutive`, `DaysLedRedConsecutive`, metodi `GetConsecutiveLedDays()`, `GetBurnRiskLevel()`, `IsInRedZone()`
+- `DayCycleController.cs`: Implementato calcolo condizione a fine giornata, integrazione Burn Risk nel calcolo condizione
+- `PlantConditionSystem.cs`: Aggiunto malus Burn Stress (-20 punti per livello 2+)
+- `PotDetailsWidget.cs`: Implementato tooltip Growth dettagliato, UI Light Stress con percentuale e colori
+- `PotHUDWidget.cs`: Implementato tooltip Growth, aggiornamento UI condizione
+
+**Test Cases e Risultati:**
+- ✅ Test crescita con cura ideale: +2 punti/giorno, avanzamento corretto
+- ✅ Test crescita con cura parziale: +1 punto/giorno
+- ✅ Test Light Stress: calcolo percentuale corretto, colori progressivi funzionanti
+- ✅ Test Burn Risk: livelli calcolati correttamente (0-3)
+- ✅ Test condizione: score calcolato correttamente, mappatura condizione funzionante
+- ⚠️ Test UI condizione: label non si aggiorna sempre correttamente (BUG-0021-001)
+
+**Soluzioni Implementate:**
+- Sistema crescita deterministico risolve bug crescita mancante
+- Tracking LED consecutivi permette calcolo Burn Risk accurato
+- Tooltip dettagliato migliora comprensione sistema crescita
+- Integrazione condizione-crescita prepara sistema per moltiplicatori futuri
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**Errori Ricorrenti:**
+- Desincronizzazione tra calcolo stato (a fine giornata) e aggiornamento UI (on-demand)
+- Fallback statici possono mascherare problemi di aggiornamento
+- Tooltip troppo dettagliati possono confondere invece di aiutare
+
+**Best Practices:**
+- Sempre ricalcolare stato quando si apre UI invece di affidarsi a valori cached
+- Separare informazioni essenziali da dettagli tecnici nei tooltip
+- Usare linguaggio user-friendly invece di termini tecnici nell'UI
+- Log di debug per tracciare aggiornamenti UI
+
+**Pattern Adottati:**
+- Sistema deterministico basato su timestamp invece di flag volatili
+- Calcolo condizione centralizzato in PlantConditionSystem
+- Tooltip modulari con sezioni separabili
+- Tracking stato con decadimento graduale (giorni consecutivi LED)
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+==================
+
+**Task Pianificati:**
+1. **Fix BUG-0021-001**: Aggiornamento label condizione
+   - Priorità: Alta
+   - Dipendenze: Nessuna
+   - Tempo stimato: 1-2 ore
+   - Prerequisiti: Debug logging per tracciare aggiornamenti
+
+2. **Fix BUG-0021-002**: Miglioramento tooltip Growth con info condizione
+   - Priorità: Media
+   - Dipendenze: Fix BUG-0021-001
+   - Tempo stimato: 2-3 ore
+   - Prerequisiti: Definire formato tooltip semplificato
+
+3. **Fix BUG-0021-003**: Semplificazione calcolo Growth
+   - Priorità: Media
+   - Dipendenze: Nessuna
+   - Tempo stimato: 2-3 ore
+   - Prerequisiti: Feedback utenti su tooltip attuale
+
+4. **Implementazione Moltiplicatori Crescita basati su Condizione**
+   - Priorità: Bassa (feature futura)
+   - Dipendenze: Fix bug UI
+   - Tempo stimato: 4-6 ore
+   - Prerequisiti: Definire moltiplicatori per ogni condizione
+
+**Dipendenze:**
+- Fix bug UI devono essere completati prima di implementare moltiplicatori crescita
+- Tooltip semplificato deve essere testato con utenti prima di finalizzare
+
+**Prerequisiti:**
+- Unity Editor per test UI
+- Log di debug per tracciare aggiornamenti
+- Feedback utenti per tooltip semplificato
+
+================================================================================
+
+📄 DOCUMENTAZIONE
+=================
+
+**File di Riferimento:**
+- `Assets/_Project/Docs/README_BLK-01-03A.md`: Documentazione sistema crescita
+- `Assets/Docs/REPORT/PIANO_IMPLEMENTAZIONE_LED_PERSISTENTE.md`: Documentazione Light Stress
+- `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`: Documentazione inline calcolo condizione
+
+**Note Tecniche:**
+- Sistema crescita usa timestamp per determinismo
+- Light Stress calcolato in base a giorni consecutivi residui
+- Condizione calcolata a fine giornata, UI aggiornata on-demand
+- Tooltip Growth mostra calcolo dettagliato ma può essere semplificato
+
+================================================================================
+
+✅ CHECKLIST FINALE
+===================
+
+- [x] Sistema crescita deterministico implementato
+- [x] Sistema Light Stress / Burn Risk implementato
+- [x] Tooltip Growth dettagliato creato
+- [x] Integrazione condizione-crescita completata
+- [x] Test funzionalità base completati
+- [ ] Fix bug label condizione (BUG-0021-001)
+- [ ] Miglioramento tooltip Growth (BUG-0021-002)
+- [ ] Semplificazione calcolo Growth (BUG-0021-003)
+- [ ] Test completo UI condizione
+- [ ] Documentazione utente tooltip semplificato
+
+================================================================================
+

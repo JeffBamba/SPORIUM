@@ -65,6 +65,16 @@ public class PotStateModel
     [Tooltip("Accumulatore WAT-RAW per consumo 1 ogni 2 giorni (0.5 per giorno ON)")]
     public float WateringRawWaterAccumulator;  // Accumulo frazionario
     
+    [Header("Plant Condition System")]
+    [Tooltip("Score di condizione (0-100)")]
+    public int ConditionScore = 50;  // Score neutro di default
+    [Tooltip("Score del giorno precedente (per calcolo forecast)")]
+    public int PreviousDayConditionScore = -1;  // -1 se non disponibile
+    [Tooltip("Condizione attuale (Rigogliosa/Sana/Stressata/Appassita/Critica)")]
+    public int ConditionLabel = 1;  // Default: Sana (enum PlantCondition)
+    [Tooltip("Direzione forecast (Up/Stable/Down)")]
+    public int ForecastDirection = 1;  // Default: Stable (enum ForecastDirection)
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -118,6 +128,10 @@ public class PotStateModel
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
+        ConditionScore = 50;
+        PreviousDayConditionScore = -1;
+        ConditionLabel = 1;  // Sana
+        ForecastDirection = 1;  // Stable
     }
     
     /// <summary>
@@ -192,6 +206,10 @@ public class PotStateModel
         WateringSystemOn = false;  // Nuova pianta = sistema OFF
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
+        ConditionScore = 50;
+        PreviousDayConditionScore = -1;
+        ConditionLabel = 1;  // Sana
+        ForecastDirection = 1;  // Stable
     }
     
     /// <summary>
@@ -240,6 +258,10 @@ public class PotStateModel
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
+        ConditionScore = 50;
+        PreviousDayConditionScore = -1;
+        ConditionLabel = 1;  // Sana
+        ForecastDirection = 1;  // Stable
     }
     
     /// <summary>
@@ -247,18 +269,23 @@ public class PotStateModel
     /// </summary>
     public void SetLedSystemState(LedSystemState newState)
     {
+        LedSystemState oldState = LedSystemState;
         LedSystemState = newState;
         
-        // Reset contatori se cambiato tipo
+        // Reset contatori SOLO se cambiato tipo (Blue ↔ Red)
+        // NON resettare quando si spegne (Off) per permettere decrescita graduale dello stress
         if (newState == LedSystemState.Blue)
-            DaysLedRedConsecutive = 0;
-        else if (newState == LedSystemState.Red)
-            DaysLedBlueConsecutive = 0;
-        else
         {
-            DaysLedBlueConsecutive = 0;
+            // Cambiato a Blue: reset Red (cambio tipo)
             DaysLedRedConsecutive = 0;
         }
+        else if (newState == LedSystemState.Red)
+        {
+            // Cambiato a Red: reset Blue (cambio tipo)
+            DaysLedBlueConsecutive = 0;
+        }
+        // Se newState == Off: NON resettare i contatori!
+        // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
     }
     
     /// <summary>
@@ -270,7 +297,9 @@ public class PotStateModel
             return DaysLedBlueConsecutive;
         if (LedSystemState == LedSystemState.Red)
             return DaysLedRedConsecutive;
-        return 0;
+        // LED spento: ritorna il massimo tra Blue e Red per mostrare stress residuo
+        // Questo permette la decrescita graduale dello stress anche quando LED è spento
+        return Mathf.Max(DaysLedBlueConsecutive, DaysLedRedConsecutive);
     }
     
     /// <summary>

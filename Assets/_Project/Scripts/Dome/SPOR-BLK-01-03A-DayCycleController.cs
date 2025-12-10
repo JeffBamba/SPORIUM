@@ -3,6 +3,7 @@ using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Condition;
 using UnityEngine.SceneManagement;
 using _Project;
 
@@ -68,6 +69,16 @@ public class DayCycleController : MonoBehaviour
     {
         if (_isInitialized)
             return;
+        
+        // Trova UINotification se disponibile (per toast HUD)
+        if (_uiNotification == null)
+        {
+            _uiNotification = FindObjectOfType<UINotification>();
+            if (enableDebugLogs && _uiNotification == null)
+            {
+                Debug.LogWarning("[DayCycleController] UINotification non trovato in scena; i toast non verranno mostrati.");
+            }
+        }
         
         // Cerca configurazione in PotSystemConfig se non trovata
         if (growthConfig == null)
@@ -336,6 +347,9 @@ public class DayCycleController : MonoBehaviour
         
         // 5. ApplyDecayAndCleanup(D) - Decay naturale
         ApplyDecayAndCleanup(dayIndex);
+        
+        // 6. CalculatePlantConditions(D) - Calcola score condizione per tutte le piante (all'alba)
+        CalculatePlantConditions(dayIndex);
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
@@ -607,6 +621,19 @@ public class DayCycleController : MonoBehaviour
             // Emetti evento per l'UI
             PotEvents.EmitPlantStageChanged(pot.PotId, (PlantStage)pot.Stage);
             
+            // Toast cambio stadio
+            if (_uiNotification != null)
+            {
+                _uiNotification.ShowNotification(
+                    $"Stage up: {pot.PotId} → {(PlantStage)pot.Stage}",
+                    3f,
+                    Color.cyan);
+            }
+            else if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[DayCycleController] UINotification mancante: niente toast stage up per {pot.PotId} → {(PlantStage)pot.Stage}");
+            }
+            
             if (enableDebugLogs)
                 Debug.Log($"[BLK-02.02] {pot.PotId}: Eventi emessi per cambio stadio {oldStage} → {pot.Stage}");
         }
@@ -831,7 +858,7 @@ public class DayCycleController : MonoBehaviour
                 // Applica effetti (WAT-RAW già verificato e disponibile)
                 if (pot.WateringSystemOn)
                 {
-                    // Applica +25% idratazione (1 punto se max=4)
+                    // Applica +20% idratazione (1 punto se max=5)
                     bool hydrationIncreased = pot.IncreaseHydration(maxHydration);
                     
                     // Consumo CRY (sempre, anche se accumulatore < 1.0)
@@ -853,14 +880,7 @@ public class DayCycleController : MonoBehaviour
             }
             else
             {
-                // Sistema OFF: Evaporazione -25% idratazione (1 punto, min 0)
-                if (pot.Hydration > 0)
-                {
-                    pot.Hydration = Mathf.Max(0, pot.Hydration - 1);
-                    if (enableDebugLogs)
-                        Debug.Log($"[DayCycleController] {pot.PotId}: Sistema OFF - Evaporazione applicata, Idratazione: {pot.Hydration}/{maxHydration}");
-                }
-                
+                // Sistema OFF: nessuna evaporazione qui (il decay avviene in ApplyDecayAndCleanup)
                 // Reset contatori
                 pot.DaysWateringSystemOn = 0;
                 pot.WateringRawWaterAccumulator = 0f;
@@ -870,8 +890,8 @@ public class DayCycleController : MonoBehaviour
             // - Usa l'idratazione di inizio tick per garantire che l'overwatering persista anche se il sistema è OFF e l'idratazione decresce di 1.
             // - Per applicare overwatering dovuto a un aumento (sistema ON che porta sopra soglia), considera anche l'idratazione finale.
             int hydrationForOverCheck = Mathf.Max(hydrationStart, pot.Hydration);
-            int overwateringThreshold = maxHydration - 1; // 75% (3/4)
-            int removalThreshold = maxHydration / 2;      // 50% (2/4)
+            int overwateringThreshold = Mathf.CeilToInt(maxHydration * 0.75f); // 75%
+            int removalThreshold = Mathf.FloorToInt(maxHydration * 0.5f);      // 50%
             float hydrationPercentForOver = maxHydration > 0 ? (float)hydrationForOverCheck / maxHydration * 100f : 0f;
             float hydrationPercentStart = maxHydration > 0 ? (float)hydrationStart / maxHydration * 100f : 0f;
             
@@ -1379,6 +1399,109 @@ public class DayCycleController : MonoBehaviour
             case 5: return "HarvestReady";
             case 6: return "Resting";
             default: return $"Stadio {stage}";
+        }
+    }
+    
+    /// <summary>
+    /// Calcola lo score di condizione per tutte le piante (all'alba)
+    /// </summary>
+    private void CalculatePlantConditions(int dayIndex)
+    {
+        if (_phSystem == null || _potSystemConfig == null)
+        {
+            if (enableDebugLogs)
+                Debug.LogWarning("[DayCycleController] PhSystem o PotSystemConfig non disponibili per calcolo condizione");
+            return;
+        }
+        
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant)
+                continue;
+            
+            // Salva score precedente per calcolo forecast
+            int previousScore = pot.PreviousDayConditionScore >= 0 ? pot.PreviousDayConditionScore : pot.ConditionScore;
+            bool isFirstCalculation = pot.PreviousDayConditionScore < 0;
+            
+            // Ottieni PlantData
+            PlantData plantData = pot.GetPlantData();
+            if (plantData == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning($"[DayCycleController] {pot.PotId}: PlantData non trovato per calcolo condizione");
+                continue;
+            }
+            
+            // DEBUG: Log dati prima del calcolo
+            if (enableDebugLogs)
+            {
+                int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+                int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
+                float currentPh = _phSystem != null ? _phSystem.CurrentPh : 0f;
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, maxHydration);
+                Debug.Log($"[DayCycleController] 🔍 DEBUG Calcolo Condizione {pot.PotId}: Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), Overwatering={isOverwatering}, pH={currentPh:F1}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, Stage={pot.Stage}");
+            }
+            
+            // Calcola condizione
+            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                pot, 
+                plantData, 
+                _phSystem, 
+                _potSystemConfig, 
+                dayIndex, 
+                previousScore);
+            
+            // Salva score precedente prima di aggiornare
+            pot.PreviousDayConditionScore = pot.ConditionScore;
+            
+            // Aggiorna score e condizione
+            int oldCondition = pot.ConditionLabel;
+            pot.ConditionScore = result.Score;
+            pot.ConditionLabel = (int)result.Condition;
+            pot.ForecastDirection = (int)result.Forecast;
+            
+            // Verifica cambio condizione per notifica Toast
+            // Mostra il toast solo se il delta score è almeno ±20 (20%) per evitare spam su variazioni minime
+            // BUG FIX: Verifica anche che il delta sia effettivamente negativo per "peggiorata" o positivo per "migliorata"
+            if (!isFirstCalculation && oldCondition != pot.ConditionLabel && _uiNotification != null && Mathf.Abs(result.ScoreDelta) >= 20)
+            {
+                string conditionName = PlantConditionSystem.GetConditionName(result.Condition, 
+                    PlantConditionSystem.IsOverwatering(pot, _potSystemConfig.MaxHydration));
+                string forecastSymbol = PlantConditionSystem.GetForecastSymbol(result.Forecast);
+                
+                // Determina tipo notifica in base alla direzione del cambio
+                Color notificationColor;
+                
+                // BUG FIX: Verifica che il delta sia effettivamente positivo per miglioramento o negativo per peggioramento
+                // per evitare toast falsi quando il calcolo usa dati non aggiornati
+                if (pot.ConditionLabel < oldCondition && result.ScoreDelta > 0) // Miglioramento (condizione migliore E score aumentato)
+                {
+                    notificationColor = Color.green;
+                    _uiNotification.ShowNotification(
+                        $"CND-002 - Condizione migliorata: {conditionName} ({result.Score}/100) {forecastSymbol}",
+                        3f, 
+                        notificationColor);
+                }
+                else if (pot.ConditionLabel > oldCondition && result.ScoreDelta < 0) // Peggioramento (condizione peggiore E score diminuito)
+                {
+                    notificationColor = Color.yellow;
+                    _uiNotification.ShowNotification(
+                        $"CND-001 - Condizione peggiorata: {conditionName} ({result.Score}/100) {forecastSymbol}",
+                        3f, 
+                        notificationColor);
+                }
+                // Se il delta non corrisponde alla direzione del cambio condizione, non mostrare toast (evita falsi positivi)
+                
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Condizione cambiata da {oldCondition} a {pot.ConditionLabel} ({conditionName}) - Score: {result.Score}/100, Forecast: {forecastSymbol}, Δ: {result.ScoreDelta}");
+                }
+            }
+            
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[DayCycleController] {pot.PotId}: Condizione calcolata - Score: {result.Score}/100, Condizione: {result.Condition}, Forecast: {result.Forecast}, Δ: {result.ScoreDelta}");
+            }
         }
     }
 }

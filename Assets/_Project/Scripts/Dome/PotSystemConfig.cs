@@ -41,7 +41,7 @@ public class PotSystemConfig : ScriptableObject
     [SerializeField] public float InteractDistance = 2.0f;
     
     [Header("Resource Caps")]
-    [SerializeField] public int MaxHydration = 4; // DEBUG_SAFE_FIX: Cambiato da 3 a 4 per ottenere 25% per annaffiatura invece di 33%
+    [SerializeField] public int MaxHydration = 5; // 5 step = 20% per punto
     [SerializeField] public int MaxLightExposure = 3;
     
     [Header("Seed Configuration")]
@@ -188,7 +188,7 @@ public class PotSystemConfig : ScriptableObject
         config.InteractDistance = 2.0f;
         
         // Limiti risorse
-        config.MaxHydration = 4; // DEBUG_SAFE_FIX: Cambiato da 3 a 4 per ottenere 25% per annaffiatura invece di 33%
+        config.MaxHydration = 5; // 5 step = 20% per punto
         config.MaxLightExposure = 3;
         
         // Codice seme
