@@ -124,7 +124,15 @@ namespace _Project.Editor
                     hydrationMed = requirements[i].hydrationMed,
                     hydrationMax = requirements[i].hydrationMax,
                     durationDays = requirements[i].durationDays,
-                    notes = requirements[i].notes
+                    notes = requirements[i].notes,
+                    // BLK-03.01-T1: Range fertilizzante fissi (valori identici per tutte le piante)
+                    fertilizerMin = requirements[i].fertilizerMin,
+                    fertilizerMed = requirements[i].fertilizerMed,
+                    fertilizerMax = requirements[i].fertilizerMax,
+                    // BLK-03.01-T2: Range luce
+                    lightMin = requirements[i].lightMin,
+                    lightMed = requirements[i].lightMed,
+                    lightMax = requirements[i].lightMax
                 };
                 // Usa SetRequiredLed per impostare correttamente il SerializableLedType
                 LedType? requiredLed = requirements[i].GetRequiredLed();
@@ -144,6 +152,16 @@ namespace _Project.Editor
                 element.FindPropertyRelative("hydrationMin").intValue = requirementsCopy[i].hydrationMin;
                 element.FindPropertyRelative("hydrationMed").intValue = requirementsCopy[i].hydrationMed;
                 element.FindPropertyRelative("hydrationMax").intValue = requirementsCopy[i].hydrationMax;
+                
+                // BLK-03.01-T1: Range fertilizzante fissi
+                element.FindPropertyRelative("fertilizerMin").intValue = requirementsCopy[i].fertilizerMin;
+                element.FindPropertyRelative("fertilizerMed").intValue = requirementsCopy[i].fertilizerMed;
+                element.FindPropertyRelative("fertilizerMax").intValue = requirementsCopy[i].fertilizerMax;
+                
+                // BLK-03.01-T2: Range luce
+                element.FindPropertyRelative("lightMin").intValue = requirementsCopy[i].lightMin;
+                element.FindPropertyRelative("lightMed").intValue = requirementsCopy[i].lightMed;
+                element.FindPropertyRelative("lightMax").intValue = requirementsCopy[i].lightMax;
                 
                 // Gestisci SerializableLedType wrapper
                 SerializedProperty ledProp = element.FindPropertyRelative("requiredLed");
@@ -177,7 +195,15 @@ namespace _Project.Editor
                     hydrationMed = 45,
                     hydrationMax = 60,
                     durationDays = 2,
-                    notes = "Ampia tolleranza"
+                    notes = "Ampia tolleranza",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 40,
+                    fertilizerMed = 75,
+                    fertilizerMax = 100,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -186,7 +212,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 60,
                     durationDays = 2,
-                    notes = "Germoglio attivo"
+                    notes = "Germoglio attivo",
+                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
+                    fertilizerMin = 40,
+                    fertilizerMed = 75,
+                    fertilizerMax = 100,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -195,7 +229,15 @@ namespace _Project.Editor
                     hydrationMed = 55,
                     hydrationMax = 75,
                     durationDays = 3,
-                    notes = "Accrescimento vegetativo"
+                    notes = "Accrescimento vegetativo",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 40,
+                    fertilizerMed = 60,
+                    fertilizerMax = 80,
+                    // BLK-03.01-T2: Range luce (Blue LED richiesto, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -204,7 +246,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 70,
                     durationDays = 3,
-                    notes = "Fioritura attiva"
+                    notes = "Fioritura attiva",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 20,
+                    fertilizerMed = 40,
+                    fertilizerMax = 60,
+                    // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -213,7 +263,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 100,
                     durationDays = 3,
-                    notes = "Finestra di raccolta multi-giorno"
+                    notes = "Finestra di raccolta multi-giorno",
+                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
+                    fertilizerMin = 0,
+                    fertilizerMed = 0,
+                    fertilizerMax = 0,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -222,7 +280,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 100,
                     durationDays = 2,
-                    notes = "Riposo post-raccolta, riattivabile con fertilizzante"
+                    notes = "Riposo post-raccolta, riattivabile con fertilizzante",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 30,
+                    fertilizerMed = 50,
+                    fertilizerMax = 70,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 }
             };
             
@@ -251,7 +317,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 65,
                     durationDays = 2,
-                    notes = "Pianta Pure richiede cura attenta"
+                    notes = "Pianta Pure richiede cura attenta",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 60,
+                    fertilizerMed = 75,
+                    fertilizerMax = 90,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -260,7 +334,15 @@ namespace _Project.Editor
                     hydrationMed = 55,
                     hydrationMax = 65,
                     durationDays = 3,
-                    notes = "Germoglio Pure, Blue LED consigliato"
+                    notes = "Germoglio Pure, Blue LED consigliato",
+                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
+                    fertilizerMin = 60,
+                    fertilizerMed = 75,
+                    fertilizerMax = 90,
+                    // BLK-03.01-T2: Range luce (Blue LED consigliato, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -269,7 +351,15 @@ namespace _Project.Editor
                     hydrationMed = 55,
                     hydrationMax = 70,
                     durationDays = 3,
-                    notes = "Crescita Pure, Blue LED richiesto"
+                    notes = "Crescita Pure, Blue LED richiesto",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 40,
+                    fertilizerMed = 60,
+                    fertilizerMax = 80,
+                    // BLK-03.01-T2: Range luce (Blue LED richiesto, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -278,7 +368,15 @@ namespace _Project.Editor
                     hydrationMed = 55,
                     hydrationMax = 65,
                     durationDays = 3,
-                    notes = "Fioritura Pure, Red LED richiesto"
+                    notes = "Fioritura Pure, Red LED richiesto",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 20,
+                    fertilizerMed = 40,
+                    fertilizerMax = 60,
+                    // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -287,7 +385,15 @@ namespace _Project.Editor
                     hydrationMed = 55,
                     hydrationMax = 70,
                     durationDays = 3,
-                    notes = "Raccolta Pure, mantenere idratazione ottimale"
+                    notes = "Raccolta Pure, mantenere idratazione ottimale",
+                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
+                    fertilizerMin = 0,
+                    fertilizerMed = 0,
+                    fertilizerMax = 0,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -296,7 +402,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 100,
                     durationDays = 2,
-                    notes = "Riposo Pure, riattivabile con fertilizzante"
+                    notes = "Riposo Pure, riattivabile con fertilizzante",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 30,
+                    fertilizerMed = 50,
+                    fertilizerMax = 70,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 }
             };
             
@@ -325,7 +439,15 @@ namespace _Project.Editor
                     hydrationMed = 40,
                     hydrationMax = 55,
                     durationDays = 2,
-                    notes = "Pianta Evil più tollerante"
+                    notes = "Pianta Evil più tollerante",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 60,
+                    fertilizerMed = 75,
+                    fertilizerMax = 90,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -334,7 +456,15 @@ namespace _Project.Editor
                     hydrationMed = 45,
                     hydrationMax = 60,
                     durationDays = 2,
-                    notes = "Germoglio Evil, tollerante"
+                    notes = "Germoglio Evil, tollerante",
+                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
+                    fertilizerMin = 60,
+                    fertilizerMed = 75,
+                    fertilizerMax = 90,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -343,7 +473,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 70,
                     durationDays = 3,
-                    notes = "Crescita Evil, Blue LED accelera"
+                    notes = "Crescita Evil, Blue LED accelera",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 40,
+                    fertilizerMed = 60,
+                    fertilizerMax = 80,
+                    // BLK-03.01-T2: Range luce (Blue LED accelera, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -352,7 +490,15 @@ namespace _Project.Editor
                     hydrationMed = 50,
                     hydrationMax = 65,
                     durationDays = 3,
-                    notes = "Fioritura Evil, Red LED richiesto"
+                    notes = "Fioritura Evil, Red LED richiesto",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 20,
+                    fertilizerMed = 40,
+                    fertilizerMax = 60,
+                    // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
+                    lightMin = 50,
+                    lightMed = 75,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -361,7 +507,15 @@ namespace _Project.Editor
                     hydrationMed = 45,
                     hydrationMax = 100,
                     durationDays = 3,
-                    notes = "Raccolta Evil, tollerante a condizioni variabili"
+                    notes = "Raccolta Evil, tollerante a condizioni variabili",
+                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
+                    fertilizerMin = 0,
+                    fertilizerMed = 0,
+                    fertilizerMax = 0,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 },
                 new StageRequirements
                 {
@@ -370,7 +524,15 @@ namespace _Project.Editor
                     hydrationMed = 40,
                     hydrationMax = 100,
                     durationDays = 2,
-                    notes = "Riposo Evil, riattivabile con fertilizzante"
+                    notes = "Riposo Evil, riattivabile con fertilizzante",
+                    // BLK-03.01-T1: Range fertilizzante fissi
+                    fertilizerMin = 30,
+                    fertilizerMed = 50,
+                    fertilizerMax = 70,
+                    // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
+                    lightMin = 0,
+                    lightMed = 50,
+                    lightMax = 100
                 }
             };
             

@@ -2,6 +2,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Fertilizer;
 using _Project;
 
 /// <summary>
@@ -320,6 +321,26 @@ public class PotActions : MonoBehaviour
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}");
         
         return isHarvestReady && hasFruits && inRange && hasResources;
+    }
+    
+    /// <summary>
+    /// BLK-03.01-T1: Verifica se è possibile applicare fertilizzante
+    /// </summary>
+    public bool CanFertilize()
+    {
+        if (_potState == null)
+            return false;
+        
+        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
+        bool
+            hasPlant = _potState.HasPlantGrowing,
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources();
+        
+        if (showDebugLogs)
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanFertilize: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+        
+        return hasPlant && inRange && hasResources;
     }
     
     #endregion
@@ -813,6 +834,140 @@ public class PotActions : MonoBehaviour
         return true;
     }
     
+    /// <summary>
+    /// BLK-03.01-T1: Esegue l'azione di applicare fertilizzante
+    /// </summary>
+    /// <param name="fertilizerItemCode">ItemCode del fertilizzante da applicare (es. "fertilizer-standard")</param>
+    public bool DoFertilize(string fertilizerItemCode)
+    {
+        if (!CanFertilize())
+        {
+            string reason = GetFertilizeFailureReason();
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, reason);
+            return false;
+        }
+        
+        // 1. Verifica vaso e pianta
+        if (_potState == null || !_potState.HasPlant)
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, "Vaso vuoto");
+            return false;
+        }
+        
+        // 2. Verifica fertilizzante nell'inventario
+        if (!_playerInventory.Has(fertilizerItemCode))
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, $"Fertilizzante '{fertilizerItemCode}' non disponibile");
+            return false;
+        }
+        
+        // 3. Determina tipo fertilizzante da ItemCode
+        FertilizerType fertilizerType = GetFertilizerTypeFromItemCode(fertilizerItemCode);
+        
+        // 4. Ottieni PlantData per verificare famiglia
+        var plantData = _potState.GetPlantData();
+        if (plantData == null)
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, "PlantData non trovato");
+            return false;
+        }
+        
+        // 5. Verifica coerenza genetica (REGOLA CRITICA: MORTE IMMEDIATA)
+        if (!FertilizerSystem.IsFertilizerCompatible(fertilizerType, plantData.Family))
+        {
+            // 🚨 MORTE IMMEDIATA della pianta
+            Debug.LogError($"[PotActions] 🚨 Fertilizzante incompatibile! Pianta MUORE IMMEDIATAMENTE. Vaso: {potSlot.PotId}, Famiglia: {plantData.Family}, Fertilizzante: {fertilizerType}");
+            
+            // Rimuovi pianta dal vaso (morte)
+            _potState.HasPlant = false;
+            _potState.PlantCode = null;
+            _potState.Stage = 0;
+            _potState.Hydration = 0;
+            _potState.LightExposure = 0;
+            _potState.FertilizerLevel = 0;
+            // Reset tutti i contatori
+            _potState.DaysSincePlant = 0;
+            _potState.DaysInCurrentStage = 0;
+            _potState.GrowthPoints = 0;
+            _potState.DaysFertilizerActive = 0;
+            
+            // Notifica evento morte pianta
+            PotEvents.EmitPlantDied(potSlot.PotId, $"Fertilizzante incompatibile: {fertilizerType} su pianta {plantData.Family}");
+            
+            // Consuma comunque il fertilizzante (già usato)
+            _playerInventory.Consume(fertilizerItemCode, 1);
+            
+            // Notifica cambio stato
+            PotEvents.EmitAction(PotEvents.PotActionType.Fertilize, potSlot);
+            PotEvents.EmitChanged(potSlot);
+            
+            return false; // Operazione fallita (pianta morta)
+        }
+        
+        // 6. Applica fertilizzante (aumenta FertilizerLevel)
+        int fertilizerAmount = FertilizerSystem.GetFertilizerAmount(fertilizerType);
+        _potState.FertilizerLevel = Mathf.Clamp(
+            _potState.FertilizerLevel + fertilizerAmount,
+            0, 100);
+        
+        // 7. Se Resting → Flowering
+        if (_potState.Stage == (int)PlantStage.Resting)
+        {
+            int oldStage = _potState.Stage;
+            _potState.Stage = (int)PlantStage.Flowering;
+            _potState.DaysInCurrentStage = 0;
+            
+            // Notifica cambio stadio
+            if (potGrowthController != null)
+            {
+                potGrowthController.OnStageChanged(PlantStage.Flowering);
+            }
+            PotEvents.EmitPlantStageChanged(potSlot.PotId, PlantStage.Flowering);
+            
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] {potSlot.PotId}: Transizione Resting → Flowering dopo fertilizzante");
+        }
+        
+        // 8. Consuma fertilizzante dall'inventario
+        if (!_playerInventory.Consume(fertilizerItemCode, 1))
+        {
+            Debug.LogError($"[PotActions] Impossibile consumare fertilizzante '{fertilizerItemCode}'");
+            return false;
+        }
+        
+        // 9. Aggiorna tracking
+        _potState.DaysFertilizerActive = 0; // Reset contatore (verrà incrementato a fine giornata se rimane attivo)
+        
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Fertilize, potSlot);
+        PotEvents.EmitChanged(potSlot);
+        
+        if (showDebugLogs)
+        {
+            Debug.Log($"[ACT-015][{potSlot.PotId}] Fertilize OK: {fertilizerType} applicato (+{fertilizerAmount}%), livello totale: {_potState.FertilizerLevel}%");
+        }
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// BLK-03.01-T1: Mappa ItemCode → FertilizerType
+    /// </summary>
+    private FertilizerType GetFertilizerTypeFromItemCode(string itemCode)
+    {
+        // Mappa ItemCode → FertilizerType
+        // Esempio: "fertilizer-standard" → Standard
+        //          "fertilizer-pure" → Pure
+        //          "fertilizer-prohibited" → Prohibited
+        return itemCode switch
+        {
+            "fertilizer-standard" => FertilizerType.Standard,
+            "fertilizer-pure" => FertilizerType.Pure,
+            "fertilizer-prohibited" => FertilizerType.Prohibited,
+            _ => FertilizerType.Standard  // Default fallback
+        };
+    }
+    
     #endregion
     
     #region Helper Methods
@@ -930,6 +1085,15 @@ public class PotActions : MonoBehaviour
         if (_potState.AmountFruits <= 0f) return "Nessun frutto disponibile";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
+        return "Azione non permessa";
+    }
+    
+    private string GetFertilizeFailureReason()
+    {
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (!IsPlayerInRange()) return "Troppo lontano";
+        if (!CanConsumeResources()) return "Azioni insufficienti";
         return "Azione non permessa";
     }
     

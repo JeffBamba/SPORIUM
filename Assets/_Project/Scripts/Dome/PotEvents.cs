@@ -19,7 +19,8 @@ public static class PotEvents
         Light,       // ACT-003: Illuminare pianta
         Uproot,      // ACT-004: Uproot pianta
         Harvest,     // ACT-005: Raccogliere frutti (BLK-02.06)
-        Spray        // ACT-014: Spray Antifungino (BLK-02.03)
+        Spray,       // ACT-014: Spray Antifungino (BLK-02.03)
+        Fertilize    // ACT-015: Applicare fertilizzante (BLK-03.01-T1)
     }
     
     /// <summary>
@@ -51,6 +52,11 @@ public static class PotEvents
     /// Evento emesso quando una pianta cambia stadio
     /// </summary>
     public static event Action<string, PlantStage> OnPlantStageChanged;
+    
+    /// <summary>
+    /// BLK-03.01-T1: Evento emesso quando una pianta muore (es. fertilizzante incompatibile)
+    /// </summary>
+    public static event Action<string, string> OnPlantDied;  // potId, reason
     
     /// <summary>
     /// Emette l'evento di azione su vaso
@@ -140,6 +146,8 @@ public static class PotEvents
                 return "Raccogli";
             case PotActionType.Spray:
                 return "Spray Antifungino";
+            case PotActionType.Fertilize:
+                return "Fertilizzare";
             default:
                 return "Sconosciuto";
         }
@@ -251,5 +259,16 @@ public static class PotEvents
     public static void EmitPlantStageChanged(string potId, PlantStage stage)
     {
         RaiseOnPlantStageChanged(potId, stage);
+    }
+    
+    /// <summary>
+    /// BLK-03.01-T1: Emette l'evento di morte pianta (es. fertilizzante incompatibile)
+    /// </summary>
+    /// <param name="potId">ID del vaso</param>
+    /// <param name="reason">Motivo della morte</param>
+    public static void EmitPlantDied(string potId, string reason)
+    {
+        Debug.LogWarning($"[PotEvents] 🚨 Pianta morta in vaso {potId}: {reason}");
+        OnPlantDied?.Invoke(potId, reason);
     }
 }

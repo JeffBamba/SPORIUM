@@ -1,0 +1,191 @@
+================================================================================
+VALORI PIANTE INTEGRATE IN SPORIUM - ESTRATTI DA NOTION
+================================================================================
+Data estrazione: 2025-12-10
+Fonte: Schede Notion delle tre piante integrate (STD-001, PURE-001, EVIL-001)
+================================================================================
+
+🌿 STD-001 — FERRIC FERN (Standard)
+================================================================================
+Codice: PLT-STD-001
+Famiglia: Standard
+Rarità: Comune
+
+STADI DI CRESCITA:
+------------------
+1. SEED (Semina)
+   - Idratazione: 30% (min) - 45% (opt) - 60% (max)
+   - Luce LED: Nessuna richiesta
+   - Fertilizzante: 60% (min) - 75% (opt) - 90% (max)
+   - Durata: 2 giorni
+
+2. GROWTH (Crescita)
+   - Idratazione: 35% (min) - 55% (opt) - 75% (max)
+   - Luce LED: Blue ×1 (richiesto)
+   - Fertilizzante: 40% (min) - 60% (opt) - 80% (max)
+   - Durata: 3 giorni
+
+3. FLOWERING (Fioritura)
+   - Idratazione: 40% (min) - 50% (opt) - 70% (max)
+   - Luce LED: Red ×1 (richiesto)
+   - Fertilizzante: 20% (min) - 40% (opt) - 60% (max)
+   - Durata: 3 giorni
+
+4. HARVESTREADY (Raccolta)
+   - Idratazione: Non specificata (stadio di raccolta)
+   - Luce LED: Non richiesta
+   - Fertilizzante: Non richiesto (—)
+   - Durata: Finestra 3 giorni (decay da giorno 3)
+
+5. RESTING (Riposo)
+   - Idratazione: Non specificata (riattivabile con fertilizzante)
+   - Luce LED: Non richiesta (o 2-3 LED)
+   - Fertilizzante: 30% (min) - 50% (opt) - 70% (max)
+   - Durata: 2-3 giorni
+
+NOTA: Evaporazione idratazione: -8%/giorno
+      Banda ottimale idratazione: 55-75%
+      Banda tollerata: 40-90%
+
+================================================================================
+
+🌿 PURE-001 — ARCTIC HASK (Pure)
+================================================================================
+Codice: PURE-001
+Famiglia: Pure
+Rarità: Rara
+
+STADI DI CRESCITA:
+------------------
+1. SEED (Semina)
+   - Idratazione: 30% (min) - 50% (opt) - 70% (max)
+   - Luce LED: Nessuna richiesta
+   - Fertilizzante: 60% (min) - 75% (opt) - 90% (max)
+   - Durata: 2 giorni
+
+2. GROWTH (Crescita)
+   - Idratazione: 40% (min) - 55% (opt) - 70% (max)
+   - Luce LED: Blue ×1 (richiesto, max 1 per colore/giorno)
+   - Fertilizzante: 40% (min) - 60% (opt) - 80% (max)
+   - Durata: 3 giorni
+
+3. FLOWERING (Fioritura)
+   - Idratazione: 45% (min) - 55% (opt) - 65% (max)
+   - Luce LED: Red ×1 (richiesto, max 1 per colore/giorno)
+   - Fertilizzante: 20% (min) - 40% (opt) - 60% (max)
+   - Durata: 2 giorni
+
+4. HARVESTREADY (Raccolta)
+   - Idratazione: Non specificata (stadio di raccolta)
+   - Luce LED: Non richiesta
+   - Fertilizzante: Non richiesto (—)
+   - Durata: Finestra 3 giorni (decay da giorno 3)
+
+5. RESTING (Riposo)
+   - Idratazione: Non specificata (ripristino dopo stress termico)
+   - Luce LED: Non richiesta
+   - Fertilizzante: 30% (min) - 50% (opt) - 70% (max)
+   - Durata: 2 giorni
+
+NOTA: Evaporazione idratazione: -7%/giorno
+      Banda ottimale idratazione: 45-65%
+      Banda tollerata: 35-80%
+      LED safe/day: 1 per colore (oltre = stress termico)
+
+================================================================================
+
+💜 EVIL-001 — GLASSCAP FUNGUS (Evil)
+================================================================================
+Codice: EVIL-001
+Famiglia: Evil
+Rarità: Comune - Instabile
+
+STADI DI CRESCITA:
+------------------
+1. SPORE (Spore - equivalente Seed)
+   - Idratazione: 70% (min) - 80% (opt) - 90% (max)
+   - Luce LED: Nessuna richiesta
+   - Fertilizzante: 60% (min) - 75% (opt) - 90% (max)
+   - Durata: 2 giorni
+
+2. MYCELIUM (Micelio - equivalente Growth)
+   - Idratazione: 75% (min) - 85% (opt) - 95% (max)
+   - Luce LED: Blue ×1 (richiesto, max 1 Red/giorno)
+   - Fertilizzante: 40% (min) - 60% (opt) - 80% (max)
+   - Durata: 3 giorni
+
+3. BLOOMING (Fioritura)
+   - Idratazione: 70% (min) - 80% (opt) - 90% (max)
+   - Luce LED: Red ×1 (richiesto, max 1 Red/giorno)
+   - Fertilizzante: 20% (min) - 40% (opt) - 60% (max)
+   - Durata: 3 giorni
+
+4. HARVESTREADY (Raccolta)
+   - Idratazione: Non specificata (stadio di raccolta)
+   - Luce LED: Non richiesta
+   - Fertilizzante: Non richiesto (—)
+   - Durata: Finestra 3 giorni (decay da giorno 3)
+
+5. DORMANT (Quiescenza - equivalente Resting)
+   - Idratazione: Non specificata (entra in quiescenza se luce intensa)
+   - Luce LED: Non richiesta (evitare luce diretta)
+   - Fertilizzante: 30% (min) - 50% (opt) - 70% (max)
+   - Durata: 2 giorni
+
+NOTA: Evaporazione idratazione: -4%/giorno
+      Banda ottimale idratazione: 70-85%
+      Banda tollerata: 60-95%
+      LED safe/day: max 1 Red (evitare luce diretta)
+
+================================================================================
+
+OSSERVAZIONI GENERALI:
+---------------------
+1. FERTILIZZANTE: Valori FISSI per tutte le piante (Standard, Pure, Evil):
+   - Seed: 60% (min) - 75% (opt) - 90% (max)
+   - Growth: 40% (min) - 60% (opt) - 80% (max)
+   - Flowering: 20% (min) - 40% (opt) - 60% (max)
+   - HarvestReady: Non richiesto (—)
+   - Resting: 30% (min) - 50% (opt) - 70% (max)
+   
+   Questi valori sono identici per tutte le famiglie di piante.
+
+2. COMPATIBILITÀ FERTILIZZANTI E FAMIGLIE DI PIANTE (REGOLA CRITICA):
+   ⚠️ L'uso di fertilizzanti incompatibili causa la MORTE IMMEDIATA della pianta!
+   
+   📌 PIANTE STANDARD:
+      ✅ Possono usare: SOLO fertilizzanti Standard
+      ❌ Se usano fertilizzanti Pure → MUORE SUBITO
+      ❌ Se usano fertilizzanti Evil → MUORE SUBITO
+   
+   📌 PIANTE PURE:
+      ✅ Possono usare: fertilizzanti Pure e Standard
+      ❌ Se usano fertilizzanti Evil → MUORE SUBITO
+   
+   📌 PIANTE EVIL:
+      ✅ Possono usare: fertilizzanti Evil e Standard
+      ❌ Se usano fertilizzanti Pure → MUORE SUBITO
+   
+   REGOLA GENERALE:
+   - Standard = solo Standard (più restrittiva)
+   - Pure = Pure o Standard (tollerante verso Standard)
+   - Evil = Evil o Standard (tollerante verso Standard)
+   - MAI usare fertilizzante opposto (Pure ↔ Evil = morte certa)
+
+3. LUCE: I valori di luce sono espressi come tipo LED (Blue/Red) e quantità (×1),
+   non come percentuali.
+
+4. IDRATAZIONE: Tutti i valori sono in percentuale (0-100%) con formato min-opt-max.
+   I valori variano per pianta e stadio.
+
+5. DURATA: Espressa in giorni (g). HarvestReady ha una "finestra" di 3 giorni prima
+   del decay.
+
+6. MAPPING STADI EVIL: Gli stadi Evil hanno nomi diversi (Spore, Mycelium, Blooming, 
+   Dormant) ma corrispondono funzionalmente agli stadi standard (Seed, Growth, Flowering, 
+   Resting) e utilizzano gli stessi valori di fertilizzante.
+
+================================================================================
+FINE DOCUMENTO
+================================================================================
+

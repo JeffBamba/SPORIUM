@@ -20,6 +20,7 @@ namespace _Project
         [SerializeField] private Button _redLedButton;
         [SerializeField] private Button _sprayButton;
         [SerializeField] private Button _harvestButton;
+        [SerializeField] private Button _fertilizeButton;  // BLK-03.01-T1
         [SerializeField] private Button _uprootButton;
 
         [SerializeField] private TextMeshProUGUI _idLabel;
@@ -27,10 +28,14 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _plantDescriptionLabel;
         [SerializeField] private ProgressBar _progressBar;
         [SerializeField] private Image _stageImage;
+        [SerializeField] private TextMeshProUGUI _growthLabelText;  // Label per stato crescita (IN CRESCITA, Stabile, etc.)
         
         [Header("Plant Stats UI")]
         [SerializeField] private TextMeshProUGUI _hydrationStressText;
         [SerializeField] private TextMeshProUGUI _lightStressText;
+        [SerializeField] private TextMeshProUGUI _fertilizerText;  // BLK-03.01-T1
+        [SerializeField] private TextMeshProUGUI _growthPointsText;  // BLK-03.01-T2
+        [SerializeField] private TextMeshProUGUI _optimalDaysText;  // BLK-03.01-T2
         [SerializeField] private ProgressBar _hydrationProgressBar;
         [SerializeField] private ProgressBar _lightProgressBar;
         [SerializeField] private TextMeshProUGUI _phAffinityText;
@@ -56,6 +61,9 @@ namespace _Project
         
         [Header("Seed Selector")]
         [SerializeField] private UISeedSelector _seedSelector;
+        
+        [Header("Fertilizer Selector (BLK-03.01-T1)")]
+        [SerializeField] private UIFertilizerSelector _fertilizerSelector;
         
         private PotSlot _currentSelectedPot;
         private PlantGrowthConfig _growthConfig;
@@ -83,6 +91,13 @@ namespace _Project
                 _seedSelector.OnSeedSelected -= OnSeedSelected;
                 _seedSelector.OnCancelled -= OnSeedSelectionCancelled;
             }
+            
+            // BLK-03.01-T1: Rimuovi sottoscrizioni fertilizer selector
+            if (_fertilizerSelector != null)
+            {
+                _fertilizerSelector.OnFertilizerSelected -= OnFertilizerSelected;
+                _fertilizerSelector.OnCancelled -= OnFertilizerSelectionCancelled;
+            }
         }
         
         private void Update()
@@ -91,6 +106,11 @@ namespace _Project
             {
                 _currentSelectedPot = null;
                 _page.SetActive(false);
+                // Chiudi il tooltip quando si chiude la HUD
+                if (_growthTooltipPanel != null)
+                {
+                    _growthTooltipPanel.SetActive(false);
+                }
             }
         }
         
@@ -153,12 +173,17 @@ namespace _Project
             if (_harvestButton != null)
                 _harvestButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Harvest));
             
+            // BLK-03.01-T1: Bottone fertilizzante
+            if (_fertilizeButton != null)
+                _fertilizeButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Fertilize));
+            
             if (_uprootButton != null)
                 _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
             else
                 Debug.LogError("[PotDetailsWidget] ⚠️ _uprootButton non assegnato! Collega il riferimento nella scena Unity.");
             
             InitializeSeedSelector();
+            InitializeFertilizerSelector();  // BLK-03.01-T1
         }
         
         /// <summary>
@@ -276,6 +301,120 @@ namespace _Project
             _seedSelector.Show(targetPot);
         }
         
+        /// <summary>
+        /// Inizializza il selettore fertilizzante se non assegnato
+        /// BLK-03.01-T1: Crea automaticamente se non esiste nella scena
+        /// </summary>
+        private void InitializeFertilizerSelector()
+        {
+            if (_fertilizerSelector == null)
+            {
+                // Cerca UIFertilizerSelector nella scena
+                _fertilizerSelector = FindObjectOfType<UIFertilizerSelector>();
+                
+                if (_fertilizerSelector == null)
+                {
+                    // Crea automaticamente il GameObject con il componente
+                    Debug.LogWarning("[PotDetailsWidget] ⚠️ UIFertilizerSelector non trovato nella scena. Creazione automatica...");
+                    GameObject fertilizerSelectorGO = new GameObject("UIFertilizerSelector");
+                    _fertilizerSelector = fertilizerSelectorGO.AddComponent<UIFertilizerSelector>();
+                    Debug.Log("[PotDetailsWidget] ✅ UIFertilizerSelector creato automaticamente!");
+                }
+            }
+            
+            // Sottoscrivi agli eventi
+            if (_fertilizerSelector != null)
+            {
+                _fertilizerSelector.OnFertilizerSelected += OnFertilizerSelected;
+                _fertilizerSelector.OnCancelled += OnFertilizerSelectionCancelled;
+            }
+        }
+        
+        /// <summary>
+        /// BLK-03.01-T1: Apre selettore fertilizzante (mostra inventario fertilizzanti)
+        /// </summary>
+        private void OpenFertilizerSelector(PotSlot targetPot)
+        {
+            Debug.Log($"[PotDetailsWidget] 🌿 OpenFertilizerSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            
+            // Assicurati che il selettore sia inizializzato
+            if (_fertilizerSelector == null)
+            {
+                Debug.Log("[PotDetailsWidget] 🌿 Inizializzazione fertilizer selector...");
+                InitializeFertilizerSelector();
+            }
+            
+            if (_fertilizerSelector == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ❌ UIFertilizerSelector non disponibile dopo inizializzazione!");
+                return;
+            }
+            
+            // Rassicurati che gli eventi siano sempre sottoscritti (in caso di ricreazione)
+            _fertilizerSelector.OnFertilizerSelected -= OnFertilizerSelected; // Rimuovi prima per evitare duplicati
+            _fertilizerSelector.OnFertilizerSelected += OnFertilizerSelected;
+            _fertilizerSelector.OnCancelled -= OnFertilizerSelectionCancelled;
+            _fertilizerSelector.OnCancelled += OnFertilizerSelectionCancelled;
+            
+            Debug.Log($"[PotDetailsWidget] 🌿 Eventi sottoscritti correttamente");
+            Debug.Log($"[PotDetailsWidget] 🌿 Apertura selettore fertilizzanti per vaso {targetPot?.PotId}");
+            
+            // Salva il vaso corrente prima di aprire il selettore
+            _currentSelectedPot = targetPot;
+            
+            _fertilizerSelector.Show(targetPot);
+        }
+        
+        /// <summary>
+        /// Gestisce la selezione di un fertilizzante
+        /// </summary>
+        private void OnFertilizerSelected(string fertilizerTypeId)
+        {
+            Debug.Log($"[PotDetailsWidget] 🌿 OnFertilizerSelected chiamato con fertilizerTypeId: {fertilizerTypeId}");
+            Debug.Log($"[PotDetailsWidget] 🌿 _currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
+            
+            if (_currentSelectedPot == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando fertilizzante selezionato!");
+                return;
+            }
+            
+            if (_currentSelectedPot.PotActions == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ⚠️ PotActions è NULL quando fertilizzante selezionato!");
+                return;
+            }
+            
+            Debug.Log($"[PotDetailsWidget] 🌿 Applicando fertilizzante {fertilizerTypeId} al vaso {_currentSelectedPot.PotId}");
+            
+            // Applica il fertilizzante selezionato
+            bool success = _currentSelectedPot.PotActions.DoFertilize(fertilizerTypeId);
+            
+            if (success)
+            {
+                Debug.Log($"[PotDetailsWidget] ✅ Fertilizzante applicato con successo!");
+                // Aggiorna l'UI
+                UpdateActionButtons(_currentSelectedPot);
+                
+                var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
+                if (growthController != null)
+                    UpdateStageAndProgressUI(_currentSelectedPot);
+            }
+            else
+            {
+                Debug.LogError($"[PotDetailsWidget] ❌ Fallito applicare fertilizzante {fertilizerTypeId}! Verifica i log di PotActions per dettagli.");
+            }
+        }
+        
+        /// <summary>
+        /// Gestisce l'annullamento della selezione fertilizzante
+        /// </summary>
+        private void OnFertilizerSelectionCancelled()
+        {
+            Debug.Log("[PotDetailsWidget] Selezione fertilizzante annullata");
+            // Nessuna azione necessaria
+        }
+        
         private void LoadGrowthConfig()
         {
             _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
@@ -360,6 +499,11 @@ namespace _Project
                 case PotEvents.PotActionType.Harvest:
                     success = selectedPot.PotActions.DoHarvest();
                     break;
+                
+                case PotEvents.PotActionType.Fertilize:
+                    // BLK-03.01-T1: Apri selettore fertilizzante invece di applicare direttamente
+                    OpenFertilizerSelector(selectedPot);
+                    return; // Esci subito, DoFertilize verrà chiamato quando l'utente seleziona un fertilizzante
                 
                 case PotEvents.PotActionType.Uproot:
                     success = selectedPot.PotActions.DoUproot();
@@ -528,6 +672,8 @@ namespace _Project
                 UpdateButtonState(_sprayButton, pot.PotActions.CanSprayAntifungal(), "Spray");
             if (_harvestButton != null)
                 UpdateButtonState(_harvestButton, pot.PotActions.CanHarvest(), "Raccogli");
+            if (_fertilizeButton != null)
+                UpdateButtonState(_fertilizeButton, pot.PotActions.CanFertilize(), "Fertilizzare");  // BLK-03.01-T1
             UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Uproot");
         }
         
@@ -686,6 +832,9 @@ namespace _Project
     
             UpdateProgressUI(state);
             
+            // Aggiorna Label Growth con stato (IN CRESCITA, Stabile, Difficoltà, Malata)
+            UpdateGrowthLabel(state);
+            
             // Aggiorna Condizione pianta
             UpdateConditionUI(state);
         }
@@ -712,6 +861,24 @@ namespace _Project
             if (_lightStressText == null)
             {
                 _lightStressText = FindTextInChildren("Light stress");
+            }
+            
+            // BLK-03.01-T1: Auto-trova fertilizer text se non assegnato
+            if (_fertilizerText == null)
+            {
+                _fertilizerText = FindTextInChildren("Fertilizer");
+            }
+            
+            // BLK-03.01-T2: Auto-trova growth points text se non assegnato
+            if (_growthPointsText == null)
+            {
+                _growthPointsText = FindTextInChildren("Growth Points");
+            }
+            
+            // BLK-03.01-T2: Auto-trova optimal days text se non assegnato
+            if (_optimalDaysText == null)
+            {
+                _optimalDaysText = FindTextInChildren("Optimal Days");
             }
             
             // Auto-trova le progress bar se non sono state collegate manualmente
@@ -838,6 +1005,133 @@ namespace _Project
             if (_lightProgressBar != null)
             {
                 _lightProgressBar.gameObject.SetActive(false);
+            }
+            
+            // BLK-03.01-T1: Aggiorna Fertilizzante (mostra livello corrente e range ideale per lo stadio)
+            if (_fertilizerText != null)
+            {
+                _fertilizerText.richText = true;
+                
+                if (state.IsEmpty || !state.HasPlant)
+                {
+                    _fertilizerText.text = "<color=#CCCCCC>Fertilizzante:</color> <color=#888888>-</color>";
+                }
+                else
+                {
+                    int currentFertilizer = state.FertilizerLevel;
+                    string fertilizerText = $"<color=#CCCCCC>Fertilizzante:</color> <color=#FFFF00>{currentFertilizer}%</color>";
+                    
+                    // Se c'è una pianta, mostra anche il range ideale per lo stadio corrente
+                    if (!string.IsNullOrEmpty(state.PlantCode))
+                    {
+                        var plantDatabase = PlantDatabase.Instance;
+                        if (plantDatabase != null)
+                        {
+                            var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                            if (plantData != null)
+                            {
+                                var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
+                                if (stageReq != null)
+                                {
+                                    // Mostra il range ideale (min-med-max) per lo stadio corrente
+                                    fertilizerText += $" <color=#CCCCCC>(Range:</color> <color=#00FF00>{stageReq.fertilizerMin}%-{stageReq.fertilizerMed}%-{stageReq.fertilizerMax}%</color><color=#CCCCCC>)</color>";
+                                    
+                                    // Cambia colore in base al range
+                                    if (stageReq.IsFertilizerInRange(currentFertilizer))
+                                    {
+                                        if (stageReq.IsFertilizerOptimal(currentFertilizer))
+                                        {
+                                            // Verde se ottimale
+                                            fertilizerText = fertilizerText.Replace("<color=#FFFF00>", "<color=#00FF00>");
+                                        }
+                                        // Giallo se nel range ma non ottimale (già impostato)
+                                    }
+                                    else
+                                    {
+                                        // Rosso se fuori range
+                                        fertilizerText = fertilizerText.Replace("<color=#FFFF00>", "<color=#FF0000>");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    _fertilizerText.text = fertilizerText;
+                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Fertilizzante: {currentFertilizer}%");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] _fertilizerText non trovato! Collega il riferimento nella scena Unity.");
+            }
+            
+            // BLK-03.01-T2: Aggiorna Growth Points (mostra punti accumulati per ogni parametro)
+            if (_growthPointsText != null)
+            {
+                _growthPointsText.richText = true;
+                
+                if (state.IsEmpty || !state.HasPlant)
+                {
+                    _growthPointsText.text = "<color=#CCCCCC>Punti Crescita:</color> <color=#888888>-</color>";
+                }
+                else
+                {
+                    int totalPoints = state.GrowthPointsWater + state.GrowthPointsLight + state.GrowthPointsFertilizer;
+                    string pointsText = $"<color=#CCCCCC>Punti Crescita:</color> " +
+                                       $"<color=#3F6FFF>W:{state.GrowthPointsWater}</color> " +
+                                       $"<color=#FFD700>L:{state.GrowthPointsLight}</color> " +
+                                       $"<color=#90EE90>F:{state.GrowthPointsFertilizer}</color> " +
+                                       $"<color=#CCCCCC>(Tot: {totalPoints}/3)</color>";
+                    
+                    // Cambia colore totale in base ai punti
+                    if (totalPoints >= 3)
+                        pointsText = pointsText.Replace("<color=#CCCCCC>(Tot:", "<color=#00FF00>(Tot:");
+                    else if (totalPoints >= 2)
+                        pointsText = pointsText.Replace("<color=#CCCCCC>(Tot:", "<color=#FFFF00>(Tot:");
+                    else if (totalPoints >= 1)
+                        pointsText = pointsText.Replace("<color=#CCCCCC>(Tot:", "<color=#FFA500>(Tot:");
+                    else
+                        pointsText = pointsText.Replace("<color=#CCCCCC>(Tot:", "<color=#FF0000>(Tot:");
+                    
+                    _growthPointsText.text = pointsText;
+                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Growth Points: W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer} (Tot: {totalPoints})");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] _growthPointsText non trovato! Collega il riferimento nella scena Unity.");
+            }
+            
+            // BLK-03.01-T2: Aggiorna Optimal Days (mostra giorni consecutivi con parametri ottimali)
+            if (_optimalDaysText != null)
+            {
+                _optimalDaysText.richText = true;
+                
+                if (state.IsEmpty || !state.HasPlant)
+                {
+                    _optimalDaysText.text = "<color=#CCCCCC>Giorni Ottimali:</color> <color=#888888>-</color>";
+                }
+                else
+                {
+                    string optimalText = $"<color=#CCCCCC>Giorni Ottimali:</color> <color=#FFFF00>{state.DaysConsecutiveOptimal}</color>";
+                    
+                    // Cambia colore in base ai giorni ottimali
+                    if (state.DaysConsecutiveOptimal >= 3)
+                        optimalText = optimalText.Replace("<color=#FFFF00>", "<color=#00FF00>");
+                    else if (state.DaysConsecutiveOptimal >= 2)
+                        optimalText = optimalText.Replace("<color=#FFFF00>", "<color=#FFD700>");
+                    else if (state.DaysConsecutiveOptimal >= 1)
+                        optimalText = optimalText.Replace("<color=#FFFF00>", "<color=#FFA500>");
+                    else
+                        optimalText = optimalText.Replace("<color=#FFFF00>", "<color=#888888>");
+                    
+                    _optimalDaysText.text = optimalText;
+                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Optimal Days: {state.DaysConsecutiveOptimal}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] _optimalDaysText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // Aggiorna pH Affinity (mostra pH ottimale della pianta se disponibile)
@@ -1383,23 +1677,19 @@ namespace _Project
                 tooltipGO.transform.SetParent(tooltipCanvas.transform, false);
                 
                 RectTransform tooltipRect = tooltipGO.AddComponent<RectTransform>();
-                tooltipRect.anchorMin = new Vector2(0, 1);
-                tooltipRect.anchorMax = new Vector2(0, 1);
-                tooltipRect.pivot = new Vector2(0, 1);
-                
-                // Posiziona il tooltip in base alla posizione della progress bar
-                Vector3 worldPos = _progressBar.transform.position;
-                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(tooltipCanvas.worldCamera ?? Camera.main, worldPos);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    tooltipCanvas.transform as RectTransform, screenPos, tooltipCanvas.worldCamera ?? Camera.main, out Vector2 localPos);
-                tooltipRect.anchoredPosition = new Vector2(localPos.x, localPos.y - 60);
+                // Centrato orizzontalmente, ancorato in alto
+                tooltipRect.anchorMin = new Vector2(0.5f, 1f);
+                tooltipRect.anchorMax = new Vector2(0.5f, 1f);
+                tooltipRect.pivot = new Vector2(0.5f, 1f);
+                // Posizionato centrato in alto dello schermo, più in basso per evitare sovrapposizione con pH
+                tooltipRect.anchoredPosition = new Vector2(0, -150);
                 
                 // Tooltip più grande per contenuto dettagliato
-                tooltipRect.sizeDelta = new Vector2(450, 300);
+                tooltipRect.sizeDelta = new Vector2(600, 300);
                 
                 Image tooltipBg = tooltipGO.AddComponent<Image>();
-                // Verde scuro solido (non trasparente)
-                tooltipBg.color = new Color(0f, 0.3f, 0.15f, 1f);
+                // Colore sfondo tooltip: #3d568e
+                tooltipBg.color = new Color(61f/255f, 86f/255f, 142f/255f, 1f);
                 
                 _growthTooltipPanel = tooltipGO;
                 _growthTooltipPanel.SetActive(false);
@@ -1459,6 +1749,52 @@ namespace _Project
         }
         
         /// <summary>
+        /// Aggiorna la label Growth con lo stato (IN CRESCITA, Stabile, Difficoltà, Malata)
+        /// </summary>
+        private void UpdateGrowthLabel(PotStateModel state)
+        {
+            // Auto-trova label se non assegnata
+            if (_growthLabelText == null)
+            {
+                _growthLabelText = FindTextInChildren("GrowthLabel");
+            }
+            
+            if (_growthLabelText != null)
+            {
+                if (state == null || state.IsEmpty || !state.HasPlant)
+                {
+                    _growthLabelText.text = "Growth: Stabile";
+                    _growthLabelText.color = new Color(0.6f, 0.6f, 0.6f); // Grigio
+                }
+                else
+                {
+                    string status = GetGrowthStatus(state);
+                    _growthLabelText.text = $"Growth: {status}";
+                    
+                    // Colore in base allo stato
+                    switch (status)
+                    {
+                        case "IN CRESCITA":
+                            _growthLabelText.color = new Color(0.2f, 1f, 0.2f); // Verde
+                            break;
+                        case "Stabile":
+                            _growthLabelText.color = new Color(1f, 1f, 0.2f); // Giallo
+                            break;
+                        case "Difficoltà":
+                            _growthLabelText.color = new Color(1f, 0.5f, 0.2f); // Arancione
+                            break;
+                        case "Malata":
+                            _growthLabelText.color = new Color(1f, 0.2f, 0.2f); // Rosso
+                            break;
+                        default:
+                            _growthLabelText.color = Color.white;
+                            break;
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
         /// Aggiorna tooltip Growth con dati attuali
         /// </summary>
         private void UpdateGrowthTooltip(PotStateModel state)
@@ -1470,209 +1806,153 @@ namespace _Project
         }
         
         /// <summary>
-        /// Costruisce il tooltip di crescita (progress bar Growth)
+        /// Determina lo stato di crescita della pianta (IN CRESCITA, Stabile, Difficoltà, Malata)
+        /// </summary>
+        private string GetGrowthStatus(PotStateModel state)
+        {
+            if (state == null || state.IsEmpty || !state.HasPlant)
+                return "Stabile";
+            
+            // Verifica se ha muffa (sistema muffa da implementare)
+            // TODO: Implementare verifica muffa quando sistema sarà disponibile
+            // if (state.HasMold)
+            //     return "Malata";
+            
+            // Ottieni PlantData e StageRequirements
+            PlantData plantData = state.GetPlantData();
+            if (plantData == null || _potSystemConfig == null)
+                return "Stabile";
+            
+            PlantStage currentStage = (PlantStage)state.Stage;
+            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            if (stageReq == null)
+                return "Stabile";
+            
+            // Calcola percentuale idratazione
+            int maxHydration = _potSystemConfig.MaxHydration;
+            int hydrationPercent = maxHydration > 0 ? 
+                Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+            
+            // Verifica range per ogni parametro
+            bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
+            bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
+                          stageReq.IsLightInRange(state.LightExposure);
+            bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+            
+            // Determina stato in base ai parametri
+            int paramsOk = (waterOk ? 1 : 0) + (lightOk ? 1 : 0) + (fertilizerOk ? 1 : 0);
+            
+            if (paramsOk == 3)
+                return "IN CRESCITA";
+            else if (paramsOk == 2 || paramsOk == 1)
+                return "Stabile";
+            else // paramsOk == 0
+                return "Difficoltà";
+            }
+        
+        /// <summary>
+        /// Costruisce il tooltip di crescita (progress bar Growth) - versione semplificata per player
         /// </summary>
         private string BuildGrowthTooltip(PotStateModel state)
-        {
+            {
             var sb = new System.Text.StringBuilder();
             
-            if (_growthConfig == null)
+            if (_growthConfig == null || state == null || state.IsEmpty || !state.HasPlant)
             {
-                sb.AppendLine("<b>Growth: Config non disponibile</b>");
+                sb.AppendLine("<b>Crescita: Informazioni non disponibili</b>");
                 return sb.ToString();
             }
             
-            string stageName = GetStageName(state.Stage);
-            float perc = CalculateProgressPercentage(state);
-            sb.AppendLine($"<b>Growth: {stageName} ({perc:F1}%)</b>");
-            sb.AppendLine();
-            
-            // Calcolo dettagliato passo-passo
-            int basePoints = state.GrowthPoints;
-            bool hadHydration = state.WateringSystemOn;
-            bool hadLight = (state.LedSystemState != LedSystemState.Off);
-            
-            int dailyBonus = (hadHydration, hadLight) switch
-            {
-                (true, true)   => _growthConfig.pointsIdealCare,
-                (true, false)  => _growthConfig.pointsPartialCare,
-                (false, true)  => _growthConfig.pointsPartialCare,
-                (false, false) => _growthConfig.pointsNoCare
-            };
-            
-            int totalPoints = basePoints + dailyBonus;
-            string threshold = GetStageThreshold(state.Stage);
-            int thresholdValue = GetStageThresholdValue(state.Stage);
-            
-            // Mostra calcolo dettagliato
-            sb.AppendLine("<color=#FFFF00>Calcolo Progresso:</color>");
-            sb.AppendLine();
-            sb.AppendLine($"<color=#CCCCCC>1. GrowthPoints accumulati:</color> <color=#FFFFFF>{basePoints}</color>");
-            sb.AppendLine();
-            
-            // Bonus giornaliero dettagliato
-            sb.AppendLine("<color=#CCCCCC>2. Bonus giornaliero (oggi):</color>");
-            if (dailyBonus > 0)
-            {
-                string bonusColor = (hadHydration && hadLight) ? "#00FF00" : "#FFFF00";
-                string bonusType = (hadHydration, hadLight) switch
-                {
-                    (true, true)   => "Cura Ideale",
-                    (true, false)  => "Cura Parziale",
-                    (false, true)  => "Cura Parziale",
-                    (false, false) => "Nessuna Cura"
-                };
-                sb.AppendLine($"   <color={bonusColor}>+{dailyBonus} punti</color> ({bonusType})");
-                sb.AppendLine($"   • Idratazione: <color={(hadHydration ? "#00FF00" : "#FF0000")}>{(hadHydration ? "ON" : "OFF")}</color>");
-                sb.AppendLine($"   • Luce LED: <color={(hadLight ? "#00FF00" : "#FF0000")}>{(hadLight ? "Accesa" : "Spenta")}</color>");
-            }
-            else
-            {
-                sb.AppendLine($"   <color=#FF0000>+{dailyBonus} punti</color> (Nessuna cura attiva)");
-                sb.AppendLine($"   • Idratazione: <color=#FF0000>OFF</color>");
-                sb.AppendLine($"   • Luce LED: <color=#FF0000>Spenta</color>");
-            }
-            sb.AppendLine();
-            
-            sb.AppendLine($"<color=#CCCCCC>3. Totale punti:</color> <color=#FFFFFF>{basePoints} + {dailyBonus} = <b>{totalPoints}</b></color>");
-            sb.AppendLine();
-            sb.AppendLine($"<color=#CCCCCC>4. Soglia per avanzare:</color> <color=#FFFFFF>{thresholdValue} punti</color>");
-            sb.AppendLine();
-            
-            // Calcolo percentuale
-            if (thresholdValue > 0)
-            {
-                float calculatedPerc = (float)totalPoints / thresholdValue * 100f;
-                sb.AppendLine($"<color=#CCCCCC>5. Progresso:</color> <color=#FFFFFF>{totalPoints} / {thresholdValue} × 100% = <b>{calculatedPerc:F1}%</b></color>");
-            }
-            else
-            {
-                sb.AppendLine($"<color=#CCCCCC>5. Progresso:</color> <color=#FFFFFF>N/A (soglia non definita)</color>");
-            }
-            sb.AppendLine();
-            
-            // Spiegazione impatti
-            sb.AppendLine("<color=#FFFF00>Impatti:</color>");
-            if (hadHydration && hadLight)
-            {
-                sb.AppendLine($"<color=#00FF00>• Cura Ideale:</color> +{_growthConfig.pointsIdealCare} punti/giorno");
-                sb.AppendLine("  (Watering ON + LED corretto)");
-            }
-            else if (hadHydration || hadLight)
-            {
-                sb.AppendLine($"<color=#FFFF00>• Cura Parziale:</color> +{_growthConfig.pointsPartialCare} punti/giorno");
-                sb.AppendLine($"  (Solo {(hadHydration ? "Watering" : "LED")} attivo)");
-            }
-            else
-            {
-                sb.AppendLine($"<color=#FF0000>• Nessuna Cura:</color> +{_growthConfig.pointsNoCare} punti/giorno");
-                sb.AppendLine("  (Watering OFF + LED spento)");
-            }
-            
-            int pointsNeeded = Mathf.Max(0, thresholdValue - totalPoints);
-            if (pointsNeeded > 0)
-            {
-                sb.AppendLine();
-                sb.AppendLine($"<color=#CCCCCC>Punti mancanti per avanzare:</color> <color=#FFFFFF>{pointsNeeded}</color>");
-                if (dailyBonus > 0)
-                {
-                    int daysNeeded = Mathf.CeilToInt((float)pointsNeeded / dailyBonus);
-                    sb.AppendLine($"<color=#CCCCCC>Giorni stimati (con cura attuale):</color> <color=#FFFFFF>~{daysNeeded}</color>");
-                }
-            }
-            else if (totalPoints >= thresholdValue)
-            {
-                sb.AppendLine();
-                sb.AppendLine("<color=#00FF00>✓ Pronto per avanzare al prossimo stadio!</color>");
-            }
-            
-            // Sezione Calcolo Condizione
-            sb.AppendLine();
-            sb.AppendLine("<color=#FFFF00>━━━━━━━━━━━━━━━━━━━━━━━━━━━━</color>");
-            sb.AppendLine();
-            sb.AppendLine("<color=#FFFF00>Calcolo Condizione (0-100):</color>");
-            sb.AppendLine();
-            
-            // Calcola condizione per mostrare i contributi
+            // Ottieni PlantData e StageRequirements
             PlantData plantData = state.GetPlantData();
-            if (plantData != null && _phSystem != null && _potSystemConfig != null)
+            if (plantData == null || _potSystemConfig == null)
             {
-                ConditionResult conditionResult = PlantConditionSystem.CalculateCondition(
-                    state,
-                    plantData,
-                    _phSystem,
-                    _potSystemConfig,
-                    _dayCycleSystem?.CurrentDay ?? 1,
-                    state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore);
-                
-                string conditionName = PlantConditionSystem.GetConditionName(
-                    conditionResult.Condition,
-                    PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration));
-                
-                sb.AppendLine($"<color=#CCCCCC>Condizione attuale:</color> <color=#FFFFFF><b>{conditionName} ({conditionResult.Score}/100)</b></color>");
+                sb.AppendLine("<b>Crescita: Dati pianta non disponibili</b>");
+                return sb.ToString();
+            }
+            
+            PlantStage currentStage = (PlantStage)state.Stage;
+            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            if (stageReq == null)
+            {
+                sb.AppendLine("<b>Crescita: Requisiti stadio non disponibili</b>");
+                return sb.ToString();
+            }
+            
+            // Calcola percentuale idratazione
+            int maxHydration = _potSystemConfig.MaxHydration;
+            int hydrationPercent = maxHydration > 0 ? 
+                Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+            
+            // Verifica range per ogni parametro
+            bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
+            bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
+                          stageReq.IsLightInRange(state.LightExposure);
+            bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+            
+            // Determina stato
+            string growthStatus = GetGrowthStatus(state);
+            sb.AppendLine($"<b>Crescita: {growthStatus}</b>");
+            sb.AppendLine();
+            
+            // Spiegazione semplice per il player
+            sb.AppendLine("La pianta cresce quando si trova nel <color=#00FF00>range giusto</color> di:");
                 sb.AppendLine();
                 
-                // Contributi positivi
-                var positiveContribs = System.Array.FindAll(conditionResult.Contributors, c => c.IsPositive);
-                if (positiveContribs.Length > 0)
-                {
-                    sb.AppendLine("<color=#00FF00>Contributi positivi:</color>");
-                    foreach (var contrib in positiveContribs)
-                    {
-                        sb.AppendLine($"  • {contrib.Source}: <color=#00FF00>+{contrib.Value}</color>");
+            // Water
+            string waterStatus = waterOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"• <color=#3F6FFF>Acqua (Water)</color>: {waterStatus}");
+            if (!waterOk)
+            {
+                sb.AppendLine($"  Range ideale: {stageReq.hydrationMin}% - {stageReq.hydrationMax}%");
+                sb.AppendLine($"  Attuale: {hydrationPercent}%");
                     }
                     sb.AppendLine();
-                }
-                
-                // Contributi negativi
-                var negativeContribs = System.Array.FindAll(conditionResult.Contributors, c => !c.IsPositive);
-                if (negativeContribs.Length > 0)
-                {
-                    sb.AppendLine("<color=#FF0000>Contributi negativi:</color>");
-                    foreach (var contrib in negativeContribs)
-                    {
-                        sb.AppendLine($"  • {contrib.Source}: <color=#FF0000>{contrib.Value}</color>");
+            
+            // Light
+            string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
+            if (!lightOk)
+            {
+                string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
+                sb.AppendLine($"  LED richiesto: {ledRequired}");
+                sb.AppendLine($"  Range ideale: {stageReq.lightMin}% - {stageReq.lightMax}%");
+                sb.AppendLine($"  Attuale: {state.LightExposure}%");
                     }
                     sb.AppendLine();
-                }
-                
-                // Calcolo totale
-                int baseScore = 50; // BASE_SCORE
-                int totalPositive = 0;
-                int totalNegative = 0;
-                foreach (var contrib in conditionResult.Contributors)
-                {
-                    if (contrib.IsPositive)
-                        totalPositive += contrib.Value;
-                    else
-                        totalNegative += Mathf.Abs(contrib.Value);
-                }
-                
-                sb.AppendLine("<color=#CCCCCC>Calcolo totale:</color>");
-                sb.AppendLine($"  Base: <color=#FFFFFF>{baseScore}</color>");
-                if (totalPositive > 0)
-                    sb.AppendLine($"  Bonus: <color=#00FF00>+{totalPositive}</color>");
-                if (totalNegative > 0)
-                    sb.AppendLine($"  Malus: <color=#FF0000>-{totalNegative}</color>");
-                sb.AppendLine($"  Totale: <color=#FFFFFF><b>{baseScore + totalPositive - totalNegative}</b></color> → clampato a <color=#FFFFFF><b>{conditionResult.Score}/100</b></color>");
-                
-                // Forecast
-                if (conditionResult.ScoreDelta != 0)
-                {
-                    string forecastSymbol = PlantConditionSystem.GetForecastSymbol(conditionResult.Forecast);
-                    string forecastColor = conditionResult.Forecast switch
-                    {
-                        ForecastDirection.Up => "#00FF00",
-                        ForecastDirection.Down => "#FF0000",
-                        _ => "#CCCCCC"
-                    };
-                    sb.AppendLine();
-                    sb.AppendLine($"<color=#CCCCCC>Forecast:</color> <color={forecastColor}>{forecastSymbol}</color> (Δ {conditionResult.ScoreDelta:+0;-0} dal giorno precedente)");
-                }
+            
+            // Fertilizer
+            string fertilizerStatus = fertilizerOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}");
+            if (!fertilizerOk)
+            {
+                sb.AppendLine($"  Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%");
+                sb.AppendLine($"  Attuale: {state.FertilizerLevel}%");
+            }
+            sb.AppendLine();
+            
+            // Giorni mancanti per avanzare
+            int daysInStage = state.DaysInCurrentStage;
+            int requiredDays = stageReq.durationDays;
+            int daysRemaining = Mathf.Max(0, requiredDays - daysInStage);
+            
+            if (daysRemaining > 0)
+            {
+                sb.AppendLine($"<color=#FFFF00>Giorni mancanti per avanzare:</color> <color=#FFFFFF>{daysRemaining}</color>");
+                sb.AppendLine($"  (Giorni nello stadio: {daysInStage} / {requiredDays})");
             }
             else
             {
-                sb.AppendLine("<color=#FF0000>Dati non disponibili per calcolo condizione</color>");
+                sb.AppendLine("<color=#00FF00>✓ Giorni minimi raggiunti!</color>");
+                if (waterOk && lightOk && fertilizerOk)
+                {
+                    sb.AppendLine("<color=#00FF00>✓ Tutti i parametri sono nel range ideale!</color>");
+                    sb.AppendLine("<color=#00FF00>La pianta può avanzare al prossimo stadio.</color>");
+            }
+            else
+            {
+                    sb.AppendLine("<color=#FFFF00>⚠️ Metti tutti i parametri nel range ideale per avanzare.</color>");
+                }
             }
             
             return sb.ToString();

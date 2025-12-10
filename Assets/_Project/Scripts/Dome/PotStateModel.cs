@@ -75,6 +75,26 @@ public class PotStateModel
     [Tooltip("Direzione forecast (Up/Stable/Down)")]
     public int ForecastDirection = 1;  // Default: Stable (enum ForecastDirection)
     
+    [Header("Fertilizer System (BLK-03.01-T1)")]
+    [Tooltip("Livello fertilizzante attuale (0-100)")]
+    public int FertilizerLevel = 0;  // 0 = nessun fertilizzante
+    [Tooltip("Giorni consecutivi con fertilizzante applicato")]
+    public int DaysFertilizerActive = 0;
+    
+    [Header("Growth Points System (BLK-03.01-T2)")]
+    [Tooltip("Punti crescita accumulati per idratazione (1 punto per giorno nel range ideale)")]
+    public int GrowthPointsWater = 0;
+    [Tooltip("Punti crescita accumulati per luce (1 punto per giorno nel range ideale)")]
+    public int GrowthPointsLight = 0;
+    [Tooltip("Punti crescita accumulati per fertilizzante (1 punto per giorno nel range ideale)")]
+    public int GrowthPointsFertilizer = 0;
+    
+    [Header("Optimal Parameters Tracking (BLK-03.01-T2)")]
+    [Tooltip("Giorni consecutivi con tutti i parametri ottimali (water + light + fertilizer nel range)")]
+    public int DaysConsecutiveOptimal = 0;
+    [Tooltip("Giorno in cui sono iniziati i parametri ottimali (-1 se non attivi)")]
+    public int DayOptimalParametersStarted = -1;
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -99,6 +119,14 @@ public class PotStateModel
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
+        FertilizerLevel = 0;
+        DaysFertilizerActive = 0;
+        // BLK-03.01-T2: Inizializza campi punti crescita
+        GrowthPointsWater = 0;
+        GrowthPointsLight = 0;
+        GrowthPointsFertilizer = 0;
+        DaysConsecutiveOptimal = 0;
+        DayOptimalParametersStarted = -1;
     }
     
     /// <summary>
@@ -132,6 +160,14 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        FertilizerLevel = 0;
+        DaysFertilizerActive = 0;
+        // BLK-03.01-T2: Inizializza campi punti crescita
+        GrowthPointsWater = 0;
+        GrowthPointsLight = 0;
+        GrowthPointsFertilizer = 0;
+        DaysConsecutiveOptimal = 0;
+        DayOptimalParametersStarted = -1;
     }
     
     /// <summary>
@@ -210,6 +246,14 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        FertilizerLevel = 0;
+        DaysFertilizerActive = 0;
+        // BLK-03.01-T2: Inizializza campi punti crescita
+        GrowthPointsWater = 0;
+        GrowthPointsLight = 0;
+        GrowthPointsFertilizer = 0;
+        DaysConsecutiveOptimal = 0;
+        DayOptimalParametersStarted = -1;
     }
     
     /// <summary>
@@ -262,6 +306,14 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        FertilizerLevel = 0;
+        DaysFertilizerActive = 0;
+        // BLK-03.01-T2: Inizializza campi punti crescita
+        GrowthPointsWater = 0;
+        GrowthPointsLight = 0;
+        GrowthPointsFertilizer = 0;
+        DaysConsecutiveOptimal = 0;
+        DayOptimalParametersStarted = -1;
     }
     
     /// <summary>

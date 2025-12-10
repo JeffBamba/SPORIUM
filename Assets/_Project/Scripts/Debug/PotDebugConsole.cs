@@ -32,6 +32,11 @@ namespace Sporae.DevTools
         // Valore stadio da impostare
         private int _stageInputValue = 0;
         
+        // BLK-03.01-T2: Valori debug per Fertilizzante, Watering e Luce %
+        private int _fertilizerInputValue = 0;
+        private int _hydrationInputValue = 0;
+        private int _lightPercentInputValue = 0;
+        
         // Rettangolo della console per bloccare input
         private Rect _consoleRect;
         
@@ -187,6 +192,71 @@ namespace Sporae.DevTools
             return ((PlantStage)stage).ToString();
         }
         
+        // BLK-03.01-T2: Imposta livello fertilizzante
+        private void SetFertilizerLevel(int newLevel)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            int oldLevel = potState.FertilizerLevel;
+            potState.FertilizerLevel = Mathf.Clamp(newLevel, 0, 100);
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            
+            AddLog($"✅ {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}%");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}%");
+        }
+        
+        // BLK-03.01-T2: Imposta idratazione
+        private void SetHydration(int newHydration)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            int maxHydration = _selectedPot.GetMaxHydration();
+            int oldHydration = potState.Hydration;
+            potState.Hydration = Mathf.Clamp(newHydration, 0, maxHydration);
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            
+            AddLog($"✅ {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration}");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration}");
+        }
+        
+        // BLK-03.01-T2: Imposta luce percentuale
+        private void SetLightPercent(int newPercent)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            int maxLightExposure = _selectedPot.GetMaxLightExposure();
+            int oldLightExposure = potState.LightExposure;
+            
+            // Converti percentuale in valore LightExposure
+            int newLightExposure = Mathf.RoundToInt((newPercent / 100f) * maxLightExposure);
+            potState.LightExposure = Mathf.Clamp(newLightExposure, 0, maxLightExposure);
+            
+            float oldPercent = maxLightExposure > 0 ? (float)oldLightExposure / maxLightExposure * 100f : 0f;
+            float newPercentActual = maxLightExposure > 0 ? (float)potState.LightExposure / maxLightExposure * 100f : 0f;
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            
+            AddLog($"✅ {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%)");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%)");
+        }
+        
         private void AddLog(string message)
         {
             _debugLog.Add($"[{System.DateTime.Now:HH:mm:ss}] {message}");
@@ -272,6 +342,12 @@ namespace Sporae.DevTools
                     _selectedPot = pot;
                     _selectedPotId = potState.PotId;
                     _stageInputValue = potState.Stage;
+                    // BLK-03.01-T2: Inizializza valori debug quando si seleziona un POT
+                    _fertilizerInputValue = potState.FertilizerLevel;
+                    _hydrationInputValue = potState.Hydration;
+                    int maxLight = pot.GetMaxLightExposure();
+                    _lightPercentInputValue = maxLight > 0 ? 
+                        Mathf.RoundToInt((float)potState.LightExposure / maxLight * 100f) : 0;
                     AddLog($"POT selezionato: {potState.PotId}");
                 }
             }
@@ -289,6 +365,10 @@ namespace Sporae.DevTools
                 currentY += 30f; // Aumentato spazio
                 
                 // Info POT corrente
+                int maxHydration = _selectedPot.GetMaxHydration();
+                int maxLightExposure = _selectedPot.GetMaxLightExposure();
+                float lightPercent = maxLightExposure > 0 ? (float)potState.LightExposure / maxLightExposure * 100f : 0f;
+                
                 string currentInfo = $"Stadio Attuale: {potState.Stage} ({GetStageName(potState.Stage)})";
                 if (potState.HasPlant && !string.IsNullOrEmpty(potState.PlantCode))
                 {
@@ -298,6 +378,10 @@ namespace Sporae.DevTools
                 {
                     currentInfo += $"\nFrutti: {potState.AmountFruits:F1}";
                 }
+                // BLK-03.01-T2: Aggiungi info Fertilizzante, Watering e Luce %
+                currentInfo += $"\nFertilizzante: {potState.FertilizerLevel}%";
+                currentInfo += $"\nIdratazione: {potState.Hydration}/{maxHydration}";
+                currentInfo += $"\nLuce: {potState.LightExposure}/{maxLightExposure} ({lightPercent:F0}%)";
                 
                 GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 70f), currentInfo, labelStyle);
                 currentY += 75f; // Aumentato spazio
@@ -315,6 +399,61 @@ namespace Sporae.DevTools
                     SetPotStage(_stageInputValue);
                 }
                 currentY += 35f; // Aumentato spazio
+                
+                // BLK-03.01-T2: Sezione Debug Fertilizzante, Watering e Luce %
+                GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 25f), 
+                    "=== Debug Parametri ===", labelStyle);
+                currentY += 30f;
+                
+                // Fertilizzante (0-100%)
+                GUI.Label(new Rect(consoleX + 10f, currentY, 150f, 25f), "Fertilizzante (0-100%):", labelStyle);
+                string fertilizerInput = GUI.TextField(new Rect(consoleX + 170f, currentY, 100f, 25f), _fertilizerInputValue.ToString());
+                if (int.TryParse(fertilizerInput, out int parsedFertilizer))
+                {
+                    _fertilizerInputValue = Mathf.Clamp(parsedFertilizer, 0, 100);
+                }
+                if (GUI.Button(new Rect(consoleX + 280f, currentY, 120f, 25f), "Imposta Fert.", buttonStyle))
+                {
+                    SetFertilizerLevel(_fertilizerInputValue);
+                }
+                // Mostra valore corrente
+                GUI.Label(new Rect(consoleX + 410f, currentY, 200f, 25f), 
+                    $"Corrente: {potState.FertilizerLevel}%", labelStyle);
+                currentY += 35f;
+                
+                // Watering (0-MaxHydration)
+                GUI.Label(new Rect(consoleX + 10f, currentY, 150f, 25f), $"Watering (0-{maxHydration}):", labelStyle);
+                string hydrationInput = GUI.TextField(new Rect(consoleX + 170f, currentY, 100f, 25f), _hydrationInputValue.ToString());
+                if (int.TryParse(hydrationInput, out int parsedHydration))
+                {
+                    _hydrationInputValue = Mathf.Clamp(parsedHydration, 0, maxHydration);
+                }
+                if (GUI.Button(new Rect(consoleX + 280f, currentY, 120f, 25f), "Imposta Water", buttonStyle))
+                {
+                    SetHydration(_hydrationInputValue);
+                }
+                // Mostra valore corrente
+                GUI.Label(new Rect(consoleX + 410f, currentY, 200f, 25f), 
+                    $"Corrente: {potState.Hydration}/{maxHydration}", labelStyle);
+                currentY += 35f;
+                
+                // Luce % (0-100%)
+                GUI.Label(new Rect(consoleX + 10f, currentY, 150f, 25f), "Luce % (0-100%):", labelStyle);
+                string lightPercentInput = GUI.TextField(new Rect(consoleX + 170f, currentY, 100f, 25f), _lightPercentInputValue.ToString());
+                if (int.TryParse(lightPercentInput, out int parsedLightPercent))
+                {
+                    _lightPercentInputValue = Mathf.Clamp(parsedLightPercent, 0, 100);
+                }
+                if (GUI.Button(new Rect(consoleX + 280f, currentY, 120f, 25f), "Imposta Luce %", buttonStyle))
+                {
+                    SetLightPercent(_lightPercentInputValue);
+                }
+                // Mostra valore corrente
+                float currentLightPercent = maxLightExposure > 0 ? 
+                    (float)potState.LightExposure / maxLightExposure * 100f : 0f;
+                GUI.Label(new Rect(consoleX + 410f, currentY, 200f, 25f), 
+                    $"Corrente: {potState.LightExposure}/{maxLightExposure} ({currentLightPercent:F0}%)", labelStyle);
+                currentY += 40f;
                 
                 // Pulsanti rapidi per stadi
                 GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 25f), "Hotkeys: 0=Empty, 1=Seed, 2=Sprout, 3=Growth, 4=Flowering, 5=HarvestReady, 6=Resting", labelStyle);

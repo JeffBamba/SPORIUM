@@ -29,6 +29,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 40
+    fertilizerMed: 75
+    fertilizerMax: 100
     durationDays: 2
     notes: Ampia tolleranza
   - stage: 2
@@ -38,6 +44,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 40
+    fertilizerMed: 75
+    fertilizerMax: 100
     durationDays: 2
     notes: Germoglio attivo
   - stage: 3
@@ -47,6 +59,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 1
       value: 0
+    lightMin: 50
+    lightMed: 75
+    lightMax: 100
+    fertilizerMin: 40
+    fertilizerMed: 60
+    fertilizerMax: 80
     durationDays: 3
     notes: Accrescimento vegetativo
   - stage: 4
@@ -56,6 +74,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 1
       value: 1
+    lightMin: 50
+    lightMed: 75
+    lightMax: 100
+    fertilizerMin: 20
+    fertilizerMed: 40
+    fertilizerMax: 60
     durationDays: 3
     notes: Fioritura attiva
   - stage: 5
@@ -65,6 +89,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 0
+    fertilizerMed: 0
+    fertilizerMax: 0
     durationDays: 3
     notes: Finestra di raccolta multi-giorno
   - stage: 6
@@ -74,6 +104,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 30
+    fertilizerMed: 50
+    fertilizerMax: 70
     durationDays: 2
     notes: Riposo post-raccolta, riattivabile con fertilizzante
   preferredFaction: 

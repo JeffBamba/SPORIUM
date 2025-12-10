@@ -31,6 +31,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 60
+    fertilizerMed: 75
+    fertilizerMax: 90
     durationDays: 2
     notes: Pianta Pure richiede cura attenta
   - stage: 2
@@ -40,6 +46,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 1
       value: 0
+    lightMin: 50
+    lightMed: 75
+    lightMax: 100
+    fertilizerMin: 60
+    fertilizerMed: 75
+    fertilizerMax: 90
     durationDays: 3
     notes: Germoglio Pure, Blue LED consigliato
   - stage: 3
@@ -49,6 +61,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 1
       value: 0
+    lightMin: 50
+    lightMed: 75
+    lightMax: 100
+    fertilizerMin: 40
+    fertilizerMed: 60
+    fertilizerMax: 80
     durationDays: 3
     notes: Crescita Pure, Blue LED richiesto
   - stage: 4
@@ -58,6 +76,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 1
       value: 1
+    lightMin: 50
+    lightMed: 75
+    lightMax: 100
+    fertilizerMin: 20
+    fertilizerMed: 40
+    fertilizerMax: 60
     durationDays: 3
     notes: Fioritura Pure, Red LED richiesto
   - stage: 5
@@ -67,6 +91,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 0
+    fertilizerMed: 0
+    fertilizerMax: 0
     durationDays: 3
     notes: Raccolta Pure, mantenere idratazione ottimale
   - stage: 6
@@ -76,6 +106,12 @@ MonoBehaviour:
     requiredLed:
       hasValue: 0
       value: 0
+    lightMin: 0
+    lightMed: 50
+    lightMax: 100
+    fertilizerMin: 30
+    fertilizerMed: 50
+    fertilizerMax: 70
     durationDays: 2
     notes: Riposo Pure, riattivabile con fertilizzante
   preferredFaction: 

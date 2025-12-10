@@ -144,6 +144,11 @@ public class GameManager : MonoBehaviour
         _playerInventory.Add(Items.Water, 2);
         _playerInventory.Add(Items.Fruits, 5);
         
+        // BLK-03.01-T1: Fertilizzanti iniziali (2x ogni tipo)
+        _playerInventory.Add(Items.FertilizerStandard, 2);
+        _playerInventory.Add(Items.FertilizerPure, 2);
+        _playerInventory.Add(Items.FertilizerProhibited, 2);
+        
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR
         if (_showDebugLogs)

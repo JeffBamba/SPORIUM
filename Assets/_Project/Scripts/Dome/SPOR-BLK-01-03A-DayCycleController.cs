@@ -4,6 +4,7 @@ using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
+using Sporae.Dome.PotSystem.Fertilizer;
 using UnityEngine.SceneManagement;
 using _Project;
 
@@ -404,6 +405,35 @@ public class DayCycleController : MonoBehaviour
         int oldStage = pot.Stage;
         pot.DaysInCurrentStage++;
         
+        // BLK-03.01-T2: Calcola punti giornalieri basati su valori nel range
+        var pointsResult = GrowthPointsCalculator.CalculateDailyPoints(
+            pot, plantData, _potSystemConfig);
+        
+        // BLK-03.01-T2: Aggiorna tracking giorni consecutivi ottimali
+        // DEBUG_SAFE_FIX: Per Seed, consideriamo ottimali anche i giorni con solo water + light (2 punti)
+        PlantStage currentStageForOptimal = (PlantStage)pot.Stage;
+        int requiredOptimalPoints = (currentStageForOptimal == PlantStage.Seed) ? 2 : 3;  // Seed: 2 punti, altri: 3 punti
+        
+        if (pointsResult.TotalPoints >= requiredOptimalPoints)
+        {
+            pot.DaysConsecutiveOptimal++;
+            if (pot.DayOptimalParametersStarted < 0)
+            {
+                pot.DayOptimalParametersStarted = dayIndex;
+            }
+        }
+        else
+        {
+            // Reset se non abbastanza parametri sono ottimali
+            pot.DaysConsecutiveOptimal = 0;
+            pot.DayOptimalParametersStarted = -1;
+        }
+        
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Punti giornalieri - Water: {pointsResult.WaterPoint}, Light: {pointsResult.LightPoint}, Fertilizer: {pointsResult.FertilizerPoint}, Total: {pointsResult.TotalPoints}, DaysOptimal: {pot.DaysConsecutiveOptimal}");
+        }
+        
         // Gestione produzione frutti in HarvestReady
         if (pot.Stage == (int)PlantStage.HarvestReady)
         {
@@ -516,6 +546,15 @@ public class DayCycleController : MonoBehaviour
         // Ottieni requisiti per lo stadio corrente
         StageRequirements currentStageReq = plantData.GetStageRequirements(currentStage);
         
+        // BLK-03.01-T2: Ottieni condizione corrente e verifica se blocca avanzamento
+        PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
+        if (ConditionGrowthModifier.BlocksAdvancement(currentCondition))
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Avanzamento bloccato - Condizione: {currentCondition}");
+            // Non può avanzare, ma continua con il resto della logica (produzione frutti, etc.)
+        }
+        
         // Verifica se i requisiti sono soddisfatti
         bool requirementsMet = false;
         if (currentStageReq != null)
@@ -526,14 +565,60 @@ public class DayCycleController : MonoBehaviour
             // Verifica LED richiesto (BLK-02.07: usa LedSystemState invece di LastLedType)
             bool ledOk = currentStageReq.IsLedRequirementMet(pot.LedSystemState);
             
-            // Verifica giorni minimi nello stadio
-            bool durationOk = pot.DaysInCurrentStage >= currentStageReq.durationDays;
+            // BLK-03.01-T2: Verifica giorni minimi con modificatore condizione
+            int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
+            int effectiveRequiredDays = currentStageReq.durationDays + daysModifier;
+            bool durationOk = pot.DaysInCurrentStage >= effectiveRequiredDays;
             
-            requirementsMet = hydrationOk && ledOk && durationOk;
+            // BLK-03.01-T2: Verifica anche giorni consecutivi ottimali
+            // DEBUG_SAFE_FIX: Per Seed, rendiamo i giorni consecutivi ottimali meno stringenti (almeno 1 giorno)
+            bool optimalDaysOk = false;
+            if (currentStage == PlantStage.Seed)
+            {
+                // Per Seed: almeno 1 giorno ottimale (più flessibile)
+                optimalDaysOk = pot.DaysConsecutiveOptimal >= 1;
+            }
+            else
+            {
+                // Per altri stadi: richiedi giorni consecutivi >= durationDays
+                optimalDaysOk = pot.DaysConsecutiveOptimal >= currentStageReq.durationDays;
+            }
+            
+            // BLK-03.01-T2: Verifica anche fertilizzante nel range
+            // DEBUG_SAFE_FIX: Per Seed, rendiamo il fertilizzante opzionale (non bloccante se è 0%)
+            bool fertilizerOk = false;
+            if (currentStage == PlantStage.Seed)
+            {
+                // Per Seed: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato)
+                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel) || pot.FertilizerLevel == 0;
+            }
+            else
+            {
+                // Per altri stadi: fertilizzante obbligatorio nel range
+                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel);
+            }
+            
+            // BLK-03.01-T2: Verifica punti accumulati
+            // DEBUG_SAFE_FIX: Per Seed, richiediamo solo 2 punti (water + light), fertilizzante opzionale
+            int totalPoints = pot.GrowthPointsWater + pot.GrowthPointsLight + pot.GrowthPointsFertilizer;
+            int requiredPoints = (currentStage == PlantStage.Seed) ? 2 : 3;  // Seed: 2 punti (water+light), altri: 3 punti
+            bool pointsOk = totalPoints >= requiredPoints;
+            
+            // BLK-03.01-T2: Avanzamento richiede tutti i requisiti E non deve essere bloccato dalla condizione
+            requirementsMet = !ConditionGrowthModifier.BlocksAdvancement(currentCondition) &&
+                             hydrationOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-02.02] {pot.PotId}: Stage {currentStage} requisiti - Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], Durata: {pot.DaysInCurrentStage}/{currentStageReq.durationDays} giorni [{durationOk}]");
+                int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
+                Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Stage {currentStage} requisiti - " +
+                         $"Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], " +
+                         $"LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], " +
+                         $"Durata: {pot.DaysInCurrentStage}/{effectiveRequiredDays} giorni (mod: {daysModifier}) [{durationOk}], " +
+                         $"OptimalDays: {pot.DaysConsecutiveOptimal}/{optimalDaysRequired} [{optimalDaysOk}], " +
+                         $"Fertilizer: {pot.FertilizerLevel}% (range: {currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}, opzionale per Seed: {currentStage == PlantStage.Seed}) [{fertilizerOk}], " +
+                         $"Points: {totalPoints}/{requiredPoints} [{pointsOk}], " +
+                         $"Condition: {currentCondition} (blocks: {ConditionGrowthModifier.BlocksAdvancement(currentCondition)})");
             }
         }
         else
@@ -553,6 +638,12 @@ public class DayCycleController : MonoBehaviour
                     // Seed → Sprout: richiede requisiti soddisfatti
                     pot.Stage = (int)PlantStage.Sprout;
                     pot.DaysInCurrentStage = 0; // Reset contatore giorni
+                    // BLK-03.01-T2: Reset contatori punti dopo avanzamento
+                    pot.GrowthPointsWater = 0;
+                    pot.GrowthPointsLight = 0;
+                    pot.GrowthPointsFertilizer = 0;
+                    pot.DaysConsecutiveOptimal = 0;
+                    pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
                         Debug.Log($"[BLK-02.02] {pot.PotId}: 🎉 Avanzamento Seed → Sprout!");
@@ -562,6 +653,12 @@ public class DayCycleController : MonoBehaviour
                     // Sprout → Growth: richiede requisiti soddisfatti
                     pot.Stage = (int)PlantStage.Growth;
                     pot.DaysInCurrentStage = 0;
+                    // BLK-03.01-T2: Reset contatori punti dopo avanzamento
+                    pot.GrowthPointsWater = 0;
+                    pot.GrowthPointsLight = 0;
+                    pot.GrowthPointsFertilizer = 0;
+                    pot.DaysConsecutiveOptimal = 0;
+                    pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
                         Debug.Log($"[BLK-02.02] {pot.PotId}: 🌱 Avanzamento Sprout → Growth!");
@@ -572,6 +669,12 @@ public class DayCycleController : MonoBehaviour
                     // (verificato tramite durationDays >= 2)
                     pot.Stage = (int)PlantStage.Flowering;
                     pot.DaysInCurrentStage = 0;
+                    // BLK-03.01-T2: Reset contatori punti dopo avanzamento
+                    pot.GrowthPointsWater = 0;
+                    pot.GrowthPointsLight = 0;
+                    pot.GrowthPointsFertilizer = 0;
+                    pot.DaysConsecutiveOptimal = 0;
+                    pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
                         Debug.Log($"[BLK-02.02] {pot.PotId}: 🌸 Avanzamento Growth → Flowering!");
@@ -583,6 +686,12 @@ public class DayCycleController : MonoBehaviour
                     pot.DaysInCurrentStage = 0;
                     pot.DaysInHarvestReady = 0; // Reset contatore HarvestReady
                     pot.AmountFruits = 0f; // Inizializza frutti
+                    // BLK-03.01-T2: Reset contatori punti dopo avanzamento
+                    pot.GrowthPointsWater = 0;
+                    pot.GrowthPointsLight = 0;
+                    pot.GrowthPointsFertilizer = 0;
+                    pot.DaysConsecutiveOptimal = 0;
+                    pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
                         Debug.Log($"[BLK-02.02] {pot.PotId}: 🍎 Avanzamento Flowering → HarvestReady!");
@@ -1173,6 +1282,24 @@ public class DayCycleController : MonoBehaviour
                 
                 // Reset esposizione luce (ma NON i timestamp!)
                 pot.LightExposure = 0;
+                
+                // BLK-03.01-T1: Decadimento fertilizzante giornaliero (-5% al giorno)
+                if (pot.FertilizerLevel > 0)
+                {
+                    int oldFertilizerLevel = pot.FertilizerLevel;
+                    FertilizerSystem.ApplyDailyDecay(pot, decayRate: 5f);
+                    
+                    if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
+                    {
+                        Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                    }
+                    
+                    // Incrementa contatore giorni con fertilizzante attivo (se ancora > 0)
+                    if (pot.FertilizerLevel > 0)
+                    {
+                        pot.DaysFertilizerActive++;
+                    }
+                }
             }
         }
     }

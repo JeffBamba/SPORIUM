@@ -38,7 +38,11 @@ namespace _Project.Pot
                     PotEvents.PotActionType.Light => "You cannot illuminate the plant.",
                     PotEvents.PotActionType.Plant => "You cannot plant the plant.",
                     PotEvents.PotActionType.Water => "You failed to water the plant",
-                    _ => "You cannot uproot the plant."
+                    PotEvents.PotActionType.Fertilize => "You cannot fertilize the plant.",  // BLK-03.01-T1
+                    PotEvents.PotActionType.Harvest => "You cannot harvest the plant.",
+                    PotEvents.PotActionType.Spray => "You cannot spray the plant.",
+                    PotEvents.PotActionType.Uproot => "You cannot uproot the plant.",
+                    _ => "Action failed."
                 };
             }
 
@@ -93,7 +97,11 @@ namespace _Project.Pot
                 text = type switch
                 {
                     PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
-                    _ => "You have successfully uprooted the plant."
+                    PotEvents.PotActionType.Fertilize => "You have successfully fertilized the plant.",  // BLK-03.01-T1
+                    PotEvents.PotActionType.Harvest => "You have successfully harvested the plant.",
+                    PotEvents.PotActionType.Spray => "You have successfully sprayed the plant.",
+                    PotEvents.PotActionType.Uproot => "You have successfully uprooted the plant.",
+                    _ => "Action completed successfully."
                 };
             }
 

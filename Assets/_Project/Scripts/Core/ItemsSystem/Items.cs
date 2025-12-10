@@ -10,5 +10,10 @@
         public const string Seed001 = "seed-001";  // Standard
         public const string Seed002 = "seed-002";  // Pure
         public const string Seed003 = "seed-003";  // Evil
+        
+        // BLK-03.01-T1: Fertilizzanti
+        public const string FertilizerStandard = "fertilizer-standard";    // 25 CRY, +25%
+        public const string FertilizerPure = "fertilizer-pure";            // 75 CRY, +40%
+        public const string FertilizerProhibited = "fertilizer-prohibited"; // 75 CRY, +40%
     }
 }

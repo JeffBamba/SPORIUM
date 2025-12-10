@@ -52,6 +52,32 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("Tipo LED richiesto per questo stadio (hasValue=false = nessun LED richiesto)")]
         public SerializableLedType requiredLed = new SerializableLedType();
         
+        [Header("Light Requirements (BLK-03.01-T2)")]
+        [Tooltip("Range minimo luce (%)")]
+        [Range(0, 100)]
+        public int lightMin = 0;
+        
+        [Tooltip("Luce ottimale/mediana (%)")]
+        [Range(0, 100)]
+        public int lightMed = 50;
+        
+        [Tooltip("Range massimo luce (%)")]
+        [Range(0, 100)]
+        public int lightMax = 100;
+        
+        [Header("Fertilizer Requirements (BLK-03.01-T1)")]
+        [Tooltip("Range minimo fertilizzante (%) - VALORI FISSI per tutti gli stadi")]
+        [Range(0, 100)]
+        public int fertilizerMin = 0;
+        
+        [Tooltip("Fertilizzante ottimale/mediano (%) - VALORI FISSI per tutti gli stadi")]
+        [Range(0, 100)]
+        public int fertilizerMed = 50;
+        
+        [Tooltip("Range massimo fertilizzante (%) - VALORI FISSI per tutti gli stadi")]
+        [Range(0, 100)]
+        public int fertilizerMax = 100;
+        
         [Header("Duration")]
         [Tooltip("Durata tipica in giorni per questo stadio")]
         [Range(1, 10)]
@@ -125,6 +151,38 @@ namespace Sporae.Dome.PotSystem.Growth
         }
         
         /// <summary>
+        /// BLK-03.01-T1: Verifica se il fertilizzante è nel range accettabile per questo stadio
+        /// </summary>
+        public bool IsFertilizerInRange(int currentFertilizer)
+        {
+            return currentFertilizer >= fertilizerMin && currentFertilizer <= fertilizerMax;
+        }
+        
+        /// <summary>
+        /// BLK-03.01-T1: Verifica se il fertilizzante è ottimale (vicino al valore mediano)
+        /// </summary>
+        public bool IsFertilizerOptimal(int currentFertilizer, int tolerance = 5)
+        {
+            return Mathf.Abs(currentFertilizer - fertilizerMed) <= tolerance;
+        }
+        
+        /// <summary>
+        /// BLK-03.01-T2: Verifica se la luce è nel range accettabile per questo stadio
+        /// </summary>
+        public bool IsLightInRange(int currentLight)
+        {
+            return currentLight >= lightMin && currentLight <= lightMax;
+        }
+        
+        /// <summary>
+        /// BLK-03.01-T2: Verifica se la luce è ottimale (vicino al valore mediano)
+        /// </summary>
+        public bool IsLightOptimal(int currentLight, int tolerance = 5)
+        {
+            return Mathf.Abs(currentLight - lightMed) <= tolerance;
+        }
+        
+        /// <summary>
         /// Restituisce una descrizione testuale dei requisiti
         /// </summary>
         public string GetRequirementsDescription()
@@ -142,6 +200,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 desc += "LED: Nessuno richiesto\n";
             }
             
+            desc += $"Fertilizzante: {fertilizerMin}% - {fertilizerMed}% - {fertilizerMax}%\n";
             desc += $"Durata: {durationDays} giorni\n";
             
             if (!string.IsNullOrEmpty(notes))
