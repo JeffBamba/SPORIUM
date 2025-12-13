@@ -76,6 +76,7 @@ namespace Sporae.Core
             GameManager existingGameManager = FindObjectOfType<GameManager>();
             if (existingGameManager != null)
             {
+                _cachedGameManager = existingGameManager; // BUG FIX: Cache il GameManager trovato
                 if (showDebugLogs)
                 {
                     Debug.Log($"[AppRoot] GameManager già presente nella scena: {existingGameManager.name}");
@@ -148,9 +149,15 @@ namespace Sporae.Core
         }
 
         // Metodi per gestire sistemi core
+        private GameManager _cachedGameManager;
         public GameManager GetGameManager()
         {
-            return FindObjectOfType<GameManager>();
+            // BUG FIX: Cache per evitare FindObjectOfType ripetuti
+            if (_cachedGameManager == null)
+            {
+                _cachedGameManager = FindObjectOfType<GameManager>();
+            }
+            return _cachedGameManager;
         }
 
         public T GetSystem<T>() where T : Component

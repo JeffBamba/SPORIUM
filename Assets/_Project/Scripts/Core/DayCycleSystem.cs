@@ -29,6 +29,12 @@ namespace _Project.Sporae.Core
 
         public bool CanEndDay()
         {
+            // BUG FIX: Controllo null per evitare crash
+            if (_gameManager == null || _gameManager.EconomySystem == null)
+            {
+                Debug.LogWarning("[DayCycleSystem] GameManager o EconomySystem non disponibili!");
+                return false;
+            }
             return _gameManager.EconomySystem.CanAfford(DailyPowerCost);
         }
         

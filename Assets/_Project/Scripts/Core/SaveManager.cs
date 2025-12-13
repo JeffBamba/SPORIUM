@@ -207,12 +207,14 @@ namespace Sporae.Core
             var saveData = new GameSaveData();
             
             // Stato del gioco
+            // BUG FIX: Controllo più robusto per ServiceContainer
             var gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (gameManager != null)
             {
+                var dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
                 saveData.gameState = new GameStateData
                 {
-                    currentDay = ServiceContainer.Instance.Get<DayCycleSystem>()?.CurrentDay ?? 1,
+                    currentDay = dayCycleSystem?.CurrentDay ?? 1,
                     currentCRY = gameManager.CurrentCRY,
                     actionsLeft = gameManager.ActionsLeft,
                     condensationAmount = gameManager.CondensationSystem?.CondensationAmount ?? 0f

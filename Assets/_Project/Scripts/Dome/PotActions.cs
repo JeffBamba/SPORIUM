@@ -82,6 +82,12 @@ public class PotActions : MonoBehaviour
         
         // Trova il GameManager
         _gameManager = FindObjectOfType<GameManager>();
+        if (_gameManager == null)
+        {
+            Debug.LogError("[PotActions] GameManager non trovato! Tentativo di recupero ritardato...");
+            StartCoroutine(WaitForGameManager());
+            return;
+        }
         _playerInventory = _gameManager.PlayerInventory;
         
         // Tenta di ottenere PhSystem dal ServiceContainer (BLK-02.03)
@@ -173,6 +179,42 @@ public class PotActions : MonoBehaviour
             _phSystem = service as PhSystem;
             if (showDebugLogs)
                 Debug.Log($"[PotActions] PhSystem registrato, collegato a {potSlot?.PotId}");
+        }
+        
+        // BUG FIX: Se GameManager viene registrato, recuperalo
+        if (service is GameManager && _gameManager == null)
+        {
+            _gameManager = service as GameManager;
+            _playerInventory = _gameManager.PlayerInventory;
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] GameManager recuperato per {potSlot?.PotId}");
+        }
+    }
+    
+    /// <summary>
+    /// BUG FIX: Coroutine per attendere che GameManager sia disponibile
+    /// </summary>
+    private System.Collections.IEnumerator WaitForGameManager()
+    {
+        int maxAttempts = 30; // 30 frame = ~0.5 secondi a 60fps
+        int attempts = 0;
+        
+        while (_gameManager == null && attempts < maxAttempts)
+        {
+            yield return null;
+            _gameManager = FindObjectOfType<GameManager>();
+            attempts++;
+        }
+        
+        if (_gameManager != null)
+        {
+            _playerInventory = _gameManager.PlayerInventory;
+            if (showDebugLogs)
+                Debug.Log($"[PotActions] GameManager recuperato dopo {attempts} tentativi per {potSlot?.PotId}");
+        }
+        else
+        {
+            Debug.LogError($"[PotActions] GameManager non trovato dopo {maxAttempts} tentativi! Il vaso potrebbe non funzionare correttamente.");
         }
     }
     

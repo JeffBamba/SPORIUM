@@ -29,18 +29,16 @@ namespace Sporae.Core
             if (amount <= 0) 
                 return false;
             
+            // BUG FIX: Se già al max, operazione è "riuscita" (non c'è errore)
+            if (CurrentCRY >= MaxCRY)
+                return true;
+            
             _diaryStatistics.CryEarned += amount;
             
             int newAmount = Math.Min(CurrentCRY + amount, MaxCRY);
-            if (newAmount != CurrentCRY)
-            {
-                CurrentCRY = newAmount;
-            
-                OnCRYChanged?.Invoke(CurrentCRY);
-                return true;
-            }
-            
-            return false;
+            CurrentCRY = newAmount;
+            OnCRYChanged?.Invoke(CurrentCRY);
+            return true;
         }
 
         public bool Spend(int amount)

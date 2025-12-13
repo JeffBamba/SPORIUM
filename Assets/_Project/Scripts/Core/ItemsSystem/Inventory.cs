@@ -26,7 +26,10 @@ namespace _Project.Sporae.Core
         public void Add(Item item)
         {
             if (item == null)
+            {
                 Debug.LogError("[Inventory.Add] Item is null");
+                return;  // BUG FIX: Esce subito per evitare NullReferenceException
+            }
             
             if (_slots.TryGetValue(item.TypeId, out InventorySlot existingItem))
                 existingItem.AddItem(item);

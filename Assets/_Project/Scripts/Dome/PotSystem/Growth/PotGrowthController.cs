@@ -91,21 +91,22 @@ namespace Sporae.Dome.PotSystem.Growth
             
             // Aggiorna sprite in base allo stadio
             Sprite targetSprite = GetSpriteForStage(potState.Stage);
+            
+            // BUG FIX: Usa sprite default se null invece di lasciare null
+            if (targetSprite == null)
+            {
+                targetSprite = s0_empty; // Fallback a sprite vuoto
+                if (enableDebugLogs)
+                {
+                    Debug.LogWarning($"[BLK-01.04] {potState.PotId}: Sprite NULL per stadio {potState.Stage}! Usando sprite default (empty).");
+                }
+            }
+            else if (enableDebugLogs)
+            {
+                Debug.Log($"[BLK-01.04] {potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");
+            }
+            
             plantRenderer.sprite = targetSprite;
-            if (targetSprite != null)
-            {
-                if (enableDebugLogs)
-                {
-                    Debug.Log($"[BLK-01.04] {potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");
-                }
-            }
-            else
-            {
-                if (enableDebugLogs)
-                {
-                    Debug.LogWarning($"[BLK-01.04] {potState.PotId}: Sprite NULL per stadio {potState.Stage}! Controlla assegnazione sprite nel PotGrowthController.");
-                }
-            }
             
             // Aggiorna scala in base allo stadio
             float targetScale = GetScaleForStage(potState.Stage);

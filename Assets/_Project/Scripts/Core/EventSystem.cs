@@ -173,10 +173,13 @@ namespace Sporae.Core
             // Aggiungi alla coda se stiamo già processando eventi
             if (_isProcessingEvents)
             {
-                if (_eventQueue.Count < maxEventQueueSize)
+                // BUG FIX: Avvisa se la coda è piena invece di perdere l'evento silenziosamente
+                if (_eventQueue.Count >= maxEventQueueSize)
                 {
-                    _eventQueue.Enqueue(new EventData(eventName, parameters, false));
+                    Debug.LogWarning($"[EventSystem] Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
+                    return;
                 }
+                _eventQueue.Enqueue(new EventData(eventName, parameters, false));
                 return;
             }
 
@@ -193,10 +196,13 @@ namespace Sporae.Core
             // Aggiungi alla coda se stiamo già processando eventi
             if (_isProcessingEvents)
             {
-                if (_eventQueue.Count < maxEventQueueSize)
+                // BUG FIX: Avvisa se la coda è piena invece di perdere l'evento silenziosamente
+                if (_eventQueue.Count >= maxEventQueueSize)
                 {
-                    _eventQueue.Enqueue(new EventData(eventName, null, true));
+                    Debug.LogWarning($"[EventSystem] Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
+                    return;
                 }
+                _eventQueue.Enqueue(new EventData(eventName, null, true));
                 return;
             }
 

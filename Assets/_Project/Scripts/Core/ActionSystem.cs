@@ -28,7 +28,8 @@ namespace Sporae.Core
 
         public bool SpendAction(int amount = 1)
         {
-            if (!CanSpendAction()) 
+            // BUG FIX: Passa amount a CanSpendAction invece di ignorarlo
+            if (!CanSpendAction(amount)) 
                 return false;
 
             _diaryStatistics.ActionsSpent += amount;
