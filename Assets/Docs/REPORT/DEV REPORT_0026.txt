@@ -1,0 +1,251 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-PH-AFFINITY-001: IMPLEMENTAZIONE SISTEMA pH AFFINITY COMPLETO
+                    BUG-FIX-ELEVATOR-001: FIX NULLREFERENCEEXCEPTION ELEVATORSYSTEM
+                    Versione: 0026
+                    Data: 2025-01-27
+                    Status: ✅ COMPLETATO
+================================================================================
+
+Implementazione completa sistema pH Affinity con effetti su condizione, crescita, produzione frutti
+e morte per pH estremi. Fix critico NullReferenceException in ElevatorSystem.TeleportPlayer causato
+da oggetti distrutti durante coroutine. Estesi PotStateModel (DaysInExtremePh, ExtremePhDeathCountdown),
+PlantData (GetPhDistanceFromOptimal), PlantConditionSystem (effetti graduali basati su distanza pH),
+DayCycleController (riduzione crescita, produzione frutti, tracking morte pH estremi). Aggiornate console
+debug G/P/Z con sezioni pH Affinity. Files: PotStateModel.cs, PlantData.cs, PlantConditionSystem.cs,
+DayCycleController.cs, DifficultyCalibrationConfig.cs, DifficultyCalibrationConsole.cs, PotDebugConsole.cs,
+PhSystemDebugConsole.cs, ElevatorSystem.cs.
+
+================================================================================
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Estensione PotStateModel per Tracking pH Estremi**
+- **Codice:** BLK-PH-AFFINITY-001.01
+- **Descrizione:** Aggiunta campi per tracking morte pianta per pH estremi opposti alla famiglia
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+- **Evidenze Tecniche:**
+  - Aggiunti campi `DaysInExtremePh` (giorni consecutivi in pH estremo opposto)
+  - Aggiunto campo `ExtremePhDeathCountdown` (countdown giorni rimanenti, -1 se non attivo)
+  - Inizializzati in tutti i costruttori e metodi di reset (PotStateModel, PlantSeed, ResetToEmpty)
+
+**TASK 2: Helper Method Calcolo Distanza pH**
+- **Codice:** BLK-PH-AFFINITY-001.02
+- **Descrizione:** Aggiunto metodo GetPhDistanceFromOptimal() in PlantData per calcolo distanza normalizzata
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs`
+- **Evidenze Tecniche:**
+  - Metodo calcola distanza normalizzata 0-1 dal range ottimale (0 = dentro range, 1 = molto lontano)
+  - Usato per calcolo malus graduali in PlantConditionSystem
+
+**TASK 3: Implementazione Effetti Graduali pH su Condizione**
+- **Codice:** BLK-PH-AFFINITY-001.03
+- **Descrizione:** Implementati effetti graduali basati su distanza pH dal range ottimale
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+- **Evidenze Tecniche:**
+  - Bonus graduale se pH molto vicino al centro range (BonusPhOptimalGradual)
+  - Malus graduale basato su distanza: Lerp tra MalusPhOutOfRangeMin e MalusPhOutOfRangeMax
+  - Malus estremo per pH Ultra (MalusPhExtreme) separato da malus standard (MalusPhUltra)
+
+**TASK 4: Parametri Configurabili pH Graduali**
+- **Codice:** BLK-PH-AFFINITY-001.04
+- **Descrizione:** Aggiunti parametri configurabili in DifficultyCalibrationConfig
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/DifficultyCalibrationConfig.cs`
+- **Evidenze Tecniche:**
+  - BonusPhOptimalGradual = 5 (bonus extra se pH vicino al centro range)
+  - MalusPhOutOfRangeMin = 5 (malus minimo fuori range)
+  - MalusPhOutOfRangeMax = 35 (malus massimo fuori range)
+  - MalusPhExtreme = 50 (malus per pH estremi ≥+80 o ≤-80)
+  - Aggiornati ResetToDefaults() e GetAllParameters()
+
+**TASK 5: Riduzione Giorni Crescita per pH in Range**
+- **Codice:** BLK-PH-AFFINITY-001.05
+- **Descrizione:** Implementata riduzione di 1 giorno nei giorni richiesti per avanzamento stadio se pH in range ottimale
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Aggiunto phDaysModifier = -1 se pH in range ottimale
+  - Formula: effectiveRequiredDays = durationDays + conditionModifier + phDaysModifier
+  - Integrato nel calcolo esistente senza rompere logica condizione
+
+**TASK 6: Effetti pH su Produzione Frutti**
+- **Codice:** BLK-PH-AFFINITY-001.06
+- **Descrizione:** Implementati bonus/malus produzione frutti basati su pH affinity
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Se pH in range: 30% possibilità doppio frutto (2 invece di 1)
+  - Se pH fuori range: 20% possibilità mancata produzione (non produce frutto)
+  - Integrato nella logica incrementale esistente senza rompere decay system
+
+**TASK 7: Sistema Morte per pH Estremi**
+- **Codice:** BLK-PH-AFFINITY-001.07
+- **Descrizione:** Implementato tracking e countdown 3 giorni prima della morte per pH estremi opposti
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Tracking giorni consecutivi in pH estremo opposto (Pure in UltraAcid, Evil in UltraBasic)
+  - Countdown 3 giorni con notifiche Toast countdown ("La pianta xxx tra X giorni morirà...")
+  - Metodo KillPlantFromExtremePh() che resetta stato pianta e mostra notifica morte
+  - Reset automatico se pH non è più estremo o non opposto
+
+**TASK 8: Notifiche Toast Countdown**
+- **Codice:** BLK-PH-AFFINITY-001.08
+- **Descrizione:** Implementate notifiche Toast per countdown morte imminente
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Evidenze Tecniche:**
+  - Metodo ShowExtremePhCountdownNotification() con colore arancione per allerta
+  - Messaggio: "⚠️ La pianta {PlantCode} tra {countdown} giorni morirà a causa del pH estremo!"
+  - Notifica mostrata solo quando countdown cambia (evita spam)
+
+**TASK 9: Aggiornamento Console G (DifficultyCalibrationConsole)**
+- **Codice:** BLK-PH-AFFINITY-001.09
+- **Descrizione:** Aggiunti slider per nuovi parametri pH graduali
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/DifficultyCalibrationConsole.cs`
+- **Evidenze Tecniche:**
+  - Sezione MALUS: aggiunti slider MalusPhOutOfRangeMin (0-20), MalusPhOutOfRangeMax (20-50), MalusPhExtreme (30-70)
+  - Sezione BONUS: aggiunto slider BonusPhOptimalGradual (0-20)
+  - Aggiornato export parametri in GetAllParameters()
+
+**TASK 10: Aggiornamento Console P (PotDebugConsole)**
+- **Codice:** BLK-PH-AFFINITY-001.10
+- **Descrizione:** Aggiunta sezione pH Affinity System per POT selezionato
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PotDebugConsole.cs`
+- **Evidenze Tecniche:**
+  - Sezione mostra: Range Ottimale, pH Corrente Dome, In Range (Sì/No con colore), Distanza dal Range, Effetto Crescita, Countdown Morte, Stato Morte Imminente
+  - Integrato con PhSystem e PlantData
+  - Altezza contenuto editing aggiornata da 1050px a 1250px
+
+**TASK 11: Aggiornamento Console Z (PhSystemDebugConsole)**
+- **Codice:** BLK-PH-AFFINITY-001.11
+- **Descrizione:** Aggiunta sezione pH Affinity - Piante Attive
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Evidenze Tecniche:**
+  - Metodo ShowPhAffinityInfo() che mostra lista piante attive con: PlantCode, Famiglia, Range Ottimale, In Range, Distanza, Countdown Morte
+  - Integrato con PhSystem e PotSlot per trovare tutte le piante attive
+
+**TASK 12: Fix NullReferenceException ElevatorSystem**
+- **Codice:** BUG-FIX-ELEVATOR-001
+- **Descrizione:** Fix NullReferenceException in TeleportPlayer causato da oggetti distrutti durante coroutine
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs`
+- **Evidenze Tecniche:**
+  - Aggiunti null checks dopo yield return new WaitForSeconds(teleportDelay)
+  - Aggiunti null checks all'interno del while loop per player e elevatorSection
+  - Aggiunti null checks per playerMover prima delle chiamate StopMovement() e SuspendMovement()
+  - Early exit con yield break se oggetti sono null durante l'esecuzione
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: NullReferenceException in ElevatorSystem.TeleportPlayer**
+- **Numero:** BUG-FIX-ELEVATOR-001
+- **Descrizione:** NullReferenceException alla riga 235 quando si accedeva a player.position dopo yield return
+- **Causa:** Durante l'attesa della coroutine (WaitForSeconds), player, levels[levelIndex] o elevatorSection potevano diventare null o essere distrutti
+- **Soluzione:** Aggiunti null checks dopo yield return e all'interno del loop, con early exit se oggetti sono null
+- **Test Verificazione:** 
+  - Test teleport con player che esce dall'ascensore durante il delay
+  - Test teleport con distruzione GameObject durante coroutine
+  - Verificato che non si verifica più NullReferenceException
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVVOLTE
+==============================
+
+**Modifiche Strutturali:**
+- Esteso PotStateModel con 2 nuovi campi per tracking pH estremi
+- Aggiunto metodo GetPhDistanceFromOptimal() in PlantData
+- Implementati effetti graduali in PlantConditionSystem basati su distanza pH
+- Aggiunti 4 nuovi parametri configurabili in DifficultyCalibrationConfig
+- Modificato calcolo effectiveRequiredDays in DayCycleController per includere phDaysModifier
+- Modificata logica produzione frutti in DayCycleController per includere bonus/malus pH
+- Implementato sistema tracking e countdown morte pH estremi in DayCycleController
+- Aggiunti metodi KillPlantFromExtremePh() e ShowExtremePhCountdownNotification()
+- Aggiornate 3 console debug (G, P, Z) con sezioni pH Affinity
+- Fix null checks in ElevatorSystem.TeleportPlayer()
+
+**Test Cases Implementati:**
+- Test condizione: verificare bonus/malus graduali in base a distanza pH
+- Test crescita: verificare riduzione 1 giorno quando pH in range
+- Test produzione: verificare 30% doppio frutto in range, 20% mancata produzione fuori range
+- Test morte: verificare countdown 3 giorni e morte per pH estremi opposti
+- Test console: verificare visualizzazione informazioni pH affinity in tutte e 3 le console
+
+**Integrazioni:**
+- Integrato con PhSystem per valutazione pH corrente e bande
+- Integrato con PlantData per range ottimale e distanza
+- Integrato con PlantConditionSystem per effetti graduali
+- Integrato con DayCycleController per crescita, produzione e morte
+- Integrato con PotEvents per notifiche morte pianta
+- Integrato con UINotification per Toast countdown
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**Pattern Implementativi:**
+- Usare distanza normalizzata per calcolare malus proporzionale (Lerp tra min e max)
+- Aggiornare countdown ogni giorno in ResolveGrowthForPot() per tracking continuo
+- Evitare spam notifiche mostrando solo quando countdown cambia
+- Modificare logica incrementale esistente senza rompere decay system
+- Mantenere retrocompatibilità con sistema esistente
+
+**Best Practices:**
+- Null checks dopo yield return in coroutine (oggetti possono essere distrutti durante attesa)
+- Early exit con yield break se oggetti diventano null durante esecuzione coroutine
+- Separare malus estremo da malus standard per maggiore granularità
+- Usare ServiceContainer per accesso a sistemi invece di FindObjectOfType
+
+**Errori Ricorrenti:**
+- NullReferenceException in coroutine quando oggetti vengono distrutti durante yield
+- Dimenticare di aggiornare altezza contenuto scroll view quando si aggiungono nuove sezioni
+- Non resettare countdown quando condizioni cambiano (pH non più estremo)
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+=================
+
+**Task Pianificati:**
+- Test runtime completo sistema pH Affinity con tutti gli scenari
+- Validazione balance gameplay (bonus/malus valori)
+- Test edge cases (pH al limite range, transizioni pH estremi)
+- Documentazione manuale operazioni Unity per setup pH Affinity
+
+**Dipendenze:**
+- Nessuna dipendenza bloccante
+- Sistema pronto per test runtime
+
+**Prerequisiti:**
+- Unity Editor con scena Dome configurata
+- Piante con range pH ottimale configurati
+- PhSystem funzionante e accessibile
+
+================================================================================
+

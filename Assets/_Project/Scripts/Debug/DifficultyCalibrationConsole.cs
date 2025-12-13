@@ -323,6 +323,9 @@ namespace Sporae.DevTools
             y += DrawSlider("Malus Luce Assente/Sbagliata", ref DifficultyCalibrationConfig.MalusLightWrongOrAbsent, 0, 50, width, y);
             y += DrawSlider("Malus pH Opposto", ref DifficultyCalibrationConfig.MalusPhOpposite, 0, 50, width, y);
             y += DrawSlider("Malus pH Ultra", ref DifficultyCalibrationConfig.MalusPhUltra, 0, 50, width, y);
+            y += DrawSlider("Malus pH Fuori Range Min", ref DifficultyCalibrationConfig.MalusPhOutOfRangeMin, 0, 20, width, y);
+            y += DrawSlider("Malus pH Fuori Range Max", ref DifficultyCalibrationConfig.MalusPhOutOfRangeMax, 20, 50, width, y);
+            y += DrawSlider("Malus pH Estremo", ref DifficultyCalibrationConfig.MalusPhExtreme, 30, 70, width, y);
             y += DrawSlider("Malus Overwatering", ref DifficultyCalibrationConfig.MalusOverwatering, 0, 50, width, y);
             y += DrawSlider("Malus Mold Mild", ref DifficultyCalibrationConfig.MalusMoldMild, 0, 50, width, y);
             y += DrawSlider("Malus Mold Severe", ref DifficultyCalibrationConfig.MalusMoldSevere, 0, 50, width, y);
@@ -338,6 +341,7 @@ namespace Sporae.DevTools
             y += DrawSlider("Bonus Luce Corretta", ref DifficultyCalibrationConfig.BonusLightCorrect, 0, 50, width, y);
             y += DrawSlider("Bonus Watering ON", ref DifficultyCalibrationConfig.BonusWateringOn, 0, 50, width, y);
             y += DrawSlider("Bonus pH Ottimale", ref DifficultyCalibrationConfig.BonusPhOptimal, 0, 50, width, y);
+            y += DrawSlider("Bonus pH Ottimale Graduale", ref DifficultyCalibrationConfig.BonusPhOptimalGradual, 0, 20, width, y);
             y += DrawSlider("Bonus No Mold", ref DifficultyCalibrationConfig.BonusNoMold, 0, 50, width, y);
             return y - startY;
         }
@@ -502,6 +506,9 @@ namespace Sporae.DevTools
             ExportParam(sb, "MalusLightWrongOrAbsent", allParams);
             ExportParam(sb, "MalusPhOpposite", allParams);
             ExportParam(sb, "MalusPhUltra", allParams);
+            ExportParam(sb, "MalusPhOutOfRangeMin", allParams);
+            ExportParam(sb, "MalusPhOutOfRangeMax", allParams);
+            ExportParam(sb, "MalusPhExtreme", allParams);
             ExportParam(sb, "MalusOverwatering", allParams);
             ExportParam(sb, "MalusMoldMild", allParams);
             ExportParam(sb, "MalusMoldSevere", allParams);
@@ -513,6 +520,7 @@ namespace Sporae.DevTools
             ExportParam(sb, "BonusLightCorrect", allParams);
             ExportParam(sb, "BonusWateringOn", allParams);
             ExportParam(sb, "BonusPhOptimal", allParams);
+            ExportParam(sb, "BonusPhOptimalGradual", allParams);
             ExportParam(sb, "BonusNoMold", allParams);
             sb.AppendLine();
             

@@ -453,6 +453,8 @@ public class DayCycleController : MonoBehaviour
             
             // Produzione frutti incrementale: +1 frutto/giorno fino a 3 max
             // IMPORTANTE: Produciamo PRIMA i frutti, poi gestiamo il decay
+            bool phInRange = _phSystem != null && plantData != null && 
+                             plantData.IsPhInOptimalRange(_phSystem.CurrentPh);
             bool isFirstFruit = false;
             if (pot.AmountFruits == 0f)
             {
@@ -467,8 +469,21 @@ public class DayCycleController : MonoBehaviour
             }
             else if (pot.AmountFruits > 0f && pot.AmountFruits < 3f)
             {
-                // Giorni successivi: +1 frutto/giorno fino a 3 max
-                pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f, 3f);
+                // Giorni successivi: produzione basata su pH
+                if (phInRange)
+                {
+                    // 30% possibilità doppio frutto se pH in range
+                    float fruitsToAdd = (Random.Range(0f, 1f) < 0.3f) ? 2f : 1f;
+                    pot.AmountFruits = Mathf.Min(pot.AmountFruits + fruitsToAdd, 3f);
+                }
+                else
+                {
+                    // Possibilità mancata produzione (20%) se pH fuori range
+                    if (Random.Range(0f, 1f) >= 0.2f)
+                    {
+                        pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f, 3f);
+                    }
+                }
             }
             
             // DOPO la produzione, gestisci il decay se ci sono frutti
@@ -541,6 +556,45 @@ public class DayCycleController : MonoBehaviour
             pot.DaysFruitsUnharvested = 0;
         }
         
+        // Verifica pH estremo (≥+80 o ≤-80) opposto alla famiglia pianta
+        if (_phSystem != null && plantData != null)
+        {
+            float currentPh = _phSystem.CurrentPh;
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            bool isExtremePh = (phBand == PhSystem.PhBand.UltraAcid || 
+                                phBand == PhSystem.PhBand.UltraBasic);
+            
+            // Verifica se pH è opposto alla famiglia pianta
+            bool isOppositeToFamily = (plantData.Family == PlantFamily.Pure && 
+                                        phBand == PhSystem.PhBand.UltraAcid) ||
+                                       (plantData.Family == PlantFamily.Evil && 
+                                        phBand == PhSystem.PhBand.UltraBasic);
+            
+            if (isExtremePh && isOppositeToFamily)
+            {
+                pot.DaysInExtremePh++;
+                pot.ExtremePhDeathCountdown = 3 - pot.DaysInExtremePh;
+                
+                // Se countdown raggiunge 0, pianta muore
+                if (pot.ExtremePhDeathCountdown <= 0)
+                {
+                    // Morte pianta
+                    KillPlantFromExtremePh(pot, plantData, phBand);
+                }
+                else
+                {
+                    // Mostra notifica countdown
+                    ShowExtremePhCountdownNotification(pot, plantData, pot.ExtremePhDeathCountdown);
+                }
+            }
+            else
+            {
+                // Reset se pH non è più estremo o non opposto
+                pot.DaysInExtremePh = 0;
+                pot.ExtremePhDeathCountdown = -1;
+            }
+        }
+        
         // BLK-02.02: Verifica requisiti per avanzamento stadio
         bool stageChanged = false;
         PlantStage currentStage = (PlantStage)pot.Stage;
@@ -577,7 +631,16 @@ public class DayCycleController : MonoBehaviour
             
             // BLK-03.01-T2: Verifica giorni minimi con modificatore condizione
             int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
-            int effectiveRequiredDays = currentStageReq.durationDays + daysModifier;
+            int phDaysModifier = 0;
+            if (_phSystem != null && plantData != null)
+            {
+                float currentPh = _phSystem.CurrentPh;
+                if (plantData.IsPhInOptimalRange(currentPh))
+                {
+                    phDaysModifier = -1; // Riduce di 1 giorno se pH in range
+                }
+            }
+            int effectiveRequiredDays = currentStageReq.durationDays + daysModifier + phDaysModifier;
             bool durationOk = pot.DaysInCurrentStage >= effectiveRequiredDays;
             
             // BLK-03.01-T2: Verifica anche giorni consecutivi ottimali
@@ -1808,5 +1871,71 @@ public class DayCycleController : MonoBehaviour
             }
         }
     }
+    
+    /// <summary>
+    /// Uccide la pianta a causa di pH estremo opposto alla famiglia
+    /// </summary>
+    private void KillPlantFromExtremePh(PotStateModel pot, PlantData plantData, PhSystem.PhBand phBand)
+    {
+        Debug.LogError($"[DayCycleController] 🚨 Pianta morta per pH estremo! Vaso: {pot.PotId}, Famiglia: {plantData.Family}, pH Band: {phBand}");
+        
+        // Resetta stato pianta (come in DoFertilize per morte fertilizzante)
+        pot.HasPlant = false;
+        pot.PlantCode = null;
+        pot.Stage = 0;
+        pot.Hydration = 0;
+        pot.LightExposure = 0;
+        pot.FertilizerLevel = 0;
+        pot.DaysSincePlant = 0;
+        pot.DaysInCurrentStage = 0;
+        pot.GrowthPoints = 0;
+        pot.DaysFertilizerActive = 0;
+        pot.DaysInExtremePh = 0;
+        pot.ExtremePhDeathCountdown = -1;
+        
+        // Notifica evento morte pianta
+        string reason = $"pH estremo opposto ({phBand}) per famiglia {plantData.Family}";
+        PotEvents.EmitPlantDied(pot.PotId, reason);
+        
+        // Mostra Toast notifica morte
+        if (_uiNotification != null)
+        {
+            _uiNotification.ShowNotification(
+                $"🚨 Pianta {plantData.PlantCode} morta per pH estremo!",
+                4f,
+                new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+        }
+        
+        // Cerca PotSlot per aggiornare visuali
+        PotSlot potSlot = FindPotSlot(pot.PotId);
+        if (potSlot != null)
+        {
+            var potGrowthController = potSlot.GetComponent<PotGrowthController>();
+            if (potGrowthController != null)
+            {
+                potGrowthController.UpdateVisuals();
+            }
+            
+            // Notifica cambio stato
+            PotEvents.EmitChanged(potSlot);
+        }
+    }
+    
+    /// <summary>
+    /// Mostra notifica Toast countdown per morte imminente
+    /// </summary>
+    private void ShowExtremePhCountdownNotification(PotStateModel pot, PlantData plantData, int countdown)
+    {
+        // Mostra notifica solo quando countdown cambia (evita spam)
+        if (_uiNotification != null && countdown > 0)
+        {
+            string message = $"⚠️ La pianta {plantData.PlantCode} tra {countdown} giorni morirà a causa del pH estremo!";
+            _uiNotification.ShowNotification(
+                message,
+                4f,
+                new Color(1f, 0.5f, 0f)); // Arancione per allerta
+        }
+    }
+    
 }
 

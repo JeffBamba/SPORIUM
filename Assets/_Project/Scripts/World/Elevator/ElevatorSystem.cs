@@ -217,13 +217,34 @@ public class ElevatorSystem : MonoBehaviour
             DisableAllFloorOptions();
             
             //Prevent player transition to clicked position when quick floor(level) selection on elevator
-            playerMover.StopMovement();
+            if (playerMover != null)
+            {
+                playerMover.StopMovement();
+            }
             
             //and suspend further movement 
-            playerMover.SuspendMovement(true);
+            if (playerMover != null)
+            {
+                playerMover.SuspendMovement(true);
+            }
 
             // Delay per stabilizzare la fisica
             yield return new WaitForSeconds(teleportDelay);
+            
+            // Check null dopo yield (il player o levels potrebbero essere stati distrutti durante il delay)
+            if (player == null)
+            {
+                Debug.LogError("[ElevatorSystem] Player è diventato null dopo WaitForSeconds!");
+                isTeleporting = false;
+                yield break;
+            }
+            
+            if (levels == null || levelIndex < 0 || levelIndex >= levels.Length || levels[levelIndex] == null)
+            {
+                Debug.LogError($"[ElevatorSystem] levels[{levelIndex}] è null dopo WaitForSeconds!");
+                isTeleporting = false;
+                yield break;
+            }
             
             Vector3 targetPosition = new Vector3(
                 player.position.x, 
@@ -231,9 +252,23 @@ public class ElevatorSystem : MonoBehaviour
                 player.position.z
             );
 
-            var diff = player.position - targetPosition;
             while (Vector3.Distance(player.position, targetPosition) > 0.05f)
             {
+                // Check null durante il loop (il player potrebbe essere stato distrutto)
+                if (player == null)
+                {
+                    Debug.LogError("[ElevatorSystem] Player è diventato null durante il loop!");
+                    isTeleporting = false;
+                    yield break;
+                }
+                
+                if (elevatorSection == null)
+                {
+                    Debug.LogError("[ElevatorSystem] elevatorSection è null!");
+                    isTeleporting = false;
+                    yield break;
+                }
+                
                 player.position = Vector3.Lerp(player.position, targetPosition, Time.deltaTime * elevatorSpeed);
                 elevatorSection.transform.position = new Vector3(
                     elevatorSection.transform.position.x,
@@ -243,10 +278,16 @@ public class ElevatorSystem : MonoBehaviour
                 yield return null;
             }
             
-            player.position = targetPosition;
+            if (player != null)
+            {
+                player.position = targetPosition;
+            }
         
             isTeleporting = false;
-            playerMover.SuspendMovement(false);
+            if (playerMover != null)
+            {
+                playerMover.SuspendMovement(false);
+            }
 
             currentLevelIndex = levelIndex;
             UpdateAvailablesFloorOptions();

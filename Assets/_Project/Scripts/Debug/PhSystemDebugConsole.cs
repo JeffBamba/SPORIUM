@@ -496,6 +496,11 @@ namespace Sporae.DevTools
             ShowPlantEffects();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
             
+            // pH Affinity - Piante Attive
+            GUILayout.Label("=== pH Affinity - Piante Attive ===", labelStyle);
+            ShowPhAffinityInfo();
+            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
+            
             // BLK-02.07: Breakdown calcoli pH (sequenza step-by-step)
             GUILayout.Label("📊 Breakdown Calcoli pH:", labelStyle);
             ShowCalculationBreakdown();
@@ -583,6 +588,78 @@ namespace Sporae.DevTools
             };
 
             GUILayout.Label($"  {effects}", new GUIStyle(GUI.skin.label) { fontSize = 14 }); // Scalato del 30% (11 * 1.3)
+        }
+        
+        /// <summary>
+        /// Mostra informazioni pH Affinity per tutte le piante attive
+        /// </summary>
+        private void ShowPhAffinityInfo()
+        {
+            if (_phSystem == null)
+            {
+                GUILayout.Label("PhSystem non disponibile", new GUIStyle(GUI.skin.label) { fontSize = 14 });
+                return;
+            }
+            
+            float currentPh = _phSystem.CurrentPh;
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            
+            // Cerca tutte le piante attive
+            PotSlot[] allPots = FindObjectsOfType<PotSlot>();
+            int activePlantCount = 0;
+            
+            foreach (var pot in allPots)
+            {
+                if (pot != null && pot.PotActions != null && pot.PotActions.HasPlant)
+                {
+                    var potState = pot.PotActions.GetCurrentState();
+                    if (potState != null && potState.HasPlant && !string.IsNullOrEmpty(potState.PlantCode))
+                    {
+                        activePlantCount++;
+                        var plantData = potState.GetPlantData();
+                        if (plantData != null)
+                        {
+                            bool inRange = plantData.IsPhInOptimalRange(currentPh);
+                            float phDistance = plantData.GetPhDistanceFromOptimal(currentPh);
+                            
+                            // PlantCode e Famiglia
+                            string familyName = plantData.Family.ToString();
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label($"  {potState.PlantCode} ({familyName}):", 
+                                new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } });
+                            GUILayout.EndHorizontal();
+                            
+                            // Range Ottimale
+                            GUILayout.Label($"    Range: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}", 
+                                new GUIStyle(GUI.skin.label) { fontSize = 13 });
+                            
+                            // In Range
+                            Color inRangeColor = inRange ? Color.green : Color.red;
+                            GUILayout.Label($"    In Range: {(inRange ? "Sì" : "No")}", 
+                                new GUIStyle(GUI.skin.label) { fontSize = 13, normal = { textColor = inRangeColor } });
+                            
+                            // Distanza dal Range
+                            GUILayout.Label($"    Distanza: {phDistance:F2}", 
+                                new GUIStyle(GUI.skin.label) { fontSize = 13 });
+                            
+                            // Countdown Morte
+                            if (potState.ExtremePhDeathCountdown >= 0)
+                            {
+                                GUILayout.Label($"    ⚠️ Countdown: {potState.ExtremePhDeathCountdown} giorni", 
+                                    new GUIStyle(GUI.skin.label) { fontSize = 13, normal = { textColor = Color.red } });
+                            }
+                            
+                            GUILayout.Space(5);
+                        }
+                    }
+                }
+            }
+            
+            if (activePlantCount == 0)
+            {
+                GUILayout.Label("  Nessuna pianta attiva", 
+                    new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.gray } });
+            }
         }
         
         /// <summary>

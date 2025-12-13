@@ -111,6 +111,25 @@ namespace Sporae.Dome.PotSystem.Growth
         }
         
         /// <summary>
+        /// Calcola distanza normalizzata dal range ottimale (0-1)
+        /// 0 = dentro range, 1 = molto lontano
+        /// </summary>
+        public float GetPhDistanceFromOptimal(float currentPh)
+        {
+            if (IsPhInOptimalRange(currentPh))
+                return 0f;
+            
+            float distance;
+            if (currentPh < optimalPhMin)
+                distance = optimalPhMin - currentPh;
+            else
+                distance = currentPh - optimalPhMax;
+            
+            // Normalizza su range 0-100 (pH va da -100 a +100)
+            return Mathf.Clamp01(distance / 100f);
+        }
+        
+        /// <summary>
         /// Restituisce il drift pH giornaliero con variazioni casuali se necessario
         /// </summary>
         public float GetDailyPhDrift()

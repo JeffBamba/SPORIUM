@@ -24,6 +24,9 @@ namespace Sporae.DevTools
         public static int MalusLightWrongOrAbsent = 10;        // default 10
         public static int MalusPhOpposite = 20;                // default 20
         public static int MalusPhUltra = 15;                   // default 15
+        public static int MalusPhOutOfRangeMin = 5;            // default 5 - Malus minimo fuori range
+        public static int MalusPhOutOfRangeMax = 35;           // default 35 - Malus massimo fuori range
+        public static int MalusPhExtreme = 50;                 // default 50 - Malus per pH estremi (≥+80 o ≤-80)
         public static int MalusOverwatering = 25;              // default 25
         public static int MalusMoldMild = 10;                  // default 10
         public static int MalusMoldSevere = 30;                // default 30
@@ -36,6 +39,7 @@ namespace Sporae.DevTools
         public static int BonusLightCorrect = 15;              // default 15
         public static int BonusWateringOn = 10;                // default 10
         public static int BonusPhOptimal = 10;                 // default 10
+        public static int BonusPhOptimalGradual = 5;            // default 5 - Bonus extra se pH molto vicino al centro range
         public static int BonusNoMold = 5;                     // default 5
         
         // ============================================
@@ -147,6 +151,9 @@ namespace Sporae.DevTools
             MalusLightWrongOrAbsent = 10;
             MalusPhOpposite = 20;
             MalusPhUltra = 15;
+            MalusPhOutOfRangeMin = 5;
+            MalusPhOutOfRangeMax = 35;
+            MalusPhExtreme = 50;
             MalusOverwatering = 25;
             MalusMoldMild = 10;
             MalusMoldSevere = 30;
@@ -157,6 +164,7 @@ namespace Sporae.DevTools
             BonusLightCorrect = 15;
             BonusWateringOn = 10;
             BonusPhOptimal = 10;
+            BonusPhOptimalGradual = 5;
             BonusNoMold = 5;
             
             // pH BANDE
@@ -249,6 +257,9 @@ namespace Sporae.DevTools
                 { "MalusLightWrongOrAbsent", MalusLightWrongOrAbsent },
                 { "MalusPhOpposite", MalusPhOpposite },
                 { "MalusPhUltra", MalusPhUltra },
+                { "MalusPhOutOfRangeMin", MalusPhOutOfRangeMin },
+                { "MalusPhOutOfRangeMax", MalusPhOutOfRangeMax },
+                { "MalusPhExtreme", MalusPhExtreme },
                 { "MalusOverwatering", MalusOverwatering },
                 { "MalusMoldMild", MalusMoldMild },
                 { "MalusMoldSevere", MalusMoldSevere },
@@ -259,6 +270,7 @@ namespace Sporae.DevTools
                 { "BonusLightCorrect", BonusLightCorrect },
                 { "BonusWateringOn", BonusWateringOn },
                 { "BonusPhOptimal", BonusPhOptimal },
+                { "BonusPhOptimalGradual", BonusPhOptimalGradual },
                 { "BonusNoMold", BonusNoMold },
                 
                 // pH BANDE

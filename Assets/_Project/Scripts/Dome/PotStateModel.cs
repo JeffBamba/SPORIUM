@@ -122,6 +122,13 @@ public class PotStateModel
     [Tooltip("Flag per indicare se la pianta è infestata (true dopo 2 giorni a livello 3)")]
     public bool IsInfested = false;
     
+    [Header("pH Extreme Death System")]
+    [Tooltip("Giorni consecutivi in pH estremo opposto alla famiglia pianta (≥+80 per Evil, ≤-80 per Pure)")]
+    public int DaysInExtremePh = 0;
+    
+    [Tooltip("Countdown giorni rimanenti prima della morte (-1 se non attivo)")]
+    public int ExtremePhDeathCountdown = -1;
+    
     [Header("Debug Console Manual Override (Console P)")]
     [Tooltip("Flag per indicare se Hydration è stato impostato manualmente dalla console P")]
     public bool IsHydrationManuallySet = false;
@@ -175,6 +182,8 @@ public class PotStateModel
         DayOptimalParametersStarted = -1;
         DaysAtMoldRiskLevel3 = 0;
         IsInfested = false;
+        DaysInExtremePh = 0;
+        ExtremePhDeathCountdown = -1;
         IsHydrationManuallySet = false;
         ManualHydrationBase = -1;
         IsLightExposureManuallySet = false;
@@ -228,6 +237,8 @@ public class PotStateModel
         MoldRiskLevel = 0;
         DaysWithoutPruning = 0;
         DaysOverwateringConsecutive = 0;
+        DaysInExtremePh = 0;
+        ExtremePhDeathCountdown = -1;
     }
     
     /// <summary>
@@ -320,6 +331,8 @@ public class PotStateModel
         MoldRiskLevel = 0;
         DaysWithoutPruning = 0;
         DaysOverwateringConsecutive = 0;
+        DaysInExtremePh = 0;
+        ExtremePhDeathCountdown = -1;
     }
     
     /// <summary>
@@ -386,6 +399,8 @@ public class PotStateModel
         MoldRiskLevel = 0;
         DaysWithoutPruning = 0;
         DaysOverwateringConsecutive = 0;
+        DaysInExtremePh = 0;
+        ExtremePhDeathCountdown = -1;
     }
     
     /// <summary>

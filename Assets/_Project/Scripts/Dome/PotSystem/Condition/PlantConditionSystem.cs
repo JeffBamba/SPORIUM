@@ -81,6 +81,19 @@ namespace Sporae.Dome.PotSystem.Condition
                 {
                     score += DifficultyCalibrationConfig.BonusPhOptimal;
                     contributors.Add(new ConditionContributor("pH Dome in banda affinità", DifficultyCalibrationConfig.BonusPhOptimal, true));
+                    
+                    // Bonus graduale se pH molto vicino al centro del range
+                    float rangeCenter = (plantData.OptimalPhMin + plantData.OptimalPhMax) / 2f;
+                    float distanceFromCenter = Mathf.Abs(currentPh - rangeCenter);
+                    float rangeSize = plantData.OptimalPhMax - plantData.OptimalPhMin;
+                    float normalizedDistance = rangeSize > 0 ? (distanceFromCenter / (rangeSize / 2f)) : 0f;
+                    
+                    // Se molto vicino al centro (entro 25% del range), bonus extra
+                    if (normalizedDistance < 0.25f)
+                    {
+                        score += DifficultyCalibrationConfig.BonusPhOptimalGradual;
+                        contributors.Add(new ConditionContributor("pH molto vicino al centro range", DifficultyCalibrationConfig.BonusPhOptimalGradual, true));
+                    }
                 }
             }
             
@@ -135,11 +148,30 @@ namespace Sporae.Dome.PotSystem.Condition
                     contributors.Add(new ConditionContributor("pH opposto (Evil in basico)", -DifficultyCalibrationConfig.MalusPhOpposite, false));
                 }
                 
-                // 4. pH in banda Ultra (≤-80 o ≥+80)
+                // 4. pH in banda Ultra (≤-80 o ≥+80) - malus estremo
                 if (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.UltraBasic)
                 {
+                    score -= DifficultyCalibrationConfig.MalusPhExtreme;
+                    contributors.Add(new ConditionContributor("pH in banda Ultra estremo", -DifficultyCalibrationConfig.MalusPhExtreme, false));
+                }
+                else if (phBand == PhSystem.PhBand.StableAcid || phBand == PhSystem.PhBand.StableBasic)
+                {
+                    // pH Ultra ma non estremo: usa malus standard
                     score -= DifficultyCalibrationConfig.MalusPhUltra;
                     contributors.Add(new ConditionContributor("pH in banda Ultra", -DifficultyCalibrationConfig.MalusPhUltra, false));
+                }
+                
+                // 5. pH fuori range ottimale (malus graduale basato su distanza)
+                if (!plantData.IsPhInOptimalRange(currentPh))
+                {
+                    float phDistance = plantData.GetPhDistanceFromOptimal(currentPh);
+                    int malusPhOutOfRange = Mathf.RoundToInt(Mathf.Lerp(
+                        DifficultyCalibrationConfig.MalusPhOutOfRangeMin,
+                        DifficultyCalibrationConfig.MalusPhOutOfRangeMax,
+                        phDistance
+                    ));
+                    score -= malusPhOutOfRange;
+                    contributors.Add(new ConditionContributor($"pH fuori range (distanza: {phDistance:F2})", -malusPhOutOfRange, false));
                 }
             }
             

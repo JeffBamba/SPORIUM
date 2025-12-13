@@ -1,0 +1,14 @@
+COMMIT RECAP - Versione 0025
+=============================
+
+Implementato sistema pH Affinity completo con effetti su condizione, crescita, produzione frutti e morte pH estremi.
+Aggiunti 2 campi PotStateModel (DaysInExtremePh, ExtremePhDeathCountdown) per tracking morte pH estremi.
+Implementati effetti graduali condizione: bonus se pH vicino centro range, malus proporzionale basato su distanza.
+Riduzione 1 giorno crescita se pH in range ottimale, produzione frutti: 30% doppio se in range, 20% mancata se fuori.
+Sistema morte pH estremi: countdown 3 giorni con notifiche Toast, morte automatica se pH opposto per 3 giorni consecutivi.
+Aggiornate console debug G/P/Z: G con slider parametri pH graduali, P con sezione pH Affinity, Z con lista piante attive.
+Fix critico NullReferenceException ElevatorSystem: aggiunti null checks dopo yield return e nel loop per oggetti distrutti.
+Files modificati: 9 (PotStateModel, PlantData, PlantConditionSystem, DayCycleController, DifficultyCalibrationConfig,
+3 console debug, ElevatorSystem). Zero errori compilazione, tutti i sistemi integrati e funzionanti.
+Pronto per test runtime completo sistema pH Affinity e validazione balance gameplay.
+

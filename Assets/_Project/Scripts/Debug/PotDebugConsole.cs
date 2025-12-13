@@ -646,10 +646,10 @@ namespace Sporae.DevTools
                 // Altezza totale contenuto editing (calcolata sommando tutti gli elementi)
                 // Titolo: 30, Info: 75, Input Stadio: 35, Debug Parametri: 3*35+40=145, 
                 // Plant Condition: 30+30+35=95, Mold: 30+30+30+35=125, Plant Level: 30+30+30+35=125,
-                // Growth Points: 30+30+35=95, LED: 30+30+30+35=125, Watering: 30+30+35=95,
+                // pH Affinity: 30+~170=200, Growth Points: 30+30+35=95, LED: 30+30+30+35=125, Watering: 30+30+35=95,
                 // Pulsanti stadi: 30+30+40=100
-                // Totale: ~1050px
-                float editingContentHeight = 1050f;
+                // Totale: ~1250px
+                float editingContentHeight = 1250f;
                 
                 // Inizia scroll view per sezione editing
                 _editingScrollPosition = GUI.BeginScrollView(
@@ -885,6 +885,92 @@ namespace Sporae.DevTools
                     ResetGrowthPoints();
                 }
                 relativeY += 35f;
+                
+                // === SEZIONE pH AFFINITY ===
+                GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f), 
+                    "=== pH Affinity System ===", labelStyle);
+                relativeY += 30f;
+                
+                if (potState.HasPlant && !string.IsNullOrEmpty(potState.PlantCode) && _phSystem != null)
+                {
+                    var plantData = potState.GetPlantData();
+                    if (plantData != null)
+                    {
+                        float currentPh = _phSystem.CurrentPh;
+                        bool inRange = plantData.IsPhInOptimalRange(currentPh);
+                        float phDistance = plantData.GetPhDistanceFromOptimal(currentPh);
+                        PhSystem.PhBand phBand = _phSystem.EvaluateState();
+                        
+                        // Range Ottimale
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            $"Range Ottimale: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}", labelStyle);
+                        relativeY += 25f;
+                        
+                        // pH Corrente Dome
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            $"pH Corrente Dome: {currentPh:F1} ({phBand})", labelStyle);
+                        relativeY += 25f;
+                        
+                        // In Range
+                        Color inRangeColor = inRange ? Color.green : Color.red;
+                        GUI.color = inRangeColor;
+                        GUI.Label(new Rect(10f, relativeY, 200f, 25f), 
+                            $"In Range: {(inRange ? "Sì" : "No")}", labelStyle);
+                        GUI.color = Color.white;
+                        relativeY += 25f;
+                        
+                        // Distanza dal Range
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            $"Distanza dal Range: {phDistance:F2} (0=in range, 1=molto lontano)", labelStyle);
+                        relativeY += 25f;
+                        
+                        // Effetto Crescita
+                        string growthEffect = inRange ? "-1 giorno" : "Nessuno";
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            $"Effetto Crescita: {growthEffect}", labelStyle);
+                        relativeY += 25f;
+                        
+                        // Countdown Morte
+                        if (potState.ExtremePhDeathCountdown >= 0)
+                        {
+                            GUI.color = Color.red;
+                            GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
+                                $"⚠️ Countdown Morte: {potState.ExtremePhDeathCountdown} giorni rimanenti (Giorni in pH estremo: {potState.DaysInExtremePh})", labelStyle);
+                            GUI.color = Color.white;
+                            relativeY += 25f;
+                            
+                            GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
+                                $"Stato Morte Imminente: Tra {potState.ExtremePhDeathCountdown} giorni morirà", labelStyle);
+                            relativeY += 30f;
+                        }
+                        else
+                        {
+                            GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                                $"Countdown Morte: Non attivo", labelStyle);
+                            relativeY += 30f;
+                        }
+                    }
+                    else
+                    {
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            "PlantData non trovato", labelStyle);
+                        relativeY += 30f;
+                    }
+                }
+                else
+                {
+                    if (!potState.HasPlant)
+                    {
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            "Nessuna pianta nel vaso", labelStyle);
+                    }
+                    else if (_phSystem == null)
+                    {
+                        GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                            "PhSystem non disponibile", labelStyle);
+                    }
+                    relativeY += 30f;
+                }
                 
                 // === SEZIONE LED SYSTEM ===
                 GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f), 
