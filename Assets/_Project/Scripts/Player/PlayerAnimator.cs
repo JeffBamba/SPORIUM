@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -21,7 +22,7 @@ namespace _Project
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
             if (!_animator || !_spriteRenderer || !_rigidbody)
-                Debug.LogWarning("PlayerAnimator is missing a necessary components.");
+                SporiumLogger.LogWarning(LogCategory.Core, "PlayerAnimator is missing a necessary components.");
             
             _currentAnimation = k_idleAnimation;
         }

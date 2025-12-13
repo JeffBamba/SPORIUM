@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 public class ElevatorSystem : MonoBehaviour
 {
@@ -38,7 +39,7 @@ public class ElevatorSystem : MonoBehaviour
         gameManager = ServiceContainer.Instance?.Get<GameManager>();
         if (gameManager == null)
         {
-            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
             if (ServiceContainer.Instance != null)
             {
                 ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
@@ -49,7 +50,7 @@ public class ElevatorSystem : MonoBehaviour
         uiNotification = ServiceContainer.Instance?.Get<UINotification>();
         if (uiNotification == null)
         {
-            Debug.LogWarning("[ElevatorSystem] UINotification non disponibile via ServiceContainer. Tentativo late binding...");
+            SporiumLogger.LogWarning(LogCategory.UI, "UINotification non disponibile via ServiceContainer. Tentativo late binding...");
             if (ServiceContainer.Instance != null)
             {
                 ServiceContainer.Instance.OnServiceRegistered += OnUINotificationRegistered;
@@ -70,7 +71,7 @@ public class ElevatorSystem : MonoBehaviour
         {
             if (levels == null || levels.Length == 0)
             {
-                Debug.LogError("[ElevatorSystem] Nessun livello configurato!");
+                SporiumLogger.LogError(LogCategory.Core, "Nessun livello configurato!");
                 enabled = false;
                 return;
             }
@@ -79,7 +80,7 @@ public class ElevatorSystem : MonoBehaviour
             {
                 if (levels[i] == null)
                 {
-                    Debug.LogError($"[ElevatorSystem] Livello {i} è null!");
+                    SporiumLogger.LogError(LogCategory.Core, $"Livello {i} è null!");
                     enabled = false;
                     return;
                 }
@@ -172,19 +173,19 @@ public class ElevatorSystem : MonoBehaviour
         
         if (gameManager == null)
         {
-            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer!");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer!");
             return;
         }
 
         if (player == null)
         {
-            Debug.LogWarning("[ElevatorSystem] Player non trovato!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Player non trovato!");
             return;
         }
 
         if (!gameManager.TrySpendCry(cryCost))
         {
-            Debug.LogWarning($"[ElevatorSystem] Non hai abbastanza azioni o CRY per usare l'ascensore! (Costo: {cryCost})");
+            SporiumLogger.LogWarning(LogCategory.Core, $"Non hai abbastanza azioni o CRY per usare l'ascensore! (Costo: {cryCost})");
             return;
         }
 
@@ -234,14 +235,14 @@ public class ElevatorSystem : MonoBehaviour
             // Check null dopo yield (il player o levels potrebbero essere stati distrutti durante il delay)
             if (player == null)
             {
-                Debug.LogError("[ElevatorSystem] Player è diventato null dopo WaitForSeconds!");
+                SporiumLogger.LogError(LogCategory.Core, "Player è diventato null dopo WaitForSeconds!");
                 isTeleporting = false;
                 yield break;
             }
             
             if (levels == null || levelIndex < 0 || levelIndex >= levels.Length || levels[levelIndex] == null)
             {
-                Debug.LogError($"[ElevatorSystem] levels[{levelIndex}] è null dopo WaitForSeconds!");
+                SporiumLogger.LogError(LogCategory.Core, $"levels[{levelIndex}] è null dopo WaitForSeconds!");
                 isTeleporting = false;
                 yield break;
             }
@@ -257,14 +258,14 @@ public class ElevatorSystem : MonoBehaviour
                 // Check null durante il loop (il player potrebbe essere stato distrutto)
                 if (player == null)
                 {
-                    Debug.LogError("[ElevatorSystem] Player è diventato null durante il loop!");
+                    SporiumLogger.LogError(LogCategory.Core, "Player è diventato null durante il loop!");
                     isTeleporting = false;
                     yield break;
                 }
                 
                 if (elevatorSection == null)
                 {
-                    Debug.LogError("[ElevatorSystem] elevatorSection è null!");
+                    SporiumLogger.LogError(LogCategory.Core, "elevatorSection è null!");
                     isTeleporting = false;
                     yield break;
                 }
@@ -366,7 +367,7 @@ public class ElevatorSystem : MonoBehaviour
         gameManager = ServiceContainer.Instance?.Get<GameManager>();
         if (gameManager == null)
         {
-            Debug.LogWarning("[ElevatorSystem] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
             if (ServiceContainer.Instance != null)
             {
                 ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;

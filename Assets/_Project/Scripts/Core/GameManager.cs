@@ -5,6 +5,7 @@ using _Project.Scripts.Core;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
+using Sporae.DevTools;
 
 /// <summary>
 /// GameManager principale del gioco.
@@ -48,7 +49,7 @@ public class GameManager : MonoBehaviour
         // (necessario se GameManager viene creato prima di GamePlayInstaller)
         if (ServiceContainer.Instance == null)
         {
-            Debug.LogWarning("[GameManager] ServiceContainer.Instance è ancora null dopo Init(). Tentativo di registrazione ritardata...");
+            SporiumLogger.LogWarning(LogCategory.Core, "ServiceContainer.Instance è ancora null dopo Init(). Tentativo di registrazione ritardata...");
             StartCoroutine(RegisterWhenReady());
             return;
         }
@@ -73,13 +74,13 @@ public class GameManager : MonoBehaviour
                 ServiceContainer.Instance.Register(this);
 #if UNITY_EDITOR
                 if (_showDebugLogs)
-                    Debug.Log("[GameManager] ✅ Registrato nel ServiceContainer");
+                    SporiumLogger.LogInfo(LogCategory.Core, "Registrato nel ServiceContainer");
 #endif
             }
         }
         else
         {
-            Debug.LogError("[GameManager] ❌ ServiceContainer.Instance è null! Impossibile registrare GameManager.");
+            SporiumLogger.LogError(LogCategory.Core, "ServiceContainer.Instance è null! Impossibile registrare GameManager.");
         }
     }
     
@@ -106,7 +107,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[GameManager] ❌ ServiceContainer.Instance rimane null dopo " + maxAttempts + " tentativi!");
+            SporiumLogger.LogError(LogCategory.Core, $"ServiceContainer.Instance rimane null dopo {maxAttempts} tentativi!");
         }
     }
     
@@ -128,7 +129,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[GameManager] DayCycleSystem non disponibile al momento. Verrà sottoscritto quando disponibile.");
+            SporiumLogger.LogWarning(LogCategory.Core, "DayCycleSystem non disponibile al momento. Verrà sottoscritto quando disponibile.");
             // Late binding: sottoscrivi quando disponibile
             if (ServiceContainer.Instance != null)
             {
@@ -155,7 +156,7 @@ public class GameManager : MonoBehaviour
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR
         if (_showDebugLogs)
-            Debug.Log($"[{nameof(GameManager)}] Defaults set: Actions={_actionsPerDay}, CRY={_startingCRY}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Defaults set: Actions={_actionsPerDay}, CRY={_startingCRY}");
 #endif
     }
 
@@ -169,7 +170,7 @@ public class GameManager : MonoBehaviour
         
 #if UNITY_EDITOR
         if (_showDebugLogs)
-            Debug.Log($"[{nameof(GameManager)}] EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
 #endif
     }
 
@@ -239,7 +240,7 @@ public class GameManager : MonoBehaviour
             
 #if UNITY_EDITOR
             if (_showDebugLogs)
-                Debug.Log("[GameManager] DayCycleSystem sottoscritto con successo (late binding)");
+                SporiumLogger.LogInfo(LogCategory.Core, "DayCycleSystem sottoscritto con successo (late binding)");
 #endif
         }
     }
@@ -265,11 +266,11 @@ public class GameManager : MonoBehaviour
     public void DebugGameManagerStatus()
     {
 #if UNITY_EDITOR
-        Debug.Log("=== GAMEMANAGER DEBUG STATUS ===");
-        Debug.Log($"ActionSystem - Max: {_actionSystem?.MaxActions}, Left: {_actionSystem?.ActionsLeft}");
-        Debug.Log($"EconomySystem - Current: {_economySystem?.CurrentCRY}");
-        Debug.Log($"DayCycleSystem - Available: {_dayCycleSystem != null}");
-        Debug.Log("================================");
+        SporiumLogger.LogInfo(LogCategory.Core, "=== GAMEMANAGER DEBUG STATUS ===");
+        SporiumLogger.LogInfo(LogCategory.Core, $"ActionSystem - Max: {_actionSystem?.MaxActions}, Left: {_actionSystem?.ActionsLeft}");
+        SporiumLogger.LogInfo(LogCategory.Core, $"EconomySystem - Current: {_economySystem?.CurrentCRY}");
+        SporiumLogger.LogInfo(LogCategory.Core, $"DayCycleSystem - Available: {_dayCycleSystem != null}");
+        SporiumLogger.LogInfo(LogCategory.Core, "================================");
 #endif
     }
 }

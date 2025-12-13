@@ -3,6 +3,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project.BlackMarket
 {
@@ -28,7 +29,7 @@ namespace _Project.BlackMarket
             }
             else
             {
-                Debug.LogWarning("[UIBlackMarketSell] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
             
             foreach (var item in _hudItemContainer.Items)
@@ -52,7 +53,7 @@ namespace _Project.BlackMarket
             var index = _items.IndexOf(item);
             if (index < 0 || index >= _storage.UniqueItems)
             {
-                Debug.LogWarning($"[UIBlackMarketSell] ⚠️ Indice invalido per HandleSellAll: {index} (UniqueItems: {_storage.UniqueItems})");
+                SporiumLogger.LogWarning(LogCategory.UI, $"⚠️ Indice invalido per HandleSellAll: {index} (UniqueItems: {_storage.UniqueItems})");
                 return;
             }
             
@@ -72,7 +73,7 @@ namespace _Project.BlackMarket
             var index = _items.IndexOf(item);
             if (index < 0 || index >= _storage.UniqueItems)
             {
-                Debug.LogWarning($"[UIBlackMarketSell] ⚠️ Indice invalido per HandleSellOne: {index} (UniqueItems: {_storage.UniqueItems})");
+                SporiumLogger.LogWarning(LogCategory.UI, $"⚠️ Indice invalido per HandleSellOne: {index} (UniqueItems: {_storage.UniqueItems})");
                 return;
             }
             

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sporae.Core;
+using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Growth
 {
@@ -31,7 +32,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 potState = GetComponent<PotStateModel>();
                 if (potState == null)
                 {
-                    Debug.LogError($"[BLK-01.03A] PotGrowthController su {gameObject.name}: PotStateModel non trovato!");
+                    SporiumLogger.LogError(LogCategory.Pot, $"PotGrowthController su {gameObject.name}: PotStateModel non trovato!");
                 }
             }
             
@@ -41,7 +42,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 plantRenderer = GetComponentInChildren<SpriteRenderer>();
                 if (plantRenderer == null)
                 {
-                    Debug.LogWarning($"[BLK-01.03B] PotGrowthController su {gameObject.name}: SpriteRenderer non trovato. Le visuali non saranno aggiornate.");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"PotGrowthController su {gameObject.name}: SpriteRenderer non trovato. Le visuali non saranno aggiornate.");
                 }
             }
         }
@@ -61,7 +62,7 @@ namespace Sporae.Dome.PotSystem.Growth
             // BLK-01.03A: I timestamp vengono impostati da PotActions quando si eseguono le azioni
 
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] {potState.PotId}: Seme piantato, inizializzato come Seed");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Seme piantato, inizializzato come Seed");
             
             // BLK-01.03B: Aggiorna le visuali
             UpdateVisuals();
@@ -98,12 +99,12 @@ namespace Sporae.Dome.PotSystem.Growth
                 targetSprite = s0_empty; // Fallback a sprite vuoto
                 if (enableDebugLogs)
                 {
-                    Debug.LogWarning($"[BLK-01.04] {potState.PotId}: Sprite NULL per stadio {potState.Stage}! Usando sprite default (empty).");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Sprite NULL per stadio {potState.Stage}! Usando sprite default (empty).");
                 }
             }
             else if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-01.04] {potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{potState.PotId}: Sprite aggiornato a {targetSprite.name} per stadio {potState.Stage}");
             }
             
             plantRenderer.sprite = targetSprite;
@@ -114,7 +115,7 @@ namespace Sporae.Dome.PotSystem.Growth
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-01.04] {potState.PotId}: Visuali aggiornate - Stadio: {potState.Stage}, Scala: {targetScale:F2}, Sprite: {(targetSprite != null ? targetSprite.name : "NULL")}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{potState.PotId}: Visuali aggiornate - Stadio: {potState.Stage}, Scala: {targetScale:F2}, Sprite: {(targetSprite != null ? targetSprite.name : "NULL")}");
             }
         }
         
@@ -157,7 +158,7 @@ namespace Sporae.Dome.PotSystem.Growth
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[BLK-01.04] {potState?.PotId ?? "Unknown"}: GetSpriteForStage({stage}={stageName}) = {(result != null ? result.name : "NULL")}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{potState?.PotId ?? "Unknown"}: GetSpriteForStage({stage}={stageName}) = {(result != null ? result.name : "NULL")}");
             }
             
             return result;
@@ -194,12 +195,12 @@ namespace Sporae.Dome.PotSystem.Growth
         {
             if (potState == null) 
             {
-                Debug.LogWarning($"[BLK-01.04] OnStageChanged chiamato ma potState è NULL!");
+                SporiumLogger.LogWarning(LogCategory.Pot, "OnStageChanged chiamato ma potState è NULL!");
                 return;
             }
             
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.04] {potState.PotId}: Stadio cambiato a {newStage}. Aggiornamento visuali...");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Stadio cambiato a {newStage}. Aggiornamento visuali...");
             
             // Aggiorna le visuali
             UpdateVisuals();

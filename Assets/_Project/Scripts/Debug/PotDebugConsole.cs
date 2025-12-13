@@ -87,7 +87,7 @@ namespace Sporae.DevTools
             enableDebugConsole = false;
             #endif
             
-            Debug.Log($"[Pot Debug Console] Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
+            SporiumLogger.LogDebug(LogCategory.Dome, $"Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
         }
         
         private void OnDestroy()
@@ -138,7 +138,7 @@ namespace Sporae.DevTools
             {
                 _isConsoleOpen = !_isConsoleOpen;
                 AddLog(_isConsoleOpen ? "Console aperta" : "Console chiusa");
-                Debug.Log($"[Pot Debug Console] Console {(_isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
+                SporiumLogger.LogDebug(LogCategory.Dome, $"Console {(_isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
                 
                 if (_isConsoleOpen)
                 {
@@ -228,7 +228,7 @@ namespace Sporae.DevTools
             PotEvents.EmitChanged(_selectedPot.PotSlot);
             
             AddLog($"✅ {potState.PotId}: Stadio cambiato {oldStage} → {newStage} ({GetStageName(newStage)})");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Stadio cambiato {oldStage} → {newStage}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Stadio cambiato {oldStage} → {newStage}");
         }
         
         private string GetStageName(int stage)
@@ -265,7 +265,7 @@ namespace Sporae.DevTools
             }
             
             AddLog($"✅ {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE - decay partirà da questo valore)");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE)");
         }
         
         // BLK-03.01-T2: Imposta idratazione
@@ -298,7 +298,7 @@ namespace Sporae.DevTools
             }
             
             AddLog($"✅ {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE - decay partirà da questo valore)");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE)");
         }
         
         // BLK-03.01-T2: Imposta luce percentuale
@@ -364,12 +364,12 @@ namespace Sporae.DevTools
             }
             else
             {
-                Debug.LogWarning($"[Pot Debug Console] PotSlot è null per {potState.PotId}! Impossibile emettere evento OnPotStateChanged.");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"PotSlot è null per {potState.PotId}! Impossibile emettere evento OnPotStateChanged.");
                 AddLog($"⚠️ PotSlot null - evento non emesso");
             }
             
             AddLog($"✅ {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE - decay partirà da questo valore)");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE)");
         }
         
         // Metodi per nuovi sistemi

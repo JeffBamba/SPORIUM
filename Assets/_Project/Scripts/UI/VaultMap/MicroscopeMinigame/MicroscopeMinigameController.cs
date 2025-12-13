@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
+using Sporae.DevTools;
 
 using Random = UnityEngine.Random;
 
@@ -65,7 +66,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[MicroscopeMinigameController] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
             
             _currentSporeId = sporeId;

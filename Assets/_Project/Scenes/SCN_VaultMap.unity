@@ -16601,6 +16601,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 750259169}
   m_CullTransparentMesh: 1
+--- !u!1 &750459669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 750459671}
+  - component: {fileID: 750459670}
+  m_Layer: 0
+  m_Name: GlobalStateInspector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &750459670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 750459669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4742d367368a2f048869d638138c6afa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableDebugConsole: 1
+  toggleKey: 108
+  showOnStart: 0
+--- !u!4 &750459671
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 750459669}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.5443993, y: 0.3471594, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &751987881
 GameObject:
   m_ObjectHideFlags: 0
@@ -44665,6 +44712,10 @@ PrefabInstance:
       propertyPath: potId
       value: POT-002
       objectReference: {fileID: 0}
+    - target: {fileID: 871008503983651716, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
+      propertyPath: state
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 885276302489715197, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0.226
@@ -44672,6 +44723,10 @@ PrefabInstance:
     - target: {fileID: 4060257016458266256, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_Name
       value: Pot_POT-002
+      objectReference: {fileID: 0}
+    - target: {fileID: 4806303643697327106, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7607455735724014979, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -48220,3 +48275,4 @@ SceneRoots:
   - {fileID: 834461679}
   - {fileID: 364694349}
   - {fileID: 807740686}
+  - {fileID: 750459671}

@@ -71,8 +71,8 @@ namespace Sporae.DevTools
             enableDebugConsole = false;
             #endif
             
-            Debug.Log($"[pH Debug Console] Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
-            Debug.Log($"[pH Debug Console] pH inizializzato a 0.0 (Reset completo)");
+            SporiumLogger.LogDebug(LogCategory.Ph, $"Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
+            SporiumLogger.LogInfo(LogCategory.Ph, "pH inizializzato a 0.0 (Reset completo)");
         }
 
         private void Start()
@@ -194,7 +194,7 @@ namespace Sporae.DevTools
                 // Debug: verifica perché non funziona
                 if (Input.GetKeyDown(toggleKey))
                 {
-                    Debug.LogWarning("[pH Debug Console] Tasto Z premuto ma enableDebugConsole è FALSE!");
+                    SporiumLogger.LogWarning(LogCategory.Ph, "Tasto Z premuto ma enableDebugConsole è FALSE!");
                 }
                 return;
             }
@@ -203,7 +203,7 @@ namespace Sporae.DevTools
             {
                 _isConsoleOpen = !_isConsoleOpen;
                 AddLog(_isConsoleOpen ? "Console aperta" : "Console chiusa");
-                Debug.Log($"[pH Debug Console] Console {( _isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
+                SporiumLogger.LogDebug(LogCategory.Ph, $"Console {( _isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
             }
 
             // Hotkeys rapide (solo se console aperta)
@@ -735,7 +735,7 @@ namespace Sporae.DevTools
                 _debugLog.RemoveAt(0);
             }
             
-            Debug.Log($"[pH Debug] {message}");
+            SporiumLogger.LogDebug(LogCategory.Ph, message);
         }
 
         private Texture2D MakeTex(int width, int height, Color col)

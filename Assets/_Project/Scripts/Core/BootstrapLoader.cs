@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Sporae.DevTools;
 
 public class BootstrapLoader : MonoBehaviour
 {
@@ -20,7 +21,7 @@ public class BootstrapLoader : MonoBehaviour
         {
             if (!ValidateConfiguration())
             {
-                Debug.LogError("[BootstrapLoader] Configurazione non valida! BootstrapLoader disabilitato.");
+                SporiumLogger.LogError(LogCategory.Core, "Configurazione non valida! BootstrapLoader disabilitato.");
                 enabled = false;
                 return;
             }
@@ -38,13 +39,13 @@ public class BootstrapLoader : MonoBehaviour
         
         if (string.IsNullOrEmpty(firstScene))
         {
-            Debug.LogError("[BootstrapLoader] Nome scena non specificato!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena non specificato!");
             isValid = false;
         }
         
         if (delayBeforeLoad < 0)
         {
-            Debug.LogWarning("[BootstrapLoader] delayBeforeLoad non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.Core, "delayBeforeLoad non può essere negativo. Impostato a 0.");
             delayBeforeLoad = 0;
         }
         
@@ -55,13 +56,13 @@ public class BootstrapLoader : MonoBehaviour
     {
         if (isLoading)
         {
-            Debug.LogWarning("[BootstrapLoader] Bootstrap già in corso!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Bootstrap già in corso!");
             return;
         }
         
         if (string.IsNullOrEmpty(firstScene))
         {
-            Debug.LogError("[BootstrapLoader] Nome scena non specificato!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena non specificato!");
             return;
         }
         
@@ -74,7 +75,7 @@ public class BootstrapLoader : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[BootstrapLoader] Iniziato bootstrap per scena: {firstScene}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Iniziato bootstrap per scena: {firstScene}");
         }
         
         // Delay iniziale per stabilizzare la scena
@@ -89,7 +90,7 @@ public class BootstrapLoader : MonoBehaviour
         {
             if (showDebugLogs)
             {
-                Debug.Log("[BootstrapLoader] SceneLoadingUI trovato, delega il caricamento a lui.");
+                SporiumLogger.LogInfo(LogCategory.Core, "SceneLoadingUI trovato, delega il caricamento a lui.");
             }
             
             // Delega il caricamento al SceneLoadingUI esistente
@@ -103,7 +104,7 @@ public class BootstrapLoader : MonoBehaviour
         {
             if (showDebugLogs)
             {
-                Debug.Log($"[BootstrapLoader] Già nella scena target: {firstScene}");
+                SporiumLogger.LogInfo(LogCategory.Core, $"Già nella scena target: {firstScene}");
             }
             isLoading = false;
             yield break;
@@ -112,7 +113,7 @@ public class BootstrapLoader : MonoBehaviour
         // Caricamento diretto se non c'è SceneLoadingUI
         if (showDebugLogs)
         {
-            Debug.Log($"[BootstrapLoader] Caricamento diretto scena: {firstScene}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Caricamento diretto scena: {firstScene}");
         }
         
         SceneManager.LoadScene(firstScene, LoadSceneMode.Single);
@@ -128,7 +129,7 @@ public class BootstrapLoader : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[BootstrapLoader] Non è possibile cambiare scena durante il caricamento!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Non è possibile cambiare scena durante il caricamento!");
         }
     }
 
@@ -156,7 +157,7 @@ public class BootstrapLoader : MonoBehaviour
         
         if (string.IsNullOrEmpty(firstScene))
         {
-            Debug.LogError("[BootstrapLoader] Nome scena non specificato!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena non specificato!");
             return;
         }
         

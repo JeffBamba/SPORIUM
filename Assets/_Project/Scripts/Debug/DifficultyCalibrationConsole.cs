@@ -83,7 +83,7 @@ namespace Sporae.DevTools
                         _consoleY = (Screen.height - consoleHeight) / 2f;
                     }
                 }
-                Debug.Log($"[Difficulty Calibration] Console {(_isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
+                SporiumLogger.LogDebug(LogCategory.Dome, $"Console {(_isConsoleOpen ? "aperta" : "chiusa")} - Tasto {toggleKey} premuto");
             }
             
             // Gestione drag
@@ -181,7 +181,7 @@ namespace Sporae.DevTools
             {
                 DifficultyCalibrationConfig.ResetToDefaults();
                 SaveOriginalValues();
-                Debug.Log("[Difficulty Calibration] Tutti i parametri resettati ai default");
+                SporiumLogger.LogInfo(LogCategory.Dome, "Tutti i parametri resettati ai default");
             }
             if (GUI.Button(new Rect(130f, 0f, 120f, 30f), "Export .txt", _buttonStyle))
             {
@@ -606,11 +606,11 @@ namespace Sporae.DevTools
             try
             {
                 File.WriteAllText(filePath, sb.ToString());
-                Debug.Log($"[Difficulty Calibration] ✅ Export completato: {filePath}");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Export completato: {filePath}");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[Difficulty Calibration] ❌ Errore export: {ex.Message}");
+                SporiumLogger.LogError(LogCategory.Dome, $"Errore export: {ex.Message}");
             }
         }
         

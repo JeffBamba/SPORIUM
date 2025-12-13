@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 /// <summary>
 /// Bootstrap per garantire la presenza di due vasi interattivi nella stanza Dome.
@@ -48,7 +49,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     {
         if (showDebugLogs)
         {
-            Debug.Log("[RoomDomePotsBootstrap] Inizializzazione vasi Dome...");
+            SporiumLogger.LogInfo(LogCategory.Dome, "Inizializzazione vasi Dome...");
         }
 
         // Crea o trova l'anchor per i vasi
@@ -60,14 +61,14 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
         if (showDebugLogs)
         {
-            Debug.Log("[RoomDomePotsBootstrap] Inizializzazione vasi Dome completata.");
+            SporiumLogger.LogInfo(LogCategory.Dome, "Inizializzazione vasi Dome completata.");
         }
 
         // BLK-01.03A: I vasi verranno registrati automaticamente da PotActions
         // NON registrare qui per evitare duplicazione
         if (showDebugLogs)
         {
-            Debug.Log("[RoomDomePotsBootstrap] Vasi creati, registrazione gestita da PotActions");
+            SporiumLogger.LogInfo(LogCategory.Dome, "Vasi creati, registrazione gestita da PotActions");
         }
     }
 
@@ -85,14 +86,14 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
             if (showDebugLogs)
             {
-                Debug.Log("[RoomDomePotsBootstrap] Creato nuovo anchor Dome_PotsAnchor");
+                SporiumLogger.LogInfo(LogCategory.Dome, "Creato nuovo anchor Dome_PotsAnchor");
             }
         }
         else
         {
             if (showDebugLogs)
             {
-                Debug.Log("[RoomDomePotsBootstrap] Trovato anchor esistente Dome_PotsAnchor");
+                SporiumLogger.LogInfo(LogCategory.Dome, "Trovato anchor esistente Dome_PotsAnchor");
             }
         }
     }
@@ -127,7 +128,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             potGO = Instantiate(potPrefab, potsAnchor.transform);
             if (showDebugLogs)
             {
-                Debug.Log($"[RoomDomePotsBootstrap] Istanzato vaso {potId} da prefab.");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Istanzato vaso {potId} da prefab.");
             }
         }
         else
@@ -136,7 +137,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             potGO = CreatePotRuntime(potId);
             if (showDebugLogs)
             {
-                Debug.Log($"[RoomDomePotsBootstrap] Creato vaso {potId} a runtime.");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Creato vaso {potId} a runtime.");
             }
         }
 
@@ -253,13 +254,13 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         if (potGrowthController != null)
         {
             // Crea e assegna il PotStateModel (Stage 0 = Empty per vasi vuoti)
-            Debug.LogError($"new pot state model with id: {potId}");
+            SporiumLogger.LogError(LogCategory.Dome, $"new pot state model with id: {potId}");
             PotStateModel potState = new PotStateModel(potId);
             potGrowthController.SetPotState(potState);
             
             if (showDebugLogs)
             {
-                Debug.Log($"[RoomDomePotsBootstrap] PotGrowthController configurato per {potId}");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"PotGrowthController configurato per {potId}");
             }
         }
 
@@ -269,7 +270,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
         if (showDebugLogs)
         {
-            Debug.Log($"[RoomDomePotsBootstrap] Vaso {potId} configurato in posizione {offset}");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"Vaso {potId} configurato in posizione {offset}");
         }
     }
 
@@ -358,11 +359,11 @@ public class RoomDomePotsBootstrap : MonoBehaviour
                     registeredCount++;
                 }
             }
-            Debug.Log($"[BLK-01.03A] Registered {registeredCount} pots in DayCycleController");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"Registered {registeredCount} pots in DayCycleController");
         }
         else
         {
-            Debug.LogWarning("[BLK-01.03A] DayCycleController non trovato!");
+            SporiumLogger.LogWarning(LogCategory.Dome, "DayCycleController non trovato!");
         }
     }
 }

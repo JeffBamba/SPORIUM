@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -18,7 +19,7 @@ namespace _Project
             _config = Resources.Load<CondensationConfig>("Configs/CondensationConfig");
             if (_config == null)
             {
-                Debug.LogError("[CondensationSystem] CondensationConfig non trovato! Usando valori default.");
+                SporiumLogger.LogError(LogCategory.Core, "CondensationConfig non trovato! Usando valori default.");
             }
         }
         

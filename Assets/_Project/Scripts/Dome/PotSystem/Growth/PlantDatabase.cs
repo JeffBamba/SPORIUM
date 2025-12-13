@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Growth
 {
@@ -99,7 +100,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 
                 if (loadedData.Length > 0)
                 {
-                    Debug.Log($"[PlantDatabase] Caricati {loadedData.Length} PlantData da Resources/Plants/");
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"Caricati {loadedData.Length} PlantData da Resources/Plants/");
                 }
             }
             
@@ -117,7 +118,7 @@ namespace Sporae.Dome.PotSystem.Growth
                     {
                         if (_plantDataBySeedTypeId.ContainsKey(typeId))
                         {
-                            Debug.LogWarning($"[PlantDatabase] Duplicato TypeId '{typeId}' trovato! Sovrascritto con {plantData.name}");
+                            SporiumLogger.LogWarning(LogCategory.Pot, $"Duplicato TypeId '{typeId}' trovato! Sovrascritto con {plantData.name}");
                         }
                         _plantDataBySeedTypeId[typeId] = plantData;
                     }
@@ -128,14 +129,14 @@ namespace Sporae.Dome.PotSystem.Growth
                 {
                     if (_plantDataByCode.ContainsKey(plantData.PlantCode))
                     {
-                        Debug.LogWarning($"[PlantDatabase] Duplicato PlantCode '{plantData.PlantCode}' trovato! Sovrascritto con {plantData.name}");
+                        SporiumLogger.LogWarning(LogCategory.Pot, $"Duplicato PlantCode '{plantData.PlantCode}' trovato! Sovrascritto con {plantData.name}");
                     }
                     _plantDataByCode[plantData.PlantCode] = plantData;
                 }
             }
             
             _isInitialized = true;
-            Debug.Log($"[PlantDatabase] Inizializzato: {_plantDataBySeedTypeId.Count} piante registrate");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Inizializzato: {_plantDataBySeedTypeId.Count} piante registrate");
         }
         
         /// <summary>
@@ -207,7 +208,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 _plantDataByCode[plantData.PlantCode] = plantData;
             }
             
-            Debug.Log($"[PlantDatabase] Registrato PlantData: {plantData.PlantCode} ({plantData.name})");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Registrato PlantData: {plantData.PlantCode} ({plantData.name})");
         }
         
         /// <summary>
@@ -248,7 +249,7 @@ namespace Sporae.Dome.PotSystem.Growth
             _plantDataByCode.Clear();
             _isInitialized = false;
             InitializeDatabase();
-            Debug.Log($"[PlantDatabase] Database ricaricato: {_plantDataBySeedTypeId.Count} piante");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Database ricaricato: {_plantDataBySeedTypeId.Count} piante");
         }
         
         [ContextMenu("Log All Plants")]
@@ -257,11 +258,11 @@ namespace Sporae.Dome.PotSystem.Growth
             if (!_isInitialized)
                 InitializeDatabase();
             
-            Debug.Log($"[PlantDatabase] === TUTTE LE PIANTE REGISTRATE ({_plantDataBySeedTypeId.Count}) ===");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"=== TUTTE LE PIANTE REGISTRATE ({_plantDataBySeedTypeId.Count}) ===");
             foreach (var kvp in _plantDataBySeedTypeId)
             {
                 var plantData = kvp.Value;
-                Debug.Log($"  [{kvp.Key}] {plantData.PlantCode} - {plantData.Family} - Drift pH: {plantData.DailyPhDrift}/giorno");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"  [{kvp.Key}] {plantData.PlantCode} - {plantData.Family} - Drift pH: {plantData.DailyPhDrift}/giorno");
             }
         }
         #endif

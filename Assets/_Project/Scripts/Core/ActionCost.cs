@@ -1,5 +1,6 @@
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 public class ActionCost : MonoBehaviour
 {
@@ -27,13 +28,13 @@ public class ActionCost : MonoBehaviour
     {
         if (cryCost < 0)
         {
-            Debug.LogWarning("[ActionCost] cryCost non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.Core, "cryCost non può essere negativo. Impostato a 0.");
             cryCost = 0;
         }
         
         if (actionCost < 0)
         {
-            Debug.LogWarning("[ActionCost] actionCost non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.Core, "actionCost non può essere negativo. Impostato a 0.");
             actionCost = 0;
         }
     }
@@ -45,7 +46,7 @@ public class ActionCost : MonoBehaviour
         
         if (_gameManager == null)
         {
-            Debug.LogWarning("[ActionCost] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
             if (ServiceContainer.Instance != null)
             {
                 ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
@@ -82,7 +83,7 @@ public class ActionCost : MonoBehaviour
     {
         if (_gameManager == null)
         {
-            Debug.LogWarning("[ActionCost] GameManager non disponibile!");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile!");
             return false;
         }
 

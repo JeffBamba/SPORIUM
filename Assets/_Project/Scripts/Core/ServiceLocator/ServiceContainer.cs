@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace  _Project.Sporae.Core
 {
@@ -49,7 +50,7 @@ namespace  _Project.Sporae.Core
             _globalInstance._services.Add(typeof(T), service);
             
 #if UNITY_EDITOR
-            Debug.Log($"Register new global service: {typeof(T)}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"Register new global service: {typeof(T)}");
 #endif
             
             OnServiceRegistered?.Invoke(service);
@@ -59,7 +60,7 @@ namespace  _Project.Sporae.Core
         {
             if (service == null)
             {
-                Debug.LogWarning($"[ServiceContainer] Tentativo di registrare servizio null di tipo {typeof(T)}. Ignorato.");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Tentativo di registrare servizio null di tipo {typeof(T)}. Ignorato.");
                 return;
             }
             
@@ -72,7 +73,7 @@ namespace  _Project.Sporae.Core
                     return;
                 }
                 
-                Debug.LogWarning($"[ServiceContainer] Servizio {typeof(T)} già registrato. Sostituito con nuova istanza.");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Servizio {typeof(T)} già registrato. Sostituito con nuova istanza.");
                 _services[typeof(T)] = service;
             }
             else
@@ -81,7 +82,7 @@ namespace  _Project.Sporae.Core
             }
             
 #if UNITY_EDITOR
-            Debug.Log($"Register new local service: {typeof(T)}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"Register new local service: {typeof(T)}");
 #endif
             
             OnServiceRegistered?.Invoke(service);
@@ -101,7 +102,7 @@ namespace  _Project.Sporae.Core
             // DEBUG_SAFE_FIX: Non loggare warning se suppressWarning è true (utile durante inizializzazione)
             if (!suppressWarning)
             {
-                Debug.LogWarning($"[ServiceContainer] Servizio di tipo {type} non trovato!");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Servizio di tipo {type} non trovato!");
             }
             return null;
         }

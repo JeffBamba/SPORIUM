@@ -9,6 +9,7 @@ using Sporae.Dome.PotSystem.Mold;
 using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
+using Sporae.DevTools;
 
 /// <summary>
 /// Controller per il ciclo giornaliero del sistema di crescita delle piante.
@@ -37,7 +38,7 @@ public class DayCycleController : MonoBehaviour
     {
         growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
         if (!growthConfig)
-            Debug.LogWarning($"[{nameof(DayCycleSystem)}] PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
+            SporiumLogger.LogWarning(LogCategory.Dome, $"PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
 
         SceneManager.sceneLoaded += (_, _) =>
         {
@@ -79,7 +80,7 @@ public class DayCycleController : MonoBehaviour
             _uiNotification = FindObjectOfType<UINotification>();
             if (enableDebugLogs && _uiNotification == null)
             {
-                Debug.LogWarning("[DayCycleController] UINotification non trovato in scena; i toast non verranno mostrati.");
+                SporiumLogger.LogWarning(LogCategory.Dome, "UINotification non trovato in scena; i toast non verranno mostrati.");
             }
         }
         
@@ -91,14 +92,14 @@ public class DayCycleController : MonoBehaviour
             {
                 growthConfig = potSystemConfig.GrowthConfig;
                 if (enableDebugLogs)
-                    Debug.Log("[BLK-01.03A] DayCycleController: Configurazione caricata da PotSystemConfig");
+                    SporiumLogger.LogInfo(LogCategory.Dome, "DayCycleController: Configurazione caricata da PotSystemConfig");
             }
         }
 
         // Verifica configurazione
         if (growthConfig == null)
         {
-            Debug.LogError("[BLK-01.03A] DayCycleController: Nessuna configurazione di crescita trovata!");
+            SporiumLogger.LogError(LogCategory.Dome, "DayCycleController: Nessuna configurazione di crescita trovata!");
             return;
         }
         
@@ -114,22 +115,22 @@ public class DayCycleController : MonoBehaviour
             {
                 _potSystemConfig = allConfigs[0];
                 if (enableDebugLogs)
-                    Debug.Log($"[BLK-01.03A] DayCycleController: PotSystemConfig trovato con nome alternativo '{_potSystemConfig.name}'");
+                    SporiumLogger.LogInfo(LogCategory.Dome, $"DayCycleController: PotSystemConfig trovato con nome alternativo '{_potSystemConfig.name}'");
             }
         }
         
         if (_potSystemConfig == null && enableDebugLogs)
         {
-            Debug.LogWarning("[BLK-01.03A] DayCycleController: PotSystemConfig non trovato in Resources/Configs/, userò valori di default (MaxHydration=4, MaxLightExposure=3)"); // DEBUG_SAFE_FIX: MaxHydration aggiornato da 3 a 4
+            SporiumLogger.LogWarning(LogCategory.Dome, "DayCycleController: PotSystemConfig non trovato in Resources/Configs/, userò valori di default (MaxHydration=4, MaxLightExposure=3)");
         }
         else if (_potSystemConfig != null && enableDebugLogs)
         {
-            Debug.Log($"[BLK-01.03A] DayCycleController: PotSystemConfig caricato - MaxHydration={_potSystemConfig.MaxHydration}, MaxLightExposure={_potSystemConfig.MaxLightExposure}");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"DayCycleController: PotSystemConfig caricato - MaxHydration={_potSystemConfig.MaxHydration}, MaxLightExposure={_potSystemConfig.MaxLightExposure}");
         }
 
         _isInitialized = true;
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Inizializzato con config '{growthConfig.name}'");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"DayCycleController: Inizializzato con config '{growthConfig.name}'");
     }
 
     /// <summary>
@@ -171,7 +172,7 @@ public class DayCycleController : MonoBehaviour
             _phSystem = ServiceContainer.Instance.Get<PhSystem>(suppressWarning: true);
             if (_phSystem != null && enableDebugLogs)
             {
-                Debug.Log("[DayCycleController] PhSystem trovato e collegato!");
+                SporiumLogger.LogInfo(LogCategory.Dome, "PhSystem trovato e collegato!");
             }
         }
         catch
@@ -194,7 +195,7 @@ public class DayCycleController : MonoBehaviour
             _gameManager = ServiceContainer.Instance.Get<GameManager>();
             if (_gameManager != null && enableDebugLogs)
             {
-                Debug.Log("[DayCycleController] GameManager trovato e collegato!");
+                SporiumLogger.LogInfo(LogCategory.Core, "GameManager trovato e collegato!");
             }
         }
         catch
@@ -217,7 +218,7 @@ public class DayCycleController : MonoBehaviour
                 _uiNotification = ServiceContainer.Instance.Get<UINotification>(suppressWarning: true);
                 if (_uiNotification != null && enableDebugLogs)
                 {
-                    Debug.Log("[DayCycleController] UINotification trovato dal ServiceContainer!");
+                    SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato dal ServiceContainer!");
                     return;
                 }
             }
@@ -231,7 +232,7 @@ public class DayCycleController : MonoBehaviour
         _uiNotification = Object.FindObjectOfType<UINotification>();
         if (_uiNotification != null && enableDebugLogs)
         {
-            Debug.Log("[DayCycleController] UINotification trovato nella scena!");
+            SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato nella scena!");
         }
     }
     
@@ -245,7 +246,7 @@ public class DayCycleController : MonoBehaviour
             _phSystem = phSystem;
             if (enableDebugLogs)
             {
-                Debug.Log("[DayCycleController] PhSystem registrato! Collegato al sistema di crescita.");
+                SporiumLogger.LogInfo(LogCategory.Ph, "PhSystem registrato! Collegato al sistema di crescita.");
             }
         }
         
@@ -254,7 +255,7 @@ public class DayCycleController : MonoBehaviour
             _uiNotification = uiNotification;
             if (enableDebugLogs)
             {
-                Debug.Log("[DayCycleController] UINotification registrato! Collegato per warning watering system.");
+                SporiumLogger.LogInfo(LogCategory.UI, "UINotification registrato! Collegato per warning watering system.");
             }
         }
         
@@ -263,7 +264,7 @@ public class DayCycleController : MonoBehaviour
             _gameManager = gameManager;
             if (enableDebugLogs)
             {
-                Debug.Log("[DayCycleController] GameManager registrato! Collegato per consumo risorse watering.");
+                SporiumLogger.LogInfo(LogCategory.Core, "GameManager registrato! Collegato per consumo risorse watering.");
             }
         }
     }
@@ -294,7 +295,7 @@ public class DayCycleController : MonoBehaviour
         {
             _registeredPots.Add(pot);
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] DayCycleController: Registrato vaso {pot.PotId}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"Registrato vaso {pot.PotId}");
         }
     }
 
@@ -308,7 +309,7 @@ public class DayCycleController : MonoBehaviour
         if (_registeredPots.Remove(pot))
         {
             if (enableDebugLogs)
-                Debug.Log($"[BLK-01.03A] DayCycleController: Rimosso vaso {pot.PotId}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"Rimosso vaso {pot.PotId}");
         }
     }
 
@@ -318,11 +319,11 @@ public class DayCycleController : MonoBehaviour
     private void HandleDayChanged(int dayIndex)
     {
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: HandleDayChanged chiamato per Day {dayIndex}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"HandleDayChanged chiamato per Day {dayIndex}");
         
         if (growthConfig == null)
         {
-            Debug.LogError("[BLK-01.03A] DayCycleController: Nessuna configurazione di crescita trovata!");
+            SporiumLogger.LogError(LogCategory.Core, "Nessuna configurazione di crescita trovata!");
             return;
         }
         
@@ -357,7 +358,7 @@ public class DayCycleController : MonoBehaviour
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Growth tick completato per Day {dayIndex}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"Growth tick completato per Day {dayIndex}");
     }
 
     /// <summary>
@@ -366,7 +367,7 @@ public class DayCycleController : MonoBehaviour
     private void ResolveGrowthForAllPots(int dayIndex)
     {
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Applicazione crescita a {_registeredPots.Count} vasi per Day {dayIndex}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"Applicazione crescita a {_registeredPots.Count} vasi per Day {dayIndex}");
 
         foreach (var pot in _registeredPots)
         {
@@ -388,7 +389,7 @@ public class DayCycleController : MonoBehaviour
         if (plantData == null)
         {
             if (enableDebugLogs)
-                Debug.LogWarning($"[BLK-02.02] {pot.PotId}: PlantData non trovato, uso sistema base");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: PlantData non trovato, uso sistema base");
             // Fallback al sistema base se non c'è PlantData
             ResolveGrowthForPotLegacy(pot, dayIndex);
             return;
@@ -433,7 +434,7 @@ public class DayCycleController : MonoBehaviour
         
         if (enableDebugLogs)
         {
-            Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Punti giornalieri - Water: {pointsResult.WaterPoint}, Light: {pointsResult.LightPoint}, Fertilizer: {pointsResult.FertilizerPoint}, Total: {pointsResult.TotalPoints}, DaysOptimal: {pot.DaysConsecutiveOptimal}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Punti giornalieri - Water: {pointsResult.WaterPoint}, Light: {pointsResult.LightPoint}, Fertilizer: {pointsResult.FertilizerPoint}, Total: {pointsResult.TotalPoints}, DaysOptimal: {pot.DaysConsecutiveOptimal}");
         }
         
         // Gestione produzione frutti in HarvestReady
@@ -516,7 +517,7 @@ public class DayCycleController : MonoBehaviour
                 // - Giorno 6: DaysFruitsUnharvested = 5 → incrementa a 6 → controlla (6 > 3? SÌ) → decay -1, AmountFruits = 0
                 if (enableDebugLogs)
                 {
-                    Debug.Log($"[BLK-02.02] {pot.PotId}: Giorno {pot.DaysInHarvestReady}, Frutti: {pot.AmountFruits:F0}, DaysFruitsUnharvested: {pot.DaysFruitsUnharvested} (prima incremento)");
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Giorno {pot.DaysInHarvestReady}, Frutti: {pot.AmountFruits:F0}, DaysFruitsUnharvested: {pot.DaysFruitsUnharvested} (prima incremento)");
                 }
                 
                 if (pot.DaysFruitsUnharvested > 3)
@@ -532,19 +533,19 @@ public class DayCycleController : MonoBehaviour
                         pot.DaysFruitsUnharvested = 0;
                         pot.DaysInHarvestReady = 0; // Reset anche questo contatore per ripartire da capo
                         if (enableDebugLogs)
-                            Debug.Log($"[BLK-02.02] {pot.PotId}: ⚠️ Tutti i frutti decaduti dopo {pot.DaysFruitsUnharvested + 1} giorni non raccolti");
+                            SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: Tutti i frutti decaduti dopo {pot.DaysFruitsUnharvested + 1} giorni non raccolti");
                     }
                     else
                     {
                         if (enableDebugLogs)
-                            Debug.Log($"[BLK-02.02] {pot.PotId}: ⚠️ DECAY GRADUALE applicato! Giorno {pot.DaysFruitsUnharvested}, {oldAmount:F0} → {pot.AmountFruits:F0} frutti (perso 1)");
+                            SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: DECAY GRADUALE applicato! Giorno {pot.DaysFruitsUnharvested}, {oldAmount:F0} → {pot.AmountFruits:F0} frutti (perso 1)");
                     }
                 }
                 else
                 {
                     if (enableDebugLogs)
                     {
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: Nessun decay (DaysFruitsUnharvested={pot.DaysFruitsUnharvested} <= 3)");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Nessun decay (DaysFruitsUnharvested={pot.DaysFruitsUnharvested} <= 3)");
                     }
                 }
             }
@@ -607,7 +608,7 @@ public class DayCycleController : MonoBehaviour
         if (ConditionGrowthModifier.BlocksAdvancement(currentCondition))
         {
             if (enableDebugLogs)
-                Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Avanzamento bloccato - Condizione: {currentCondition}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Avanzamento bloccato - Condizione: {currentCondition}");
             // Non può avanzare, ma continua con il resto della logica (produzione frutti, etc.)
         }
         
@@ -615,7 +616,7 @@ public class DayCycleController : MonoBehaviour
         if (pot.MoldRiskLevel >= 2) // Severe o Critical
         {
             if (enableDebugLogs)
-                Debug.Log($"[BLK-07.01] {pot.PotId}: Avanzamento bloccato - Infestazione Severe (Mold Risk Level: {pot.MoldRiskLevel})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Avanzamento bloccato - Infestazione Severe (Mold Risk Level: {pot.MoldRiskLevel})");
             // Non può avanzare, ma continua con il resto della logica
         }
         
@@ -687,7 +688,7 @@ public class DayCycleController : MonoBehaviour
             if (enableDebugLogs)
             {
                 int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
-                Debug.Log($"[BLK-03.01-T2] {pot.PotId}: Stage {currentStage} requisiti - " +
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Stage {currentStage} requisiti - " +
                          $"Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], " +
                          $"LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], " +
                          $"Durata: {pot.DaysInCurrentStage}/{effectiveRequiredDays} giorni (mod: {daysModifier}) [{durationOk}], " +
@@ -702,7 +703,7 @@ public class DayCycleController : MonoBehaviour
             // Se non ci sono requisiti specifici, considera sempre soddisfatti
             requirementsMet = true;
             if (enableDebugLogs)
-                Debug.Log($"[BLK-02.02] {pot.PotId}: Nessun requisito specifico per stage {currentStage}, avanzamento automatico");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Nessun requisito specifico per stage {currentStage}, avanzamento automatico");
         }
         
         // BLK-02.02: Avanzamento stadi con requisiti specifici
@@ -722,7 +723,7 @@ public class DayCycleController : MonoBehaviour
                     pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: 🎉 Avanzamento Seed → Sprout!");
+                        SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Avanzamento Seed → Sprout!");
                     break;
                     
                 case PlantStage.Sprout:
@@ -737,7 +738,7 @@ public class DayCycleController : MonoBehaviour
                     pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: 🌱 Avanzamento Sprout → Growth!");
+                        SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Avanzamento Sprout → Growth!");
                     break;
                     
                 case PlantStage.Growth:
@@ -753,7 +754,7 @@ public class DayCycleController : MonoBehaviour
                     pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: 🌸 Avanzamento Growth → Flowering!");
+                        SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Avanzamento Growth → Flowering!");
                     break;
                     
                 case PlantStage.Flowering:
@@ -770,7 +771,7 @@ public class DayCycleController : MonoBehaviour
                     pot.DayOptimalParametersStarted = -1;
                     stageChanged = true;
                     if (enableDebugLogs)
-                        Debug.Log($"[BLK-02.02] {pot.PotId}: 🍎 Avanzamento Flowering → HarvestReady!");
+                        SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Avanzamento Flowering → HarvestReady!");
                     break;
                     
                 case PlantStage.HarvestReady:
@@ -794,13 +795,13 @@ public class DayCycleController : MonoBehaviour
             if (potGrowthController != null)
             {
                 if (enableDebugLogs)
-                    Debug.Log($"[BLK-02.02] {pot.PotId}: Trovato PotGrowthController, chiamando OnStageChanged...");
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Trovato PotGrowthController, chiamando OnStageChanged...");
                 potGrowthController.OnStageChanged((PlantStage)pot.Stage);
             }
             else
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning($"[BLK-02.02] {pot.PotId}: PotGrowthController NON TROVATO! Le visuali non saranno aggiornate.");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: PotGrowthController NON TROVATO! Le visuali non saranno aggiornate.");
             }
             
             // Emetti evento per l'UI
@@ -816,11 +817,11 @@ public class DayCycleController : MonoBehaviour
             }
             else if (enableDebugLogs)
             {
-                Debug.LogWarning($"[DayCycleController] UINotification mancante: niente toast stage up per {pot.PotId} → {(PlantStage)pot.Stage}");
+                SporiumLogger.LogWarning(LogCategory.UI, $"UINotification mancante: niente toast stage up per {pot.PotId} → {(PlantStage)pot.Stage}");
             }
             
             if (enableDebugLogs)
-                Debug.Log($"[BLK-02.02] {pot.PotId}: Eventi emessi per cambio stadio {oldStage} → {pot.Stage}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Eventi emessi per cambio stadio {oldStage} → {pot.Stage}");
         }
         
         // BLK-02.02: Emetti evento di crescita (sempre, per aggiornare progress bar)
@@ -918,7 +919,7 @@ public class DayCycleController : MonoBehaviour
             if (_gameManager == null)
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per verifica risorse watering");
+                    SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile per verifica risorse watering");
                 return;
             }
         }
@@ -949,7 +950,7 @@ public class DayCycleController : MonoBehaviour
             string message = $"⚠️ WAT-RAW insufficiente. {vasiDaDisattivare} sistemi irrigazione verranno disattivati.";
             if (enableDebugLogs)
             {
-                Debug.LogWarning($"[DayCycleController] {message} Vasi: {string.Join(", ", vasiDaDisattivareList)}");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{message} Vasi: {string.Join(", ", vasiDaDisattivareList)}");
             }
             
             // Emetti evento per UI (mostra toast warning)
@@ -972,7 +973,7 @@ public class DayCycleController : MonoBehaviour
             if (_gameManager == null)
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per applicazione effetti watering");
+                    SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile per applicazione effetti watering");
                 return;
             }
         }
@@ -1001,7 +1002,7 @@ public class DayCycleController : MonoBehaviour
                     
                     string message = $"💧 Sistema irrigazione {pot.PotId} disattivato: WAT-RAW insufficiente";
                     if (enableDebugLogs)
-                        Debug.LogWarning($"[DayCycleController] {message}");
+                        SporiumLogger.LogWarning(LogCategory.Pot, message);
                     
                     // Rimuovi eventuali contributi overwatering se presenti
                     if (_phSystem != null)
@@ -1019,7 +1020,7 @@ public class DayCycleController : MonoBehaviour
                     }
                     else if (enableDebugLogs)
                     {
-                        Debug.LogWarning($"[DayCycleController] PotSlot non trovato per {pot.PotId}, evento UI non emesso");
+                        SporiumLogger.LogWarning(LogCategory.Pot, $"PotSlot non trovato per {pot.PotId}, evento UI non emesso");
                     }
                     
                     // Salta al prossimo vaso (sistema disattivato)
@@ -1037,7 +1038,7 @@ public class DayCycleController : MonoBehaviour
                     pot.WateringRawWaterAccumulator -= 1.0f;
                     
                     if (enableDebugLogs)
-                        Debug.Log($"[DayCycleController] {pot.PotId}: Consumato 1 WAT-RAW (accumulatore: {pot.WateringRawWaterAccumulator:F1})");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Consumato 1 WAT-RAW (accumulatore: {pot.WateringRawWaterAccumulator:F1})");
                 }
                 
                 // Applica effetti (WAT-RAW già verificato e disponibile)
@@ -1050,7 +1051,7 @@ public class DayCycleController : MonoBehaviour
                     if (!_gameManager.TrySpendCry(2))
                     {
                         if (enableDebugLogs)
-                            Debug.LogWarning($"[DayCycleController] {pot.PotId}: CRY insufficiente per sistema irrigazione (richiesti 2)");
+                            SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: CRY insufficiente per sistema irrigazione (richiesti 2)");
                     }
                     
                     // Incrementa contatore giorni ON
@@ -1059,7 +1060,7 @@ public class DayCycleController : MonoBehaviour
                     if (enableDebugLogs)
                     {
                         string hydrationMsg = hydrationIncreased ? $"Idratazione: {pot.Hydration}/{maxHydration}" : "Idratazione già al massimo";
-                        Debug.Log($"[DayCycleController] {pot.PotId}: Sistema ON - {hydrationMsg}, Giorni ON: {pot.DaysWateringSystemOn}");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Sistema ON - {hydrationMsg}, Giorni ON: {pot.DaysWateringSystemOn}");
                     }
                 }
             }
@@ -1088,13 +1089,13 @@ public class DayCycleController : MonoBehaviour
                     _phSystem.RegisterActionDrift(Sporae.DevTools.DifficultyCalibrationConfig.OverwateringPhDrift, "Overwatering", pot.PotId);
                     
                     if (enableDebugLogs)
-                        Debug.Log($"[DayCycleController] {pot.PotId}: OVERWATERING attivo → pH -5 accodato (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%, Check:{hydrationForOverCheck}/{maxHydration} = {hydrationPercentForOver:F0}%)");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: OVERWATERING attivo → pH -5 accodato (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%, Check:{hydrationForOverCheck}/{maxHydration} = {hydrationPercentForOver:F0}%)");
                 }
                 else if (hydrationStart < removalThreshold)
                 {
                     _phSystem.RemoveActionContribution("Overwatering", pot.PotId);
                     if (enableDebugLogs)
-                        Debug.Log($"[DayCycleController] {pot.PotId}: Overwatering rimosso (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%)");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Overwatering rimosso (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%)");
                 }
             }
         }
@@ -1111,7 +1112,7 @@ public class DayCycleController : MonoBehaviour
             if (_gameManager == null)
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning("[DayCycleController] GameManager non disponibile per applicazione effetti LED");
+                    SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile per applicazione effetti LED");
                 return;
             }
         }
@@ -1146,7 +1147,7 @@ public class DayCycleController : MonoBehaviour
             
             if (enableDebugLogs && (hadBlueDays || hadRedDays))
             {
-                Debug.Log($"[DayCycleController] {pot.PotId}: LED System OFF - Decadimento contatori (Blue: {pot.DaysLedBlueConsecutive}, Red: {pot.DaysLedRedConsecutive})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LED System OFF - Decadimento contatori (Blue: {pot.DaysLedBlueConsecutive}, Red: {pot.DaysLedRedConsecutive})");
             }
             return;
         }
@@ -1169,7 +1170,7 @@ public class DayCycleController : MonoBehaviour
             if (_gameManager.TrySpendCry(cryCost))
             {
                 if (enableDebugLogs)
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Consumo CRY notturno LED: {cryCost} CRY");
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Consumo CRY notturno LED: {cryCost} CRY");
             }
             else
             {
@@ -1189,12 +1190,12 @@ public class DayCycleController : MonoBehaviour
                     _phSystem.RemoveActionContribution("RedLED_x2", pot.PotId);
                     
                     if (enableDebugLogs)
-                        Debug.Log($"[DayCycleController] {pot.PotId}: Contributo pH LED rimosso (CRY insufficiente, LED spento: {oldState} → Off)");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Contributo pH LED rimosso (CRY insufficiente, LED spento: {oldState} → Off)");
                 }
                 
                 ShowLedNotification($"LGT-002: Sistema LED {pot.PotId} spento - CRY insufficiente", Color.yellow);
                 if (enableDebugLogs)
-                    Debug.LogWarning($"[DayCycleController] {pot.PotId}: CRY insufficiente per LED, sistema spento");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: CRY insufficiente per LED, sistema spento");
             }
         }
         
@@ -1268,7 +1269,7 @@ public class DayCycleController : MonoBehaviour
             _phSystem.RegisterActionDrift(phDelta, actionName, pot.PotId);
             
             if (enableDebugLogs)
-                Debug.Log($"[DayCycleController] {pot.PotId}: LED {state} giorno {consecutiveDays} - pH {(phDelta > 0 ? "+" : "")}{phDelta:F1} (mult: {effectMultiplier:F1})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LED {state} giorno {consecutiveDays} - pH {(phDelta > 0 ? "+" : "")}{phDelta:F1} (mult: {effectMultiplier:F1})");
         }
         
         // Effetti crescita (Light Exposure)
@@ -1292,7 +1293,7 @@ public class DayCycleController : MonoBehaviour
         // Per ora solo log
         if (consecutiveDays >= 4 && enableDebugLogs)
         {
-            Debug.LogWarning($"[DayCycleController] {pot.PotId}: ⚠️ LED {state} attivo {consecutiveDays} giorni - Zona rossa! (Malus mult: {malusMultiplier:F1})");
+            SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: LED {state} attivo {consecutiveDays} giorni - Zona rossa! (Malus mult: {malusMultiplier:F1})");
         }
     }
     
@@ -1315,7 +1316,7 @@ public class DayCycleController : MonoBehaviour
         }
         else if (enableDebugLogs)
         {
-            Debug.LogWarning($"[DayCycleController] UINotification non disponibile per: {message}");
+            SporiumLogger.LogWarning(LogCategory.UI, $"UINotification non disponibile per: {message}");
         }
     }
     
@@ -1370,7 +1371,7 @@ public class DayCycleController : MonoBehaviour
                         
                         if (enableDebugLogs && oldHydration != pot.Hydration)
                         {
-                            Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (MANUALE, base={pot.ManualHydrationBase}) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decay applicato (MANUALE, base={pot.ManualHydrationBase}) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
                         }
                     }
                     else
@@ -1380,7 +1381,7 @@ public class DayCycleController : MonoBehaviour
                         
                         if (enableDebugLogs && oldHydration != pot.Hydration)
                         {
-                            Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (sistema OFF) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decay applicato (sistema OFF) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
                         }
                     }
                 }
@@ -1388,7 +1389,7 @@ public class DayCycleController : MonoBehaviour
                 {
                     if (enableDebugLogs)
                     {
-                        Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay saltato (sistema ON) - Hydration: {pot.Hydration}/{maxHydration}");
+                        SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decay saltato (sistema ON) - Hydration: {pot.Hydration}/{maxHydration}");
                     }
                 }
                 
@@ -1404,7 +1405,7 @@ public class DayCycleController : MonoBehaviour
                         
                         if (enableDebugLogs)
                         {
-                            Debug.Log($"[BLK-01.03A] {pot.PotId}: LightExposure ripristinato a valore base manuale (LED spento) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LightExposure ripristinato a valore base manuale (LED spento) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
                         }
                     }
                     else
@@ -1413,7 +1414,7 @@ public class DayCycleController : MonoBehaviour
                         // Il valore base rimane preservato per quando LED sarà spento
                         if (enableDebugLogs)
                         {
-                            Debug.Log($"[BLK-01.03A] {pot.PotId}: LightExposure preservato (MANUALE, LED acceso) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LightExposure preservato (MANUALE, LED acceso) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
                         }
                     }
                 }
@@ -1447,7 +1448,7 @@ public class DayCycleController : MonoBehaviour
                         
                         if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
                         {
-                            Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante (MANUALE, base={pot.ManualFertilizerBase}) - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decadimento fertilizzante (MANUALE, base={pot.ManualFertilizerBase}) - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
                         }
                     }
                     else
@@ -1457,7 +1458,7 @@ public class DayCycleController : MonoBehaviour
                         
                         if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
                         {
-                            Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                            SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decadimento fertilizzante - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
                         }
                     }
                     
@@ -1494,14 +1495,14 @@ public class DayCycleController : MonoBehaviour
     {
         growthConfig = config;
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Nuova configurazione impostata: {config?.name ?? "NULL"}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"DayCycleController: Nuova configurazione impostata: {config?.name ?? "NULL"}");
     }
 
     #if UNITY_EDITOR
     [ContextMenu("Log Registered Pots")]
     private void EditorLogRegisteredPots()
     {
-        Debug.Log($"[BLK-01.03A] DayCycleController: Vasi registrati ({_registeredPots.Count}):");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"DayCycleController: Vasi registrati ({_registeredPots.Count}):");
         for (int i = 0; i < _registeredPots.Count; i++)
         {
             var pot = _registeredPots[i];
@@ -1510,11 +1511,11 @@ public class DayCycleController : MonoBehaviour
                 string plantInfo = pot.HasPlant 
                     ? $" - {GetStageName(pot.Stage)} (Giorno {pot.DaysSincePlant})" 
                     : " - Vuoto";
-                Debug.Log($"  [{i}] {pot.PotId}{plantInfo}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"  [{i}] {pot.PotId}{plantInfo}");
             }
             else
             {
-                Debug.Log($"  [{i}] NULL (da rimuovere)");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"  [{i}] NULL (da rimuovere)");
             }
         }
     }
@@ -1524,7 +1525,7 @@ public class DayCycleController : MonoBehaviour
     {
         _registeredPots.RemoveAll(pot => pot == null);
         if (enableDebugLogs)
-            Debug.Log($"[BLK-01.03A] DayCycleController: Cleanup completato, {_registeredPots.Count} vasi validi");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"DayCycleController: Cleanup completato, {_registeredPots.Count} vasi validi");
     }
     #endif
     
@@ -1555,7 +1556,7 @@ public class DayCycleController : MonoBehaviour
         if (_phSystem == null)
         {
             if (enableDebugLogs)
-                Debug.LogWarning("[DayCycleController] PhSystem non disponibile, impossibile calcolare drift pH");
+                SporiumLogger.LogWarning(LogCategory.Ph, "PhSystem non disponibile, impossibile calcolare drift pH");
             return;
         }
         
@@ -1568,7 +1569,7 @@ public class DayCycleController : MonoBehaviour
         int skippedCount = 0;
         
         if (enableDebugLogs)
-            Debug.Log($"[DayCycleController] Calcolo drift pH per {_registeredPots.Count} vasi registrati...");
+            SporiumLogger.LogDebug(LogCategory.Ph, $"Calcolo drift pH per {_registeredPots.Count} vasi registrati...");
         
         foreach (var pot in _registeredPots)
         {
@@ -1582,7 +1583,7 @@ public class DayCycleController : MonoBehaviour
             if (!pot.HasPlant)
             {
                 if (enableDebugLogs)
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Vaso vuoto (HasPlant=false), saltato");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"{pot.PotId}: Vaso vuoto (HasPlant=false), saltato");
                 skippedCount++;
                 continue;
             }
@@ -1591,7 +1592,7 @@ public class DayCycleController : MonoBehaviour
             if (pot.Stage == (int)PlantStage.Empty)
             {
                 if (enableDebugLogs)
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Stage è Empty, saltato (pianta probabilmente rimossa con UPROOT)");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"{pot.PotId}: Stage è Empty, saltato (pianta probabilmente rimossa con UPROOT)");
                 skippedCount++;
                 continue;
             }
@@ -1600,7 +1601,7 @@ public class DayCycleController : MonoBehaviour
             if (string.IsNullOrEmpty(pot.PlantCode))
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning($"[DayCycleController] ⚠️ {pot.PotId}: PlantCode è NULL o vuoto! Stage: {pot.Stage} (HasPlant: {pot.HasPlant})");
+                    SporiumLogger.LogWarning(LogCategory.Ph, $"{pot.PotId}: PlantCode è NULL o vuoto! Stage: {pot.Stage} (HasPlant: {pot.HasPlant})");
                 skippedCount++;
                 continue;
             }
@@ -1610,7 +1611,7 @@ public class DayCycleController : MonoBehaviour
             if (plantData == null)
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning($"[DayCycleController] ⚠️ {pot.PotId}: PlantData non trovato per PlantCode '{pot.PlantCode}'");
+                    SporiumLogger.LogWarning(LogCategory.Ph, $"{pot.PotId}: PlantData non trovato per PlantCode '{pot.PlantCode}'");
                 skippedCount++;
                 continue;
             }
@@ -1628,24 +1629,24 @@ public class DayCycleController : MonoBehaviour
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[DayCycleController] ✅ {pot.PotId}: {plantData.PlantCode} ({plantData.Family}) Stage:{pot.Stage} → drift pH: {plantDrift:F2}/giorno");
+                SporiumLogger.LogDebug(LogCategory.Ph, $"{pot.PotId}: {plantData.PlantCode} ({plantData.Family}) Stage:{pot.Stage} → drift pH: {plantDrift:F2}/giorno");
             }
         }
         
         // Log riepilogativo
         if (totalPhDrift != 0f && enableDebugLogs)
         {
-            Debug.Log($"[DayCycleController] ✅ pH Drift totale da {plantCount} piante: {totalPhDrift:F2} → pH attuale: {_phSystem.CurrentPh:F2}");
+            SporiumLogger.LogInfo(LogCategory.Ph, $"pH Drift totale da {plantCount} piante: {totalPhDrift:F2} → pH attuale: {_phSystem.CurrentPh:F2}");
         }
         else if (enableDebugLogs)
         {
             if (plantCount > 0)
             {
-                Debug.Log($"[DayCycleController] ⚠️ Nessun drift pH da {plantCount} piante (tutte Standard o drift = 0)");
+                SporiumLogger.LogDebug(LogCategory.Ph, $"Nessun drift pH da {plantCount} piante (tutte Standard o drift = 0)");
             }
             else if (skippedCount > 0)
             {
-                Debug.LogWarning($"[DayCycleController] ⚠️ Nessuna pianta valida trovata! {skippedCount} vasi saltati (vuoti o senza PlantCode)");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"Nessuna pianta valida trovata! {skippedCount} vasi saltati (vuoti o senza PlantCode)");
             }
         }
     }
@@ -1674,7 +1675,7 @@ public class DayCycleController : MonoBehaviour
         
         if (enableDebugLogs)
         {
-            Debug.Log($"[DayCycleController] 🔍 Cleanup: {activePotIds.Count} vasi attivi su {_registeredPots.Count} registrati");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"Cleanup: {activePotIds.Count} vasi attivi su {_registeredPots.Count} registrati");
         }
     }
     
@@ -1704,7 +1705,7 @@ public class DayCycleController : MonoBehaviour
         if (_phSystem == null || _potSystemConfig == null)
         {
             if (enableDebugLogs)
-                Debug.LogWarning("[DayCycleController] PhSystem o PotSystemConfig non disponibili per calcolo condizione");
+                SporiumLogger.LogWarning(LogCategory.Pot, "PhSystem o PotSystemConfig non disponibili per calcolo condizione");
             return;
         }
         
@@ -1722,7 +1723,7 @@ public class DayCycleController : MonoBehaviour
             if (plantData == null)
             {
                 if (enableDebugLogs)
-                    Debug.LogWarning($"[DayCycleController] {pot.PotId}: PlantData non trovato per calcolo condizione");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: PlantData non trovato per calcolo condizione");
                 continue;
             }
             
@@ -1733,7 +1734,7 @@ public class DayCycleController : MonoBehaviour
                 int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
                 float currentPh = _phSystem != null ? _phSystem.CurrentPh : 0f;
                 bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, maxHydration);
-                Debug.Log($"[DayCycleController] 🔍 DEBUG Calcolo Condizione {pot.PotId}: Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), Overwatering={isOverwatering}, pH={currentPh:F1}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, Stage={pot.Stage}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"DEBUG Calcolo Condizione {pot.PotId}: Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), Overwatering={isOverwatering}, pH={currentPh:F1}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, Stage={pot.Stage}");
             }
             
             // Calcola condizione
@@ -1788,13 +1789,13 @@ public class DayCycleController : MonoBehaviour
                 
                 if (enableDebugLogs)
                 {
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Condizione cambiata da {oldCondition} a {pot.ConditionLabel} ({conditionName}) - Score: {result.Score}/100, Forecast: {forecastSymbol}, Δ: {result.ScoreDelta}");
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Condizione cambiata da {oldCondition} a {pot.ConditionLabel} ({conditionName}) - Score: {result.Score}/100, Forecast: {forecastSymbol}, Δ: {result.ScoreDelta}");
                 }
             }
             
             if (enableDebugLogs)
             {
-                Debug.Log($"[DayCycleController] {pot.PotId}: Condizione calcolata - Score: {result.Score}/100, Condizione: {result.Condition}, Forecast: {result.Forecast}, Δ: {result.ScoreDelta}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Condizione calcolata - Score: {result.Score}/100, Condizione: {result.Condition}, Forecast: {result.Forecast}, Δ: {result.ScoreDelta}");
             }
             
             // BLK-07.01: Calcolo mold risk giornaliero
@@ -1855,18 +1856,18 @@ public class DayCycleController : MonoBehaviour
                             Color.red);
                     }
                     
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Infestazione applicata dopo {pot.DaysAtMoldRiskLevel3} giorni a livello 3");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: Infestazione applicata dopo {pot.DaysAtMoldRiskLevel3} giorni a livello 3");
                 }
                 else if (!shouldInfest && pot.IsInfested)
                 {
                     // Infestazione rimossa (livello sceso sotto 3)
                     pot.IsInfested = false;
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Infestazione rimossa (livello sceso a {pot.MoldRiskLevel})");
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Infestazione rimossa (livello sceso a {pot.MoldRiskLevel})");
                 }
                 
                 if (enableDebugLogs && pot.MoldRiskLevel > 0)
                 {
-                    Debug.Log($"[DayCycleController] {pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, DaysWithoutPruning: {pot.DaysWithoutPruning})");
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, DaysWithoutPruning: {pot.DaysWithoutPruning})");
                 }
             }
         }
@@ -1877,7 +1878,7 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void KillPlantFromExtremePh(PotStateModel pot, PlantData plantData, PhSystem.PhBand phBand)
     {
-        Debug.LogError($"[DayCycleController] 🚨 Pianta morta per pH estremo! Vaso: {pot.PotId}, Famiglia: {plantData.Family}, pH Band: {phBand}");
+        SporiumLogger.LogError(LogCategory.Pot, $"Pianta morta per pH estremo! Vaso: {pot.PotId}, Famiglia: {plantData.Family}, pH Band: {phBand}");
         
         // Resetta stato pianta (come in DoFertilize per morte fertilizzante)
         pot.HasPlant = false;

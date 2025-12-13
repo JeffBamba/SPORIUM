@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEngine;
+using Sporae.DevTools;
 
 /// <summary>
 /// Configura automaticamente i layer necessari per il sistema dei vasi.
@@ -28,7 +29,7 @@ public class LayerSetup : MonoBehaviour
     public void SetupLayers()
     {
         if (showDebugLogs)
-            Debug.Log("[LayerSetup] Iniziando configurazione layer...");
+            SporiumLogger.LogInfo(LogCategory.Core, "Iniziando configurazione layer...");
 
         // Configura Player
         SetupPlayerLayer();
@@ -40,7 +41,7 @@ public class LayerSetup : MonoBehaviour
         SetupGroundLayer();
         
         if (showDebugLogs)
-            Debug.Log("[LayerSetup] Configurazione layer completata!");
+            SporiumLogger.LogInfo(LogCategory.Core, "Configurazione layer completata!");
     }
     
     private void SetupPlayerLayer()
@@ -53,16 +54,16 @@ public class LayerSetup : MonoBehaviour
             {
                 player.layer = playerLayer;
                 if (showDebugLogs)
-                    Debug.Log($"[LayerSetup] Player assegnato al layer: {LAYER_PLAYER}");
+                    SporiumLogger.LogInfo(LogCategory.Core, $"Player assegnato al layer: {LAYER_PLAYER}");
             }
             else
             {
-                Debug.LogWarning($"[LayerSetup] Layer {LAYER_PLAYER} non trovato! Crea il layer in Project Settings > Tags and Layers");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Layer {LAYER_PLAYER} non trovato! Crea il layer in Project Settings > Tags and Layers");
             }
         }
         else
         {
-            Debug.LogWarning("[LayerSetup] Player non trovato con tag 'Player'");
+            SporiumLogger.LogWarning(LogCategory.Core, "Player non trovato con tag 'Player'");
         }
     }
     
@@ -86,11 +87,11 @@ public class LayerSetup : MonoBehaviour
             }
             
             if (showDebugLogs)
-                Debug.Log($"[LayerSetup] {allPots.Length} vasi assegnati al layer: {LAYER_INTERACTABLE}");
+                SporiumLogger.LogInfo(LogCategory.Core, $"{allPots.Length} vasi assegnati al layer: {LAYER_INTERACTABLE}");
         }
         else
         {
-            Debug.LogWarning($"[LayerSetup] Layer {LAYER_INTERACTABLE} non trovato! Crea il layer in Project Settings > Tags and Layers");
+            SporiumLogger.LogWarning(LogCategory.Core, $"Layer {LAYER_INTERACTABLE} non trovato! Crea il layer in Project Settings > Tags and Layers");
         }
     }
     
@@ -104,7 +105,7 @@ public class LayerSetup : MonoBehaviour
         if (!hasGroundTag && !hasNavPlaneTag)
         {
             if (showDebugLogs)
-                Debug.Log("[LayerSetup] Tag 'Ground' e 'NAV_Plane' non definiti. Salto setup ground layer.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Tag 'Ground' e 'NAV_Plane' non definiti. Salto setup ground layer.");
             return;
         }
         
@@ -122,7 +123,7 @@ public class LayerSetup : MonoBehaviour
         catch (System.Exception e)
         {
             if (showDebugLogs)
-                Debug.LogWarning($"[LayerSetup] Errore nel cercare oggetti ground: {e.Message}");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Errore nel cercare oggetti ground: {e.Message}");
             return;
         }
         
@@ -145,11 +146,11 @@ public class LayerSetup : MonoBehaviour
             }
             
             if (showDebugLogs)
-                Debug.Log($"[LayerSetup] {totalGround} oggetti ground assegnati al layer: {LAYER_GROUND}");
+                SporiumLogger.LogInfo(LogCategory.Core, $"{totalGround} oggetti ground assegnati al layer: {LAYER_GROUND}");
         }
         else
         {
-            Debug.LogWarning($"[LayerSetup] Layer {LAYER_GROUND} non trovato! Crea il layer in Project Settings > Tags and Layers");
+            SporiumLogger.LogWarning(LogCategory.Core, $"Layer {LAYER_GROUND} non trovato! Crea il layer in Project Settings > Tags and Layers");
         }
     }
     
@@ -159,23 +160,23 @@ public class LayerSetup : MonoBehaviour
     [ContextMenu("Verify Layer Setup")]
     public void VerifyLayerSetup()
     {
-        Debug.Log("=== VERIFICA CONFIGURAZIONE LAYER ===");
+        SporiumLogger.LogInfo(LogCategory.Core, "=== VERIFICA CONFIGURAZIONE LAYER ===");
         
         // Verifica Player
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
             string playerLayerName = LayerMask.LayerToName(player.layer);
-            Debug.Log($"Player: Layer {player.layer} ({playerLayerName})");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Player: Layer {player.layer} ({playerLayerName})");
         }
         
         // Verifica Vasi
         PotSlot[] allPots = FindObjectsOfType<PotSlot>();
-        Debug.Log($"Vasi trovati: {allPots.Length}");
+        SporiumLogger.LogInfo(LogCategory.Core, $"Vasi trovati: {allPots.Length}");
         foreach (PotSlot pot in allPots)
         {
             string potLayerName = LayerMask.LayerToName(pot.gameObject.layer);
-            Debug.Log($"  {pot.PotId}: Layer {pot.gameObject.layer} ({potLayerName})");
+            SporiumLogger.LogInfo(LogCategory.Core, $"  {pot.PotId}: Layer {pot.gameObject.layer} ({potLayerName})");
         }
         
         // Verifica Ground
@@ -192,12 +193,12 @@ public class LayerSetup : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"[LayerSetup] Errore nel verificare tag ground: {e.Message}");
+            SporiumLogger.LogWarning(LogCategory.Core, $"Errore nel verificare tag ground: {e.Message}");
         }
         
-        Debug.Log($"Ground objects: {groundObjects.Length + navPlanes.Length}");
+        SporiumLogger.LogInfo(LogCategory.Core, $"Ground objects: {groundObjects.Length + navPlanes.Length}");
         
-        Debug.Log("=== FINE VERIFICA ===");
+        SporiumLogger.LogInfo(LogCategory.Core, "=== FINE VERIFICA ===");
     }
     
     #if UNITY_EDITOR

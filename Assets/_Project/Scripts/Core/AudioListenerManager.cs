@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -173,7 +174,7 @@ namespace _Project
                     
                     if (showDebugLogs)
                     {
-                        Debug.Log($"[AudioListenerManager] AudioListener rimosso da {listener.gameObject.name}");
+                        SporiumLogger.LogDebug(LogCategory.Audio, $"AudioListener rimosso da {listener.gameObject.name}");
                     }
                 }
             }
@@ -182,9 +183,9 @@ namespace _Project
             {
                 if (_mainListener != null)
                 {
-                    Debug.Log($"[AudioListenerManager] ✅ AudioListener mantenuto su: {_mainListener.gameObject.name}");
+                    SporiumLogger.LogInfo(LogCategory.Audio, $"✅ AudioListener mantenuto su: {_mainListener.gameObject.name}");
                 }
-                Debug.Log($"[AudioListenerManager] ✅ Rimossi {removedCount} AudioListener duplicati");
+                SporiumLogger.LogInfo(LogCategory.Audio, $"✅ Rimossi {removedCount} AudioListener duplicati");
             }
         }
         

@@ -1,0 +1,20 @@
+COMMIT RECAP - Versione 0026
+=============================
+
+Implementato sistema logging centralizzato SporiumLogger con livelli (Debug/Info/Warning/Error/Critical)
+e categorie (UI/Core/Dome/Pot/Ph/Inventory/Save/Audio). Creati LogLevel.cs, LogCategory.cs, SporiumLogger.cs.
+Migrati 800+ Debug.Log da 60+ file a SporiumLogger con categorie appropriate: Core (GamePlayInstaller,
+ServiceContainer, AssetManager, ActionCost, AudioListenerManager, SceneLoadingUI, SaveManager, AppRoot,
+EventSystem), UI (PotDetailsWidget, PotHUDWidget, HUDController, UIFertilizerSelector, UISeedSelector,
+EndDayButton, HUDInventory, HUDCondensation, HUDPhDisplay, HUDInventoryItem, HUDItemContainer, PruningDialog,
+UIConfigChecker, BlackMarket, Diary, DragDropUI, UIAwardPopup, Microscope, Pipette, Lab, Catalizzatore),
+Dome (PotActions, PotEvents, PotGrowthController, MoldSystem, RoomDomePotsBootstrap, DayCycleController,
+PlantConditionSystem, PlantData, PlantLevelSystem, LedLightController, PlantDatabase, PotSystemIntegration),
+Player (PlayerClickMover2D, PlayerAnimator), Interactables (PotSlot), World (ElevatorSystem), Debug (console),
+DevTools (GrowthDebugger, SystemTest, GrowthDebugHotkeys). Implementato GlobalStateInspector con console
+unificata (F1 toggle) per visualizzare/modificare stato gioco: GameManager, pH System, Pot System, Inventory,
+Day Cycle, Save System, Performance Metrics. SporiumLogger supporta filtri runtime per categoria/livello,
+export JSON/CSV, history tracking (1000 log), zero overhead in build release. Fix errori: LogCategory.World
+sostituito con Core in PlayerClickMover2D/PlayerAnimator, fix type conversion e Inventory API in GlobalStateInspector.
+Zero errori compilazione. Pronto per Fase 2 (Console Commands System, Debug Overlay HUD).
+

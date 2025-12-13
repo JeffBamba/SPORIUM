@@ -1,5 +1,6 @@
 using _Project.Sporae.Core;
 using UnityEngine;
+using Sporae.DevTools;
 
 /// <summary>
 /// Helper di debug per testare la sincronizzazione tra GameManager e HUD
@@ -17,7 +18,7 @@ public class GameManagerDebugHelper : MonoBehaviour
     
     private void Start()
     {
-        Debug.Log("[GameManagerDebugHelper] Start() chiamato - Inizializzazione...");
+        SporiumLogger.LogDebug(LogCategory.Core, "Start() chiamato - Inizializzazione...");
         
         _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         _gameManager = FindObjectOfType<GameManager>();
@@ -25,23 +26,23 @@ public class GameManagerDebugHelper : MonoBehaviour
         
         if (_gameManager == null)
         {
-            Debug.LogWarning("[GameManagerDebugHelper] GameManager non trovato!");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non trovato!");
         }
         else
         {
-            Debug.Log($"[GameManagerDebugHelper] GameManager trovato: {_gameManager.name}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"GameManager trovato: {_gameManager.name}");
         }
         
         if (_hudController == null)
         {
-            Debug.LogWarning("[GameManagerDebugHelper] HUDController non trovato!");
+            SporiumLogger.LogWarning(LogCategory.UI, "HUDController non trovato!");
         }
         else
         {
-            Debug.Log($"[GameManagerDebugHelper] HUDController trovato: {_hudController.name}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"HUDController trovato: {_hudController.name}");
         }
         
-        Debug.Log("[GameManagerDebugHelper] Inizializzazione completata. Premi F2 per debug, F3 per sync.");
+        SporiumLogger.LogInfo(LogCategory.Core, "Inizializzazione completata. Premi F2 per debug, F3 per sync.");
     }
     
     private void Update()
@@ -51,58 +52,58 @@ public class GameManagerDebugHelper : MonoBehaviour
         // Test continuo per verificare che i tasti siano rilevati
         if (Input.GetKey(debugKey))
         {
-            Debug.Log("[GameManagerDebugHelper] TASTO F2 TENUTO!");
+            SporiumLogger.LogDebug(LogCategory.Core, "TASTO F2 TENUTO!");
         }
         
         if (Input.GetKey(forceUpdateKey))
         {
-            Debug.Log("[GameManagerDebugHelper] TASTO F3 TENUTO!");
+            SporiumLogger.LogDebug(LogCategory.Core, "TASTO F3 TENUTO!");
         }
         
         if (Input.GetKeyDown(debugKey))
         {
-            Debug.Log("[GameManagerDebugHelper] TASTO F2 PREMUTO!");
+            SporiumLogger.LogDebug(LogCategory.Core, "TASTO F2 PREMUTO!");
             ShowDebugInfo();
         }
         
         if (Input.GetKeyDown(forceUpdateKey))
         {
-            Debug.Log("[GameManagerDebugHelper] TASTO F3 PREMUTO!");
+            SporiumLogger.LogDebug(LogCategory.Core, "TASTO F3 PREMUTO!");
             ForceSynchronization();
         }
     }
     
     private void ShowDebugInfo()
     {
-        Debug.Log("=== GAMEMANAGER DEBUG HELPER ===");
+        SporiumLogger.LogDebug(LogCategory.Core, "=== GAMEMANAGER DEBUG HELPER ===");
         
         if (_gameManager)
         {
-            Debug.Log($"GameManager - Current CRY: {_gameManager.CurrentCRY}");
-            Debug.Log($"GameManager - Current Actions: {_gameManager.ActionsLeft}");
-            Debug.Log($"GameManager - Current Day: {_dayCycleSystem.CurrentDay}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current CRY: {_gameManager.CurrentCRY}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current Actions: {_gameManager.ActionsLeft}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current Day: {_dayCycleSystem.CurrentDay}");
         }
         else
         {
-            Debug.Log("GameManager: NULL");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager: NULL");
         }
 
-        Debug.Log(_hudController ? "HUDController: Trovato" : "HUDController: NULL");
+        SporiumLogger.LogDebug(LogCategory.UI, _hudController ? "HUDController: Trovato" : "HUDController: NULL");
 
-        Debug.Log("================================");
+        SporiumLogger.LogDebug(LogCategory.Core, "================================");
     }
     
     private void ForceSynchronization()
     {
-        Debug.Log("=== FORZATURA SINCRONIZZAZIONE ===");
+        SporiumLogger.LogDebug(LogCategory.UI, "=== FORZATURA SINCRONIZZAZIONE ===");
         
         if (_hudController != null)
         {
             _hudController.ForceUpdateAllUI();
-            Debug.Log("HUDController.ForceUpdateAllUI() chiamato");
+            SporiumLogger.LogInfo(LogCategory.UI, "HUDController.ForceUpdateAllUI() chiamato");
         }
         
-        Debug.Log("==================================");
+        SporiumLogger.LogDebug(LogCategory.UI, "==================================");
     }
     
     [ContextMenu("Debug Status")]

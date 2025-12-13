@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sporae.Dome.PotSystem.Level;
+using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Level
 {
@@ -31,7 +32,7 @@ namespace Sporae.Dome.PotSystem.Level
             if (potState.CompletedCycles >= cyclesRequired)
             {
                 potState.PlantLevel++;
-                Debug.Log($"[PlantLevelSystem] {potState.PotId}: Livello aumentato a Lvl {potState.PlantLevel} (cicli completati: {potState.CompletedCycles})");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Livello aumentato a Lvl {potState.PlantLevel} (cicli completati: {potState.CompletedCycles})");
                 return true;
             }
             
@@ -73,7 +74,7 @@ namespace Sporae.Dome.PotSystem.Level
             if (levelsLost > 0)
             {
                 potState.PlantLevel = newLevel;
-                Debug.Log($"[PlantLevelSystem] {potState.PotId}: Livello ridotto di {levelsLost} (Lvl {potState.PlantLevel + levelsLost} → Lvl {potState.PlantLevel})");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Livello ridotto di {levelsLost} (Lvl {potState.PlantLevel + levelsLost} → Lvl {potState.PlantLevel})");
             }
         }
     }

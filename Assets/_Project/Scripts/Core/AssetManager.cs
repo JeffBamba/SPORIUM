@@ -3,6 +3,7 @@ using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
@@ -100,12 +101,12 @@ namespace _Project.Sporae.Core
             {
                 _assetCache[key] = asset;
 #if UNITY_EDITOR
-                Debug.Log($"[AssetManager] Asset caricato e cachato: {path} (tipo: {typeof(T).Name})");
+                SporiumLogger.LogDebug(LogCategory.Core, $"Asset caricato e cachato: {path} (tipo: {typeof(T).Name})");
 #endif
             }
             else
             {
-                Debug.LogError($"[AssetManager] Asset non trovato: {path} (tipo: {typeof(T).Name})");
+                SporiumLogger.LogError(LogCategory.Core, $"Asset non trovato: {path} (tipo: {typeof(T).Name})");
             }
             
             return asset;

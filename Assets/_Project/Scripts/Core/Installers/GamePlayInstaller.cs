@@ -2,6 +2,7 @@ using _Project.Pot;
 using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -20,7 +21,7 @@ namespace _Project.Sporae.Core.Installers
             // Verifica che ServiceContainer.Instance sia disponibile
             if (ServiceContainer.Instance == null)
             {
-                Debug.LogError("[GamePlayInstaller] ServiceContainer.Instance è null! Impossibile registrare servizi.");
+                SporiumLogger.LogError(LogCategory.Core, "ServiceContainer.Instance è null! Impossibile registrare servizi.");
                 return;
             }
             
@@ -31,7 +32,7 @@ namespace _Project.Sporae.Core.Installers
             }
             else
             {
-                Debug.LogWarning("[GamePlayInstaller] UINotification non assegnato! Alcune funzionalità potrebbero non funzionare.");
+                SporiumLogger.LogWarning(LogCategory.Core, "UINotification non assegnato! Alcune funzionalità potrebbero non funzionare.");
             }
             
             // DayCycleSystem può essere creato anche se _fadeToBlack è null
@@ -75,23 +76,23 @@ namespace _Project.Sporae.Core.Installers
 #if UNITY_EDITOR
                     if (loadSuccess)
                     {
-                        Debug.Log("[GamePlayInstaller] ✅ Salvataggio caricato automaticamente");
+                        SporiumLogger.LogInfo(LogCategory.Core, "✅ Salvataggio caricato automaticamente");
                     }
                     else
                     {
-                        Debug.LogWarning("[GamePlayInstaller] ⚠️ Errore durante il caricamento automatico del salvataggio");
+                        SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
                     }
 #else
                     if (!loadSuccess)
                     {
-                        Debug.LogWarning("[GamePlayInstaller] ⚠️ Errore durante il caricamento automatico del salvataggio");
+                        SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
                     }
 #endif
                 }
 #if UNITY_EDITOR
                 else
                 {
-                    Debug.Log("[GamePlayInstaller] Nessun salvataggio trovato, partita nuova");
+                    SporiumLogger.LogInfo(LogCategory.Core, "Nessun salvataggio trovato, partita nuova");
                 }
 #endif
             }

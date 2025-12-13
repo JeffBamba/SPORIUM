@@ -5,6 +5,7 @@ using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 namespace Sporae.Core
 {
@@ -94,13 +95,13 @@ namespace Sporae.Core
                 PlayerPrefs.Save();
                 
 #if UNITY_EDITOR
-                Debug.Log($"[SaveManager] Gioco salvato con successo: {slotName}");
+                SporiumLogger.LogInfo(LogCategory.Save, $"Gioco salvato con successo: {slotName}");
 #endif
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SaveManager] Errore durante il salvataggio: {ex.Message}");
+                SporiumLogger.LogError(LogCategory.Save, $"Errore durante il salvataggio: {ex.Message}");
                 return false;
             }
         }
@@ -128,7 +129,7 @@ namespace Sporae.Core
                 
                 if (string.IsNullOrEmpty(json))
                 {
-                    Debug.LogWarning($"[SaveManager] Nessun salvataggio trovato: {slotName}");
+                    SporiumLogger.LogWarning(LogCategory.Save, $"Nessun salvataggio trovato: {slotName}");
                     return false;
                 }
                 
@@ -136,13 +137,13 @@ namespace Sporae.Core
                 ApplySaveData(saveData);
                 
 #if UNITY_EDITOR
-                Debug.Log($"[SaveManager] Gioco caricato con successo: {slotName}");
+                SporiumLogger.LogInfo(LogCategory.Save, $"Gioco caricato con successo: {slotName}");
 #endif
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SaveManager] Errore durante il caricamento: {ex.Message}");
+                SporiumLogger.LogError(LogCategory.Save, $"Errore durante il caricamento: {ex.Message}");
                 return false;
             }
         }
@@ -167,13 +168,13 @@ namespace Sporae.Core
                 PlayerPrefs.Save();
                 
 #if UNITY_EDITOR
-                Debug.Log($"[SaveManager] Salvataggio eliminato: {slotName}");
+                SporiumLogger.LogInfo(LogCategory.Save, $"Salvataggio eliminato: {slotName}");
 #endif
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SaveManager] Errore durante l'eliminazione: {ex.Message}");
+                SporiumLogger.LogError(LogCategory.Save, $"Errore durante l'eliminazione: {ex.Message}");
                 return false;
             }
         }

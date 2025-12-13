@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
@@ -32,7 +33,7 @@ namespace _Project.Sporae.Core
             // BUG FIX: Controllo null per evitare crash
             if (_gameManager == null || _gameManager.EconomySystem == null)
             {
-                Debug.LogWarning("[DayCycleSystem] GameManager o EconomySystem non disponibili!");
+                SporiumLogger.LogWarning(LogCategory.Core, "GameManager o EconomySystem non disponibili!");
                 return false;
             }
             return _gameManager.EconomySystem.CanAfford(DailyPowerCost);

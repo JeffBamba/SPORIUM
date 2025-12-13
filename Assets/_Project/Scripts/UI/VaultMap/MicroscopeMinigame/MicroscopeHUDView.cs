@@ -4,6 +4,7 @@ using Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -48,7 +49,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[MicroscopeHUDView] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
             
             _notification = ServiceContainer.Instance?.Get<UINotification>();

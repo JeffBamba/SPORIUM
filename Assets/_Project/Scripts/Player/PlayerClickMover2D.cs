@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Sporae.DevTools;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerClickMover2D : MonoBehaviour
@@ -114,7 +115,7 @@ public class PlayerClickMover2D : MonoBehaviour
             mainCamera = FindObjectOfType<Camera>();
             if (mainCamera == null)
             {
-                Debug.LogWarning("[PlayerClickMover2D] Nessuna camera trovata! Impossibile convertire posizione mouse.");
+                SporiumLogger.LogWarning(LogCategory.Core, "Nessuna camera trovata! Impossibile convertire posizione mouse.");
                 return Vector2.zero;
             }
         }

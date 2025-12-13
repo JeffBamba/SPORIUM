@@ -2,6 +2,7 @@ using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 public class HUDController : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class HUDController : MonoBehaviour
         {
             if (!ValidateUIReferences())
             {
-                Debug.LogError("[HUDController] Riferimenti UI mancanti! HUD disabilitato.");
+                SporiumLogger.LogError(LogCategory.UI, "Riferimenti UI mancanti! HUD disabilitato.");
                 enabled = false;
                 return;
             }
@@ -44,19 +45,19 @@ public class HUDController : MonoBehaviour
         
         if (dayText == null)
         {
-            Debug.LogError("[HUDController] dayText non assegnato!");
+            SporiumLogger.LogError(LogCategory.UI, "dayText non assegnato!");
             isValid = false;
         }
         
         if (actionsText == null)
         {
-            Debug.LogError("[HUDController] actionsText non assegnato!");
+            SporiumLogger.LogError(LogCategory.UI, "actionsText non assegnato!");
             isValid = false;
         }
         
         if (cryText == null)
         {
-            Debug.LogError("[HUDController] cryText non assegnato!");
+            SporiumLogger.LogError(LogCategory.UI, "cryText non assegnato!");
             isValid = false;
         }
         
@@ -70,7 +71,7 @@ public class HUDController : MonoBehaviour
         
         if (_gameManager == null)
         {
-            Debug.LogWarning("[HUDController] GameManager non trovato nella scena. HUD in modalità offline.");
+            SporiumLogger.LogWarning(LogCategory.UI, "GameManager non trovato nella scena. HUD in modalità offline.");
             SetOfflineMode();
             return;
         }
@@ -85,7 +86,7 @@ public class HUDController : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log("[HUDController] HUD inizializzato correttamente.");
+            SporiumLogger.LogInfo(LogCategory.UI, "HUD inizializzato correttamente.");
         }
     }
     
@@ -99,7 +100,7 @@ public class HUDController : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log("[HUDController] UI aggiornata con delay per sincronizzazione GameManager");
+            SporiumLogger.LogDebug(LogCategory.UI, "UI aggiornata con delay per sincronizzazione GameManager");
         }
     }
 
@@ -224,7 +225,7 @@ public class HUDController : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[HUDController] Force Update - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Force Update - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
         }
         
         UpdateDay(_dayCycleSystem.CurrentDay);
@@ -238,19 +239,19 @@ public class HUDController : MonoBehaviour
     [ContextMenu("Debug HUD Status")]
     public void DebugHUDStatus()
     {
-        Debug.Log("=== HUD DEBUG STATUS ===");
-        Debug.Log($"HUD Initialized: {_isInitialized}");
-        Debug.Log($"GameManager Found: {_gameManager != null}");
+        SporiumLogger.LogInfo(LogCategory.UI, "=== HUD DEBUG STATUS ===");
+        SporiumLogger.LogDebug(LogCategory.UI, $"HUD Initialized: {_isInitialized}");
+        SporiumLogger.LogDebug(LogCategory.UI, $"GameManager Found: {_gameManager != null}");
         
         if (_gameManager != null)
         {
-            Debug.Log($"GameManager Values - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"GameManager Values - Day: {_dayCycleSystem.CurrentDay}, Actions: {_gameManager.ActionsLeft}, CRY: {_gameManager.CurrentCRY}");
         }
         
-        if (dayText != null) Debug.Log($"Day Text: {dayText.text}");
-        if (actionsText != null) Debug.Log($"Actions Text: {actionsText.text}");
-        if (cryText != null) Debug.Log($"CRY Text: {cryText.text}");
-        Debug.Log("========================");
+        if (dayText != null) SporiumLogger.LogDebug(LogCategory.UI, $"Day Text: {dayText.text}");
+        if (actionsText != null) SporiumLogger.LogDebug(LogCategory.UI, $"Actions Text: {actionsText.text}");
+        if (cryText != null) SporiumLogger.LogDebug(LogCategory.UI, $"CRY Text: {cryText.text}");
+        SporiumLogger.LogDebug(LogCategory.UI, "========================");
     }
 
     public void SetDebugMode(bool enabled)

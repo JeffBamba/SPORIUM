@@ -3,6 +3,7 @@ using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -25,7 +26,7 @@ namespace _Project
             _gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (_gameManager == null)
             {
-                Debug.LogWarning("[UIAwardPopup] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
             _collectButton.onClick.AddListener(HandleCollect);
         }

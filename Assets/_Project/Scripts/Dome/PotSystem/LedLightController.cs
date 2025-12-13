@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 /// <summary>
 /// BLK-02.07: Controller per gestire le luci Unity associate ai LED dei vasi
@@ -24,14 +25,14 @@ public class LedLightController : MonoBehaviour
         {
             _blueLight = transform.Find("BlueLight")?.GetComponent<Light2D>();
             if (_blueLight == null && showDebugLogs)
-                Debug.LogWarning($"[LedLightController] {gameObject.name}: BlueLight non trovata. Assegna manualmente nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{gameObject.name}: BlueLight non trovata. Assegna manualmente nella scena Unity.");
         }
         
         if (_redLight == null)
         {
             _redLight = transform.Find("RedLight")?.GetComponent<Light2D>();
             if (_redLight == null && showDebugLogs)
-                Debug.LogWarning($"[LedLightController] {gameObject.name}: RedLight non trovata. Assegna manualmente nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{gameObject.name}: RedLight non trovata. Assegna manualmente nella scena Unity.");
         }
         
         // Inizializza: tutte le luci spente
@@ -70,7 +71,7 @@ public class LedLightController : MonoBehaviour
         {
             _blueLight.enabled = enabled;
             if (showDebugLogs)
-                Debug.Log($"[LedLightController] {gameObject.name}: BlueLight {(enabled ? "accesa" : "spenta")}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{gameObject.name}: BlueLight {(enabled ? "accesa" : "spenta")}");
         }
     }
     
@@ -83,7 +84,7 @@ public class LedLightController : MonoBehaviour
         {
             _redLight.enabled = enabled;
             if (showDebugLogs)
-                Debug.Log($"[LedLightController] {gameObject.name}: RedLight {(enabled ? "accesa" : "spenta")}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{gameObject.name}: RedLight {(enabled ? "accesa" : "spenta")}");
         }
     }
     

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace Sporae.Core
 {
@@ -77,7 +78,7 @@ namespace Sporae.Core
             
             if (showDebugLogs)
             {
-                Debug.Log("[EventSystem] EventSystem inizializzato.");
+                SporiumLogger.LogInfo(LogCategory.Core, "EventSystem inizializzato.");
             }
         }
 
@@ -99,7 +100,7 @@ namespace Sporae.Core
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[EventSystem] Listener registrato per evento: {eventName}");
+                    SporiumLogger.LogDebug(LogCategory.Core, $"Listener registrato per evento: {eventName}");
                 }
             }
         }
@@ -122,7 +123,7 @@ namespace Sporae.Core
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[EventSystem] Listener semplice registrato per evento: {eventName}");
+                    SporiumLogger.LogDebug(LogCategory.Core, $"Listener semplice registrato per evento: {eventName}");
                 }
             }
         }
@@ -140,7 +141,7 @@ namespace Sporae.Core
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[EventSystem] Listener rimosso per evento: {eventName}");
+                    SporiumLogger.LogDebug(LogCategory.Core, $"Listener rimosso per evento: {eventName}");
                 }
             }
         }
@@ -158,7 +159,7 @@ namespace Sporae.Core
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[EventSystem] Listener semplice rimosso per evento: {eventName}");
+                    SporiumLogger.LogDebug(LogCategory.Core, $"Listener semplice rimosso per evento: {eventName}");
                 }
             }
         }
@@ -176,7 +177,7 @@ namespace Sporae.Core
                 // BUG FIX: Avvisa se la coda è piena invece di perdere l'evento silenziosamente
                 if (_eventQueue.Count >= maxEventQueueSize)
                 {
-                    Debug.LogWarning($"[EventSystem] Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
+                    SporiumLogger.LogWarning(LogCategory.Core, $"Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
                     return;
                 }
                 _eventQueue.Enqueue(new EventData(eventName, parameters, false));
@@ -199,7 +200,7 @@ namespace Sporae.Core
                 // BUG FIX: Avvisa se la coda è piena invece di perdere l'evento silenziosamente
                 if (_eventQueue.Count >= maxEventQueueSize)
                 {
-                    Debug.LogWarning($"[EventSystem] Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
+                    SporiumLogger.LogWarning(LogCategory.Core, $"Coda eventi piena ({maxEventQueueSize})! Evento '{eventName}' perso.");
                     return;
                 }
                 _eventQueue.Enqueue(new EventData(eventName, null, true));
@@ -238,7 +239,7 @@ namespace Sporae.Core
                             }
                             catch (Exception e)
                             {
-                                Debug.LogError($"[EventSystem] Errore nel listener per evento {eventName}: {e.Message}");
+                                SporiumLogger.LogError(LogCategory.Core, $"Errore nel listener per evento {eventName}: {e.Message}");
                             }
                         }
                     }
@@ -257,7 +258,7 @@ namespace Sporae.Core
                             }
                             catch (Exception e)
                             {
-                                Debug.LogError($"[EventSystem] Errore nel listener per evento {eventName}: {e.Message}");
+                                SporiumLogger.LogError(LogCategory.Core, $"Errore nel listener per evento {eventName}: {e.Message}");
                             }
                         }
                     }
@@ -265,7 +266,7 @@ namespace Sporae.Core
 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[EventSystem] Evento emesso: {eventName}");
+                    SporiumLogger.LogDebug(LogCategory.Core, $"Evento emesso: {eventName}");
                 }
             }
             finally
@@ -305,7 +306,7 @@ namespace Sporae.Core
 
             if (showDebugLogs)
             {
-                Debug.Log($"[EventSystem] Evento cancellato: {eventName}");
+                SporiumLogger.LogDebug(LogCategory.Core, $"Evento cancellato: {eventName}");
             }
         }
 
@@ -320,7 +321,7 @@ namespace Sporae.Core
 
             if (showDebugLogs)
             {
-                Debug.Log("[EventSystem] Tutti gli eventi cancellati.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Tutti gli eventi cancellati.");
             }
         }
 

@@ -8,6 +8,7 @@ using Sporae.Dome.PotSystem.Pruning;
 using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Mold;
 using _Project;
+using Sporae.DevTools;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -60,12 +61,12 @@ public class PotActions : MonoBehaviour
         if (config != null && config.MaxHydration == 4)
         {
             if (showDebugLogs)
-                Debug.LogWarning($"[PotActions] ⚠️ Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
+                SporiumLogger.LogWarning(LogCategory.Pot, "Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
             // Forza ricaricamento per ottenere il valore aggiornato
             Resources.UnloadAsset(config);
             config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             if (config != null && showDebugLogs)
-                Debug.Log($"[PotActions] ✅ Config ricaricato: MaxHydration={config.MaxHydration}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"Config ricaricato: MaxHydration={config.MaxHydration}");
         }
         
         // Trova il PotSlot se non assegnato
@@ -88,7 +89,7 @@ public class PotActions : MonoBehaviour
         _gameManager = FindObjectOfType<GameManager>();
         if (_gameManager == null)
         {
-            Debug.LogError("[PotActions] GameManager non trovato! Tentativo di recupero ritardato...");
+            SporiumLogger.LogError(LogCategory.Pot, "GameManager non trovato! Tentativo di recupero ritardato...");
             StartCoroutine(WaitForGameManager());
             return;
         }
@@ -107,7 +108,7 @@ public class PotActions : MonoBehaviour
         InitializePotState();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions] Inizializzato per {potSlot?.PotId ?? "vaso sconosciuto"}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Inizializzato per {potSlot?.PotId ?? "vaso sconosciuto"}");
         
         // Registra il vaso nel sistema di crescita (BLK-01.03A)
         // IMPORTANTE: Registra anche se ha già una pianta (per piante esistenti)
@@ -129,7 +130,7 @@ public class PotActions : MonoBehaviour
             dayCycleController = FindObjectOfType<DayCycleController>();
             if (dayCycleController == null && showDebugLogs)
             {
-                Debug.LogWarning($"[PotActions] ⚠️ DayCycleController non trovato per {potSlot?.PotId}. Il vaso non verrà registrato.");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"DayCycleController non trovato per {potSlot?.PotId}. Il vaso non verrà registrato.");
                 return;
             }
         }
@@ -140,12 +141,12 @@ public class PotActions : MonoBehaviour
             dayCycleController.RegisterPot(_potState);
             if (showDebugLogs)
             {
-                Debug.Log($"[PotActions] ✅ Vaso {potSlot?.PotId} con pianta esistente registrato nel DayCycleController (Stage: {_potState.Stage}, PlantCode: {_potState.PlantCode ?? "NULL"})");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"Vaso {potSlot?.PotId} con pianta esistente registrato nel DayCycleController (Stage: {_potState.Stage}, PlantCode: {_potState.PlantCode ?? "NULL"})");
             }
         }
         else if (showDebugLogs)
         {
-            Debug.Log($"[PotActions] Vaso {potSlot?.PotId} vuoto, registrazione quando si pianta un seme");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Vaso {potSlot?.PotId} vuoto, registrazione quando si pianta un seme");
         }
     }
     
@@ -169,7 +170,7 @@ public class PotActions : MonoBehaviour
         {
             _phSystem = ServiceContainer.Instance.Get<PhSystem>();
             if (showDebugLogs)
-                Debug.Log($"[PotActions] PhSystem trovato per {potSlot?.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"PhSystem trovato per {potSlot?.PotId}");
         }
     }
     
@@ -182,7 +183,7 @@ public class PotActions : MonoBehaviour
         {
             _phSystem = service as PhSystem;
             if (showDebugLogs)
-                Debug.Log($"[PotActions] PhSystem registrato, collegato a {potSlot?.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"PhSystem registrato, collegato a {potSlot?.PotId}");
         }
         
         // BUG FIX: Se GameManager viene registrato, recuperalo
@@ -191,7 +192,7 @@ public class PotActions : MonoBehaviour
             _gameManager = service as GameManager;
             _playerInventory = _gameManager.PlayerInventory;
             if (showDebugLogs)
-                Debug.Log($"[PotActions] GameManager recuperato per {potSlot?.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Core, $"GameManager recuperato per {potSlot?.PotId}");
         }
     }
     
@@ -214,11 +215,11 @@ public class PotActions : MonoBehaviour
         {
             _playerInventory = _gameManager.PlayerInventory;
             if (showDebugLogs)
-                Debug.Log($"[PotActions] GameManager recuperato dopo {attempts} tentativi per {potSlot?.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Core, $"GameManager recuperato dopo {attempts} tentativi per {potSlot?.PotId}");
         }
         else
         {
-            Debug.LogError($"[PotActions] GameManager non trovato dopo {maxAttempts} tentativi! Il vaso potrebbe non funzionare correttamente.");
+            SporiumLogger.LogError(LogCategory.Core, $"GameManager non trovato dopo {maxAttempts} tentativi! Il vaso potrebbe non funzionare correttamente.");
         }
     }
     
@@ -233,7 +234,7 @@ public class PotActions : MonoBehaviour
         {
             _potState = existingPotGrowthController.GetPotState();
             if (showDebugLogs && _potState != null)
-                Debug.Log($"[PotActions] Stato esistente trovato per {potSlot.PotId}: {_potState}");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"Stato esistente trovato per {potSlot.PotId}: {_potState}");
         }
             
         // Crea nuovo solo se non esiste
@@ -242,7 +243,7 @@ public class PotActions : MonoBehaviour
         
         _potState = new PotStateModel(potSlot.PotId);
         if (showDebugLogs)
-            Debug.Log($"[PotActions] Nuovo stato creato per {potSlot.PotId}: {_potState}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"Nuovo stato creato per {potSlot.PotId}: {_potState}");
     }
     
     #region Action Validation Methods
@@ -270,7 +271,7 @@ public class PotActions : MonoBehaviour
             notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
         
         return isEmpty && hasSeed && inRange && hasResources && notWateredOnThisDay;
     }
@@ -300,7 +301,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanWater (Toggle): Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.WateringSystemOn}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Toggle): Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.WateringSystemOn}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -322,7 +323,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}, Stage={(PlantStage)_potState.Stage}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}, Stage={(PlantStage)_potState.Stage}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -343,7 +344,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanSprayAntifungal: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanSprayAntifungal: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -364,7 +365,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}");
         
         return isHarvestReady && hasFruits && inRange && hasResources;
     }
@@ -384,7 +385,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanFertilize: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanFertilize: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -404,7 +405,7 @@ public class PotActions : MonoBehaviour
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions][{potSlot?.PotId}] CanPruning: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanPruning: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -490,7 +491,7 @@ public class PotActions : MonoBehaviour
             seedTypeId = FindSeedTypeId();
             if (string.IsNullOrEmpty(seedTypeId))
             {
-                Debug.LogError($"[PotActions] Impossible to find seed in inventory");
+                SporiumLogger.LogError(LogCategory.Inventory, "Impossible to find seed in inventory");
                 PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Nessun seme disponibile");
                 return false;
             }
@@ -499,7 +500,7 @@ public class PotActions : MonoBehaviour
         // Verifica che il seme specificato esista nell'inventario
         if (!_playerInventory.Has(seedTypeId))
         {
-            Debug.LogError($"[PotActions] Seme '{seedTypeId}' non disponibile nell'inventario");
+            SporiumLogger.LogError(LogCategory.Inventory, $"Seme '{seedTypeId}' non disponibile nell'inventario");
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
             return false;
         }
@@ -512,7 +513,7 @@ public class PotActions : MonoBehaviour
         {
             if (showDebugLogs)
             {
-                Debug.LogWarning($"[PotActions] ⚠️ Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
             }
             // IMPORTANTE: Anche se PlantData non è trovato, piantiamo comunque il seme
             // ma senza PlantCode, quindi non avrà drift pH
@@ -521,20 +522,20 @@ public class PotActions : MonoBehaviour
         {
             if (showDebugLogs)
             {
-                Debug.Log($"[PotActions] ✅ PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
             }
             
             // Verifica che PlantCode non sia null o vuoto
             if (string.IsNullOrEmpty(plantCode))
             {
-                Debug.LogError($"[PotActions] ⚠️ PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
+                SporiumLogger.LogError(LogCategory.Pot, $"PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
             }
         }
         
         // Consuma il seme dall'inventario
         if (!_playerInventory.Consume(seedTypeId))
         {
-            Debug.LogError($"[PotActions] Impossible to consume seed");
+            SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
             return false;
         }
         
@@ -546,11 +547,11 @@ public class PotActions : MonoBehaviour
         {
             if (string.IsNullOrEmpty(_potState.PlantCode))
             {
-                Debug.LogWarning($"[PotActions] ⚠️ PlantCode NON salvato correttamente nel PotStateModel! PotId: {potSlot.PotId}, PlantCode passato: '{plantCode}'");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"PlantCode NON salvato correttamente nel PotStateModel! PotId: {potSlot.PotId}, PlantCode passato: '{plantCode}'");
             }
             else
             {
-                Debug.Log($"[PotActions] ✅ PlantCode salvato correttamente: {_potState.PlantCode} per vaso {potSlot.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"PlantCode salvato correttamente: {_potState.PlantCode} per vaso {potSlot.PotId}");
             }
         }
         
@@ -567,7 +568,7 @@ public class PotActions : MonoBehaviour
         if (showDebugLogs && dayCycleController != null && _potState.HasPlant)
         {
             // Verifica che il vaso sia stato registrato (controllo indiretto)
-            Debug.Log($"[PotActions] ✅ Verifica post-piantagione: HasPlant={_potState.HasPlant}, Stage={_potState.Stage}, PlantCode={_potState.PlantCode ?? "NULL"}, dayCycleController disponibile");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"Verifica post-piantagione: HasPlant={_potState.HasPlant}, Stage={_potState.Stage}, PlantCode={_potState.PlantCode ?? "NULL"}, dayCycleController disponibile");
         }
         
         // Notifica il cambio stato
@@ -577,7 +578,7 @@ public class PotActions : MonoBehaviour
         if (showDebugLogs)
         {
             string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
-            Debug.Log($"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
         }
         
         return true;
@@ -593,7 +594,7 @@ public class PotActions : MonoBehaviour
         {
             _phSystem.RemovePlantContributions(potSlot.PotId);
             if (showDebugLogs)
-                Debug.Log($"[PotActions] ✅ Contributi pH rimossi per pianta nel vaso {potSlot.PotId} (PlantCode: {_potState.PlantCode})");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Contributi pH rimossi per pianta nel vaso {potSlot.PotId} (PlantCode: {_potState.PlantCode})");
         }
         
         // Reset completo dello stato del vaso (importante per evitare che la pianta continui a influenzare il pH)
@@ -612,7 +613,7 @@ public class PotActions : MonoBehaviour
         PotEvents.EmitChanged(potSlot);
         
         if (showDebugLogs)
-            Debug.Log($"[PotActions] ✅ UPROOT completato per vaso {potSlot.PotId}. Vaso resettato completamente.");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"UPROOT completato per vaso {potSlot.PotId}. Vaso resettato completamente.");
         
         return true;
     }
@@ -660,7 +661,7 @@ public class PotActions : MonoBehaviour
         if (showDebugLogs)
         {
             string stateMsg = _potState.WateringSystemOn ? "ON" : "OFF";
-            Debug.Log($"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
         }
         
         return true;
@@ -682,7 +683,7 @@ public class PotActions : MonoBehaviour
     public bool DoLight(LedType? ledType = null)
     {
         if (showDebugLogs)
-            Debug.LogWarning($"[PotActions][{potSlot?.PotId}] ⚠️ DoLight(LedType?) è deprecato. Usare DoLight(LedSystemState?)");
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] DoLight(LedType?) è deprecato. Usare DoLight(LedSystemState?)");
         
         // Migrazione automatica: converti LedType a LedSystemState
         LedSystemState? newState = null;
@@ -746,7 +747,7 @@ public class PotActions : MonoBehaviour
                 _phSystem.RemoveActionContribution("RedLED_x2", potSlot.PotId);
                 
                 if (showDebugLogs)
-                    Debug.Log($"[PotActions] {potSlot.PotId}: Contributo pH LED rimosso (LED spento: {oldState} → Off)");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"{potSlot.PotId}: Contributo pH LED rimosso (LED spento: {oldState} → Off)");
             }
         }
         
@@ -777,7 +778,7 @@ public class PotActions : MonoBehaviour
         if (showDebugLogs)
         {
             string stateMsg = _potState.LedSystemState.ToString();
-            Debug.Log($"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
         }
         
         return true;
@@ -847,7 +848,7 @@ public class PotActions : MonoBehaviour
         {
             _phSystem.RegisterActionDrift(5f, "SprayAntifungal", potSlot.PotId);
             if (showDebugLogs)
-                Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino applicato: pH +5");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"[ACT-014][{potSlot.PotId}] Spray Antifungino applicato: pH +5");
         }
         
         // BLK-07.01: Rimuove muffe
@@ -858,7 +859,7 @@ public class PotActions : MonoBehaviour
         PotEvents.EmitChanged(potSlot);
             
         if (showDebugLogs)
-            Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino OK: muffe rimosse (se presenti), pH +5 applicato");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-014][{potSlot.PotId}] Spray Antifungino OK: muffe rimosse (se presenti), pH +5 applicato");
         
         return true;
     }
@@ -892,7 +893,7 @@ public class PotActions : MonoBehaviour
                 return false;
             }
             if (showDebugLogs)
-                Debug.Log($"[ACT-013][{potSlot.PotId}] Consumato STR-004 per potatura");
+                SporiumLogger.LogInfo(LogCategory.Inventory, $"[ACT-013][{potSlot.PotId}] Consumato STR-004 per potatura");
         }
         
         // Consuma le risorse (1 azione)
@@ -906,7 +907,7 @@ public class PotActions : MonoBehaviour
         PruningConfig pruningConfig = Resources.Load<PruningConfig>("Configs/PruningConfig");
         if (pruningConfig == null)
         {
-            Debug.LogError($"[ACT-013][{potSlot.PotId}] PruningConfig non trovato in Resources/Configs/PruningConfig");
+            SporiumLogger.LogError(LogCategory.Pot, $"[ACT-013][{potSlot.PotId}] PruningConfig non trovato in Resources/Configs/PruningConfig");
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Configurazione potatura non trovata");
             return false;
         }
@@ -960,19 +961,19 @@ public class PotActions : MonoBehaviour
                     if (PruningSystem.ApplyResaBonus(_potState, pruningConfig))
                     {
                         if (showDebugLogs)
-                            Debug.Log($"[ACT-013][{potSlot.PotId}] Bonus resa applicato (Growth pre-Flowering)");
+                            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-013][{potSlot.PotId}] Bonus resa applicato (Growth pre-Flowering)");
                     }
                 }
                 
                 // Log feedback appropriato
                 if (showDebugLogs)
-                    Debug.Log($"[ACT-013][{potSlot.PotId}] {result.Message}");
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-013][{potSlot.PotId}] {result.Message}");
             }
         else
         {
             // Log fallimento
             if (showDebugLogs)
-                Debug.Log($"[ACT-013][{potSlot.PotId}] {result.Message}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-013][{potSlot.PotId}] {result.Message}");
         }
         
         // Notifica il cambio stato
@@ -1010,7 +1011,7 @@ public class PotActions : MonoBehaviour
             float modifier = levelConfig.GetQuantityModifier(_potState.PlantLevel);
             baseAmount = baseAmount * (1f + modifier / 100f); // Modifier è negativo (es. -15%)
             if (showDebugLogs)
-                Debug.Log($"[ACT-005][{potSlot.PotId}] Modificatore resa Lvl {_potState.PlantLevel}: {modifier}% (quantità: {_potState.AmountFruits} → {baseAmount})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore resa Lvl {_potState.PlantLevel}: {modifier}% (quantità: {_potState.AmountFruits} → {baseAmount})");
         }
         
         // Calcola quantità frutti da raccogliere
@@ -1045,7 +1046,7 @@ public class PotActions : MonoBehaviour
             bool levelUp = PlantLevelSystem.CheckLevelUp(_potState, levelConfig);
             if (levelUp && showDebugLogs)
             {
-                Debug.Log($"[ACT-005][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel}!");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel}!");
             }
         }
         
@@ -1063,7 +1064,7 @@ public class PotActions : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[ACT-005][{potSlot.PotId}] Harvest OK: raccolti {fruitsToHarvest} frutti, aggiunti all'inventario. Stadio cambiato: {oldStage} (HarvestReady) → {(int)PlantStage.Resting} (Resting)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Harvest OK: raccolti {fruitsToHarvest} frutti, aggiunti all'inventario. Stadio cambiato: {oldStage} (HarvestReady) → {(int)PlantStage.Resting} (Resting)");
         }
         
         return true;
@@ -1111,7 +1112,7 @@ public class PotActions : MonoBehaviour
         if (!FertilizerSystem.IsFertilizerCompatible(fertilizerType, plantData.Family))
         {
             // 🚨 MORTE IMMEDIATA della pianta
-            Debug.LogError($"[PotActions] 🚨 Fertilizzante incompatibile! Pianta MUORE IMMEDIATAMENTE. Vaso: {potSlot.PotId}, Famiglia: {plantData.Family}, Fertilizzante: {fertilizerType}");
+            SporiumLogger.LogError(LogCategory.Pot, $"Fertilizzante incompatibile! Pianta MUORE IMMEDIATAMENTE. Vaso: {potSlot.PotId}, Famiglia: {plantData.Family}, Fertilizzante: {fertilizerType}");
             
             // Rimuovi pianta dal vaso (morte)
             _potState.HasPlant = false;
@@ -1167,13 +1168,13 @@ public class PotActions : MonoBehaviour
             PotEvents.EmitPlantStageChanged(potSlot.PotId, PlantStage.Flowering);
             
             if (showDebugLogs)
-                Debug.Log($"[PotActions] {potSlot.PotId}: Transizione Resting → Flowering dopo fertilizzante");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"{potSlot.PotId}: Transizione Resting → Flowering dopo fertilizzante");
         }
         
         // 8. Consuma fertilizzante dall'inventario
         if (!_playerInventory.Consume(fertilizerItemCode, 1))
         {
-            Debug.LogError($"[PotActions] Impossibile consumare fertilizzante '{fertilizerItemCode}'");
+            SporiumLogger.LogError(LogCategory.Inventory, $"Impossibile consumare fertilizzante '{fertilizerItemCode}'");
             return false;
         }
         
@@ -1186,7 +1187,7 @@ public class PotActions : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[ACT-015][{potSlot.PotId}] Fertilize OK: {fertilizerType} applicato (+{fertilizerAmount}%), livello totale: {_potState.FertilizerLevel}%");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Fertilize OK: {fertilizerType} applicato (+{fertilizerAmount}%), livello totale: {_potState.FertilizerLevel}%");
         }
         
         return true;
@@ -1360,7 +1361,7 @@ public class PotActions : MonoBehaviour
         config = newConfig;
         if (showDebugLogs)
         {
-            Debug.Log($"[PotActions] Configurazione aggiornata per {potSlot?.PotId}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"Configurazione aggiornata per {potSlot?.PotId}");
         }
     }
     

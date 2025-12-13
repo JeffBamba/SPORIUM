@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Sporae.DevTools;
 
 public class SceneLoadingUI : MonoBehaviour
 {
@@ -40,7 +41,7 @@ public class SceneLoadingUI : MonoBehaviour
         {
             if (!ValidateConfiguration())
             {
-                Debug.LogError("[SceneLoadingUI] Configurazione non valida! SceneLoadingUI disabilitato.");
+                SporiumLogger.LogError(LogCategory.Core, "Configurazione non valida! SceneLoadingUI disabilitato.");
                 enabled = false;
                 return;
             }
@@ -55,13 +56,13 @@ public class SceneLoadingUI : MonoBehaviour
         
         if (string.IsNullOrEmpty(targetScene))
         {
-            Debug.LogError("[SceneLoadingUI] Nome scena target non specificato!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena target non specificato!");
             isValid = false;
         }
         
         if (minLoadingTime < 0)
         {
-            Debug.LogWarning("[SceneLoadingUI] minLoadingTime non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.Core, "minLoadingTime non può essere negativo. Impostato a 0.");
             minLoadingTime = 0;
         }
         
@@ -73,7 +74,7 @@ public class SceneLoadingUI : MonoBehaviour
         // Verifica se la scena target è nelle Build Settings
         if (!IsSceneInBuildSettings(targetScene))
         {
-            Debug.LogError($"[SceneLoadingUI] Scena '{targetScene}' non trovata nelle Build Settings!");
+            SporiumLogger.LogError(LogCategory.Core, $"Scena '{targetScene}' non trovata nelle Build Settings!");
             enabled = false;
             return;
         }
@@ -86,7 +87,7 @@ public class SceneLoadingUI : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[SceneLoadingUI] SceneLoadingUI inizializzato per scena: {targetScene}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"SceneLoadingUI inizializzato per scena: {targetScene}");
         }
     }
 
@@ -109,13 +110,13 @@ public class SceneLoadingUI : MonoBehaviour
     {
         if (isLoading)
         {
-            Debug.LogWarning("[SceneLoadingUI] Caricamento già in corso!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Caricamento già in corso!");
             return;
         }
         
         if (string.IsNullOrEmpty(targetScene))
         {
-            Debug.LogError("[SceneLoadingUI] Nome scena target non specificato!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena target non specificato!");
             return;
         }
         
@@ -126,19 +127,19 @@ public class SceneLoadingUI : MonoBehaviour
     {
         if (isLoading)
         {
-            Debug.LogWarning("[SceneLoadingUI] Caricamento già in corso!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Caricamento già in corso!");
             return;
         }
         
         if (string.IsNullOrEmpty(sceneName))
         {
-            Debug.LogError("[SceneLoadingUI] Nome scena non può essere vuoto!");
+            SporiumLogger.LogError(LogCategory.Core, "Nome scena non può essere vuoto!");
             return;
         }
         
         if (!IsSceneInBuildSettings(sceneName))
         {
-            Debug.LogError($"[SceneLoadingUI] Scena '{sceneName}' non trovata nelle Build Settings!");
+            SporiumLogger.LogError(LogCategory.Core, $"Scena '{sceneName}' non trovata nelle Build Settings!");
             return;
         }
         
@@ -163,7 +164,7 @@ public class SceneLoadingUI : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[SceneLoadingUI] Iniziato caricamento scena: {targetScene}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Iniziato caricamento scena: {targetScene}");
         }
         
         // Loop di caricamento
@@ -190,7 +191,7 @@ public class SceneLoadingUI : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[SceneLoadingUI] Caricamento completato per scena: {targetScene}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Caricamento completato per scena: {targetScene}");
         }
     }
 
@@ -239,7 +240,7 @@ public class SceneLoadingUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[SceneLoadingUI] Non è possibile cambiare scena durante il caricamento!");
+            SporiumLogger.LogWarning(LogCategory.Core, "Non è possibile cambiare scena durante il caricamento!");
         }
     }
 
@@ -284,7 +285,7 @@ public class SceneLoadingUI : MonoBehaviour
             
             if (showDebugLogs)
             {
-                Debug.Log("[SceneLoadingUI] Caricamento fermato manualmente.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Caricamento fermato manualmente.");
             }
         }
     }

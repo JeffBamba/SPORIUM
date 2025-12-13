@@ -5,6 +5,7 @@ using Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -34,7 +35,7 @@ namespace _Project
             _actionSystem = gameManager?.ActionSystem;
             if (_actionSystem == null)
             {
-                Debug.LogWarning("[DiaryUI] ActionSystem non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "ActionSystem non disponibile via ServiceContainer!");
             }
             
             _buttonGoToSleep.onClick.AddListener(HandleGoToSleep);

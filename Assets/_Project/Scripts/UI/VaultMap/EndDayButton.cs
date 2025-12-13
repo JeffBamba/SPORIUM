@@ -3,6 +3,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 public class EndDayButton : MonoBehaviour
 {
@@ -37,7 +38,7 @@ public class EndDayButton : MonoBehaviour
         {
             if (!ValidateConfiguration())
             {
-                Debug.LogError("[EndDayButton] Configurazione non valida! EndDayButton disabilitato.");
+                SporiumLogger.LogError(LogCategory.UI, "Configurazione non valida! EndDayButton disabilitato.");
                 enabled = false;
                 return;
             }
@@ -52,7 +53,7 @@ public class EndDayButton : MonoBehaviour
         
         if (dailyPowerCost < 0)
         {
-            Debug.LogWarning("[EndDayButton] dailyPowerCost non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.UI, "dailyPowerCost non può essere negativo. Impostato a 0.");
             dailyPowerCost = 0;
         }
         
@@ -61,7 +62,7 @@ public class EndDayButton : MonoBehaviour
             endDayButton = GetComponent<Button>();
             if (endDayButton == null)
             {
-                Debug.LogError("[EndDayButton] Button component non trovato!");
+                SporiumLogger.LogError(LogCategory.UI, "Button component non trovato!");
                 isValid = false;
             }
         }
@@ -83,7 +84,7 @@ public class EndDayButton : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log("[EndDayButton] EndDayButton inizializzato correttamente.");
+            SporiumLogger.LogInfo(LogCategory.UI, "EndDayButton inizializzato correttamente.");
         }
     }
 
@@ -91,7 +92,7 @@ public class EndDayButton : MonoBehaviour
     {
         if (!_isInitialized)
         {
-            Debug.LogWarning("[EndDayButton] EndDayButton non inizializzato!");
+            SporiumLogger.LogWarning(LogCategory.UI, "EndDayButton non inizializzato!");
             return;
         }
         
@@ -111,7 +112,7 @@ public class EndDayButton : MonoBehaviour
         // Per ora, usa un semplice Debug.Log
         if (showDebugLogs)
         {
-            Debug.Log($"[EndDayButton] {confirmationMessage}");
+            SporiumLogger.LogDebug(LogCategory.UI, confirmationMessage);
         }
         
         // DEBUG_SAFE_FIX: Non chiamare EndDay() automaticamente
@@ -134,9 +135,9 @@ public class EndDayButton : MonoBehaviour
                 if (showDebugLogs)
                 {
                     if (saveSuccess)
-                        Debug.Log("[EndDayButton] ✅ Salvataggio automatico eseguito con successo");
+                        SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito con successo");
                     else
-                        Debug.LogWarning("[EndDayButton] ⚠️ Errore durante il salvataggio automatico");
+                        SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico");
                 }
             }
             
@@ -147,7 +148,7 @@ public class EndDayButton : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[EndDayButton] Giornata finita! " +
+            SporiumLogger.LogInfo(LogCategory.Core, $"Giornata finita! " +
                      $"Giorno: {_dayCycleSystem.CurrentDay}, " +
                      $"Azioni: {_gameManager.ActionsLeft}, " +
                      $"CRY: {_gameManager.CurrentCRY}");
@@ -186,7 +187,7 @@ public class EndDayButton : MonoBehaviour
             Invoke(nameof(ResetButtonColor), 0.5f);
         }
         
-        Debug.LogWarning($"[EndDayButton] Fallimento nel finire la giornata: {reason}");
+        SporiumLogger.LogWarning(LogCategory.UI, $"Fallimento nel finire la giornata: {reason}");
     }
 
     private void ResetButtonColor()

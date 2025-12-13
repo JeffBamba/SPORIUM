@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -42,7 +43,7 @@ namespace _Project
             _gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (_gameManager == null)
             {
-                Debug.LogWarning("[LabPippete] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;

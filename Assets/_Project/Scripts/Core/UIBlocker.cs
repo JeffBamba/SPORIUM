@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 /// <summary>
 /// Utility per bloccare input mondo quando il puntatore è sopra UI.
@@ -21,7 +22,7 @@ public static class UIBlocker
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             #if UNITY_EDITOR
-            Debug.Log("[UIBlocker] Puntatore sopra UI (API standard)");
+            SporiumLogger.LogDebug(LogCategory.UI, "Puntatore sopra UI (API standard)");
             #endif
             return true;
         }
@@ -39,7 +40,7 @@ public static class UIBlocker
             #if UNITY_EDITOR
             if (isOverUI)
             {
-                Debug.Log($"[UIBlocker] Puntatore sopra UI (raycast): {_results.Count} elementi");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Puntatore sopra UI (raycast): {_results.Count} elementi");
             }
             #endif
             
@@ -47,7 +48,7 @@ public static class UIBlocker
         }
         
         #if UNITY_EDITOR
-        Debug.LogWarning("[UIBlocker] EventSystem non trovato!");
+        SporiumLogger.LogWarning(LogCategory.UI, "EventSystem non trovato!");
         #endif
         return false;
     }
@@ -84,7 +85,7 @@ public static class UIBlocker
     {
         if (EventSystem.current == null)
         {
-            Debug.LogWarning("[UIBlocker] EventSystem non trovato per debug");
+            SporiumLogger.LogWarning(LogCategory.UI, "EventSystem non trovato per debug");
             return;
         }
 
@@ -94,11 +95,11 @@ public static class UIBlocker
         _results.Clear();
         EventSystem.current.RaycastAll(_ped, _results);
         
-        Debug.Log($"[UIBlocker] Debug: {_results.Count} elementi UI sotto il puntatore:");
+        SporiumLogger.LogDebug(LogCategory.UI, $"Debug: {_results.Count} elementi UI sotto il puntatore:");
         for (int i = 0; i < _results.Count; i++)
         {
             var result = _results[i];
-            Debug.Log($"  {i}: {result.gameObject.name} (Layer: {LayerMask.LayerToName(result.gameObject.layer)})");
+            SporiumLogger.LogDebug(LogCategory.UI, $"  {i}: {result.gameObject.name} (Layer: {LayerMask.LayerToName(result.gameObject.layer)})");
         }
     }
 }

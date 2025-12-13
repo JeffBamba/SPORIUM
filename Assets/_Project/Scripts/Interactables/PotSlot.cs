@@ -5,6 +5,7 @@ using System;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 using TMPro;
 
@@ -196,7 +197,7 @@ public class PotSlot : MonoBehaviour
     /// </summary>
     private void SelectPot()
     {
-        Debug.Log($"[{potId}] Selected (state: {state})");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"[{potId}] Selected (state: {state})");
         
         // Pulisci selezione precedente su altri vasi
         ClearAllSelections();
@@ -219,7 +220,7 @@ public class PotSlot : MonoBehaviour
     public void SetState(PotState newState)
     {
         state = newState;
-        Debug.Log($"[{potId}] Stato cambiato a: {state}");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"[{potId}] Stato cambiato a: {state}");
     }
     
     /// <summary>

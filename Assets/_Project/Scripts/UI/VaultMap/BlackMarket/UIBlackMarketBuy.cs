@@ -3,6 +3,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project.BlackMarket
 {
@@ -31,7 +32,7 @@ namespace _Project.BlackMarket
             }
             else
             {
-                Debug.LogWarning("[UIBlackMarketBuy] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
             
             foreach (var item in _hudItemContainer.Items)

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 /// <summary>
 /// Sistema di eventi per il sistema dei vasi.
@@ -68,11 +69,11 @@ public static class PotEvents
     {
         if (pot == null)
         {
-            Debug.LogWarning("[PotEvents] Tentativo di emettere evento con vaso null");
+            SporiumLogger.LogWarning(LogCategory.Pot, "Tentativo di emettere evento con vaso null");
             return;
         }
         
-        Debug.Log($"[PotEvents] Emesso evento OnPotAction: {type} su {pot.PotId}");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"Emesso evento OnPotAction: {type} su {pot.PotId}");
         OnPotAction?.Invoke(type, pot);
     }
     
@@ -84,11 +85,11 @@ public static class PotEvents
     {
         if (pot == null)
         {
-            Debug.LogWarning("[PotEvents] Tentativo di emettere evento con vaso null");
+            SporiumLogger.LogWarning(LogCategory.Pot, "Tentativo di emettere evento con vaso null");
             return;
         }
         
-        Debug.Log($"[PotEvents] Emesso evento OnPotStateChanged per {pot.PotId}");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"Emesso evento OnPotStateChanged per {pot.PotId}");
         OnPotStateChanged?.Invoke(pot);
     }
     
@@ -100,11 +101,11 @@ public static class PotEvents
     {
         if (pot == null)
         {
-            Debug.LogWarning("[PotEvents] Tentativo di emettere evento con vaso null");
+            SporiumLogger.LogWarning(LogCategory.Pot, "Tentativo di emettere evento con vaso null");
             return;
         }
         
-        Debug.Log($"[PotEvents] Emesso evento OnPotSelected per {pot.PotId}");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"Emesso evento OnPotSelected per {pot.PotId}");
         OnPotSelected?.Invoke(pot);
     }
     
@@ -118,11 +119,11 @@ public static class PotEvents
     {
         if (pot == null)
         {
-            Debug.LogWarning("[PotEvents] Tentativo di emettere evento con vaso null");
+            SporiumLogger.LogWarning(LogCategory.Pot, "Tentativo di emettere evento con vaso null");
             return;
         }
         
-        Debug.LogWarning($"[PotEvents] Azione {type} fallita su {pot.PotId}: {reason}");
+        SporiumLogger.LogWarning(LogCategory.Pot, $"Azione {type} fallita su {pot.PotId}: {reason}");
         OnPotActionFailed?.Invoke(type, pot, reason);
     }
     
@@ -243,7 +244,7 @@ public static class PotEvents
     /// <param name="totalPoints">Punti totali nello stadio</param>
     public static void RaiseOnPlantGrew(string potId, PlantStage stage, int addedPoints, int totalPoints)
     {
-        Debug.Log($"[PotEvents] Emesso evento OnPlantGrew: {potId} - {stage} (+{addedPoints} punti, totali: {totalPoints})");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"Emesso evento OnPlantGrew: {potId} - {stage} (+{addedPoints} punti, totali: {totalPoints})");
         OnPlantGrew?.Invoke(potId, stage, addedPoints, totalPoints);
     }
     
@@ -254,7 +255,7 @@ public static class PotEvents
     /// <param name="stage">Nuovo stadio della pianta</param>
     public static void RaiseOnPlantStageChanged(string potId, PlantStage stage)
     {
-        Debug.Log($"[PotEvents] Emesso evento OnPlantStageChanged: {potId} - Nuovo stadio: {stage}");
+        SporiumLogger.LogDebug(LogCategory.Pot, $"Emesso evento OnPlantStageChanged: {potId} - Nuovo stadio: {stage}");
         OnPlantStageChanged?.Invoke(potId, stage);
     }
     
@@ -275,7 +276,7 @@ public static class PotEvents
     /// <param name="reason">Motivo della morte</param>
     public static void EmitPlantDied(string potId, string reason)
     {
-        Debug.LogWarning($"[PotEvents] 🚨 Pianta morta in vaso {potId}: {reason}");
+        SporiumLogger.LogWarning(LogCategory.Pot, $"Pianta morta in vaso {potId}: {reason}");
         OnPlantDied?.Invoke(potId, reason);
     }
 }

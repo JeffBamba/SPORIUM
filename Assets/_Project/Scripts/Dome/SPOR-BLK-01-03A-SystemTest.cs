@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 /// <summary>
 /// Script di test completo per il sistema BLK-01.03A
@@ -42,7 +43,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
         testResults.Clear();
         allTestsPassed = true;
         
-        Debug.Log("=== INIZIO TEST SISTEMA BLK-01.03A ===");
+        SporiumLogger.LogInfo(LogCategory.Dome, "=== INIZIO TEST SISTEMA BLK-01.03A ===");
         
         // Test 1: Verifica componenti essenziali
         TestEssentialComponents();
@@ -62,7 +63,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
         // Risultati finali
         LogTestResults();
         
-        Debug.Log("=== FINE TEST SISTEMA BLK-01.03A ===");
+        SporiumLogger.LogInfo(LogCategory.Dome, "=== FINE TEST SISTEMA BLK-01.03A ===");
     }
     
     /// <summary>
@@ -70,7 +71,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void TestEssentialComponents()
     {
-        Debug.Log("--- Test 1: Componenti Essenziali ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- Test 1: Componenti Essenziali ---");
 
         _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         
@@ -125,7 +126,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void TestConfiguration()
     {
-        Debug.Log("--- Test 2: Configurazione ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- Test 2: Configurazione ---");
         
         if (potSystemConfig != null)
         {
@@ -158,7 +159,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void TestPotsAndRegistration()
     {
-        Debug.Log("--- Test 3: Vasi e Registrazione ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- Test 3: Vasi e Registrazione ---");
         
         // Trova tutti i vasi
         var allPots = FindObjectsOfType<PotSlot>();
@@ -209,7 +210,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void TestGrowthSystem()
     {
-        Debug.Log("--- Test 4: Sistema Crescita ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- Test 4: Sistema Crescita ---");
         
         if (dayCycleController != null)
         {
@@ -245,7 +246,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void TestTimestampSystem()
     {
-        Debug.Log("--- Test 5: Sistema Timestamp ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- Test 5: Sistema Timestamp ---");
         
         // Verifica che i vasi abbiano timestamp corretti
         var allPots = FindObjectsOfType<PotSlot>();
@@ -297,7 +298,7 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     {
         if (showDetailedLogs)
         {
-            Debug.Log(message);
+            SporiumLogger.LogInfo(LogCategory.Dome, message);
         }
         
         testResults.Add(message);
@@ -313,20 +314,20 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     /// </summary>
     private void LogTestResults()
     {
-        Debug.Log("--- RISULTATI FINALI TEST ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- RISULTATI FINALI TEST ---");
         
         if (allTestsPassed)
         {
-            Debug.Log("🎉 TUTTI I TEST SONO PASSATI! Il sistema è configurato correttamente.");
+            SporiumLogger.LogInfo(LogCategory.Dome, "🎉 TUTTI I TEST SONO PASSATI! Il sistema è configurato correttamente.");
         }
         else
         {
-            Debug.Log("⚠️ ALCUNI TEST SONO FALLITI! Controlla i log sopra per i dettagli.");
+            SporiumLogger.LogWarning(LogCategory.Dome, "⚠️ ALCUNI TEST SONO FALLITI! Controlla i log sopra per i dettagli.");
         }
         
-        Debug.Log($"Test eseguiti: {testResults.Count}");
-        Debug.Log($"Test passati: {testResults.Count(r => r.StartsWith("✅"))}");
-        Debug.Log($"Test falliti: {testResults.Count(r => r.StartsWith("❌"))}");
+        SporiumLogger.LogInfo(LogCategory.Dome, $"Test eseguiti: {testResults.Count}");
+        SporiumLogger.LogInfo(LogCategory.Dome, $"Test passati: {testResults.Count(r => r.StartsWith("✅"))}");
+        SporiumLogger.LogInfo(LogCategory.Dome, $"Test falliti: {testResults.Count(r => r.StartsWith("❌"))}");
     }
     
     /// <summary>
@@ -335,25 +336,25 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     [ContextMenu("Quick Growth Test")]
     public void QuickGrowthTest()
     {
-        Debug.Log("--- TEST RAPIDO CRESCITA ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- TEST RAPIDO CRESCITA ---");
         
         if (dayCycleController != null)
         {
             var growthConfig = dayCycleController.GetGrowthConfig();
             if (growthConfig != null)
             {
-                Debug.Log($"Configurazione: {growthConfig.name}");
-                Debug.Log($"Seed→Sprout: {growthConfig.pointsSeedToSprout} punti");
-                Debug.Log($"Sprout→Mature: {growthConfig.pointsSproutToMature} punti");
-                Debug.Log($"Vasi registrati: {dayCycleController.GetRegisteredPotCount()}");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Configurazione: {growthConfig.name}");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Seed→Sprout: {growthConfig.pointsSeedToSprout} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Sprout→Mature: {growthConfig.pointsSproutToMature} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Vasi registrati: {dayCycleController.GetRegisteredPotCount()}");
             }
         }
         
         if (gameManager != null)
         {
-            Debug.Log($"Giorno corrente: {_dayCycleSystem.CurrentDay}");
-            Debug.Log($"Azioni rimanenti: {gameManager.ActionsLeft}");
-            Debug.Log($"CRY disponibili: {gameManager.CurrentCRY}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Giorno corrente: {_dayCycleSystem.CurrentDay}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Azioni rimanenti: {gameManager.ActionsLeft}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"CRY disponibili: {gameManager.CurrentCRY}");
         }
     }
     
@@ -363,16 +364,16 @@ public class SPOR_BLK_01_03A_SystemTest : MonoBehaviour
     [ContextMenu("Force Growth Tick")]
     public void ForceGrowthTick()
     {
-        Debug.Log("--- FORZA TICK CRESCITA ---");
+        SporiumLogger.LogInfo(LogCategory.Dome, "--- FORZA TICK CRESCITA ---");
         
         if (gameManager != null)
         {
-            Debug.Log($"Forzando EndDay per test crescita...");
+            SporiumLogger.LogInfo(LogCategory.Dome, "Forzando EndDay per test crescita...");
             _dayCycleSystem.EndDay();
         }
         else
         {
-            Debug.LogError("GameManager non trovato!");
+            SporiumLogger.LogError(LogCategory.Core, "GameManager non trovato!");
         }
     }
 }

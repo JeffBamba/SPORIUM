@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Sporae.DevTools;
 
 /// <summary>
 /// Verifica e ripara la configurazione UI per prevenire click-through.
@@ -24,7 +25,7 @@ public class UIConfigChecker : MonoBehaviour
     public void CheckUIConfiguration()
     {
         if (showDebugLogs)
-            Debug.Log("[UIConfigChecker] Iniziando verifica configurazione UI...");
+            SporiumLogger.LogInfo(LogCategory.UI, "Iniziando verifica configurazione UI...");
         
         bool allGood = true;
         
@@ -43,11 +44,11 @@ public class UIConfigChecker : MonoBehaviour
         if (allGood)
         {
             if (showDebugLogs)
-                Debug.Log("[UIConfigChecker] ✅ Configurazione UI corretta!");
+                SporiumLogger.LogInfo(LogCategory.UI, "Configurazione UI corretta!");
         }
         else
         {
-            Debug.LogWarning("[UIConfigChecker] ⚠️ Problemi nella configurazione UI rilevati!");
+            SporiumLogger.LogWarning(LogCategory.UI, "Problemi nella configurazione UI rilevati!");
         }
     }
     
@@ -56,14 +57,14 @@ public class UIConfigChecker : MonoBehaviour
         EventSystem eventSystem = FindObjectOfType<EventSystem>();
         if (eventSystem == null)
         {
-            Debug.LogError("[UIConfigChecker] ❌ EventSystem non trovato!");
+            SporiumLogger.LogError(LogCategory.UI, "EventSystem non trovato!");
             
             if (autoFix)
             {
                 GameObject eventSystemGO = new GameObject("EventSystem");
                 eventSystem = eventSystemGO.AddComponent<EventSystem>();
                 eventSystemGO.AddComponent<StandaloneInputModule>();
-                Debug.Log("[UIConfigChecker] ✅ EventSystem creato automaticamente");
+                SporiumLogger.LogInfo(LogCategory.UI, "EventSystem creato automaticamente");
             }
             
             return false;
@@ -72,17 +73,17 @@ public class UIConfigChecker : MonoBehaviour
         StandaloneInputModule inputModule = eventSystem.GetComponent<StandaloneInputModule>();
         if (inputModule == null)
         {
-            Debug.LogWarning("[UIConfigChecker] ⚠️ StandaloneInputModule mancante su EventSystem");
+            SporiumLogger.LogWarning(LogCategory.UI, "StandaloneInputModule mancante su EventSystem");
             
             if (autoFix)
             {
                 eventSystem.gameObject.AddComponent<StandaloneInputModule>();
-                Debug.Log("[UIConfigChecker] ✅ StandaloneInputModule aggiunto");
+                SporiumLogger.LogInfo(LogCategory.UI, "StandaloneInputModule aggiunto");
             }
         }
         
         if (showDebugLogs)
-            Debug.Log($"[UIConfigChecker] ✅ EventSystem trovato: {eventSystem.name}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"EventSystem trovato: {eventSystem.name}");
         
         return true;
     }
@@ -92,7 +93,7 @@ public class UIConfigChecker : MonoBehaviour
         Canvas[] canvases = FindObjectsOfType<Canvas>();
         if (canvases.Length == 0)
         {
-            Debug.LogError("[UIConfigChecker] ❌ Nessun Canvas trovato!");
+            SporiumLogger.LogError(LogCategory.UI, "Nessun Canvas trovato!");
             return false;
         }
         
@@ -104,12 +105,12 @@ public class UIConfigChecker : MonoBehaviour
             GraphicRaycaster graphicRaycaster = canvas.GetComponent<GraphicRaycaster>();
             if (graphicRaycaster == null)
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ GraphicRaycaster mancante su Canvas: {canvas.name}");
+                SporiumLogger.LogWarning(LogCategory.UI, $"GraphicRaycaster mancante su Canvas: {canvas.name}");
                 
                 if (autoFix)
                 {
                     canvas.gameObject.AddComponent<GraphicRaycaster>();
-                    Debug.Log($"[UIConfigChecker] ✅ GraphicRaycaster aggiunto a {canvas.name}");
+                    SporiumLogger.LogInfo(LogCategory.UI, $"GraphicRaycaster aggiunto a {canvas.name}");
                 }
                 else
                 {
@@ -121,14 +122,14 @@ public class UIConfigChecker : MonoBehaviour
             CanvasScaler canvasScaler = canvas.GetComponent<CanvasScaler>();
             if (canvasScaler == null)
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ CanvasScaler mancante su Canvas: {canvas.name}");
+                SporiumLogger.LogWarning(LogCategory.UI, $"CanvasScaler mancante su Canvas: {canvas.name}");
                 
                 if (autoFix)
                 {
                     CanvasScaler scaler = canvas.gameObject.AddComponent<CanvasScaler>();
                     scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                     scaler.referenceResolution = new Vector2(1920, 1080);
-                    Debug.Log($"[UIConfigChecker] ✅ CanvasScaler aggiunto a {canvas.name}");
+                    SporiumLogger.LogInfo(LogCategory.UI, $"CanvasScaler aggiunto a {canvas.name}");
                 }
             }
             
@@ -136,7 +137,7 @@ public class UIConfigChecker : MonoBehaviour
             {
                 string raycastStatus = graphicRaycaster != null ? "✅" : "❌";
                 string scalerStatus = canvasScaler != null ? "✅" : "❌";
-                Debug.Log($"[UIConfigChecker] Canvas: {canvas.name} - Raycaster: {raycastStatus} Scaler: {scalerStatus}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Canvas: {canvas.name} - Raycaster: {raycastStatus} Scaler: {scalerStatus}");
             }
         }
         
@@ -148,7 +149,7 @@ public class UIConfigChecker : MonoBehaviour
         Button[] buttons = FindObjectsOfType<Button>();
         if (buttons.Length == 0)
         {
-            Debug.LogWarning("[UIConfigChecker] ⚠️ Nessun pulsante UI trovato");
+            SporiumLogger.LogWarning(LogCategory.UI, "Nessun pulsante UI trovato");
             return true;
         }
         
@@ -160,12 +161,12 @@ public class UIConfigChecker : MonoBehaviour
             Image buttonImage = button.GetComponent<Image>();
             if (buttonImage != null && !buttonImage.raycastTarget)
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ Button {button.name}: raycastTarget = false");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Button {button.name}: raycastTarget = false");
                 
                 if (autoFix)
                 {
                     buttonImage.raycastTarget = true;
-                    Debug.Log($"[UIConfigChecker] ✅ raycastTarget abilitato per {button.name}");
+                    SporiumLogger.LogInfo(LogCategory.UI, $"raycastTarget abilitato per {button.name}");
                 }
                 else
                 {
@@ -176,18 +177,18 @@ public class UIConfigChecker : MonoBehaviour
             // Verifica che sia interactable
             if (!button.interactable)
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ Button {button.name}: interactable = false");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Button {button.name}: interactable = false");
             }
             
             // Verifica OnClick events
             if (button.onClick.GetPersistentEventCount() == 0)
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ Button {button.name}: nessun OnClick event");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Button {button.name}: nessun OnClick event");
             }
         }
         
         if (showDebugLogs)
-            Debug.Log($"[UIConfigChecker] ✅ Verificati {buttons.Length} pulsanti UI");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Verificati {buttons.Length} pulsanti UI");
         
         return allGood;
     }
@@ -202,12 +203,12 @@ public class UIConfigChecker : MonoBehaviour
         {
             if (canvas.gameObject.layer != LayerMask.NameToLayer("UI"))
             {
-                Debug.LogWarning($"[UIConfigChecker] ⚠️ Canvas {canvas.name} non su layer UI (attuale: {LayerMask.LayerToName(canvas.gameObject.layer)})");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Canvas {canvas.name} non su layer UI (attuale: {LayerMask.LayerToName(canvas.gameObject.layer)})");
                 
                 if (autoFix)
                 {
                     canvas.gameObject.layer = LayerMask.NameToLayer("UI");
-                    Debug.Log($"[UIConfigChecker] ✅ Layer UI assegnato a {canvas.name}");
+                    SporiumLogger.LogInfo(LogCategory.UI, $"Layer UI assegnato a {canvas.name}");
                 }
                 else
                 {
@@ -225,17 +226,17 @@ public class UIConfigChecker : MonoBehaviour
     [ContextMenu("Test UIBlocker")]
     public void TestUIBlocker()
     {
-        Debug.Log("[UIConfigChecker] === TEST UIBLOCKER ===");
+        SporiumLogger.LogDebug(LogCategory.UI, "=== TEST UIBLOCKER ===");
         
         bool isOverUI = UIBlocker.IsPointerOverUI();
-        Debug.Log($"[UIConfigChecker] IsPointerOverUI: {isOverUI}");
+        SporiumLogger.LogDebug(LogCategory.UI, $"IsPointerOverUI: {isOverUI}");
         
         if (isOverUI)
         {
             UIBlocker.DebugPointerOverUI();
         }
         
-        Debug.Log("[UIConfigChecker] === FINE TEST ===");
+        SporiumLogger.LogDebug(LogCategory.UI, "=== FINE TEST ===");
     }
     
     #if UNITY_EDITOR

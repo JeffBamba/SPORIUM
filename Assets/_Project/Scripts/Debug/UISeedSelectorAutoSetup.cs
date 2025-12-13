@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using _Project;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -36,7 +37,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.Log("[UISeedSelectorAutoSetup] UISeedSelector già presente nella scena");
+                    SporiumLogger.LogDebug(LogCategory.UI, "UISeedSelector già presente nella scena");
                 }
                 return;
             }
@@ -53,7 +54,7 @@ namespace _Project
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log("[UISeedSelectorAutoSetup] Creato Canvas per UISeedSelector");
+                    SporiumLogger.LogInfo(LogCategory.UI, "Creato Canvas per UISeedSelector");
                 }
             }
             
@@ -168,8 +169,8 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log($"[UISeedSelectorAutoSetup] ✅ UISeedSelector creato con successo!");
-                Debug.Log($"[UISeedSelectorAutoSetup] Panel: {panelGO.name}, Container: {containerGO.name}");
+                SporiumLogger.LogInfo(LogCategory.UI, "UISeedSelector creato con successo!");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Panel: {panelGO.name}, Container: {containerGO.name}");
             }
         }
         
@@ -185,7 +186,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning($"[UISeedSelectorAutoSetup] Campo '{fieldName}' non trovato in UISeedSelector!");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Campo '{fieldName}' non trovato in UISeedSelector!");
             }
         }
     }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Sporae.DevTools;
 
 /// <summary>
 /// Integrazione del sistema dei vasi con il GameManager esistente.
@@ -27,7 +28,7 @@ public class PotSystemIntegration : MonoBehaviour
         gameManager = FindObjectOfType<GameManager>();
         if (gameManager == null)
         {
-            Debug.LogWarning("[PotSystemIntegration] GameManager non trovato. Integrazione disabilitata.");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non trovato. Integrazione disabilitata.");
             enabled = false;
             return;
         }
@@ -46,11 +47,11 @@ public class PotSystemIntegration : MonoBehaviour
             // Ottieni tutti i vasi
             allPots = new List<PotSlot>(potsBootstrap.GetAllPots());
             
-            Debug.Log($"[PotSystemIntegration] Integrazione attivata con {allPots.Count} vasi.");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"Integrazione attivata con {allPots.Count} vasi.");
         }
         else
         {
-            Debug.LogWarning("[PotSystemIntegration] Bootstrap vasi non trovato. Integrazione disabilitata.");
+            SporiumLogger.LogWarning(LogCategory.Dome, "Bootstrap vasi non trovato. Integrazione disabilitata.");
             enabled = false;
         }
     }
@@ -65,7 +66,7 @@ public class PotSystemIntegration : MonoBehaviour
     {
         if (!enableIntegration) return;
         
-        Debug.Log($"[PotSystemIntegration] Vaso {pot.PotId} selezionato per azioni.");
+        SporiumLogger.LogInfo(LogCategory.Pot, $"Vaso {pot.PotId} selezionato per azioni.");
         
         // Mostra opzioni disponibili (da implementare in BLK-01.02)
         ShowAvailableActions(pot);
@@ -79,25 +80,25 @@ public class PotSystemIntegration : MonoBehaviour
     {
         if (pot == null || pot.PotActions == null) return;
         
-        Debug.Log($"[PotSystemIntegration] Azioni disponibili per {pot.PotId}:");
+        SporiumLogger.LogInfo(LogCategory.Pot, $"Azioni disponibili per {pot.PotId}:");
         
         // Usa il nuovo sistema PotActions per determinare le azioni disponibili
         if (pot.PotActions.CanPlant())
         {
-            Debug.Log($"  - Piantare seme (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Piantare seme (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
         }
         
         if (pot.PotActions.CanWater())
         {
-            Debug.Log($"  - Annaffiare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Annaffiare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
         }
         
         if (pot.PotActions.CanLight())
         {
-            Debug.Log($"  - Illuminare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Illuminare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
         }
         
-        Debug.Log($"    Azioni richieste: 1 per azione");
+        SporiumLogger.LogInfo(LogCategory.Pot, "    Azioni richieste: 1 per azione");
     }
     
     /// <summary>
@@ -113,7 +114,7 @@ public class PotSystemIntegration : MonoBehaviour
             if (pot.PotActions != null && potSystemConfig != null)
             {
                 pot.PotActions.SetConfig(potSystemConfig);
-                Debug.Log($"[PotSystemIntegration] Configurato vaso {pot.PotId}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"Configurato vaso {pot.PotId}");
             }
         }
     }

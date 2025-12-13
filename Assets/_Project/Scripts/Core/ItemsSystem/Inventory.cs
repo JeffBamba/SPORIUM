@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
@@ -27,7 +28,7 @@ namespace _Project.Sporae.Core
         {
             if (item == null)
             {
-                Debug.LogError("[Inventory.Add] Item is null");
+                SporiumLogger.LogError(LogCategory.Inventory, "Item is null");
                 return;  // BUG FIX: Esce subito per evitare NullReferenceException
             }
             

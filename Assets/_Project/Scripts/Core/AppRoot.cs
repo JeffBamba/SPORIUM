@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace Sporae.Core
 {
@@ -29,7 +30,7 @@ namespace Sporae.Core
                     
                     if (_instance == null)
                     {
-                        Debug.LogWarning("[AppRoot] Nessuna istanza di AppRoot trovata nella scena!");
+                        SporiumLogger.LogWarning(LogCategory.Core, "Nessuna istanza di AppRoot trovata nella scena!");
                     }
                 }
                 return _instance;
@@ -40,7 +41,7 @@ namespace Sporae.Core
         {
             if (_instance != null && _instance != this)
             {
-                Debug.LogWarning("[AppRoot] Duplicato di AppRoot trovato! Distruggo il duplicato.");
+                SporiumLogger.LogWarning(LogCategory.Core, "Duplicato di AppRoot trovato! Distruggo il duplicato.");
                 Destroy(gameObject);
                 return;
             }
@@ -64,7 +65,7 @@ namespace Sporae.Core
         {
             if (gameManagerPrefab == null && autoCreateGameManager)
             {
-                Debug.LogWarning("[AppRoot] gameManagerPrefab non assegnato ma autoCreateGameManager è attivo!");
+                SporiumLogger.LogWarning(LogCategory.Core, "gameManagerPrefab non assegnato ma autoCreateGameManager è attivo!");
             }
         }
 
@@ -79,7 +80,7 @@ namespace Sporae.Core
                 _cachedGameManager = existingGameManager; // BUG FIX: Cache il GameManager trovato
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[AppRoot] GameManager già presente nella scena: {existingGameManager.name}");
+                    SporiumLogger.LogInfo(LogCategory.Core, $"GameManager già presente nella scena: {existingGameManager.name}");
                 }
                 // Non creare un nuovo GameManager se ne esiste già uno
                 _isInitialized = true;
@@ -90,7 +91,7 @@ namespace Sporae.Core
             
             if (showDebugLogs)
             {
-                Debug.Log("[AppRoot] AppRoot inizializzato correttamente.");
+                SporiumLogger.LogInfo(LogCategory.Core, "AppRoot inizializzato correttamente.");
             }
         }
         
@@ -99,7 +100,7 @@ namespace Sporae.Core
         {
             if (string.IsNullOrEmpty(key))
             {
-                Debug.LogWarning("[AppRoot] Chiave non può essere null o vuota!");
+                SporiumLogger.LogWarning(LogCategory.Core, "Chiave non può essere null o vuota!");
                 return;
             }
             
@@ -110,7 +111,7 @@ namespace Sporae.Core
         {
             if (string.IsNullOrEmpty(key))
             {
-                Debug.LogWarning("[AppRoot] Chiave non può essere null o vuota!");
+                SporiumLogger.LogWarning(LogCategory.Core, "Chiave non può essere null o vuota!");
                 return defaultValue;
             }
             
@@ -122,7 +123,7 @@ namespace Sporae.Core
                 }
                 else
                 {
-                    Debug.LogWarning($"[AppRoot] Tipo non corrispondente per chiave '{key}'. " +
+                    SporiumLogger.LogWarning(LogCategory.Core, $"Tipo non corrispondente per chiave '{key}'. " +
                                    $"Atteso: {typeof(T)}, Trovato: {value?.GetType()}");
                 }
             }
@@ -175,7 +176,7 @@ namespace Sporae.Core
         {
             if (showDebugLogs)
             {
-                Debug.Log("[AppRoot] Uscita applicazione richiesta.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Uscita applicazione richiesta.");
             }
             
             #if UNITY_EDITOR
@@ -189,7 +190,7 @@ namespace Sporae.Core
         {
             if (showDebugLogs)
             {
-                Debug.Log("[AppRoot] Riavvio applicazione richiesto.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Riavvio applicazione richiesto.");
             }
             
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
@@ -201,7 +202,7 @@ namespace Sporae.Core
             
             if (showDebugLogs)
             {
-                Debug.Log($"[AppRoot] TimeScale impostato a: {Time.timeScale}");
+                SporiumLogger.LogDebug(LogCategory.Core, $"TimeScale impostato a: {Time.timeScale}");
             }
         }
 
@@ -228,14 +229,14 @@ namespace Sporae.Core
         {
             if (_globalData.Count == 0)
             {
-                Debug.Log("[AppRoot] Nessun dato globale presente.");
+                SporiumLogger.LogDebug(LogCategory.Core, "Nessun dato globale presente.");
                 return;
             }
             
-            Debug.Log("[AppRoot] Dati globali:");
+            SporiumLogger.LogDebug(LogCategory.Core, "Dati globali:");
             foreach (var kvp in _globalData)
             {
-                Debug.Log($"  {kvp.Key}: {kvp.Value} ({kvp.Value?.GetType()})");
+                SporiumLogger.LogDebug(LogCategory.Core, $"  {kvp.Key}: {kvp.Value} ({kvp.Value?.GetType()})");
             }
         }
 
@@ -280,16 +281,16 @@ namespace Sporae.Core
                     if (showDebugLogs)
                     {
                         if (saveSuccess)
-                            Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (pausa applicazione)");
+                            SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito (pausa applicazione)");
                         else
-                            Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (pausa)");
+                            SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico (pausa)");
                     }
                 }
             }
             
             if (showDebugLogs)
             {
-                Debug.Log($"[AppRoot] Applicazione {(pauseStatus ? "in pausa" : "ripresa")}.");
+                SporiumLogger.LogDebug(LogCategory.Core, $"Applicazione {(pauseStatus ? "in pausa" : "ripresa")}.");
             }
         }
 
@@ -305,16 +306,16 @@ namespace Sporae.Core
                     if (showDebugLogs)
                     {
                         if (saveSuccess)
-                            Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (perso focus)");
+                            SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito (perso focus)");
                         else
-                            Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (focus)");
+                            SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico (focus)");
                     }
                 }
             }
             
             if (showDebugLogs)
             {
-                Debug.Log($"[AppRoot] Applicazione {(hasFocus ? "in focus" : "perso focus")}.");
+                SporiumLogger.LogDebug(LogCategory.Core, $"Applicazione {(hasFocus ? "in focus" : "perso focus")}.");
             }
         }
         
@@ -328,9 +329,9 @@ namespace Sporae.Core
                 if (showDebugLogs)
                 {
                     if (saveSuccess)
-                        Debug.Log("[AppRoot] ✅ Salvataggio automatico eseguito (chiusura applicazione)");
+                        SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito (chiusura applicazione)");
                     else
-                        Debug.LogWarning("[AppRoot] ⚠️ Errore durante il salvataggio automatico (quit)");
+                        SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico (quit)");
                 }
             }
         }

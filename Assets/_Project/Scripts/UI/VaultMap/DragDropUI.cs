@@ -5,6 +5,7 @@ using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -48,7 +49,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[DragDropUI] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer!");
             }
 
             if (!_confirmOperation)
@@ -140,7 +141,7 @@ namespace _Project
             
             if (!inventoryFrom.Consume(itemId, amount))
             {
-                Debug.LogError($"Cannot consume item from inventory: {itemId}");
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot consume item from inventory: {itemId}");
                 return;
             }
 

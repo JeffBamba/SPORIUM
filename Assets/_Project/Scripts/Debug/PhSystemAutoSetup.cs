@@ -33,7 +33,7 @@ namespace _Project
         {
             if (showDebugLogs)
             {
-                Debug.Log("[PhSystemAutoSetup] Inizializzazione setup sistema pH...");
+                SporiumLogger.LogInfo(LogCategory.Ph, "Inizializzazione setup sistema pH...");
             }
             
             // Crea PhSystemDebugConsole se richiesto e mancante
@@ -56,7 +56,7 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log("[PhSystemAutoSetup] Setup sistema pH completato!");
+                SporiumLogger.LogInfo(LogCategory.Ph, "Setup sistema pH completato!");
             }
         }
         
@@ -69,7 +69,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.Log("[PhSystemAutoSetup] PhSystemDebugConsole già presente nella scena");
+                    SporiumLogger.LogDebug(LogCategory.Ph, "PhSystemDebugConsole già presente nella scena");
                 }
                 return;
             }
@@ -83,8 +83,8 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log($"[PhSystemAutoSetup] Creato PhSystemDebugConsole su {consoleGO.name}");
-                Debug.Log($"[PhSystemAutoSetup] Tasto toggle: {toggleKey}, Abilitato: {enableDebugConsole}");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Creato PhSystemDebugConsole su {consoleGO.name}");
+                SporiumLogger.LogDebug(LogCategory.Ph, $"Tasto toggle: {toggleKey}, Abilitato: {enableDebugConsole}");
             }
         }
         
@@ -97,7 +97,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.Log("[PhSystemAutoSetup] HUDPhDisplay già presente nella scena");
+                    SporiumLogger.LogDebug(LogCategory.UI, "HUDPhDisplay già presente nella scena");
                 }
                 return;
             }
@@ -108,7 +108,7 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log($"[PhSystemAutoSetup] Creato HUDPhDisplay su {hudGO.name}");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Creato HUDPhDisplay su {hudGO.name}");
             }
             
             // L'HUD creerà automaticamente gli elementi UI se autoCreateUI è true
@@ -123,7 +123,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.Log("[PhSystemAutoSetup] PhSystemIdleOscillation già presente nella scena");
+                    SporiumLogger.LogDebug(LogCategory.Ph, "PhSystemIdleOscillation già presente nella scena");
                 }
                 return;
             }
@@ -134,7 +134,7 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log($"[PhSystemAutoSetup] Creato PhSystemIdleOscillation su {oscillationGO.name}");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Creato PhSystemIdleOscillation su {oscillationGO.name}");
             }
         }
         

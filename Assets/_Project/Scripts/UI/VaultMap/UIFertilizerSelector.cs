@@ -5,6 +5,7 @@ using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -49,7 +50,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[UIFertilizerSelector] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
@@ -157,20 +158,20 @@ namespace _Project
             // Verifica che i riferimenti UI siano assegnati, altrimenti crea automaticamente
             if (selectorPanel == null || fertilizerButtonContainer == null)
             {
-                Debug.LogWarning("[UIFertilizerSelector] ⚠️ Riferimenti UI mancanti. Creazione automatica UI...");
+                SporiumLogger.LogWarning(LogCategory.UI, "Riferimenti UI mancanti. Creazione automatica UI...");
                 CreateUI();
             }
             
             // Verifica di nuovo dopo la creazione automatica
             if (selectorPanel == null)
             {
-                Debug.LogError("[UIFertilizerSelector] ⚠️ selectorPanel non assegnato dopo creazione automatica!");
+                SporiumLogger.LogError(LogCategory.UI, "selectorPanel non assegnato dopo creazione automatica!");
                 return;
             }
             
             if (fertilizerButtonContainer == null)
             {
-                Debug.LogError("[UIFertilizerSelector] ⚠️ fertilizerButtonContainer non assegnato dopo creazione automatica!");
+                SporiumLogger.LogError(LogCategory.UI, "fertilizerButtonContainer non assegnato dopo creazione automatica!");
                 return;
             }
             
@@ -221,7 +222,7 @@ namespace _Project
             
             if (_playerInventory == null)
             {
-                Debug.LogWarning("[UIFertilizerSelector] PlayerInventory non trovato!");
+                SporiumLogger.LogWarning(LogCategory.UI, "PlayerInventory non trovato!");
                 return fertilizers;
             }
             
@@ -259,7 +260,7 @@ namespace _Project
             
             if (fertilizerButtonContainer == null)
             {
-                Debug.LogError("[UIFertilizerSelector] fertilizerButtonContainer non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "fertilizerButtonContainer non assegnato!");
                 return;
             }
             
@@ -401,17 +402,17 @@ namespace _Project
         /// </summary>
         private void OnFertilizerButtonClicked(string fertilizerTypeId)
         {
-            Debug.Log($"[UIFertilizerSelector] 🌿 Fertilizzante selezionato: {fertilizerTypeId}, TargetPot: {_targetPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Fertilizzante selezionato: {fertilizerTypeId}, TargetPot: {_targetPot?.PotId ?? "NULL"}");
             
             // Verifica che ci sia un target pot
             if (_targetPot == null)
             {
-                Debug.LogError("[UIFertilizerSelector] ⚠️ TargetPot è NULL! Impossibile applicare fertilizzante.");
+                SporiumLogger.LogError(LogCategory.UI, "TargetPot è NULL! Impossibile applicare fertilizzante.");
                 return;
             }
             
             // Emetti evento PRIMA di nascondere il pannello
-            Debug.Log($"[UIFertilizerSelector] 🌿 Emettendo evento OnFertilizerSelected per fertilizzante {fertilizerTypeId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Emettendo evento OnFertilizerSelected per fertilizzante {fertilizerTypeId}");
             OnFertilizerSelected?.Invoke(fertilizerTypeId);
             
             // Nascondi dopo aver emesso l'evento
@@ -423,7 +424,7 @@ namespace _Project
         /// </summary>
         private void OnCloseClicked()
         {
-            Debug.Log("[UIFertilizerSelector] Selezione annullata");
+            SporiumLogger.LogDebug(LogCategory.UI, "Selezione annullata");
             
             OnCancelled?.Invoke();
             Hide();
@@ -499,7 +500,7 @@ namespace _Project
             if (selectorCanvas != null)
             {
                 selectorCanvas.sortingOrder = canvasSortingOrder;
-                Debug.Log($"[UIFertilizerSelector] Canvas sorting order impostato a {canvasSortingOrder}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Canvas sorting order impostato a {canvasSortingOrder}");
             }
         }
         
@@ -560,14 +561,14 @@ namespace _Project
                 canvas.sortingOrder = canvasSortingOrder;
                 canvasGO.AddComponent<CanvasScaler>();
                 canvasGO.AddComponent<GraphicRaycaster>();
-                Debug.Log($"[UIFertilizerSelector] Creato Canvas con sorting order {canvasSortingOrder}");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Creato Canvas con sorting order {canvasSortingOrder}");
             }
             else
             {
                 if (canvas.sortingOrder < canvasSortingOrder)
                 {
                     canvas.sortingOrder = canvasSortingOrder;
-                    Debug.Log($"[UIFertilizerSelector] Canvas esistente aggiornato con sorting order {canvasSortingOrder}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Canvas esistente aggiornato con sorting order {canvasSortingOrder}");
                 }
             }
             
@@ -695,7 +696,7 @@ namespace _Project
             // Imposta il panel come non attivo inizialmente
             selectorPanel.SetActive(false);
             
-            Debug.Log("[UIFertilizerSelector] ✅ UI creata automaticamente con successo!");
+            SporiumLogger.LogInfo(LogCategory.UI, "UI creata automaticamente con successo!");
         }
     }
 }

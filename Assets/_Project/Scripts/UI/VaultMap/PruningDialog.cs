@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using _Project; // Per UINotification
+using Sporae.DevTools;
 
 namespace Sporae.Dome.UI
 {
@@ -105,12 +106,12 @@ namespace Sporae.Dome.UI
                 File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
             } catch { }
             // #endregion
-            Debug.Log($"[PruningDialog] ✂️ Toggle value changed: {isOn} (hasSprayAvailable: {_hasSprayAvailable})");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Toggle value changed: {isOn} (hasSprayAvailable: {_hasSprayAvailable})");
             
             // BUG FIX: Se l'utente prova a selezionare il toggle ma non c'è STR-004, resetta
             if (isOn && !_hasSprayAvailable)
             {
-                Debug.LogWarning("[PruningDialog] ⚠️ Tentativo di selezionare toggle senza STR-004 disponibile. Reset.");
+                SporiumLogger.LogWarning(LogCategory.UI, "Tentativo di selezionare toggle senza STR-004 disponibile. Reset.");
                 if (sprayToggle != null)
                 {
                     sprayToggle.isOn = false;
@@ -135,7 +136,7 @@ namespace Sporae.Dome.UI
             }
             else
             {
-                Debug.LogWarning("[PruningDialog] ⚠️ UINotification non trovato! Toast non mostrato.");
+                SporiumLogger.LogWarning(LogCategory.UI, "UINotification non trovato! Toast non mostrato.");
             }
         }
         
@@ -176,13 +177,13 @@ namespace Sporae.Dome.UI
                 Canvas canvas = sprayToggle.GetComponentInParent<Canvas>();
                 if (canvas != null && canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
                 {
-                    Debug.LogWarning("[PruningDialog] ⚠️ Canvas non ha GraphicRaycaster! Il toggle potrebbe non funzionare.");
+                    SporiumLogger.LogWarning(LogCategory.UI, "Canvas non ha GraphicRaycaster! Il toggle potrebbe non funzionare.");
                 }
                 
                 // BUG FIX: Verifica che il toggle abbia un targetGraphic
                 if (sprayToggle.targetGraphic == null)
                 {
-                    Debug.LogWarning("[PruningDialog] ⚠️ Toggle non ha targetGraphic! Il toggle potrebbe non funzionare.");
+                    SporiumLogger.LogWarning(LogCategory.UI, "Toggle non ha targetGraphic! Il toggle potrebbe non funzionare.");
                 }
                 
                 // #region agent log
@@ -207,7 +208,7 @@ namespace Sporae.Dome.UI
             }
             else
             {
-                Debug.LogError("[PruningDialog] ⚠️ sprayToggle è NULL! Verifica che sia collegato nel prefab.");
+                SporiumLogger.LogError(LogCategory.UI, "sprayToggle è NULL! Verifica che sia collegato nel prefab.");
             }
         }
         

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 /// <summary>
 /// Debug script per il sistema di crescita BLK-01.03A.
@@ -31,7 +32,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         
         if (enableDebugLogs)
         {
-            Debug.Log("[BLK-01.03A] GrowthDebugger inizializzato. Premi F6 per stampare stato vasi.");
+            SporiumLogger.LogInfo(LogCategory.Dome, "GrowthDebugger inizializzato. Premi F6 per stampare stato vasi.");
         }
     }
 
@@ -51,14 +52,14 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
     [ContextMenu("Print All Pots Status")]
     public void PrintAllPotsStatus()
     {
-        Debug.Log("=== STATO VASI BLK-01.03A ===");
+        SporiumLogger.LogInfo(LogCategory.Dome, "=== STATO VASI BLK-01.03A ===");
         
         // Trova tutti i vasi nella scena
         FindAllPots();
         
         if (allPots.Count == 0)
         {
-            Debug.Log("Nessun vaso trovato nella scena.");
+            SporiumLogger.LogWarning(LogCategory.Dome, "Nessun vaso trovato nella scena.");
             return;
         }
 
@@ -75,7 +76,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         // Stampa informazioni sul sistema di crescita
         PrintGrowthSystemInfo();
         
-        Debug.Log("=== FINE STATO VASI ===");
+        SporiumLogger.LogInfo(LogCategory.Dome, "=== FINE STATO VASI ===");
     }
 
     /// <summary>
@@ -108,27 +109,27 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
         string stageName = GetStageName(pot.Stage);
         string threshold = GetStageThreshold(pot.Stage);
         
-        Debug.Log($"[{index}] {pot.PotId}:");
-        Debug.Log($"  - Stato: {(pot.HasPlant ? "Pianta" : "Vuoto")}");
+        SporiumLogger.LogInfo(LogCategory.Pot, $"[{index}] {pot.PotId}:");
+        SporiumLogger.LogInfo(LogCategory.Pot, $"  - Stato: {(pot.HasPlant ? "Pianta" : "Vuoto")}");
         
         if (pot.HasPlant)
         {
-            Debug.Log($"  - Stadio: {stageName} (Progresso: {pot.GrowthPoints}/{threshold})");
-            Debug.Log($"  - Giorni dalla semina: {pot.DaysSincePlant}");
-            Debug.Log($"  - Giorni negligenza: {pot.DaysNeglectedStreak}");
-            Debug.Log($"  - Idratazione: {pot.Hydration}/3");
-            Debug.Log($"  - Luce: {pot.LightExposure}/3");
-            Debug.Log($"  - Timestamps:");
-            Debug.Log($"    * Piantato: Giorno {pot.PlantedDay}");
-            Debug.Log($"    * Ultima acqua: Giorno {pot.LastWateredDay}");
-            Debug.Log($"    * Ultima luce: Giorno {pot.LastLitDay}");
-            Debug.Log($"  - Sistema Irrigazione (GDD AZ-11):");
-            Debug.Log($"    * Stato: {(pot.WateringSystemOn ? "ON" : "OFF")}");
-            Debug.Log($"    * Giorni ON: {pot.DaysWateringSystemOn}");
-            Debug.Log($"    * Accumulatore WAT-RAW: {pot.WateringRawWaterAccumulator:F1}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Stadio: {stageName} (Progresso: {pot.GrowthPoints}/{threshold})");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Giorni dalla semina: {pot.DaysSincePlant}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Giorni negligenza: {pot.DaysNeglectedStreak}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Idratazione: {pot.Hydration}/3");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Luce: {pot.LightExposure}/3");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Timestamps:");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Piantato: Giorno {pot.PlantedDay}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Ultima acqua: Giorno {pot.LastWateredDay}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Ultima luce: Giorno {pot.LastLitDay}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Sistema Irrigazione (GDD AZ-11):");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Stato: {(pot.WateringSystemOn ? "ON" : "OFF")}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Giorni ON: {pot.DaysWateringSystemOn}");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"    * Accumulatore WAT-RAW: {pot.WateringRawWaterAccumulator:F1}");
         }
         
-        Debug.Log("  ---");
+        SporiumLogger.LogInfo(LogCategory.Pot, "  ---");
     }
 
     /// <summary>
@@ -141,19 +142,19 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
             var config = dayCycleController.GetGrowthConfig();
             if (config != null)
             {
-                Debug.Log("=== CONFIGURAZIONE CRESCITA ===");
-                Debug.Log($"  - Seed → Sprout: {config.pointsSeedToSprout} punti");
-                Debug.Log($"  - Sprout → Mature: {config.pointsSproutToMature} punti");
-                Debug.Log($"  - Cura ideale: {config.pointsIdealCare} punti");
-                Debug.Log($"  - Cura parziale: {config.pointsPartialCare} punti");
-                Debug.Log($"  - Nessuna cura: {config.pointsNoCare} punti");
-                Debug.Log($"  - Decadimento idratazione: {config.dailyHydrationDecay}");
-                Debug.Log($"  - Vasi registrati: {dayCycleController.GetRegisteredPotCount()}");
+                SporiumLogger.LogInfo(LogCategory.Dome, "=== CONFIGURAZIONE CRESCITA ===");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Seed → Sprout: {config.pointsSeedToSprout} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Sprout → Mature: {config.pointsSproutToMature} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Cura ideale: {config.pointsIdealCare} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Cura parziale: {config.pointsPartialCare} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Nessuna cura: {config.pointsNoCare} punti");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Decadimento idratazione: {config.dailyHydrationDecay}");
+                SporiumLogger.LogInfo(LogCategory.Dome, $"  - Vasi registrati: {dayCycleController.GetRegisteredPotCount()}");
             }
         }
         else
         {
-            Debug.LogWarning("DayCycleController non trovato!");
+            SporiumLogger.LogWarning(LogCategory.Dome, "DayCycleController non trovato!");
         }
     }
 
@@ -193,7 +194,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
     {
         if (dayCycleController == null)
         {
-            Debug.LogError("DayCycleController non trovato!");
+            SporiumLogger.LogError(LogCategory.Dome, "DayCycleController non trovato!");
             return;
         }
 
@@ -206,7 +207,7 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
             }
         }
 
-        Debug.Log($"[BLK-01.03A] Forzata registrazione di {allPots.Count} vasi nel DayCycleController");
+        SporiumLogger.LogInfo(LogCategory.Dome, $"Forzata registrazione di {allPots.Count} vasi nel DayCycleController");
     }
 
     /// <summary>
@@ -217,20 +218,20 @@ public class SPOR_BLK_01_03A_GrowthDebugger : MonoBehaviour
     {
         if (dayCycleController == null)
         {
-            Debug.LogError("DayCycleController non trovato!");
+            SporiumLogger.LogError(LogCategory.Dome, "DayCycleController non trovato!");
             return;
         }
 
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
-            Debug.Log($"[BLK-01.03A] Simulazione tick crescita per giorno {_dayCycleSystem.CurrentDay}");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"Simulazione tick crescita per giorno {_dayCycleSystem.CurrentDay}");
             // Il DayCycleController si iscrive automaticamente a OnDayChanged
             // quindi questo è solo per debug
         }
         else
         {
-            Debug.LogError("GameManager non trovato!");
+            SporiumLogger.LogError(LogCategory.Core, "GameManager non trovato!");
         }
     }
 }

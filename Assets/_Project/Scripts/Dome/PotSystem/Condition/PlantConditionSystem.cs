@@ -214,10 +214,10 @@ namespace Sporae.Dome.PotSystem.Condition
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (potState != null && potState.PotId != null)
             {
-                Debug.Log($"[PlantConditionSystem] 🔍 DEBUG Calcolo {potState.PotId}: Base={DifficultyCalibrationConfig.BaseScore}, Score finale={score}, Contributi: {contributors.Count} (Pos: {System.Array.FindAll(contributors.ToArray(), c => c.IsPositive).Length}, Neg: {System.Array.FindAll(contributors.ToArray(), c => !c.IsPositive).Length})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"DEBUG Calcolo {potState.PotId}: Base={DifficultyCalibrationConfig.BaseScore}, Score finale={score}, Contributi: {contributors.Count} (Pos: {System.Array.FindAll(contributors.ToArray(), c => c.IsPositive).Length}, Neg: {System.Array.FindAll(contributors.ToArray(), c => !c.IsPositive).Length})");
                 foreach (var c in contributors)
                 {
-                    Debug.Log($"  - {c.Source}: {(c.IsPositive ? "+" : "")}{c.Value}");
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"  - {c.Source}: {(c.IsPositive ? "+" : "")}{c.Value}");
                 }
             }
             #endif

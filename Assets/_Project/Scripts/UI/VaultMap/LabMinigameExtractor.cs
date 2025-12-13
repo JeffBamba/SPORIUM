@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -81,7 +82,7 @@ namespace _Project
             _gameManager = ServiceContainer.Instance?.Get<GameManager>();
             if (_gameManager == null)
             {
-                Debug.LogWarning("[LabMinigameExtractor] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;

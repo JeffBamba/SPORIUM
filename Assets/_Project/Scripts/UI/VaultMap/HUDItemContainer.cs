@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -50,7 +51,7 @@ namespace _Project
         {
             if (_items == null || id < 0 || id >= _items.Count)
             {
-                Debug.LogWarning($"[HUDItemContainer] ⚠️ Tentativo di disabilitare slot invalido: {id} (capacità: {_items?.Count ?? 0})");
+                SporiumLogger.LogWarning(LogCategory.UI, $"⚠️ Tentativo di disabilitare slot invalido: {id} (capacità: {_items?.Count ?? 0})");
                 return;
             }
             
@@ -64,19 +65,19 @@ namespace _Project
         {
             if (_items == null)
             {
-                Debug.LogError("[HUDItemContainer] ⚠️ Lista _items è null! Assicurati che gli item siano assegnati nell'Inspector.");
+                SporiumLogger.LogError(LogCategory.UI, "⚠️ Lista _items è null! Assicurati che gli item siano assegnati nell'Inspector.");
                 return;
             }
             
             if (id < 0 || id >= _items.Count)
             {
-                Debug.LogError($"[HUDItemContainer] ⚠️ Tentativo di impostare item con indice invalido: {id} (capacità: {_items.Count}). Item: {itemName}");
+                SporiumLogger.LogError(LogCategory.UI, $"⚠️ Tentativo di impostare item con indice invalido: {id} (capacità: {_items.Count}). Item: {itemName}");
                 return;
             }
             
             if (_items[id] == null)
             {
-                Debug.LogError($"[HUDItemContainer] ⚠️ Item slot {id} è null! Assicurati che tutti gli slot siano assegnati nell'Inspector.");
+                SporiumLogger.LogError(LogCategory.UI, $"⚠️ Item slot {id} è null! Assicurati che tutti gli slot siano assegnati nell'Inspector.");
                 return;
             }
             

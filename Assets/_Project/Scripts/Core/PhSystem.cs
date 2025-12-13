@@ -200,7 +200,7 @@ namespace _Project
             {
                 _currentPh = Mathf.Clamp(_currentPh - deltaToRemove, MIN_PH, MAX_PH);
                 OnPhChanged?.Invoke(CurrentPh, -deltaToRemove);
-                Debug.Log($"[PhSystem] 🧹 Drift simulato rimosso: {-deltaToRemove:F2}, pH ora: {_currentPh:F2}");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Drift simulato rimosso: {-deltaToRemove:F2}, pH ora: {_currentPh:F2}");
             }
         }
         
@@ -232,7 +232,7 @@ namespace _Project
             if (Mathf.Abs(drift) > 0.01f)
             {
                 _queuedPlantsDrift += drift;
-                Debug.Log($"[PhSystem] ✅ RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}, day={day}");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}, day={day}");
             }
         }
         
@@ -254,7 +254,7 @@ namespace _Project
                 {
                     // Se era accodato per oggi, rimuovilo dai queued
                     _queuedPlantsDrift -= _plantContributions[i].DailyDrift;
-                    Debug.Log($"[PhSystem] 🧹 Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"Cleanup: Rimuovo contributo obsoleto - PotId={_plantContributions[i].PotId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
                     _plantContributions.RemoveAt(i);
                     removedCount++;
                 }
@@ -273,7 +273,7 @@ namespace _Project
                 
                 if (_plantContributions.Count == 0)
                 {
-                    Debug.Log($"[PhSystem] 🔄 Cleanup: _plantContributions è vuoto dopo cleanup");
+                    SporiumLogger.LogDebug(LogCategory.Ph, "Cleanup: _plantContributions è vuoto dopo cleanup");
                 }
                 
                 // Nessun ricalcolo pH perché mancano i valori rimossi già applicati; la rimozione futura è garantita (queued = 0).
@@ -289,7 +289,7 @@ namespace _Project
         {
             if (string.IsNullOrEmpty(potId))
             {
-                Debug.LogWarning("[PhSystem] ⚠️ RemovePlantContributions chiamato con potId NULL o vuoto!");
+                SporiumLogger.LogWarning(LogCategory.Ph, "RemovePlantContributions chiamato con potId NULL o vuoto!");
                 return;
             }
             
@@ -302,7 +302,7 @@ namespace _Project
                 if (_plantContributions[i].PotId == potId)
                 {
                     totalDriftToRemove += _plantContributions[i].DailyDrift;
-                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: PotId={potId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"Trovato contributo da rimuovere: PotId={potId}, PlantCode={_plantContributions[i].PlantCode}, Drift={_plantContributions[i].DailyDrift:F2}, Day={_plantContributions[i].Day}");
                     _plantContributions.RemoveAt(i);
                     removedCount++;
                 }
@@ -312,15 +312,15 @@ namespace _Project
             if (Mathf.Abs(totalDriftToRemove) > 0.01f)
             {
                 _queuedPlantsDrift = Mathf.Min(0f, _queuedPlantsDrift - totalDriftToRemove);
-                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH accodati per pianta nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedPlantsDrift:F2}), pH attuale = {CurrentPh:F2}");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Rimossi {removedCount} contributi pH accodati per pianta nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedPlantsDrift:F2}), pH attuale = {CurrentPh:F2}");
             }
             else if (removedCount > 0)
             {
-                Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per vaso {potId} ma drift totale era 0 o molto piccolo");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"Rimossi {removedCount} contributi per vaso {potId} ma drift totale era 0 o molto piccolo");
             }
             else
             {
-                Debug.LogWarning($"[PhSystem] ⚠️ Nessun contributo trovato per vaso {potId} da rimuovere!");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"Nessun contributo trovato per vaso {potId} da rimuovere!");
             }
         }
         
@@ -369,7 +369,7 @@ namespace _Project
         {
             if (string.IsNullOrEmpty(actionName) || string.IsNullOrEmpty(potId))
             {
-                Debug.LogWarning("[PhSystem] ⚠️ RemoveActionContribution chiamato con actionName o potId NULL o vuoto!");
+                SporiumLogger.LogWarning(LogCategory.Ph, "RemoveActionContribution chiamato con actionName o potId NULL o vuoto!");
                 return;
             }
             
@@ -382,7 +382,7 @@ namespace _Project
                 if (_actionContributions[i].ActionName == actionName && _actionContributions[i].PotId == potId)
                 {
                     totalDriftToRemove += _actionContributions[i].Delta;
-                    Debug.Log($"[PhSystem] 🔍 Trovato contributo da rimuovere: Action={actionName}, PotId={potId}, Delta={_actionContributions[i].Delta:F2}");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"Trovato contributo da rimuovere: Action={actionName}, PotId={potId}, Delta={_actionContributions[i].Delta:F2}");
                     _actionContributions.RemoveAt(i);
                     removedCount++;
                 }
@@ -393,7 +393,7 @@ namespace _Project
             {
                 // Evita di generare offset positivo: mantieni il queued non maggiore di 0 per drift negativi
                 _queuedActionsDrift = Mathf.Min(0f, _queuedActionsDrift - totalDriftToRemove);
-                Debug.Log($"[PhSystem] ✅ Rimossi {removedCount} contributi pH accodati per {actionName} nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedActionsDrift:F2})");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"Rimossi {removedCount} contributi pH accodati per {actionName} nel vaso {potId}: drift accodato rimosso = {totalDriftToRemove:F2} (queued ora: {_queuedActionsDrift:F2})");
                 
                 // BLK-02.07 BUG FIX: Notifica cambio per aggiornare tooltip quando vengono rimossi contributi
                 // Emetti evento con delta 0 per forzare aggiornamento tooltip senza cambiare pH corrente
@@ -401,7 +401,7 @@ namespace _Project
             }
             else if (removedCount > 0)
             {
-                Debug.Log($"[PhSystem] ⚠️ Rimossi {removedCount} contributi per {actionName} nel vaso {potId} ma drift totale accodato era 0 o molto piccolo");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"Rimossi {removedCount} contributi per {actionName} nel vaso {potId} ma drift totale accodato era 0 o molto piccolo");
                 
                 // BLK-02.07 BUG FIX: Notifica cambio anche se drift era 0 (per aggiornare tooltip)
                 OnPhChanged?.Invoke(CurrentPh, 0f);
@@ -571,7 +571,7 @@ namespace _Project
                 // Se la lista è vuota ma il totale è ancora diverso da 0, potrebbe essere un problema di sincronizzazione
                 // In questo caso, non mostriamo il fallback per evitare confusione
                 // Il totale verrà corretto al prossimo calcolo giornaliero
-                Debug.LogWarning($"[PhSystem] ⚠️ Discrepanza: _plantContributions è vuoto ma _plantsDrift = {contrib.PlantsDrift:F2}. Questo potrebbe indicare un problema di sincronizzazione.");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"Discrepanza: _plantContributions è vuoto ma _plantsDrift = {contrib.PlantsDrift:F2}. Questo potrebbe indicare un problema di sincronizzazione.");
             }
             
             // Mostra dettagli delle azioni individuali per pot
@@ -666,7 +666,7 @@ namespace _Project
             
             OnPhChanged?.Invoke(CurrentPh, actualDelta);
             
-            Debug.Log($"[PhSystem] ✅ ApplyQueuedDrifts: delta={actualDelta:F2}, pH={_currentPh:F2}, contrib=Base:{contrib.BasePh:F2} Plants:{contrib.PlantsDrift:F2} Actions:{contrib.ActionsDrift:F2} Events:{contrib.EventsDrift:F2} Daily:{contrib.DailyDrift:F2}");
+            SporiumLogger.LogDebug(LogCategory.Ph, $"ApplyQueuedDrifts: delta={actualDelta:F2}, pH={_currentPh:F2}, contrib=Base:{contrib.BasePh:F2} Plants:{contrib.PlantsDrift:F2} Actions:{contrib.ActionsDrift:F2} Events:{contrib.EventsDrift:F2} Daily:{contrib.DailyDrift:F2}");
         }
         
         /// <summary>

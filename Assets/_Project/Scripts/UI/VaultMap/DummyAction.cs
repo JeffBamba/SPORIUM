@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Sporae.DevTools;
 
 public class DummyAction : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class DummyAction : MonoBehaviour
         {
             if (!ValidateConfiguration())
             {
-                Debug.LogError("[DummyAction] Configurazione non valida! DummyAction disabilitato.");
+                SporiumLogger.LogError(LogCategory.Core, "Configurazione non valida! DummyAction disabilitato.");
                 enabled = false;
                 return;
             }
@@ -34,13 +35,13 @@ public class DummyAction : MonoBehaviour
         
         if (cost == null)
         {
-            Debug.LogError("[DummyAction] ActionCost non assegnato!");
+            SporiumLogger.LogError(LogCategory.Core, "ActionCost non assegnato!");
             isValid = false;
         }
         
         if (string.IsNullOrEmpty(actionName))
         {
-            Debug.LogWarning("[DummyAction] Nome azione vuoto. Impostato nome di default.");
+            SporiumLogger.LogWarning(LogCategory.Core, "Nome azione vuoto. Impostato nome di default.");
             actionName = "Azione";
         }
         
@@ -53,7 +54,7 @@ public class DummyAction : MonoBehaviour
         
         if (gameManager == null)
         {
-            Debug.LogWarning("[DummyAction] GameManager non trovato nella scena!");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non trovato nella scena!");
         }
         
         isInitialized = true;
@@ -63,19 +64,19 @@ public class DummyAction : MonoBehaviour
     {
         if (!isInitialized)
         {
-            Debug.LogWarning("[DummyAction] DummyAction non inizializzato!");
+            SporiumLogger.LogWarning(LogCategory.Core, "DummyAction non inizializzato!");
             return;
         }
 
         if (cost == null)
         {
-            Debug.LogError("[DummyAction] ActionCost non disponibile!");
+            SporiumLogger.LogError(LogCategory.Core, "ActionCost non disponibile!");
             return;
         }
 
         if (gameManager == null)
         {
-            Debug.LogWarning("[DummyAction] GameManager non disponibile!");
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile!");
             return;
         }
 
@@ -102,7 +103,7 @@ public class DummyAction : MonoBehaviour
     {
         if (showDebugLogs)
         {
-            Debug.Log($"[DummyAction] {actionName} eseguita con successo! " +
+            SporiumLogger.LogInfo(LogCategory.Core, $"{actionName} eseguita con successo! " +
                      $"Azioni rimanenti: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
         }
         
@@ -114,7 +115,7 @@ public class DummyAction : MonoBehaviour
     {
         if (showDebugLogs)
         {
-            Debug.LogWarning($"[DummyAction] {actionName} fallita: {reason}. " +
+            SporiumLogger.LogWarning(LogCategory.Core, $"{actionName} fallita: {reason}. " +
                            $"Azioni rimanenti: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
         }
         
@@ -170,7 +171,7 @@ public class DummyAction : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[DummyAction] {actionName} forzata! " +
+            SporiumLogger.LogInfo(LogCategory.Core, $"{actionName} forzata! " +
                      $"Azioni rimanenti: {gameManager.ActionsLeft}, CRY: {gameManager.CurrentCRY}");
         }
     }

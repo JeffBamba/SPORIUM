@@ -255,7 +255,7 @@ namespace _Project
             if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
             {
                 _targetCanvas = canvas;
-                Debug.Log($"[HUDPhDisplay] Trovato Canvas Screen Space Overlay: {canvas.name}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Trovato Canvas Screen Space Overlay: {canvas.name}");
                 break;
             }
         }
@@ -270,7 +270,7 @@ namespace _Project
             canvasGO.AddComponent<UnityEngine.UI.CanvasScaler>();
             canvasGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
             
-            Debug.Log("[HUDPhDisplay] Creato nuovo Canvas Screen Space Overlay per pH HUD");
+            SporiumLogger.LogInfo(LogCategory.UI, "Creato nuovo Canvas Screen Space Overlay per pH HUD");
             
             // Crea EventSystem se mancante
             if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)

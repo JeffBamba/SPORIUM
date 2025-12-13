@@ -3,6 +3,7 @@ using Sporae.Dome.PotSystem.Mold;
 using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Growth;
 using _Project; // Per PhSystem
+using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Mold
 {
@@ -99,7 +100,7 @@ namespace Sporae.Dome.PotSystem.Mold
                 // Riduce score di 10
                 potState.ConditionScore = Mathf.Max(0, potState.ConditionScore - config.mildScorePenalty);
                 
-                Debug.Log($"[MoldSystem] {potState.PotId}: Infestazione Mild applicata (-{config.mildLevelReduction} livello, -{config.mildScorePenalty} score)");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Mild applicata (-{config.mildLevelReduction} livello, -{config.mildScorePenalty} score)");
             }
             else if (moldRiskLevel >= 2) // Severe o Critical
             {
@@ -112,7 +113,7 @@ namespace Sporae.Dome.PotSystem.Mold
                 // Riduce score di 30
                 potState.ConditionScore = Mathf.Max(0, potState.ConditionScore - config.severeScorePenalty);
                 
-                Debug.Log($"[MoldSystem] {potState.PotId}: Infestazione Severe applicata (-{config.severeLevelReduction} livelli, -{config.severeScorePenalty} score, crescita bloccata)");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Severe applicata (-{config.severeLevelReduction} livelli, -{config.severeScorePenalty} score, crescita bloccata)");
             }
         }
         
@@ -145,7 +146,7 @@ namespace Sporae.Dome.PotSystem.Mold
             } catch { }
             // #endregion
             
-            Debug.Log($"[MoldSystem] {potState.PotId}: Infestazione rimossa");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Infestazione rimossa");
         }
     }
 }

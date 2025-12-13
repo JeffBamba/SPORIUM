@@ -6,6 +6,7 @@ using Sporae.Dome.PotSystem.Growth;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -49,7 +50,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[UISeedSelector] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
@@ -157,7 +158,7 @@ namespace _Project
             // Verifica che i riferimenti UI siano assegnati
             if (selectorPanel == null)
             {
-                Debug.LogError("[UISeedSelector] ⚠️ selectorPanel non assegnato! " +
+                SporiumLogger.LogError(LogCategory.UI, "selectorPanel non assegnato! " +
                     "Devi assegnare il GameObject del pannello principale nell'Inspector. " +
                     "Vedi le istruzioni in Assets/Docs/UISeedSelector_Setup.md");
                 return;
@@ -165,7 +166,7 @@ namespace _Project
             
             if (seedButtonContainer == null)
             {
-                Debug.LogError("[UISeedSelector] ⚠️ seedButtonContainer non assegnato! " +
+                SporiumLogger.LogError(LogCategory.UI, "seedButtonContainer non assegnato! " +
                     "Devi assegnare il Transform del container per i pulsanti semi nell'Inspector.");
                 return;
             }
@@ -217,7 +218,7 @@ namespace _Project
             
             if (_playerInventory == null)
             {
-                Debug.LogWarning("[UISeedSelector] PlayerInventory non trovato!");
+                SporiumLogger.LogWarning(LogCategory.UI, "PlayerInventory non trovato!");
                 return seeds;
             }
             
@@ -245,7 +246,7 @@ namespace _Project
             
             if (seedButtonContainer == null)
             {
-                Debug.LogError("[UISeedSelector] seedButtonContainer non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "seedButtonContainer non assegnato!");
                 return;
             }
             
@@ -389,17 +390,17 @@ namespace _Project
         /// </summary>
         private void OnSeedButtonClicked(string seedTypeId)
         {
-            Debug.Log($"[UISeedSelector] 🔵 Seme selezionato: {seedTypeId}, TargetPot: {_targetPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Seme selezionato: {seedTypeId}, TargetPot: {_targetPot?.PotId ?? "NULL"}");
             
             // Verifica che ci sia un target pot
             if (_targetPot == null)
             {
-                Debug.LogError("[UISeedSelector] ⚠️ TargetPot è NULL! Impossibile piantare seme.");
+                SporiumLogger.LogError(LogCategory.UI, "TargetPot è NULL! Impossibile piantare seme.");
                 return;
             }
             
             // Emetti evento PRIMA di nascondere il pannello
-            Debug.Log($"[UISeedSelector] 🔵 Emettendo evento OnSeedSelected per seme {seedTypeId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Emettendo evento OnSeedSelected per seme {seedTypeId}");
             OnSeedSelected?.Invoke(seedTypeId);
             
             // Nascondi dopo aver emesso l'evento
@@ -411,7 +412,7 @@ namespace _Project
         /// </summary>
         private void OnCloseClicked()
         {
-            Debug.Log("[UISeedSelector] Selezione annullata");
+            SporiumLogger.LogDebug(LogCategory.UI, "Selezione annullata");
             
             OnCancelled?.Invoke();
             Hide();
@@ -490,7 +491,7 @@ namespace _Project
             if (selectorCanvas != null)
             {
                 selectorCanvas.sortingOrder = canvasSortingOrder;
-                Debug.Log($"[UISeedSelector] Canvas sorting order impostato a {canvasSortingOrder} per renderlo sopra la HUD della pianta");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Canvas sorting order impostato a {canvasSortingOrder} per renderlo sopra la HUD della pianta");
             }
         }
         
@@ -589,7 +590,7 @@ namespace _Project
                 canvas.sortingOrder = canvasSortingOrder; // Imposta sorting order alto
                 canvasGO.AddComponent<CanvasScaler>();
                 canvasGO.AddComponent<GraphicRaycaster>();
-                Debug.Log($"[UISeedSelector] Creato Canvas per UISeedSelector con sorting order {canvasSortingOrder}");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Creato Canvas per UISeedSelector con sorting order {canvasSortingOrder}");
             }
             else
             {
@@ -597,7 +598,7 @@ namespace _Project
                 if (canvas.sortingOrder < canvasSortingOrder)
                 {
                     canvas.sortingOrder = canvasSortingOrder;
-                    Debug.Log($"[UISeedSelector] Canvas esistente aggiornato con sorting order {canvasSortingOrder}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Canvas esistente aggiornato con sorting order {canvasSortingOrder}");
                 }
             }
             
@@ -726,7 +727,7 @@ namespace _Project
             // Imposta il panel come non attivo inizialmente
             selectorPanel.SetActive(false);
             
-            Debug.Log("[UISeedSelector] UI creata automaticamente con successo!");
+            SporiumLogger.LogInfo(LogCategory.UI, "UI creata automaticamente con successo!");
         }
     }
 }

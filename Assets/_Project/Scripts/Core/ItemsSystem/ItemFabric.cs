@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
@@ -19,7 +20,7 @@ namespace _Project.Sporae.Core
             var config = Resources.Load<ItemConfig>("Items/" + typeId);
             if (!config)
             {
-                Debug.LogError($"Cannot find item config by id: {typeId}");
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config by id: {typeId}");
                 return null;
             }
 

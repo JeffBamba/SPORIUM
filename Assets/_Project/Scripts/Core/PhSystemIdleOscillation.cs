@@ -64,7 +64,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.LogWarning("[PhSystemIdleOscillation] PhSystem non trovato in Start(). Riproverà periodicamente.");
+                    SporiumLogger.LogWarning(LogCategory.Ph, "PhSystem non trovato in Start(). Riproverà periodicamente.");
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace _Project
             
             if (showDebugLogs)
             {
-                Debug.Log($"[PhSystemIdleOscillation] ✅ Inizializzato. Base pH: {_basePhValue:F2}, Oscillazione iniziale: 0.00 (sempre da 0.0)");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"✅ Inizializzato. Base pH: {_basePhValue:F2}, Oscillazione iniziale: 0.00 (sempre da 0.0)");
             }
         }
         
@@ -99,7 +99,7 @@ namespace _Project
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log("[PhSystemIdleOscillation] ✅ PhSystem registrato! Oscillazione attivata.");
+                    SporiumLogger.LogInfo(LogCategory.Ph, "✅ PhSystem registrato! Oscillazione attivata.");
                 }
             }
         }
@@ -157,7 +157,7 @@ namespace _Project
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[PhSystemIdleOscillation] Valore base aggiornato: {_basePhValue:F2}");
+                    SporiumLogger.LogInfo(LogCategory.Ph, $"Valore base aggiornato: {_basePhValue:F2}");
                 }
             }
             
@@ -172,7 +172,7 @@ namespace _Project
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[PhSystemIdleOscillation] Nuovo target casuale: {_targetOscillation:F2}");
+                    SporiumLogger.LogDebug(LogCategory.Ph, $"Nuovo target casuale: {_targetOscillation:F2}");
                 }
             }
             
@@ -192,7 +192,7 @@ namespace _Project
             // Debug log ogni 3 secondi per verificare che funzioni
             if (showDebugLogs && Time.time % 3f < 0.1f)
             {
-                Debug.Log($"[PhSystemIdleOscillation] 🔄 Base: {_basePhValue:F2}, Oscillation: {_currentOscillation:F2}, Total pH: {_phSystem.CurrentPh:F2}");
+                SporiumLogger.LogDebug(LogCategory.Ph, $"🔄 Base: {_basePhValue:F2}, Oscillation: {_currentOscillation:F2}, Total pH: {_phSystem.CurrentPh:F2}");
             }
         }
         
@@ -207,7 +207,7 @@ namespace _Project
                     
                     if (_phSystem != null && showDebugLogs)
                     {
-                        Debug.Log("[PhSystemIdleOscillation] PhSystem trovato nel ServiceContainer");
+                        SporiumLogger.LogInfo(LogCategory.Ph, "PhSystem trovato nel ServiceContainer");
                     }
                 }
                 else
@@ -220,7 +220,7 @@ namespace _Project
                         // Per ora aspettiamo che venga registrato
                         if (showDebugLogs)
                         {
-                            Debug.LogWarning("[PhSystemIdleOscillation] PhSystem non ancora registrato. Riproverà in Start().");
+                            SporiumLogger.LogWarning(LogCategory.Ph, "PhSystem non ancora registrato. Riproverà in Start().");
                         }
                     }
                 }
@@ -229,7 +229,7 @@ namespace _Project
             {
                 if (showDebugLogs)
                 {
-                    Debug.LogWarning($"[PhSystemIdleOscillation] Errore nel recupero di PhSystem: {ex.Message}");
+                    SporiumLogger.LogWarning(LogCategory.Ph, $"Errore nel recupero di PhSystem: {ex.Message}");
                 }
             }
         }
@@ -283,7 +283,7 @@ namespace _Project
                 
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[PhSystemIdleOscillation] Oscillazione resettata a 0.0. Base pH: {_basePhValue:F2}");
+                    SporiumLogger.LogInfo(LogCategory.Ph, $"Oscillazione resettata a 0.0. Base pH: {_basePhValue:F2}");
                 }
             }
         }

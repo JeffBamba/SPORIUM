@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -57,7 +58,7 @@ namespace _Project
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _nameLabel in ImproveReadability: {ex.Message}");
+                        SporiumLogger.LogWarning(LogCategory.UI, $"Impossibile impostare outline per _nameLabel in ImproveReadability: {ex.Message}");
                     }
                 }
                 
@@ -87,7 +88,7 @@ namespace _Project
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _scoreLabel in ImproveReadability: {ex.Message}");
+                        SporiumLogger.LogWarning(LogCategory.UI, $"Impossibile impostare outline per _scoreLabel in ImproveReadability: {ex.Message}");
                     }
                 }
                 
@@ -175,7 +176,7 @@ namespace _Project
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _nameLabel: {ex.Message}");
+                        SporiumLogger.LogWarning(LogCategory.UI, $"Impossibile impostare outline per _nameLabel: {ex.Message}");
                     }
                 }
                 
@@ -185,7 +186,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning($"[HUDInventoryItem] ⚠️ _nameLabel è null per item: {itemName}. Assicurati che il TextMeshProUGUI sia assegnato nell'Inspector.");
+                SporiumLogger.LogWarning(LogCategory.UI, $"⚠️ _nameLabel è null per item: {itemName}. Assicurati che il TextMeshProUGUI sia assegnato nell'Inspector.");
             }
             
             // Auto-trova score label se non assegnato
@@ -225,7 +226,7 @@ namespace _Project
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogWarning($"[HUDInventoryItem] Impossibile impostare outline per _scoreLabel: {ex.Message}");
+                        SporiumLogger.LogWarning(LogCategory.UI, $"Impossibile impostare outline per _scoreLabel: {ex.Message}");
                     }
                 }
                 

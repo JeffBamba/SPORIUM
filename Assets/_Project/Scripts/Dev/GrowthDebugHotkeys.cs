@@ -3,6 +3,7 @@ using UnityEngine;
 using Sporae.Core;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 namespace Sporae.Dev
 {
@@ -35,15 +36,15 @@ namespace Sporae.Dev
                 gameManager = FindObjectOfType<GameManager>();
                 if (gameManager == null)
                 {
-                    Debug.LogWarning("[BLK-01.03B] GrowthDebugHotkeys: GameManager non trovato nella scena!");
+                    SporiumLogger.LogWarning(LogCategory.Core, "GrowthDebugHotkeys: GameManager non trovato nella scena!");
                 }
             }
             
-            Debug.Log("[BLK-01.03B] GrowthDebugHotkeys inizializzato. Hotkeys disponibili:");
-            Debug.Log("[BLK-01.03B] G = Simula End Day");
-            Debug.Log("[BLK-01.03B] H = Toggle sistema irrigazione (GDD AZ-11)");
-            Debug.Log("[BLK-01.03B] L = Illumina vaso selezionato");
-            Debug.Log("[BLK-01.03B] P = Pianta su vaso selezionato");
+            SporiumLogger.LogInfo(LogCategory.Dome, "GrowthDebugHotkeys inizializzato. Hotkeys disponibili:");
+            SporiumLogger.LogInfo(LogCategory.Dome, "G = Simula End Day");
+            SporiumLogger.LogInfo(LogCategory.Dome, "H = Toggle sistema irrigazione (GDD AZ-11)");
+            SporiumLogger.LogInfo(LogCategory.Dome, "L = Illumina vaso selezionato");
+            SporiumLogger.LogInfo(LogCategory.Dome, "P = Pianta su vaso selezionato");
         }
         
         void Update()
@@ -80,9 +81,9 @@ namespace Sporae.Dev
         /// </summary>
         private void SimulateEndDay()
         {
-            Debug.Log("[BLK-01.03B] 🔄 Simulazione End Day...");
+            SporiumLogger.LogInfo(LogCategory.Dome, "🔄 Simulazione End Day...");
             _dayCycleSystem.EndDay();
-            Debug.Log($"[BLK-01.03B] ✅ End Day completato. Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+            SporiumLogger.LogInfo(LogCategory.Dome, $"✅ End Day completato. Nuovo giorno: {_dayCycleSystem.CurrentDay}");
         }
         
         /// <summary>
@@ -93,22 +94,22 @@ namespace Sporae.Dev
             selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per toggle irrigazione");
+                SporiumLogger.LogWarning(LogCategory.Pot, "❌ Nessun vaso selezionato o PotActions mancante per toggle irrigazione");
                 return;
             }
             
             bool currentState = selectedPot.PotActions.IsWateringSystemOn();
-            Debug.Log($"[BLK-01.03B] 💧 Toggle sistema irrigazione vaso {selectedPot.PotId} (stato attuale: {(currentState ? "ON" : "OFF")})...");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"💧 Toggle sistema irrigazione vaso {selectedPot.PotId} (stato attuale: {(currentState ? "ON" : "OFF")})...");
             bool success = selectedPot.PotActions.DoWater();
             
             if (success)
             {
                 bool newState = selectedPot.PotActions.IsWateringSystemOn();
-                Debug.Log($"[BLK-01.03B] ✅ Sistema irrigazione vaso {selectedPot.PotId} impostato a {(newState ? "ON" : "OFF")}!");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"✅ Sistema irrigazione vaso {selectedPot.PotId} impostato a {(newState ? "ON" : "OFF")}!");
             }
             else
             {
-                Debug.LogWarning($"[BLK-01.03B] ❌ Toggle sistema irrigazione vaso {selectedPot.PotId} fallito!");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"❌ Toggle sistema irrigazione vaso {selectedPot.PotId} fallito!");
             }
         }
         
@@ -120,22 +121,22 @@ namespace Sporae.Dev
             selectedPot = FindSelectedPot();
             if (!selectedPot || !selectedPot.PotActions)
             {
-                Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per illuminare");
+                SporiumLogger.LogWarning(LogCategory.Pot, "❌ Nessun vaso selezionato o PotActions mancante per illuminare");
                 return;
             }
             
             LedSystemState oldState = selectedPot.PotActions.GetLedSystemState();
-            Debug.Log($"[BLK-01.03B] 💡 Toggle LED sistema vaso {selectedPot.PotId} (stato attuale: {oldState})...");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"💡 Toggle LED sistema vaso {selectedPot.PotId} (stato attuale: {oldState})...");
             bool success = selectedPot.PotActions.DoLight((LedSystemState?)null);  // Toggle esplicito
             
             if (success)
             {
                 LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
-                Debug.Log($"[BLK-01.03B] ✅ LED sistema vaso {selectedPot.PotId}: {oldState} → {newState}");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"✅ LED sistema vaso {selectedPot.PotId}: {oldState} → {newState}");
             }
             else
             {
-                Debug.LogWarning($"[BLK-01.03B] ❌ Toggle LED sistema fallito!");
+                SporiumLogger.LogWarning(LogCategory.Pot, "❌ Toggle LED sistema fallito!");
             }
         }
         
@@ -147,20 +148,20 @@ namespace Sporae.Dev
             selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[BLK-01.03B] ❌ Nessun vaso selezionato o PotActions mancante per piantare");
+                SporiumLogger.LogWarning(LogCategory.Pot, "❌ Nessun vaso selezionato o PotActions mancante per piantare");
                 return;
             }
             
-            Debug.Log($"[BLK-01.03B] 🌱 Tentativo piantagione vaso {selectedPot.PotId}...");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"🌱 Tentativo piantagione vaso {selectedPot.PotId}...");
             bool success = selectedPot.PotActions.DoPlant();
             
             if (success)
             {
-                Debug.Log($"[BLK-01.03B] ✅ Vaso {selectedPot.PotId} piantato con successo!");
+                SporiumLogger.LogInfo(LogCategory.Pot, $"✅ Vaso {selectedPot.PotId} piantato con successo!");
             }
             else
             {
-                Debug.LogWarning($"[BLK-01.03B] ❌ Piantagione vaso {selectedPot.PotId} fallita!");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"❌ Piantagione vaso {selectedPot.PotId} fallita!");
             }
         }
         
@@ -181,7 +182,7 @@ namespace Sporae.Dev
             // Fallback: usa il primo vaso disponibile
             if (allPots.Length > 0)
             {
-                Debug.LogWarning($"[BLK-01.03B] ⚠️ Nessun vaso selezionato. Usando primo vaso disponibile: {allPots[0].PotId}");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"⚠️ Nessun vaso selezionato. Usando primo vaso disponibile: {allPots[0].PotId}");
                 return allPots[0];
             }
             
@@ -231,7 +232,7 @@ namespace Sporae.Dev
             #if !UNITY_EDITOR && !DEVELOPMENT_BUILD
             enableDebugHotkeys = false;
             showDebugInfo = false;
-            Debug.Log("[BLK-01.03B] GrowthDebugHotkeys disabilitato in build release");
+            SporiumLogger.LogInfo(LogCategory.Dome, "GrowthDebugHotkeys disabilitato in build release");
             #endif
         }
     }

@@ -11,6 +11,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -169,12 +170,12 @@ namespace _Project
             if (_plantButton != null)
                 _plantButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Plant));
             else
-                Debug.LogError("[PotDetailsWidget] ⚠️ _plantButton non assegnato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogError(LogCategory.UI, "_plantButton non assegnato! Collega il riferimento nella scena Unity.");
             
             if (_wateringButton != null)
                 _wateringButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Water));
             else
-                Debug.LogError("[PotDetailsWidget] ⚠️ _wateringButton non assegnato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogError(LogCategory.UI, "_wateringButton non assegnato! Collega il riferimento nella scena Unity.");
             
             // BLK-02.07: Due pulsanti separati per Blue e Red (ON/OFF)
             if (_blueLedButton != null)
@@ -197,7 +198,7 @@ namespace _Project
             if (_uprootButton != null)
                 _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
             else
-                Debug.LogError("[PotDetailsWidget] ⚠️ _uprootButton non assegnato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogError(LogCategory.UI, "_uprootButton non assegnato! Collega il riferimento nella scena Unity.");
             
             InitializeSeedSelector();
             InitializeFertilizerSelector();  // BLK-03.01-T1
@@ -215,7 +216,7 @@ namespace _Project
                 
                 if (_seedSelector == null)
                 {
-                    Debug.LogError("[PotDetailsWidget] ⚠️ UISeedSelector non trovato nella scena! " +
+                    SporiumLogger.LogError(LogCategory.UI, "UISeedSelector non trovato nella scena! " +
                         "Devi creare un GameObject 'UISeedSelector' nella scena con il componente UISeedSelector " +
                         "e collegare tutti i riferimenti UI necessari. Vedi le istruzioni in Assets/Docs/UISeedSelector_Setup.md");
                     return;
@@ -238,29 +239,29 @@ namespace _Project
         /// </summary>
         private void OnSeedSelected(string seedTypeId)
         {
-            Debug.Log($"[PotDetailsWidget] 🟢 OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
-            Debug.Log($"[PotDetailsWidget] 🟢 _currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
             
             if (_currentSelectedPot == null)
             {
-                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando seme selezionato!");
+                SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando seme selezionato!");
                 return;
             }
             
             if (_currentSelectedPot.PotActions == null)
             {
-                Debug.LogError("[PotDetailsWidget] ⚠️ PotActions è NULL quando seme selezionato!");
+                SporiumLogger.LogError(LogCategory.UI, "PotActions è NULL quando seme selezionato!");
                 return;
             }
             
-            Debug.Log($"[PotDetailsWidget] 🟢 Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
             
             // Piantare il seme selezionato
             bool success = _currentSelectedPot.PotActions.DoPlant(seedTypeId);
             
             if (success)
             {
-                Debug.Log($"[PotDetailsWidget] ✅ Seme {seedTypeId} piantato con successo!");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Seme {seedTypeId} piantato con successo!");
                 // Aggiorna l'UI
                 UpdateActionButtons(_currentSelectedPot);
                 
@@ -270,7 +271,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogError($"[PotDetailsWidget] ❌ Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
+                SporiumLogger.LogError(LogCategory.UI, $"Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
             }
         }
         
@@ -279,7 +280,7 @@ namespace _Project
         /// </summary>
         private void OnSeedSelectionCancelled()
         {
-            Debug.Log("[PotDetailsWidget] Selezione seme annullata");
+            SporiumLogger.LogDebug(LogCategory.UI, "Selezione seme annullata");
             // Nessuna azione necessaria
         }
         
@@ -288,18 +289,18 @@ namespace _Project
         /// </summary>
         private void OpenSeedSelector(PotSlot targetPot)
         {
-            Debug.Log($"[PotDetailsWidget] 🔵 OpenSeedSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OpenSeedSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
             
             // Assicurati che il selettore sia inizializzato
             if (_seedSelector == null)
             {
-                Debug.Log("[PotDetailsWidget] 🔵 Inizializzazione seed selector...");
+                SporiumLogger.LogDebug(LogCategory.UI, "Inizializzazione seed selector...");
                 InitializeSeedSelector();
             }
             
             if (_seedSelector == null)
             {
-                Debug.LogError("[PotDetailsWidget] ❌ UISeedSelector non disponibile dopo inizializzazione!");
+                SporiumLogger.LogError(LogCategory.UI, "UISeedSelector non disponibile dopo inizializzazione!");
                 return;
             }
             
@@ -309,8 +310,8 @@ namespace _Project
             _seedSelector.OnCancelled -= OnSeedSelectionCancelled;
             _seedSelector.OnCancelled += OnSeedSelectionCancelled;
             
-            Debug.Log($"[PotDetailsWidget] 🔵 Eventi sottoscritti correttamente");
-            Debug.Log($"[PotDetailsWidget] 🔵 Apertura selettore semi per vaso {targetPot?.PotId}");
+            SporiumLogger.LogDebug(LogCategory.UI, "Eventi sottoscritti correttamente");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Apertura selettore semi per vaso {targetPot?.PotId}");
             
             // Salva il vaso corrente prima di aprire il selettore
             _currentSelectedPot = targetPot;
@@ -332,10 +333,10 @@ namespace _Project
                 if (_fertilizerSelector == null)
                 {
                     // Crea automaticamente il GameObject con il componente
-                    Debug.LogWarning("[PotDetailsWidget] ⚠️ UIFertilizerSelector non trovato nella scena. Creazione automatica...");
+                    SporiumLogger.LogWarning(LogCategory.UI, "UIFertilizerSelector non trovato nella scena. Creazione automatica...");
                     GameObject fertilizerSelectorGO = new GameObject("UIFertilizerSelector");
                     _fertilizerSelector = fertilizerSelectorGO.AddComponent<UIFertilizerSelector>();
-                    Debug.Log("[PotDetailsWidget] ✅ UIFertilizerSelector creato automaticamente!");
+                    SporiumLogger.LogInfo(LogCategory.UI, "UIFertilizerSelector creato automaticamente!");
                 }
             }
             
@@ -352,18 +353,18 @@ namespace _Project
         /// </summary>
         private void OpenFertilizerSelector(PotSlot targetPot)
         {
-            Debug.Log($"[PotDetailsWidget] 🌿 OpenFertilizerSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OpenFertilizerSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
             
             // Assicurati che il selettore sia inizializzato
             if (_fertilizerSelector == null)
             {
-                Debug.Log("[PotDetailsWidget] 🌿 Inizializzazione fertilizer selector...");
+                SporiumLogger.LogDebug(LogCategory.UI, "Inizializzazione fertilizer selector...");
                 InitializeFertilizerSelector();
             }
             
             if (_fertilizerSelector == null)
             {
-                Debug.LogError("[PotDetailsWidget] ❌ UIFertilizerSelector non disponibile dopo inizializzazione!");
+                SporiumLogger.LogError(LogCategory.UI, "UIFertilizerSelector non disponibile dopo inizializzazione!");
                 return;
             }
             
@@ -373,8 +374,8 @@ namespace _Project
             _fertilizerSelector.OnCancelled -= OnFertilizerSelectionCancelled;
             _fertilizerSelector.OnCancelled += OnFertilizerSelectionCancelled;
             
-            Debug.Log($"[PotDetailsWidget] 🌿 Eventi sottoscritti correttamente");
-            Debug.Log($"[PotDetailsWidget] 🌿 Apertura selettore fertilizzanti per vaso {targetPot?.PotId}");
+            SporiumLogger.LogDebug(LogCategory.UI, "Eventi sottoscritti correttamente");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Apertura selettore fertilizzanti per vaso {targetPot?.PotId}");
             
             // Salva il vaso corrente prima di aprire il selettore
             _currentSelectedPot = targetPot;
@@ -387,7 +388,7 @@ namespace _Project
         /// </summary>
         private void OpenPruningDialog(PotSlot targetPot)
         {
-            Debug.Log($"[PotDetailsWidget] ✂️ OpenPruningDialog chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OpenPruningDialog chiamato per vaso {targetPot?.PotId ?? "NULL"}");
             
             // Crea istanza dialog se non esiste
             if (_pruningDialogInstance == null)
@@ -420,7 +421,7 @@ namespace _Project
                     _pruningDialogInstance = FindObjectOfType<PruningDialog>();
                     if (_pruningDialogInstance == null)
                     {
-                        Debug.LogError("[PotDetailsWidget] ❌ PruningDialog non trovato! Assicurati di avere il prefab assegnato o un'istanza nella scena.");
+                        SporiumLogger.LogError(LogCategory.UI, "PruningDialog non trovato! Assicurati di avere il prefab assegnato o un'istanza nella scena.");
                         return;
                     }
                 }
@@ -458,17 +459,17 @@ namespace _Project
                 System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
             } catch { }
             // #endregion
-            Debug.Log($"[PotDetailsWidget] ✂️ OnPruningDialogResult: confirmed={confirmed}, useSpray={useSpray}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OnPruningDialogResult: confirmed={confirmed}, useSpray={useSpray}");
             
             if (!confirmed)
             {
-                Debug.Log("[PotDetailsWidget] ✂️ Potatura annullata dall'utente");
+                SporiumLogger.LogDebug(LogCategory.UI, "Potatura annullata dall'utente");
                 return;
             }
             
             if (_currentSelectedPot == null || _currentSelectedPot.PotActions == null)
             {
-                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando potatura confermata!");
+                SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando potatura confermata!");
                 return;
             }
             
@@ -484,7 +485,7 @@ namespace _Project
             
             if (success)
             {
-                Debug.Log($"[PotDetailsWidget] ✂️ Potatura eseguita con successo (useSpray={useSpray})");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Potatura eseguita con successo (useSpray={useSpray})");
                 
                 // BUG FIX: Mostra toast con esito potatura
                 var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
@@ -505,7 +506,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] ✂️ Potatura fallita");
+                SporiumLogger.LogWarning(LogCategory.UI, "Potatura fallita");
                 
                 // BUG FIX: Mostra toast con esito potatura fallita
                 var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
@@ -524,22 +525,22 @@ namespace _Project
         /// </summary>
         private void OnFertilizerSelected(string fertilizerTypeId)
         {
-            Debug.Log($"[PotDetailsWidget] 🌿 OnFertilizerSelected chiamato con fertilizerTypeId: {fertilizerTypeId}");
-            Debug.Log($"[PotDetailsWidget] 🌿 _currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"OnFertilizerSelected chiamato con fertilizerTypeId: {fertilizerTypeId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
             
             if (_currentSelectedPot == null)
             {
-                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando fertilizzante selezionato!");
+                SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando fertilizzante selezionato!");
                 return;
             }
             
             if (_currentSelectedPot.PotActions == null)
             {
-                Debug.LogError("[PotDetailsWidget] ⚠️ PotActions è NULL quando fertilizzante selezionato!");
+                SporiumLogger.LogError(LogCategory.UI, "PotActions è NULL quando fertilizzante selezionato!");
                 return;
             }
             
-            Debug.Log($"[PotDetailsWidget] 🌿 Applicando fertilizzante {fertilizerTypeId} al vaso {_currentSelectedPot.PotId}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Applicando fertilizzante {fertilizerTypeId} al vaso {_currentSelectedPot.PotId}");
             
             // Applica il fertilizzante selezionato
             bool success = _currentSelectedPot.PotActions.DoFertilize(fertilizerTypeId);
@@ -550,11 +551,11 @@ namespace _Project
             
             if (success)
             {
-                Debug.Log($"[PotDetailsWidget] ✅ Fertilizzante applicato con successo!");
+                SporiumLogger.LogInfo(LogCategory.UI, "Fertilizzante applicato con successo!");
             }
             else
             {
-                Debug.LogError($"[PotDetailsWidget] ❌ Fallito applicare fertilizzante {fertilizerTypeId}! Verifica i log di PotActions per dettagli.");
+                SporiumLogger.LogError(LogCategory.UI, $"Fallito applicare fertilizzante {fertilizerTypeId}! Verifica i log di PotActions per dettagli.");
             }
         }
         
@@ -563,7 +564,7 @@ namespace _Project
         /// </summary>
         private void OnFertilizerSelectionCancelled()
         {
-            Debug.Log("[PotDetailsWidget] Selezione fertilizzante annullata");
+            SporiumLogger.LogDebug(LogCategory.UI, "Selezione fertilizzante annullata");
             // Nessuna azione necessaria
         }
         
@@ -572,12 +573,12 @@ namespace _Project
             _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
             if (_growthConfig != null)
             {
-                Debug.Log($"[PotDetailsWidget] ✅ Config caricata: pointsSeedToSprout={_growthConfig.pointsSeedToSprout}, pointsSproutToMature={_growthConfig.pointsSproutToMature}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Config caricata: pointsSeedToSprout={_growthConfig.pointsSeedToSprout}, pointsSproutToMature={_growthConfig.pointsSproutToMature}");
             }
             else
                 return;
             
-            Debug.LogWarning($"[{nameof(PotDetailsWidget)}] PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
+            SporiumLogger.LogWarning(LogCategory.UI, "PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
             _growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
         }
 
@@ -593,8 +594,8 @@ namespace _Project
         
         private void OnPotSelected(PotSlot pot)
         {
-            Debug.Log($"[BLK-01.03B] Vaso {pot.PotId} selezionato. Aggiornamento UI...");
-            Debug.Log($"[BLK-01.03B] PotActions presente: {pot.PotActions != null}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Vaso {pot.PotId} selezionato. Aggiornamento UI...");
+            SporiumLogger.LogDebug(LogCategory.UI, $"PotActions presente: {pot.PotActions != null}");
             // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
             // Salva il vaso selezionato corrente
@@ -608,7 +609,7 @@ namespace _Project
             // Aggiorna i pulsanti di azione
             UpdateActionButtons(pot);
         
-            Debug.Log($"[BLK-01.03B] UI aggiornata per vaso {pot.PotId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"UI aggiornata per vaso {pot.PotId}");
         }
         
         /// <summary>
@@ -616,17 +617,17 @@ namespace _Project
         /// </summary>
         private void OnActionButtonClicked(PotEvents.PotActionType actionType)
         {
-            Debug.Log($"[PotHUDWidget] Click su pulsante {actionType} intercettato!");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Click su pulsante {actionType} intercettato!");
         
             // Trova il vaso selezionato
             PotSlot selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[PotHUDWidget] Nessun vaso selezionato o PotActions mancante");
+                SporiumLogger.LogWarning(LogCategory.UI, "Nessun vaso selezionato o PotActions mancante");
                 return;
             }
         
-            Debug.Log($"[PotHUDWidget] Eseguendo azione {actionType} su vaso {selectedPot.PotId}");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Eseguendo azione {actionType} su vaso {selectedPot.PotId}");
         
             // Esegui l'azione appropriata
             bool success = false;
@@ -669,7 +670,7 @@ namespace _Project
         
             if (success)
             {
-                Debug.Log($"[PotHUDWidget] Azione {actionType} eseguita con successo!");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Azione {actionType} eseguita con successo!");
                 // Aggiorna l'UI
                 UpdateActionButtons(selectedPot);
 
@@ -679,7 +680,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning($"[PotHUDWidget] Azione {actionType} fallita!");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Azione {actionType} fallita!");
             }
         }
         
@@ -694,7 +695,7 @@ namespace _Project
             PotSlot selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
+                SporiumLogger.LogWarning(LogCategory.UI, "Nessun vaso selezionato");
                 return;
             }
             
@@ -704,7 +705,7 @@ namespace _Project
             if (success)
             {
                 LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
-                Debug.Log($"[PotDetailsWidget] LED Blue: {(newState == LedSystemState.Blue ? "ON" : "OFF")}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"LED Blue: {(newState == LedSystemState.Blue ? "ON" : "OFF")}");
                 UpdateActionButtons(selectedPot);
                 UpdateStageAndProgressUI(selectedPot);
             }
@@ -718,7 +719,7 @@ namespace _Project
             PotSlot selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
+                SporiumLogger.LogWarning(LogCategory.UI, "Nessun vaso selezionato");
                 return;
             }
             
@@ -728,7 +729,7 @@ namespace _Project
             if (success)
             {
                 LedSystemState newState = selectedPot.PotActions.GetLedSystemState();
-                Debug.Log($"[PotDetailsWidget] LED Red: {(newState == LedSystemState.Red ? "ON" : "OFF")}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"LED Red: {(newState == LedSystemState.Red ? "ON" : "OFF")}");
                 UpdateActionButtons(selectedPot);
                 UpdateStageAndProgressUI(selectedPot);
             }
@@ -755,7 +756,7 @@ namespace _Project
             PotSlot selectedPot = FindSelectedPot();
             if (selectedPot == null || selectedPot.PotActions == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] Nessun vaso selezionato");
+                SporiumLogger.LogWarning(LogCategory.UI, "Nessun vaso selezionato");
                 return;
             }
             
@@ -871,7 +872,7 @@ namespace _Project
             if (!_currentSelectedPot || _currentSelectedPot.PotId != potId)
                 return;
         
-            Debug.Log($"[BLK-01.03B] Pianta cresciuta su {potId}: {oldPoints} → {newPoints} punti. Aggiornamento progress bar...");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Pianta cresciuta su {potId}: {oldPoints} → {newPoints} punti. Aggiornamento progress bar...");
             UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
@@ -883,7 +884,7 @@ namespace _Project
             if (!_currentSelectedPot || _currentSelectedPot.PotId != potId)
                 return;
         
-            Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
             UpdateStageAndProgressUI(_currentSelectedPot);
         }
         
@@ -903,7 +904,7 @@ namespace _Project
             // Aggiorna UI solo se il vaso morto è quello attualmente selezionato
             if (_currentSelectedPot != null && _currentSelectedPot.PotId == potId)
             {
-                Debug.Log($"[PotDetailsWidget] 🚨 Pianta morta su {potId}: {reason}. Aggiornamento UI...");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Pianta morta su {potId}: {reason}. Aggiornamento UI...");
                 UpdateStageAndProgressUI(_currentSelectedPot);
                 UpdateActionButtons(_currentSelectedPot);
                 
@@ -972,29 +973,29 @@ namespace _Project
                         if (plantData != null && !string.IsNullOrEmpty(plantData.Description))
                         {
                             _plantDescriptionLabel.text = $"<color=#FFFFFF>{plantData.Description}</color>";
-                            Debug.Log($"[PotDetailsWidget] ✅ Descrizione pianta aggiornata per {state.PlantCode}: {plantData.Description}");
+                            SporiumLogger.LogDebug(LogCategory.UI, $"Descrizione pianta aggiornata per {state.PlantCode}: {plantData.Description}");
                         }
                         else
                         {
                             _plantDescriptionLabel.text = "<color=#888888>Nessuna descrizione disponibile</color>";
-                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Descrizione non trovata per pianta {state.PlantCode} (PlantData null o Description vuota)");
+                            SporiumLogger.LogWarning(LogCategory.UI, $"Descrizione non trovata per pianta {state.PlantCode} (PlantData null o Description vuota)");
                         }
                     }
                     else
                     {
                         _plantDescriptionLabel.text = "<color=#FF0000>Errore database piante</color>";
-                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                        SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
                     _plantDescriptionLabel.text = "<color=#888888>Nessuna pianta selezionata</color>";
-                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                    SporiumLogger.LogWarning(LogCategory.UI, $"PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ _plantDescriptionLabel non trovato! Verifica che esista un GameObject 'PlantDescription' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Left/");
+                SporiumLogger.LogWarning(LogCategory.UI, "_plantDescriptionLabel non trovato! Verifica che esista un GameObject 'PlantDescription' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Left/");
             }
 
             // BLK-01.04: Aggiorna Stage Label con informazioni dettagliate
@@ -1177,11 +1178,11 @@ namespace _Project
                 string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color={hydrationColor}>{hydrationPercentage:F0}%</color>{wateringStatus}{rangeText}";
                 
                 _hydrationStressText.text = hydrationText;
-                Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Hydration: {hydrationPercentage:F0}% (Hydration={state.Hydration}/{maxHydration}, Sistema={state.WateringSystemOn})");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornato Hydration: {hydrationPercentage:F0}% (Hydration={state.Hydration}/{maxHydration}, Sistema={state.WateringSystemOn})");
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] _hydrationStressText non trovato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_hydrationStressText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // Nascondi la progress bar come richiesto (il player deve vedere la percentuale invece)
@@ -1244,11 +1245,11 @@ namespace _Project
                 }
                 
                 _lightStressText.text = $"<color=#CCCCCC>Light Stress:</color> <color={stressColor}>{stressPercentage:F0}%</color>{rangeText}";
-                Debug.Log($"[PotDetailsWidget] Aggiornato Light Stress: {stressPercentage:F0}% (LED: {state.LedSystemState}, Giorni consecutivi: {state.GetConsecutiveLedDays()})");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornato Light Stress: {stressPercentage:F0}% (LED: {state.LedSystemState}, Giorni consecutivi: {state.GetConsecutiveLedDays()})");
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] _lightStressText non trovato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_lightStressText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // Nascondi la progress bar come richiesto (il player deve vedere la percentuale invece)
@@ -1313,12 +1314,12 @@ namespace _Project
                     string fertilizerText = $"<color=#CCCCCC>Fertilizzante:</color> <color={fertilizerColor}>{currentFertilizer}%</color>{rangeText}";
                     
                     _fertilizerText.text = fertilizerText;
-                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Fertilizzante: {currentFertilizer}%");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornato Fertilizzante: {currentFertilizer}%");
                 }
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] _fertilizerText non trovato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_fertilizerText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // BLK-03.01-T2: Aggiorna Growth Points (mostra punti accumulati per ogni parametro)
@@ -1350,12 +1351,12 @@ namespace _Project
                         pointsText = pointsText.Replace("<color=#CCCCCC>(Tot:", "<color=#FF0000>(Tot:");
                     
                     _growthPointsText.text = pointsText;
-                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Growth Points: W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer} (Tot: {totalPoints})");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornato Growth Points: W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer} (Tot: {totalPoints})");
                 }
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] _growthPointsText non trovato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_growthPointsText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // BLK-03.01-T2: Aggiorna Optimal Days (mostra giorni consecutivi con parametri ottimali)
@@ -1382,12 +1383,12 @@ namespace _Project
                         optimalText = optimalText.Replace("<color=#FFFF00>", "<color=#888888>");
                     
                     _optimalDaysText.text = optimalText;
-                    Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Optimal Days: {state.DaysConsecutiveOptimal}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornato Optimal Days: {state.DaysConsecutiveOptimal}");
                 }
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] _optimalDaysText non trovato! Collega il riferimento nella scena Unity.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_optimalDaysText non trovato! Collega il riferimento nella scena Unity.");
             }
             
             // BLK-02.02: Aggiorna Plant Level
@@ -1475,27 +1476,27 @@ namespace _Project
                         {
                             // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico (la label è già nella HUD)
                             _phAffinityText.text = $"<color=#00FF00>{plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}</color>";
-                            Debug.Log($"[PotDetailsWidget] ✅ pH Affinity aggiornato per {state.PlantCode}: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}");
+                            SporiumLogger.LogDebug(LogCategory.UI, $"pH Affinity aggiornato per {state.PlantCode}: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}");
                         }
                         else
                         {
                             // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
                             _phAffinityText.text = "<color=#FF0000>N/A</color>";
-                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData non trovato per PlantCode: {state.PlantCode}");
+                            SporiumLogger.LogWarning(LogCategory.UI, $"PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
                         // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
                         _phAffinityText.text = "<color=#FF0000>N/A</color>";
-                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                        SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
                     // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
                     _phAffinityText.text = "<color=#FF0000>N/A</color>";
-                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                    SporiumLogger.LogWarning(LogCategory.UI, $"PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
             
@@ -1525,18 +1526,18 @@ namespace _Project
                                 colorTag = "<color=#999999>"; // Grigio per drift zero (Standard)
                             
                             _phDriftText.text = $"<color=#CCCCCC>pH Drift:</color> {colorTag}{phDrift:+#;-#;0}/giorno</color>";
-                            Debug.Log($"[PotDetailsWidget] ✅ pH Drift aggiornato per {state.PlantCode}: {phDrift:+#;-#;0}/giorno");
+                            SporiumLogger.LogDebug(LogCategory.UI, $"pH Drift aggiornato per {state.PlantCode}: {phDrift:+#;-#;0}/giorno");
                         }
                         else
                         {
                             _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
-                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData non trovato per PlantCode: {state.PlantCode}");
+                            SporiumLogger.LogWarning(LogCategory.UI, $"PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
                         _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
-                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                        SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
                 else
@@ -1595,7 +1596,7 @@ namespace _Project
                             string activePowerValue = plantData.ActivePower;
                             bool isNullOrEmpty = string.IsNullOrEmpty(activePowerValue);
                             
-                            Debug.Log($"[PotDetailsWidget] 🔍 DEBUG ActivePower per {state.PlantCode}: " +
+                            SporiumLogger.LogDebug(LogCategory.UI, $"DEBUG ActivePower per {state.PlantCode}: " +
                                 $"PlantData trovato={plantData != null}, " +
                                 $"ActivePower null/empty={isNullOrEmpty}, " +
                                 $"ActivePower length={activePowerValue?.Length ?? 0}, " +
@@ -1604,35 +1605,35 @@ namespace _Project
                             if (!isNullOrEmpty)
                             {
                                 _effectsText.text = $"<color=#CCCCCC>Potere Attivo:</color>\n<color=#FFD700>{activePowerValue}</color>";
-                                Debug.Log($"[PotDetailsWidget] ✅ Potere attivo aggiornato per {state.PlantCode}: {activePowerValue}");
+                                SporiumLogger.LogDebug(LogCategory.UI, $"Potere attivo aggiornato per {state.PlantCode}: {activePowerValue}");
                             }
                             else
                             {
                                 _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessun potere attivo disponibile</color>";
-                                Debug.LogWarning($"[PotDetailsWidget] ⚠️ Potere attivo vuoto per pianta {state.PlantCode}. Verifica l'asset PlantData in Unity Editor e ricarica l'asset (Ctrl+R o Assets > Refresh).");
+                                SporiumLogger.LogWarning(LogCategory.UI, $"Potere attivo vuoto per pianta {state.PlantCode}. Verifica l'asset PlantData in Unity Editor e ricarica l'asset (Ctrl+R o Assets > Refresh).");
                             }
                         }
                         else
                         {
                             _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessun potere attivo disponibile</color>";
-                            Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData null per PlantCode: {state.PlantCode}");
+                            SporiumLogger.LogWarning(LogCategory.UI, $"PlantData null per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
                         _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#FF0000>Errore database piante</color>";
-                        Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
+                        SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
                     _effectsText.text = "<color=#CCCCCC>Potere Attivo:</color>\n<color=#888888>Nessuna pianta selezionata</color>";
-                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
+                    SporiumLogger.LogWarning(LogCategory.UI, $"PlantCode vuoto per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
             else
             {
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ _effectsText non trovato! Verifica che esista un GameObject 'Effects' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Right/");
+                SporiumLogger.LogWarning(LogCategory.UI, "_effectsText non trovato! Verifica che esista un GameObject 'Effects' con TextMeshProUGUI nella gerarchia UI_PotDetails/Panel/Right/");
             }
         }
         
@@ -1646,7 +1647,7 @@ namespace _Project
                 _progressBar.gameObject.SetActive(false); // Nascondi la barra
             }
         
-            Debug.Log($"[BLK-01.04] UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
         }
         
         private int CalculateCurrentGrowthPoints(PotStateModel state)
@@ -1683,14 +1684,14 @@ namespace _Project
                     
                 case (int)PlantStage.Seed:
                     float seedProgress = (float)points / _growthConfig.pointsSeedToSprout * 100f;
-                    Debug.Log($"[PotDetailsWidget] 🔍 DEBUG Progress Seed: points={points}, threshold={_growthConfig.pointsSeedToSprout}, progress={seedProgress:F1}%");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"DEBUG Progress Seed: points={points}, threshold={_growthConfig.pointsSeedToSprout}, progress={seedProgress:F1}%");
                     if (points >= _growthConfig.pointsSeedToSprout)
                         return 100f; // Pronto per avanzare
                     return seedProgress;
                     
                 case (int)PlantStage.Sprout:
                     float sproutProgress = (float)points / _growthConfig.pointsSproutToMature * 100f;
-                    Debug.Log($"[PotDetailsWidget] 🔍 DEBUG Progress Sprout: points={points}, threshold={_growthConfig.pointsSproutToMature}, progress={sproutProgress:F1}%");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"DEBUG Progress Sprout: points={points}, threshold={_growthConfig.pointsSproutToMature}, progress={sproutProgress:F1}%");
                     if (points >= _growthConfig.pointsSproutToMature)
                         return 100f; // Pronto per avanzare
                     return sproutProgress;
@@ -1831,7 +1832,7 @@ namespace _Project
                 TextMeshProUGUI textComp = foundByName.GetComponent<TextMeshProUGUI>();
                 if (textComp != null)
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per nome GameObject '{containsText}': {foundByName.name}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Trovato TextMeshProUGUI per nome GameObject '{containsText}': {foundByName.name}");
                     return textComp;
                 }
             }
@@ -1842,7 +1843,7 @@ namespace _Project
             {
                 if (text != null && !string.IsNullOrEmpty(text.text) && text.text.Contains(containsText))
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per '{containsText}': {text.name} (testo: '{text.text}')");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Trovato TextMeshProUGUI per '{containsText}': {text.name} (testo: '{text.text}')");
                     return text;
                 }
             }
@@ -1852,7 +1853,7 @@ namespace _Project
             {
                 if (text != null && text.name.Contains(containsText, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato TextMeshProUGUI per nome parziale '{containsText}': {text.name}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Trovato TextMeshProUGUI per nome parziale '{containsText}': {text.name}");
                     return text;
                 }
             }
@@ -1860,7 +1861,7 @@ namespace _Project
             // BUG FIX: Non loggare warning per GrowthLabel (è opzionale e può non esistere nella scena)
             if (containsText != "GrowthLabel")
             {
-                Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il GameObject abbia questo nome o che il testo contenga questa stringa.");
+                SporiumLogger.LogWarning(LogCategory.UI, $"Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il GameObject abbia questo nome o che il testo contenga questa stringa.");
             }
             return null;
         }
@@ -1873,20 +1874,20 @@ namespace _Project
             // Cerca prima nel GameObject _page se disponibile
             GameObject searchRoot = _page != null ? _page : gameObject;
             
-            Debug.Log($"[PotDetailsWidget] 🔍 Cercando ProgressBar per '{containsName}' in '{searchRoot.name}'");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Cercando ProgressBar per '{containsName}' in '{searchRoot.name}'");
             
             // Prima cerca direttamente ProgressBar con nome contenente il testo cercato
             ProgressBar[] allProgressBars = searchRoot.GetComponentsInChildren<ProgressBar>(true);
-            Debug.Log($"[PotDetailsWidget] 📊 Trovate {allProgressBars.Length} ProgressBar totali nella gerarchia");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Trovate {allProgressBars.Length} ProgressBar totali nella gerarchia");
             
             foreach (var progressBar in allProgressBars)
             {
                 if (progressBar != null)
                 {
-                    Debug.Log($"[PotDetailsWidget]   - ProgressBar: '{progressBar.name}' (attivo: {progressBar.gameObject.activeSelf})");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"  - ProgressBar: '{progressBar.name}' (attivo: {progressBar.gameObject.activeSelf})");
                     if (progressBar.name.Contains(containsName, System.StringComparison.OrdinalIgnoreCase))
                     {
-                        Debug.Log($"[PotDetailsWidget] ✅ Trovato ProgressBar per '{containsName}': {progressBar.name}");
+                        SporiumLogger.LogDebug(LogCategory.UI, $"Trovato ProgressBar per '{containsName}': {progressBar.name}");
                         return progressBar;
                     }
                 }
@@ -1895,33 +1896,33 @@ namespace _Project
             // Se non trovato direttamente, cerca ProgressBar figlio di GameObject padre con nome corrispondente
             // Esempio: cerca ProgressBar figlio di "Hydration" quando containsName = "Hydration Progress"
             string parentName = containsName.Replace(" Progress", "").Replace("Progress", "").Trim();
-            Debug.Log($"[PotDetailsWidget] 🔍 Cercando GameObject padre '{parentName}' per trovare ProgressBar figlio");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Cercando GameObject padre '{parentName}' per trovare ProgressBar figlio");
             
             // Cerca ricorsivamente il GameObject padre (non solo figli diretti)
             Transform parentTransform = FindTransformRecursive(searchRoot.transform, parentName);
             if (parentTransform != null)
             {
-                Debug.Log($"[PotDetailsWidget] ✅ Trovato GameObject padre '{parentName}'");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Trovato GameObject padre '{parentName}'");
                 ProgressBar progressBar = parentTransform.GetComponentInChildren<ProgressBar>(true);
                 if (progressBar != null)
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato ProgressBar figlio di '{parentName}': {progressBar.name}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Trovato ProgressBar figlio di '{parentName}': {progressBar.name}");
                     return progressBar;
                 }
                 else
                 {
-                    Debug.LogWarning($"[PotDetailsWidget] ⚠️ GameObject '{parentName}' trovato ma nessuna ProgressBar figlio");
+                    SporiumLogger.LogWarning(LogCategory.UI, $"GameObject '{parentName}' trovato ma nessuna ProgressBar figlio");
                 }
             }
             else
             {
-                Debug.LogWarning($"[PotDetailsWidget] ⚠️ GameObject padre '{parentName}' non trovato nella gerarchia");
+                SporiumLogger.LogWarning(LogCategory.UI, $"GameObject padre '{parentName}' non trovato nella gerarchia");
             }
             
             // Cerca anche per nome parziale nel padre (es. "LightStress" per "Lighting Progress")
             if (containsName.Contains("Light", System.StringComparison.OrdinalIgnoreCase))
             {
-                Debug.Log($"[PotDetailsWidget] 🔍 Cercando fallback per Light: 'LightStress' o 'Light'");
+                SporiumLogger.LogDebug(LogCategory.UI, "Cercando fallback per Light: 'LightStress' o 'Light'");
                 Transform lightParent = FindTransformRecursive(searchRoot.transform, "LightStress");
                 if (lightParent == null)
                 {
@@ -1931,17 +1932,17 @@ namespace _Project
                 
                 if (lightParent != null)
                 {
-                    Debug.Log($"[PotDetailsWidget] ✅ Trovato GameObject Light: '{lightParent.name}'");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Trovato GameObject Light: '{lightParent.name}'");
                     ProgressBar progressBar = lightParent.GetComponentInChildren<ProgressBar>(true);
                     if (progressBar != null)
                     {
-                        Debug.Log($"[PotDetailsWidget] ✅ Trovato ProgressBar figlio di 'LightStress/Light': {progressBar.name}");
+                        SporiumLogger.LogDebug(LogCategory.UI, $"Trovato ProgressBar figlio di 'LightStress/Light': {progressBar.name}");
                         return progressBar;
                     }
                 }
             }
             
-            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessuna ProgressBar trovata per '{containsName}'. Verifica che il GameObject abbia questo nome o che ci sia un ProgressBar figlio di '{parentName}'.");
+            SporiumLogger.LogWarning(LogCategory.UI, $"Nessuna ProgressBar trovata per '{containsName}'. Verifica che il GameObject abbia questo nome o che ci sia un ProgressBar figlio di '{parentName}'.");
             return null;
         }
         
@@ -2031,7 +2032,7 @@ namespace _Project
             // perché la progress bar è nascosta e gli EventTrigger non funzionano su oggetti disattivati
             if (_growthLabelText == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthLabelText è null! Tooltip Growth non può essere configurato. Verifica che esista un GameObject con TextMeshProUGUI contenente 'GrowthLabel'.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_growthLabelText è null! Tooltip Growth non può essere configurato. Verifica che esista un GameObject con TextMeshProUGUI contenente 'GrowthLabel'.");
                 return;
             }
             
@@ -2051,7 +2052,7 @@ namespace _Project
             // BUG FIX: Il tooltip panel deve essere assegnato manualmente in Unity, non creato in runtime
             if (_growthTooltipPanel == null)
             {
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthTooltipPanel non assegnato! Assegna manualmente il GameObject del tooltip Growth nell'Inspector di PotDetailsWidget.");
+                SporiumLogger.LogWarning(LogCategory.UI, "_growthTooltipPanel non assegnato! Assegna manualmente il GameObject del tooltip Growth nell'Inspector di PotDetailsWidget.");
                 return;
             }
             
@@ -2062,7 +2063,7 @@ namespace _Project
                 _growthTooltipText = _growthTooltipPanel.GetComponentInChildren<TextMeshProUGUI>();
                 if (_growthTooltipText == null)
                 {
-                    Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthTooltipText non trovato! Assicurati che il tooltip panel abbia un child TextMeshProUGUI o assegnalo manualmente nell'Inspector.");
+                    SporiumLogger.LogWarning(LogCategory.UI, "_growthTooltipText non trovato! Assicurati che il tooltip panel abbia un child TextMeshProUGUI o assegnalo manualmente nell'Inspector.");
                 }
             }
             
@@ -2094,7 +2095,7 @@ namespace _Project
             if (!_growthLabelText.gameObject.activeSelf)
             {
                 _growthLabelText.gameObject.SetActive(true);
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ GrowthLabel era disattivata! Attivata per permettere tooltip.");
+                SporiumLogger.LogWarning(LogCategory.UI, "GrowthLabel era disattivata! Attivata per permettere tooltip.");
             }
             
             // BUG FIX: Assicurati che ci sia un GraphicRaycaster nel Canvas per permettere eventi
@@ -2102,7 +2103,7 @@ namespace _Project
             if (parentCanvas != null && parentCanvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
             {
                 parentCanvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ Canvas non aveva GraphicRaycaster! Aggiunto per permettere tooltip.");
+                SporiumLogger.LogWarning(LogCategory.UI, "Canvas non aveva GraphicRaycaster! Aggiunto per permettere tooltip.");
             }
             
             // PointerEnter - mostra tooltip (aggiorna sempre con dati più recenti)
@@ -2226,7 +2227,7 @@ namespace _Project
                             System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
                         } catch { }
                         // #endregion
-                        Debug.Log("[PotDetailsWidget] ✅ GrowthLabel creata dinamicamente perché non trovata nella scena.");
+                        SporiumLogger.LogInfo(LogCategory.UI, "GrowthLabel creata dinamicamente perché non trovata nella scena.");
                     }
                 }
                 

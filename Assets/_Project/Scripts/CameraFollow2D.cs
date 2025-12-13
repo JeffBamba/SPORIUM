@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sporae.DevTools;
 
 public class CameraFollow2D : MonoBehaviour
 {
@@ -37,7 +38,7 @@ public class CameraFollow2D : MonoBehaviour
         {
             if (!ValidateConfiguration())
             {
-                Debug.LogError("[CameraFollow2D] Configurazione non valida! CameraFollow2D disabilitato.");
+                SporiumLogger.LogError(LogCategory.Core, "Configurazione non valida! CameraFollow2D disabilitato.");
                 enabled = false;
                 return;
             }
@@ -52,19 +53,19 @@ public class CameraFollow2D : MonoBehaviour
         
         if (smoothSpeed <= 0)
         {
-            Debug.LogWarning("[CameraFollow2D] smoothSpeed deve essere maggiore di 0. Impostato a 1.");
+            SporiumLogger.LogWarning(LogCategory.Core, "smoothSpeed deve essere maggiore di 0. Impostato a 1.");
             smoothSpeed = 1f;
         }
         
         if (rotationSpeed <= 0)
         {
-            Debug.LogWarning("[CameraFollow2D] rotationSpeed deve essere maggiore di 0. Impostato a 1.");
+            SporiumLogger.LogWarning(LogCategory.Core, "rotationSpeed deve essere maggiore di 0. Impostato a 1.");
             rotationSpeed = 1f;
         }
         
         if (lookAheadDistance < 0)
         {
-            Debug.LogWarning("[CameraFollow2D] lookAheadDistance non può essere negativo. Impostato a 0.");
+            SporiumLogger.LogWarning(LogCategory.Core, "lookAheadDistance non può essere negativo. Impostato a 0.");
             lookAheadDistance = 0f;
         }
         
@@ -82,12 +83,12 @@ public class CameraFollow2D : MonoBehaviour
                 target = player.transform;
                 if (showDebugLogs)
                 {
-                    Debug.Log($"[CameraFollow2D] Target trovato automaticamente: {target.name}");
+                    SporiumLogger.LogInfo(LogCategory.Core, $"Target trovato automaticamente: {target.name}");
                 }
             }
             else
             {
-                Debug.LogWarning($"[CameraFollow2D] Nessun oggetto con tag '{playerTag}' trovato!");
+                SporiumLogger.LogWarning(LogCategory.Core, $"Nessun oggetto con tag '{playerTag}' trovato!");
             }
         }
         
@@ -101,12 +102,12 @@ public class CameraFollow2D : MonoBehaviour
             
             if (showDebugLogs)
             {
-                Debug.Log("[CameraFollow2D] Camera inizializzata correttamente.");
+                SporiumLogger.LogInfo(LogCategory.Core, "Camera inizializzata correttamente.");
             }
         }
         else
         {
-            Debug.LogWarning("[CameraFollow2D] Nessun target assegnato! Camera non seguirà nulla.");
+            SporiumLogger.LogWarning(LogCategory.Core, "Nessun target assegnato! Camera non seguirà nulla.");
         }
     }
 
@@ -201,7 +202,7 @@ public class CameraFollow2D : MonoBehaviour
         
         if (showDebugLogs)
         {
-            Debug.Log($"[CameraFollow2D] Nuovo target assegnato: {(target != null ? target.name : "null")}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Nuovo target assegnato: {(target != null ? target.name : "null")}");
         }
     }
 

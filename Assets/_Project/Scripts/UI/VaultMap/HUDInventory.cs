@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -44,7 +45,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[HUDInventory] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
@@ -194,7 +195,7 @@ namespace _Project
                 
                 blockerGO.SetActive(false); // Inizia nascosto
                 
-                Debug.Log($"[HUDInventory] ✅ Background blocker creato e configurato per coprire tutto lo schermo (Canvas: {targetCanvas.name}, Sorting Order: {targetCanvas.sortingOrder})");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Background blocker creato e configurato per coprire tutto lo schermo (Canvas: {targetCanvas.name}, Sorting Order: {targetCanvas.sortingOrder})");
             }
         }
         
@@ -267,14 +268,14 @@ namespace _Project
                 if (_inventoryCanvas.renderMode != RenderMode.ScreenSpaceOverlay && 
                     _inventoryCanvas.renderMode != RenderMode.ScreenSpaceCamera)
                 {
-                    Debug.LogWarning($"[HUDInventory] ⚠️ Canvas render mode è {_inventoryCanvas.renderMode}. Il sorting order funziona solo con ScreenSpaceOverlay o ScreenSpaceCamera!");
+                    SporiumLogger.LogWarning(LogCategory.UI, $"Canvas render mode è {_inventoryCanvas.renderMode}. Il sorting order funziona solo con ScreenSpaceOverlay o ScreenSpaceCamera!");
                 }
                 
-                Debug.Log($"[HUDInventory] ✅ Canvas sorting order impostato a {canvasSortingOrder} (render mode: {_inventoryCanvas.renderMode})");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Canvas sorting order impostato a {canvasSortingOrder} (render mode: {_inventoryCanvas.renderMode})");
             }
             else
             {
-                Debug.LogWarning("[HUDInventory] ⚠️ Canvas non trovato per l'inventario. Assicurati che _inventoryPage sia dentro un Canvas.");
+                SporiumLogger.LogWarning(LogCategory.UI, "Canvas non trovato per l'inventario. Assicurati che _inventoryPage sia dentro un Canvas.");
             }
         }
         
@@ -295,7 +296,7 @@ namespace _Project
                 if (itemCanvas != null && itemCanvas.sortingOrder < canvasSortingOrder)
                 {
                     itemCanvas.sortingOrder = canvasSortingOrder;
-                    Debug.Log($"[HUDInventory] ✅ Canvas item sorting order aggiornato a {canvasSortingOrder}");
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Canvas item sorting order aggiornato a {canvasSortingOrder}");
                 }
                 
                 // Migliora i testi - trova TUTTI i TextMeshProUGUI nell'item
@@ -358,13 +359,13 @@ namespace _Project
         {
             if (_inventory == null)
             {
-                Debug.LogWarning("[HUDInventory] ⚠️ Inventory è null! Impossibile aggiornare inventario.");
+                SporiumLogger.LogWarning(LogCategory.UI, "Inventory è null! Impossibile aggiornare inventario.");
                 return;
             }
             
             if (_hudItemContainer == null)
             {
-                Debug.LogWarning("[HUDInventory] ⚠️ HUDItemContainer è null! Impossibile aggiornare inventario.");
+                SporiumLogger.LogWarning(LogCategory.UI, "HUDItemContainer è null! Impossibile aggiornare inventario.");
                 return;
             }
             
@@ -374,11 +375,11 @@ namespace _Project
             int uniqueItems = _inventory.UniqueItems;
             int maxCapacity = _hudItemContainer.Capacity;
             
-            Debug.Log($"[HUDInventory] Aggiornamento inventario: {uniqueItems} item unici trovati, capacità container: {maxCapacity}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Aggiornamento inventario: {uniqueItems} item unici trovati, capacità container: {maxCapacity}");
             
             if (maxCapacity == 0)
             {
-                Debug.LogError("[HUDInventory] ⚠️ HUDItemContainer non ha slot disponibili! Assicurati che gli item siano assegnati nell'Inspector.");
+                SporiumLogger.LogError(LogCategory.UI, "HUDItemContainer non ha slot disponibili! Assicurati che gli item siano assegnati nell'Inspector.");
                 return;
             }
             
@@ -391,11 +392,11 @@ namespace _Project
                     if (index < maxCapacity)
                     {
                         _hudItemContainer.SetItemData(index++, slot.TypeId, slot.Quantity);
-                        Debug.Log($"[HUDInventory] ✅ Item stackabile aggiunto all'indice {index-1}: {slot.TypeId} x{slot.Quantity}");
+                        SporiumLogger.LogDebug(LogCategory.UI, $"Item stackabile aggiunto all'indice {index-1}: {slot.TypeId} x{slot.Quantity}");
                     }
                     else
                     {
-                        Debug.LogWarning($"[HUDInventory] ⚠️ Capacità inventario raggiunta! Saltato item: {slot.TypeId}");
+                        SporiumLogger.LogWarning(LogCategory.UI, $"Capacità inventario raggiunta! Saltato item: {slot.TypeId}");
                         break;
                     }
                 }
@@ -406,11 +407,11 @@ namespace _Project
                         if (index < maxCapacity)
                         {
                             _hudItemContainer.SetItemData(index++, item.TypeId, -1);
-                            Debug.Log($"[HUDInventory] ✅ Item non-stackabile aggiunto all'indice {index-1}: {item.TypeId}");
+                            SporiumLogger.LogDebug(LogCategory.UI, $"Item non-stackabile aggiunto all'indice {index-1}: {item.TypeId}");
                         }
                         else
                         {
-                            Debug.LogWarning($"[HUDInventory] ⚠️ Capacità inventario raggiunta! Saltato item: {item.TypeId}");
+                            SporiumLogger.LogWarning(LogCategory.UI, $"Capacità inventario raggiunta! Saltato item: {item.TypeId}");
                             break;
                         }
                     }
@@ -419,7 +420,7 @@ namespace _Project
                 }
             }
             
-            Debug.Log($"[HUDInventory] ✅ Inventario aggiornato: {index} slot popolati su {maxCapacity} disponibili");
+            SporiumLogger.LogInfo(LogCategory.UI, $"Inventario aggiornato: {index} slot popolati su {maxCapacity} disponibili");
         }
     }
 }

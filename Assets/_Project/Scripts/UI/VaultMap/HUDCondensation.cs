@@ -2,6 +2,7 @@
 using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -22,7 +23,7 @@ namespace _Project
             
             if (_gameManager == null)
             {
-                Debug.LogWarning("[HUDCondensation] GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
                 if (ServiceContainer.Instance != null)
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
@@ -30,7 +31,7 @@ namespace _Project
             }
             
             if (_uiNotification == null)
-                Debug.LogWarning("[HUDCondensation] UINotification non disponibile via ServiceContainer");
+                SporiumLogger.LogWarning(LogCategory.UI, "UINotification non disponibile via ServiceContainer");
         }
         
         /// <summary>
@@ -69,7 +70,7 @@ namespace _Project
             }
             else
             {
-                Debug.LogWarning("[HUDCondensation] GameManager non disponibile in Start(). Verrà sottoscritto quando disponibile.");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile in Start(). Verrà sottoscritto quando disponibile.");
             }
             
             if (_collectButton != null)
@@ -108,7 +109,7 @@ namespace _Project
             
             if (_gameManager == null)
             {
-                Debug.LogWarning("[HUDCondensation] GameManager non disponibile per raccogliere condensa.");
+                SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile per raccogliere condensa.");
                 return;
             }
             

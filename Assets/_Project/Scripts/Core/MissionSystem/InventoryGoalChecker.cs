@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
@@ -21,7 +22,7 @@ namespace _Project.Sporae.Core
             }
             else
             {
-                Debug.LogWarning("[InventoryGoalChecker] GameManager non disponibile via ServiceContainer!");
+                SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer!");
             }
         }
         

@@ -1,5 +1,6 @@
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Growth
 {
@@ -182,39 +183,39 @@ namespace Sporae.Dome.PotSystem.Growth
             // Validazione parametri
             if (string.IsNullOrEmpty(plantCode))
             {
-                Debug.LogWarning($"[PlantData] {name}: PlantCode non impostato!");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{name}: PlantCode non impostato!");
             }
             
             if (seedItemConfig == null)
             {
-                Debug.LogWarning($"[PlantData] {name}: SeedItemConfig non assegnato!");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{name}: SeedItemConfig non assegnato!");
             }
             
             if (seedItemConfig != null && !seedItemConfig.IsSeed)
             {
-                Debug.LogWarning($"[PlantData] {name}: SeedItemConfig assegnato non è un seme (IsSeed=false)!");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{name}: SeedItemConfig assegnato non è un seme (IsSeed=false)!");
             }
             
             // Validazione pH drift in base alla famiglia
             if (family == PlantFamily.Pure && dailyPhDrift <= 0)
             {
-                Debug.LogWarning($"[PlantData] {name}: Pianta Pure dovrebbe avere drift pH positivo!");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"{name}: Pianta Pure dovrebbe avere drift pH positivo!");
             }
             
             if (family == PlantFamily.Evil && dailyPhDrift >= 0)
             {
-                Debug.LogWarning($"[PlantData] {name}: Pianta Evil dovrebbe avere drift pH negativo!");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"{name}: Pianta Evil dovrebbe avere drift pH negativo!");
             }
             
             if (family == PlantFamily.Standard && dailyPhDrift != 0)
             {
-                Debug.LogWarning($"[PlantData] {name}: Pianta Standard dovrebbe avere drift pH = 0!");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"{name}: Pianta Standard dovrebbe avere drift pH = 0!");
             }
             
             // Validazione range pH ottimale
             if (optimalPhMin >= optimalPhMax)
             {
-                Debug.LogWarning($"[PlantData] {name}: Range pH ottimale non valido (min >= max)!");
+                SporiumLogger.LogWarning(LogCategory.Ph, $"{name}: Range pH ottimale non valido (min >= max)!");
             }
         }
     }
