@@ -1,0 +1,14 @@
+COMMIT RECAP - Versione 0024
+=============================
+
+Implementati 3 sistemi core: Pruning (AZ-13), Livelli Piante (1-5), Mold/Infestazioni (BLK-07.01).
+Aggiunti PruningSystem, PlantLevelSystem, MoldSystem con ScriptableObject config.
+UI aggiornata: dialog potatura, display livelli/mold risk, badge infestazione, colori dinamici.
+Fix 9 bug: tooltip Growth, toggle spray, dialog potatura, fertilizzante Seed/Sprout, infestazione.
+Miglioramenti UX: colori Light Stress (grigio/arancione/viola/rosso), colori Fertilizzante (grigio/verde).
+Tooltip Growth convertito da runtime a manuale (istruzioni Unity fornite).
+Integrazione completa: PlantConditionSystem, DayCycleController, PotActions, UI widgets.
+File creati: 9 nuovi (sistemi + config + dialog + istruzioni), File modificati: 8 esistenti.
+Zero errori compilazione, tutti i sistemi integrati e funzionanti.
+Pronto per test runtime e setup manuale Unity seguendo istruzioni fornite.
+

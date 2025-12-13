@@ -680,30 +680,13 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
-        - Mold Risk
+        - FertilizerLevel:
           [Component] RectTransform
           - Text (TMP)
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
         - Hydration
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-          - ProgressBar
-            [Component] RectTransform
-            [Component] CanvasRenderer
-            [Component] Image
-            [Component] ProgressBar
-            - Image
-              [Component] RectTransform
-              [Component] CanvasRenderer
-              [Component] Image
-            - Text (TMP)
-              [Component] RectTransform
-              [Component] CanvasRenderer
-              [Component] TextMeshProUGUI
-        - Progress
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
@@ -743,12 +726,36 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
+        - PlantLevelText
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+        - MoldRiskText
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+        - InfestationBadge
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
       - Image
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
       - Right
         [Component] RectTransform
+        - Progress
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+          - GrowthLabel
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
         - Stage
           [Component] RectTransform
           [Component] CanvasRenderer
@@ -771,7 +778,28 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
-        - VALUE
+        - Condition
+          [Component] RectTransform
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
+        - ConditionBar
+          [Component] RectTransform
+          - ProgressBar
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] Image
+            [Component] ProgressBar
+            - Image
+              [Component] RectTransform
+              [Component] CanvasRenderer
+              [Component] Image
+            - Text (TMP)
+              [Component] RectTransform
+              [Component] CanvasRenderer
+              [Component] TextMeshProUGUI
+        - ConditionForecast
           [Component] RectTransform
           - Text (TMP)
             [Component] RectTransform
@@ -780,6 +808,15 @@
       - Bottom
         [Component] RectTransform
         - Plant
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          [Component] Button
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
+        - btnPruning
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] Image
@@ -816,6 +853,15 @@
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
         - HarvestButton
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          [Component] Button
+          - Text (TMP)
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
+        - Fertilizer
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] Image
@@ -2199,6 +2245,56 @@
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
       - ContinueButton
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] Image
+        [Component] Button
+        - Text (TMP)
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+  - PruningDialog
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+    [Component] PruningDialog
+    - ContentPanel
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] Image
+      - TitleText
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+      - BodyText
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+      - SprayToggle
+        [Component] RectTransform
+        [Component] Toggle
+        - Background
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          - Checkmark
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] Image
+        - Label
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Text
+      - ConfirmButton
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] Image
+        [Component] Button
+        - Text (TMP)
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+      - CancelButton
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image

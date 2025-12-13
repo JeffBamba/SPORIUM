@@ -95,6 +95,27 @@ public class PotStateModel
     [Tooltip("Giorno in cui sono iniziati i parametri ottimali (-1 se non attivi)")]
     public int DayOptimalParametersStarted = -1;
     
+    [Header("Pruning System (AZ-13)")]
+    [Tooltip("Flag per cap bonus resa: non cumulabile più di 1 volta per ciclo")]
+    public bool HasPruningResaBonus = false;
+    
+    [Header("Plant Level System (BLK-02.02)")]
+    [Tooltip("Livello corrente pianta (1-5)")]
+    public int PlantLevel = 1;  // Default: Lvl 1
+    
+    [Tooltip("Cicli completati (per progressione livello)")]
+    public int CompletedCycles = 0;
+    
+    [Header("Mold System (BLK-07.01)")]
+    [Tooltip("Livello rischio muffe (0=None, 1=Mild, 2=Severe, 3=Critical)")]
+    public int MoldRiskLevel = 0;
+    
+    [Tooltip("Giorni consecutivi senza potatura")]
+    public int DaysWithoutPruning = 0;
+    
+    [Tooltip("Giorni consecutivi in overwatering")]
+    public int DaysOverwateringConsecutive = 0;
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -168,6 +189,12 @@ public class PotStateModel
         GrowthPointsFertilizer = 0;
         DaysConsecutiveOptimal = 0;
         DayOptimalParametersStarted = -1;
+        HasPruningResaBonus = false;
+        PlantLevel = 1;
+        CompletedCycles = 0;
+        MoldRiskLevel = 0;
+        DaysWithoutPruning = 0;
+        DaysOverwateringConsecutive = 0;
     }
     
     /// <summary>
@@ -254,6 +281,12 @@ public class PotStateModel
         GrowthPointsFertilizer = 0;
         DaysConsecutiveOptimal = 0;
         DayOptimalParametersStarted = -1;
+        HasPruningResaBonus = false;
+        PlantLevel = 1;
+        CompletedCycles = 0;
+        MoldRiskLevel = 0;
+        DaysWithoutPruning = 0;
+        DaysOverwateringConsecutive = 0;
     }
     
     /// <summary>
@@ -314,6 +347,28 @@ public class PotStateModel
         GrowthPointsFertilizer = 0;
         DaysConsecutiveOptimal = 0;
         DayOptimalParametersStarted = -1;
+        HasPruningResaBonus = false;
+        PlantLevel = 1;
+        CompletedCycles = 0;
+        MoldRiskLevel = 0;
+        DaysWithoutPruning = 0;
+        DaysOverwateringConsecutive = 0;
+    }
+    
+    /// <summary>
+    /// Incrementa il contatore di cicli completati
+    /// </summary>
+    public void IncrementCompletedCycle()
+    {
+        CompletedCycles++;
+    }
+    
+    /// <summary>
+    /// Verifica se può salire di livello
+    /// </summary>
+    public bool CanLevelUp(int cyclesRequired)
+    {
+        return CompletedCycles >= cyclesRequired;
     }
     
     /// <summary>

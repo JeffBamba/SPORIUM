@@ -1,3 +1,4 @@
+using System.IO;
 using _Project.Sporae.Core;
 using _Project;
 using TMPro;
@@ -7,6 +8,7 @@ using UnityEngine.EventSystems;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
+using Sporae.Dome.UI;
 
 /// <summary>
 /// Widget UI minimale che mostra informazioni sul vaso selezionato.
@@ -33,6 +35,9 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private TextMeshProUGUI fertilizerText;  // BLK-03.01-T1
     [SerializeField] private TextMeshProUGUI growthPointsText;  // BLK-03.01-T2
     [SerializeField] private TextMeshProUGUI optimalDaysText;  // BLK-03.01-T2
+    [SerializeField] private TextMeshProUGUI plantLevelText;  // BLK-02.02: Livello pianta (1-5)
+    [SerializeField] private TextMeshProUGUI moldRiskText;  // BLK-07.01: Mold risk indicator
+    [SerializeField] private GameObject infestationBadge;  // BLK-07.01: Badge "INFESTATA"
     
     [Header("Growth Tooltip UI")]
     [SerializeField] private GameObject growthTooltipPanel;
@@ -52,7 +57,12 @@ public class PotHUDWidget : MonoBehaviour
     [SerializeField] private Button btnSpray;
     [SerializeField] private Button btnHarvest;
     [SerializeField] private Button btnFertilize;  // BLK-03.01-T1
+    [SerializeField] private Button btnPruning;  // AZ-13
     [SerializeField] private TextMeshProUGUI txtCosts;
+    
+    [Header("Pruning Dialog (AZ-13)")]
+    [SerializeField] private PruningDialog pruningDialogPrefab;
+    private PruningDialog _pruningDialogInstance;
     
     [Header("Seed Selector")]
     [SerializeField] private UISeedSelector seedSelector;
@@ -267,6 +277,105 @@ public class PotHUDWidget : MonoBehaviour
         _currentSelectedPot = targetPot;
         
         fertilizerSelector.Show(targetPot);
+    }
+    
+    /// <summary>
+    /// AZ-13: Apre il dialog di potatura con opzione Spray
+    /// </summary>
+    private void OpenPruningDialog(PotSlot targetPot)
+    {
+        Debug.Log($"[PotHUDWidget] ✂️ OpenPruningDialog chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+        
+        // Crea istanza dialog se non esiste
+        if (_pruningDialogInstance == null)
+        {
+            if (pruningDialogPrefab != null)
+            {
+                // BUG FIX: Istanzia nel Canvas root invece che nel transform corrente
+                Canvas canvas = GetComponentInParent<Canvas>();
+                if (canvas == null)
+                    canvas = FindObjectOfType<Canvas>();
+                
+                if (canvas != null)
+                {
+                    _pruningDialogInstance = Instantiate(pruningDialogPrefab, canvas.transform);
+                }
+                else
+                {
+                    _pruningDialogInstance = Instantiate(pruningDialogPrefab, transform);
+                }
+                
+                // BUG FIX: Assicurati che il GameObject root sia attivo
+                if (_pruningDialogInstance != null)
+                {
+                    _pruningDialogInstance.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                // Cerca dialog nella scena
+                _pruningDialogInstance = FindObjectOfType<PruningDialog>();
+                if (_pruningDialogInstance == null)
+                {
+                    Debug.LogError("[PotHUDWidget] ❌ PruningDialog non trovato! Assicurati di avere il prefab assegnato o un'istanza nella scena.");
+                    return;
+                }
+            }
+        }
+        
+        // BUG FIX: Assicurati che il dialog sia attivo prima di mostrarlo
+        if (_pruningDialogInstance != null)
+        {
+            _pruningDialogInstance.gameObject.SetActive(true);
+        }
+        
+        // Verifica disponibilità STR-004
+        bool hasSpray = targetPot?.PotActions?.HasSprayAntifungal() ?? false;
+        
+        // Sottoscrivi eventi
+        _pruningDialogInstance.OnDialogResult -= OnPruningDialogResult; // Rimuovi prima per evitare duplicati
+        _pruningDialogInstance.OnDialogResult += OnPruningDialogResult;
+        
+        // Salva il vaso corrente
+        _currentSelectedPot = targetPot;
+        
+        // Mostra dialog
+        _pruningDialogInstance.Show(hasSpray);
+    }
+    
+    /// <summary>
+    /// AZ-13: Gestisce il risultato del dialog potatura
+    /// </summary>
+    private void OnPruningDialogResult(bool confirmed, bool useSpray)
+    {
+        Debug.Log($"[PotHUDWidget] ✂️ OnPruningDialogResult: confirmed={confirmed}, useSpray={useSpray}");
+        
+        if (!confirmed)
+        {
+            Debug.Log("[PotHUDWidget] ✂️ Potatura annullata dall'utente");
+            return;
+        }
+        
+        if (_currentSelectedPot == null || _currentSelectedPot.PotActions == null)
+        {
+            Debug.LogError("[PotHUDWidget] ⚠️ _currentSelectedPot è NULL quando potatura confermata!");
+            return;
+        }
+        
+        // Esegui potatura
+        bool success = _currentSelectedPot.PotActions.DoPruning(useSpray);
+        
+        if (success)
+        {
+            Debug.Log($"[PotHUDWidget] ✂️ Potatura eseguita con successo (useSpray={useSpray})");
+            // Aggiorna UI
+            UpdateActionButtons(_currentSelectedPot);
+            UpdateStageAndProgressUI(_currentSelectedPot);
+        }
+        else
+        {
+            Debug.LogWarning("[PotHUDWidget] ✂️ Potatura fallita");
+        }
     }
     
     /// <summary>
@@ -1119,6 +1228,12 @@ public class PotHUDWidget : MonoBehaviour
             btnFertilize = CreateActionButton("Fertilize", "Fertilizzare", PotEvents.PotActionType.Fertilize);
         }
         
+        // AZ-13: Bottone potatura
+        if (btnPruning == null)
+        {
+            btnPruning = CreateActionButton("Pruning", "Potatura", PotEvents.PotActionType.Pruning);
+        }
+        
         // Crea il testo dei costi
         if (txtCosts == null)
         {
@@ -1203,6 +1318,9 @@ public class PotHUDWidget : MonoBehaviour
             case PotEvents.PotActionType.Fertilize:
                 buttonRect.anchoredPosition = new Vector2(460, 50);
                 break;
+            case PotEvents.PotActionType.Pruning:
+                buttonRect.anchoredPosition = new Vector2(550, 50);
+                break;
         }
         
         // Aggiungi listener per l'azione
@@ -1283,6 +1401,10 @@ public class PotHUDWidget : MonoBehaviour
                 // BLK-03.01-T1: Apri selettore fertilizzante invece di applicare direttamente
                 OpenFertilizerSelector(selectedPot);
                 return; // Esci subito, DoFertilize verrà chiamato quando l'utente seleziona un fertilizzante
+            case PotEvents.PotActionType.Pruning:
+                // AZ-13: Apri dialog potatura con opzione Spray
+                OpenPruningDialog(selectedPot);
+                return; // Esci subito, DoPruning verrà chiamato quando l'utente conferma
         }
         
         if (success)
@@ -1357,6 +1479,7 @@ public class PotHUDWidget : MonoBehaviour
         UpdateButtonState(btnSpray, pot.PotActions.CanSprayAntifungal(), "Spray");
         UpdateButtonState(btnHarvest, pot.PotActions.CanHarvest(), "Raccogli");
         UpdateButtonState(btnFertilize, pot.PotActions.CanFertilize(), "Fertilizzare");  // BLK-03.01-T1
+        UpdateButtonState(btnPruning, pot.PotActions.CanPruning(), "Potatura");  // AZ-13
     }
     
     /// <summary>
@@ -1395,6 +1518,8 @@ public class PotHUDWidget : MonoBehaviour
         if (btnLight != null) btnLight.gameObject.SetActive(visible);
         if (btnSpray != null) btnSpray.gameObject.SetActive(visible);
         if (btnHarvest != null) btnHarvest.gameObject.SetActive(visible);
+        if (btnFertilize != null) btnFertilize.gameObject.SetActive(visible);
+        if (btnPruning != null) btnPruning.gameObject.SetActive(visible);
         if (txtCosts != null) txtCosts.gameObject.SetActive(visible);
 
         if (visible) SetCustomMessage("");
@@ -1703,6 +1828,56 @@ public class PotHUDWidget : MonoBehaviour
                 optimalDaysText.color = new Color(0.5f, 0.5f, 0.5f); // Grigio
             }
         }
+        
+        // BLK-02.02: Aggiorna Plant Level Text
+        if (plantLevelText != null)
+        {
+            if (!state.IsEmpty && state.HasPlant)
+            {
+                plantLevelText.text = $"📈 Livello: {state.PlantLevel}/5 (Cicli: {state.CompletedCycles})";
+                plantLevelText.color = state.PlantLevel >= 3 ? new Color(0.2f, 1f, 0.2f) : Color.white;
+            }
+            else
+            {
+                plantLevelText.text = "📈 Livello: -";
+                plantLevelText.color = new Color(0.6f, 0.6f, 0.6f);
+            }
+        }
+        
+        // BLK-07.01: Aggiorna Mold Risk Text
+        if (moldRiskText != null)
+        {
+            if (!state.IsEmpty && state.HasPlant && state.MoldRiskLevel > 0)
+            {
+                string riskLevel = state.MoldRiskLevel switch
+                {
+                    1 => "Lieve",
+                    2 => "Severo",
+                    3 => "Critico",
+                    _ => "Sconosciuto"
+                };
+                moldRiskText.text = $"⚠️ Mold Risk: {riskLevel} (Lvl {state.MoldRiskLevel})";
+                moldRiskText.color = state.MoldRiskLevel >= 2 ? new Color(1f, 0.2f, 0.2f) : new Color(1f, 0.7f, 0.2f);
+            }
+            else
+            {
+                moldRiskText.text = "✅ Mold Risk: Nessuno";
+                moldRiskText.color = new Color(0.2f, 1f, 0.2f);
+            }
+        }
+        
+        // BLK-07.01: Aggiorna Infestation Badge
+        if (infestationBadge != null)
+        {
+            // #region agent log
+            try {
+                var logData = new { moldRiskLevel = state.MoldRiskLevel, conditionResult = !state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2 };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG2-A\",\"location\":\"PotHUDWidget.cs:1847\",\"message\":\"UpdatePlantStatsUI: Infestation badge condition\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+            infestationBadge.SetActive(!state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2);
+        }
     }
 
     private void UpdateProgressUI(PotStateModel state)
@@ -1940,10 +2115,12 @@ public class PotHUDWidget : MonoBehaviour
         int hydrationPercent = maxHydration > 0 ? 
             Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
         
-        // Verifica range per ogni parametro
+        // BUG 2 FIX: Verifica range per ogni parametro basato SOLO sui valori attuali, non sullo stato delle azioni
         bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
-        bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
-                      stageReq.IsLightInRange(state.LightExposure);
+        // BUG 2 FIX: Light OK solo se LightExposure è nel range (non dipende da LED attivo o meno per il tooltip)
+        bool lightOk = stageReq.IsLightInRange(state.LightExposure);
+        // Nota: IsLedRequirementMet viene verificato separatamente per il requisito LED, ma non influisce su "OK/NOT OK" nel tooltip
+        bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
         
         // Determina stato
@@ -1966,24 +2143,39 @@ public class PotHUDWidget : MonoBehaviour
         sb.AppendLine();
         
         // Light
+        // BUG 2 FIX: Light OK basato solo su LightExposure nel range, non su LED attivo
         string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
         sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
         if (!lightOk)
         {
-            string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
-            sb.AppendLine($"  LED richiesto: {ledRequired}");
             sb.AppendLine($"  Range ideale: {stageReq.lightMin}% - {stageReq.lightMax}%");
             sb.AppendLine($"  Attuale: {state.LightExposure}%");
+        }
+        // Mostra requisito LED separatamente (non influisce su OK/NOT OK)
+        string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
+        if (ledRequired != "Nessuno")
+        {
+            string ledStatus = ledRequirementMet ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"  LED richiesto: {ledRequired} ({ledStatus})");
         }
         sb.AppendLine();
         
         // Fertilizer
+        // BUG FIX: Per Seed e Sprout, il fertilizzante è opzionale
+        bool isFertilizerOptional = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout);
         string fertilizerStatus = fertilizerOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
-        sb.AppendLine($"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}");
+        string fertilizerLabel = isFertilizerOptional ? 
+            $"• <color=#90EE90>Fertilizzante</color> (opzionale): {fertilizerStatus}" :
+            $"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}";
+        sb.AppendLine(fertilizerLabel);
         if (!fertilizerOk)
         {
             sb.AppendLine($"  Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%");
             sb.AppendLine($"  Attuale: {state.FertilizerLevel}%");
+        }
+        if (isFertilizerOptional)
+        {
+            sb.AppendLine($"  <color=#FFFF00>Nota: Negli stadi Seed e Sprout, il fertilizzante è opzionale per avanzare.</color>");
         }
         sb.AppendLine();
         

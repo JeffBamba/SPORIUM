@@ -20,7 +20,8 @@ public static class PotEvents
         Uproot,      // ACT-004: Uproot pianta
         Harvest,     // ACT-005: Raccogliere frutti (BLK-02.06)
         Spray,       // ACT-014: Spray Antifungino (BLK-02.03)
-        Fertilize    // ACT-015: Applicare fertilizzante (BLK-03.01-T1)
+        Fertilize,   // ACT-015: Applicare fertilizzante (BLK-03.01-T1)
+        Pruning      // ACT-013: Potatura (AZ-13)
     }
     
     /// <summary>
@@ -148,6 +149,8 @@ public static class PotEvents
                 return "Spray Antifungino";
             case PotActionType.Fertilize:
                 return "Fertilizzare";
+            case PotActionType.Pruning:
+                return "Potatura";
             default:
                 return "Sconosciuto";
         }
@@ -174,6 +177,8 @@ public static class PotEvents
                 return "ACT-005";
             case PotActionType.Spray:
                 return "ACT-014";
+            case PotActionType.Pruning:
+                return "ACT-013";
             default:
                 return "ACT-000";
         }
@@ -200,6 +205,8 @@ public static class PotEvents
                 return "Raccogli tutti i frutti disponibili dalla pianta";
             case PotActionType.Spray:
                 return "Applicare spray antifungino (rimuove muffe, pH +5)";
+            case PotActionType.Pruning:
+                return "Eseguire potatura (rimuove infestazione, bonus resa in Growth)";
             default:
                 return "Azione non riconosciuta";
         }

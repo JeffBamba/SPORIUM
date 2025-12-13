@@ -1,8 +1,12 @@
 using System.Linq;
+using System.IO;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Fertilizer;
+using Sporae.Dome.PotSystem.Pruning;
+using Sporae.Dome.PotSystem.Level;
+using Sporae.Dome.PotSystem.Mold;
 using _Project;
 
 /// <summary>
@@ -383,6 +387,53 @@ public class PotActions : MonoBehaviour
             Debug.Log($"[PotActions][{potSlot?.PotId}] CanFertilize: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
         
         return hasPlant && inRange && hasResources;
+    }
+    
+    /// <summary>
+    /// AZ-13: Verifica se è possibile eseguire potatura
+    /// </summary>
+    public bool CanPruning()
+    {
+        if (_potState == null)
+            return false;
+        
+        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
+        bool
+            hasPlant = _potState.HasPlantGrowing,
+            inRange = IsPlayerInRange(),
+            hasResources = CanConsumeResources();
+        
+        if (showDebugLogs)
+            Debug.Log($"[PotActions][{potSlot?.PotId}] CanPruning: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+        
+        return hasPlant && inRange && hasResources;
+    }
+    
+    /// <summary>
+    /// AZ-13: Verifica se è disponibile STR-004 (Spray Antifungino) in inventario
+    /// </summary>
+    public bool HasSprayAntifungal()
+    {
+        // #region agent log
+        try {
+            var logData = new { inventoryNull = _playerInventory == null };
+            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-B\",\"location\":\"PotActions.cs:414\",\"message\":\"HasSprayAntifungal: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+        } catch { }
+        // #endregion
+        if (_playerInventory == null)
+            return false;
+        
+        // Verifica presenza STR-004 nell'inventario
+        bool hasItem = _playerInventory.Has("STR-004", 1);
+        // #region agent log
+        try {
+            var logData2 = new { hasItem = hasItem, itemCode = "STR-004" };
+            var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-B\",\"location\":\"PotActions.cs:420\",\"message\":\"HasSprayAntifungal: Result\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+        } catch { }
+        // #endregion
+        return hasItem;
     }
     
     #endregion
@@ -799,8 +850,8 @@ public class PotActions : MonoBehaviour
                 Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino applicato: pH +5");
         }
         
-        // TODO: Rimuovere muffe quando sistema muffe sarà implementato
-        // Per ora solo applica pH
+        // BLK-07.01: Rimuove muffe
+        MoldSystem.RemoveInfestation(_potState);
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Spray, potSlot);
@@ -810,6 +861,125 @@ public class PotActions : MonoBehaviour
             Debug.Log($"[ACT-014][{potSlot.PotId}] Spray Antifungino OK: muffe rimosse (se presenti), pH +5 applicato");
         
         return true;
+    }
+    
+    /// <summary>
+    /// AZ-13: Esegue l'azione di potatura
+    /// </summary>
+    /// <param name="useSpray">Se true, usa Spray Antifungino (STR-004) per bonus e reroll</param>
+    public bool DoPruning(bool useSpray = false)
+    {
+        if (!CanPruning())
+        {
+            string reason = GetPruningFailureReason();
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, reason);
+            return false;
+        }
+        
+        // Se richiesto Spray, verifica disponibilità
+        if (useSpray && !HasSprayAntifungal())
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "STR-004 (Spray Antifungino) non disponibile");
+            return false;
+        }
+        
+        // Consuma STR-004 se usato
+        if (useSpray)
+        {
+            if (!_playerInventory.Consume("STR-004", 1))
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Impossibile consumare STR-004");
+                return false;
+            }
+            if (showDebugLogs)
+                Debug.Log($"[ACT-013][{potSlot.PotId}] Consumato STR-004 per potatura");
+        }
+        
+        // Consuma le risorse (1 azione)
+        if (!TryConsumeResources())
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Insufficient resources");
+            return false;
+        }
+        
+        // Carica PruningConfig
+        PruningConfig pruningConfig = Resources.Load<PruningConfig>("Configs/PruningConfig");
+        if (pruningConfig == null)
+        {
+            Debug.LogError($"[ACT-013][{potSlot.PotId}] PruningConfig non trovato in Resources/Configs/PruningConfig");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Configurazione potatura non trovata");
+            return false;
+        }
+        
+        // Ottieni stadio corrente
+        PlantStage currentStage = (PlantStage)_potState.Stage;
+        
+        // #region agent log
+        try {
+            var logData = new { useSpray = useSpray, currentStage = currentStage.ToString(), potId = potSlot != null ? potSlot.PotId : "null" };
+            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-E\",\"location\":\"PotActions.cs:901\",\"message\":\"DoPruning: Before TryPrune\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+        } catch { }
+        // #endregion
+        // Esegui potatura
+        PruningResult result = PruningSystem.TryPrune(_potState, currentStage, useSpray, pruningConfig);
+        // #region agent log
+        try {
+            var logData2 = new { resultSuccess = result.Success, resultType = result.ResultType.ToString(), resultMessage = result.Message };
+            var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-D\",\"location\":\"PotActions.cs:903\",\"message\":\"DoPruning: After TryPrune\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+        } catch { }
+        // #endregion
+        
+            // Gestisci risultato
+            if (result.Success)
+            {
+                // #region agent log
+                try {
+                    var logData = new { moldRiskLevelBefore = _potState.MoldRiskLevel, daysWithoutPruningBefore = _potState.DaysWithoutPruning };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-A\",\"location\":\"PotActions.cs:937\",\"message\":\"DoPruning: Before RemoveInfestation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+                
+                // BLK-07.01: Rimuove infestazione
+                MoldSystem.RemoveInfestation(_potState);
+                _potState.DaysWithoutPruning = 0;
+                
+                // #region agent log
+                try {
+                    var logData2 = new { moldRiskLevelAfter = _potState.MoldRiskLevel, daysWithoutPruningAfter = _potState.DaysWithoutPruning };
+                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-A\",\"location\":\"PotActions.cs:942\",\"message\":\"DoPruning: After RemoveInfestation\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+                } catch { }
+                // #endregion
+                
+                // Se è Growth pre-Flowering e non ha già bonus resa, applica bonus
+                if (result.ResultType == PruningResultType.SuccessResa)
+                {
+                    if (PruningSystem.ApplyResaBonus(_potState, pruningConfig))
+                    {
+                        if (showDebugLogs)
+                            Debug.Log($"[ACT-013][{potSlot.PotId}] Bonus resa applicato (Growth pre-Flowering)");
+                    }
+                }
+                
+                // Log feedback appropriato
+                if (showDebugLogs)
+                    Debug.Log($"[ACT-013][{potSlot.PotId}] {result.Message}");
+            }
+        else
+        {
+            // Log fallimento
+            if (showDebugLogs)
+                Debug.Log($"[ACT-013][{potSlot.PotId}] {result.Message}");
+        }
+        
+        // Notifica il cambio stato
+        PotEvents.EmitAction(PotEvents.PotActionType.Pruning, potSlot);
+        PotEvents.EmitChanged(potSlot);
+        
+        return result.Success;
     }
     
     /// <summary>
@@ -832,8 +1002,19 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
+        // BLK-02.02: Applica modificatori resa basati su livello
+        float baseAmount = _potState.AmountFruits;
+        PlantLevelConfig levelConfig = Resources.Load<PlantLevelConfig>("Configs/PlantLevelConfig");
+        if (levelConfig != null && _potState.PlantLevel >= 3)
+        {
+            float modifier = levelConfig.GetQuantityModifier(_potState.PlantLevel);
+            baseAmount = baseAmount * (1f + modifier / 100f); // Modifier è negativo (es. -15%)
+            if (showDebugLogs)
+                Debug.Log($"[ACT-005][{potSlot.PotId}] Modificatore resa Lvl {_potState.PlantLevel}: {modifier}% (quantità: {_potState.AmountFruits} → {baseAmount})");
+        }
+        
         // Calcola quantità frutti da raccogliere
-        int fruitsToHarvest = Mathf.RoundToInt(_potState.AmountFruits);
+        int fruitsToHarvest = Mathf.RoundToInt(baseAmount);
         if (fruitsToHarvest <= 0)
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Nessun frutto disponibile");
@@ -855,6 +1036,18 @@ public class PotActions : MonoBehaviour
         _potState.Stage = (int)PlantStage.Resting;
         _potState.DaysInHarvestReady = 0; // Reset contatore HarvestReady
         _potState.DaysInCurrentStage = 0; // Reset contatore stadio corrente
+        _potState.HasPruningResaBonus = false; // AZ-13: Reset bonus resa per nuovo ciclo
+        
+        // BLK-02.02: Incrementa cicli completati e verifica level up
+        _potState.IncrementCompletedCycle();
+        if (levelConfig != null)
+        {
+            bool levelUp = PlantLevelSystem.CheckLevelUp(_potState, levelConfig);
+            if (levelUp && showDebugLogs)
+            {
+                Debug.Log($"[ACT-005][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel}!");
+            }
+        }
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Harvest, potSlot);
@@ -958,6 +1151,7 @@ public class PotActions : MonoBehaviour
             int oldStage = _potState.Stage;
             _potState.Stage = (int)PlantStage.Flowering;
             _potState.DaysInCurrentStage = 0;
+            _potState.HasPruningResaBonus = false; // AZ-13: Reset bonus resa per nuovo ciclo
             
             // Notifica cambio stadio
             if (potGrowthController != null)
@@ -1136,6 +1330,15 @@ public class PotActions : MonoBehaviour
         if (!_potState.HasPlantGrowing) return "Vaso vuoto";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni insufficienti";
+        return "Azione non permessa";
+    }
+    
+    private string GetPruningFailureReason()
+    {
+        if (_potState == null) return "Stato vaso non valido";
+        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
+        if (!IsPlayerInRange()) return "Troppo lontano";
+        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";
     }
     

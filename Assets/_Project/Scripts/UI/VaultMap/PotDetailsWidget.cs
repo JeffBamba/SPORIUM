@@ -1,10 +1,12 @@
 using System.Linq;
+using System.IO;
 using _Project.Sporae.Core;
 // GDD AZ-11: Watering namespace rimosso (minigioco deprecato)
 // using _Project.Watering;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem;
+using Sporae.Dome.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,7 +23,12 @@ namespace _Project
         [SerializeField] private Button _sprayButton;
         [SerializeField] private Button _harvestButton;
         [SerializeField] private Button _fertilizeButton;  // BLK-03.01-T1
+        [SerializeField] private Button _pruningButton;  // AZ-13
         [SerializeField] private Button _uprootButton;
+        
+        [Header("Pruning Dialog (AZ-13)")]
+        [SerializeField] private PruningDialog _pruningDialogPrefab;
+        private PruningDialog _pruningDialogInstance;
 
         [SerializeField] private TextMeshProUGUI _idLabel;
         [SerializeField] private TextMeshProUGUI _stageLabel;
@@ -36,6 +43,9 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _fertilizerText;  // BLK-03.01-T1
         [SerializeField] private TextMeshProUGUI _growthPointsText;  // BLK-03.01-T2
         [SerializeField] private TextMeshProUGUI _optimalDaysText;  // BLK-03.01-T2
+        [SerializeField] private TextMeshProUGUI _plantLevelText;  // BLK-02.02: Livello pianta (1-5)
+        [SerializeField] private TextMeshProUGUI _moldRiskText;  // BLK-07.01: Mold risk indicator
+        [SerializeField] private GameObject _infestationBadge;  // BLK-07.01: Badge "INFESTATA"
         [SerializeField] private ProgressBar _hydrationProgressBar;
         [SerializeField] private ProgressBar _lightProgressBar;
         [SerializeField] private TextMeshProUGUI _phAffinityText;
@@ -51,6 +61,7 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _conditionTooltipText;
         
         [Header("Growth Tooltip UI")]
+        [Header("Growth Tooltip UI (assegna manualmente in Unity)")]
         [SerializeField] private GameObject _growthTooltipPanel;
         [SerializeField] private TextMeshProUGUI _growthTooltipText;
 
@@ -176,6 +187,10 @@ namespace _Project
             // BLK-03.01-T1: Bottone fertilizzante
             if (_fertilizeButton != null)
                 _fertilizeButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Fertilize));
+            
+            // AZ-13: Bottone potatura
+            if (_pruningButton != null)
+                _pruningButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Pruning));
             
             if (_uprootButton != null)
                 _uprootButton.onClick.AddListener(() => OnActionButtonClicked(PotEvents.PotActionType.Uproot));
@@ -366,6 +381,143 @@ namespace _Project
         }
         
         /// <summary>
+        /// AZ-13: Apre il dialog di potatura con opzione Spray
+        /// </summary>
+        private void OpenPruningDialog(PotSlot targetPot)
+        {
+            Debug.Log($"[PotDetailsWidget] ✂️ OpenPruningDialog chiamato per vaso {targetPot?.PotId ?? "NULL"}");
+            
+            // Crea istanza dialog se non esiste
+            if (_pruningDialogInstance == null)
+            {
+                if (_pruningDialogPrefab != null)
+                {
+                    // BUG FIX: Istanzia nel Canvas root invece che nel transform corrente
+                    Canvas canvas = GetComponentInParent<Canvas>();
+                    if (canvas == null)
+                        canvas = FindObjectOfType<Canvas>();
+                    
+                    if (canvas != null)
+                    {
+                        _pruningDialogInstance = Instantiate(_pruningDialogPrefab, canvas.transform);
+                    }
+                    else
+                    {
+                        _pruningDialogInstance = Instantiate(_pruningDialogPrefab, transform);
+                    }
+                    
+                    // BUG FIX: Assicurati che il GameObject root sia attivo
+                    if (_pruningDialogInstance != null)
+                    {
+                        _pruningDialogInstance.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    // Cerca dialog nella scena
+                    _pruningDialogInstance = FindObjectOfType<PruningDialog>();
+                    if (_pruningDialogInstance == null)
+                    {
+                        Debug.LogError("[PotDetailsWidget] ❌ PruningDialog non trovato! Assicurati di avere il prefab assegnato o un'istanza nella scena.");
+                        return;
+                    }
+                }
+            }
+            
+            // BUG FIX: Assicurati che il dialog sia attivo prima di mostrarlo
+            if (_pruningDialogInstance != null)
+            {
+                _pruningDialogInstance.gameObject.SetActive(true);
+            }
+            
+            // Verifica disponibilità STR-004
+            bool hasSpray = targetPot?.PotActions?.HasSprayAntifungal() ?? false;
+            
+            // Sottoscrivi eventi
+            _pruningDialogInstance.OnDialogResult -= OnPruningDialogResult; // Rimuovi prima per evitare duplicati
+            _pruningDialogInstance.OnDialogResult += OnPruningDialogResult;
+            
+            // Salva il vaso corrente
+            _currentSelectedPot = targetPot;
+            
+            // Mostra dialog
+            _pruningDialogInstance.Show(hasSpray);
+        }
+        
+        /// <summary>
+        /// AZ-13: Gestisce il risultato del dialog potatura
+        /// </summary>
+        private void OnPruningDialogResult(bool confirmed, bool useSpray)
+        {
+            // #region agent log
+            try {
+                var logData = new { confirmed = confirmed, useSpray = useSpray };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-E\",\"location\":\"PotDetailsWidget.cs:424\",\"message\":\"OnPruningDialogResult: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+            Debug.Log($"[PotDetailsWidget] ✂️ OnPruningDialogResult: confirmed={confirmed}, useSpray={useSpray}");
+            
+            if (!confirmed)
+            {
+                Debug.Log("[PotDetailsWidget] ✂️ Potatura annullata dall'utente");
+                return;
+            }
+            
+            if (_currentSelectedPot == null || _currentSelectedPot.PotActions == null)
+            {
+                Debug.LogError("[PotDetailsWidget] ⚠️ _currentSelectedPot è NULL quando potatura confermata!");
+                return;
+            }
+            
+            // Esegui potatura
+            bool success = _currentSelectedPot.PotActions.DoPruning(useSpray);
+            // #region agent log
+            try {
+                var logData2 = new { success = success };
+                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-D\",\"location\":\"PotDetailsWidget.cs:441\",\"message\":\"OnPruningDialogResult: DoPruning result\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+            } catch { }
+            // #endregion
+            
+            if (success)
+            {
+                Debug.Log($"[PotDetailsWidget] ✂️ Potatura eseguita con successo (useSpray={useSpray})");
+                
+                // BUG FIX: Mostra toast con esito potatura
+                var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+                if (uiNotification != null)
+                {
+                    string toastMessage = useSpray ? 
+                        "✂️ Potatura completata con successo! Spray Antifungino utilizzato." : 
+                        "✂️ Potatura completata con successo!";
+                    uiNotification.ShowNotification(toastMessage, 3f, new Color(0.2f, 1f, 0.2f)); // Verde per successo
+                }
+                
+                // Aggiorna UI
+                UpdateActionButtons(_currentSelectedPot);
+                
+                var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
+                if (growthController != null)
+                    UpdateStageAndProgressUI(_currentSelectedPot);
+            }
+            else
+            {
+                Debug.LogWarning("[PotDetailsWidget] ✂️ Potatura fallita");
+                
+                // BUG FIX: Mostra toast con esito potatura fallita
+                var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+                if (uiNotification != null)
+                {
+                    string toastMessage = useSpray ? 
+                        "✂️ Potatura fallita. Spray Antifungino consumato ma potatura non riuscita." : 
+                        "✂️ Potatura fallita. Riprova più tardi.";
+                    uiNotification.ShowNotification(toastMessage, 3f, new Color(1f, 0.2f, 0.2f)); // Rosso per fallimento
+                }
+            }
+        }
+        
+        /// <summary>
         /// Gestisce la selezione di un fertilizzante
         /// </summary>
         private void OnFertilizerSelected(string fertilizerTypeId)
@@ -504,6 +656,11 @@ namespace _Project
                     // BLK-03.01-T1: Apri selettore fertilizzante invece di applicare direttamente
                     OpenFertilizerSelector(selectedPot);
                     return; // Esci subito, DoFertilize verrà chiamato quando l'utente seleziona un fertilizzante
+                
+                case PotEvents.PotActionType.Pruning:
+                    // AZ-13: Apri dialog potatura con opzione Spray
+                    OpenPruningDialog(selectedPot);
+                    return; // Esci subito, DoPruning verrà chiamato quando l'utente conferma
                 
                 case PotEvents.PotActionType.Uproot:
                     success = selectedPot.PotActions.DoUproot();
@@ -672,6 +829,8 @@ namespace _Project
                 UpdateButtonState(_sprayButton, pot.PotActions.CanSprayAntifungal(), "Spray");
             if (_harvestButton != null)
                 UpdateButtonState(_harvestButton, pot.PotActions.CanHarvest(), "Raccogli");
+            if (_pruningButton != null)
+                UpdateButtonState(_pruningButton, pot.PotActions.CanPruning(), "Potatura");
             if (_fertilizeButton != null)
                 UpdateButtonState(_fertilizeButton, pot.PotActions.CanFertilize(), "Fertilizzare");  // BLK-03.01-T1
             UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Uproot");
@@ -881,6 +1040,25 @@ namespace _Project
                 _optimalDaysText = FindTextInChildren("Optimal Days");
             }
             
+            // BLK-02.02: Auto-trova plant level text se non assegnato
+            if (_plantLevelText == null)
+            {
+                _plantLevelText = FindTextInChildren("Plant Level");
+            }
+            
+            // BLK-07.01: Auto-trova mold risk text se non assegnato
+            if (_moldRiskText == null)
+            {
+                _moldRiskText = FindTextInChildren("Mold Risk");
+            }
+            
+            // BLK-07.01: Auto-trova infestation badge se non assegnato
+            if (_infestationBadge == null)
+            {
+                var badge = FindObjectInChildren("Infestation Badge");
+                if (badge != null) _infestationBadge = badge;
+            }
+            
             // Auto-trova le progress bar se non sono state collegate manualmente
             if (_hydrationProgressBar == null)
             {
@@ -925,9 +1103,11 @@ namespace _Project
                 // Assicurati che richText sia abilitato
                 _hydrationStressText.richText = true;
                 
-                string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color=#FFFF00>{hydrationPercentage:F0}%</color>{wateringStatus}";
+                // MODIFICA 1: Determina colore in base al range ideale
+                string hydrationColor = "#FFFF00"; // Default: giallo
+                string rangeText = "";
                 
-                // Se c'è una pianta, mostra anche il range ideale per lo stadio corrente
+                // Se c'è una pianta, verifica se è nel range ideale
                 if (!string.IsNullOrEmpty(state.PlantCode))
                 {
                     var plantDatabase = PlantDatabase.Instance;
@@ -939,12 +1119,33 @@ namespace _Project
                             var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
                             if (stageReq != null)
                             {
+                                // MODIFICA 1: Logica colori: 0% o 100% = rosso, nei parametri ideali = verde, altre = arancione
+                                int hydrationInt = (int)hydrationPercentage;
+                                if (hydrationInt == 0 || hydrationInt == 100)
+                                {
+                                    hydrationColor = "#FF0000"; // Rosso per 0% o 100%
+                                }
+                                else if (stageReq.IsHydrationOptimal(hydrationInt))
+                                {
+                                    hydrationColor = "#00FF00"; // Verde se ottimale
+                                }
+                                else if (stageReq.IsHydrationInRange(hydrationInt))
+                                {
+                                    hydrationColor = "#FF6600"; // Arancione se nel range ma non ottimale
+                                }
+                                else
+                                {
+                                    hydrationColor = "#FF6600"; // Arancione se fuori range
+                                }
+                                
                                 // Mostra il range ideale (min-med-max) per lo stadio corrente
-                                hydrationText += $" <color=#CCCCCC>(Range:</color> <color=#00FF00>{stageReq.hydrationMin}%-{stageReq.hydrationMed}%-{stageReq.hydrationMax}%</color><color=#CCCCCC>)</color>";
+                                rangeText = $" <color=#CCCCCC>(Range:</color> <color=#00FF00>{stageReq.hydrationMin}%-{stageReq.hydrationMed}%-{stageReq.hydrationMax}%</color><color=#CCCCCC>)</color>";
                             }
                         }
                     }
                 }
+                
+                string hydrationText = $"<color=#CCCCCC>Hydration:</color> <color={hydrationColor}>{hydrationPercentage:F0}%</color>{wateringStatus}{rangeText}";
                 
                 _hydrationStressText.text = hydrationText;
                 Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Hydration: {hydrationPercentage:F0}% (Hydration={state.Hydration}/{maxHydration}, Sistema={state.WateringSystemOn})");
@@ -983,17 +1184,37 @@ namespace _Project
                 // Nota: Quando LED è spento, i giorni consecutivi decrescono gradualmente (25% al giorno)
                 // seguendo la stessa logica della crescita ma al contrario
                 
-                // Colore in base allo stress
+                // MODIFICA: Colore in base allo stress con nuova scala colori
+                // 0%: grigio neutro, 1-50%: arancione, 51-75%: viola, 76-100%: rosso
                 string stressColor = stressPercentage switch
                 {
-                    >= 100f => "#FF0000",  // Rosso per stress massimo (4+ giorni)
-                    >= 75f => "#FF6600",   // Arancione scuro per stress alto (3 giorni)
-                    >= 50f => "#FFAA00",   // Arancione per stress medio (2 giorni)
-                    >= 25f => "#FFFF00",   // Giallo per stress basso (1 giorno)
-                    _ => "#00FF00"         // Verde per nessuno stress (0 giorni)
+                    > 75f => "#FF0000",   // Rosso per stress alto (76-100%)
+                    > 50f => "#800080",   // Viola per stress medio-alto (51-75%)
+                    > 0f => "#FF6600",    // Arancione per stress basso-medio (1-50%)
+                    _ => "#808080"        // Grigio neutro per nessuno stress (0%)
                 };
                 
-                _lightStressText.text = $"<color=#CCCCCC>Light Stress:</color> <color={stressColor}>{stressPercentage:F0}%</color>";
+                // MODIFICA 2: Aggiungere range ideale a Light Stress (come per Hydration e Fertilizzante)
+                // MODIFICA: Applica lo stesso colore dello stress anche al range
+                string rangeText = "";
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
+                            if (stageReq != null)
+                            {
+                                rangeText = $" <color=#CCCCCC>(Range:</color> <color={stressColor}>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color><color=#CCCCCC>)</color>";
+                            }
+                        }
+                    }
+                }
+                
+                _lightStressText.text = $"<color=#CCCCCC>Light Stress:</color> <color={stressColor}>{stressPercentage:F0}%</color>{rangeText}";
                 Debug.Log($"[PotDetailsWidget] Aggiornato Light Stress: {stressPercentage:F0}% (LED: {state.LedSystemState}, Giorni consecutivi: {state.GetConsecutiveLedDays()})");
             }
             else
@@ -1019,7 +1240,9 @@ namespace _Project
                 else
                 {
                     int currentFertilizer = state.FertilizerLevel;
-                    string fertilizerText = $"<color=#CCCCCC>Fertilizzante:</color> <color=#FFFF00>{currentFertilizer}%</color>";
+                    // MODIFICA 1: Determina colore in base al range ideale
+                    string fertilizerColor = "#FFFF00"; // Default: giallo
+                    string rangeText = "";
                     
                     // Se c'è una pianta, mostra anche il range ideale per lo stadio corrente
                     if (!string.IsNullOrEmpty(state.PlantCode))
@@ -1033,28 +1256,32 @@ namespace _Project
                                 var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
                                 if (stageReq != null)
                                 {
-                                    // Mostra il range ideale (min-med-max) per lo stadio corrente
-                                    fertilizerText += $" <color=#CCCCCC>(Range:</color> <color=#00FF00>{stageReq.fertilizerMin}%-{stageReq.fertilizerMed}%-{stageReq.fertilizerMax}%</color><color=#CCCCCC>)</color>";
+                                    // MODIFICA: Nuova logica colori fertilizzante
+                                    // Da 0 a soglia minima: grigio
+                                    // Dalla soglia minima alla massima: verde
+                                    // Oltre la massima: grigio
+                                    if (currentFertilizer < stageReq.fertilizerMin)
+                                    {
+                                        fertilizerColor = "#808080"; // Grigio se sotto il minimo
+                                    }
+                                    else if (currentFertilizer >= stageReq.fertilizerMin && currentFertilizer <= stageReq.fertilizerMax)
+                                    {
+                                        fertilizerColor = "#00FF00"; // Verde se nel range (min-max incluso)
+                                    }
+                                    else // currentFertilizer > stageReq.fertilizerMax
+                                    {
+                                        fertilizerColor = "#808080"; // Grigio se oltre il massimo
+                                    }
                                     
-                                    // Cambia colore in base al range
-                                    if (stageReq.IsFertilizerInRange(currentFertilizer))
-                                    {
-                                        if (stageReq.IsFertilizerOptimal(currentFertilizer))
-                                        {
-                                            // Verde se ottimale
-                                            fertilizerText = fertilizerText.Replace("<color=#FFFF00>", "<color=#00FF00>");
-                                        }
-                                        // Giallo se nel range ma non ottimale (già impostato)
-                                    }
-                                    else
-                                    {
-                                        // Rosso se fuori range
-                                        fertilizerText = fertilizerText.Replace("<color=#FFFF00>", "<color=#FF0000>");
-                                    }
+                                    // Mostra il range ideale (min-med-max) per lo stadio corrente
+                                    // MODIFICA: Applica lo stesso colore del fertilizzante anche al range
+                                    rangeText = $" <color=#CCCCCC>(Range:</color> <color={fertilizerColor}>{stageReq.fertilizerMin}%-{stageReq.fertilizerMed}%-{stageReq.fertilizerMax}%</color><color=#CCCCCC>)</color>";
                                 }
                             }
                         }
                     }
+                    
+                    string fertilizerText = $"<color=#CCCCCC>Fertilizzante:</color> <color={fertilizerColor}>{currentFertilizer}%</color>{rangeText}";
                     
                     _fertilizerText.text = fertilizerText;
                     Debug.Log($"[PotDetailsWidget] ✅ Aggiornato Fertilizzante: {currentFertilizer}%");
@@ -1134,6 +1361,75 @@ namespace _Project
                 Debug.LogWarning("[PotDetailsWidget] _optimalDaysText non trovato! Collega il riferimento nella scena Unity.");
             }
             
+            // BLK-02.02: Aggiorna Plant Level
+            if (_plantLevelText != null)
+            {
+                _plantLevelText.richText = true;
+                if (state.IsEmpty || !state.HasPlant)
+                {
+                    _plantLevelText.text = "<color=#CCCCCC>Livello:</color> <color=#888888>-</color>";
+                }
+                else
+                {
+                    string levelColor = state.PlantLevel >= 3 ? "#00FF00" : "#FFFFFF";
+                    _plantLevelText.text = $"<color=#CCCCCC>Livello:</color> <color={levelColor}>{state.PlantLevel}/5</color> <color=#888888>(Cicli: {state.CompletedCycles})</color>";
+                }
+            }
+            
+            // BLK-07.01: Aggiorna Mold Risk
+            if (_moldRiskText != null)
+            {
+                _moldRiskText.richText = true;
+                if (state.IsEmpty || !state.HasPlant)
+                {
+                    _moldRiskText.text = "<color=#CCCCCC>Mold Risk:</color> <color=#888888>-</color>";
+                }
+                else if (state.MoldRiskLevel > 0)
+                {
+                    string riskLevel = state.MoldRiskLevel switch
+                    {
+                        1 => "Lieve",
+                        2 => "Severo",
+                        3 => "Critico",
+                        _ => "Sconosciuto"
+                    };
+                    // MODIFICA 1: Logica colori: 0% o 100% = rosso, nei parametri ideali = verde, altre = arancione
+                    // Per Mold Risk: Lvl 0 = verde (nessuno), Lvl 1-2 = arancione, Lvl 3 = rosso
+                    string riskColor = state.MoldRiskLevel == 3 ? "#FF0000" : "#FF6600"; // Rosso solo per Critical (Lvl 3), arancione per altri
+                    _moldRiskText.text = $"<color=#CCCCCC>Mold Risk:</color> <color={riskColor}>{riskLevel} (Lvl {state.MoldRiskLevel})</color>";
+                }
+                else
+                {
+                    _moldRiskText.text = "<color=#CCCCCC>Mold Risk:</color> <color=#00FF00>Nessuno</color>";
+                }
+            }
+            
+            // BLK-07.01: Aggiorna Infestation Badge
+            if (_infestationBadge != null)
+            {
+                // #region agent log
+                try {
+                    var logData = new { moldRiskLevel = state.MoldRiskLevel, conditionResult = !state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2 };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG2-A\",\"location\":\"PotDetailsWidget.cs:1296\",\"message\":\"UpdatePlantStatsUI: Infestation badge condition\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+                // MODIFICA: Badge INFESTATA arancione per lvl 2, rosso per lvl 3
+                bool showBadge = !state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2;
+                _infestationBadge.SetActive(showBadge);
+                
+                // Cambia colore del badge in base al livello
+                if (showBadge && _infestationBadge != null)
+                {
+                    var badgeImage = _infestationBadge.GetComponent<UnityEngine.UI.Image>();
+                    if (badgeImage != null)
+                    {
+                        // Arancione per lvl 2, rosso per lvl 3
+                        badgeImage.color = state.MoldRiskLevel >= 3 ? new Color(1f, 0.2f, 0.2f) : new Color(1f, 0.5f, 0.2f);
+                    }
+                }
+            }
+            
             // Aggiorna pH Affinity (mostra pH ottimale della pianta se disponibile)
             if (_phAffinityText != null)
             {
@@ -1148,24 +1444,28 @@ namespace _Project
                         var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
                         if (plantData != null)
                         {
-                            _phAffinityText.text = $"<color=#CCCCCC>pH Affinity:</color> <color=#00FF00>{plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}</color>";
+                            // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico (la label è già nella HUD)
+                            _phAffinityText.text = $"<color=#00FF00>{plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}</color>";
                             Debug.Log($"[PotDetailsWidget] ✅ pH Affinity aggiornato per {state.PlantCode}: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}");
                         }
                         else
                         {
-                            _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>N/A</color>";
+                            // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
+                            _phAffinityText.text = "<color=#FF0000>N/A</color>";
                             Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
-                        _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>{}</color>";
+                        // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
+                        _phAffinityText.text = "<color=#FF0000>N/A</color>";
                         Debug.LogWarning("[PotDetailsWidget] ⚠️ PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
-                    _phAffinityText.text = "<color=#CCCCCC>pH Affinity:</color> <color=#FF0000>{}</color>";
+                    // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
+                    _phAffinityText.text = "<color=#FF0000>N/A</color>";
                     Debug.LogWarning($"[PotDetailsWidget] ⚠️ PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
@@ -1311,15 +1611,10 @@ namespace _Project
         {
             float progressPercentage = CalculateProgressPercentage(state);
             
-            // GDD AZ-11: Verifica che _progressBar esista prima di aggiornarla
+            // MODIFICA 3: Rimuovere la barra Growth e tenere solo la label
             if (_progressBar != null)
             {
-                _progressBar.Value = progressPercentage / 100f;
-                Debug.Log($"[PotDetailsWidget] ✅ Progress Bar aggiornata: {progressPercentage:F1}% (Value: {_progressBar.Value:F2})");
-            }
-            else
-            {
-                Debug.LogWarning("[PotDetailsWidget] ⚠️ _progressBar è null! Collega il riferimento nella scena Unity.");
+                _progressBar.gameObject.SetActive(false); // Nascondi la barra
             }
         
             Debug.Log($"[BLK-01.04] UI aggiornata: {state.PotId} - {GetStageName(state.Stage)} - {progressPercentage:F1}% - {GetProgressInfo(state)}");
@@ -1482,6 +1777,19 @@ namespace _Project
         /// <summary>
         /// Trova un TextMeshProUGUI nei figli cercando per testo contenuto o nome GameObject
         /// </summary>
+        private GameObject FindObjectInChildren(string containsText)
+        {
+            // Cerca prima nel GameObject _page se disponibile
+            GameObject searchRoot = _page != null ? _page : gameObject;
+            
+            // Cerca per nome GameObject
+            Transform found = FindTransformRecursive(searchRoot.transform, containsText);
+            if (found != null)
+                return found.gameObject;
+            
+            return null;
+        }
+        
         private TextMeshProUGUI FindTextInChildren(string containsText)
         {
             // Cerca prima nel GameObject _page se disponibile
@@ -1520,7 +1828,11 @@ namespace _Project
                 }
             }
             
-            Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il GameObject abbia questo nome o che il testo contenga questa stringa.");
+            // BUG FIX: Non loggare warning per GrowthLabel (è opzionale e può non esistere nella scena)
+            if (containsText != "GrowthLabel")
+            {
+                Debug.LogWarning($"[PotDetailsWidget] ⚠️ Nessun TextMeshProUGUI trovato per '{containsText}'. Verifica che il GameObject abbia questo nome o che il testo contenga questa stringa.");
+            }
             return null;
         }
         
@@ -1661,68 +1973,121 @@ namespace _Project
         
         /// <summary>
         /// Setup tooltip per la progress bar Growth
+        /// BUG FIX: Sposta EventTrigger sulla label Growth invece che sulla progress bar (che è nascosta)
         /// </summary>
         private void SetupGrowthTooltip()
         {
-            if (_progressBar == null)
-                return;
+            // BUG FIX: Prova a trovare la label Growth se non è ancora assegnata
+            if (_growthLabelText == null)
+            {
+                // Cerca prima "GrowthLabel" per nome
+                _growthLabelText = FindTextInChildren("GrowthLabel");
                 
-            // Crea tooltip panel se non esiste
+                // Se non trovato, cerca per testo "Growth:"
+                if (_growthLabelText == null)
+                {
+                    _growthLabelText = FindTextInChildren("Growth:");
+                }
+                
+                // #region agent log
+                try {
+                    var logData = new { found = _growthLabelText != null, labelName = _growthLabelText != null ? _growthLabelText.name : "null", searchMethod = _growthLabelText != null ? "found" : "not found" };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"Searching for GrowthLabel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+            }
+            
+            // BUG FIX: Usa la label Growth invece della progress bar per l'EventTrigger
+            // perché la progress bar è nascosta e gli EventTrigger non funzionano su oggetti disattivati
+            if (_growthLabelText == null)
+            {
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthLabelText è null! Tooltip Growth non può essere configurato. Verifica che esista un GameObject con TextMeshProUGUI contenente 'GrowthLabel'.");
+                return;
+            }
+            
+            // #region agent log
+            try {
+                var logData = new { 
+                    labelActive = _growthLabelText.gameObject.activeSelf, 
+                    labelEnabled = _growthLabelText.enabled,
+                    hasCanvas = _growthLabelText.GetComponentInParent<Canvas>() != null,
+                    hasGraphicRaycaster = _growthLabelText.GetComponentInParent<Canvas>()?.GetComponent<UnityEngine.UI.GraphicRaycaster>() != null
+                };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"GrowthLabel found, checking setup\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+                
+            // BUG FIX: Il tooltip panel deve essere assegnato manualmente in Unity, non creato in runtime
             if (_growthTooltipPanel == null)
             {
-                // Trova o crea Canvas con sorting order alto per tooltip
-                Canvas tooltipCanvas = GetOrCreateTooltipCanvas();
-                
-                GameObject tooltipGO = new GameObject("GrowthTooltipPanel");
-                tooltipGO.transform.SetParent(tooltipCanvas.transform, false);
-                
-                RectTransform tooltipRect = tooltipGO.AddComponent<RectTransform>();
-                // Centrato orizzontalmente, ancorato in alto
-                tooltipRect.anchorMin = new Vector2(0.5f, 1f);
-                tooltipRect.anchorMax = new Vector2(0.5f, 1f);
-                tooltipRect.pivot = new Vector2(0.5f, 1f);
-                // Posizionato centrato in alto dello schermo, più in basso per evitare sovrapposizione con pH
-                tooltipRect.anchoredPosition = new Vector2(0, -150);
-                
-                // Tooltip più grande per contenuto dettagliato
-                tooltipRect.sizeDelta = new Vector2(600, 300);
-                
-                Image tooltipBg = tooltipGO.AddComponent<Image>();
-                // Colore sfondo tooltip: #3d568e
-                tooltipBg.color = new Color(61f/255f, 86f/255f, 142f/255f, 1f);
-                
-                _growthTooltipPanel = tooltipGO;
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthTooltipPanel non assegnato! Assegna manualmente il GameObject del tooltip Growth nell'Inspector di PotDetailsWidget.");
+                return;
+            }
+            
+            // Verifica che il testo del tooltip sia assegnato
+            if (_growthTooltipText == null && _growthTooltipPanel != null)
+            {
+                // Prova a trovare il testo automaticamente come child del panel
+                _growthTooltipText = _growthTooltipPanel.GetComponentInChildren<TextMeshProUGUI>();
+                if (_growthTooltipText == null)
+                {
+                    Debug.LogWarning("[PotDetailsWidget] ⚠️ _growthTooltipText non trovato! Assicurati che il tooltip panel abbia un child TextMeshProUGUI o assegnalo manualmente nell'Inspector.");
+                }
+            }
+            
+            // Assicurati che il tooltip sia inizialmente nascosto
+            if (_growthTooltipPanel != null)
+            {
                 _growthTooltipPanel.SetActive(false);
             }
             
-            // Crea testo tooltip se non esiste
-            if (_growthTooltipText == null && _growthTooltipPanel != null)
+            // BUG FIX: Aggiungi EventTrigger alla label Growth invece che alla progress bar
+            // perché la progress bar è nascosta e gli EventTrigger non funzionano su oggetti disattivati
+            EventTrigger trigger = _growthLabelText.GetComponent<EventTrigger>();
+            if (trigger == null)
             {
-                GameObject textGO = new GameObject("GrowthTooltipText");
-                textGO.transform.SetParent(_growthTooltipPanel.transform, false);
-                
-                _growthTooltipText = textGO.AddComponent<TextMeshProUGUI>();
-                _growthTooltipText.color = Color.white;
-                _growthTooltipText.fontSize = 16; // Testo più grande (era 12)
-                _growthTooltipText.alignment = TextAlignmentOptions.Left;
-                _growthTooltipText.richText = true;
-                
-                RectTransform textRect = textGO.GetComponent<RectTransform>();
-                textRect.anchorMin = Vector2.zero;
-                textRect.anchorMax = Vector2.one;
-                textRect.offsetMin = new Vector2(12, 12);
-                textRect.offsetMax = new Vector2(-12, -12);
+                trigger = _growthLabelText.gameObject.AddComponent<EventTrigger>();
+                // #region agent log
+                try {
+                    var logData = new { eventTriggerAdded = true };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"EventTrigger added to GrowthLabel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
             }
             
-            // Aggiungi EventTrigger alla progress bar per hover
-            EventTrigger trigger = _progressBar.GetComponent<EventTrigger>();
-            if (trigger == null)
-                trigger = _progressBar.gameObject.AddComponent<EventTrigger>();
+            // Rimuovi trigger esistenti per evitare duplicati
+            trigger.triggers.Clear();
+            
+            // BUG FIX: Assicurati che la label sia attiva e abilitata per ricevere eventi
+            if (!_growthLabelText.gameObject.activeSelf)
+            {
+                _growthLabelText.gameObject.SetActive(true);
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ GrowthLabel era disattivata! Attivata per permettere tooltip.");
+            }
+            
+            // BUG FIX: Assicurati che ci sia un GraphicRaycaster nel Canvas per permettere eventi
+            Canvas parentCanvas = _growthLabelText.GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+            {
+                parentCanvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                Debug.LogWarning("[PotDetailsWidget] ⚠️ Canvas non aveva GraphicRaycaster! Aggiunto per permettere tooltip.");
+            }
             
             // PointerEnter - mostra tooltip (aggiorna sempre con dati più recenti)
             EventTrigger.Entry enterEntry = new EventTrigger.Entry();
             enterEntry.eventID = EventTriggerType.PointerEnter;
             enterEntry.callback.AddListener((data) => {
+                // #region agent log
+                try {
+                    var logData = new { currentSelectedPotNull = _currentSelectedPot == null, potActionsNull = (_currentSelectedPot?.PotActions == null) };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-A\",\"location\":\"PotDetailsWidget.cs:PointerEnter\",\"message\":\"Growth tooltip PointerEnter triggered\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+                
                 if (_currentSelectedPot != null && _currentSelectedPot.PotActions != null)
                 {
                     // Ottieni stato aggiornato (non cached)
@@ -1732,7 +2097,16 @@ namespace _Project
                         // Aggiorna tooltip con dati più recenti prima di mostrarlo
                         UpdateGrowthTooltip(state);
                         if (_growthTooltipPanel != null)
+                        {
                             _growthTooltipPanel.SetActive(true);
+                            // #region agent log
+                            try {
+                                var logData2 = new { tooltipPanelActive = _growthTooltipPanel.activeSelf };
+                                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-B\",\"location\":\"PotDetailsWidget.cs:PointerEnter\",\"message\":\"Growth tooltip panel activated\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+                            } catch { }
+                            // #endregion
+                        }
                     }
                 }
             });
@@ -1743,7 +2117,16 @@ namespace _Project
             exitEntry.eventID = EventTriggerType.PointerExit;
             exitEntry.callback.AddListener((data) => {
                 if (_growthTooltipPanel != null)
+                {
                     _growthTooltipPanel.SetActive(false);
+                    // #region agent log
+                    try {
+                        var logData = new { tooltipPanelActive = _growthTooltipPanel.activeSelf };
+                        var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-C\",\"location\":\"PotDetailsWidget.cs:PointerExit\",\"message\":\"Growth tooltip panel deactivated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                    } catch { }
+                    // #endregion
+                }
             });
             trigger.triggers.Add(exitEntry);
         }
@@ -1756,11 +2139,88 @@ namespace _Project
             // Auto-trova label se non assegnata
             if (_growthLabelText == null)
             {
+                // #region agent log
+                try {
+                    var logData = $"{{\"searchText\":\"GrowthLabel\"}}";
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Searching for GrowthLabel\",\"data\":{logData},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+                
+                // BUG FIX: Cerca prima "GrowthLabel" per nome, poi "Growth:" nel testo
                 _growthLabelText = FindTextInChildren("GrowthLabel");
+                
+                // Se non trovato, cerca per testo "Growth:"
+                if (_growthLabelText == null)
+                {
+                    _growthLabelText = FindTextInChildren("Growth:");
+                    // #region agent log
+                    try {
+                        var logData = new { found = _growthLabelText != null, searchMethod = "Growth: text" };
+                        var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Searching for Growth: text\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                    } catch { }
+                    // #endregion
+                }
+                
+                // Se ancora non trovato, crea dinamicamente la label come fa PotHUDWidget
+                if (_growthLabelText == null)
+                {
+                    // Trova il container Right o Progress per posizionare la label
+                    GameObject searchRoot = _page != null ? _page : gameObject;
+                    Transform progressTransform = FindTransformRecursive(searchRoot.transform, "Progress");
+                    if (progressTransform == null)
+                        progressTransform = FindTransformRecursive(searchRoot.transform, "Right");
+                    
+                    if (progressTransform != null)
+                    {
+                        GameObject growthLabelGO = new GameObject("GrowthLabel");
+                        growthLabelGO.transform.SetParent(progressTransform, false);
+                        
+                        _growthLabelText = growthLabelGO.AddComponent<TextMeshProUGUI>();
+                        _growthLabelText.color = Color.white;
+                        _growthLabelText.fontSize = 14;
+                        _growthLabelText.alignment = TextAlignmentOptions.Left;
+                        _growthLabelText.text = "Growth:";
+                        
+                        RectTransform growthLabelRect = growthLabelGO.GetComponent<RectTransform>();
+                        growthLabelRect.anchorMin = new Vector2(0, 1f);
+                        growthLabelRect.anchorMax = new Vector2(0, 1f);
+                        growthLabelRect.pivot = new Vector2(0, 1f);
+                        growthLabelRect.anchoredPosition = new Vector2(0, 0);
+                        growthLabelRect.sizeDelta = new Vector2(200, 20);
+                        
+                        // #region agent log
+                        try {
+                            var logData = new { created = true, parentName = progressTransform.name };
+                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Created GrowthLabel dynamically\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                        } catch { }
+                        // #endregion
+                        Debug.Log("[PotDetailsWidget] ✅ GrowthLabel creata dinamicamente perché non trovata nella scena.");
+                    }
+                }
+                
+                // #region agent log
+                try {
+                    var found = _growthLabelText != null;
+                    var textName = _growthLabelText != null ? _growthLabelText.name : "null";
+                    var logData2 = $"{{\"found\":{found.ToString().ToLower()},\"textName\":\"{textName}\"}}";
+                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Final GrowthLabel status\",\"data\":{logData2},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+                } catch { }
+                // #endregion
             }
             
+            // BUG FIX: Se ancora null dopo la ricerca, non loggare warning (è opzionale)
             if (_growthLabelText != null)
             {
+                // BUG FIX: Assicurati che il tooltip sia configurato quando la label viene trovata
+                if (_growthTooltipPanel == null)
+                {
+                    SetupGrowthTooltip();
+                }
+                
                 if (state == null || state.IsEmpty || !state.HasPlant)
                 {
                     _growthLabelText.text = "Growth: Stabile";
@@ -1771,17 +2231,15 @@ namespace _Project
                     string status = GetGrowthStatus(state);
                     _growthLabelText.text = $"Growth: {status}";
                     
-                    // Colore in base allo stato
+                    // MODIFICA 3: Colore in base allo stato (Verde quando >= Stabile, Arancione quando < Stabile, Rosso quando bottom level)
                     switch (status)
                     {
                         case "IN CRESCITA":
-                            _growthLabelText.color = new Color(0.2f, 1f, 0.2f); // Verde
-                            break;
                         case "Stabile":
-                            _growthLabelText.color = new Color(1f, 1f, 0.2f); // Giallo
+                            _growthLabelText.color = new Color(0.2f, 1f, 0.2f); // Verde quando >= Stabile
                             break;
                         case "Difficoltà":
-                            _growthLabelText.color = new Color(1f, 0.5f, 0.2f); // Arancione
+                            _growthLabelText.color = new Color(1f, 0.5f, 0.2f); // Arancione quando < Stabile
                             break;
                         case "Malata":
                             _growthLabelText.color = new Color(1f, 0.2f, 0.2f); // Rosso
@@ -1884,10 +2342,12 @@ namespace _Project
             int hydrationPercent = maxHydration > 0 ? 
                 Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
             
-            // Verifica range per ogni parametro
+            // BUG 2 FIX: Verifica range per ogni parametro basato SOLO sui valori attuali, non sullo stato delle azioni
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
-            bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
-                          stageReq.IsLightInRange(state.LightExposure);
+            // BUG 2 FIX: Light OK solo se LightExposure è nel range (non dipende da LED attivo o meno per il tooltip)
+            bool lightOk = stageReq.IsLightInRange(state.LightExposure);
+            // Nota: IsLedRequirementMet viene verificato separatamente per il requisito LED, ma non influisce su "OK/NOT OK" nel tooltip
+            bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
             
             // Determina stato
@@ -1910,24 +2370,68 @@ namespace _Project
                     sb.AppendLine();
             
             // Light
-            string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            // BUG FIX: Light OK deve considerare sia LightExposure nel range che LED requirement
+            // Se LED è acceso e LightExposure è nel range, allora è OK
+            bool lightOkFinal = lightOk && ledRequirementMet;
+            string lightStatus = lightOkFinal ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
             sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
-            if (!lightOk)
+            // BUG FIX: Mostra sempre il range ideale (come nella HUD Light Stress), non solo quando NON OK
+            sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
+            
+            // BUG FIX: Calcola lo stesso stress percentage mostrato nella HUD Light Stress
+            // Light Stress mostra lo stress basato su giorni consecutivi senza LED, non LightExposure
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            const int maxDaysForFullStress = 4;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            
+            // #region agent log
+            try {
+                var logData = new { 
+                    lightExposure = state.LightExposure, 
+                    consecutiveDays = consecutiveDays, 
+                    stressPercentage = stressPercentage 
+                };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-STRESS-DISCREPANCY\",\"location\":\"PotDetailsWidget.cs:BuildGrowthTooltip\",\"message\":\"Light Stress calculation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+            
+            if (!lightOkFinal)
             {
+                if (!lightOk)
+                {
+                    // BUG FIX: Mostra lo stress percentage (come nella HUD) invece di LightExposure
+                    sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
+                }
                 string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
-                sb.AppendLine($"  LED richiesto: {ledRequired}");
-                sb.AppendLine($"  Range ideale: {stageReq.lightMin}% - {stageReq.lightMax}%");
-                sb.AppendLine($"  Attuale: {state.LightExposure}%");
-                    }
-                    sb.AppendLine();
+                if (ledRequired != "Nessuno" && !ledRequirementMet)
+                {
+                    sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                }
+            }
+            else
+            {
+                // BUG FIX: Mostra lo stress percentage anche quando è OK per coerenza con HUD
+                sb.AppendLine($"  Attuale: <color=#00FF00>{stressPercentage:F0}%</color>");
+            }
+            sb.AppendLine();
             
             // Fertilizer
+            // BUG FIX: Per Seed e Sprout, il fertilizzante è opzionale
+            bool isFertilizerOptional = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout);
             string fertilizerStatus = fertilizerOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
-            sb.AppendLine($"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}");
+            string fertilizerLabel = isFertilizerOptional ? 
+                $"• <color=#90EE90>Fertilizzante</color> (opzionale): {fertilizerStatus}" :
+                $"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}";
+            sb.AppendLine(fertilizerLabel);
             if (!fertilizerOk)
             {
                 sb.AppendLine($"  Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%");
                 sb.AppendLine($"  Attuale: {state.FertilizerLevel}%");
+            }
+            if (isFertilizerOptional)
+            {
+                sb.AppendLine($"  <color=#FFFF00>Nota: Negli stadi Seed e Sprout, il fertilizzante è opzionale per avanzare.</color>");
             }
             sb.AppendLine();
             

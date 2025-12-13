@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Mold;
 using _Project; // Per PhSystem
 using _Project.Sporae.Core;
 
@@ -99,9 +100,14 @@ namespace Sporae.Dome.PotSystem.Condition
                 }
             }
             
-            // 5. Nessun Mold Risk attivo (TODO: implementare quando sistema mold sarà disponibile)
-            // Per ora assumiamo che non ci sia mold risk
-            bool hasNoMoldRisk = true; // TODO: Verificare quando sistema mold sarà implementato
+            // 5. Nessun Mold Risk attivo
+            MoldConfig moldConfig = Resources.Load<MoldConfig>("Configs/MoldConfig");
+            int moldRiskLevel = 0;
+            if (moldConfig != null)
+            {
+                moldRiskLevel = MoldSystem.GetMoldRiskLevel(potState, phSystem, plantData, moldConfig);
+            }
+            bool hasNoMoldRisk = (moldRiskLevel == 0);
             if (hasNoMoldRisk)
             {
                 score += BONUS_NO_MOLD;
@@ -161,9 +167,7 @@ namespace Sporae.Dome.PotSystem.Condition
                 contributors.Add(new ConditionContributor("Overwatering attivo", -MALUS_OVERWATERING, false));
             }
             
-            // 6. Mold Risk (TODO: implementare quando sistema mold sarà disponibile)
-            // Per ora assumiamo che non ci sia mold risk
-            int moldRiskLevel = 0; // TODO: Ottenere da sistema mold quando disponibile
+            // 6. Mold Risk (moldRiskLevel già calcolato sopra)
             if (moldRiskLevel == 1) // Mild
             {
                 score -= MALUS_MOLD_MILD;

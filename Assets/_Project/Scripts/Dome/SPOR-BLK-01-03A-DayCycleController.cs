@@ -5,6 +5,8 @@ using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Fertilizer;
+using Sporae.Dome.PotSystem.Mold;
+using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
 
@@ -555,6 +557,14 @@ public class DayCycleController : MonoBehaviour
             // Non può avanzare, ma continua con il resto della logica (produzione frutti, etc.)
         }
         
+        // BLK-07.01: Verifica blocco crescita per infestazione Severe
+        if (pot.MoldRiskLevel >= 2) // Severe o Critical
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[BLK-07.01] {pot.PotId}: Avanzamento bloccato - Infestazione Severe (Mold Risk Level: {pot.MoldRiskLevel})");
+            // Non può avanzare, ma continua con il resto della logica
+        }
+        
         // Verifica se i requisiti sono soddisfatti
         bool requirementsMet = false;
         if (currentStageReq != null)
@@ -585,27 +595,30 @@ public class DayCycleController : MonoBehaviour
             }
             
             // BLK-03.01-T2: Verifica anche fertilizzante nel range
-            // DEBUG_SAFE_FIX: Per Seed, rendiamo il fertilizzante opzionale (non bloccante se è 0%)
+            // BUG FIX: Per Seed e Sprout (stadi pre-Growth), rendiamo il fertilizzante opzionale (non bloccante se è 0%)
             bool fertilizerOk = false;
-            if (currentStage == PlantStage.Seed)
+            if (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout)
             {
-                // Per Seed: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato)
+                // Per Seed e Sprout: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato)
                 fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel) || pot.FertilizerLevel == 0;
             }
             else
             {
-                // Per altri stadi: fertilizzante obbligatorio nel range
+                // Per Growth e stadi successivi: fertilizzante obbligatorio nel range
                 fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel);
             }
             
             // BLK-03.01-T2: Verifica punti accumulati
-            // DEBUG_SAFE_FIX: Per Seed, richiediamo solo 2 punti (water + light), fertilizzante opzionale
+            // BUG FIX: Per Seed e Sprout, richiediamo solo 2 punti (water + light), fertilizzante opzionale
             int totalPoints = pot.GrowthPointsWater + pot.GrowthPointsLight + pot.GrowthPointsFertilizer;
-            int requiredPoints = (currentStage == PlantStage.Seed) ? 2 : 3;  // Seed: 2 punti (water+light), altri: 3 punti
+            int requiredPoints = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout) ? 2 : 3;  // Seed/Sprout: 2 punti (water+light), altri: 3 punti
             bool pointsOk = totalPoints >= requiredPoints;
             
             // BLK-03.01-T2: Avanzamento richiede tutti i requisiti E non deve essere bloccato dalla condizione
-            requirementsMet = !ConditionGrowthModifier.BlocksAdvancement(currentCondition) &&
+            // BLK-07.01: Blocca anche se infestazione Severe
+            bool isBlockedByCondition = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
+            bool isBlockedByMold = pot.MoldRiskLevel >= 2; // Severe o Critical
+            requirementsMet = !isBlockedByCondition && !isBlockedByMold &&
                              hydrationOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
             if (enableDebugLogs)
@@ -1628,6 +1641,49 @@ public class DayCycleController : MonoBehaviour
             if (enableDebugLogs)
             {
                 Debug.Log($"[DayCycleController] {pot.PotId}: Condizione calcolata - Score: {result.Score}/100, Condizione: {result.Condition}, Forecast: {result.Forecast}, Δ: {result.ScoreDelta}");
+            }
+            
+            // BLK-07.01: Calcolo mold risk giornaliero
+            MoldConfig moldConfig = Resources.Load<MoldConfig>("Configs/MoldConfig");
+            if (moldConfig != null && plantData != null)
+            {
+                // Traccia overwatering consecutivo
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, _potSystemConfig.MaxHydration);
+                if (isOverwatering)
+                {
+                    pot.DaysOverwateringConsecutive++;
+                }
+                else
+                {
+                    pot.DaysOverwateringConsecutive = 0;
+                }
+                
+                // Incrementa giorni senza potatura
+                pot.DaysWithoutPruning++;
+                
+                // Calcola mold risk
+                int oldMoldRiskLevel = pot.MoldRiskLevel;
+                pot.MoldRiskLevel = MoldSystem.GetMoldRiskLevel(pot, _phSystem, plantData, moldConfig);
+                
+                // #region agent log
+                try {
+                    var logData = new { potId = pot.PotId, oldMoldRiskLevel = oldMoldRiskLevel, newMoldRiskLevel = pot.MoldRiskLevel, daysOverwatering = pot.DaysOverwateringConsecutive, daysWithoutPruning = pot.DaysWithoutPruning, currentPh = (_phSystem != null ? _phSystem.CurrentPh : 0f) };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-C\",\"location\":\"DayCycleController.cs:1666\",\"message\":\"DayCycle: MoldRiskLevel recalculated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                } catch { }
+                // #endregion
+                
+                // Se rischio si materializza, applica infestazione
+                if (MoldSystem.CheckInfestation(pot.MoldRiskLevel) && pot.MoldRiskLevel != oldMoldRiskLevel)
+                {
+                    PlantLevelConfig levelConfig = Resources.Load<PlantLevelConfig>("Configs/PlantLevelConfig");
+                    MoldSystem.ApplyInfestation(pot, pot.MoldRiskLevel, moldConfig, levelConfig);
+                }
+                
+                if (enableDebugLogs && pot.MoldRiskLevel > 0)
+                {
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, DaysWithoutPruning: {pot.DaysWithoutPruning})");
+                }
             }
         }
     }
