@@ -964,7 +964,7 @@ public class DayCycleController : MonoBehaviour
                 }
                 
                 // Sistema ON: accumula WAT-RAW e applica idratazione
-                pot.WateringRawWaterAccumulator += 0.5f;
+                pot.WateringRawWaterAccumulator += Sporae.DevTools.DifficultyCalibrationConfig.WateringAccumulator;
                 
                 // Se accumulatore >= 1.0, consuma 1 WAT-RAW
                 if (pot.WateringRawWaterAccumulator >= 1.0f)
@@ -1012,8 +1012,8 @@ public class DayCycleController : MonoBehaviour
             // - Usa l'idratazione di inizio tick per garantire che l'overwatering persista anche se il sistema è OFF e l'idratazione decresce di 1.
             // - Per applicare overwatering dovuto a un aumento (sistema ON che porta sopra soglia), considera anche l'idratazione finale.
             int hydrationForOverCheck = Mathf.Max(hydrationStart, pot.Hydration);
-            int overwateringThreshold = Mathf.CeilToInt(maxHydration * 0.75f); // 75%
-            int removalThreshold = Mathf.FloorToInt(maxHydration * 0.5f);      // 50%
+            int overwateringThreshold = Mathf.CeilToInt(maxHydration * Sporae.DevTools.DifficultyCalibrationConfig.OverwateringThresholdPercent / 100f);
+            int removalThreshold = Mathf.FloorToInt(maxHydration * Sporae.DevTools.DifficultyCalibrationConfig.OverwateringRemovalPercent / 100f);
             float hydrationPercentForOver = maxHydration > 0 ? (float)hydrationForOverCheck / maxHydration * 100f : 0f;
             float hydrationPercentStart = maxHydration > 0 ? (float)hydrationStart / maxHydration * 100f : 0f;
             
@@ -1021,8 +1021,8 @@ public class DayCycleController : MonoBehaviour
             {
                 if (hydrationForOverCheck >= overwateringThreshold)
                 {
-                    // Applica drift giornaliero -5 SEMPRE finché condizione attiva
-                    _phSystem.RegisterActionDrift(-5f, "Overwatering", pot.PotId);
+                    // Applica drift giornaliero configurabile SEMPRE finché condizione attiva
+                    _phSystem.RegisterActionDrift(Sporae.DevTools.DifficultyCalibrationConfig.OverwateringPhDrift, "Overwatering", pot.PotId);
                     
                     if (enableDebugLogs)
                         Debug.Log($"[DayCycleController] {pot.PotId}: OVERWATERING attivo → pH -5 accodato (HydrationStart:{hydrationStart}/{maxHydration} = {hydrationPercentStart:F0}%, Check:{hydrationForOverCheck}/{maxHydration} = {hydrationPercentForOver:F0}%)");
@@ -1147,10 +1147,10 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private float GetLedEffectMultiplier(int consecutiveDays)
     {
-        if (consecutiveDays == 1) return 1.0f;      // x1
-        if (consecutiveDays >= 2 && consecutiveDays <= 3) return 1.5f;  // x1.5
-        if (consecutiveDays >= 4) return 2.0f;     // x2
-        return 1.0f;
+        if (consecutiveDays == 1) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay1;
+        if (consecutiveDays >= 2 && consecutiveDays <= 3) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDays2_3;
+        if (consecutiveDays >= 4) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay4Plus;
+        return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay1;
     }
     
     /// <summary>
@@ -1158,9 +1158,9 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private float GetLedMalusMultiplier(int consecutiveDays)
     {
-        if (consecutiveDays <= 3) return 1.0f;      // Malus base
-        if (consecutiveDays >= 4) return 1.5f + (consecutiveDays - 4) * 0.2f;  // Crescita esponenziale
-        return 1.0f;
+        if (consecutiveDays <= 3) return Sporae.DevTools.DifficultyCalibrationConfig.LedMalusBase;
+        if (consecutiveDays >= 4) return Sporae.DevTools.DifficultyCalibrationConfig.LedMalusGrowth + (consecutiveDays - 4) * Sporae.DevTools.DifficultyCalibrationConfig.LedMalusIncrementPerDay;
+        return Sporae.DevTools.DifficultyCalibrationConfig.LedMalusBase;
     }
     
     /// <summary>
@@ -1192,7 +1192,7 @@ public class DayCycleController : MonoBehaviour
         // Effetti pH (con scaling)
         if (_phSystem != null)
         {
-            float basePhDelta = ledType == LedType.Blue ? 5f : -5f;
+            float basePhDelta = ledType == LedType.Blue ? Sporae.DevTools.DifficultyCalibrationConfig.PhDriftLedBlue : Sporae.DevTools.DifficultyCalibrationConfig.PhDriftLedRed;
             float phDelta = basePhDelta * effectMultiplier;
             string actionName = ledType == LedType.Blue ? "BlueLED" : "RedLED";
             
@@ -1209,10 +1209,20 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Effetti crescita (Light Exposure)
+        // BUG FIX: Se LightExposure è stato impostato manualmente, preserva il valore base
+        // Il LED può aumentare LightExposure sopra il valore base, ma il valore base viene preservato
         int maxLightExposure = GetMaxLightExposureForPot(pot);
         if (pot.LightExposure < maxLightExposure)
         {
             pot.IncreaseLightExposure(maxLightExposure);
+            
+            // Se LightExposure è stato impostato manualmente, aggiorna il valore base se è più basso del valore attuale
+            // Questo permette al LED di aumentare LightExposure sopra il valore base, ma preserva il valore base per quando LED è spento
+            if (pot.IsLightExposureManuallySet && pot.ManualLightExposureBase >= 0)
+            {
+                // Il valore base rimane quello impostato manualmente, ma LightExposure può essere aumentato dal LED
+                // Quando LED è spento, LightExposure tornerà al valore base
+            }
         }
         
         // TODO BLK-02.08: Applicare malus (Burn Stress, Mold Risk) quando sistemi saranno implementati
@@ -1275,14 +1285,40 @@ public class DayCycleController : MonoBehaviour
             {
                 // GDD AZ-11: Decadimento idratazione SOLO se sistema irrigazione è OFF
                 // Se sistema è ON, il decadimento è già compensato dall'aumento di idratazione
+                // BUG FIX: Se Hydration è stato impostato manualmente, applica decay partendo dal valore base salvato
                 if (!pot.WateringSystemOn)
                 {
                     int oldHydration = pot.Hydration;
-                    pot.Hydration = Mathf.Max(0, pot.Hydration - growthConfig.dailyHydrationDecay);
                     
-                    if (enableDebugLogs && oldHydration != pot.Hydration)
+                    if (pot.IsHydrationManuallySet && pot.ManualHydrationBase >= 0)
                     {
-                        Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (sistema OFF) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                        // Decay partendo dal valore base manuale
+                        int newHydration = Mathf.Max(0, pot.ManualHydrationBase - growthConfig.dailyHydrationDecay);
+                        pot.Hydration = newHydration;
+                        pot.ManualHydrationBase = newHydration; // Aggiorna base per il prossimo giorno
+                        
+                        // #region agent log
+                        try {
+                            var logData = new { potId = pot.PotId, oldHydration = oldHydration, newHydration = pot.Hydration, manualBase = pot.ManualHydrationBase, decay = growthConfig.dailyHydrationDecay };
+                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-MANUAL-OVERRIDE\",\"location\":\"DayCycleController.cs:ApplyDecayAndCleanup\",\"message\":\"Hydration decay applicato (MANUALE)\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                        } catch { }
+                        // #endregion
+                        
+                        if (enableDebugLogs && oldHydration != pot.Hydration)
+                        {
+                            Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (MANUALE, base={pot.ManualHydrationBase}) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                        }
+                    }
+                    else
+                    {
+                        // Decay normale
+                        pot.Hydration = Mathf.Max(0, pot.Hydration - growthConfig.dailyHydrationDecay);
+                        
+                        if (enableDebugLogs && oldHydration != pot.Hydration)
+                        {
+                            Debug.Log($"[BLK-01.03A] {pot.PotId}: Decay applicato (sistema OFF) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
+                        }
                     }
                 }
                 else
@@ -1293,18 +1329,73 @@ public class DayCycleController : MonoBehaviour
                     }
                 }
                 
-                // Reset esposizione luce (ma NON i timestamp!)
-                pot.LightExposure = 0;
+                // BUG FIX: Reset esposizione luce SOLO se non è stato impostato manualmente
+                // Se è stato impostato manualmente, preserva il valore base quando LED è spento
+                if (pot.IsLightExposureManuallySet && pot.ManualLightExposureBase >= 0)
+                {
+                    // Se LED è spento, ripristina il valore base manuale
+                    // Se LED è acceso, il valore è già stato aumentato da ApplyLedSystemEffects, quindi non lo tocchiamo
+                    if (pot.LedSystemState == LedSystemState.Off)
+                    {
+                        pot.LightExposure = pot.ManualLightExposureBase;
+                        
+                        if (enableDebugLogs)
+                        {
+                            Debug.Log($"[BLK-01.03A] {pot.PotId}: LightExposure ripristinato a valore base manuale (LED spento) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
+                        }
+                    }
+                    else
+                    {
+                        // LED è acceso, LightExposure è già stato aumentato da ApplyLedSystemEffects
+                        // Il valore base rimane preservato per quando LED sarà spento
+                        if (enableDebugLogs)
+                        {
+                            Debug.Log($"[BLK-01.03A] {pot.PotId}: LightExposure preservato (MANUALE, LED acceso) - LightExposure: {pot.LightExposure} (base={pot.ManualLightExposureBase})");
+                        }
+                    }
+                }
+                else
+                {
+                    // Reset esposizione luce (ma NON i timestamp!)
+                    pot.LightExposure = 0;
+                }
                 
                 // BLK-03.01-T1: Decadimento fertilizzante giornaliero (-5% al giorno)
-                if (pot.FertilizerLevel > 0)
+                // BUG FIX: Se FertilizerLevel è stato impostato manualmente, applica decay partendo dal valore base salvato
+                if (pot.FertilizerLevel > 0 || (pot.IsFertilizerManuallySet && pot.ManualFertilizerBase >= 0))
                 {
                     int oldFertilizerLevel = pot.FertilizerLevel;
-                    FertilizerSystem.ApplyDailyDecay(pot, decayRate: 5f);
                     
-                    if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
+                    if (pot.IsFertilizerManuallySet && pot.ManualFertilizerBase >= 0)
                     {
-                        Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                        // Decay partendo dal valore base manuale
+                        float decayAmount = pot.ManualFertilizerBase * 0.05f; // 5% del valore base
+                        int newFertilizerLevel = Mathf.Max(0, Mathf.RoundToInt(pot.ManualFertilizerBase - decayAmount));
+                        pot.FertilizerLevel = newFertilizerLevel;
+                        pot.ManualFertilizerBase = newFertilizerLevel; // Aggiorna base per il prossimo giorno
+                        
+                        // #region agent log
+                        try {
+                            var logData = new { potId = pot.PotId, oldFertilizerLevel = oldFertilizerLevel, newFertilizerLevel = pot.FertilizerLevel, manualBase = pot.ManualFertilizerBase, decayAmount = decayAmount };
+                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-MANUAL-OVERRIDE\",\"location\":\"DayCycleController.cs:ApplyDecayAndCleanup\",\"message\":\"Fertilizer decay applicato (MANUALE)\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+                        } catch { }
+                        // #endregion
+                        
+                        if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
+                        {
+                            Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante (MANUALE, base={pot.ManualFertilizerBase}) - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                        }
+                    }
+                    else
+                    {
+                        // Decay normale
+                        FertilizerSystem.ApplyDailyDecay(pot, decayRate: 5f);
+                        
+                        if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
+                        {
+                            Debug.Log($"[BLK-03.01-T1] {pot.PotId}: Decadimento fertilizzante - {oldFertilizerLevel}% → {pot.FertilizerLevel}%");
+                        }
                     }
                     
                     // Incrementa contatore giorni con fertilizzante attivo (se ancora > 0)
@@ -1665,19 +1756,49 @@ public class DayCycleController : MonoBehaviour
                 int oldMoldRiskLevel = pot.MoldRiskLevel;
                 pot.MoldRiskLevel = MoldSystem.GetMoldRiskLevel(pot, _phSystem, plantData, moldConfig);
                 
+                // BUG FIX 2: Tracking giorni a livello 3 per infestazione
+                if (pot.MoldRiskLevel == 3)
+                {
+                    pot.DaysAtMoldRiskLevel3++;
+                }
+                else
+                {
+                    pot.DaysAtMoldRiskLevel3 = 0; // Reset se non è più a livello 3
+                }
+                
                 // #region agent log
                 try {
-                    var logData = new { potId = pot.PotId, oldMoldRiskLevel = oldMoldRiskLevel, newMoldRiskLevel = pot.MoldRiskLevel, daysOverwatering = pot.DaysOverwateringConsecutive, daysWithoutPruning = pot.DaysWithoutPruning, currentPh = (_phSystem != null ? _phSystem.CurrentPh : 0f) };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-C\",\"location\":\"DayCycleController.cs:1666\",\"message\":\"DayCycle: MoldRiskLevel recalculated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    var logData = new { potId = pot.PotId, oldMoldRiskLevel = oldMoldRiskLevel, newMoldRiskLevel = pot.MoldRiskLevel, daysAtLevel3 = pot.DaysAtMoldRiskLevel3, isInfested = pot.IsInfested, daysOverwatering = pot.DaysOverwateringConsecutive, daysWithoutPruning = pot.DaysWithoutPruning, currentPh = (_phSystem != null ? _phSystem.CurrentPh : 0f) };
+                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG2-A\",\"location\":\"DayCycleController.cs:1666\",\"message\":\"DayCycle: MoldRiskLevel recalculated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
                     System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
                 } catch { }
                 // #endregion
                 
-                // Se rischio si materializza, applica infestazione
-                if (MoldSystem.CheckInfestation(pot.MoldRiskLevel) && pot.MoldRiskLevel != oldMoldRiskLevel)
+                // BUG FIX 2: Infestazione solo dopo 2 giorni consecutivi a livello 3
+                bool shouldInfest = MoldSystem.CheckInfestation(pot.MoldRiskLevel, pot.DaysAtMoldRiskLevel3);
+                if (shouldInfest && !pot.IsInfested)
                 {
+                    // Prima infestazione: applica effetti e mostra toast
+                    pot.IsInfested = true;
                     PlantLevelConfig levelConfig = Resources.Load<PlantLevelConfig>("Configs/PlantLevelConfig");
                     MoldSystem.ApplyInfestation(pot, pot.MoldRiskLevel, moldConfig, levelConfig);
+                    
+                    // Toast notifica infestazione
+                    if (_uiNotification != null)
+                    {
+                        _uiNotification.ShowNotification(
+                            $"La pianta nel pot {pot.PotId} è ora Infestata",
+                            4f,
+                            Color.red);
+                    }
+                    
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Infestazione applicata dopo {pot.DaysAtMoldRiskLevel3} giorni a livello 3");
+                }
+                else if (!shouldInfest && pot.IsInfested)
+                {
+                    // Infestazione rimossa (livello sceso sotto 3)
+                    pot.IsInfested = false;
+                    Debug.Log($"[DayCycleController] {pot.PotId}: Infestazione rimossa (livello sceso a {pot.MoldRiskLevel})");
                 }
                 
                 if (enableDebugLogs && pot.MoldRiskLevel > 0)

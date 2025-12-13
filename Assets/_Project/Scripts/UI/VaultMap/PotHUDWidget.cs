@@ -1532,6 +1532,19 @@ public class PotHUDWidget : MonoBehaviour
     {
         if (!_isInitialized) return;
         
+        // #region agent log
+        try {
+            var logData = new { 
+                potId = pot != null ? pot.PotId : "null",
+                currentSelectedPotId = _currentSelectedPot != null ? _currentSelectedPot.PotId : "null",
+                isMatch = _currentSelectedPot != null && _currentSelectedPot.PotId == pot?.PotId,
+                lightExposure = pot?.PotActions?.GetCurrentState()?.LightExposure ?? -1
+            };
+            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotHUDWidget.cs:OnPotStateChanged\",\"message\":\"OnPotStateChanged: Event received\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+        } catch { }
+        // #endregion
+        
         // Aggiorna i pulsanti se questo è il vaso selezionato
         UpdateActionButtons(pot);
         
@@ -1580,13 +1593,26 @@ public class PotHUDWidget : MonoBehaviour
     
     /// <summary>
     /// BLK-01.04: Aggiorna tutti gli elementi UI per stage e progresso
+    /// BUG FIX: Reso pubblico per permettere aggiornamento forzato da console debug
     /// </summary>
-    private void UpdateStageAndProgressUI(PotSlot pot)
+    public void UpdateStageAndProgressUI(PotSlot pot)
     {
         if (pot == null || pot.PotActions == null) return;
         
         PotStateModel state = pot.PotActions.GetCurrentState();
         if (state == null) return;
+        
+        // #region agent log
+        try {
+            var logData = new { 
+                potId = pot.PotId,
+                lightExposure = state.LightExposure,
+                hydration = state.Hydration
+            };
+            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotHUDWidget.cs:UpdateStageAndProgressUI\",\"message\":\"UpdateStageAndProgressUI: State read\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+        } catch { }
+        // #endregion
         
         // Aggiorna PotId
         if (potIdText != null)
@@ -1876,7 +1902,8 @@ public class PotHUDWidget : MonoBehaviour
                 System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
             } catch { }
             // #endregion
-            infestationBadge.SetActive(!state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2);
+            // BUG FIX 2: Badge INFESTATA solo se IsInfested = true (dopo 2 giorni a livello 3)
+            infestationBadge.SetActive(!state.IsEmpty && state.HasPlant && state.IsInfested);
         }
     }
 

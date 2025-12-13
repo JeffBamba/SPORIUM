@@ -72,10 +72,12 @@ namespace Sporae.Dome.PotSystem.Mold
         
         /// <summary>
         /// Verifica se rischio si materializza in infestazione
+        /// BUG FIX: Infestazione solo dopo 2 giorni consecutivi a livello 3
         /// </summary>
-        public static bool CheckInfestation(int moldRiskLevel)
+        public static bool CheckInfestation(int moldRiskLevel, int daysAtLevel3)
         {
-            return moldRiskLevel >= 1; // Mild o superiore
+            // Infestazione solo se livello 3 E almeno 2 giorni consecutivi
+            return moldRiskLevel == 3 && daysAtLevel3 >= 2;
         }
         
         /// <summary>
@@ -124,7 +126,7 @@ namespace Sporae.Dome.PotSystem.Mold
             
             // #region agent log
             try {
-                var logData = new { potId = potState.PotId, moldRiskLevelBefore = potState.MoldRiskLevel, daysWithoutPruningBefore = potState.DaysWithoutPruning };
+                var logData = new { potId = potState.PotId, moldRiskLevelBefore = potState.MoldRiskLevel, daysWithoutPruningBefore = potState.DaysWithoutPruning, isInfestedBefore = potState.IsInfested, daysAtLevel3Before = potState.DaysAtMoldRiskLevel3 };
                 var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"MoldSystem.cs:RemoveInfestation\",\"message\":\"RemoveInfestation: Before reset\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
                 System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
             } catch { }
@@ -132,10 +134,12 @@ namespace Sporae.Dome.PotSystem.Mold
             
             potState.MoldRiskLevel = 0;
             potState.DaysWithoutPruning = 0;
+            potState.IsInfested = false;
+            potState.DaysAtMoldRiskLevel3 = 0;
             
             // #region agent log
             try {
-                var logData2 = new { potId = potState.PotId, moldRiskLevelAfter = potState.MoldRiskLevel, daysWithoutPruningAfter = potState.DaysWithoutPruning };
+                var logData2 = new { potId = potState.PotId, moldRiskLevelAfter = potState.MoldRiskLevel, daysWithoutPruningAfter = potState.DaysWithoutPruning, isInfestedAfter = potState.IsInfested, daysAtLevel3After = potState.DaysAtMoldRiskLevel3 };
                 var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"MoldSystem.cs:RemoveInfestation\",\"message\":\"RemoveInfestation: After reset\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
                 System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
             } catch { }

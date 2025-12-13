@@ -131,6 +131,7 @@ namespace _Project
             PotEvents.OnPotStateChanged += OnPotStateChanged;
             PotEvents.OnPlantGrew += OnPlantGrew;
             PotEvents.OnPlantStageChanged += OnPlantStageChanged;
+            PotEvents.OnPlantDied += OnPlantDied;
         }
 
         private void Unsubscribes()
@@ -139,6 +140,7 @@ namespace _Project
             PotEvents.OnPotStateChanged -= OnPotStateChanged;
             PotEvents.OnPlantGrew -= OnPlantGrew;
             PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
+            PotEvents.OnPlantDied -= OnPlantDied;
         }
         
         private void Initialize()
@@ -542,15 +544,13 @@ namespace _Project
             // Applica il fertilizzante selezionato
             bool success = _currentSelectedPot.PotActions.DoFertilize(fertilizerTypeId);
             
+            // Aggiorna sempre l'UI, anche se fallito (potrebbe essere morte pianta)
+            UpdateActionButtons(_currentSelectedPot);
+            UpdateStageAndProgressUI(_currentSelectedPot);
+            
             if (success)
             {
                 Debug.Log($"[PotDetailsWidget] ✅ Fertilizzante applicato con successo!");
-                // Aggiorna l'UI
-                UpdateActionButtons(_currentSelectedPot);
-                
-                var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
-                if (growthController != null)
-                    UpdateStageAndProgressUI(_currentSelectedPot);
             }
             else
             {
@@ -885,6 +885,35 @@ namespace _Project
         
             Debug.Log($"[BLK-01.03B] Stadio cambiato su {potId}: {stage}. Aggiornamento UI...");
             UpdateStageAndProgressUI(_currentSelectedPot);
+        }
+        
+        /// <summary>
+        /// Gestisce l'evento di morte della pianta
+        /// </summary>
+        private void OnPlantDied(string potId, string reason)
+        {
+            // Mostra Toast notification
+            var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+            if (uiNotification != null)
+            {
+                string toastMessage = $"🚨 Pianta morta! {reason}";
+                uiNotification.ShowNotification(toastMessage, 4f, new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+            }
+            
+            // Aggiorna UI solo se il vaso morto è quello attualmente selezionato
+            if (_currentSelectedPot != null && _currentSelectedPot.PotId == potId)
+            {
+                Debug.Log($"[PotDetailsWidget] 🚨 Pianta morta su {potId}: {reason}. Aggiornamento UI...");
+                UpdateStageAndProgressUI(_currentSelectedPot);
+                UpdateActionButtons(_currentSelectedPot);
+                
+                // Aggiorna anche le visuali del PotGrowthController
+                var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
+                if (growthController != null)
+                {
+                    growthController.UpdateVisuals();
+                }
+            }
         }
 
         private Sprite GetStageSprite()
@@ -1414,8 +1443,8 @@ namespace _Project
                     System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
                 } catch { }
                 // #endregion
-                // MODIFICA: Badge INFESTATA arancione per lvl 2, rosso per lvl 3
-                bool showBadge = !state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2;
+                // BUG FIX 2: Badge INFESTATA solo se IsInfested = true (dopo 2 giorni a livello 3)
+                bool showBadge = !state.IsEmpty && state.HasPlant && state.IsInfested;
                 _infestationBadge.SetActive(showBadge);
                 
                 // Cambia colore del badge in base al livello
@@ -2344,10 +2373,17 @@ namespace _Project
             
             // BUG 2 FIX: Verifica range per ogni parametro basato SOLO sui valori attuali, non sullo stato delle azioni
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
-            // BUG 2 FIX: Light OK solo se LightExposure è nel range (non dipende da LED attivo o meno per il tooltip)
-            bool lightOk = stageReq.IsLightInRange(state.LightExposure);
-            // Nota: IsLedRequirementMet viene verificato separatamente per il requisito LED, ma non influisce su "OK/NOT OK" nel tooltip
+            
+            // BUG 3 FIX: Light OK basato su stress percentage (0% = OK) invece di LightExposure
+            // Calcola stress percentage (come nella HUD Light Stress)
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            const int maxDaysForFullStress = 4;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            
+            // Light è OK se stress è 0% (nessuno stress) E LED requirement è soddisfatto
             bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
+            bool lightOk = stressPercentage == 0f && ledRequirementMet;
+            
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
             
             // Determina stato
@@ -2370,39 +2406,30 @@ namespace _Project
                     sb.AppendLine();
             
             // Light
-            // BUG FIX: Light OK deve considerare sia LightExposure nel range che LED requirement
-            // Se LED è acceso e LightExposure è nel range, allora è OK
-            bool lightOkFinal = lightOk && ledRequirementMet;
-            string lightStatus = lightOkFinal ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            // BUG 3 FIX: Light OK basato su stress percentage (0% = OK) invece di LightExposure
+            string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
             sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
             // BUG FIX: Mostra sempre il range ideale (come nella HUD Light Stress), non solo quando NON OK
             sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
-            
-            // BUG FIX: Calcola lo stesso stress percentage mostrato nella HUD Light Stress
-            // Light Stress mostra lo stress basato su giorni consecutivi senza LED, non LightExposure
-            int consecutiveDays = state.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
-            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             
             // #region agent log
             try {
                 var logData = new { 
                     lightExposure = state.LightExposure, 
                     consecutiveDays = consecutiveDays, 
-                    stressPercentage = stressPercentage 
+                    stressPercentage = stressPercentage,
+                    lightOk = lightOk,
+                    ledRequirementMet = ledRequirementMet
                 };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-STRESS-DISCREPANCY\",\"location\":\"PotDetailsWidget.cs:BuildGrowthTooltip\",\"message\":\"Light Stress calculation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-A\",\"location\":\"PotDetailsWidget.cs:BuildGrowthTooltip\",\"message\":\"Light OK calculation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
                 System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
             } catch { }
             // #endregion
             
-            if (!lightOkFinal)
+            if (!lightOk)
             {
-                if (!lightOk)
-                {
-                    // BUG FIX: Mostra lo stress percentage (come nella HUD) invece di LightExposure
-                    sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
-                }
+                // BUG 3 FIX: Mostra lo stress percentage (come nella HUD) invece di LightExposure
+                sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
                 string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
                 if (ledRequired != "Nessuno" && !ledRequirementMet)
                 {
@@ -2411,7 +2438,7 @@ namespace _Project
             }
             else
             {
-                // BUG FIX: Mostra lo stress percentage anche quando è OK per coerenza con HUD
+                // BUG 3 FIX: Mostra lo stress percentage anche quando è OK per coerenza con HUD
                 sb.AppendLine($"  Attuale: <color=#00FF00>{stressPercentage:F0}%</color>");
             }
             sb.AppendLine();

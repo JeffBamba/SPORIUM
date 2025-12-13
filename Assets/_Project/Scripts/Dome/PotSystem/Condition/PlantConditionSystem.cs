@@ -4,6 +4,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Mold;
 using _Project; // Per PhSystem
 using _Project.Sporae.Core;
+using Sporae.DevTools; // Per DifficultyCalibrationConfig
 
 namespace Sporae.Dome.PotSystem.Condition
 {
@@ -13,24 +14,7 @@ namespace Sporae.Dome.PotSystem.Condition
     /// </summary>
     public static class PlantConditionSystem
     {
-        private const int BASE_SCORE = 50; // Score neutro di partenza
-        
-        // Contributi positivi
-        private const int BONUS_HYDRATION_OPTIMAL = 20;
-        private const int BONUS_LIGHT_CORRECT = 15;
-        private const int BONUS_WATERING_ON = 10;
-        private const int BONUS_PH_OPTIMAL = 10;
-        private const int BONUS_NO_MOLD = 5;
-        
-        // Contributi negativi
-        private const int MALUS_HYDRATION_OUT_OF_RANGE = 15;
-        private const int MALUS_LIGHT_WRONG_OR_ABSENT = 10;
-        private const int MALUS_PH_OPPOSITE = 20;
-        private const int MALUS_PH_ULTRA = 15;
-        private const int MALUS_OVERWATERING = 25;
-        private const int MALUS_MOLD_MILD = 10;
-        private const int MALUS_MOLD_SEVERE = 30;
-        private const int MALUS_BURN_STRESS = 20;
+        // Parametri ora configurabili via DifficultyCalibrationConfig
         
         /// <summary>
         /// Calcola lo score di condizione per una pianta (0-100)
@@ -53,11 +37,11 @@ namespace Sporae.Dome.PotSystem.Condition
             if (plantData == null)
             {
                 // PlantData non disponibile: score neutro
-                return new ConditionResult(BASE_SCORE, PlantCondition.Sana, ForecastDirection.Stable, 0, 
+                return new ConditionResult(DifficultyCalibrationConfig.BaseScore, PlantCondition.Sana, ForecastDirection.Stable, 0, 
                     new ConditionContributor[0]);
             }
             
-            int score = BASE_SCORE;
+            int score = DifficultyCalibrationConfig.BaseScore;
             List<ConditionContributor> contributors = new List<ConditionContributor>();
             
             // === CONTRIBUTI POSITIVI ===
@@ -70,23 +54,23 @@ namespace Sporae.Dome.PotSystem.Condition
             bool isHydrationOptimal = IsHydrationInOptimalRange(potState, plantData, maxHydration);
             if (isHydrationOptimal)
             {
-                score += BONUS_HYDRATION_OPTIMAL;
-                contributors.Add(new ConditionContributor("Idratazione ottimale", BONUS_HYDRATION_OPTIMAL, true));
+                score += DifficultyCalibrationConfig.BonusHydrationOptimal;
+                contributors.Add(new ConditionContributor("Idratazione ottimale", DifficultyCalibrationConfig.BonusHydrationOptimal, true));
             }
             
             // 2. Luce corretta per stadio (LED corretto)
             bool hasCorrectLight = IsLightCorrectForStage(potState, plantData, currentDay);
             if (hasCorrectLight)
             {
-                score += BONUS_LIGHT_CORRECT;
-                contributors.Add(new ConditionContributor("Luce corretta (LED)", BONUS_LIGHT_CORRECT, true));
+                score += DifficultyCalibrationConfig.BonusLightCorrect;
+                contributors.Add(new ConditionContributor("Luce corretta (LED)", DifficultyCalibrationConfig.BonusLightCorrect, true));
             }
             
             // 3. Watering System ON e dosaggio corretto
             if (potState.WateringSystemOn && isHydrationOptimal)
             {
-                score += BONUS_WATERING_ON;
-                contributors.Add(new ConditionContributor("Watering ON e dosaggio corretto", BONUS_WATERING_ON, true));
+                score += DifficultyCalibrationConfig.BonusWateringOn;
+                contributors.Add(new ConditionContributor("Watering ON e dosaggio corretto", DifficultyCalibrationConfig.BonusWateringOn, true));
             }
             
             // 4. pH Dome in banda affinità pianta
@@ -95,8 +79,8 @@ namespace Sporae.Dome.PotSystem.Condition
                 float currentPh = phSystem.CurrentPh;
                 if (plantData.IsPhInOptimalRange(currentPh))
                 {
-                    score += BONUS_PH_OPTIMAL;
-                    contributors.Add(new ConditionContributor("pH Dome in banda affinità", BONUS_PH_OPTIMAL, true));
+                    score += DifficultyCalibrationConfig.BonusPhOptimal;
+                    contributors.Add(new ConditionContributor("pH Dome in banda affinità", DifficultyCalibrationConfig.BonusPhOptimal, true));
                 }
             }
             
@@ -110,8 +94,8 @@ namespace Sporae.Dome.PotSystem.Condition
             bool hasNoMoldRisk = (moldRiskLevel == 0);
             if (hasNoMoldRisk)
             {
-                score += BONUS_NO_MOLD;
-                contributors.Add(new ConditionContributor("Nessun Mold Risk", BONUS_NO_MOLD, true));
+                score += DifficultyCalibrationConfig.BonusNoMold;
+                contributors.Add(new ConditionContributor("Nessun Mold Risk", DifficultyCalibrationConfig.BonusNoMold, true));
             }
             
             // === CONTRIBUTI NEGATIVI ===
@@ -119,18 +103,18 @@ namespace Sporae.Dome.PotSystem.Condition
             // 1. Idratazione fuori range (Dry/Wet)
             if (!isHydrationOptimal)
             {
-                if (hydrationPercent < 25 || hydrationPercent > 90)
+                if (hydrationPercent < DifficultyCalibrationConfig.HydrationDryThreshold || hydrationPercent > DifficultyCalibrationConfig.HydrationWetThreshold)
                 {
-                    score -= MALUS_HYDRATION_OUT_OF_RANGE;
-                    contributors.Add(new ConditionContributor("Idratazione fuori range", -MALUS_HYDRATION_OUT_OF_RANGE, false));
+                    score -= DifficultyCalibrationConfig.MalusHydrationOutOfRange;
+                    contributors.Add(new ConditionContributor("Idratazione fuori range", -DifficultyCalibrationConfig.MalusHydrationOutOfRange, false));
                 }
             }
             
             // 2. Luce assente o spettro sbagliato
             if (!hasCorrectLight)
             {
-                score -= MALUS_LIGHT_WRONG_OR_ABSENT;
-                contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato", -MALUS_LIGHT_WRONG_OR_ABSENT, false));
+                score -= DifficultyCalibrationConfig.MalusLightWrongOrAbsent;
+                contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
             }
             
             // 3. pH opposto alla pianta (Pure in acido, Evil in basico)
@@ -142,20 +126,20 @@ namespace Sporae.Dome.PotSystem.Condition
                 // Pure preferisce basico, Evil preferisce acido
                 if (plantData.Family == PlantFamily.Pure && (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid))
                 {
-                    score -= MALUS_PH_OPPOSITE;
-                    contributors.Add(new ConditionContributor("pH opposto (Pure in acido)", -MALUS_PH_OPPOSITE, false));
+                    score -= DifficultyCalibrationConfig.MalusPhOpposite;
+                    contributors.Add(new ConditionContributor("pH opposto (Pure in acido)", -DifficultyCalibrationConfig.MalusPhOpposite, false));
                 }
                 else if (plantData.Family == PlantFamily.Evil && (phBand == PhSystem.PhBand.UltraBasic || phBand == PhSystem.PhBand.StableBasic))
                 {
-                    score -= MALUS_PH_OPPOSITE;
-                    contributors.Add(new ConditionContributor("pH opposto (Evil in basico)", -MALUS_PH_OPPOSITE, false));
+                    score -= DifficultyCalibrationConfig.MalusPhOpposite;
+                    contributors.Add(new ConditionContributor("pH opposto (Evil in basico)", -DifficultyCalibrationConfig.MalusPhOpposite, false));
                 }
                 
                 // 4. pH in banda Ultra (≤-80 o ≥+80)
                 if (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.UltraBasic)
                 {
-                    score -= MALUS_PH_ULTRA;
-                    contributors.Add(new ConditionContributor("pH in banda Ultra", -MALUS_PH_ULTRA, false));
+                    score -= DifficultyCalibrationConfig.MalusPhUltra;
+                    contributors.Add(new ConditionContributor("pH in banda Ultra", -DifficultyCalibrationConfig.MalusPhUltra, false));
                 }
             }
             
@@ -163,28 +147,32 @@ namespace Sporae.Dome.PotSystem.Condition
             bool isOverwatering = IsOverwatering(potState, maxHydration);
             if (isOverwatering)
             {
-                score -= MALUS_OVERWATERING;
-                contributors.Add(new ConditionContributor("Overwatering attivo", -MALUS_OVERWATERING, false));
+                score -= DifficultyCalibrationConfig.MalusOverwatering;
+                contributors.Add(new ConditionContributor("Overwatering attivo", -DifficultyCalibrationConfig.MalusOverwatering, false));
             }
             
-            // 6. Mold Risk (moldRiskLevel già calcolato sopra)
-            if (moldRiskLevel == 1) // Mild
+            // 6. Mold Infestation (BUG FIX 2: solo se IsInfested = true, non basato su MoldRiskLevel)
+            if (potState.IsInfested)
             {
-                score -= MALUS_MOLD_MILD;
-                contributors.Add(new ConditionContributor("Mold Risk lieve", -MALUS_MOLD_MILD, false));
-            }
-            else if (moldRiskLevel >= 2) // Severe
-            {
-                score -= MALUS_MOLD_SEVERE;
-                contributors.Add(new ConditionContributor("Mold Risk severo", -MALUS_MOLD_SEVERE, false));
+                // Applica malus in base al livello di rischio al momento dell'infestazione
+                if (potState.MoldRiskLevel == 1) // Mild
+                {
+                    score -= DifficultyCalibrationConfig.MalusMoldMild;
+                    contributors.Add(new ConditionContributor("Infestazione muffe lieve", -DifficultyCalibrationConfig.MalusMoldMild, false));
+                }
+                else if (potState.MoldRiskLevel >= 2) // Severe o Critical
+                {
+                    score -= DifficultyCalibrationConfig.MalusMoldSevere;
+                    contributors.Add(new ConditionContributor("Infestazione muffe severa", -DifficultyCalibrationConfig.MalusMoldSevere, false));
+                }
             }
             
             // 7. Burn Stress attivo (LED 4+ giorni consecutivi)
             int burnRiskLevel = potState.GetBurnRiskLevel();
             if (burnRiskLevel >= 2) // Alto o Critico
             {
-                score -= MALUS_BURN_STRESS;
-                contributors.Add(new ConditionContributor("Burn Stress attivo", -MALUS_BURN_STRESS, false));
+                score -= DifficultyCalibrationConfig.MalusBurnStress;
+                contributors.Add(new ConditionContributor("Burn Stress attivo", -DifficultyCalibrationConfig.MalusBurnStress, false));
             }
             
             // Clamp score 0-100
@@ -194,7 +182,7 @@ namespace Sporae.Dome.PotSystem.Condition
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (potState != null && potState.PotId != null)
             {
-                Debug.Log($"[PlantConditionSystem] 🔍 DEBUG Calcolo {potState.PotId}: Base={BASE_SCORE}, Score finale={score}, Contributi: {contributors.Count} (Pos: {System.Array.FindAll(contributors.ToArray(), c => c.IsPositive).Length}, Neg: {System.Array.FindAll(contributors.ToArray(), c => !c.IsPositive).Length})");
+                Debug.Log($"[PlantConditionSystem] 🔍 DEBUG Calcolo {potState.PotId}: Base={DifficultyCalibrationConfig.BaseScore}, Score finale={score}, Contributi: {contributors.Count} (Pos: {System.Array.FindAll(contributors.ToArray(), c => c.IsPositive).Length}, Neg: {System.Array.FindAll(contributors.ToArray(), c => !c.IsPositive).Length})");
                 foreach (var c in contributors)
                 {
                     Debug.Log($"  - {c.Source}: {(c.IsPositive ? "+" : "")}{c.Value}");
@@ -281,7 +269,7 @@ namespace Sporae.Dome.PotSystem.Condition
         }
         
         /// <summary>
-        /// Verifica se c'è overwatering (idratazione >= 75%)
+        /// Verifica se c'è overwatering (idratazione >= soglia configurabile)
         /// </summary>
         public static bool IsOverwatering(PotStateModel potState, int maxHydration)
         {
@@ -289,7 +277,7 @@ namespace Sporae.Dome.PotSystem.Condition
                 return false;
             
             int hydrationPercent = Mathf.RoundToInt((float)potState.Hydration / maxHydration * 100f);
-            return hydrationPercent >= 75;
+            return hydrationPercent >= DifficultyCalibrationConfig.OverwateringThresholdPercent;
         }
         
         /// <summary>
@@ -298,18 +286,18 @@ namespace Sporae.Dome.PotSystem.Condition
         private static PlantCondition MapScoreToCondition(int score, bool isOverwatering)
         {
             // Overwatering forza stato Stressata indipendentemente dallo score
-            if (isOverwatering && score >= 40)
+            if (isOverwatering && score >= DifficultyCalibrationConfig.ConditionThresholdStressata)
             {
                 return PlantCondition.Stressata;
             }
             
-            if (score >= 90)
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdRigogliosa)
                 return PlantCondition.Rigogliosa;
-            if (score >= 70)
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdSana)
                 return PlantCondition.Sana;
-            if (score >= 40)
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdStressata)
                 return PlantCondition.Stressata;
-            if (score >= 20)
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdAppassita)
                 return PlantCondition.Appassita;
             return PlantCondition.Critica;
         }
@@ -319,9 +307,9 @@ namespace Sporae.Dome.PotSystem.Condition
         /// </summary>
         private static ForecastDirection CalculateForecast(int scoreDelta)
         {
-            if (scoreDelta > 5)
+            if (scoreDelta > DifficultyCalibrationConfig.ForecastDeltaUp)
                 return ForecastDirection.Up;
-            if (scoreDelta < -5)
+            if (scoreDelta < DifficultyCalibrationConfig.ForecastDeltaDown)
                 return ForecastDirection.Down;
             return ForecastDirection.Stable;
         }

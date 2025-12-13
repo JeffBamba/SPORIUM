@@ -116,6 +116,31 @@ public class PotStateModel
     [Tooltip("Giorni consecutivi in overwatering")]
     public int DaysOverwateringConsecutive = 0;
     
+    [Tooltip("Giorni consecutivi a Mold Risk Level 3 (per infestazione dopo 2 giorni)")]
+    public int DaysAtMoldRiskLevel3 = 0;
+    
+    [Tooltip("Flag per indicare se la pianta è infestata (true dopo 2 giorni a livello 3)")]
+    public bool IsInfested = false;
+    
+    [Header("Debug Console Manual Override (Console P)")]
+    [Tooltip("Flag per indicare se Hydration è stato impostato manualmente dalla console P")]
+    public bool IsHydrationManuallySet = false;
+    
+    [Tooltip("Valore base Hydration da cui partire per il decay (impostato manualmente)")]
+    public int ManualHydrationBase = -1;
+    
+    [Tooltip("Flag per indicare se LightExposure è stato impostato manualmente dalla console P")]
+    public bool IsLightExposureManuallySet = false;
+    
+    [Tooltip("Valore base LightExposure da cui partire per il decay (impostato manualmente)")]
+    public int ManualLightExposureBase = -1;
+    
+    [Tooltip("Flag per indicare se FertilizerLevel è stato impostato manualmente dalla console P")]
+    public bool IsFertilizerManuallySet = false;
+    
+    [Tooltip("Valore base FertilizerLevel da cui partire per il decay (impostato manualmente)")]
+    public int ManualFertilizerBase = -1;
+    
     /// <summary>
     /// Crea un nuovo stato di vaso vuoto
     /// </summary>
@@ -148,6 +173,14 @@ public class PotStateModel
         GrowthPointsFertilizer = 0;
         DaysConsecutiveOptimal = 0;
         DayOptimalParametersStarted = -1;
+        DaysAtMoldRiskLevel3 = 0;
+        IsInfested = false;
+        IsHydrationManuallySet = false;
+        ManualHydrationBase = -1;
+        IsLightExposureManuallySet = false;
+        ManualLightExposureBase = -1;
+        IsFertilizerManuallySet = false;
+        ManualFertilizerBase = -1;
     }
     
     /// <summary>

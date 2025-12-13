@@ -249,10 +249,23 @@ namespace Sporae.DevTools
             int oldLevel = potState.FertilizerLevel;
             potState.FertilizerLevel = Mathf.Clamp(newLevel, 0, 100);
             
-            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            // BUG FIX: Marca come impostato manualmente e salva valore base per decay
+            potState.IsFertilizerManuallySet = true;
+            potState.ManualFertilizerBase = potState.FertilizerLevel;
             
-            AddLog($"✅ {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}%");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}%");
+            // BUG FIX: Forza aggiornamento UI
+            if (_selectedPot.PotSlot != null)
+            {
+                PotEvents.EmitChanged(_selectedPot.PotSlot);
+                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
+                if (hudWidget != null)
+                {
+                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
+                }
+            }
+            
+            AddLog($"✅ {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE - decay partirà da questo valore)");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE)");
         }
         
         // BLK-03.01-T2: Imposta idratazione
@@ -269,10 +282,23 @@ namespace Sporae.DevTools
             int oldHydration = potState.Hydration;
             potState.Hydration = Mathf.Clamp(newHydration, 0, maxHydration);
             
-            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            // BUG FIX: Marca come impostato manualmente e salva valore base per decay
+            potState.IsHydrationManuallySet = true;
+            potState.ManualHydrationBase = potState.Hydration;
             
-            AddLog($"✅ {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration}");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration}");
+            // BUG FIX: Forza aggiornamento UI
+            if (_selectedPot.PotSlot != null)
+            {
+                PotEvents.EmitChanged(_selectedPot.PotSlot);
+                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
+                if (hudWidget != null)
+                {
+                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
+                }
+            }
+            
+            AddLog($"✅ {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE - decay partirà da questo valore)");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE)");
         }
         
         // BLK-03.01-T2: Imposta luce percentuale
@@ -292,13 +318,58 @@ namespace Sporae.DevTools
             int newLightExposure = Mathf.RoundToInt((newPercent / 100f) * maxLightExposure);
             potState.LightExposure = Mathf.Clamp(newLightExposure, 0, maxLightExposure);
             
+            // BUG FIX: Marca come impostato manualmente e salva valore base per decay
+            potState.IsLightExposureManuallySet = true;
+            potState.ManualLightExposureBase = potState.LightExposure;
+            
             float oldPercent = maxLightExposure > 0 ? (float)oldLightExposure / maxLightExposure * 100f : 0f;
             float newPercentActual = maxLightExposure > 0 ? (float)potState.LightExposure / maxLightExposure * 100f : 0f;
             
-            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            // #region agent log
+            try {
+                var logData = new { 
+                    potId = potState.PotId, 
+                    oldLightExposure = oldLightExposure, 
+                    newLightExposure = potState.LightExposure,
+                    maxLightExposure = maxLightExposure,
+                    newPercent = newPercent,
+                    potSlotNotNull = _selectedPot.PotSlot != null,
+                    potSlotId = _selectedPot.PotSlot != null ? _selectedPot.PotSlot.PotId : "null"
+                };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotDebugConsole.cs:SetLightPercent\",\"message\":\"SetLightPercent: Before EmitChanged\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
             
-            AddLog($"✅ {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%)");
-            Debug.Log($"[Pot Debug Console] {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%)");
+            // BUG FIX: Assicurati che PotSlot non sia null prima di emettere evento
+            if (_selectedPot.PotSlot != null)
+            {
+                PotEvents.EmitChanged(_selectedPot.PotSlot);
+                
+                // BUG FIX: Forza aggiornamento UI anche direttamente se PotHUDWidget è disponibile
+                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
+                if (hudWidget != null && _selectedPot.PotSlot != null)
+                {
+                    // Forza aggiornamento chiamando direttamente UpdateStageAndProgressUI
+                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
+                }
+                
+                // #region agent log
+                try {
+                    var logData2 = new { potId = potState.PotId, eventEmitted = true, hudWidgetFound = hudWidget != null };
+                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotDebugConsole.cs:SetLightPercent\",\"message\":\"SetLightPercent: After EmitChanged\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+                } catch { }
+                // #endregion
+            }
+            else
+            {
+                Debug.LogWarning($"[Pot Debug Console] PotSlot è null per {potState.PotId}! Impossibile emettere evento OnPotStateChanged.");
+                AddLog($"⚠️ PotSlot null - evento non emesso");
+            }
+            
+            AddLog($"✅ {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE - decay partirà da questo valore)");
+            Debug.Log($"[Pot Debug Console] {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE)");
         }
         
         // Metodi per nuovi sistemi
@@ -568,11 +639,17 @@ namespace Sporae.DevTools
                 
                 // Calcola altezza disponibile per sezione editing (spazio rimanente prima dei log)
                 float editingSectionStartY = currentY;
-                float logSectionStartY = consoleHeight - 100f; // Riserva spazio per log (circa 100px)
-                float availableEditingHeight = logSectionStartY - editingSectionStartY - 20f; // Margine
+                float logSectionHeight = 120f; // Spazio riservato per log (aumentato da 100f)
+                float logSectionStartY = consoleY + consoleHeight - logSectionHeight; // Posizione assoluta
+                float availableEditingHeight = logSectionStartY - editingSectionStartY - 15f; // Margine ridotto
                 
-                // Altezza totale contenuto editing (stimata: ~850px per tutte le sezioni)
-                float editingContentHeight = 850f;
+                // Altezza totale contenuto editing (calcolata sommando tutti gli elementi)
+                // Titolo: 30, Info: 75, Input Stadio: 35, Debug Parametri: 3*35+40=145, 
+                // Plant Condition: 30+30+35=95, Mold: 30+30+30+35=125, Plant Level: 30+30+30+35=125,
+                // Growth Points: 30+30+35=95, LED: 30+30+30+35=125, Watering: 30+30+35=95,
+                // Pulsanti stadi: 30+30+40=100
+                // Totale: ~1050px
+                float editingContentHeight = 1050f;
                 
                 // Inizia scroll view per sezione editing
                 _editingScrollPosition = GUI.BeginScrollView(
@@ -910,8 +987,8 @@ namespace Sporae.DevTools
                 // Fine scroll view per sezione editing
                 GUI.EndScrollView();
                 
-                // Aggiorna currentY per il log (usa l'altezza disponibile calcolata)
-                currentY = editingSectionStartY + availableEditingHeight + 10f;
+                // Aggiorna currentY per il log (usa la posizione calcolata per la sezione log)
+                currentY = logSectionStartY;
             }
             else
             {
@@ -920,23 +997,33 @@ namespace Sporae.DevTools
                 currentY += 30f; // Aumentato spazio
             }
             
-            // Log debug
-            currentY += 15f; // Aumentato spazio
-            GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 25f), "Log:", labelStyle);
-            currentY += 30f; // Aumentato spazio
-            
-            float logHeight = consoleHeight - (currentY - consoleY) - 10f;
-            _scrollPosition = GUI.BeginScrollView(
-                new Rect(consoleX + 10f, currentY, consoleWidth - 20f, logHeight),
-                _scrollPosition,
-                new Rect(0, 0, consoleWidth - 40f, _debugLog.Count * 20f + 10f)); // Aumentato da 15f a 20f
-            
-            for (int i = 0; i < _debugLog.Count; i++)
+            // Log debug (assicurati che sia dentro la console)
+            if (currentY < consoleY + consoleHeight - 10f)
             {
-                GUI.Label(new Rect(0, i * 20f, consoleWidth - 40f, 20f), _debugLog[i], labelStyle); // Aumentato da 15f a 20f
+                // Sezione log
+                GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 25f), 
+                    "=== LOG ===", labelStyle);
+                currentY += 30f;
+                
+                // Scroll view per log
+                float logScrollHeight = consoleY + consoleHeight - currentY - 10f; // Altezza rimanente
+                if (logScrollHeight > 0)
+                {
+                    _scrollPosition = GUI.BeginScrollView(
+                        new Rect(consoleX + 10f, currentY, consoleWidth - 20f, logScrollHeight),
+                        _scrollPosition,
+                        new Rect(0, 0, consoleWidth - 40f, _debugLog.Count * 20f + 10f));
+                    
+                    float logY = 0f;
+                    for (int i = 0; i < _debugLog.Count; i++)
+                    {
+                        GUI.Label(new Rect(0, logY, consoleWidth - 40f, 20f), _debugLog[i], labelStyle);
+                        logY += 20f;
+                    }
+                    
+                    GUI.EndScrollView();
+                }
             }
-            
-            GUI.EndScrollView();
             
             // Pulsante chiudi (più grande)
             if (GUI.Button(new Rect(consoleX + consoleWidth - 100f, consoleY + 10f, 90f, 30f), "Chiudi (P)", buttonStyle)) // Aumentato da 70f/25f a 90f/30f

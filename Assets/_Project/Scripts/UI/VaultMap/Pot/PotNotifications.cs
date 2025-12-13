@@ -51,6 +51,18 @@ namespace _Project.Pot
 
         private void HandlePotAction(PotEvents.PotActionType type, PotSlot pot)
         {
+            // BUG FIX: Se l'azione è Fertilize e la pianta è morta (HasPlant == false), 
+            // non mostrare il Toast di successo (il Toast di morte verrà mostrato da OnPlantDied)
+            if (type == PotEvents.PotActionType.Fertilize && pot != null && pot.PotActions != null)
+            {
+                var potState = pot.PotActions.GetCurrentState();
+                if (potState != null && !potState.HasPlant)
+                {
+                    // Pianta morta: non mostrare Toast di successo (il Toast di morte verrà mostrato da OnPlantDied)
+                    return;
+                }
+            }
+            
             string text;
             
             if (type == PotEvents.PotActionType.Water)
@@ -97,7 +109,7 @@ namespace _Project.Pot
                 text = type switch
                 {
                     PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
-                    PotEvents.PotActionType.Fertilize => "You have successfully fertilized the plant.",  // BLK-03.01-T1
+                    PotEvents.PotActionType.Fertilize => "Hai fertilizzato la pianta in maniera corretta",  // BLK-03.01-T1
                     PotEvents.PotActionType.Harvest => "You have successfully harvested the plant.",
                     PotEvents.PotActionType.Spray => "You have successfully sprayed the plant.",
                     PotEvents.PotActionType.Uproot => "You have successfully uprooted the plant.",

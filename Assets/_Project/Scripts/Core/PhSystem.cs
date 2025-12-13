@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -421,10 +422,30 @@ namespace _Project
         public PhBand EvaluateState()
         {
             float ph = CurrentPh;
-            if (ph <= -80f) return PhBand.UltraAcid;
-            if (ph <= -30f) return PhBand.StableAcid;
-            if (ph <= 29f) return PhBand.Neutral;
-            if (ph <= 79f) return PhBand.StableBasic;
+            // Usa soglie configurabili se disponibili, altrimenti default
+            float ultraAcidThreshold = -80f;
+            float stableAcidThreshold = -30f;
+            float stableBasicThreshold = 30f;
+            float ultraBasicThreshold = 80f;
+            
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try
+            {
+                ultraAcidThreshold = DifficultyCalibrationConfig.PhThresholdUltraAcid;
+                stableAcidThreshold = DifficultyCalibrationConfig.PhThresholdStableAcid;
+                stableBasicThreshold = DifficultyCalibrationConfig.PhThresholdStableBasic;
+                ultraBasicThreshold = DifficultyCalibrationConfig.PhThresholdUltraBasic;
+            }
+            catch
+            {
+                // Se config non disponibile, usa default
+            }
+            #endif
+            
+            if (ph <= ultraAcidThreshold) return PhBand.UltraAcid;
+            if (ph <= stableAcidThreshold) return PhBand.StableAcid;
+            if (ph <= stableBasicThreshold - 1f) return PhBand.Neutral; // -1 per evitare overlap
+            if (ph <= ultraBasicThreshold - 1f) return PhBand.StableBasic; // -1 per evitare overlap
             return PhBand.UltraBasic;
         }
 

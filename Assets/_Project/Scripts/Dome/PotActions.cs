@@ -1132,6 +1132,12 @@ public class PotActions : MonoBehaviour
             // Consuma comunque il fertilizzante (già usato)
             _playerInventory.Consume(fertilizerItemCode, 1);
             
+            // Aggiorna le visuali del Pot (sprite vuoto)
+            if (potGrowthController != null)
+            {
+                potGrowthController.UpdateVisuals();
+            }
+            
             // Notifica cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Fertilize, potSlot);
             PotEvents.EmitChanged(potSlot);
