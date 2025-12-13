@@ -1,0 +1,16 @@
+================================================================================
+                    COMMIT RECAP - DEV REPORT #0019
+                    Data: 2025-01-XX
+================================================================================
+
+Feat: Estensione Console Debug P e Z con sistemi mancanti + Fix scrolling
+
+Aggiunte 6 sezioni a PotDebugConsole (P): PlantCondition, Mold, PlantLevel, GrowthPoints, LED, Watering.
+Aggiunte 3 sezioni a PhSystemDebugConsole (Z): Game State (CRY/Actions), Day Cycle espanso, Condensation.
+Fix scrolling verticale PotDebugConsole: sezioni tagliate risolte con scroll view dedicata.
+Integrazione completa con sistemi: PlantConditionSystem, MoldSystem, PlantLevelSystem, GrowthPointsCalculator.
+
+Files: PotDebugConsole.cs (6 sezioni + scrolling), PhSystemDebugConsole.cs (3 sezioni)
+
+================================================================================
+

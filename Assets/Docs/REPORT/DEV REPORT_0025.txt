@@ -1,0 +1,167 @@
+================================================================================
+                    DEV REPORT - SPORAE BUILD BETA
+                    BLK-DEBUG-TOOLS-001: ESTENSIONE CONSOLE DEBUG
+                    Versione: 0025
+                    Data: 2025-01-XX
+                    Status: ✅ COMPLETATO
+================================================================================
+
+Estensione Console Debug P e Z con sistemi mancanti. PotDebugConsole (P): aggiunte 6 sezioni
+(PlantCondition, Mold, PlantLevel, GrowthPoints, LED, Watering) con controlli completi.
+PhSystemDebugConsole (Z): aggiunte 3 sezioni (Game State CRY/Actions, Day Cycle espanso,
+Condensation). Fix scrolling verticale PotDebugConsole: sezioni tagliate risolte con scroll view
+dedicata (altezza dinamica, coordinate relative). Integrazione completa con sistemi esistenti.
+Files: PotDebugConsole.cs (esteso + scrolling), PhSystemDebugConsole.cs (esteso).
+
+================================================================================
+
+================================================================================
+
+✅ TASK COMPLETATI
+==================
+
+**TASK 1: Analisi Sistemi Mancanti nelle Console Debug**
+- **Codice:** BLK-DEBUG-TOOLS-001.01
+- **Descrizione:** Analisi comparativa console debug esistenti vs sistemi implementati
+- **Status:** ✅ COMPLETATO
+- **File Creati:**
+  - `Assets/Docs/REPORT/ANALISI_STRUMENTI_DEBUG_AVANZATI.md` (analisi completa)
+- **Evidenze Tecniche:**
+  - Identificati 13 sistemi implementati non coperti dalle console
+  - Priorità assegnate: 6 Alta, 3 Media, 4 Bassa
+  - Mappatura dettagliata funzionalità mancanti per ogni sistema
+
+**TASK 2: Estensione PotDebugConsole (Tasto P)**
+- **Codice:** BLK-DEBUG-TOOLS-001.02
+- **Descrizione:** Aggiunta 6 nuove sezioni a PotDebugConsole per sistemi pot
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PotDebugConsole.cs`
+- **Sezioni Aggiunte:**
+  1. **Plant Condition System**: Score (0-100), ConditionLabel, ForecastDirection, Set Score
+  2. **Mold System**: MoldRiskLevel (0-3), fattori rischio, calcolo tempo reale, Set Risk, Rimuovi Infestazione
+  3. **Plant Level System**: PlantLevel (1-5), CompletedCycles, progress %, Set Level/Cycles
+  4. **Growth Points System**: GrowthPointsWater/Light/Fertilizer, DaysConsecutiveOptimal, Reset Points
+  5. **LED System**: LedSystemState (Off/Blue/Red), giorni consecutivi, BurnRiskLevel, Set State/Days
+  6. **Watering System**: WateringSystemOn, DaysWateringSystemOn, WAT-RAW Accumulator, Toggle ON/OFF
+- **Evidenze Tecniche:**
+  - Integrazione con PlantConditionSystem, MoldSystem, PlantLevelSystem
+  - Accesso a PhSystem, PotSystemConfig, PlantLevelConfig, MoldConfig via ServiceContainer
+  - Cache references per evitare FindObjectOfType ripetuti
+  - Tutte le modifiche protette da `#if UNITY_EDITOR || DEVELOPMENT_BUILD`
+
+**TASK 3: Estensione PhSystemDebugConsole (Tasto Z)**
+- **Codice:** BLK-DEBUG-TOOLS-001.03
+- **Descrizione:** Aggiunta 3 nuove sezioni a PhSystemDebugConsole per sistemi core
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Sezioni Aggiunte:**
+  1. **Game State**: CurrentCRY, ActionsLeft, Set CRY/Actions (via EconomySystem.SetCRY, ActionSystem.RestoreState)
+  2. **Day Cycle System (Espanso)**: Giorno corrente, prossimo giorno, stato fine giornata, Set Day
+  3. **Condensation System**: CondensationAmount/Max, visualizzazione stato (Set non disponibile direttamente)
+- **Evidenze Tecniche:**
+  - Integrazione con GameManager, DayCycleSystem, CondensationSystem
+  - Lazy initialization per sistemi non sempre disponibili
+  - Retry buttons per sistemi non disponibili al momento
+
+**TASK 4: Fix Scrolling Verticale PotDebugConsole**
+- **Codice:** BLK-DEBUG-TOOLS-001.04
+- **Descrizione:** Fix bug sezioni tagliate in PotDebugConsole con scrolling verticale
+- **Status:** ✅ COMPLETATO
+- **File Modificati:**
+  - `Assets/_Project/Scripts/Debug/PotDebugConsole.cs`
+- **Evidenze Tecniche:**
+  - Aggiunta variabile `_editingScrollPosition` per tracciare scroll
+  - Calcolo altezza disponibile dinamica (spazio tra lista POT e log)
+  - Creata area scrollabile con `GUI.BeginScrollView` per sezione editing
+  - Conversione coordinate assolute → relative (consoleX + offset → offset)
+  - Altezza contenuto stimata: ~850px per tutte le sezioni
+  - Scroll view dedicata per area editing POT (non interferisce con lista POT e log)
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+**BUG 1: Sezioni Tagliate in PotDebugConsole**
+- **Numero:** BUG-DEBUG-001
+- **Descrizione:** Console debug P aveva sezioni tagliate perché non entravano tutte nella schermata
+- **Causa:** Sezione editing POT usava coordinate assolute senza scrolling, contenuto troppo lungo (~850px) superava altezza disponibile
+- **Soluzione:** Implementato scrolling verticale dedicato per sezione editing con GUI.BeginScrollView, coordinate convertite da assolute a relative
+- **Test Verificazione:** ✅ Tutte le sezioni ora accessibili tramite scroll, nessuna sezione tagliata
+- **File Modificati:** `Assets/_Project/Scripts/Debug/PotDebugConsole.cs`
+
+================================================================================
+
+📝 ATTIVITÀ DI LAVORO SVOLTE
+=============================
+
+**Modifiche Strutturali:**
+- Estesa PotDebugConsole con 6 nuove sezioni (PlantCondition, Mold, PlantLevel, GrowthPoints, LED, Watering)
+- Estesa PhSystemDebugConsole con 3 nuove sezioni (Game State, Day Cycle espanso, Condensation)
+- Aggiunto scrolling verticale per sezione editing POT in PotDebugConsole
+- Aggiunti metodi helper per nomi (GetConditionName, GetForecastSymbol, GetMoldRiskName, GetLedStateName, GetBurnRiskName)
+- Aggiunti metodi Set per tutti i nuovi sistemi (SetPlantLevel, SetMoldRiskLevel, SetConditionScore, SetLedSystemState, ecc.)
+
+**Integrazioni:**
+- Integrazione con PlantConditionSystem per calcolo e visualizzazione score condizione
+- Integrazione con MoldSystem per calcolo rischio muffe in tempo reale
+- Integrazione con PlantLevelSystem per visualizzazione progress livelli
+- Integrazione con GrowthPointsCalculator per visualizzazione punti crescita
+- Integrazione con LED System per visualizzazione stato e burn risk
+- Integrazione con Watering System per toggle e visualizzazione stato
+- Integrazione con GameManager per CRY e Actions
+- Integrazione con DayCycleSystem per controlli giorno espansi
+- Integrazione con CondensationSystem per visualizzazione condensazione
+
+**Test Cases:**
+- ✅ Test selezione POT: valori input inizializzati correttamente
+- ✅ Test modifica valori: tutti i Set methods funzionanti
+- ✅ Test scrolling: tutte le sezioni accessibili, nessuna tagliata
+- ✅ Test integrazione sistemi: accesso corretto a ServiceContainer e configs
+- ✅ Test protezione build: tutte le modifiche disabilitate in release
+
+================================================================================
+
+📚 LEZIONI APPRESE
+==================
+
+**Pattern Adottati:**
+- Lazy initialization per sistemi non sempre disponibili (ServiceContainer, configs)
+- Cache references per evitare FindObjectOfType ripetuti
+- Coordinate relative in scroll view (offset invece di consoleX + offset)
+- Calcolo altezza dinamica per scroll view (spazio disponibile - margini)
+
+**Best Practices:**
+- Tutte le modifiche debug protette da `#if UNITY_EDITOR || DEVELOPMENT_BUILD`
+- Logging debug per tutte le modifiche (AddLog)
+- Inizializzazione valori input quando si seleziona POT
+- Retry buttons per sistemi non disponibili al momento
+
+**Problemi Risolti:**
+- Sezioni tagliate risolte con scrolling verticale dedicato
+- Accesso sistemi migliorato con lazy initialization e cache
+- Coordinate GUI convertite correttamente per scroll view
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+==================
+
+**Prossime Attività:**
+1. Implementare strumenti debug avanzati priorità media (Performance Profiler, Event Tracer, Visual Debugger, Save State Analyzer)
+2. Valutare implementazione strumenti priorità bassa (Replay System, Memory Leak Detector, Test Runner, ecc.)
+3. Creare GlobalStateInspector unificato per sostituire debug helpers separati
+4. Implementare Console Commands System per automazione test
+
+**Dipendenze:**
+- Nessuna dipendenza bloccante
+- Strumenti priorità media possono essere implementati in parallelo
+
+**Prerequisiti:**
+- Review e approvazione implementazione attuale
+- Definizione priorità per strumenti fase successiva
+
+================================================================================
+

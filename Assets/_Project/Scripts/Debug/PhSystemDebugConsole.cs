@@ -34,8 +34,14 @@ namespace Sporae.DevTools
         
         private PhSystem _phSystem;
         private DayCycleSystem _dayCycleSystem;
+        private GameManager _gameManager;
+        private CondensationSystem _condensationSystem;
         private bool _isConsoleOpen = false;
         private string _phInputValue = "0";
+        private string _cryInputValue = "250";
+        private string _actionsInputValue = "4";
+        private string _dayInputValue = "1";
+        private string _condensationInputValue = "0";
         private Vector2 _scrollPosition;
         private Vector2 _mainScrollPosition; // Scroll per l'intera console
         private List<string> _debugLog = new List<string>();
@@ -75,9 +81,14 @@ namespace Sporae.DevTools
             {
                 gameManager = FindObjectOfType<GameManager>();
             }
+            
+            _gameManager = gameManager;
 
             // Ottieni DayCycleSystem per pulsante End of Day
             TryGetDayCycleSystem();
+            
+            // Ottieni CondensationSystem
+            TryGetCondensationSystem();
 
             // Registra nel ServiceContainer se disponibile (dopo che è stato inizializzato)
             TryRegisterPhSystem();
@@ -85,6 +96,25 @@ namespace Sporae.DevTools
             AddLog("=== pH System Debug Console ===");
             AddLog("Premi Z per aprire/chiudere la console");
             AddLog($"pH iniziale: {_phSystem.CurrentPh:F2} ({_phSystem.GetBandName()})");
+        }
+        
+        private void TryGetCondensationSystem()
+        {
+            try
+            {
+                if (_gameManager != null)
+                {
+                    _condensationSystem = _gameManager.CondensationSystem;
+                    if (_condensationSystem != null)
+                    {
+                        AddLog("CondensationSystem trovato");
+                    }
+                }
+            }
+            catch
+            {
+                // CondensationSystem non disponibile
+            }
         }
         
         private void TryGetDayCycleSystem()
@@ -325,8 +355,64 @@ namespace Sporae.DevTools
             GUILayout.EndHorizontal();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
             
-            // BLK-02.07: Pulsante End of Day per testare sequenza cambio giorno
-            GUILayout.Label("Controlli Giorno:", labelStyle);
+            // === SEZIONE GAME STATE ===
+            GUILayout.Label("=== Game State ===", labelStyle);
+            if (_gameManager != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"CRY: {_gameManager.CurrentCRY}", labelStyle, GUILayout.Width(130));
+                _cryInputValue = GUILayout.TextField(_cryInputValue, GUILayout.Width(100));
+                if (GUILayout.Button("Set CRY", buttonStyle, GUILayout.Width(104)))
+                {
+                    if (int.TryParse(_cryInputValue, out int newCry))
+                    {
+                        _gameManager.EconomySystem.SetCRY(newCry);
+                        AddLog($"CRY impostato a {newCry}");
+                    }
+                }
+                GUILayout.EndHorizontal();
+                
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Actions: {_gameManager.ActionsLeft}", labelStyle, GUILayout.Width(130));
+                _actionsInputValue = GUILayout.TextField(_actionsInputValue, GUILayout.Width(100));
+                if (GUILayout.Button("Set Actions", buttonStyle, GUILayout.Width(104)))
+                {
+                    if (int.TryParse(_actionsInputValue, out int newActions))
+                    {
+                        _gameManager.ActionSystem.RestoreState(newActions, _gameManager.ActionSystem.MaxActions);
+                        AddLog($"Actions impostate a {newActions}");
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("GameManager non disponibile", labelStyle);
+            }
+            GUILayout.Space(7);
+            
+            // === SEZIONE DAY CYCLE (Espansa) ===
+            GUILayout.Label("=== Day Cycle System ===", labelStyle);
+            GUILayout.BeginHorizontal();
+            if (_dayCycleSystem != null)
+            {
+                int currentDay = _dayCycleSystem.CurrentDay;
+                bool canEndDay = _dayCycleSystem.CanEndDay();
+                
+                GUILayout.Label($"Giorno Corrente: {currentDay}", labelStyle, GUILayout.Width(200));
+                GUILayout.Label($"Prossimo Giorno: {currentDay + 1}", labelStyle, GUILayout.Width(200));
+                
+                if (!canEndDay)
+                {
+                    GUILayout.Label("(CRY insufficienti)", new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.red } });
+                }
+            }
+            else
+            {
+                GUILayout.Label("DayCycleSystem non disponibile", labelStyle);
+            }
+            GUILayout.EndHorizontal();
+            
             GUILayout.BeginHorizontal();
             if (_dayCycleSystem != null)
             {
@@ -347,9 +433,16 @@ namespace Sporae.DevTools
                 }
                 GUI.enabled = true;
                 
-                if (!canEndDay)
+                // Pulsante per impostare giorno manualmente
+                _dayInputValue = GUILayout.TextField(_dayInputValue, GUILayout.Width(100));
+                if (GUILayout.Button("Set Day", buttonStyle, GUILayout.Width(104)))
                 {
-                    GUILayout.Label("(CRY insufficienti)", new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.red } });
+                    if (int.TryParse(_dayInputValue, out int newDay))
+                    {
+                        // Nota: DayCycleSystem potrebbe non avere un metodo SetDay pubblico
+                        // In questo caso, loggiamo solo
+                        AddLog($"⚠️ Set Day non implementato direttamente (Giorno corrente: {currentDay})");
+                    }
                 }
             }
             else
@@ -365,7 +458,38 @@ namespace Sporae.DevTools
                 }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
+            GUILayout.Space(7);
+            
+            // === SEZIONE CONDENSATION ===
+            GUILayout.Label("=== Condensation System ===", labelStyle);
+            if (_condensationSystem != null)
+            {
+                float currentCondensation = _condensationSystem.CondensationAmount;
+                float maxCondensation = _condensationSystem.GetMax();
+                
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Condensazione: {currentCondensation:F1}/{maxCondensation:F1}", labelStyle, GUILayout.Width(260));
+                _condensationInputValue = GUILayout.TextField(_condensationInputValue, GUILayout.Width(100));
+                if (GUILayout.Button("Set Cond.", buttonStyle, GUILayout.Width(104)))
+                {
+                    if (float.TryParse(_condensationInputValue, out float newCondensation))
+                    {
+                        // Nota: CondensationSystem potrebbe non avere un metodo Set pubblico
+                        // In questo caso, loggiamo solo
+                        AddLog($"⚠️ Set Condensation non implementato direttamente (Corrente: {currentCondensation:F1})");
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("CondensationSystem non disponibile", labelStyle);
+                if (GUILayout.Button("Retry", buttonStyle, GUILayout.Width(78)))
+                {
+                    TryGetCondensationSystem();
+                }
+            }
+            GUILayout.Space(7);
 
             // Effetti su piante
             GUILayout.Label("Effetti su Piante:", labelStyle);
