@@ -778,33 +778,6 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
-        - Condition
-          [Component] RectTransform
-          - Text (TMP)
-            [Component] RectTransform
-            [Component] CanvasRenderer
-            [Component] TextMeshProUGUI
-        - ConditionBar
-          [Component] RectTransform
-          - ProgressBar
-            [Component] RectTransform
-            [Component] CanvasRenderer
-            [Component] Image
-            [Component] ProgressBar
-            - Image
-              [Component] RectTransform
-              [Component] CanvasRenderer
-              [Component] Image
-            - Text (TMP)
-              [Component] RectTransform
-              [Component] CanvasRenderer
-              [Component] TextMeshProUGUI
-        - ConditionForecast
-          [Component] RectTransform
-          - Text (TMP)
-            [Component] RectTransform
-            [Component] CanvasRenderer
-            [Component] TextMeshProUGUI
       - Bottom
         [Component] RectTransform
         - Plant
@@ -2303,6 +2276,14 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
+  - GrowthTooltipPanel
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+    - GrowthTooltipText
+      [Component] RectTransform
+      [Component] CanvasRenderer
+      [Component] TextMeshProUGUI
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2768,3 +2749,9 @@
 - PotDebugConsole
   [Component] Transform
   [Component] PotDebugConsole
+- GAMEPLAY_Balancing_Console
+  [Component] Transform
+  [Component] DifficultyCalibrationConsole
+- GlobalStateInspector
+  [Component] Transform
+  [Component] GlobalStateInspector

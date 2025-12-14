@@ -253,15 +253,11 @@ namespace Sporae.DevTools
             potState.IsFertilizerManuallySet = true;
             potState.ManualFertilizerBase = potState.FertilizerLevel;
             
-            // BUG FIX: Forza aggiornamento UI
+            // BUG FIX: Forza aggiornamento UI tramite eventi
             if (_selectedPot.PotSlot != null)
             {
                 PotEvents.EmitChanged(_selectedPot.PotSlot);
-                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
-                if (hudWidget != null)
-                {
-                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
-                }
+                // Le HUD sempre visibili si aggiornano automaticamente tramite eventi
             }
             
             AddLog($"✅ {potState.PotId}: Fertilizzante cambiato {oldLevel}% → {potState.FertilizerLevel}% (MANUALE - decay partirà da questo valore)");
@@ -286,15 +282,11 @@ namespace Sporae.DevTools
             potState.IsHydrationManuallySet = true;
             potState.ManualHydrationBase = potState.Hydration;
             
-            // BUG FIX: Forza aggiornamento UI
+            // BUG FIX: Forza aggiornamento UI tramite eventi
             if (_selectedPot.PotSlot != null)
             {
                 PotEvents.EmitChanged(_selectedPot.PotSlot);
-                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
-                if (hudWidget != null)
-                {
-                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
-                }
+                // Le HUD sempre visibili si aggiornano automaticamente tramite eventi
             }
             
             AddLog($"✅ {potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE - decay partirà da questo valore)");
@@ -345,18 +337,11 @@ namespace Sporae.DevTools
             if (_selectedPot.PotSlot != null)
             {
                 PotEvents.EmitChanged(_selectedPot.PotSlot);
-                
-                // BUG FIX: Forza aggiornamento UI anche direttamente se PotHUDWidget è disponibile
-                var hudWidget = UnityEngine.Object.FindObjectOfType<PotHUDWidget>();
-                if (hudWidget != null && _selectedPot.PotSlot != null)
-                {
-                    // Forza aggiornamento chiamando direttamente UpdateStageAndProgressUI
-                    hudWidget.UpdateStageAndProgressUI(_selectedPot.PotSlot);
-                }
+                // Le HUD sempre visibili si aggiornano automaticamente tramite eventi
                 
                 // #region agent log
                 try {
-                    var logData2 = new { potId = potState.PotId, eventEmitted = true, hudWidgetFound = hudWidget != null };
+                    var logData2 = new { potId = potState.PotId, eventEmitted = true };
                     var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotDebugConsole.cs:SetLightPercent\",\"message\":\"SetLightPercent: After EmitChanged\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
                     System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
                 } catch { }

@@ -1,0 +1,595 @@
+================================================================================
+ANALISI SISTEMI LEGATI ALLE PIANTE - GDD 40 v.08/12/2025 vs REPOMAIN
+SPORIUM - Build Beta
+Data Analisi: 2025-12-13
+Analista: Senior Developer Mode (AI Assistant)
+Versione GDD: 40 v.08/12/2025
+Versione Repository: main (REPOMAIN)
+================================================================================
+
+SCOPO
+------
+Questo documento confronta lo stato attuale del repository REPOMAIN con i requisiti
+del GDD 40 v.08/12/2025 relativi ai SISTEMI LEGATI ALLE PIANTE, identificando:
+- Feature completamente implementate ✅
+- Feature parzialmente implementate ⚠️
+- Feature non implementate ❌
+- Gap e discrepanze rispetto al GDD
+
+FONTI ANALIZZATE
+-----------------
+- GDD 40 v.08/12/2025 (Notion) - Pagina principale
+- Sezione 3 — Le PIANTE regole generali (Notion)
+- AZIONI Esistenti Lista & Dettagli (Notion) - AZ-10, AZ-11, AZ-12, AZ-13, AZ-14, AZ-15, AZ-16, AZ-18, AZ-19, AZ-24
+- ENV-001 — Dome Centrale (Notion)
+- Repository REPOMAIN - Analisi codice sorgente
+
+================================================================================
+1. SISTEMA STADI DI CRESCITA
+================================================================================
+
+GDD RICHIESTO:
+--------------
+Stadi: Seed → Sprout → Growth → Flowering → HarvestReady → Resting (6 stadi)
++ Empty (vaso vuoto) = 7 stati totali
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (7/7 stadi)
+- Empty (0) ✅
+- Seed (1) ✅
+- Sprout (2) ✅
+- Growth (3) ✅
+- Flowering (4) ✅
+- HarvestReady (5) ✅
+- Resting (6) ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantStage.cs
+- Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+2. SISTEMA STAGE REQUIREMENTS (Requisiti per Stadio)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+Ogni stadio ha requisiti specifici:
+- Idratazione: range min/med/max per stadio
+- Luce LED: Blue/Red/None richiesto per stadio
+- Fertilizzante: range min/med/max per stadio
+- Durata: giorni minimi nello stadio
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO
+- StageRequirements.cs con configurazione completa ✅
+- PlantData con array StageRequirements[] per ogni pianta ✅
+- Verifica requisiti idratazione, LED, durata ✅
+- Tracking DaysInCurrentStage ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/StageRequirements.cs
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+3. SISTEMA pH DRIFT E INTEGRAZIONE pH
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- pH globale Dome: range -100/+100
+- Drift pH giornaliero da piante:
+  - Pure: +2/giorno (range +2 a +3)
+  - Evil: -2/giorno (range -1 a -3)
+  - Standard: 0/giorno
+- Range chiave:
+  - Ultra Acido (≤-80): Pure collassano, Evil +50% resa
+  - Neutrale (-29...+29): nessun bonus/malus
+  - Ultra Basico (≥+80): Evil collassano, Pure iper-produttive ma sterili
+- Azioni che modificano pH:
+  - Overwatering → pH -5 ✅
+  - Blue LED → pH +2 ✅
+  - Red LED → pH -5 ✅
+  - Spray Antifungino → pH +5 ✅
+  - Fertilizzanti → ±10 (da verificare)
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (Drift + Display + Integrazione Base)
+- PhSystem con range -100/+100 ✅
+- Calcolo drift pH giornaliero da piante ✅
+- Registrazione drift individuale per pianta ✅
+- pH Drift display nei widget UI ✅
+- Integrazione con azioni player (Water, Light, Spray) ✅
+- Overwatering detection con pH -5 ✅
+- LED effects su pH (Blue +2, Red +5) ⚠️ (GDD dice +2 per Blue, REPO ha +5)
+- Spray Antifungal effect su pH ✅
+
+⚠️ PARZIALE:
+- Effetti pH estremi su sopravvivenza (solo base implementato, non collasso completo)
+- Modificatori pH su velocità crescita (solo requisiti base, non modificatori avanzati)
+
+File implementazione:
+- Assets/_Project/Scripts/Core/PhSystem.cs
+- Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs
+- Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs
+- Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs
+
+STATO: ⚠️ PARZIALMENTE CONFORME (mancano effetti estremi completi)
+
+================================================================================
+4. SISTEMA WATERING (AZ-11) - Irrigazione a Goccia Automatico
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Toggle ON/OFF persistente per ogni vaso
+- ON: +25% idratazione automatica a fine giornata
+- OFF: -25% riduzione idratazione per giorno
+- Consumo risorse per vaso ON: 1 WAT-RAW ogni 2 giorni + 2 CRY/giorno
+- Vasi OFF: nessun consumo
+- Effetti a fine giornata
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (BLK-02.06 + Fix Recenti)
+- Sistema toggle persistente ON/OFF ✅
+- WateringSystemOn flag in PotStateModel ✅
+- Calcolo effetti a fine giornata ✅
+- Consumo risorse giornaliero ✅
+- HUD con indicatore ON/OFF ✅
+- Toast di conferma ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotActions.cs (DoToggleWateringSystem)
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (WateringSystemOn, DaysWateringSystemOn)
+- Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs
+- Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs
+- Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+5. SISTEMA LED PERSISTENTE (AZ-12)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Stato persistente per vaso: OFF / BLUE / RED
+- Effetti a fine giornata basati su giorni consecutivi
+- Scaling effetti:
+  - 1 giorno → effetto base (x1)
+  - 2-3 giorni → effetto medio (x1.5) con primi malus
+  - 4+ giorni → effetto alto (x2) con malus crescenti
+- BLUE: stabilità, controllo, riduzione IM, consolidamento Pure
+- RED: crescita, produzione, spinta evolutiva, aumento IM
+- Abuso: Burn Stress, drift pH, consumo CRY notturno
+- HUD: mostra stato corrente + giorni di esposizione consecutivi
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+⚠️ PARZIALE
+- Sistema LED persistente con stati OFF/Blue/Red ✅
+- LedSystemState in PotStateModel ✅
+- Tracking giorni consecutivi (DaysLedBlueConsecutive, DaysLedRedConsecutive) ✅
+- Effetti pH (Blue +2, Red -5) ✅
+- HUD con stato LED ✅
+
+❌ MANCANTE:
+- Scaling effetti basato su giorni consecutivi (1 giorno x1, 2-3 giorni x1.5, 4+ giorni x2)
+- Sistema Burn Stress completo da abuso LED
+- Consumo CRY notturno se LED lasciato acceso
+- Indicatore giorni di esposizione consecutivi nell'HUD
+- Effetti sistemici completi (riduzione IM per BLUE, aumento IM per RED)
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotActions.cs (DoLight)
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (LedSystemState, DaysLedBlueConsecutive, DaysLedRedConsecutive)
+- Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs
+
+STATO: ⚠️ PARZIALMENTE CONFORME (manca scaling effetti e Burn Stress completo)
+
+================================================================================
+6. SISTEMA PRUNING (AZ-13)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Azione generica senza minigioco
+- Costo: 1 Azione
+- RNG per stadio con probabilità base:
+  - Seed: 10% base + 15% se Spray
+  - Sprout: 15% base + 15% se Spray
+  - Growth: 80% base + 10% se Spray
+  - Flowering: 10% base + 10% se Spray
+  - HarvestReady: 12% base + 5% se Spray
+  - Resting: 10% base + 10% se Spray
+- Opzione Spray Antifungino (STR-004) per aumentare efficacia
+- Successo: rimuove "Infestata" O bonus resa pre-Flowering (+1 frutto o +10%)
+- Cap bonus resa: non cumulabile più di 1 volta per ciclo
+- Fallimento: nessun effetto
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (BLK-07.01)
+- PruningSystem con RNG per stadio ✅
+- PruningConfig con probabilità configurabili ✅
+- Opzione Spray Antifungino ✅
+- Rimozione infestazione ✅
+- Bonus resa pre-Flowering ✅
+- Cap bonus resa (HasPruningResaBonus) ✅
+- PruningDialog UI ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Pruning/PruningSystem.cs
+- Assets/_Project/Scripts/Dome/PotSystem/Pruning/PruningConfig.cs
+- Assets/_Project/Scripts/UI/VaultMap/PruningDialog.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (HasPruningResaBonus)
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+7. SISTEMA HARVEST (AZ-15)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Raccolta frutti da pianta in HarvestReady
+- Produzione incrementale: +1 frutto/giorno fino a max 3
+- Decay on-plant: dopo 3 giorni non raccolti → -1 frutto/giorno
+- Harvest raccoglie tutti i frutti disponibili
+- Livello frutto = Livello pianta al momento del pick (o ridotto se marcio)
+- Transizione HarvestReady → Resting dopo raccolta
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (BLK-02.06)
+- Sistema Harvest completo ✅
+- Produzione frutti incrementale (+1/giorno fino a max 3) ✅
+- Decay graduale dopo 3 giorni (-1/giorno) ✅
+- Visualizzazione frutti sopra pot (+1/+2/+3) ✅
+- Transizione HarvestReady → Resting ✅
+- Tracking DaysInHarvestReady e DaysFruitsUnharvested ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotActions.cs (DoHarvest)
+- Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (DaysInHarvestReady, DaysFruitsUnharvested)
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+8. SISTEMA FERTILIZZANTI (AZ-24)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Creazione: LAB-CMP-001 (Compost) - inserisci PRODOTTO pianta → dopo 1 giorno ottieni Fertilizzante
+- Applicazione: seleziona pianta in Resting → applica Fertilizzante → transizione a Flowering
+- Costo: 1 Azione per creazione, 1 Azione per applicazione
+- Tipi: Standard, Pure, Prohibited (Evil)
+- Compatibilità famiglie:
+  - Standard: solo Standard (se Pure/Evil → MUORE SUBITO)
+  - Pure: Pure o Standard (se Evil → MUORE SUBITO)
+  - Evil: Evil o Standard (se Pure → MUORE SUBITO)
+- Effetti: riattivazione da Resting → Flowering
+- Tracking: FertilizerLevel (0-100), DaysFertilizerActive
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+⚠️ PARZIALE
+- FertilizerSystem con applicazione ✅
+- Tracking FertilizerLevel e DaysFertilizerActive ✅
+- Transizione Resting → Flowering con fertilizzante ✅
+- GrowthPointsFertilizer per punti crescita ✅
+
+❌ MANCANTE:
+- Sistema creazione Compost (LAB-CMP-001)
+- Tipi fertilizzanti (Standard/Pure/Prohibited)
+- Sistema compatibilità famiglie (morte se incompatibile)
+- Verifica famiglia pianta vs famiglia fertilizzante
+- Sistema decay fertilizzante applicato
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Fertilizer/FertilizerSystem.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (FertilizerLevel, DaysFertilizerActive, GrowthPointsFertilizer)
+
+STATO: ⚠️ PARZIALMENTE CONFORME (manca sistema creazione e compatibilità famiglie)
+
+================================================================================
+9. SISTEMA LIVELLI PIANTE (1-5)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Progressione: completando cicli Flowering → HarvestReady → Resting → (Fertilizzante) → Flowering
+- Soglie: Lvl 1→2: 1 ciclo, Lvl 2→3: 2 cicli, Lvl 3→4: 3 cicli, Lvl 4→5: 4 cicli
+- Resa frutti: Lvl 1-2 invariata; da Lvl 3 in poi quantità -15%/livello, qualità crescente
+- Effetti Active-slot e Passive-slot scalano con Livello
+- Solo Lvl 5 possono essere spostate negli Slot Passivi
+- Mutazioni: possibili solo a Lvl 1-3; no nuove mutazioni a Lvl 4-5
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+⚠️ PARZIALE
+- PlantLevelSystem con progressione livelli ✅
+- Tracking PlantLevel (1-5) e CompletedCycles ✅
+- PlantLevelConfig con soglie configurabili ✅
+- Check level-up basato su cicli completati ✅
+- Riduzione livelli per infestazione muffe ✅
+
+❌ MANCANTE:
+- Calcolo resa frutti basato su livello (-15%/livello da Lvl 3)
+- Scaling effetti Active-slot/Passive-slot con livello
+- Sistema Slot Passivi (3 slot per piante Lvl 5)
+- Verifica livello per mutazioni (solo Lvl 1-3)
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Level/PlantLevelSystem.cs
+- Assets/_Project/Scripts/Dome/PotSystem/Level/PlantLevelConfig.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (PlantLevel, CompletedCycles)
+
+STATO: ⚠️ PARZIALMENTE CONFORME (manca sistema resa basato su livello e Slot Passivi)
+
+================================================================================
+10. SISTEMA MUFFE (Mold System)
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Calcolo rischio muffe (0-3): None, Mild, Severe, Critical
+- Fattori rischio:
+  - Overwatering prolungato: +1 per giorno oltre soglia
+  - pH acido (≤-20): +1
+  - Piante Evil: +1 bonus rischio
+  - Mancata potatura: +0.5 per giorno senza potatura
+- Infestazione: dopo 2 giorni a livello 3 → pianta Infestata
+- Effetti infestazione:
+  - Mild: riduzione score -10, riduzione livelli -1
+  - Severe: riduzione score -30, riduzione livelli -3
+- Trattamento: Spray Antifungino (AZ-14) o Potatura (AZ-13)
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO (BLK-07.01)
+- MoldSystem con calcolo rischio ✅
+- MoldConfig con soglie configurabili ✅
+- Tracking MoldRiskLevel (0-3) ✅
+- Tracking DaysOverwateringConsecutive ✅
+- Tracking DaysWithoutPruning ✅
+- Tracking DaysAtMoldRiskLevel3 ✅
+- Flag IsInfested ✅
+- Rimozione infestazione ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Mold/MoldSystem.cs
+- Assets/_Project/Scripts/Dome/PotSystem/Mold/MoldConfig.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (MoldRiskLevel, IsInfested, DaysWithoutPruning, DaysOverwateringConsecutive, DaysAtMoldRiskLevel3)
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+11. SISTEMA CONDIZIONI PIANTA
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- Condizioni: Rigogliosa, Sana, Stressata, Appassita, Infestata
+- Condizioni aggiuntive: Overwatered, Thirsty, Overlit, Light-starved, Burned, Sterile
+- Calcolo score (0-100):
+  - BASE = 50 punti
+  - Contributi positivi: idratazione ottimale (+20), luce corretta (+15), watering ON (+10), pH affinità (+10), no Mold Risk (+5)
+  - Contributi negativi: idratazione fuori range (-15), luce assente/sbagliata (-10), pH opposto (-20), pH Ultra (-15), Overwatering (-25), Mold Risk (-10/-30), Burn Stress (-20)
+- Mappatura score → condizione:
+  - 90-100: Rigogliosa
+  - 70-89: Sana
+  - 40-69: Stressata
+  - 20-39: Appassita
+  - 0-19: Critica (Burned/Infestata/Sterile)
+- Forecast: tendenza crescita/regressione (↑ → ↓)
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+⚠️ PARZIALE
+- PlantConditionSystem con calcolo score ✅
+- Tracking ConditionScore (0-100) ✅
+- Tracking ConditionLabel (Rigogliosa/Sana/Stressata/Appassita/Critica) ✅
+- Tracking ForecastDirection (↑ → ↓) ✅
+- Contributi positivi/negativi calcolati ✅
+
+❌ MANCANTE:
+- Visualizzazione completa condizioni nell'HUD (badge chiari)
+- Progress bar condizione segmentata con fasce di colore
+- Tooltip esplicativo con contributi attivi
+- Integrazione completa con Toast HUD System
+- Condizioni specifiche: Overwatered, Thirsty, Overlit, Light-starved, Burned, Sterile (solo tracking base)
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs
+- Assets/_Project/Scripts/Dome/PotStateModel.cs (ConditionScore, ConditionLabel, ForecastDirection, PreviousDayConditionScore)
+
+STATO: ⚠️ PARZIALMENTE CONFORME (manca visualizzazione completa e alcune condizioni specifiche)
+
+================================================================================
+12. SISTEMA PLANTDATA E PLANTDATABASE
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- PlantData ScriptableObject con:
+  - PlantCode (es. PLT-STD-001)
+  - SeedItemConfig
+  - Family (Standard/Pure/Evil)
+  - Rarity
+  - DailyPhDrift
+  - OptimalPhMin/Max
+  - StageRequirements[]
+  - Active Power (bonus in vaso attivo)
+  - Passive Power (bonus in slot passivo)
+- PlantDatabase singleton per lookup
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ COMPLETO
+- PlantData ScriptableObject completo ✅
+- PlantDatabase singleton ✅
+- Lookup by SeedTypeId ✅
+- Lookup by PlantCode ✅
+- Auto-caricamento da Resources/Plants ✅
+- PlantData assets configurati (PLT-STD-001, PLT-PURE-001, PLT-EVIL-001) ✅
+- Campo activePower ✅
+- Campo description ✅
+
+File implementazione:
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs
+- Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantDatabase.cs
+
+STATO: ✅ CONFORME AL GDD
+
+================================================================================
+13. SISTEMA AZIONI PLAYER
+================================================================================
+
+GDD RICHIESTO:
+--------------
+- AZ-10: Plant (Piantare seme) ✅
+- AZ-11: Watering (Toggle ON/OFF) ✅
+- AZ-12: LED Persistente (OFF/Blue/Red) ✅
+- AZ-13: Pruning (Potatura) ✅
+- AZ-14: Spray Antifungino ✅
+- AZ-15: Harvest (Raccolta) ✅
+- AZ-16: Sposta ↔ Slot Passivo ❌
+- AZ-18: Uproot (Estirpazione) ✅
+- AZ-19: Consumare frutti ❌
+- AZ-24: Fertilizzanti (Applicazione) ⚠️
+
+REPOMAIN IMPLEMENTATO:
+----------------------
+✅ AZ-10: Plant ✅
+✅ AZ-11: Watering Toggle ✅
+✅ AZ-12: LED Persistente ⚠️ (manca scaling effetti)
+✅ AZ-13: Pruning ✅
+✅ AZ-14: Spray Antifungino ✅
+✅ AZ-15: Harvest ✅
+❌ AZ-16: Sposta ↔ Slot Passivo (NON IMPLEMENTATO)
+✅ AZ-18: Uproot ✅
+❌ AZ-19: Consumare frutti (NON IMPLEMENTATO)
+⚠️ AZ-24: Fertilizzanti (parziale - manca creazione e compatibilità)
+
+STATO: ⚠️ 7/10 azioni complete, 2/10 parziali, 1/10 non implementata
+
+================================================================================
+14. SISTEMI NON IMPLEMENTATI
+================================================================================
+
+❌ SISTEMA MUTAZIONI
+- Sistema completamente mancante
+- Mutazioni Armoniche (MUT-101, MUT-102, MUT-103, MUT-104)
+- Mutazioni Corrotte (MUT-301, MUT-302, MUT-303, MUT-304)
+- Mutazioni Adattive (MUT-401, MUT-402, MUT-403, MUT-404)
+- Trigger mutazioni: pH mismatch, uso reagenti proibiti, condizioni stress, eventi casuali
+
+❌ SISTEMA SLOT PASSIVI
+- 3 slot passivi per piante Lvl 5
+- Bonus passivi unici
+- pH influsso cappato al 20%
+- Requisito per Laboratorio Clonazione e Dome Sperimentale
+
+❌ SISTEMA IBRIDI
+- Ibridi Standard (Gruppo 1)
+- Ibridi Avanzati (Gruppo 2)
+- DNA Fusion minigioco
+- Selezione tratti (max 3)
+
+❌ SISTEMA BURN STRESS COMPLETO
+- Tracking Burn Stress da abuso LED
+- Regressione Stage e -1 Livello per Burned
+- Sterilità temporanea se stress persiste
+
+❌ EFFETTI pH ESTREMI COMPLETI
+- Ultra Acido (≤-80): Pure collassano, Evil +50% resa
+- Ultra Basico (≥+80): Evil collassano, Pure iper-produttive ma sterili
+- Controllo pH per avanzamento stadi
+- pH influenza velocità crescita
+
+❌ SISTEMA COMPOST (LAB-CMP-001)
+- Creazione fertilizzanti da prodotti piante
+- Input: prodotti botanici
+- Output: Fertilizzanti Standard/Pure/Proibiti
+
+================================================================================
+15. RIEPILOGO STATO IMPLEMENTAZIONE
+================================================================================
+
+✅ COMPLETAMENTE IMPLEMENTATO (9 sistemi):
+1. Sistema Stadi Crescita (7/7) ✅
+2. Sistema Stage Requirements ✅
+3. Sistema pH Drift (base) ✅
+4. Sistema Watering Toggle (AZ-11) ✅
+5. Sistema Pruning (AZ-13) ✅
+6. Sistema Harvest (AZ-15) ✅
+7. Sistema Muffe (BLK-07.01) ✅
+8. Sistema PlantData/PlantDatabase ✅
+9. Sistema Azioni Base (Plant, Water, Light, Spray, Uproot) ✅
+
+⚠️ PARZIALMENTE IMPLEMENTATO (6 sistemi):
+1. Sistema LED Persistente (AZ-12) - manca scaling effetti e Burn Stress completo
+2. Sistema Fertilizzanti (AZ-24) - manca creazione e compatibilità famiglie
+3. Sistema Livelli (1-5) - manca resa basata su livello e Slot Passivi
+4. Sistema Condizioni - manca visualizzazione completa e alcune condizioni specifiche
+5. Sistema pH Estremi - solo base implementato
+6. Sistema Azioni Player - 7/10 complete, 2/10 parziali, 1/10 mancante
+
+❌ NON IMPLEMENTATO (6 sistemi):
+1. Sistema Mutazioni
+2. Sistema Slot Passivi
+3. Sistema Ibridi
+4. Sistema Burn Stress Completo
+5. Sistema Compost (LAB-CMP-001)
+6. Sistema Consumo Frutti (AZ-19)
+
+================================================================================
+16. CONCLUSIONI
+================================================================================
+
+STATO COMPLESSIVO: ⚠️ 60% IMPLEMENTATO
+
+✅ PUNTI DI FORZA:
+- Sistema core crescita completamente funzionante (7 stadi)
+- Sistema Harvest completo con decay graduale
+- Sistema Watering toggle conforme al GDD
+- Sistema Pruning completo
+- Sistema Muffe completo
+- Architettura solida e modulare
+
+⚠️ GAP PRINCIPALI:
+- Sistema Mutazioni completamente mancante
+- Sistema Slot Passivi non implementato
+- Sistema Ibridi non implementato
+- Sistema LED manca scaling effetti e Burn Stress completo
+- Sistema Fertilizzanti manca creazione e compatibilità famiglie
+- Sistema Condizioni manca visualizzazione completa
+- Effetti pH estremi solo parzialmente implementati
+
+🎯 PRIORITÀ IMPLEMENTAZIONE:
+1. CRITICA: Sistema Slot Passivi (blocca progressione late-game)
+2. ALTA: Sistema Mutazioni (feature core GDD)
+3. ALTA: Sistema LED scaling effetti e Burn Stress completo
+4. MEDIA: Sistema Fertilizzanti completo (creazione + compatibilità)
+5. MEDIA: Sistema Condizioni visualizzazione completa
+6. BASSA: Sistema Ibridi (late-game feature)
+7. BASSA: Sistema Compost (sistema economico)
+
+================================================================================
+FINE ANALISI
+Data Ultimo Aggiornamento: 2025-12-13
+Versione GDD: 40 v.08/12/2025
+Versione Repository: main (REPOMAIN)
+================================================================================
+

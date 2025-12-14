@@ -1,0 +1,322 @@
+# 📋 **REPORT TECNICO REFACTORING HUD MINIMALE - SPORAE**
+# 📋 **MINIMAL HUD REFACTORING TECHNICAL REPORT - SPORAE**
+
+---
+
+## 🇮🇹 **VERSIONE ITALIANA**
+
+### 🎯 **PANORAMICA GENERALE**
+Questo report documenta il **refactoring completo** del sistema HUD minimale per i pot. Rimozione di `PotHUDWidget` e creazione di `AlwaysVisiblePotHUD` con HUD sempre visibili, aggiunta di PotId e pH Drift, e implementazione tooltip Growth (con bug da risolvere).
+
+### 📅 **SESIONE DI LAVORO**
+
+**Data**: Oggi  
+**Durata**: Sessione intensiva di refactoring e nuove funzionalità  
+**Risultato**: **HUD MINIMALE REFACTORED + NUOVE FEATURES** ✅ (con bug tooltip da fixare)
+
+---
+
+## ✅ **TASK COMPLETATI**
+
+### **TASK-001: Rimozione Completa PotHUDWidget** ✅
+**Codice**: REFACTOR-HUD-001  
+**Descrizione**: Rimozione completa di `PotHUDWidget.cs` e creazione di nuovo sistema `AlwaysVisiblePotHUD.cs`  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- File `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` rimosso completamente
+- Creato nuovo file `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+- Aggiornati tutti i riferimenti in `PotSystemIntegration.cs`, `DeselectHandler.cs`, `PotDebugConsole.cs`
+- Rimossi riferimenti obsoleti a `btnPlantSheet` e sistema di selezione interattiva
+
+### **TASK-002: Sistema HUD Sempre Visibili** ✅
+**Codice**: FEATURE-HUD-001  
+**Descrizione**: Implementazione sistema HUD minimale sempre visibili per tutti i 4 pot in basso a destra  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Classe `MinimalHUDInstance` per gestire singole HUD
+- Metodo `CreateAlwaysVisibleMinimalHUDs()` per creare fino a 4 HUD
+- Supporto per prefab opzionale (`minimalHUDPrefab`) o creazione dinamica
+- Aggiornamento automatico tramite eventi (`OnPotStateChanged`, `OnPlantGrew`, `OnPlantStageChanged`)
+- Aggiornamento periodico ogni 0.5 secondi per performance
+
+### **TASK-003: Fix Layout Prefab Modificato** ✅
+**Codice**: BUGFIX-LAYOUT-001  
+**Descrizione**: Fix layout quando prefab viene modificato con dimensioni diverse  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `CreateHUDFromPrefab()` per leggere dimensioni reali del prefab usando `containerRect.rect.size`
+- Calcolo posizioni basato su dimensioni reali invece di `minimalHUDSize` hardcoded
+- Layout ora si adatta automaticamente alle modifiche del prefab
+
+### **TASK-004: Gestione Vasi Vuoti** ✅
+**Codice**: BUGFIX-EMPTY-001  
+**Descrizione**: Fix visualizzazione informazioni quando vaso è vuoto  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Aggiunto check `state.IsEmpty || state.Stage == PlantStage.Empty` in `UpdateSingleMinimalHUD()`
+- Quando vuoto: mostra "Vuoto", condizione "-", crescita "-", cerchi grigi
+- Evita calcolo condizione per vasi vuoti
+
+### **TASK-005: Fix Apertura PotDetailsWidget** ✅
+**Codice**: BUGFIX-DETAILS-001  
+**Descrizione**: Fix apertura automatica di `PotDetailsWidget` quando si clicca su un pot  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Ripristinata chiamata `ShowDetails(pot)` in `PotDetailsWidget.OnPotSelected()`
+- Dopo rimozione `PotHUDWidget`, questo è l'unico modo per aprire il pannello dettagliato
+- Verificato funzionamento tramite log di debug
+
+### **TASK-006: Aggiunta PotId nella HUD** ✅
+**Codice**: FEATURE-HUD-002  
+**Descrizione**: Aggiunta visualizzazione nome Pot (es. POT-001) nella HUD minimale  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Aggiunto campo `potIdText` in `MinimalHUDInstance`
+- Creazione `PotIdText` GameObject in `CreateSingleMinimalHUD()`
+- Aggiornamento in `UpdateSingleMinimalHUD()` con `hudInstance.pot.PotId`
+- Posizionato in alto nella HUD
+
+### **TASK-007: Aggiunta pH Drift nella HUD** ✅
+**Codice**: FEATURE-HUD-003  
+**Descrizione**: Aggiunta visualizzazione pH drift giornaliero della pianta con colori  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Aggiunto campo `phDriftText` in `MinimalHUDInstance`
+- Creazione `PhDriftText` GameObject con `richText = true`
+- Calcolo pH drift da `plantData.GetDailyPhDrift()`
+- Colori: Verde (+), Rosso (-), Grigio (0)
+- Formato: `"pH: +2/giorno"` con colori appropriati
+
+### **TASK-008: Implementazione Tooltip Growth** ⚠️
+**Codice**: FEATURE-TOOLTIP-001  
+**Descrizione**: Implementazione tooltip Growth al passaggio mouse sulla label Growth  
+**Stato**: ⚠️ IMPLEMENTATO MA NON FUNZIONA (BUG)  
+**Evidenza Tecnica**:
+- Aggiunto campi `growthTooltipPanel` e `growthTooltipText` in `MinimalHUDInstance`
+- Metodo `SetupGrowthTooltip()` per configurare EventTrigger
+- Metodo `BuildGrowthTooltip()` con logica completa (simile a PotDetailsWidget)
+- Metodo `GetGrowthStatus()` per determinare stato crescita
+- EventTrigger su `growthStateText` con `PointerEnter`/`PointerExit`
+- **PROBLEMA**: Tooltip non si vede quando si passa il mouse
+
+---
+
+## 🐛 **BUG IDENTIFICATI**
+
+### **BUG-001: Tooltip Growth Non Visibile** 🔴 **PENDENTE**
+**Codice**: BUG-TOOLTIP-001  
+**Descrizione**: Il tooltip Growth non appare quando si passa il mouse sulla label Growth nella HUD minimale  
+**Causa Presunta**: 
+- Tooltip panel potrebbe essere nascosto dietro altri elementi UI
+- Z-order/sorting order del Canvas potrebbe essere errato
+- EventTrigger potrebbe non funzionare correttamente su elementi creati dinamicamente
+- Tooltip panel potrebbe essere fuori dallo schermo o mal posizionato
+- Canvas potrebbe non avere GraphicRaycaster configurato correttamente
+
+**Impatto**: 
+- Player non può vedere informazioni dettagliate sulla crescita della pianta
+- Funzionalità tooltip completamente inutilizzabile
+
+**Soluzione Proposta** (da implementare):
+1. Verificare z-order e sorting order del tooltip panel
+2. Assicurarsi che il tooltip sia figlio del Canvas principale con sorting order alto
+3. Verificare che EventTrigger funzioni su elementi dinamici
+4. Controllare posizionamento tooltip (potrebbe essere fuori schermo)
+5. Verificare che Canvas abbia GraphicRaycaster per eventi UI
+6. Aggiungere log di debug per verificare quando EventTrigger viene chiamato
+
+**File Coinvolti**:
+- `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs` (metodi `SetupGrowthTooltip`, `UpdateGrowthTooltip`, `BuildGrowthTooltip`)
+
+---
+
+## 🔧 **MODIFICHE TECNICHE APPLICATE**
+
+### **1. AlwaysVisiblePotHUD.cs - Nuovo Sistema HUD**
+
+**Struttura Classe**:
+```csharp
+public class AlwaysVisiblePotHUD : MonoBehaviour
+{
+    private class MinimalHUDInstance
+    {
+        public PotSlot pot;
+        public GameObject container;
+        public Image plantPreviewImage;
+        public TextMeshProUGUI potIdText;  // NUOVO
+        public TextMeshProUGUI plantNameAndLevelText;
+        public TextMeshProUGUI conditionText;
+        public TextMeshProUGUI growthStateText;
+        public TextMeshProUGUI phDriftText;  // NUOVO
+        public Image waterCircle;
+        public Image ledCircle;
+        public GameObject growthTooltipPanel;  // NUOVO
+        public TextMeshProUGUI growthTooltipText;  // NUOVO
+    }
+}
+```
+
+**Metodi Principali**:
+- `CreateAlwaysVisibleMinimalHUDs()`: Crea fino a 4 HUD minimale
+- `CreateHUDFromPrefab()`: Istantzia da prefab se disponibile
+- `CreateSingleMinimalHUD()`: Crea dinamicamente se no prefab
+- `UpdateSingleMinimalHUD()`: Aggiorna singola HUD con dati pot
+- `SetupGrowthTooltip()`: Configura tooltip Growth con EventTrigger
+- `BuildGrowthTooltip()`: Costruisce testo tooltip con dettagli crescita
+- `GetGrowthStatus()`: Determina stato crescita (IN CRESCITA, Stabile, Difficoltà)
+
+### **2. PotDetailsWidget.cs - Fix Apertura Automatica**
+
+**Modifica**:
+```csharp
+private void OnPotSelected(PotSlot pot)
+{
+    _currentSelectedPot = pot;
+    // Apri il pannello automaticamente quando si seleziona un pot
+    ShowDetails(pot);
+}
+```
+
+### **3. PotSlot.cs - Rimozione Riferimenti Obsoleti**
+
+**Modifica**: Rimosso commento riferimento a `PotHUDWidget` nel metodo `SelectPot()`
+
+### **4. PotSystemIntegration.cs - Rimozione Riferimenti**
+
+**Modifica**: Rimosso campo `[SerializeField] private PotHUDWidget potHUDWidget;`
+
+### **5. DeselectHandler.cs - Aggiornamento**
+
+**Modifica**: Commentato codice obsoleto che cercava `PotHUDWidget`
+
+### **6. PotDebugConsole.cs - Rimozione Chiamate Dirette**
+
+**Modifica**: Rimosse chiamate dirette a `PotHUDWidget.UpdateStageAndProgressUI()`, ora usa solo eventi
+
+---
+
+## 📊 **ATTIVITÀ DI LAVORO SVOLTE**
+
+### **Codice Modificato**:
+1. **Creato**: `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs` (770+ righe)
+2. **Rimosso**: `Assets/_Project/Scripts/UI/VaultMap/PotHUDWidget.cs` (3600+ righe)
+3. **Modificato**: `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+4. **Modificato**: `Assets/_Project/Scripts/Interactables/PotSlot.cs`
+5. **Modificato**: `Assets/_Project/Scripts/Dome/PotSystemIntegration.cs`
+6. **Modificato**: `Assets/_Project/Scripts/DeselectHandler.cs`
+7. **Modificato**: `Assets/_Project/Scripts/Debug/PotDebugConsole.cs`
+
+### **Test Cases Eseguiti**:
+- ✅ Verifica creazione HUD sempre visibili per 4 pot
+- ✅ Verifica aggiornamento automatico tramite eventi
+- ✅ Verifica gestione vasi vuoti
+- ✅ Verifica apertura PotDetailsWidget al click su pot
+- ✅ Verifica visualizzazione PotId
+- ✅ Verifica visualizzazione pH Drift con colori
+- ⚠️ **Tooltip Growth**: NON FUNZIONA (bug da risolvere)
+
+### **Risultati Test**:
+- ✅ Layout HUD corretto con prefab modificato
+- ✅ Informazioni vasi vuoti corrette
+- ✅ PotId e pH Drift visualizzati correttamente
+- ❌ Tooltip Growth non appare al passaggio mouse
+
+---
+
+## 📚 **LEZIONI APPRESE**
+
+1. **Refactoring Completo**: Rimozione completa di un sistema esistente richiede aggiornamento di tutti i riferimenti in tutto il codebase
+2. **Event-Driven Architecture**: Sistema basato su eventi è più robusto e manutenibile rispetto a chiamate dirette
+3. **UI Dinamica**: Creazione dinamica di UI richiede attenzione a z-order, sorting order e GraphicRaycaster
+4. **Tooltip Implementation**: Tooltip su elementi dinamici richiede configurazione corretta di Canvas, EventTrigger e posizionamento
+
+---
+
+## 🎯 **PROSSIMI PASSI**
+
+### **PRIORITÀ ALTA** 🔴
+
+1. **BUG-TOOLTIP-001: Fix Tooltip Growth Non Visibile**
+   - Verificare z-order e sorting order del tooltip panel
+   - Assicurarsi che tooltip sia figlio del Canvas principale
+   - Verificare posizionamento tooltip (non fuori schermo)
+   - Aggiungere log di debug per EventTrigger
+   - Testare con prefab vs creazione dinamica
+   - **Dipendenze**: Nessuna
+   - **Prerequisiti**: Accesso Unity per test visivi
+
+### **PRIORITÀ MEDIA** 🟡
+
+2. **FEATURE-HUD-004: Ottimizzazione Performance**
+   - Valutare se aggiornamento ogni 0.5s è sufficiente
+   - Considerare aggiornamento solo su eventi invece che periodico
+   - **Dipendenze**: Nessuna
+
+3. **FEATURE-HUD-005: Supporto Prefab Completo**
+   - Verificare che tutti gli elementi UI siano trovati correttamente nel prefab
+   - Documentare struttura prefab richiesta
+   - **Dipendenze**: Nessuna
+
+### **PRIORITÀ BASSA** 🟢
+
+4. **FEATURE-TOOLTIP-002: Tooltip Condizione**
+   - Implementare tooltip simile per label Condizione
+   - **Dipendenze**: Fix BUG-TOOLTIP-001
+
+5. **FEATURE-HUD-006: Animazioni HUD**
+   - Aggiungere animazioni di transizione quando cambia stato
+   - **Dipendenze**: Nessuna
+
+---
+
+## 📝 **METADATA**
+
+**Titolo**: REFACTORING HUD MINIMALE - AlwaysVisiblePotHUD  
+**Codice BLK**: BLK-HUD-REFACTOR-001  
+**Tipo Report**: Development Report  
+**Data Generazione**: Oggi  
+**Versione**: 0028  
+**Stato Sistema**: ⚠️ FUNZIONANTE CON BUG PENDENTE  
+**Autore**: AI Assistant  
+**Reviewer**: User (da confermare)
+
+---
+
+## 🔍 **NOTE TECNICHE**
+
+### **Architettura HUD Minimale**:
+- Sistema basato su array di `MinimalHUDInstance` (max 4)
+- Ogni istanza gestisce un singolo pot
+- Aggiornamento tramite eventi asincroni
+- Supporto per prefab opzionale o creazione dinamica
+
+### **Tooltip Growth**:
+- Implementazione simile a `PotDetailsWidget`
+- Usa `EventTrigger` per `PointerEnter`/`PointerExit`
+- Tooltip panel creato dinamicamente come child del container HUD
+- **PROBLEMA**: Non visibile (bug da risolvere)
+
+### **pH Drift**:
+- Calcolato da `PlantData.GetDailyPhDrift()`
+- Colori: Verde (+), Rosso (-), Grigio (0)
+- Formato rich text con colori
+
+---
+
+## ✅ **CHECKLIST COMPLETAMENTO**
+
+- [x] Rimozione PotHUDWidget
+- [x] Creazione AlwaysVisiblePotHUD
+- [x] Sistema HUD sempre visibili
+- [x] Fix layout prefab modificato
+- [x] Gestione vasi vuoti
+- [x] Fix apertura PotDetailsWidget
+- [x] Aggiunta PotId
+- [x] Aggiunta pH Drift
+- [x] Implementazione tooltip Growth (codice completo)
+- [ ] **Fix tooltip Growth non visibile** 🔴 **PENDENTE**
+
+---
+
+**Fine Report**
+

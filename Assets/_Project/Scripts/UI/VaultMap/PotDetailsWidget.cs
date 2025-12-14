@@ -594,22 +594,110 @@ namespace _Project
         
         private void OnPotSelected(PotSlot pot)
         {
-            SporiumLogger.LogDebug(LogCategory.UI, $"Vaso {pot.PotId} selezionato. Aggiornamento UI...");
+            SporiumLogger.LogDebug(LogCategory.UI, $"Vaso {pot.PotId} selezionato. PotDetailsWidget: apro automaticamente il pannello");
             SporiumLogger.LogDebug(LogCategory.UI, $"PotActions presente: {pot.PotActions != null}");
-            // Debug.Log($"[BLK-01.03B] Player in range: {pot.InRange}");
         
             // Salva il vaso selezionato corrente
-            
             _currentSelectedPot = pot;
+            
+            // Apri il pannello automaticamente quando si seleziona un pot
+            // (dato che PotHUDWidget è stato rimosso, questo è l'unico modo per aprire il pannello)
+            ShowDetails(pot);
+        
+            SporiumLogger.LogDebug(LogCategory.UI, $"PotDetailsWidget: Vaso {pot.PotId} salvato, pannello aperto");
+        }
+        
+        /// <summary>
+        /// Mostra il pannello dettagliato per il vaso selezionato
+        /// Chiamato quando l'utente clicca su "Dettagli" nell'HUD minimale
+        /// </summary>
+        public void ShowDetails(PotSlot pot = null)
+        {
+            // #region agent log
+            try {
+                var logData = new { 
+                    potId = pot?.PotId ?? (_currentSelectedPot?.PotId ?? "NULL"), 
+                    hasCurrentPot = _currentSelectedPot != null,
+                    pageExists = _page != null,
+                    pageActiveBefore = _page != null ? _page.activeSelf : false
+                };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+            
+            // Usa il vaso passato o quello già selezionato
+            PotSlot targetPot = pot ?? _currentSelectedPot;
+            if (targetPot == null)
+            {
+                // #region agent log
+                try {
+                    var logData2 = new { targetPotNull = true };
+                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: No target pot\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
+                } catch { }
+                // #endregion
+                
+                SporiumLogger.LogWarning(LogCategory.UI, "ShowDetails: Nessun vaso selezionato!");
+                return;
+            }
+            
+            SporiumLogger.LogDebug(LogCategory.UI, $"ShowDetails: Apertura pannello dettagliato per vaso {targetPot.PotId}");
+            
+            _currentSelectedPot = targetPot;
+            
+            if (_page == null)
+            {
+                // #region agent log
+                try {
+                    var logData3 = new { pageNull = true };
+                    var logJson3 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: _page is NULL\",\"data\":{JsonUtility.ToJson(logData3)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson3);
+                } catch { }
+                // #endregion
+                
+                SporiumLogger.LogError(LogCategory.UI, "ShowDetails: _page è NULL! Assicurati che il campo Page sia assegnato nell'Inspector.");
+                return;
+            }
+            
             _page.SetActive(true);
         
-            // BLK-01.03B: Aggiorna tutti gli elementi UI del nuovo sistema
-            UpdateStageAndProgressUI(pot);
+            // Aggiorna tutti gli elementi UI
+            UpdateStageAndProgressUI(targetPot);
+            UpdateActionButtons(targetPot);
         
-            // Aggiorna i pulsanti di azione
-            UpdateActionButtons(pot);
+            // #region agent log
+            try {
+                var logData4 = new { 
+                    potId = targetPot?.PotId ?? "NULL",
+                    pageActiveAfter = _page != null ? _page.activeSelf : false
+                };
+                var logJson4 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: Exit - page should be active\",\"data\":{JsonUtility.ToJson(logData4)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson4);
+            } catch { }
+            // #endregion
         
-            SporiumLogger.LogDebug(LogCategory.UI, $"UI aggiornata per vaso {pot.PotId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"ShowDetails: Pannello dettagliato aperto per vaso {targetPot.PotId}");
+        }
+        
+        /// <summary>
+        /// Nasconde il pannello dettagliato
+        /// </summary>
+        public void HideDetails()
+        {
+            // #region agent log
+            try {
+                var logData = new { pageActive = _page != null ? _page.activeSelf : false };
+                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"FIX-HUD-SEPARATION\",\"location\":\"PotDetailsWidget.cs:HideDetails\",\"message\":\"HideDetails: Closing details panel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
+            } catch { }
+            // #endregion
+            
+            if (_page != null)
+            {
+                _page.SetActive(false);
+                SporiumLogger.LogDebug(LogCategory.UI, "HideDetails: Pannello dettagliato chiuso");
+            }
         }
         
         /// <summary>

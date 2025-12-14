@@ -206,7 +206,7 @@ public class PotSlot : MonoBehaviour
         IsSelected = true;
 
         // NOTA: Non raccogliere automaticamente i frutti qui!
-        // L'harvest deve essere gestito tramite il widget UI (PotHUDWidget/PotDetailsWidget)
+        // L'harvest deve essere gestito tramite il widget UI (PotDetailsWidget)
         // quando l'utente clicca esplicitamente sul pulsante "Harvest"
         // CollectFruits() è stato rimosso per permettere all'utente di scegliere se fare harvest o vedere i dettagli
 

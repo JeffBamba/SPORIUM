@@ -15,7 +15,6 @@ public class PotSystemIntegration : MonoBehaviour
     
     [Header("References")]
     [SerializeField] private RoomDomePotsBootstrap potsBootstrap;
-    [SerializeField] private PotHUDWidget potHUDWidget;
     
     private GameManager gameManager;
     private List<PotSlot> allPots;

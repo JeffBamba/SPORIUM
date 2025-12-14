@@ -6,11 +6,8 @@ public class DeselectHandler : MonoBehaviour
 
     void OnMouseDown()
     {
-        var widget = FindObjectOfType<PotHUDWidget>();
-        if (widget != null)
-        {
-            widget.DeselectPot();
-        }
+        // PotHUDWidget rimosso - le HUD sono sempre visibili e non c'è più selezione interattiva
+        // Se necessario, implementare logica di deselezione qui
     }
 
     void Update()
