@@ -26152,6 +26152,7 @@ MonoBehaviour:
   textColor: {r: 1, g: 1, b: 1, a: 1}
   potDetailsWidget: {fileID: 0}
   minimalHUDPrefab: {fileID: 1049477046891050114, guid: 0a013ecbf2bf4314d972cb45ebe7cb3a, type: 3}
+  growthTooltipPrefab: {fileID: 6646459495118037745, guid: cb0d6ecdeba676c48a25e8691e3fc596, type: 3}
 --- !u!4 &1168366424
 Transform:
   m_ObjectHideFlags: 0

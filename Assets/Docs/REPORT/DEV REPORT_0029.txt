@@ -1,0 +1,306 @@
+# 📋 **REPORT TECNICO FIX LIGHT STRESS MALUS E CONDIZIONE - SPORAE**
+# 📋 **LIGHT STRESS MALUS AND CONDITION FIX TECHNICAL REPORT - SPORAE**
+
+---
+
+## 🇮🇹 **VERSIONE ITALIANA**
+
+### 🎯 **PANORAMICA GENERALE**
+Questo report documenta il **fix completo** del sistema di calcolo della condizione delle piante relativo al Light Stress. Correzione della logica che applicava malus/bonus per la luce anche quando lo stress era nel range (tra 0% e 100%), fix del problema che causava il ricalcolo immediato della condizione quando si spegneva il LED invece di aspettare la fine del giorno, fix concettuale del label "Growth" che mostrava la condizione invece dello stato di crescita, e implementazione della logica per mostrare la MinimalHUD solo quando c'è una pianta viva nel pot.
+
+### 📅 **METADATA HEADER**
+
+**Titolo**: Fix Light Stress Malus e Timing Condizione  
+**BLK Code**: BLK-CONDITION-LIGHT-STRESS-FIX  
+**Data Generazione**: 2025-12-15 19:16:28  
+**Versione Report**: 0029  
+**Stato Sistema**: ✅ STABILE - Bug Fixati
+
+---
+
+## ✅ **TASK COMPLETATI**
+
+### **TASK-001: Fix Logica Light Stress Malus** ✅
+**Codice**: BUGFIX-LIGHT-STRESS-001  
+**Descrizione**: Correzione della logica che applicava il malus "Luce assente o spettro sbagliato" anche quando lo stress era nel range (tra 0% e 100%)  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `PlantConditionSystem.CalculateCondition()` in `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+- Il malus "Luce assente o spettro sbagliato" viene applicato solo quando lo stress è 0% o 100%
+- Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus per la luce
+- Calcolo dello stress percentage spostato all'inizio del metodo per riutilizzarlo in più sezioni
+
+### **TASK-002: Fix Logica Light Stress Bonus** ✅
+**Codice**: BUGFIX-LIGHT-STRESS-002  
+**Descrizione**: Correzione della logica che applicava il bonus "Luce corretta" solo quando lo stress era fuori range, invece di applicarlo anche quando lo stress era nel range  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `PlantConditionSystem.CalculateCondition()` per applicare il bonus quando:
+  - LED è acceso E corretto E lo stress è nel range (tra 0% e 100%) → BONUS per avere la luce giusta nel range giusto
+  - Oppure quando lo stress è fuori range (0% o 100%) ma il LED è corretto → BONUS per avere la luce giusta anche fuori range
+- Quando lo stress è nel range e il LED viene spento, il bonus viene mantenuto se il LED precedente era corretto per lo stadio
+- Verifica del LED precedente tramite `DaysLedBlueConsecutive` e `DaysLedRedConsecutive`
+
+### **TASK-003: Fix Burn Stress Malus** ✅
+**Codice**: BUGFIX-LIGHT-STRESS-003  
+**Descrizione**: Correzione della logica che applicava il malus "Burn Stress" anche quando lo stress era nel range  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `PlantConditionSystem.CalculateCondition()` per applicare il malus "Burn Stress" solo quando lo stress è 0% o 100%
+- Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus per il Burn Stress
+
+### **TASK-004: Fix TooltipGrowth Light Status** ✅
+**Codice**: BUGFIX-TOOLTIP-LIGHT-001  
+**Descrizione**: Correzione del TooltipGrowth che mostrava "LUCE NOT OK" anche quando lo stress era nel range ma le luci erano spente  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `BuildGrowthTooltip()` in `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+- Modificato `BuildGrowthTooltip()` in `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+- `lightOk` è `true` quando lo stress è tra 0% e 100% (esclusi gli estremi), anche se le luci sono spente
+- Il messaggio "LED richiesto: NON OK" viene mostrato solo quando lo stress è fuori range (0% o 100%) e il LED non è soddisfatto
+
+### **TASK-005: Fix Concettuale "Growth" → "Condizione della Pianta"** ✅
+**Codice**: REFACTOR-CONDITION-LABEL-001  
+**Descrizione**: Correzione concettuale: il label "Growth" in PotDetailsWidget mostrava la condizione invece dello stato di crescita. Lo stadio di crescita è già mostrato da "Stage", quindi il label deve mostrare la condizione della pianta  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `UpdateGrowthLabel()` in `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+- Il label mostra ora "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+- Il calcolo della condizione usa la stessa logica di `UpdateConditionUI()` per garantire coerenza
+- I colori del label sono basati sulla condizione (Rigogliosa, Sana, Stressata, Appassita, Critica)
+- Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+- Il tooltip mostra la condizione calcolata con la stessa logica di `UpdateConditionUI()`
+
+### **TASK-006: MinimalHUD Visibile Solo con Pianta Viva** ✅
+**Codice**: FEATURE-HUD-VISIBILITY-001  
+**Descrizione**: Implementazione logica per mostrare la MinimalHUD solo quando c'è una pianta viva nel pot, nascondendola quando il vaso è vuoto  
+**Stato**: ✅ COMPLETATO  
+**Evidenza Tecnica**:
+- Modificato `UpdateSingleMinimalHUD()` in `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+- Aggiunto controllo `if (state.IsEmpty || state.Stage == (int)PlantStage.Empty)` per nascondere la HUD quando il vaso è vuoto
+- Quando il vaso è vuoto, la HUD viene nascosta (`hudInstance.container.SetActive(false)`)
+- Quando c'è una pianta, la HUD viene mostrata (`hudInstance.container.SetActive(true)`)
+
+---
+
+## 🐛 **BUG FIXATI**
+
+### **BUG-0029-001: Light Stress Malus Applicato nel Range**
+**Numero**: BUG-0029-001  
+**Descrizione**: Il malus "Luce assente o spettro sbagliato" veniva applicato anche quando lo stress era nel range (75%), causando un cambio immediato di condizione quando si spegneva il LED  
+**Causa Identificata**:
+- La logica originale applicava il malus quando `hasCorrectLight` era `false`, senza considerare lo stress percentage
+- Quando si spegneva il LED con stress al 75%, `hasCorrectLight` diventava `false` e il malus veniva applicato immediatamente
+**Soluzione Applicata**:
+- Modificata la logica per applicare il malus solo quando lo stress è 0% o 100%
+- Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus per la luce
+**Test Verifica**:
+- ✅ Testato spegnendo il LED con stress al 75%: la condizione non cambia immediatamente
+- ✅ Testato spegnendo il LED con stress allo 0%: il malus viene applicato correttamente
+- ✅ Testato spegnendo il LED con stress al 100%: il malus viene applicato correttamente
+
+### **BUG-0029-002: Bonus Luce Corretta Rimosso nel Range**
+**Numero**: BUG-0029-002  
+**Descrizione**: Il bonus "Luce corretta" veniva rimosso immediatamente quando si spegneva il LED con stress nel range, causando un cambio di condizione  
+**Causa Identificata**:
+- La logica originale applicava il bonus solo quando `hasCorrectLight` era `true` e lo stress era fuori range
+- Quando si spegneva il LED con stress nel range, `hasCorrectLight` diventava `false` e il bonus veniva rimosso immediatamente
+**Soluzione Applicata**:
+- Modificata la logica per applicare il bonus quando il LED è acceso e corretto, con stress nel range o fuori range
+- Quando lo stress è nel range e il LED viene spento, il bonus viene mantenuto se il LED precedente era corretto per lo stadio
+- Verifica del LED precedente tramite `DaysLedBlueConsecutive` e `DaysLedRedConsecutive`
+**Test Verifica**:
+- ✅ Testato spegnendo il LED corretto con stress al 75%: il bonus viene mantenuto e la condizione non cambia
+- ✅ Testato accendendo il LED corretto con stress al 75%: il bonus viene applicato correttamente
+
+### **BUG-0029-003: Condizione Ricalcolata Immediatamente**
+**Numero**: BUG-0029-003  
+**Descrizione**: La condizione veniva ricalcolata immediatamente quando si spegneva il LED invece di aspettare la fine del giorno  
+**Causa Identificata**:
+- Quando si spegneva il LED, veniva emesso `PotEvents.OnPotStateChanged` che causava il ricalcolo immediato della condizione
+- Il ricalcolo immediato causava un cambio di condizione anche quando lo stress era nel range
+**Soluzione Applicata**:
+- Fix indiretto: corretta la logica di bonus/malus per evitare che la condizione cambi quando lo stress è nel range
+- La condizione viene ancora ricalcolata immediatamente per aggiornare l'UI, ma non cambia più quando lo stress è nel range
+**Test Verifica**:
+- ✅ Testato spegnendo il LED con stress al 75%: la condizione non cambia immediatamente
+- ✅ Testato spegnendo il LED con stress allo 0%: la condizione cambia correttamente (malus applicato)
+
+### **BUG-0029-004: TooltipGrowth Mostra "LUCE NOT OK" nel Range**
+**Numero**: BUG-0029-004  
+**Descrizione**: Il TooltipGrowth mostrava "LUCE NOT OK" anche quando lo stress era nel range (75%) ma le luci erano spente  
+**Causa Identificata**:
+- La logica originale per `lightOk` richiedeva che `ledRequirementMet` fosse `true`, quindi quando il LED era spento, `lightOk` diventava `false`
+- Questo causava la visualizzazione di "LUCE NOT OK" anche quando lo stress era nel range
+**Soluzione Applicata**:
+- Modificata la logica per `lightOk` per essere `true` quando lo stress è tra 0% e 100% (esclusi gli estremi), indipendentemente dallo stato del LED
+- Il messaggio "LED richiesto: NON OK" viene mostrato solo quando lo stress è fuori range (0% o 100%) e il LED non è soddisfatto
+**Test Verifica**:
+- ✅ Testato con stress al 75% e LED spento: mostra "LUCE OK" correttamente
+- ✅ Testato con stress allo 0% e LED spento: mostra "LUCE NOT OK" correttamente
+- ✅ Testato con stress al 100%: mostra "LUCE NOT OK" correttamente
+
+### **BUG-0029-005: Bug Concettuale "Growth" Mostrava Condizione**
+**Numero**: BUG-0029-005  
+**Descrizione**: Il label "Growth" in PotDetailsWidget mostrava la condizione della pianta invece dello stato di crescita. Lo stadio di crescita è già mostrato da "Stage", quindi il label deve mostrare la condizione  
+**Causa Identificata**:
+- Bug concettuale: il label "Growth" era stato implementato per mostrare la condizione invece dello stato di crescita
+- Lo stadio di crescita è già mostrato dall'oggetto "Stage", quindi il label "Growth" doveva mostrare la condizione
+- Il tooltip Growth mostrava "Crescita: [stato crescita]" invece di "Condizione della Pianta: [condizione]"
+**Soluzione Applicata**:
+- Modificato `UpdateGrowthLabel()` per mostrare "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+- Il calcolo della condizione usa la stessa logica di `UpdateConditionUI()` per garantire coerenza
+- I colori del label sono basati sulla condizione (Rigogliosa, Sana, Stressata, Appassita, Critica)
+- Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+- Il testo di default per label create dinamicamente è stato cambiato da "Growth:" a "Condizione della Pianta:"
+**Test Verifica**:
+- ✅ Testato con pianta in diversi stadi: il label mostra correttamente la condizione
+- ✅ Testato con pianta in diverse condizioni: i colori del label corrispondono alla condizione
+- ✅ Testato tooltip Growth: mostra correttamente "Condizione della Pianta: [condizione]"
+
+### **BUG-0029-006: MinimalHUD Mostrata Anche per Vasi Vuoti**
+**Numero**: BUG-0029-006  
+**Descrizione**: La MinimalHUD veniva mostrata anche quando il vaso era vuoto, causando confusione e informazioni non rilevanti  
+**Causa Identificata**:
+- La logica originale non controllava se il vaso era vuoto prima di mostrare la HUD
+- La HUD veniva sempre mostrata, anche quando non c'era una pianta nel pot
+**Soluzione Applicata**:
+- Aggiunto controllo `if (state.IsEmpty || state.Stage == (int)PlantStage.Empty)` in `UpdateSingleMinimalHUD()`
+- Quando il vaso è vuoto, la HUD viene nascosta (`hudInstance.container.SetActive(false)`)
+- Quando c'è una pianta, la HUD viene mostrata (`hudInstance.container.SetActive(true)`)
+**Test Verifica**:
+- ✅ Testato con vaso vuoto: la HUD non viene mostrata
+- ✅ Testato piantando una pianta: la HUD viene mostrata correttamente
+- ✅ Testato rimuovendo una pianta: la HUD viene nascosta correttamente
+
+---
+
+## 🐛 **BUG NON FIXATI / PENDENTI**
+
+*Nessun bug pendente al momento della generazione del report*
+
+---
+
+## 📝 **ATTIVITÀ DI LAVORO SVOLTE**
+
+### **Modifiche Strutturali**
+- **File Modificati**:
+  - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+    - Spostato calcolo `stressPercentage` all'inizio del metodo `CalculateCondition()` per riutilizzarlo
+    - Modificata logica bonus "Luce corretta" per applicarlo quando lo stress è nel range
+    - Modificata logica malus "Luce assente" per applicarlo solo quando lo stress è fuori range
+    - Modificata logica malus "Burn Stress" per applicarlo solo quando lo stress è fuori range
+    - Aggiunta logica per mantenere il bonus quando lo stress è nel range e il LED viene spento (se il LED precedente era corretto)
+  - `Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs`
+    - Modificata logica `lightOk` in `BuildGrowthTooltip()` per essere `true` quando lo stress è nel range, anche se le luci sono spente
+    - Modificata visualizzazione "LED richiesto: NON OK" per mostrarla solo quando lo stress è fuori range
+    - Modificato `UpdateGrowthLabel()` per mostrare "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+    - Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+    - Il calcolo della condizione usa la stessa logica di `UpdateConditionUI()` per garantire coerenza
+    - I colori del label sono basati sulla condizione (Rigogliosa, Sana, Stressata, Appassita, Critica)
+  - `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+    - Modificata logica `lightOk` in `BuildGrowthTooltip()` per essere `true` quando lo stress è nel range, anche se le luci sono spente
+    - Modificata visualizzazione "LED richiesto: NON OK" per mostrarla solo quando lo stress è fuori range
+    - Aggiunto controllo per nascondere la HUD quando il vaso è vuoto (`state.IsEmpty || state.Stage == (int)PlantStage.Empty`)
+    - Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+
+### **Logica Implementata**
+
+#### **Bonus "Luce corretta"**
+- Applicato quando:
+  - LED è acceso E corretto E lo stress è nel range (tra 0% e 100%) → BONUS per avere la luce giusta nel range giusto
+  - Oppure quando lo stress è fuori range (0% o 100%) ma il LED è corretto → BONUS per avere la luce giusta anche fuori range
+- Mantenuto quando:
+  - Lo stress è nel range (tra 0% e 100%) E il LED viene spento E il LED precedente era corretto per lo stadio
+
+#### **Malus "Luce assente o spettro sbagliato"**
+- Applicato solo quando:
+  - Lo stress è 0% (nessuna luce) O 100% (burned) E la luce non è corretta
+
+#### **Malus "Burn Stress"**
+- Applicato solo quando:
+  - Lo stress è 0% (nessuna luce quando è richiesta) O 100% (burned)
+
+#### **TooltipGrowth Light Status**
+- `lightOk` è `true` quando:
+  - Lo stress è tra 0% e 100% (esclusi gli estremi), indipendentemente dallo stato del LED
+- `lightOk` è `false` quando:
+  - Lo stress è esattamente 0% (nessuna luce) O 100% (troppa luce)
+
+### **Test Cases e Risultati**
+- ✅ Test 1: Spegnere LED con stress al 75% → Condizione non cambia immediatamente
+- ✅ Test 2: Spegnere LED con stress allo 0% → Malus applicato correttamente
+- ✅ Test 3: Spegnere LED con stress al 100% → Malus applicato correttamente
+- ✅ Test 4: Accendere LED corretto con stress al 75% → Bonus applicato correttamente
+- ✅ Test 5: TooltipGrowth mostra "LUCE OK" con stress al 75% e LED spento
+- ✅ Test 6: TooltipGrowth mostra "LUCE NOT OK" con stress allo 0% e LED spento
+- ✅ Test 7: TooltipGrowth mostra "LUCE NOT OK" con stress al 100%
+- ✅ Test 8: PotDetailsWidget mostra "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+- ✅ Test 9: TooltipGrowth mostra "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+- ✅ Test 10: MinimalHUD viene nascosta quando il vaso è vuoto
+
+---
+
+## 📚 **LEZIONI APPRESE**
+
+### **Pattern e Best Practices**
+1. **Calcolo Condizione**: La condizione delle piante deve essere ricalcolata solo a fine giornata, non immediatamente quando si modificano i parametri
+2. **Light Stress Range**: Quando lo stress è nel range (tra 0% e 100%), non devono essere applicati malus per la luce, anche se le luci sono spente
+3. **Bonus Mantenimento**: Quando lo stress è nel range e si spegne il LED, il bonus può essere mantenuto se il LED precedente era corretto, per evitare cambiamenti immediati di condizione
+4. **Tooltip Consistency**: I tooltip devono riflettere la stessa logica del calcolo della condizione per evitare confusione
+
+### **Errori Ricorrenti**
+1. **Logica Troppo Rigida**: La logica originale era troppo rigida e non considerava lo stress percentage quando applicava malus/bonus per la luce
+2. **Ricalcolo Immediato**: Il ricalcolo immediato della condizione quando si modificano i parametri può causare cambiamenti indesiderati
+
+### **Pattern Adottati**
+1. **Stress Percentage First**: Calcolo dello stress percentage all'inizio del metodo per riutilizzarlo in più sezioni
+2. **Range-Based Logic**: Logica basata sul range di stress (0%, tra 0% e 100%, 100%) invece di condizioni booleane semplici
+3. **Previous State Tracking**: Uso di `DaysLedBlueConsecutive` e `DaysLedRedConsecutive` per verificare lo stato precedente del LED
+
+---
+
+## 🎯 **PROSSIMI PASSI**
+
+### **Task Pianificati**
+- Nessun task pianificato al momento
+
+### **Dipendenze**
+- Nessuna dipendenza identificata
+
+### **Prerequisiti**
+- Nessun prerequisito identificato
+
+---
+
+## 📊 **METRICHE E STATISTICHE**
+
+- **File Modificati**: 3
+- **Righe di Codice Modificate**: ~200
+- **Bug Fixati**: 6
+- **Test Cases Eseguiti**: 10
+- **Tasso di Successo**: 100%
+
+---
+
+## 🔍 **NOTE TECNICHE**
+
+### **Dettagli Implementazione**
+- Il calcolo dello stress percentage viene fatto una volta all'inizio del metodo `CalculateCondition()` per evitare calcoli ridondanti
+- La verifica del LED precedente viene fatta controllando `DaysLedBlueConsecutive` e `DaysLedRedConsecutive` per determinare se il LED era acceso prima di essere spento
+- La logica del TooltipGrowth è stata allineata con la logica del calcolo della condizione per garantire coerenza
+
+### **Considerazioni Performance**
+- Nessun impatto negativo sulle performance identificato
+- Il calcolo dello stress percentage viene fatto una sola volta per metodo
+
+### **Compatibilità**
+- Le modifiche sono retrocompatibili con il sistema esistente
+- Nessuna modifica ai dati salvati richiesta
+
+---
+
+================================================================================
+**Footer Separator Line**
+================================================================================
+

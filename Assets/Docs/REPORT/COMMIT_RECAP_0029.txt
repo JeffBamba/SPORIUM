@@ -1,0 +1,54 @@
+# 📝 **COMMIT RECAP 0029 - FIX LIGHT STRESS MALUS E CONDIZIONE**
+
+## 🎯 **PANORAMICA**
+Fix completo del sistema di calcolo della condizione delle piante relativo al Light Stress. Correzione della logica che applicava malus/bonus per la luce anche quando lo stress era nel range, e fix del TooltipGrowth che mostrava "LUCE NOT OK" anche quando lo stress era nel range ma le luci erano spente.
+
+## 📋 **FILE MODIFICATI**
+
+### **Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs**
+- Spostato calcolo `stressPercentage` all'inizio del metodo `CalculateCondition()` per riutilizzarlo
+- Modificata logica bonus "Luce corretta" per applicarlo quando lo stress è nel range (tra 0% e 100%)
+- Modificata logica malus "Luce assente" per applicarlo solo quando lo stress è fuori range (0% o 100%)
+- Modificata logica malus "Burn Stress" per applicarlo solo quando lo stress è fuori range (0% o 100%)
+- Aggiunta logica per mantenere il bonus quando lo stress è nel range e il LED viene spento (se il LED precedente era corretto)
+
+### **Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs**
+- Modificata logica `lightOk` in `BuildGrowthTooltip()` per essere `true` quando lo stress è nel range, anche se le luci sono spente
+- Modificata visualizzazione "LED richiesto: NON OK" per mostrarla solo quando lo stress è fuori range
+- Modificato `UpdateGrowthLabel()` per mostrare "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+- Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+- I colori del label sono basati sulla condizione (Rigogliosa, Sana, Stressata, Appassita, Critica)
+- Rimossi log di debug
+
+### **Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs**
+- Modificata logica `lightOk` in `BuildGrowthTooltip()` per essere `true` quando lo stress è nel range, anche se le luci sono spente
+- Modificata visualizzazione "LED richiesto: NON OK" per mostrarla solo quando lo stress è fuori range
+- Aggiunto controllo per nascondere la HUD quando il vaso è vuoto (`state.IsEmpty || state.Stage == (int)PlantStage.Empty`)
+- Modificato `BuildGrowthTooltip()` per mostrare "Condizione della Pianta: [condizione]" invece di "Crescita: [stato crescita]"
+- Rimossi log di debug
+
+## 🐛 **BUG FIXATI**
+
+1. **BUG-0029-001**: Light Stress Malus applicato nel range → Fix: malus applicato solo quando stress è 0% o 100%
+2. **BUG-0029-002**: Bonus Luce Corretta rimosso nel range → Fix: bonus mantenuto quando stress è nel range e LED precedente era corretto
+3. **BUG-0029-003**: Condizione ricalcolata immediatamente → Fix indiretto: logica corretta evita cambiamenti quando stress è nel range
+4. **BUG-0029-004**: TooltipGrowth mostra "LUCE NOT OK" nel range → Fix: `lightOk` è `true` quando stress è nel range, anche se luci sono spente
+5. **BUG-0029-005**: Bug concettuale "Growth" mostrava condizione → Fix: label mostra "Condizione della Pianta: [condizione]" invece di "Growth: [stato crescita]"
+6. **BUG-0029-006**: MinimalHUD mostrata anche per vasi vuoti → Fix: HUD nascosta quando vaso è vuoto (`state.IsEmpty || state.Stage == Empty`)
+
+## ✅ **RISULTATI**
+
+- ✅ Fix completo della logica Light Stress malus/bonus
+- ✅ TooltipGrowth mostra correttamente lo stato della luce
+- ✅ Condizione non cambia immediatamente quando si spegne il LED con stress nel range
+- ✅ Fix concettuale: "Growth" → "Condizione della Pianta" in PotDetailsWidget e TooltipGrowth
+- ✅ MinimalHUD mostrata solo quando c'è una pianta viva nel pot
+- ✅ Tutti i test cases passati con successo
+
+## 📊 **STATISTICHE**
+
+- **File Modificati**: 3
+- **Bug Fixati**: 6
+- **Test Cases**: 10/10 passati
+- **Tasso di Successo**: 100%
+

@@ -333,7 +333,7 @@ namespace _Project
                 if (_fertilizerSelector == null)
                 {
                     // Crea automaticamente il GameObject con il componente
-                    SporiumLogger.LogWarning(LogCategory.UI, "UIFertilizerSelector non trovato nella scena. Creazione automatica...");
+                    SporiumLogger.LogInfo(LogCategory.UI, "UIFertilizerSelector non trovato nella scena. Creazione automatica...");
                     GameObject fertilizerSelectorGO = new GameObject("UIFertilizerSelector");
                     _fertilizerSelector = fertilizerSelectorGO.AddComponent<UIFertilizerSelector>();
                     SporiumLogger.LogInfo(LogCategory.UI, "UIFertilizerSelector creato automaticamente!");
@@ -452,13 +452,6 @@ namespace _Project
         /// </summary>
         private void OnPruningDialogResult(bool confirmed, bool useSpray)
         {
-            // #region agent log
-            try {
-                var logData = new { confirmed = confirmed, useSpray = useSpray };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-E\",\"location\":\"PotDetailsWidget.cs:424\",\"message\":\"OnPruningDialogResult: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
             SporiumLogger.LogDebug(LogCategory.UI, $"OnPruningDialogResult: confirmed={confirmed}, useSpray={useSpray}");
             
             if (!confirmed)
@@ -570,16 +563,22 @@ namespace _Project
         
         private void LoadGrowthConfig()
         {
+            // Prova prima con il nome completo, poi con il nome senza suffisso
             _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
+            if (_growthConfig == null)
+            {
+                _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
+            }
+            
             if (_growthConfig != null)
             {
                 SporiumLogger.LogDebug(LogCategory.UI, $"Config caricata: pointsSeedToSprout={_growthConfig.pointsSeedToSprout}, pointsSproutToMature={_growthConfig.pointsSproutToMature}");
             }
             else
-                return;
-            
-            SporiumLogger.LogWarning(LogCategory.UI, "PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
-            _growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, "PlantGrowthConfig non trovato in Resources/Configs/. Usando valori di default.");
+                _growthConfig = ScriptableObject.CreateInstance<PlantGrowthConfig>();
+            }
         }
 
         private void HandleDayChanged(int obj)
@@ -613,31 +612,10 @@ namespace _Project
         /// </summary>
         public void ShowDetails(PotSlot pot = null)
         {
-            // #region agent log
-            try {
-                var logData = new { 
-                    potId = pot?.PotId ?? (_currentSelectedPot?.PotId ?? "NULL"), 
-                    hasCurrentPot = _currentSelectedPot != null,
-                    pageExists = _page != null,
-                    pageActiveBefore = _page != null ? _page.activeSelf : false
-                };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
-            
             // Usa il vaso passato o quello già selezionato
             PotSlot targetPot = pot ?? _currentSelectedPot;
             if (targetPot == null)
             {
-                // #region agent log
-                try {
-                    var logData2 = new { targetPotNull = true };
-                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: No target pot\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-                } catch { }
-                // #endregion
-                
                 SporiumLogger.LogWarning(LogCategory.UI, "ShowDetails: Nessun vaso selezionato!");
                 return;
             }
@@ -648,14 +626,6 @@ namespace _Project
             
             if (_page == null)
             {
-                // #region agent log
-                try {
-                    var logData3 = new { pageNull = true };
-                    var logJson3 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: _page is NULL\",\"data\":{JsonUtility.ToJson(logData3)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson3);
-                } catch { }
-                // #endregion
-                
                 SporiumLogger.LogError(LogCategory.UI, "ShowDetails: _page è NULL! Assicurati che il campo Page sia assegnato nell'Inspector.");
                 return;
             }
@@ -1168,6 +1138,25 @@ namespace _Project
             if (_moldRiskText == null)
             {
                 _moldRiskText = FindTextInChildren("Mold Risk");
+            }
+            
+            // Fix: Rimuovi caratteri Unicode non supportati dal testo iniziale (es. ✅ \u2705)
+            // Questo previene il warning di TextMeshPro quando il font non supporta questi caratteri
+            if (_moldRiskText != null)
+            {
+                string originalText = _moldRiskText.text;
+                // Rimuovi caratteri emoji comuni non supportati da LiberationSans SDF
+                string cleanedText = originalText
+                    .Replace("\u2705", "")  // ✅ checkmark
+                    .Replace("\u26A0", "")  // ⚠️ warning
+                    .Replace("\u274C", "")  // ❌ cross mark
+                    .Replace("\u2713", "[OK]")  // ✓ checkmark (sostituisci con testo)
+                    .Trim();
+                
+                if (cleanedText != originalText)
+                {
+                    _moldRiskText.text = cleanedText;
+                }
             }
             
             // BLK-07.01: Auto-trova infestation badge se non assegnato
@@ -2250,7 +2239,8 @@ namespace _Project
         }
         
         /// <summary>
-        /// Aggiorna la label Growth con lo stato (IN CRESCITA, Stabile, Difficoltà, Malata)
+        /// Aggiorna la label Growth con la CONDIZIONE della pianta (Rigogliosa, Sana, Stressata, Appassita, Critica)
+        /// BUG FIX: Cambiato da stato crescita a condizione della pianta (lo stadio viene già mostrato da Stage)
         /// </summary>
         private void UpdateGrowthLabel(PotStateModel state)
         {
@@ -2299,7 +2289,7 @@ namespace _Project
                         _growthLabelText.color = Color.white;
                         _growthLabelText.fontSize = 14;
                         _growthLabelText.alignment = TextAlignmentOptions.Left;
-                        _growthLabelText.text = "Growth:";
+                        _growthLabelText.text = "Condizione della Pianta:";
                         
                         RectTransform growthLabelRect = growthLabelGO.GetComponent<RectTransform>();
                         growthLabelRect.anchorMin = new Vector2(0, 1f);
@@ -2341,31 +2331,57 @@ namespace _Project
                 
                 if (state == null || state.IsEmpty || !state.HasPlant)
                 {
-                    _growthLabelText.text = "Growth: Stabile";
+                    _growthLabelText.text = "Condizione della Pianta: Sana";
                     _growthLabelText.color = new Color(0.6f, 0.6f, 0.6f); // Grigio
                 }
                 else
                 {
-                    string status = GetGrowthStatus(state);
-                    _growthLabelText.text = $"Growth: {status}";
+                    // BUG FIX: Mostra la CONDIZIONE invece dello stato di crescita
+                    // Usa la stessa logica di UpdateConditionUI per calcolare la condizione
+                    PlantData plantData = state.GetPlantData();
+                    string conditionName;
                     
-                    // MODIFICA 3: Colore in base allo stato (Verde quando >= Stabile, Arancione quando < Stabile, Rosso quando bottom level)
-                    switch (status)
+                    if (plantData != null && _phSystem != null && _potSystemConfig != null)
                     {
-                        case "IN CRESCITA":
-                        case "Stabile":
-                            _growthLabelText.color = new Color(0.2f, 1f, 0.2f); // Verde quando >= Stabile
-                            break;
-                        case "Difficoltà":
-                            _growthLabelText.color = new Color(1f, 0.5f, 0.2f); // Arancione quando < Stabile
-                            break;
-                        case "Malata":
-                            _growthLabelText.color = new Color(1f, 0.2f, 0.2f); // Rosso
-                            break;
-                        default:
-                            _growthLabelText.color = Color.white;
-                            break;
+                        int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+                        // BUG FIX: Usa lo stesso fallback di DayCycleController quando PreviousDayConditionScore è -1
+                        int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+                        
+                        ConditionResult result = PlantConditionSystem.CalculateCondition(
+                            state,
+                            plantData,
+                            _phSystem,
+                            _potSystemConfig,
+                            currentDay,
+                            previousDayScore);
+                        
+                        bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
+                        conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
+                        
+                        // Colore in base alla condizione (stesso sistema di UpdateConditionUI)
+                        _growthLabelText.color = result.ConditionColor;
                     }
+                    else
+                    {
+                        // Fallback: usa ConditionLabel direttamente
+                        PlantCondition condition = (PlantCondition)state.ConditionLabel;
+                        int maxHydration = _potSystemConfig?.MaxHydration ?? 5;
+                        bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
+                        conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
+                        
+                        // Colore in base alla condizione
+                        _growthLabelText.color = condition switch
+                        {
+                            PlantCondition.Rigogliosa => new Color(0f, 0.5f, 0f),      // Verde scuro
+                            PlantCondition.Sana => new Color(0f, 0.8f, 0f),          // Verde
+                            PlantCondition.Stressata => new Color(1f, 0.8f, 0f),      // Giallo
+                            PlantCondition.Appassita => new Color(1f, 0.5f, 0f),     // Arancione
+                            PlantCondition.Critica => new Color(0.8f, 0f, 0f),        // Rosso
+                            _ => Color.white
+                        };
+                    }
+                    
+                    _growthLabelText.text = $"Condizione della Pianta: {conditionName}";
                 }
             }
         }
@@ -2469,15 +2485,43 @@ namespace _Project
             const int maxDaysForFullStress = 4;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             
-            // Light è OK se stress è 0% (nessuno stress) E LED requirement è soddisfatto
-            bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
-            bool lightOk = stressPercentage == 0f && ledRequirementMet;
+            // BUG FIX: Light è OK se stress è tra 0% e 100% (esclusi gli estremi)
+            // NOT OK solo quando stress è esattamente 0% (nessuna luce) o 100% (troppa luce)
+            // Quando lo stress è nel range, è OK anche se le luci sono spente (seguendo la logica del fix)
+            bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
+            
             
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
             
-            // Determina stato
-            string growthStatus = GetGrowthStatus(state);
-            sb.AppendLine($"<b>Crescita: {growthStatus}</b>");
+            // BUG FIX: Mostra la CONDIZIONE invece dello stato di crescita
+            // Calcola la condizione usando la stessa logica di UpdateConditionUI
+            string conditionName;
+            if (_phSystem != null)
+            {
+                int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+                // BUG FIX: Usa lo stesso fallback di DayCycleController quando PreviousDayConditionScore è -1
+                int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+                
+                ConditionResult result = PlantConditionSystem.CalculateCondition(
+                    state,
+                    plantData,
+                    _phSystem,
+                    _potSystemConfig,
+                    currentDay,
+                    previousDayScore);
+                
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
+                conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
+            }
+            else
+            {
+                // Fallback: usa ConditionLabel direttamente
+                PlantCondition condition = (PlantCondition)state.ConditionLabel;
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
+                conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
+            }
+            
+            sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
             sb.AppendLine();
             
             // Spiegazione semplice per il player
@@ -2501,28 +2545,20 @@ namespace _Project
             // BUG FIX: Mostra sempre il range ideale (come nella HUD Light Stress), non solo quando NON OK
             sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
             
-            // #region agent log
-            try {
-                var logData = new { 
-                    lightExposure = state.LightExposure, 
-                    consecutiveDays = consecutiveDays, 
-                    stressPercentage = stressPercentage,
-                    lightOk = lightOk,
-                    ledRequirementMet = ledRequirementMet
-                };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-A\",\"location\":\"PotDetailsWidget.cs:BuildGrowthTooltip\",\"message\":\"Light OK calculation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
-            
             if (!lightOk)
             {
-                // BUG 3 FIX: Mostra lo stress percentage (come nella HUD) invece di LightExposure
+                // BUG FIX: Mostra lo stress percentage (come nella HUD) invece di LightExposure
                 sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
-                string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
-                if (ledRequired != "Nessuno" && !ledRequirementMet)
+                // BUG FIX: Mostra LED richiesto solo quando lo stress è fuori range (0% o 100%)
+                // Quando lo stress è nel range, non mostrare "LED richiesto: NON OK" anche se il LED è spento
+                if (stressPercentage == 0f || stressPercentage >= 100f)
                 {
-                    sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                    string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
+                    bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
+                    if (ledRequired != "Nessuno" && !ledRequirementMet)
+                    {
+                        sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                    }
                 }
             }
             else
@@ -2628,6 +2664,14 @@ namespace _Project
             
             // Calcola condizione
             PlantData plantData = state.GetPlantData();
+            
+            // BUG FIX: Se _phSystem è null, prova a recuperarlo di nuovo dal ServiceContainer
+            // (potrebbe essere stato registrato dopo l'inizializzazione di PotDetailsWidget)
+            if (_phSystem == null)
+            {
+                _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            }
+            
             if (plantData == null || _phSystem == null || _potSystemConfig == null)
             {
                 // Fallback: mostra score base se non possiamo calcolare
@@ -2636,20 +2680,24 @@ namespace _Project
                 return;
             }
             
+            int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+            // BUG FIX: Usa lo stesso fallback di DayCycleController quando PreviousDayConditionScore è -1
+            int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+            
             ConditionResult result = PlantConditionSystem.CalculateCondition(
                 state, 
                 plantData, 
                 _phSystem, 
                 _potSystemConfig, 
-                _dayCycleSystem?.CurrentDay ?? 1, 
-                state.PreviousDayConditionScore);
+                currentDay, 
+                previousDayScore);
             
             // Aggiorna label condizione con forecast
             if (_conditionLabelText != null)
             {
                 _conditionLabelText.richText = true;
-                string conditionName = PlantConditionSystem.GetConditionName(result.Condition, 
-                    PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration));
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
+                string conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
                 string forecastSymbol = PlantConditionSystem.GetForecastSymbol(result.Forecast);
                 string forecastColor = result.Forecast switch
                 {

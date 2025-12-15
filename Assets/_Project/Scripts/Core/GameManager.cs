@@ -151,7 +151,7 @@ public class GameManager : MonoBehaviour
         _playerInventory.Add(Items.FertilizerProhibited, 2);
         
         // AZ-13/AZ-14: Spray Antifungino iniziale (3x per test potatura)
-        _playerInventory.Add("STR-004", 3);
+        _playerInventory.Add(Items.SprayAntifungal, 3);
         
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR

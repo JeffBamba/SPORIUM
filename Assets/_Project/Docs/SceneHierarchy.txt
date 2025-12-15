@@ -2722,10 +2722,6 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
-- POT_HUD_Widget
-  [Component] RectTransform
-  [Component] CanvasRenderer
-  [Component] PotHUDWidget
 - GameManager
   [Component] Transform
   [Component] GameManager
@@ -2739,6 +2735,9 @@
     [Component] Transform
     [Component] CinemachinePipeline
     [Component] CinemachineFramingTransposer
+- AlwaysVisiblePotHUD
+  [Component] Transform
+  [Component] AlwaysVisiblePotHUD
 - PH DEBUG
   [Component] Transform
   [Component] HUDPhDisplay

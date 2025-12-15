@@ -44,6 +44,12 @@ namespace Sporae.Dome.PotSystem.Condition
             int score = DifficultyCalibrationConfig.BaseScore;
             List<ConditionContributor> contributors = new List<ConditionContributor>();
             
+            // Calcola stress percentage una volta all'inizio per riutilizzarlo in più sezioni
+            // BUG FIX: Quando lo stress è nel range (tra 0% e 100%), non applicare né bonus né malus per la luce
+            int consecutiveDays = potState.GetConsecutiveLedDays();
+            const int maxDaysForFullStress = 4;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            
             // === CONTRIBUTI POSITIVI ===
             
             // 1. Idratazione in range ottimale per stadio
@@ -59,11 +65,56 @@ namespace Sporae.Dome.PotSystem.Condition
             }
             
             // 2. Luce corretta per stadio (LED corretto)
+            // BUG FIX: Il bonus viene applicato quando:
+            // - LED è acceso E corretto per lo stadio E lo stress è nel range (tra 0% e 100%)
+            // - Oppure quando lo stress è fuori range (0% o 100%) ma il LED è corretto
+            // Il malus "Luce assente" viene applicato solo quando lo stress è 0% o 100%
             bool hasCorrectLight = IsLightCorrectForStage(potState, plantData, currentDay);
-            if (hasCorrectLight)
+            bool isLedOn = potState.LedSystemState != LedSystemState.Off;
+            
+            // Applica bonus quando:
+            // - LED è acceso E corretto E lo stress è nel range (tra 0% e 100%) → BONUS per avere la luce giusta nel range giusto
+            // - Oppure quando lo stress è fuori range (0% o 100%) ma il LED è corretto → BONUS per avere la luce giusta anche fuori range
+            // BUG FIX: Quando lo stress è nel range (tra 0% e 100%), il bonus viene applicato anche se il LED è spento
+            // Questo evita che il bonus venga rimosso immediatamente quando si spegne il LED con stress nel range
+            // Il bonus viene rimosso solo a fine giornata quando lo stress viene ricalcolato
+            if (hasCorrectLight && (isLedOn && (stressPercentage > 0f && stressPercentage < 100f) || (stressPercentage == 0f || stressPercentage >= 100f)))
             {
                 score += DifficultyCalibrationConfig.BonusLightCorrect;
                 contributors.Add(new ConditionContributor("Luce corretta (LED)", DifficultyCalibrationConfig.BonusLightCorrect, true));
+            }
+            else if (!isLedOn && (stressPercentage > 0f && stressPercentage < 100f))
+            {
+                // BUG FIX: Quando lo stress è nel range e il LED è spento, mantieni il bonus se il LED precedente era corretto
+                // Questo evita che il bonus venga rimosso immediatamente quando si spegne il LED con stress nel range
+                // Verifica se il LED precedente era corretto controllando DaysLedBlueConsecutive/DaysLedRedConsecutive
+                // Se uno dei due è > 0, significa che il LED era acceso prima di essere spento
+                bool hadLedOnBefore = potState.DaysLedBlueConsecutive > 0 || potState.DaysLedRedConsecutive > 0;
+                if (hadLedOnBefore)
+                {
+                    // Verifica se il LED precedente era corretto per lo stadio
+                    PlantStage currentStage = (PlantStage)potState.Stage;
+                    StageRequirements stageReq = plantData?.GetStageRequirements(currentStage);
+                    LedType? requiredLed = stageReq?.GetRequiredLed();
+                    
+                    bool previousLedWasCorrect = false;
+                    if (requiredLed.HasValue)
+                    {
+                        // Se il LED richiesto è Blue e DaysLedBlueConsecutive > 0, il LED precedente era corretto
+                        // Se il LED richiesto è Red e DaysLedRedConsecutive > 0, il LED precedente era corretto
+                        if (requiredLed.Value == LedType.Blue && potState.DaysLedBlueConsecutive > 0)
+                            previousLedWasCorrect = true;
+                        else if (requiredLed.Value == LedType.Red && potState.DaysLedRedConsecutive > 0)
+                            previousLedWasCorrect = true;
+                    }
+                    
+                    if (previousLedWasCorrect)
+                    {
+                        // Mantieni il bonus perché il LED precedente era corretto e lo stress è nel range
+                        score += DifficultyCalibrationConfig.BonusLightCorrect;
+                        contributors.Add(new ConditionContributor("Luce corretta (LED) - stress nel range", DifficultyCalibrationConfig.BonusLightCorrect, true));
+                    }
+                }
             }
             
             // 3. Watering System ON e dosaggio corretto
@@ -113,6 +164,8 @@ namespace Sporae.Dome.PotSystem.Condition
             
             // === CONTRIBUTI NEGATIVI ===
             
+            // Nota: stressPercentage è già calcolato all'inizio del metodo
+            
             // 1. Idratazione fuori range (Dry/Wet)
             if (!isHydrationOptimal)
             {
@@ -124,7 +177,12 @@ namespace Sporae.Dome.PotSystem.Condition
             }
             
             // 2. Luce assente o spettro sbagliato
-            if (!hasCorrectLight)
+            // BUG FIX: Il malus viene applicato solo quando lo stress è fuori range (0% o 100%)
+            // Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus per la luce
+            
+            // Applica malus solo quando stress è esattamente 0% (nessuna luce) o 100% (burned)
+            // Quando lo stress è nel range (tra 0% e 100%), non applicare malus per luce assente/spettro sbagliato
+            if (!hasCorrectLight && (stressPercentage == 0f || stressPercentage >= 100f))
             {
                 score -= DifficultyCalibrationConfig.MalusLightWrongOrAbsent;
                 contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
@@ -199,12 +257,31 @@ namespace Sporae.Dome.PotSystem.Condition
                 }
             }
             
-            // 7. Burn Stress attivo (LED 4+ giorni consecutivi)
-            int burnRiskLevel = potState.GetBurnRiskLevel();
-            if (burnRiskLevel >= 2) // Alto o Critico
+            // 7. Burn Stress attivo (solo quando stress è 0% o 100%)
+            // BUG FIX: Il malus viene applicato solo quando lo stress è fuori range (0% = nessuna luce, 100% = burned)
+            // Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus
+            // Nota: consecutiveDays, maxDaysForFullStress e stressPercentage sono già calcolati all'inizio della sezione CONTRIBUTI NEGATIVI
+            
+            // Applica malus solo quando stress è esattamente 0% (nessuna luce) o 100% (burned)
+            if (stressPercentage == 0f || stressPercentage >= 100f)
             {
-                score -= DifficultyCalibrationConfig.MalusBurnStress;
-                contributors.Add(new ConditionContributor("Burn Stress attivo", -DifficultyCalibrationConfig.MalusBurnStress, false));
+                // Verifica se il LED è richiesto per lo stadio corrente
+                PlantStage currentStage = (PlantStage)potState.Stage;
+                StageRequirements stageReq = plantData?.GetStageRequirements(currentStage);
+                bool ledRequired = stageReq != null && stageReq.GetRequiredLed().HasValue;
+                
+                if (stressPercentage == 0f && ledRequired)
+                {
+                    // Nessuna luce quando è richiesta → malus
+                    score -= DifficultyCalibrationConfig.MalusBurnStress;
+                    contributors.Add(new ConditionContributor("Nessuna luce (LED richiesto)", -DifficultyCalibrationConfig.MalusBurnStress, false));
+                }
+                else if (stressPercentage >= 100f)
+                {
+                    // Stress massimo (burned) → malus
+                    score -= DifficultyCalibrationConfig.MalusBurnStress;
+                    contributors.Add(new ConditionContributor("Burn Stress attivo (100%)", -DifficultyCalibrationConfig.MalusBurnStress, false));
+                }
             }
             
             // Clamp score 0-100

@@ -46,27 +46,45 @@ public class PotActions : MonoBehaviour
         // Fallback: carica PotSystemConfig se non assegnato
         if (config == null)
         {
+            // Carica esplicitamente da Resources/Configs/ per evitare conflitti con file in altre cartelle
             config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             if (config == null)
             {
+                // Se non trovato, cerca tutti i configs ma preferisci quello con MaxHydration corretto
                 var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
                 if (allConfigs != null && allConfigs.Length > 0)
                 {
-                    config = allConfigs[0];
+                    // Preferisci config con MaxHydration != 4 (vecchio sistema)
+                    foreach (var cfg in allConfigs)
+                    {
+                        if (cfg.MaxHydration != 4)
+                        {
+                            config = cfg;
+                            break;
+                        }
+                    }
+                    // Se tutti hanno MaxHydration=4, prendi il primo
+                    if (config == null)
+                        config = allConfigs[0];
                 }
             }
         }
         
-        // BUG FIX: Verifica che MaxHydration sia 10 (non 4 del vecchio sistema)
+        // BUG FIX: Verifica che MaxHydration sia corretto (non 4 del vecchio sistema)
         if (config != null && config.MaxHydration == 4)
         {
             if (showDebugLogs)
-                SporiumLogger.LogWarning(LogCategory.Pot, "Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
+                SporiumLogger.LogInfo(LogCategory.Pot, "Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
             // Forza ricaricamento per ottenere il valore aggiornato
             Resources.UnloadAsset(config);
             config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             if (config != null && showDebugLogs)
-                SporiumLogger.LogInfo(LogCategory.Pot, $"Config ricaricato: MaxHydration={config.MaxHydration}");
+            {
+                if (config.MaxHydration == 4)
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"Config ricaricato ma MaxHydration è ancora 4. Verifica che il file in Resources/Configs/PotSystemConfig.asset abbia MaxHydration corretto.");
+                else
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"Config ricaricato: MaxHydration={config.MaxHydration}");
+            }
         }
         
         // Trova il PotSlot se non assegnato
@@ -426,7 +444,7 @@ public class PotActions : MonoBehaviour
             return false;
         
         // Verifica presenza STR-004 nell'inventario
-        bool hasItem = _playerInventory.Has("STR-004", 1);
+        bool hasItem = _playerInventory.Has(Items.SprayAntifungal, 1);
         // #region agent log
         try {
             var logData2 = new { hasItem = hasItem, itemCode = "STR-004" };
@@ -887,7 +905,7 @@ public class PotActions : MonoBehaviour
         // Consuma STR-004 se usato
         if (useSpray)
         {
-            if (!_playerInventory.Consume("STR-004", 1))
+            if (!_playerInventory.Consume(Items.SprayAntifungal, 1))
             {
                 PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Impossibile consumare STR-004");
                 return false;

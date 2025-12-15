@@ -39,7 +39,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     [SerializeField] private GameObject minimalHUDPrefab;
     
     [Header("Growth Tooltip")]
-    [Tooltip("Prefab del tooltip Growth (opzionale, creato dinamicamente se non assegnato)")]
+    [Tooltip("Prefab del tooltip Growth (opzionale, creato dinamicamente se non assegnato). Se assegnato, viene istanziato invece di creare dinamicamente.")]
     [SerializeField] private GameObject growthTooltipPrefab;
     
     private Canvas _parentCanvas;
@@ -269,6 +269,12 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         hudInstance.waterCircle = container.transform.Find("WaterCircle")?.GetComponent<Image>();
         hudInstance.ledCircle = container.transform.Find("LedCircle")?.GetComponent<Image>();
         
+        // IMPORTANTE: Abilita raycastTarget per GrowthStateText se esiste (necessario per EventTrigger)
+        if (hudInstance.growthStateText != null)
+        {
+            hudInstance.growthStateText.raycastTarget = true;
+        }
+        
         // Setup tooltip Growth
         SetupGrowthTooltip(hudInstance);
         
@@ -337,23 +343,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         previewRect.anchoredPosition = new Vector2(5, 0);
         previewRect.sizeDelta = new Vector2(50, 50);
         
-        // 2. PotId (nome del Pot, in alto)
-        GameObject potIdGO = new GameObject("PotIdText");
-        potIdGO.transform.SetParent(container.transform, false);
-        hudInstance.potIdText = potIdGO.AddComponent<TextMeshProUGUI>();
-        hudInstance.potIdText.color = textColor;
-        hudInstance.potIdText.fontSize = 12;
-        hudInstance.potIdText.fontStyle = FontStyles.Bold;
-        hudInstance.potIdText.alignment = TextAlignmentOptions.Left;
-        hudInstance.potIdText.text = hudInstance.pot.PotId;
-        RectTransform potIdRect = potIdGO.GetComponent<RectTransform>();
-        potIdRect.anchorMin = new Vector2(0f, 0.85f);
-        potIdRect.anchorMax = new Vector2(1f, 1f);
-        potIdRect.pivot = new Vector2(0f, 0.5f);
-        potIdRect.anchoredPosition = new Vector2(60, 0);
-        potIdRect.sizeDelta = new Vector2(-65, 15);
-        
-        // 3. Nome Pianta + Livello (sotto PotId)
+        // 2. Nome Pianta + Livello (PRIMA RIGA - in alto)
         GameObject nameGO = new GameObject("PlantNameAndLevelText");
         nameGO.transform.SetParent(container.transform, false);
         hudInstance.plantNameAndLevelText = nameGO.AddComponent<TextMeshProUGUI>();
@@ -363,13 +353,13 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         hudInstance.plantNameAndLevelText.alignment = TextAlignmentOptions.Left;
         hudInstance.plantNameAndLevelText.text = "Vuoto";
         RectTransform nameRect = nameGO.GetComponent<RectTransform>();
-        nameRect.anchorMin = new Vector2(0f, 0.7f);
-        nameRect.anchorMax = new Vector2(1f, 0.85f);
+        nameRect.anchorMin = new Vector2(0f, 0.85f);
+        nameRect.anchorMax = new Vector2(1f, 1f);
         nameRect.pivot = new Vector2(0f, 0.5f);
         nameRect.anchoredPosition = new Vector2(60, 0);
         nameRect.sizeDelta = new Vector2(-65, 15);
         
-        // 4. Condizione (sotto il nome)
+        // 3. Condizione di crescita (SECONDA RIGA: Sana, Rigogliosa, Appassita, etc)
         GameObject conditionGO = new GameObject("ConditionText");
         conditionGO.transform.SetParent(container.transform, false);
         hudInstance.conditionText = conditionGO.AddComponent<TextMeshProUGUI>();
@@ -378,13 +368,13 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         hudInstance.conditionText.alignment = TextAlignmentOptions.Left;
         hudInstance.conditionText.text = "-";
         RectTransform conditionRect = conditionGO.GetComponent<RectTransform>();
-        conditionRect.anchorMin = new Vector2(0f, 0.55f);
-        conditionRect.anchorMax = new Vector2(1f, 0.7f);
+        conditionRect.anchorMin = new Vector2(0f, 0.7f);
+        conditionRect.anchorMax = new Vector2(1f, 0.85f);
         conditionRect.pivot = new Vector2(0f, 0.5f);
         conditionRect.anchoredPosition = new Vector2(60, 0);
         conditionRect.sizeDelta = new Vector2(-65, 15);
         
-        // 5. Stato Crescita (sotto la condizione) - con tooltip
+        // 4. Stage di crescita (TERZA RIGA: Seed, Sprout, Flowering, etc) - con tooltip
         GameObject growthGO = new GameObject("GrowthStateText");
         growthGO.transform.SetParent(container.transform, false);
         hudInstance.growthStateText = growthGO.AddComponent<TextMeshProUGUI>();
@@ -392,14 +382,31 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         hudInstance.growthStateText.fontSize = 11;
         hudInstance.growthStateText.alignment = TextAlignmentOptions.Left;
         hudInstance.growthStateText.text = "-";
+        hudInstance.growthStateText.raycastTarget = true; // IMPORTANTE: Abilita raycast per EventTrigger
         RectTransform growthRect = growthGO.GetComponent<RectTransform>();
-        growthRect.anchorMin = new Vector2(0f, 0.4f);
-        growthRect.anchorMax = new Vector2(1f, 0.55f);
+        growthRect.anchorMin = new Vector2(0f, 0.55f);
+        growthRect.anchorMax = new Vector2(1f, 0.7f);
         growthRect.pivot = new Vector2(0f, 0.5f);
         growthRect.anchoredPosition = new Vector2(60, 0);
         growthRect.sizeDelta = new Vector2(-65, 15);
         
-        // 6. pH Drift (sotto lo stato crescita)
+        // 5. PotId (QUARTA RIGA)
+        GameObject potIdGO = new GameObject("PotIdText");
+        potIdGO.transform.SetParent(container.transform, false);
+        hudInstance.potIdText = potIdGO.AddComponent<TextMeshProUGUI>();
+        hudInstance.potIdText.color = textColor;
+        hudInstance.potIdText.fontSize = 12;
+        hudInstance.potIdText.fontStyle = FontStyles.Bold;
+        hudInstance.potIdText.alignment = TextAlignmentOptions.Left;
+        hudInstance.potIdText.text = hudInstance.pot.PotId;
+        RectTransform potIdRect = potIdGO.GetComponent<RectTransform>();
+        potIdRect.anchorMin = new Vector2(0f, 0.4f);
+        potIdRect.anchorMax = new Vector2(1f, 0.55f);
+        potIdRect.pivot = new Vector2(0f, 0.5f);
+        potIdRect.anchoredPosition = new Vector2(60, 0);
+        potIdRect.sizeDelta = new Vector2(-65, 15);
+        
+        // 6. pH Drift (QUINTA RIGA)
         GameObject phDriftGO = new GameObject("PhDriftText");
         phDriftGO.transform.SetParent(container.transform, false);
         hudInstance.phDriftText = phDriftGO.AddComponent<TextMeshProUGUI>();
@@ -469,11 +476,22 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             return;
         }
         
-        // Assicurati che il container sia visibile
+        // Mostra la HUD solo se c'è una pianta piantata
+        bool hasPlant = !state.IsEmpty && state.HasPlant && state.Stage != (int)PlantStage.Empty;
+        
+        if (!hasPlant)
+        {
+            // Nascondi la HUD se non c'è una pianta
+            if (hudInstance.container != null)
+                hudInstance.container.SetActive(false);
+            return;
+        }
+        
+        // Assicurati che il container sia visibile quando c'è una pianta
         if (hudInstance.container != null)
             hudInstance.container.SetActive(true);
         
-        // Gestione speciale per vasi vuoti: resetta tutti i testi
+        // Gestione speciale per vasi vuoti: resetta tutti i testi (non dovrebbe mai arrivare qui se hasPlant è false)
         if (state.IsEmpty || state.Stage == (int)PlantStage.Empty)
         {
             // 1. Anteprima immagine pianta (grigia per Empty)
@@ -532,10 +550,16 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         }
         
         // Vaso con pianta: aggiorna normalmente
-        // 1. PotId (sempre visibile)
-        if (hudInstance.potIdText != null)
+        // 1. Nome Pianta + Livello (PRIMA RIGA)
+        if (hudInstance.plantNameAndLevelText != null)
         {
-            hudInstance.potIdText.text = hudInstance.pot.PotId;
+            string plantName = GetPlantDisplayName(state.PlantCode);
+            if (string.IsNullOrEmpty(plantName))
+            {
+                plantName = "Pianta Sconosciuta";
+            }
+            string levelText = $" Lv.{state.PlantLevel}";
+            hudInstance.plantNameAndLevelText.text = $"{plantName}{levelText}";
         }
         
         // 2. Anteprima immagine pianta
@@ -548,54 +572,56 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             }
         }
         
-        // 3. Nome Pianta + Livello
-        if (hudInstance.plantNameAndLevelText != null)
-        {
-            string plantName = GetPlantDisplayName(state.PlantCode);
-            if (string.IsNullOrEmpty(plantName))
-            {
-                plantName = "Pianta Sconosciuta";
-            }
-            string levelText = $" Lv.{state.PlantLevel}";
-            hudInstance.plantNameAndLevelText.text = $"{plantName}{levelText}";
-        }
-        
-        // 4. Condizione
+        // 3. Condizione di crescita (SECONDA RIGA: Sana, Rigogliosa, Appassita, etc)
+        // APPROCCIO FINALE: Usa esattamente lo stesso metodo di PotDetailsWidget per calcolare la condizione
+        // Questo garantisce che entrambe le HUD mostrino la stessa condizione
         if (hudInstance.conditionText != null)
         {
             PlantData plantData = state?.GetPlantData();
-            ConditionResult result;
             
             if (plantData != null && _phSystem != null && _potSystemConfig != null)
             {
-                result = PlantConditionSystem.CalculateCondition(
+                // Usa esattamente gli stessi parametri di PotDetailsWidget e DayCycleController
+                int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+                // BUG FIX: Usa lo stesso fallback di DayCycleController quando PreviousDayConditionScore è -1
+                int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+                
+                ConditionResult result = PlantConditionSystem.CalculateCondition(
                     state,
                     plantData,
                     _phSystem,
                     _potSystemConfig,
-                    _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 0,
-                    state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore);
+                    currentDay,
+                    previousDayScore);
                 
-                int maxHydration = _potSystemConfig?.MaxHydration ?? 5;
-                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
+                // Usa esattamente lo stesso metodo di PotDetailsWidget per ottenere il nome della condizione
+                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
                 string conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
-                hudInstance.conditionText.text = conditionName;
+                
+                hudInstance.conditionText.text = $"Condizione: {conditionName}";
             }
             else
             {
+                // Fallback: usa state.ConditionLabel direttamente
                 PlantCondition condition = (PlantCondition)state.ConditionLabel;
                 int maxHydration = _potSystemConfig?.MaxHydration ?? 5;
                 bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
                 string conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
-                hudInstance.conditionText.text = conditionName;
+                hudInstance.conditionText.text = $"Condizione: {conditionName}";
             }
         }
         
-        // 5. Stato Crescita
+        // 4. Stage di crescita (TERZA RIGA: Seed, Sprout, Flowering, etc)
         if (hudInstance.growthStateText != null)
         {
-            string growthStatus = GetGrowthStatus(state);
-            hudInstance.growthStateText.text = $"Growth: {growthStatus}";
+            string stageName = GetStageName(state.Stage);
+            hudInstance.growthStateText.text = stageName;
+        }
+        
+        // 5. PotId (QUARTA RIGA)
+        if (hudInstance.potIdText != null)
+        {
+            hudInstance.potIdText.text = hudInstance.pot.PotId;
         }
         
         // 6. pH Drift
@@ -794,12 +820,10 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         // Verifica range per ogni parametro
         bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
         
-        // Light OK basato su stress percentage (0% = OK) invece di LightExposure
-        int consecutiveDays = state.GetConsecutiveLedDays();
-        const int maxDaysForFullStress = 4;
-        float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-        bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
-        bool lightOk = stressPercentage == 0f && ledRequirementMet;
+        // BUG FIX: Allinea logica con PotDetailsWidget per mostrare lo stesso risultato
+        // Usa la stessa logica di PotDetailsWidget: IsLedRequirementMet && IsLightInRange
+        bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
+                      stageReq.IsLightInRange(state.LightExposure);
         
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
         
@@ -822,42 +846,128 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         if (hudInstance == null || hudInstance.growthStateText == null)
             return;
         
+        // Verifica GraphicRaycaster nel Canvas
+        Canvas parentCanvas = hudInstance.growthStateText.GetComponentInParent<Canvas>();
+        bool hasGraphicRaycaster = parentCanvas != null && parentCanvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() != null;
+        if (!hasGraphicRaycaster && parentCanvas != null)
+        {
+            parentCanvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+        
+        // Assicurati che la label sia attiva
+        if (!hudInstance.growthStateText.gameObject.activeSelf)
+        {
+            hudInstance.growthStateText.gameObject.SetActive(true);
+        }
+        
         // Crea tooltip panel se non esiste
         if (hudInstance.growthTooltipPanel == null)
         {
-            // Crea panel tooltip
-            GameObject tooltipPanel = new GameObject("GrowthTooltipPanel");
-            tooltipPanel.transform.SetParent(hudInstance.container.transform, false);
-            hudInstance.growthTooltipPanel = tooltipPanel;
+            GameObject tooltipPanel = null;
             
-            // Aggiungi Image per background
-            Image bgImage = tooltipPanel.AddComponent<Image>();
-            bgImage.color = new Color(0, 0, 0, 0.9f);
+            // Se è disponibile un prefab, usalo invece di creare dinamicamente
+            if (growthTooltipPrefab != null)
+            {
+                tooltipPanel = Instantiate(growthTooltipPrefab, hudInstance.container.transform);
+                tooltipPanel.name = "MinimalHUDGrowthTooltip";
+                hudInstance.growthTooltipPanel = tooltipPanel;
+                
+                // Cerca il componente TextMeshProUGUI nel prefab
+                hudInstance.growthTooltipText = tooltipPanel.GetComponentInChildren<TextMeshProUGUI>();
+                
+                // Configura posizionamento relativo al container
+                RectTransform tooltipRect = tooltipPanel.GetComponent<RectTransform>();
+                RectTransform containerRect = hudInstance.container.GetComponent<RectTransform>();
+                if (tooltipRect != null && containerRect != null)
+                {
+                    tooltipRect.anchorMin = new Vector2(0f, 0.5f);
+                    tooltipRect.anchorMax = new Vector2(0f, 0.5f);
+                    tooltipRect.pivot = new Vector2(1f, 0.5f); // Ancorato a destra, centrato verticalmente
+                    float containerWidth = containerRect.rect.width;
+                    tooltipRect.anchoredPosition = new Vector2(-containerWidth / 2f - 10, 0); // A sinistra del container
+                }
+            }
+            else
+            {
+                // Fallback: crea tooltip dinamicamente se prefab non assegnato
+                // Crea panel tooltip
+                tooltipPanel = new GameObject("MinimalHUDGrowthTooltip");
+                tooltipPanel.transform.SetParent(hudInstance.container.transform, false);
+                hudInstance.growthTooltipPanel = tooltipPanel;
+                
+                // Aggiungi Image per background
+                Image bgImage = tooltipPanel.AddComponent<Image>();
+                bgImage.color = new Color(0, 0, 0, 0.9f);
+                
+                RectTransform tooltipRect = tooltipPanel.GetComponent<RectTransform>();
+                // DEBUG_SAFE_FIX: Posiziona tooltip a sinistra della HUD minimale del pot, centrato verticalmente
+                RectTransform containerRect = hudInstance.container.GetComponent<RectTransform>();
+                if (containerRect != null && parentCanvas != null)
+                {
+                    // Converte posizione del container HUD nello spazio del Canvas
+                    Vector3[] containerWorldCorners = new Vector3[4];
+                    containerRect.GetWorldCorners(containerWorldCorners);
+                    // Usa il punto centrale sinistro del container
+                    Vector2 containerLeftCenter = RectTransformUtility.WorldToScreenPoint(
+                        parentCanvas.worldCamera ?? Camera.main, 
+                        (containerWorldCorners[0] + containerWorldCorners[3]) / 2f); // Left-center
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        parentCanvas.GetComponent<RectTransform>(),
+                        containerLeftCenter,
+                        parentCanvas.worldCamera ?? Camera.main,
+                        out Vector2 localPoint);
+                    
+                    // DEBUG_SAFE_FIX: Usa posizionamento relativo al container invece di coordinate assolute
+                    // Posiziona il tooltip come child del container ma con coordinate relative
+                    tooltipRect.anchorMin = new Vector2(0f, 0.5f);
+                    tooltipRect.anchorMax = new Vector2(0f, 0.5f);
+                    tooltipRect.pivot = new Vector2(1f, 0.5f); // Ancorato a destra, centrato verticalmente
+                    // Calcola offset basato sulla larghezza del container
+                    float containerWidth = containerRect.rect.width;
+                    tooltipRect.anchoredPosition = new Vector2(-containerWidth / 2f - 10, 0); // A sinistra del container
+                }
+                else
+                {
+                    // Fallback: posizionamento semplice
+                    tooltipRect.anchorMin = new Vector2(1f, 0.5f);
+                    tooltipRect.anchorMax = new Vector2(1f, 0.5f);
+                    tooltipRect.pivot = new Vector2(1f, 0.5f);
+                    tooltipRect.anchoredPosition = new Vector2(-10, 0);
+                }
+                tooltipRect.sizeDelta = new Vector2(300, 200);
+                
+                // DEBUG_SAFE_FIX: Assicurati che il tooltip abbia un sorting order alto per essere sopra altri elementi
+                Canvas tooltipCanvas = tooltipPanel.GetComponent<Canvas>();
+                if (tooltipCanvas == null)
+                {
+                    tooltipCanvas = tooltipPanel.AddComponent<Canvas>();
+                    tooltipCanvas.overrideSorting = true;
+                    tooltipCanvas.sortingOrder = 1000; // Ordine molto alto per essere sopra tutto
+                    tooltipPanel.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                }
+                
+                // Aggiungi testo tooltip
+                GameObject tooltipTextGO = new GameObject("TooltipText");
+                tooltipTextGO.transform.SetParent(tooltipPanel.transform, false);
+                hudInstance.growthTooltipText = tooltipTextGO.AddComponent<TextMeshProUGUI>();
+                hudInstance.growthTooltipText.color = Color.white;
+                hudInstance.growthTooltipText.fontSize = 12;
+                hudInstance.growthTooltipText.richText = true;
+                hudInstance.growthTooltipText.alignment = TextAlignmentOptions.Left;
+                hudInstance.growthTooltipText.text = "Tooltip Growth";
+                
+                RectTransform textRect = tooltipTextGO.GetComponent<RectTransform>();
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = new Vector2(8, 8);
+                textRect.offsetMax = new Vector2(-8, -8);
+            }
             
-            RectTransform tooltipRect = tooltipPanel.GetComponent<RectTransform>();
-            tooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
-            tooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
-            tooltipRect.pivot = new Vector2(0f, 1f);
-            tooltipRect.anchoredPosition = new Vector2(10, -10);
-            tooltipRect.sizeDelta = new Vector2(300, 200);
-            
-            // Aggiungi testo tooltip
-            GameObject tooltipTextGO = new GameObject("TooltipText");
-            tooltipTextGO.transform.SetParent(tooltipPanel.transform, false);
-            hudInstance.growthTooltipText = tooltipTextGO.AddComponent<TextMeshProUGUI>();
-            hudInstance.growthTooltipText.color = Color.white;
-            hudInstance.growthTooltipText.fontSize = 12;
-            hudInstance.growthTooltipText.richText = true;
-            hudInstance.growthTooltipText.alignment = TextAlignmentOptions.Left;
-            hudInstance.growthTooltipText.text = "Tooltip Growth";
-            
-            RectTransform textRect = tooltipTextGO.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(8, 8);
-            textRect.offsetMax = new Vector2(-8, -8);
-            
-            tooltipPanel.SetActive(false);
+            // Assicurati che il tooltip sia inizialmente disattivato
+            if (tooltipPanel != null)
+            {
+                tooltipPanel.SetActive(false);
+            }
         }
         
         // Aggiungi EventTrigger alla label Growth
@@ -881,6 +991,8 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
                     UpdateGrowthTooltip(hudInstance, state);
                     if (hudInstance.growthTooltipPanel != null)
                     {
+                        // DEBUG_SAFE_FIX: Aggiorna posizione tooltip a sinistra della HUD minimale quando viene mostrato
+                        UpdateTooltipPosition(hudInstance);
                         hudInstance.growthTooltipPanel.SetActive(true);
                     }
                 }
@@ -901,6 +1013,25 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     }
     
     /// <summary>
+    /// Aggiorna posizione tooltip a sinistra della HUD minimale
+    /// </summary>
+    private void UpdateTooltipPosition(MinimalHUDInstance hudInstance)
+    {
+        if (hudInstance == null || hudInstance.growthTooltipPanel == null || hudInstance.container == null)
+            return;
+        
+        RectTransform tooltipRect = hudInstance.growthTooltipPanel.GetComponent<RectTransform>();
+        RectTransform containerRect = hudInstance.container.GetComponent<RectTransform>();
+        
+        if (tooltipRect != null && containerRect != null)
+        {
+            // DEBUG_SAFE_FIX: Usa posizionamento relativo al container (più semplice e affidabile)
+            float containerWidth = containerRect.rect.width;
+            tooltipRect.anchoredPosition = new Vector2(-containerWidth / 2f - 10, 0); // A sinistra del container, centrato verticalmente
+        }
+    }
+    
+    /// <summary>
     /// Aggiorna tooltip Growth con dati attuali
     /// </summary>
     private void UpdateGrowthTooltip(MinimalHUDInstance hudInstance, PotStateModel state)
@@ -909,6 +1040,33 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             return;
         
         hudInstance.growthTooltipText.text = BuildGrowthTooltip(state);
+        
+        // DEBUG_SAFE_FIX: Adatta le dimensioni del background al contenuto del testo
+        if (hudInstance.growthTooltipPanel != null)
+        {
+            RectTransform tooltipRect = hudInstance.growthTooltipPanel.GetComponent<RectTransform>();
+            if (tooltipRect != null)
+            {
+                // Forza il testo a calcolare le dimensioni preferite
+                hudInstance.growthTooltipText.ForceMeshUpdate();
+                
+                // Ottieni le dimensioni preferite del testo (con padding)
+                float preferredWidth = hudInstance.growthTooltipText.preferredWidth;
+                float preferredHeight = hudInstance.growthTooltipText.preferredHeight;
+                
+                // Aggiungi padding (left/right e top/bottom)
+                float paddingHorizontal = 16f; // 8px per lato
+                float paddingVertical = 16f; // 8px per lato
+                
+                // Imposta le dimensioni del tooltip con un minimo
+                float minWidth = 250f;
+                float minHeight = 100f;
+                tooltipRect.sizeDelta = new Vector2(
+                    Mathf.Max(preferredWidth + paddingHorizontal, minWidth),
+                    Mathf.Max(preferredHeight + paddingVertical, minHeight)
+                );
+            }
+        }
     }
     
     /// <summary>
@@ -948,18 +1106,46 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         // Verifica range per ogni parametro
         bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
         
-        // Light OK basato su stress percentage (0% = OK)
+        // BUG FIX: Light OK basato su stress percentage
+        // NOT OK solo quando stress è esattamente 0% (nessuna luce) o 100% (troppa luce)
+        // OK quando stress è tra 0% e 100% (esclusi gli estremi)
+        // Quando lo stress è nel range, è OK anche se le luci sono spente (seguendo la logica del fix)
         int consecutiveDays = state.GetConsecutiveLedDays();
         const int maxDaysForFullStress = 4;
         float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-        bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
-        bool lightOk = stressPercentage == 0f && ledRequirementMet;
+        bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
         
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
         
-        // Determina stato
-        string growthStatus = GetGrowthStatus(state);
-        sb.AppendLine($"<b>Crescita: {growthStatus}</b>");
+        // BUG FIX: Mostra la CONDIZIONE invece dello stato di crescita
+        // Calcola la condizione usando la stessa logica di UpdateSingleMinimalHUD
+        string conditionName;
+        if (_phSystem != null && _potSystemConfig != null)
+        {
+            int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+            // BUG FIX: Usa lo stesso fallback di DayCycleController quando PreviousDayConditionScore è -1
+            int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+            
+            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                state,
+                plantData,
+                _phSystem,
+                _potSystemConfig,
+                currentDay,
+                previousDayScore);
+            
+            bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
+            conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
+        }
+        else
+        {
+            // Fallback: usa ConditionLabel direttamente
+            PlantCondition condition = (PlantCondition)state.ConditionLabel;
+            bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
+            conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
+        }
+        
+        sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
         sb.AppendLine();
         
         // Spiegazione semplice per il player
@@ -983,10 +1169,16 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         if (!lightOk)
         {
             sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
-            string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
-            if (ledRequired != "Nessuno" && !ledRequirementMet)
+            // BUG FIX: Mostra LED richiesto solo quando lo stress è fuori range (0% o 100%)
+            // Quando lo stress è nel range, non mostrare "LED richiesto: NON OK" anche se il LED è spento
+            if (stressPercentage == 0f || stressPercentage >= 100f)
             {
-                sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
+                bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
+                if (ledRequired != "Nessuno" && !ledRequirementMet)
+                {
+                    sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                }
             }
         }
         else

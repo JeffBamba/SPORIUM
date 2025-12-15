@@ -15,5 +15,8 @@
         public const string FertilizerStandard = "fertilizer-standard";    // 25 CRY, +25%
         public const string FertilizerPure = "fertilizer-pure";            // 75 CRY, +40%
         public const string FertilizerProhibited = "fertilizer-prohibited"; // 75 CRY, +40%
+        
+        // AZ-13/AZ-14: Spray Antifungino
+        public const string SprayAntifungal = "STR-004";                   // Spray Antifungino (rimuove muffe, pH +5)
     }
 }

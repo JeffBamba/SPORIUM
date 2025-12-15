@@ -75,12 +75,29 @@ public class DayCycleController : MonoBehaviour
             return;
         
         // Trova UINotification se disponibile (per toast HUD)
+        // DEBUG_SAFE_FIX: Usa TryGetUINotification che prova prima ServiceContainer poi FindObjectOfType
+        // Inoltre cerca anche oggetti disattivati perché UINotification potrebbe non essere ancora attivo
         if (_uiNotification == null)
         {
-            _uiNotification = FindObjectOfType<UINotification>();
-            if (enableDebugLogs && _uiNotification == null)
+            TryGetUINotification();
+            
+            // Se ancora non trovato, prova a cercare anche oggetti disattivati
+            if (_uiNotification == null)
             {
-                SporiumLogger.LogWarning(LogCategory.Dome, "UINotification non trovato in scena; i toast non verranno mostrati.");
+                _uiNotification = Object.FindObjectOfType<UINotification>(true); // true = include inactive
+            }
+            
+            // DEBUG_SAFE_FIX: Non mostrare warning se ServiceContainer non è ancora disponibile
+            // Il sistema si collegherà automaticamente tramite OnServiceRegistered quando UINotification viene registrato
+            if (enableDebugLogs && _uiNotification == null && ServiceContainer.Instance != null)
+            {
+                // Mostra warning solo se ServiceContainer è disponibile ma UINotification non è ancora registrato
+                // Questo evita warning falsi quando ServiceContainer non è ancora inizializzato
+                SporiumLogger.LogWarning(LogCategory.Dome, "UINotification non trovato in scena; i toast non verranno mostrati. Verrà collegato automaticamente quando registrato nel ServiceContainer.");
+            }
+            else if (enableDebugLogs && _uiNotification != null)
+            {
+                SporiumLogger.LogInfo(LogCategory.Dome, "UINotification trovato e collegato per toast notifications.");
             }
         }
         
@@ -155,6 +172,12 @@ public class DayCycleController : MonoBehaviour
         if (ServiceContainer.Instance != null)
         {
             ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+            
+            // DEBUG_SAFE_FIX: Ritenta la ricerca di UINotification ora che ServiceContainer è disponibile
+            if (_uiNotification == null)
+            {
+                TryGetUINotification();
+            }
         }
     }
     
