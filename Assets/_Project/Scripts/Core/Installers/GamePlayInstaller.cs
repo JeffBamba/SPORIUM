@@ -42,6 +42,18 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new DiaryStatistics());
             ServiceContainer.Instance.Register(new PotNotifications());
 
+            // Registra ToastNotificationManager se presente nella scena
+            var toastManager = FindObjectOfType<ToastNotificationManager>();
+            if (toastManager != null)
+            {
+                ServiceContainer.Instance.Register(toastManager);
+                SporiumLogger.LogInfo(LogCategory.Core, "ToastNotificationManager registrato nel ServiceContainer");
+            }
+            else
+            {
+                SporiumLogger.LogWarning(LogCategory.Core, "ToastNotificationManager non trovato nella scena. Toast notifications potrebbero non funzionare.");
+            }
+
             _missionManager = new MissionManager();
             ServiceContainer.Instance.Register(_missionManager);
             

@@ -1,6 +1,7 @@
 using System.Linq;
 
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 using TMPro;
 using UnityEngine;
@@ -42,7 +43,15 @@ namespace _Project
 
         private void HandleIncorrectItem(string obj)
         {
-            _notification.ShowNotification(_incorrectItemMessage, 2, Color.red);
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
+            {
+                toastManager.ShowError(_incorrectItemMessage, "SEED-STORAGE-001");
+            }
+            else if (_notification != null)
+            {
+                _notification.ShowNotification(_incorrectItemMessage, 2, Color.red);
+            }
         }
 
         private void HandleConfirm()

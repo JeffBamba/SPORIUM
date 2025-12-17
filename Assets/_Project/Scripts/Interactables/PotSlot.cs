@@ -186,7 +186,16 @@ public class PotSlot : MonoBehaviour
 
         _diaryStatistics.FruitsHarvested += amount;
         
-        _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
+        // Usa nuovo sistema toast se disponibile
+        var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+        if (toastManager != null)
+        {
+            toastManager.ShowToast(ToastNotificationType.ItemCollected, $"New Fruit added to Inventory: {amount}", "INV-FRUIT-001");
+        }
+        else if (_uiNotification != null)
+        {
+            _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
+        }
         _inventory.Add(Items.Fruits, amount);
         PotActions.PotState.AmountFruits -= amount;
         _amountOfFruits.text = "";

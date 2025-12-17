@@ -33,6 +33,7 @@ public class DayCycleController : MonoBehaviour
     private PotSystemConfig _potSystemConfig;
     private GameManager _gameManager;
     private UINotification _uiNotification;
+    private ToastNotificationManager _toastManager;
 
     private void Awake()
     {
@@ -101,6 +102,12 @@ public class DayCycleController : MonoBehaviour
             }
         }
         
+        // Prova a ottenere ToastNotificationManager (nuovo sistema)
+        if (_toastManager == null)
+        {
+            TryGetToastManager();
+        }
+        
         // Cerca configurazione in PotSystemConfig se non trovata
         if (growthConfig == null)
         {
@@ -167,6 +174,7 @@ public class DayCycleController : MonoBehaviour
         
         // Cerca UINotification per mostrare warning
         TryGetUINotification();
+        TryGetToastManager();
         
         // Sottoscrivi all'evento OnServiceRegistered per quando PhSystem viene registrato dopo
         if (ServiceContainer.Instance != null)
@@ -177,6 +185,10 @@ public class DayCycleController : MonoBehaviour
             if (_uiNotification == null)
             {
                 TryGetUINotification();
+            }
+            if (_toastManager == null)
+            {
+                TryGetToastManager();
             }
         }
     }
@@ -262,6 +274,28 @@ public class DayCycleController : MonoBehaviour
     /// <summary>
     /// Chiamato quando un servizio viene registrato nel ServiceContainer
     /// </summary>
+    /// <summary>
+    /// Tenta di ottenere ToastNotificationManager dal ServiceContainer
+    /// </summary>
+    private void TryGetToastManager()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+        
+        try
+        {
+            _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
+            if (_toastManager != null && enableDebugLogs)
+            {
+                SporiumLogger.LogInfo(LogCategory.UI, "ToastNotificationManager trovato dal ServiceContainer!");
+            }
+        }
+        catch
+        {
+            // ToastNotificationManager non nel ServiceContainer, ignora
+        }
+    }
+    
     private void OnServiceRegistered(object service)
     {
         if (service is PhSystem phSystem && _phSystem == null)
@@ -279,6 +313,15 @@ public class DayCycleController : MonoBehaviour
             if (enableDebugLogs)
             {
                 SporiumLogger.LogInfo(LogCategory.UI, "UINotification registrato! Collegato per warning watering system.");
+            }
+        }
+        
+        if (service is ToastNotificationManager toastManager && _toastManager == null)
+        {
+            _toastManager = toastManager;
+            if (enableDebugLogs)
+            {
+                SporiumLogger.LogInfo(LogCategory.UI, "ToastNotificationManager registrato! Collegato al sistema di crescita.");
             }
         }
         
@@ -831,7 +874,13 @@ public class DayCycleController : MonoBehaviour
             PotEvents.EmitPlantStageChanged(pot.PotId, (PlantStage)pot.Stage);
             
             // Toast cambio stadio
-            if (_uiNotification != null)
+            if (_toastManager != null)
+            {
+                _toastManager.ShowToast(ToastNotificationType.StageUp, 
+                    $"Stage up: {pot.PotId} → {(PlantStage)pot.Stage}", 
+                    "STAGE-UP-001");
+            }
+            else if (_uiNotification != null)
             {
                 _uiNotification.ShowNotification(
                     $"Stage up: {pot.PotId} → {(PlantStage)pot.Stage}",
@@ -977,7 +1026,11 @@ public class DayCycleController : MonoBehaviour
             }
             
             // Emetti evento per UI (mostra toast warning)
-            if (_uiNotification != null)
+            if (_toastManager != null)
+            {
+                _toastManager.ShowWarning(message, "LGT-002");
+            }
+            else if (_uiNotification != null)
             {
                 _uiNotification.ShowNotification(message, 3f, Color.yellow);
             }
@@ -1333,7 +1386,17 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void ShowLedNotification(string message, Color color)
     {
-        if (_uiNotification != null)
+        if (_toastManager != null)
+        {
+            // Determina tipo basato su colore o messaggio
+            ToastNotificationType type = ToastNotificationType.Info;
+            if (message.Contains("CRY insufficiente") || message.Contains("spento"))
+                type = ToastNotificationType.SystemDisabled;
+            
+            string code = message.Contains("Blue") ? "LGT-003" : message.Contains("Red") ? "LGT-004" : "LGT-001";
+            _toastManager.ShowToast(type, message, code);
+        }
+        else if (_uiNotification != null)
         {
             _uiNotification.ShowNotification(message, 3f, color);
         }
@@ -1795,18 +1858,28 @@ public class DayCycleController : MonoBehaviour
                 if (pot.ConditionLabel < oldCondition && result.ScoreDelta > 0) // Miglioramento (condizione migliore E score aumentato)
                 {
                     notificationColor = Color.green;
-                    _uiNotification.ShowNotification(
-                        $"CND-002 - Condizione migliorata: {conditionName} ({result.Score}/100) {forecastSymbol}",
-                        3f, 
-                        notificationColor);
+                    string message = $"CND-002 - Condizione migliorata: {conditionName} ({result.Score}/100) {forecastSymbol}";
+                    if (_toastManager != null)
+                    {
+                        _toastManager.ShowToast(ToastNotificationType.ConditionImproved, message, "CND-002");
+                    }
+                    else if (_uiNotification != null)
+                    {
+                        _uiNotification.ShowNotification(message, 3f, notificationColor);
+                    }
                 }
                 else if (pot.ConditionLabel > oldCondition && result.ScoreDelta < 0) // Peggioramento (condizione peggiore E score diminuito)
                 {
                     notificationColor = Color.yellow;
-                    _uiNotification.ShowNotification(
-                        $"CND-001 - Condizione peggiorata: {conditionName} ({result.Score}/100) {forecastSymbol}",
-                        3f, 
-                        notificationColor);
+                    string message = $"CND-001 - Condizione peggiorata: {conditionName} ({result.Score}/100) {forecastSymbol}";
+                    if (_toastManager != null)
+                    {
+                        _toastManager.ShowToast(ToastNotificationType.ConditionDegraded, message, "CND-001");
+                    }
+                    else if (_uiNotification != null)
+                    {
+                        _uiNotification.ShowNotification(message, 3f, notificationColor);
+                    }
                 }
                 // Se il delta non corrisponde alla direzione del cambio condizione, non mostrare toast (evita falsi positivi)
                 
@@ -1871,7 +1944,11 @@ public class DayCycleController : MonoBehaviour
                     MoldSystem.ApplyInfestation(pot, pot.MoldRiskLevel, moldConfig, levelConfig);
                     
                     // Toast notifica infestazione
-                    if (_uiNotification != null)
+                    if (_toastManager != null)
+                    {
+                        _toastManager.ShowWarning($"La pianta nel pot {pot.PotId} è ora Infestata", "MOLD-001");
+                    }
+                    else if (_uiNotification != null)
                     {
                         _uiNotification.ShowNotification(
                             $"La pianta nel pot {pot.PotId} è ora Infestata",
@@ -1922,7 +1999,13 @@ public class DayCycleController : MonoBehaviour
         PotEvents.EmitPlantDied(pot.PotId, reason);
         
         // Mostra Toast notifica morte
-        if (_uiNotification != null)
+        if (_toastManager != null)
+        {
+            _toastManager.ShowToast(ToastNotificationType.ExtremePhDeath, 
+                $"🚨 Pianta {plantData.PlantCode} morta per pH estremo!", 
+                "PH-DEATH-001");
+        }
+        else if (_uiNotification != null)
         {
             _uiNotification.ShowNotification(
                 $"🚨 Pianta {plantData.PlantCode} morta per pH estremo!",
@@ -1951,13 +2034,20 @@ public class DayCycleController : MonoBehaviour
     private void ShowExtremePhCountdownNotification(PotStateModel pot, PlantData plantData, int countdown)
     {
         // Mostra notifica solo quando countdown cambia (evita spam)
-        if (_uiNotification != null && countdown > 0)
+        if (countdown > 0)
         {
             string message = $"⚠️ La pianta {plantData.PlantCode} tra {countdown} giorni morirà a causa del pH estremo!";
-            _uiNotification.ShowNotification(
-                message,
-                4f,
-                new Color(1f, 0.5f, 0f)); // Arancione per allerta
+            if (_toastManager != null)
+            {
+                _toastManager.ShowToast(ToastNotificationType.CountdownAlert, message, "PH-COUNTDOWN-001");
+            }
+            else if (_uiNotification != null)
+            {
+                _uiNotification.ShowNotification(
+                    message,
+                    4f,
+                    new Color(1f, 0.5f, 0f)); // Arancione per allerta
+            }
         }
     }
     

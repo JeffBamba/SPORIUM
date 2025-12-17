@@ -1,5 +1,6 @@
 using System;
 using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 using System.Collections;
 using UnityEngine;
@@ -91,7 +92,16 @@ namespace _Project
             State = VisitorState.Animating;
             StartCoroutine(MoveRoutine(_appearPosition, () =>
             {
-                _notificationSystem.ShowBanner("Visitor waiting for player!", Color.magenta, out _clearNotification);
+                // Usa nuovo sistema toast per banner se disponibile
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowBanner("Visitor waiting for player!", ToastNotificationType.Info, out _clearNotification);
+                }
+                else if (_notificationSystem != null)
+                {
+                    _notificationSystem.ShowBanner("Visitor waiting for player!", Color.magenta, out _clearNotification);
+                }
                 State = stateAfterAppear;
             }));
         }

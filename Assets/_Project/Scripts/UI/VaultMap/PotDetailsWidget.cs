@@ -482,7 +482,16 @@ namespace _Project
                 
                 // BUG FIX: Mostra toast con esito potatura
                 var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
-                if (uiNotification != null)
+                // Usa nuovo sistema toast se disponibile
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    string toastMessage = useSpray ? 
+                        "✂️ Potatura completata con successo! Spray Antifungino utilizzato." : 
+                        "✂️ Potatura completata con successo!";
+                    toastManager.ShowSuccess(toastMessage, "PRUNE-SUCCESS-001");
+                }
+                else if (uiNotification != null)
                 {
                     string toastMessage = useSpray ? 
                         "✂️ Potatura completata con successo! Spray Antifungino utilizzato." : 
@@ -502,13 +511,24 @@ namespace _Project
                 SporiumLogger.LogWarning(LogCategory.UI, "Potatura fallita");
                 
                 // BUG FIX: Mostra toast con esito potatura fallita
-                var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
-                if (uiNotification != null)
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
                 {
                     string toastMessage = useSpray ? 
                         "✂️ Potatura fallita. Spray Antifungino consumato ma potatura non riuscita." : 
                         "✂️ Potatura fallita. Riprova più tardi.";
-                    uiNotification.ShowNotification(toastMessage, 3f, new Color(1f, 0.2f, 0.2f)); // Rosso per fallimento
+                    toastManager.ShowError(toastMessage, "PRUNE-FAILED-001");
+                }
+                else
+                {
+                    var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+                    if (uiNotification != null)
+                    {
+                        string toastMessage = useSpray ? 
+                            "✂️ Potatura fallita. Spray Antifungino consumato ma potatura non riuscita." : 
+                            "✂️ Potatura fallita. Riprova più tardi.";
+                        uiNotification.ShowNotification(toastMessage, 3f, new Color(1f, 0.2f, 0.2f)); // Rosso per fallimento
+                    }
                 }
             }
         }
@@ -952,11 +972,20 @@ namespace _Project
         private void OnPlantDied(string potId, string reason)
         {
             // Mostra Toast notification
-            var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
-            if (uiNotification != null)
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
             {
                 string toastMessage = $"🚨 Pianta morta! {reason}";
-                uiNotification.ShowNotification(toastMessage, 4f, new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+                toastManager.ShowToast(ToastNotificationType.PlantDied, toastMessage, "PLANT-DEATH-001");
+            }
+            else
+            {
+                var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+                if (uiNotification != null)
+                {
+                    string toastMessage = $"🚨 Pianta morta! {reason}";
+                    uiNotification.ShowNotification(toastMessage, 4f, new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+                }
             }
             
             // Aggiorna UI solo se il vaso morto è quello attualmente selezionato

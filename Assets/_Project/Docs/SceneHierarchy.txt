@@ -2284,6 +2284,68 @@
       [Component] RectTransform
       [Component] CanvasRenderer
       [Component] TextMeshProUGUI
+  - ToastNotificationSystem
+    [Component] RectTransform
+    [Component] ToastNotificationManager
+    [Component] ToastNotificationPool
+    - Header
+      [Component] RectTransform
+      - ToastNotificationHeader
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] CanvasGroup
+        [Component] Button
+        [Component] Image
+        [Component] ToastNotificationHeader
+        - Background
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - Border
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - Corner_TL
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - Corner_TR
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - Corner_BL
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - Corner_BR
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - AlertIcon
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+        - HeaderText
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+        - BadgeContainer
+          [Component] RectTransform
+          - BadgeText
+            [Component] RectTransform
+            [Component] CanvasRenderer
+            [Component] TextMeshProUGUI
+        - ChevronIcon
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] Image
+          - ChevronTransform
+            [Component] RectTransform
+    - ToastContainer
+      [Component] RectTransform
+      [Component] VerticalLayoutGroup
+    - PoolParent
+      [Component] RectTransform
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2754,3 +2816,6 @@
 - GlobalStateInspector
   [Component] Transform
   [Component] GlobalStateInspector
+- ToastNotificationDebugConsole
+  [Component] Transform
+  [Component] ToastNotificationDebugConsole

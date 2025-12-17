@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using _Project; // Per UINotification
+using _Project.Sporae.Core; // Per ServiceContainer
 using Sporae.DevTools;
 
 namespace Sporae.Dome.UI
@@ -132,7 +133,15 @@ namespace Sporae.Dome.UI
             var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
             if (uiNotification != null)
             {
-                uiNotification.ShowNotification(message, 2f, new Color(0.2f, 0.8f, 1f)); // Colore azzurro per info
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowInfo(message, "PRUNE-INFO-001");
+                }
+                else if (uiNotification != null)
+                {
+                    uiNotification.ShowNotification(message, 2f, new Color(0.2f, 0.8f, 1f)); // Colore azzurro per info
+                }
             }
             else
             {

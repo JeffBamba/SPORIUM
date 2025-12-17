@@ -118,7 +118,16 @@ namespace _Project
             {
                 if (_uiNotification != null)
                 {
-                    _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                    // Usa nuovo sistema toast se disponibile
+                    var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                    if (toastManager != null)
+                    {
+                        toastManager.ShowToast(ToastNotificationType.ResourceGained, $"You collected Rainwater: {amountToCollect}!", "WATER-001");
+                    }
+                    else if (_uiNotification != null)
+                    {
+                        _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                    }
                 }
                 _gameManager.PlayerInventory.Add(Items.Water, amountToCollect);
             }

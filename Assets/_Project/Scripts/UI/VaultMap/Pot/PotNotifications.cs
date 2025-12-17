@@ -1,15 +1,24 @@
 ﻿using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using _Project.Sporae.Core;
+using Sporae.DevTools;
 
 namespace _Project.Pot
 {
     public class PotNotifications
     {
         private readonly UINotification _notification;
+        private ToastNotificationManager _toastManager;
         
         public PotNotifications()
         {
             _notification = Object.FindObjectOfType<UINotification>();
+            
+            // Prova a ottenere ToastNotificationManager (può essere null se non ancora registrato)
+            if (ServiceContainer.Instance != null)
+            {
+                _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
+            }
 
             PotEvents.OnPotAction += HandlePotAction;
             PotEvents.OnPotActionFailed += HandlePotFailed;
@@ -46,7 +55,32 @@ namespace _Project.Pot
                 };
             }
 
-            _notification.ShowNotification(text, 2, Color.red);
+            // Usa nuovo sistema toast se disponibile, altrimenti fallback a UINotification
+            // DEBUG_SAFE_FIX: Riprova a ottenere ToastNotificationManager se null (potrebbe essere registrato dopo)
+            if (_toastManager == null && ServiceContainer.Instance != null)
+            {
+                _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
+            }
+            
+            if (_toastManager != null)
+            {
+                string code = type switch
+                {
+                    PotEvents.PotActionType.Light => "POT-LIGHT-FAILED",
+                    PotEvents.PotActionType.Plant => "POT-PLANT-FAILED",
+                    PotEvents.PotActionType.Water => "POT-WATER-FAILED",
+                    PotEvents.PotActionType.Fertilize => "POT-FERTILIZE-FAILED",
+                    PotEvents.PotActionType.Harvest => "POT-HARVEST-FAILED",
+                    PotEvents.PotActionType.Spray => "POT-SPRAY-FAILED",
+                    PotEvents.PotActionType.Uproot => "POT-UPROOT-FAILED",
+                    _ => "POT-ACTION-FAILED"
+                };
+                _toastManager.ShowError(text, code);
+            }
+            else if (_notification != null)
+            {
+                _notification.ShowNotification(text, 2, Color.red);
+            }
         }
 
         private void HandlePotAction(PotEvents.PotActionType type, PotSlot pot)
@@ -117,7 +151,32 @@ namespace _Project.Pot
                 };
             }
 
-            _notification.ShowNotification(text, 2, Color.green);
+            // Usa nuovo sistema toast se disponibile, altrimenti fallback a UINotification
+            // DEBUG_SAFE_FIX: Riprova a ottenere ToastNotificationManager se null (potrebbe essere registrato dopo)
+            if (_toastManager == null && ServiceContainer.Instance != null)
+            {
+                _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
+            }
+            
+            if (_toastManager != null)
+            {
+                string code = type switch
+                {
+                    PotEvents.PotActionType.Water => "POT-WATER-SUCCESS",
+                    PotEvents.PotActionType.Light => "POT-LIGHT-SUCCESS",
+                    PotEvents.PotActionType.Plant => "POT-PLANT-SUCCESS",
+                    PotEvents.PotActionType.Fertilize => "POT-FERTILIZE-SUCCESS",
+                    PotEvents.PotActionType.Harvest => "POT-HARVEST-SUCCESS",
+                    PotEvents.PotActionType.Spray => "POT-SPRAY-SUCCESS",
+                    PotEvents.PotActionType.Uproot => "POT-UPROOT-SUCCESS",
+                    _ => "POT-ACTION-SUCCESS"
+                };
+                _toastManager.ShowSuccess(text, code);
+            }
+            else if (_notification != null)
+            {
+                _notification.ShowNotification(text, 2, Color.green);
+            }
         }
     }
 }

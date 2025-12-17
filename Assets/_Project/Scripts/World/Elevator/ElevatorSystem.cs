@@ -25,6 +25,7 @@ public class ElevatorSystem : MonoBehaviour
     private bool playerInside = false;
     private Transform player;
     private bool isTeleporting = false;
+    private Coroutine _teleportCoroutine; // DEBUG_SAFE_FIX: Traccia la coroutine per poterla fermare
     private GameManager gameManager;
     private int currentLevelIndex;
     private PlayerClickMover2D playerMover;
@@ -144,6 +145,19 @@ public class ElevatorSystem : MonoBehaviour
 
     public void SetLevel(int levelIndex)
     {
+        // DEBUG_SAFE_FIX: Ferma qualsiasi coroutine TeleportPlayer in corso e ripristina il movimento
+        if (_teleportCoroutine != null)
+        {
+            StopCoroutine(_teleportCoroutine);
+            _teleportCoroutine = null;
+            // Assicurati che il movimento sia ripristinato se la coroutine è stata interrotta
+            if (playerMover != null)
+            {
+                playerMover.SuspendMovement(false);
+            }
+            isTeleporting = false;
+        }
+        
         currentLevelIndex = levelIndex; 
         elevatorSection.transform.position = new Vector3(
             elevatorSection.transform.position.x,
@@ -160,7 +174,15 @@ public class ElevatorSystem : MonoBehaviour
         {
             if (uiNotification != null)
             {
-                uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowError("Sorry, out of order", "ELEVATOR-001");
+                }
+                else if (uiNotification != null)
+                {
+                    uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+                }
             }
             return;
         }
@@ -189,8 +211,21 @@ public class ElevatorSystem : MonoBehaviour
             return;
         }
 
+        // DEBUG_SAFE_FIX: Ferma qualsiasi coroutine in corso prima di iniziare una nuova
+        if (_teleportCoroutine != null)
+        {
+            StopCoroutine(_teleportCoroutine);
+            _teleportCoroutine = null;
+            // Assicurati che il movimento sia ripristinato se la coroutine precedente è stata interrotta
+            if (playerMover != null)
+            {
+                playerMover.SuspendMovement(false);
+            }
+            isTeleporting = false;
+        }
+        
         // Teleport con delay per evitare problemi di fisica
-        StartCoroutine(TeleportPlayer(levelIndex));
+        _teleportCoroutine = StartCoroutine(TeleportPlayer(levelIndex));
     }
 
     private bool IsLevelUnlocked(int levelIndex)
@@ -285,6 +320,7 @@ public class ElevatorSystem : MonoBehaviour
             }
         
             isTeleporting = false;
+            _teleportCoroutine = null; // DEBUG_SAFE_FIX: Pulisci il riferimento alla coroutine
             if (playerMover != null)
             {
                 playerMover.SuspendMovement(false);

@@ -194,7 +194,16 @@ namespace _Project
             if (_isWon)
             {
                 _playerInventory.Add(Items.SporeGeneric);
-                _notification.ShowNotification("You got a spore!", 2, Color.green);
+                // Usa nuovo sistema toast se disponibile
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowToast(ToastNotificationType.ItemCollected, "You got a spore!", "SPORE-001");
+                }
+                else if (_notification != null)
+                {
+                    _notification.ShowNotification("You got a spore!", 2, Color.green);
+                }
             }
 
             StartCoroutine(HideRoutine());

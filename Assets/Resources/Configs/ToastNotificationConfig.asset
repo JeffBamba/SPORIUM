@@ -1,0 +1,172 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9d85d9a0fbbcbf46b6f4f80bd6f74a5, type: 3}
+  m_Name: ToastNotificationConfig
+  m_EditorClassIdentifier: 
+  TypeSettings:
+  - Type: 0
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 3
+    CodePrefix: SUCCESS-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 1
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 3
+    CodePrefix: POT-ACTION-SUCCESS-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 2
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 2.5
+    CodePrefix: INV-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 3
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 2.5
+    CodePrefix: RES-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 4
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 3
+    CodePrefix: INFO-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 5
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 3
+    CodePrefix: STAGE-UP-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 6
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 3
+    CodePrefix: CND-002-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 7
+    Color:
+      serializedVersion: 2
+      rgba: 4286250879
+    DefaultDuration: 2
+    CodePrefix: SYS-ENABLED-
+    SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
+  - Type: 8
+    Color:
+      serializedVersion: 2
+      rgba: 4285516262
+    DefaultDuration: 4
+    CodePrefix: WARNING-
+    SeverityIcon: {fileID: 21300000, guid: 528a130a47a1d4af28e1ef4c8b3c5386, type: 3}
+  - Type: 9
+    Color:
+      serializedVersion: 2
+      rgba: 4285516262
+    DefaultDuration: 4
+    CodePrefix: CND-001-
+    SeverityIcon: {fileID: 21300000, guid: 528a130a47a1d4af28e1ef4c8b3c5386, type: 3}
+  - Type: 10
+    Color:
+      serializedVersion: 2
+      rgba: 4285516262
+    DefaultDuration: 3
+    CodePrefix: SYS-DISABLED-
+    SeverityIcon: {fileID: 21300000, guid: 528a130a47a1d4af28e1ef4c8b3c5386, type: 3}
+  - Type: 11
+    Color:
+      serializedVersion: 2
+      rgba: 4285516262
+    DefaultDuration: 5
+    CodePrefix: PH-COUNTDOWN-
+    SeverityIcon: {fileID: 21300000, guid: 528a130a47a1d4af28e1ef4c8b3c5386, type: 3}
+  - Type: 12
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 4
+    CodePrefix: ERROR-
+    SeverityIcon: {fileID: 0}
+  - Type: 13
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 4
+    CodePrefix: POT-ACTION-FAILED-
+    SeverityIcon: {fileID: 0}
+  - Type: 14
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 3
+    CodePrefix: RES-
+    SeverityIcon: {fileID: 0}
+  - Type: 15
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 3
+    CodePrefix: INV-
+    SeverityIcon: {fileID: 0}
+  - Type: 16
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 5
+    CodePrefix: CRI-
+    SeverityIcon: {fileID: 0}
+  - Type: 17
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 5
+    CodePrefix: PLANT-DEATH-
+    SeverityIcon: {fileID: 0}
+  - Type: 18
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 5
+    CodePrefix: PH-DEATH-
+    SeverityIcon: {fileID: 0}
+  - Type: 19
+    Color:
+      serializedVersion: 2
+      rgba: 4284440531
+    DefaultDuration: 6
+    CodePrefix: SYS-
+    SeverityIcon: {fileID: 0}
+  FixedWidth: 405
+  PositionOffset: {x: -24, y: -96}
+  MonospacedFont: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
+  FontSize: 18
+  CharacterSpacing: 2
+  BorderSprite: {fileID: -5177388603050735206, guid: cc35afd292fc349128b36a291fb3a165, type: 3}
+  CornerSprite: {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  GlowShader: {fileID: 0}
+  TextureFilterMode: 0
+  AlertCircleIcon: {fileID: 21300000, guid: 92910b609a0e2414eabda29cb97a9bfb, type: 3}
+  InfoIcon: {fileID: 21300000, guid: a1d2b94f178ed6b4bb9dbb8a03b528f6, type: 3}
+  WarningIcon: {fileID: 21300000, guid: a6322f064a7b12848b98e6b874528422, type: 3}
+  DangerIcon: {fileID: 21300000, guid: 65c59193a7da4184b821a13df9da5b9c, type: 3}
+  ChevronIcon: {fileID: 21300000, guid: a11f3440920d2134eba375971f965c51, type: 3}
+  DefaultDuration: 3
+  MaxHistoryEntries: 100
+  EnableHistory: 1

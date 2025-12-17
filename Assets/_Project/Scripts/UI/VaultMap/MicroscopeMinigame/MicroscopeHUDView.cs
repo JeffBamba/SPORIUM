@@ -157,12 +157,28 @@ namespace _Project
             if (hits == 0)
             {
                 _playerInventory.Add(Items.OrganicScrap001, 1);
-                _notification.ShowNotification("Spore becomes Corrupted", 2, Color.red);
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowError("Spore becomes Corrupted", "SPORE-CORRUPT-001");
+                }
+                else if (_notification != null)
+                {
+                    _notification.ShowNotification("Spore becomes Corrupted", 2, Color.red);
+                }
             }
             else
             {
                 _playerInventory.Add(Items.SporeGeneric, 1);
-                _notification.ShowNotification("You got spore with traits", 2, Color.green);
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    toastManager.ShowSuccess("You got spore with traits", "SPORE-TRAIT-001");
+                }
+                else if (_notification != null)
+                {
+                    _notification.ShowNotification("You got spore with traits", 2, Color.green);
+                }
             }
         }
 
