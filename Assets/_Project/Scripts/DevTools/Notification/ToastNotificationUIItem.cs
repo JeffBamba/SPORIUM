@@ -18,7 +18,6 @@ namespace Sporae.DevTools
         [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private Image _backgroundImage;
         [SerializeField] private Image _borderImage; // 2px solid border
-        [SerializeField] private Image[] _cornerImages; // 4 corner L-shapes
         [SerializeField] private Image _severityIcon; // Info/Warning/Danger icon
         [SerializeField] private TextMeshProUGUI _codeText;
         [SerializeField] private TextMeshProUGUI _messageText;
@@ -130,15 +129,6 @@ namespace Sporae.DevTools
                 _borderImage.color = color;
             }
             
-            if (_cornerImages != null)
-            {
-                foreach (var corner in _cornerImages)
-                {
-                    if (corner != null)
-                        corner.color = color;
-                }
-            }
-            
             SetupPixelArtStyle();
             SetupExpandButton();
             PlayEnterAnimation();
@@ -182,15 +172,6 @@ namespace Sporae.DevTools
                 _severityIcon.color = _color;
             }
             
-            if (_cornerImages != null)
-            {
-                foreach (var corner in _cornerImages)
-                {
-                    if (corner != null)
-                        corner.color = _color;
-                }
-            }
-            
             // Testo secondario per codice e timestamp
             if (_codeText != null)
                 _codeText.color = ToastNotificationConfig.TEXT_SECONDARY_DARK;
@@ -207,15 +188,6 @@ namespace Sporae.DevTools
             // Texture filtering pixel-perfect
             if (_borderImage != null && _borderImage.sprite != null)
                 _borderImage.sprite.texture.filterMode = FilterMode.Point;
-            
-            if (_cornerImages != null)
-            {
-                foreach (var corner in _cornerImages)
-                {
-                    if (corner != null && corner.sprite != null)
-                        corner.sprite.texture.filterMode = FilterMode.Point;
-                }
-            }
             
             // Font monospaced
             var config = Resources.Load<ToastNotificationConfig>("Configs/ToastNotificationConfig");

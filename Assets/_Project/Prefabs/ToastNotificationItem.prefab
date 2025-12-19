@@ -250,11 +250,6 @@ MonoBehaviour:
   _canvasGroup: {fileID: 6474318026617555958}
   _backgroundImage: {fileID: 6035380154991060872}
   _borderImage: {fileID: 4679571519694803093}
-  _cornerImages:
-  - {fileID: 1372512960741153089}
-  - {fileID: 1627078154687795702}
-  - {fileID: 6070779401826940804}
-  - {fileID: 1340329615980088003}
   _severityIcon: {fileID: 5509983241958304657}
   _codeText: {fileID: 6428107487628302350}
   _messageText: {fileID: 8781157424614392014}

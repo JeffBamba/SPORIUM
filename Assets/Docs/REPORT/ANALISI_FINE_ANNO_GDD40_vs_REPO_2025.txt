@@ -1,0 +1,561 @@
+# 📊 ANALISI GENERALE DI FINE ANNO 2025
+## Confronto Repository Main vs GDD 40 v.08/12/2025 - SPORIUM
+
+**Data Generazione:** 2025-12-19  
+**Versione GDD Analizzata:** 40 v.08/12/2025  
+**Versione Repository:** Build_Beta (Main)  
+**Autore:** Analisi Automatica Sistema  
+**Scopo:** Valutazione stato sviluppo e gap analysis rispetto al GDD
+
+---
+
+## 📋 EXECUTIVE SUMMARY
+
+### Stato Generale Progetto
+**Completamento Stimato:** ~35-40% del GDD v.40
+
+**Sistemi Fondamentali (FASE 0):** ✅ **COMPLETATI** (100%)
+- GameManager, EventSystem, ActionSystem, EconomySystem
+- Inventory, DeteriorationSystem, DayCycleSystem
+- Architettura modulare e ServiceContainer Pattern
+
+**Sistemi Core Dome (FASE 1):** ⚠️ **PARZIALMENTE COMPLETATI** (~60%)
+- ✅ Sistema pH globale implementato e funzionante
+- ✅ Sistema crescita piante con 6 stadi (Seed → Resting)
+- ⚠️ Sistema livelli (1-5) parzialmente implementato
+- ❌ Slot passivi non implementati
+- ⚠️ Sistema condizioni avanzato parziale
+
+**Sistemi Piante (FASE 2):** ⚠️ **PARZIALMENTE COMPLETATI** (~40%)
+- ✅ PlantData, PlantDatabase, PlantFamily implementati
+- ✅ Integrazione pH con famiglie (Pure/Evil/Standard)
+- ⚠️ Catalog piante: struttura presente, contenuti limitati
+- ❌ Sistema mutazioni non implementato
+- ❌ Sistema ibridi non implementato
+
+**Sistemi Economici (FASE 3):** ⚠️ **PARZIALMENTE COMPLETATI** (~50%)
+- ✅ Seed Storage base implementato
+- ❌ Food Room non implementato
+- ✅ Black Market base presente
+- ⚠️ Costi CRY giornalieri parziali
+
+**Sistemi Sociali (FASE 4):** ❌ **NON IMPLEMENTATI** (~5%)
+- ❌ Sistema Fazioni/Reputazione non presente
+- ⚠️ Visitor Room struttura base presente, logica mancante
+- ❌ Sistema baratto non implementato
+
+**Sistemi Narrativi (FASE 5):** ⚠️ **PARZIALMENTE COMPLETATI** (~20%)
+- ⚠️ MissionSystem struttura presente, contenuti limitati
+- ❌ Sistema Atti narrativi non implementato
+- ⚠️ Diario SPORAE base presente
+
+**Sistemi Avanzati (FASE 6):** ❌ **NON IMPLEMENTATI** (~10%)
+- ⚠️ Sistema muffe base presente, logica avanzata mancante
+- ❌ Dome Avanzata non implementata
+- ❌ Cure Ipnotiche non implementate
+
+---
+
+## 🎯 ANALISI DETTAGLIATA PER SEZIONE GDD
+
+### SEZIONE 0 — BUILDS & RELEASE
+**Stato:** ✅ **COMPLETATA**
+- Demo Build ufficiale presente
+- Sistema di versioning funzionante
+- Documentazione build presente
+
+---
+
+### SEZIONE 1 — VISIONE & CONCEPT
+**Stato:** ✅ **ALLINEATA**
+- Architettura modulare implementata correttamente
+- Filosofia "Poche Azioni, Molta Intenzione" rispettata
+- Sistema data-driven con ScriptableObjects
+
+---
+
+### SEZIONE 2 — LORE & STORIA
+**Stato:** ⚠️ **STRUTTURA PRESENTE, CONTENUTI LIMITATI**
+- Framework narrativo presente
+- Contenuti specifici (Atti, dialoghi) non implementati
+
+---
+
+### SEZIONE 3 — LE PIANTE REGOLE GENERALI
+
+#### 3.1 Famiglie Botaniche
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ PlantFamily enum (Standard/Pure/Evil)
+- ✅ PlantData ScriptableObject completo
+- ✅ PlantDatabase singleton funzionante
+- ✅ Integrazione pH drift per famiglia
+
+**Gap:**
+- ❌ Catalog completo: solo struttura, poche piante effettive
+- ❌ Interazioni Dome (Pure/Evil) non implementate
+- ❌ Sistema bonus Active/Passive slot parziale
+
+#### 3.2 Stati di Crescita
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ 6 stadi completi: Seed → Sprout → Growth → Flowering → HarvestReady → Resting
+- ✅ StageRequirements system funzionante
+- ✅ Transizioni con requisiti (idratazione, LED, pH)
+- ✅ Sistema frutti multi-giorno (1→2→3)
+
+**Gap:**
+- ⚠️ Durata stadi: logica presente ma non completamente bilanciata
+- ⚠️ Sistema condizioni avanzato parziale (Rigogliosa/Sana/Stressata/Appassita/Infestata)
+
+#### 3.3 Sistema Livelli (1-5)
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ✅ PlantLevelSystem presente
+- ✅ Struttura dati livelli presente
+- ⚠️ Progressione livelli: logica presente ma non completamente testata
+- ❌ Resa frutti modifica da Lvl 3+ non implementata
+- ❌ Solo Lvl 5 in slot passivi: non implementato
+
+#### 3.4 Sistema Mutazioni
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ MutationSystem non presente
+- ❌ MutationScore calculator non presente
+- ❌ Timing mutazioni (Dawn Check) non presente
+- ❌ Effetti mutazioni non implementati
+
+**Priorità:** ALTA (blocca late-game content)
+
+#### 3.5 Sistema Ibridi
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ HybridSystem non presente
+- ❌ DNA Fusion minigioco non presente
+- ❌ Trait Selection System non presente
+- ❌ Ibridi non generabili
+
+**Priorità:** ALTA (blocca late-game content)
+
+#### 3.6 Drift pH e Bilanciamento
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ PhSystem globale funzionante
+- ✅ Drift giornaliero per famiglia implementato
+- ✅ Range pH (-100 a +100) implementato
+- ✅ Bande pH (UA/SA/N/SB/UB) implementate
+- ✅ Effetti pH su crescita implementati
+
+**Gap:**
+- ⚠️ Micro-Operations 2.0 (Watering a goccia): struttura presente, logica completa mancante
+- ⚠️ LED Giornaliero: sistema base presente, costi notturni CRY parziali
+
+#### 3.7 Sistema Condizioni Piante
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ✅ PlantConditionSystem presente
+- ✅ Condizioni base (Sana, Stressata, Infestata) implementate
+- ⚠️ Score sistema (0-100) parzialmente implementato
+- ⚠️ Forecast tendenza non completamente implementato
+- ❌ Progress bar HUD condizioni non presente
+
+---
+
+### SEZIONE 4 — AMBIENTI DI GIOCO
+
+#### 4.1 Dome Centrale (ENV-001)
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ 4 vasi attivi funzionanti
+- ✅ Sistema crescita completo
+- ✅ Integrazione pH globale
+- ❌ 3 slot passivi non implementati
+
+#### 4.2 Laboratorio Botanico (LAB-BIO)
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ✅ Struttura ambiente presente
+- ✅ Microscopio minigioco implementato (MG-01)
+- ⚠️ Pipetta minigioco presente ma non completo (MG-02)
+- ⚠️ Catalizzatore presente ma non completo (MG-03)
+- ❌ Incubatore non implementato
+
+#### 4.3 Seed Storage (EXT-002)
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ UI funzionante
+- ✅ Sistema storage base presente
+- ⚠️ Costi CRY giornalieri parziali
+- ⚠️ Espansione slot non implementata
+
+#### 4.4 Visitor Room (EXT-001)
+**Stato:** ⚠️ **STRUTTURA PRESENTE, LOGICA MANCANTE**
+- ✅ Ambiente presente
+- ❌ Sistema CALL Visitatore non implementato
+- ❌ Sistema baratto non implementato
+- ❌ Inventario fazioni non presente
+
+#### 4.5 Food Room
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ FoodRoomSystem non presente
+- ❌ Produzione cibo non implementata
+- ❌ Slot produzione non presenti
+
+**Priorità:** ALTA (blocca survival loop)
+
+---
+
+### SEZIONE 5 — LOOPS & ECONOMIA
+
+#### 5.1 Economia CRY
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ EconomySystem funzionante
+- ✅ Gestione CRY base completa
+- ✅ Costi azioni implementati
+- ⚠️ Costi giornalieri Vault parziali
+- ⚠️ Costi LED notturni parziali
+
+#### 5.2 Loop Produzione Frutti
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ Harvest → Frutti → Spore
+- ✅ Estrazione spore funzionante
+- ✅ Sistema qualità spore (STABLE/STANDARD/UNSTABLE) presente
+
+#### 5.3 Loop Compost → Fertilizzante
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ⚠️ FertilizerSystem presente
+- ⚠️ Logica base presente
+- ❌ Sistema completo compost non implementato
+
+#### 5.4 Loop Food Room
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ Produzione cibo non presente
+- ❌ Bonus Azioni da cibo non implementati
+
+---
+
+### SEZIONE 6 — MINIGAMES & AZIONI
+
+#### 6.1 Minigiochi Laboratorio
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+
+**MG-01 Microscopio:** ✅ **IMPLEMENTATO**
+- ✅ Minigioco rhythm game direzionale funzionante
+- ✅ Estrazione tratti genetici implementata
+- ✅ Precisione calcolata correttamente
+
+**MG-02 Pipetta:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ⚠️ Struttura presente
+- ⚠️ Tracciamento manuale presente
+- ❌ Logica ibridazione completa mancante
+
+**MG-03 Catalizzatore:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ⚠️ Struttura presente
+- ⚠️ Quick-time event base presente
+- ❌ Attivazione seme completa mancante
+
+**MG-07 Extractor:** ✅ **IMPLEMENTATO**
+- ✅ Estrazione spore funzionante
+- ✅ Sistema qualità implementato
+
+**MG-04 Watering (Deprecato):** ✅ **SOSTITUITO**
+- ✅ Micro-Operations 2.0 struttura presente
+
+**MG-06 Lighting (Deprecato):** ✅ **SOSTITUITO**
+- ✅ LED Giornaliero sistema presente
+
+#### 6.2 Azioni Giornaliere
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ ACT-001 Plant: implementato
+- ✅ ACT-002 Water: implementato (Micro-Operations 2.0)
+- ✅ ACT-003 Light: implementato (LED Giornaliero)
+- ✅ ACT-011 Watering a goccia: struttura presente
+- ✅ ACT-012 LED Giornaliero: implementato
+- ⚠️ ACT-013 Potatura: presente ma logica avanzata mancante
+- ❌ Altre azioni avanzate non implementate
+
+---
+
+### SEZIONE 7 — ITEM LIVELLI E COSTO IN CRY
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ✅ ItemsSystem base funzionante
+- ✅ Inventory completo
+- ⚠️ Costi CRY item parziali
+- ⚠️ Livelli item parziali
+
+---
+
+### SEZIONE 8 — AZIONI GIORNALIERE: BONUS E INCREMENTI
+**Stato:** ⚠️ **PARZIALMENTE IMPLEMENTATO**
+- ✅ Sistema azioni giornaliere presente
+- ⚠️ Bonus incrementi parziali
+- ❌ Sistema completo bonus/malus non implementato
+
+---
+
+### SEZIONE 9 — EVENTI RANDOM BONUS/MALUS
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ Sistema eventi random non presente
+- ❌ Eventi GDD non implementati
+- ❌ Gestione eventi mancante
+
+**Priorità:** MEDIA
+
+---
+
+### SEZIONE 10 — MISSIONI
+**Stato:** ⚠️ **STRUTTURA PRESENTE, CONTENUTI LIMITATI**
+- ✅ MissionManager presente
+- ✅ Struttura missioni presente
+- ❌ Missioni GDD non implementate
+- ❌ Sistema MQ + SQ non completo
+- ❌ Effetti collaterali missioni non implementati
+
+**Priorità:** MEDIA
+
+---
+
+### SEZIONE 11 — FAZIONI E REPUTAZIONE
+**Stato:** ❌ **NON IMPLEMENTATO**
+- ❌ FactionSystem non presente
+- ❌ Sistema reputazione non presente
+- ❌ 6 fazioni non implementate
+- ❌ Drift reputazione non presente
+- ❌ Effetti reputazione non implementati
+
+**Priorità:** CRITICA (blocca social systems e late-game)
+
+---
+
+### SEZIONE 12 — TOAST HUD SYSTEM
+**Stato:** ✅ **IMPLEMENTATO**
+- ✅ HUDNotificationSystem 2.0 completo
+- ✅ Toast notifications funzionanti
+- ✅ Tipi toast (Info/Success/Warning/Danger/Narrative/Tutorial) implementati
+- ✅ Sistema pooling presente
+
+---
+
+## 📊 TABELLA RIEPILOGATIVA COMPLETAMENTO
+
+| Sezione GDD | Sistema | Stato | Completamento | Priorità |
+|------------|---------|------|---------------|----------|
+| **FASE 0: Foundation** | | | | |
+| | GameManager | ✅ | 100% | - |
+| | EventSystem | ✅ | 100% | - |
+| | ActionSystem | ✅ | 100% | - |
+| | EconomySystem | ✅ | 100% | - |
+| | Inventory | ✅ | 100% | - |
+| | DayCycleSystem | ✅ | 100% | - |
+| **FASE 1: Core Dome** | | | | |
+| | pH System | ✅ | 95% | - |
+| | Sistema Crescita (6 stadi) | ✅ | 90% | - |
+| | Sistema Livelli (1-5) | ⚠️ | 60% | ALTA |
+| | Slot Passivi | ❌ | 0% | ALTA |
+| | Condizioni Avanzate | ⚠️ | 50% | MEDIA |
+| **FASE 2: Plant Systems** | | | | |
+| | PlantData/Database | ✅ | 80% | - |
+| | Catalog Piante | ⚠️ | 30% | ALTA |
+| | Sistema Mutazioni | ❌ | 0% | ALTA |
+| | Sistema Ibridi | ❌ | 0% | ALTA |
+| **FASE 3: Economic & Survival** | | | | |
+| | Seed Storage | ✅ | 70% | - |
+| | Food Room | ❌ | 0% | ALTA |
+| | Black Market | ⚠️ | 50% | MEDIA |
+| **FASE 4: Social Systems** | | | | |
+| | Fazioni/Reputazione | ❌ | 0% | CRITICA |
+| | Visitor Room | ⚠️ | 20% | ALTA |
+| | Sistema Baratto | ❌ | 0% | ALTA |
+| **FASE 5: Narrative** | | | | |
+| | MissionSystem | ⚠️ | 30% | MEDIA |
+| | Atti Narrativi | ❌ | 0% | BASSA |
+| | Diario SPORAE | ⚠️ | 40% | MEDIA |
+| **FASE 6: Advanced** | | | | |
+| | Sistema Muffe | ⚠️ | 40% | MEDIA |
+| | Dome Avanzata | ❌ | 0% | BASSA |
+| | Cure Ipnotiche | ❌ | 0% | BASSA |
+| **Minigiochi** | | | | |
+| | MG-01 Microscopio | ✅ | 90% | - |
+| | MG-02 Pipetta | ⚠️ | 50% | ALTA |
+| | MG-03 Catalizzatore | ⚠️ | 50% | ALTA |
+| | MG-07 Extractor | ✅ | 80% | - |
+
+---
+
+## 🚨 GAP CRITICI IDENTIFICATI
+
+### 1. SISTEMA FAZIONI/REPUTAZIONE (CRITICA)
+**Impatto:** Blocca social systems, late-game content, missioni avanzate
+**Stato:** ❌ Non implementato
+**Effort Stimato:** 3-4 settimane
+**Dipendenze:** Sistema piante completo
+
+### 2. SISTEMA MUTAZIONI (ALTA)
+**Impatto:** Blocca varietà gameplay, late-game content
+**Stato:** ❌ Non implementato
+**Effort Stimato:** 2-3 settimane
+**Dipendenze:** pH System (✅ presente), Sistema livelli (⚠️ parziale)
+
+### 3. SISTEMA IBRIDI (ALTA)
+**Impatto:** Blocca late-game content, varietà piante
+**Stato:** ❌ Non implementato
+**Effort Stimato:** 3-4 settimane
+**Dipendenze:** Sistema piante (⚠️ parziale), Minigiochi Lab (⚠️ parziali)
+
+### 4. FOOD ROOM (ALTA)
+**Impatto:** Blocca survival loop, progression naturale
+**Stato:** ❌ Non implementato
+**Effort Stimato:** 2 settimane
+**Dipendenze:** Nessuna (sistema indipendente)
+
+### 5. SLOT PASSIVI (ALTA)
+**Impatto:** Blocca progression late-game, strategia avanzata
+**Stato:** ❌ Non implementato
+**Effort Stimato:** 1-2 settimane
+**Dipendenze:** Sistema livelli (⚠️ parziale)
+
+### 6. SISTEMA LIVELLI COMPLETO (ALTA)
+**Impatto:** Blocca progression, slot passivi, mutazioni
+**Stato:** ⚠️ Parzialmente implementato
+**Effort Stimato:** 1 settimana
+**Dipendenze:** Nessuna (sistema base presente)
+
+---
+
+## 📈 ROADMAP SUGGERITA 2026
+
+### Q1 2026 - Completamento Core Systems
+**Obiettivo:** Completare FASE 1 e FASE 2 base
+
+**Settimana 1-2:** Sistema Livelli Completo
+- Completare progressione livelli
+- Implementare resa frutti modifica Lvl 3+
+- Test completo sistema
+
+**Settimana 3-4:** Slot Passivi
+- Implementare 3 slot passivi
+- Sistema spostamento Lvl 5 → slot passivi
+- Bonus passivi applicati
+
+**Settimana 5-7:** Sistema Mutazioni
+- MutationSystem completo
+- MutationScore calculator
+- Prime 3 mutazioni implementate
+- UI mutazioni
+
+**Settimana 8-10:** Catalog Piante Base
+- Implementare prime 9 piante (3 Standard, 3 Pure, 3 Evil)
+- Dati completi per ogni pianta
+- Test integrazione
+
+### Q2 2026 - Social & Economic Systems
+**Obiettivo:** Completare FASE 3 e FASE 4
+
+**Settimana 11-12:** Food Room
+- FoodRoomSystem completo
+- Produzione 4 tipi cibo
+- Bonus Azioni implementati
+
+**Settimana 13-16:** Sistema Fazioni/Reputazione
+- FactionSystem completo
+- 6 fazioni implementate
+- Drift reputazione
+- Effetti reputazione
+
+**Settimana 17-18:** Visitor Room Completo
+- Sistema CALL Visitatore
+- Sistema baratto
+- Inventario fazioni
+
+**Settimana 19-20:** Sistema Ibridi
+- HybridSystem completo
+- DNA Fusion minigioco
+- Prime ibridi implementati
+
+### Q3 2026 - Narrative & Polish
+**Obiettivo:** Completare FASE 5 e polish
+
+**Settimana 21-24:** Sistema Missioni
+- Missioni GDD implementate
+- Sistema MQ + SQ
+- Effetti collaterali
+
+**Settimana 25-28:** Atti Narrativi
+- Sistema Atti
+- Atto I completo
+- Transizioni
+
+**Settimana 29-32:** Polish & Advanced
+- Sistema eventi random
+- Sistema muffe avanzato
+- Dome Avanzata (opzionale)
+
+---
+
+## ✅ PUNTI DI FORZA ATTUALE
+
+1. **Architettura Solida:** Sistema modulare ben progettato, ServiceContainer pattern funzionante
+2. **Sistema pH Completo:** Implementazione robusta e ben integrata
+3. **Sistema Crescita Avanzato:** 6 stadi completi con requisiti complessi
+4. **Minigiochi Base:** Microscopio funzionante, struttura per altri presente
+5. **Foundation Sistemi:** Core systems completi e testati
+
+---
+
+## ⚠️ AREE DI MIGLIORAMENTO
+
+1. **Contenuti:** Struttura presente ma contenuti limitati (piante, missioni, eventi)
+2. **Integrazione:** Alcuni sistemi isolati, necessaria migliore integrazione
+3. **Testing:** Necessario più testing end-to-end dei loop completi
+4. **Documentazione:** Alcuni sistemi necessitano documentazione più dettagliata
+5. **Bilanciamento:** Parametri necessitano tuning basato su gameplay reale
+
+---
+
+## 📝 RACCOMANDAZIONI STRATEGICHE
+
+### Priorità Immediata (Q1 2026)
+1. **Completare Sistema Livelli** - Blocca slot passivi e progression
+2. **Implementare Slot Passivi** - Abilita strategia avanzata
+3. **Sistema Mutazioni Base** - Aggiunge varietà gameplay
+4. **Catalog Piante Base** - Necessario per testare sistemi
+
+### Priorità Media (Q2 2026)
+1. **Food Room** - Completa survival loop
+2. **Fazioni/Reputazione** - Abilita social systems
+3. **Sistema Ibridi** - Abilita late-game content
+
+### Priorità Bassa (Q3 2026)
+1. **Narrative Systems** - Contenuti, non blocca gameplay
+2. **Advanced Systems** - Late-game content
+
+---
+
+## 🎯 METRICHE DI SUCCESSO
+
+### Completamento Target Q1 2026
+- ✅ Sistema Livelli: 100%
+- ✅ Slot Passivi: 100%
+- ✅ Sistema Mutazioni: 80% (prime 3 mutazioni)
+- ✅ Catalog Piante: 30% (9 piante base)
+
+### Completamento Target Q2 2026
+- ✅ Food Room: 100%
+- ✅ Fazioni/Reputazione: 100%
+- ✅ Visitor Room: 100%
+- ✅ Sistema Ibridi: 80% (prime 3 ibridi)
+
+### Completamento Target Q3 2026
+- ✅ Sistema Missioni: 80%
+- ✅ Atti Narrativi: 50% (Atto I)
+- ✅ Eventi Random: 60%
+
+---
+
+## 📚 RIFERIMENTI
+
+- **GDD v.40:** https://www.notion.so/2705d1deb3ba805a9651d1fca74f6044
+- **Piano Implementazione:** Assets/Docs/REPORT/PIANO_IMPLEMENTAZIONE_SISTEMI.md
+- **Report Tecnici:** Assets/Docs/REPORT/DEV REPORT_*.txt
+- **Analisi Precedenti:** Assets/Docs/REPORT/ANALISI_*.txt
+
+---
+
+**FINE REPORT ANALISI FINE ANNO 2025**
+
+---
+
+*Generato automaticamente il 2025-12-19*  
+*Versione Repository: Build_Beta (Main)*  
+*Versione GDD: 40 v.08/12/2025*
+

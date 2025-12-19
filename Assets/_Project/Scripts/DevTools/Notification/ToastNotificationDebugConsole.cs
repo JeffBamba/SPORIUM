@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
+using _Project.UI.HUDNotifications2_0;
 
 namespace Sporae.DevTools
 {
@@ -38,6 +39,10 @@ namespace Sporae.DevTools
         private ToastNotificationManager _manager;
         private ToastNotificationHistory _history;
         
+        // Cache HUD Notifications 2.0
+        private HUDNotificationFeedManager2_0 _manager2_0;
+        private HUDNotificationConfig2_0 _config2_0;
+        
         private Rect _consoleRect;
         
         private void Awake()
@@ -67,6 +72,14 @@ namespace Sporae.DevTools
                 _manager = ServiceContainer.Instance?.Get<ToastNotificationManager>();
                 if (_manager != null)
                     _history = _manager.GetHistory();
+            }
+            
+            // Aggiorna cache HUD Notifications 2.0
+            if (_manager2_0 == null)
+            {
+                _manager2_0 = ServiceContainer.Instance?.Get<HUDNotificationFeedManager2_0>(suppressWarning: true);
+                if (_manager2_0 != null)
+                    _config2_0 = _manager2_0.GetConfig();
             }
         }
         
@@ -134,6 +147,11 @@ namespace Sporae.DevTools
             
             // Sezione 5: Settings
             DrawSettingsSection(labelStyle, buttonStyle, headerStyle);
+            
+            GUILayout.Space(10);
+            
+            // Sezione 6: HUD Notifications 2.0 Runtime Editor
+            DrawHUDNotifications2_0RuntimeEditor(labelStyle, buttonStyle, headerStyle);
             
             GUILayout.EndScrollView();
             GUILayout.EndArea();
@@ -444,6 +462,151 @@ namespace Sporae.DevTools
             }
             GUILayout.EndHorizontal();
             return expanded;
+        }
+        
+        private void DrawHUDNotifications2_0RuntimeEditor(GUIStyle labelStyle, GUIStyle buttonStyle, GUIStyle headerStyle)
+        {
+            bool expanded = GetSectionExpanded("HUD2.0Editor");
+            expanded = DrawSectionHeader("6. HUD Notifications 2.0 Runtime Editor", expanded, headerStyle);
+            SetSectionExpanded("HUD2.0Editor", expanded);
+            
+            if (!expanded) return;
+            
+            GUILayout.BeginVertical(GUI.skin.box);
+            
+            if (_config2_0 == null)
+            {
+                GUILayout.Label("HUDNotificationConfig2.0 non disponibile. Assicurati che il sistema 2.0 sia inizializzato.", labelStyle);
+                GUILayout.EndVertical();
+                return;
+            }
+            
+            // Container Settings
+            GUILayout.Label("Container Settings", headerStyle);
+            _config2_0.ContainerWidth = EditorFloatField("Width (px)", _config2_0.ContainerWidth, labelStyle);
+            _config2_0.ContainerTopOffset = EditorFloatField("Top Offset (px)", _config2_0.ContainerTopOffset, labelStyle);
+            _config2_0.ContainerRightOffset = EditorFloatField("Right Offset (px)", _config2_0.ContainerRightOffset, labelStyle);
+            
+            GUILayout.Space(5);
+            
+            // Header Settings
+            GUILayout.Label("Header Settings", headerStyle);
+            _config2_0.HeaderPadding = EditorFloatField("Padding (px)", _config2_0.HeaderPadding, labelStyle);
+            _config2_0.HeaderBorderWidth = EditorFloatField("Border Width (px)", _config2_0.HeaderBorderWidth, labelStyle);
+            _config2_0.HeaderMarginBottom = EditorFloatField("Margin Bottom (px)", _config2_0.HeaderMarginBottom, labelStyle);
+            _config2_0.HeaderFontSize = EditorFloatField("Font Size (px)", _config2_0.HeaderFontSize, labelStyle);
+            _config2_0.HeaderIconSize = EditorFloatField("Icon Size (px)", _config2_0.HeaderIconSize, labelStyle);
+            _config2_0.HeaderChevronSize = EditorFloatField("Chevron Size (px)", _config2_0.HeaderChevronSize, labelStyle);
+            
+            GUILayout.Space(5);
+            
+            // Toast Settings
+            GUILayout.Label("Toast Settings", headerStyle);
+            _config2_0.ToastPadding = EditorFloatField("Padding (px)", _config2_0.ToastPadding, labelStyle);
+            _config2_0.ToastBorderWidth = EditorFloatField("Border Width (px)", _config2_0.ToastBorderWidth, labelStyle);
+            _config2_0.ToastGap = EditorFloatField("Gap (px)", _config2_0.ToastGap, labelStyle);
+            _config2_0.ToastIconSize = EditorFloatField("Icon Size (px)", _config2_0.ToastIconSize, labelStyle);
+            _config2_0.ToastCodeFontSize = EditorFloatField("Code Font Size (px)", _config2_0.ToastCodeFontSize, labelStyle);
+            _config2_0.ToastMessageFontSize = EditorFloatField("Message Font Size (px)", _config2_0.ToastMessageFontSize, labelStyle);
+            
+            GUILayout.Space(5);
+            
+            // Item Notification Settings
+            GUILayout.Label("Item Notification Settings", headerStyle);
+            _config2_0.ItemIconSize = EditorFloatField("Item Icon Size (px)", _config2_0.ItemIconSize, labelStyle);
+            _config2_0.ItemIconGap = EditorFloatField("Item Icon Gap (px)", _config2_0.ItemIconGap, labelStyle);
+            _config2_0.ItemHeaderFontSize = EditorFloatField("Item Header Font Size (px)", _config2_0.ItemHeaderFontSize, labelStyle);
+            _config2_0.ItemNameFontSize = EditorFloatField("Item Name Font Size (px)", _config2_0.ItemNameFontSize, labelStyle);
+            _config2_0.ItemLocationFontSize = EditorFloatField("Item Location Font Size (px)", _config2_0.ItemLocationFontSize, labelStyle);
+            
+            GUILayout.Space(5);
+            
+            // Timing Settings
+            GUILayout.Label("Timing Settings", headerStyle);
+            _config2_0.AutoDismissDuration = EditorFloatField("Auto Dismiss Duration (s)", _config2_0.AutoDismissDuration, labelStyle);
+            _config2_0.OverflowDismissDuration = EditorFloatField("Overflow Dismiss Duration (s)", _config2_0.OverflowDismissDuration, labelStyle);
+            _config2_0.MaxVisibleNotifications = EditorIntField("Max Visible Notifications", _config2_0.MaxVisibleNotifications, labelStyle);
+            
+            GUILayout.Space(10);
+            
+            // Pulsanti
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Reset to Defaults", buttonStyle))
+            {
+                ResetToDefaults();
+            }
+            if (GUILayout.Button("Apply Changes", buttonStyle))
+            {
+                ApplyChanges();
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.EndVertical();
+        }
+        
+        private float EditorFloatField(string label, float value, GUIStyle labelStyle)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, labelStyle, GUILayout.Width(200));
+            string str = GUILayout.TextField(value.ToString("F1"), GUILayout.Width(100));
+            float result = value;
+            if (float.TryParse(str, out float parsed))
+                result = parsed;
+            GUILayout.EndHorizontal();
+            return result;
+        }
+        
+        private int EditorIntField(string label, int value, GUIStyle labelStyle)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, labelStyle, GUILayout.Width(200));
+            string str = GUILayout.TextField(value.ToString(), GUILayout.Width(100));
+            int result = value;
+            if (int.TryParse(str, out int parsed))
+                result = parsed;
+            GUILayout.EndHorizontal();
+            return result;
+        }
+        
+        private void ResetToDefaults()
+        {
+            if (_config2_0 == null) return;
+            
+            // Reset ai valori di default
+            _config2_0.ContainerWidth = 306f;
+            _config2_0.ContainerTopOffset = 96f;
+            _config2_0.ContainerRightOffset = 24f;
+            _config2_0.HeaderPadding = 8f;
+            _config2_0.HeaderBorderWidth = 2f;
+            _config2_0.HeaderMarginBottom = 6f;
+            _config2_0.HeaderFontSize = 10f;
+            _config2_0.HeaderIconSize = 14f;
+            _config2_0.HeaderChevronSize = 16f;
+            _config2_0.ToastPadding = 8f;
+            _config2_0.ToastBorderWidth = 2f;
+            _config2_0.ToastGap = 6f;
+            _config2_0.ToastIconSize = 14f;
+            _config2_0.ToastCodeFontSize = 10f;
+            _config2_0.ToastMessageFontSize = 11f;
+            _config2_0.ItemIconSize = 40f;
+            _config2_0.ItemIconGap = 8f;
+            _config2_0.ItemHeaderFontSize = 10f;
+            _config2_0.ItemNameFontSize = 11f;
+            _config2_0.ItemLocationFontSize = 9f;
+            _config2_0.AutoDismissDuration = 8f;
+            _config2_0.OverflowDismissDuration = 5f;
+            _config2_0.MaxVisibleNotifications = 3;
+            
+            SporiumLogger.LogInfo(LogCategory.UI, "HUD Notifications 2.0 config reset to defaults");
+        }
+        
+        private void ApplyChanges()
+        {
+            if (_manager2_0 == null) return;
+            
+            // Notifica al manager di ricaricare layout
+            _manager2_0.RefreshLayout();
+            SporiumLogger.LogInfo(LogCategory.UI, "HUD Notifications 2.0 layout refreshed");
         }
         
         private Texture2D MakeTex(int width, int height, Color col)

@@ -39,6 +39,32 @@ namespace Sporae.DevTools
                 ServiceContainer.Instance.Register(this);
         }
         
+        // #region agent log
+        private static void LogDebug(string hypothesisId, string location, string message, System.Collections.Generic.Dictionary<string, object> data)
+        {
+            try
+            {
+                long timestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                System.Text.StringBuilder dataJson = new System.Text.StringBuilder("{");
+                bool first = true;
+                foreach (var kvp in data)
+                {
+                    if (!first) dataJson.Append(",");
+                    first = false;
+                    dataJson.Append($"\"{kvp.Key}\":");
+                    if (kvp.Value is bool) dataJson.Append(kvp.Value.ToString().ToLower());
+                    else if (kvp.Value is string) dataJson.Append($"\"{kvp.Value}\"");
+                    else if (kvp.Value == null) dataJson.Append("null");
+                    else dataJson.Append(kvp.Value.ToString().Replace(",", "."));
+                }
+                dataJson.Append("}");
+                string logLine = $"{{\"id\":\"log_{timestamp}\",\"timestamp\":{timestamp},\"location\":\"{location}\",\"message\":\"{message}\",\"data\":{dataJson},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"{hypothesisId}\"}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logLine);
+            }
+            catch { }
+        }
+        // #endregion
+
         private void SetupRectTransform()
         {
             // NOTA: La posizione, anchor, pivot e dimensioni del root RectTransform
@@ -48,6 +74,48 @@ namespace Sporae.DevTools
             // VerticalLayoutGroup per toast container (necessario per il funzionamento)
             if (_toastContainer != null)
             {
+                // #region agent log
+                LogDebug("A", "ToastNotificationManager.cs:49", "ToastContainer RectTransform BEFORE setup", new System.Collections.Generic.Dictionary<string, object>
+                {
+                    { "anchorMin", $"{_toastContainer.anchorMin.x},{_toastContainer.anchorMin.y}" },
+                    { "anchorMax", $"{_toastContainer.anchorMax.x},{_toastContainer.anchorMax.y}" },
+                    { "pivot", $"{_toastContainer.pivot.x},{_toastContainer.pivot.y}" },
+                    { "sizeDelta", $"{_toastContainer.sizeDelta.x},{_toastContainer.sizeDelta.y}" },
+                    { "anchoredPosition", $"{_toastContainer.anchoredPosition.x},{_toastContainer.anchoredPosition.y}" },
+                    { "rect", $"{_toastContainer.rect.width},{_toastContainer.rect.height}" }
+                });
+                // #endregion
+
+                // DEBUG_SAFE_FIX: Configura RectTransform del ToastContainer per layout corretto
+                // ToastContainer deve essere top-stretch (anchor top, stretch orizzontale) per allinearsi con header
+                // E posizionato SOTTO l'header con offset Y negativo calcolato dinamicamente
+                _toastContainer.anchorMin = new Vector2(0f, 1f); // Top-left
+                _toastContainer.anchorMax = new Vector2(1f, 1f); // Top-right (stretch horizontal)
+                _toastContainer.pivot = new Vector2(0.5f, 1f); // Top-center
+                
+                // Calcola offset Y negativo basato sull'altezza dell'header
+                float headerHeight = 0f;
+                if (_header != null)
+                {
+                    var headerRectTransform = _header.GetComponent<RectTransform>();
+                    if (headerRectTransform != null)
+                    {
+                        headerHeight = headerRectTransform.rect.height;
+                    }
+                }
+                // Se headerHeight è 0, usa valore di fallback (circa 40px)
+                if (headerHeight <= 0f) headerHeight = 40f;
+                
+                _toastContainer.anchoredPosition = new Vector2(0f, -headerHeight); // Sotto l'header
+                _toastContainer.sizeDelta = new Vector2(0f, 0f); // Width: stretch, Height: auto (gestito da ContentSizeFitter)
+
+                // Aggiungi ContentSizeFitter per adattare altezza al contenuto
+                var contentSizeFitter = _toastContainer.GetComponent<UnityEngine.UI.ContentSizeFitter>();
+                if (contentSizeFitter == null)
+                    contentSizeFitter = _toastContainer.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>();
+                contentSizeFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.Unconstrained;
+                contentSizeFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+
                 var layoutGroup = _toastContainer.GetComponent<VerticalLayoutGroup>();
                 if (layoutGroup == null)
                     layoutGroup = _toastContainer.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -58,6 +126,27 @@ namespace Sporae.DevTools
                 layoutGroup.childControlWidth = true;
                 layoutGroup.childForceExpandHeight = false;
                 layoutGroup.childForceExpandWidth = true;
+
+                // Forza rebuild del layout per applicare ContentSizeFitter
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_toastContainer);
+
+                // #region agent log
+                LogDebug("B", "ToastNotificationManager.cs:107", "ToastContainer RectTransform AFTER setup", new System.Collections.Generic.Dictionary<string, object>
+                {
+                    { "anchorMin", $"{_toastContainer.anchorMin.x},{_toastContainer.anchorMin.y}" },
+                    { "anchorMax", $"{_toastContainer.anchorMax.x},{_toastContainer.anchorMax.y}" },
+                    { "pivot", $"{_toastContainer.pivot.x},{_toastContainer.pivot.y}" },
+                    { "sizeDelta", $"{_toastContainer.sizeDelta.x},{_toastContainer.sizeDelta.y}" },
+                    { "anchoredPosition", $"{_toastContainer.anchoredPosition.x},{_toastContainer.anchoredPosition.y}" },
+                    { "rect", $"{_toastContainer.rect.width},{_toastContainer.rect.height}" },
+                    { "headerHeight", headerHeight },
+                    { "layoutGroupSpacing", layoutGroup.spacing },
+                    { "layoutGroupChildControlWidth", layoutGroup.childControlWidth },
+                    { "layoutGroupChildControlHeight", layoutGroup.childControlHeight },
+                    { "contentSizeFitterHorizontalFit", contentSizeFitter.horizontalFit.ToString() },
+                    { "contentSizeFitterVerticalFit", contentSizeFitter.verticalFit.ToString() }
+                });
+                // #endregion
             }
         }
         
@@ -195,6 +284,17 @@ namespace Sporae.DevTools
             
             if (_toastContainer != null)
             {
+                // #region agent log
+                LogDebug("D", "ToastNotificationManager.cs:196", "ToastContainer BEFORE adding toast", new System.Collections.Generic.Dictionary<string, object>
+                {
+                    { "containerRect", $"{_toastContainer.rect.width},{_toastContainer.rect.height}" },
+                    { "containerSizeDelta", $"{_toastContainer.sizeDelta.x},{_toastContainer.sizeDelta.y}" },
+                    { "containerAnchoredPosition", $"{_toastContainer.anchoredPosition.x},{_toastContainer.anchoredPosition.y}" },
+                    { "activeToastsCount", _activeToasts.Count },
+                    { "toastId", toastId }
+                });
+                // #endregion
+
                 toastItem.transform.SetParent(_toastContainer);
                 // LIFO: più recente in alto (SetAsFirstSibling invece di SetAsLastSibling)
                 toastItem.transform.SetAsFirstSibling();
@@ -206,6 +306,18 @@ namespace Sporae.DevTools
                     // Forza il layout group a ricalcolare le posizioni
                     UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_toastContainer);
                 }
+
+                // #region agent log
+                LogDebug("D", "ToastNotificationManager.cs:210", "ToastContainer AFTER adding toast", new System.Collections.Generic.Dictionary<string, object>
+                {
+                    { "containerRect", $"{_toastContainer.rect.width},{_toastContainer.rect.height}" },
+                    { "containerSizeDelta", $"{_toastContainer.sizeDelta.x},{_toastContainer.sizeDelta.y}" },
+                    { "containerAnchoredPosition", $"{_toastContainer.anchoredPosition.x},{_toastContainer.anchoredPosition.y}" },
+                    { "activeToastsCount", _activeToasts.Count + 1 },
+                    { "toastId", toastId },
+                    { "toastRect", $"{toastItem.GetComponent<RectTransform>().rect.width},{toastItem.GetComponent<RectTransform>().rect.height}" }
+                });
+                // #endregion
             }
             
             // LIFO: aggiungi in testa alla lista (più recente prima)

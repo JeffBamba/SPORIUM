@@ -12,7 +12,6 @@ namespace Sporae.DevTools
     {
         [Header("Pool Settings")]
         [SerializeField] private ToastNotificationUIItem _prefab;
-        [SerializeField] private Transform _poolParent;
         [SerializeField] private int _initialPoolSize = 10;
         
         private Queue<ToastNotificationUIItem> _pool = new Queue<ToastNotificationUIItem>();
@@ -20,9 +19,6 @@ namespace Sporae.DevTools
         
         private void Awake()
         {
-            if (_poolParent == null)
-                _poolParent = transform;
-            
             // Pre-warm pool
             for (int i = 0; i < _initialPoolSize; i++)
             {
@@ -61,7 +57,7 @@ namespace Sporae.DevTools
             
             _activeItems.Remove(item);
             item.ReturnToPool();
-            item.transform.SetParent(_poolParent);
+            item.transform.SetParent(transform);
             _pool.Enqueue(item);
         }
         
@@ -73,7 +69,7 @@ namespace Sporae.DevTools
                 return null;
             }
             
-            var instance = Instantiate(_prefab, _poolParent);
+            var instance = Instantiate(_prefab, transform);
             instance.gameObject.SetActive(false);
             return instance;
         }

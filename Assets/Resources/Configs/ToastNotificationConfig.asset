@@ -16,21 +16,21 @@ MonoBehaviour:
   - Type: 0
     Color:
       serializedVersion: 2
-      rgba: 4286250879
+      rgba: 2373648255
     DefaultDuration: 3
     CodePrefix: SUCCESS-
     SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
   - Type: 1
     Color:
       serializedVersion: 2
-      rgba: 4286250879
+      rgba: 2373648255
     DefaultDuration: 3
     CodePrefix: POT-ACTION-SUCCESS-
     SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
   - Type: 2
     Color:
       serializedVersion: 2
-      rgba: 4286250879
+      rgba: 2373648255
     DefaultDuration: 2.5
     CodePrefix: INV-
     SeverityIcon: {fileID: 21300000, guid: f38e832edef3ab648bcc2ab5dfa2906d, type: 3}
