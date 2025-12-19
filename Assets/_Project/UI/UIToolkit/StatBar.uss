@@ -1,0 +1,56 @@
+/* Stat Bar - Dynamic Color Styles */
+
+/* Health Bar Color States */
+.health-fill-green {
+    background-color: #7FFF7A;
+    border-color: #7FFF7A;
+}
+
+.health-fill-yellow {
+    background-color: #E6C96F;
+    border-color: #E6C96F;
+}
+
+.health-fill-red {
+    background-color: #D35F5F;
+    border-color: #D35F5F;
+}
+
+/* Energy Bar Color States */
+.energy-fill-blue {
+    background-color: #5DB6E3;
+    border-color: #5DB6E3;
+}
+
+.energy-fill-yellow {
+    background-color: #E6C96F;
+    border-color: #E6C96F;
+}
+
+.energy-fill-red {
+    background-color: #D35F5F;
+    border-color: #D35F5F;
+}
+
+/* Hydration Bar Color States */
+.hydration-fill-green-normal {
+    background-color: #7FFF7A;
+    border-color: #7FFF7A;
+}
+
+.hydration-fill-green-enhanced {
+    background-color: #7FFF7A;
+    border-color: #7FFF7A;
+    /* Enhanced glow will be applied via C# */
+}
+
+.hydration-fill-yellow {
+    background-color: #E6C96F;
+    border-color: #E6C96F;
+}
+
+.hydration-fill-red {
+    background-color: #D35F5F;
+    border-color: #D35F5F;
+}
+

@@ -1,0 +1,73 @@
+/* Game Viewport Background - Gradiente Background per SPORIUM */
+
+/* Container principale - copre tutto lo schermo */
+.game-viewport {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    /* Z-order basso per stare dietro tutto */
+    /* Nota: Imposta sorting order appropriato nel UIDocument */
+}
+
+/* Background principale con gradiente */
+.viewport-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    
+    /* Fallback: colore solido centrale del gradiente */
+    /* Blu-Grigio metallico: #1a2328 rgb(26, 35, 40) */
+    background-color: rgb(26, 35, 40);
+    
+    /* TODO: Per gradiente completo, usa background-image con texture */
+    /* 
+     * Crea una texture 1920×1080px (o 256×256px ripetibile) con gradiente:
+     * - Inizio/Fine: #0f1419 rgb(15, 20, 25) - Blu-Nero scuro
+     * - Centro: #1a2328 rgb(26, 35, 40) - Blu-Grigio metallico
+     * 
+     * Esempio Photoshop/GIMP:
+     * 1. Crea nuovo documento 1920×1080px
+     * 2. Gradiente lineare verticale:
+     *    - Top: #0f1419
+     *    - Center: #1a2328
+     *    - Bottom: #0f1419
+     * 3. Esporta come PNG
+     * 4. Importa in Unity come Texture2D
+     * 5. Usa: background-image: url('project://database/Assets/_Project/Art/Textures/viewport_gradient.png?fileID=...');
+     */
+}
+
+/* Overlay vignette laterale (opzionale) */
+.viewport-vignette {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    
+    /* Nero-blu vignette: #0a0f12 rgb(10, 15, 18) */
+    /* Usa opacity bassa per effetto vignette */
+    background-color: rgb(10, 15, 18);
+    opacity: 0.3;
+    
+    /* TODO: Per vignette più sofisticata, usa texture con gradiente radiale */
+    /*
+     * Crea texture con gradiente radiale:
+     * - Centro: trasparente
+     * - Bordi: #0a0f12 rgb(10, 15, 18)
+     * 
+     * Esempio:
+     * 1. Crea nuovo documento 1920×1080px
+     * 2. Gradiente radiale dal centro:
+     *    - Centro: trasparente (alpha 0)
+     *    - Bordi: #0a0f12 (alpha 0.5-0.8)
+     * 3. Esporta come PNG con alpha
+     * 4. Importa in Unity come Texture2D
+     * 5. Usa: background-image: url('project://database/Assets/_Project/Art/Textures/viewport_vignette.png?fileID=...');
+     */
+}
+

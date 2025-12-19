@@ -1,0 +1,42 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/PlayerStatusPanel.uss?fileID=7433441132597879392&amp;guid=2a1f3795a51102e44863d144592a29ed&amp;type=3#PlayerStatusPanel" />
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/StatBar.uss?fileID=7433441132597879392&amp;guid=399e534877b251a4bbe5608ee5298806&amp;type=3#StatBar" />
+    <ui:VisualElement name="player-status-panel" class="player-status-panel" style="position: absolute; top: 78%; left: 32px; height: 99px; min-height: 208px;">
+        <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
+        <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
+        <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
+        <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
+        <ui:VisualElement name="scanlines-overlay" class="scanlines-overlay" style="position: absolute; height: 250px; width: 217px;" />
+        <ui:VisualElement name="top-section" class="top-section">
+            <ui:VisualElement name="biologo-portrait" class="portrait-image" style="min-width: 55px; min-height: 60px; height: 60px; width: 55px;" />
+            <ui:Label name="header-label" text="BIOLOGO" class="header-label" style="left: 1px; top: -6px; font-size: 8px; color: rgb(122, 199, 255);" />
+            <ui:Label name="header-label" text="STATUS" class="header-label" style="left: -63px; top: 7px; width: 51px; color: rgb(227, 244, 255); -unity-font-style: bold;" />
+        </ui:VisualElement>
+        <ui:Button name="reputation-btn" text="REP" class="header-button" style="width: 30px; top: -63px; right: -122px; min-width: auto; height: 30px; left: 120px; border-left-color: rgb(227, 209, 93); border-right-color: rgb(227, 209, 93); border-top-color: rgb(227, 209, 93); border-bottom-color: rgb(227, 209, 93); color: rgb(227, 209, 94);" />
+        <ui:VisualElement name="hydration-bar-container" class="stat-bar-container" style="top: -45px;">
+            <ui:VisualElement name="hydration-bar-header" class="stat-bar-header">
+                <ui:Label name="hydration-label" text="HYDRATION" class="stat-label" style="right: -5px; color: rgb(149, 184, 226);" />
+                <ui:Label name="hydration-value" text="30%" class="stat-value" />
+            </ui:VisualElement>
+            <ui:VisualElement name="segmented-bar" class="stat-bar segmented-bar">
+                <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+            </ui:VisualElement>
+            <ui:Label name="low-text" text="Low" class="low-text" />
+            <ui:Label name="warning-text" class="warning-text" />
+        </ui:VisualElement>
+        <ui:Button name="diary-btn" class="diary-button" style="white-space: nowrap; text-overflow: ellipsis; top: -18px; border-left-color: rgb(183, 148, 246); border-right-color: rgb(183, 148, 246); border-top-color: rgb(183, 148, 246); border-bottom-color: rgb(183, 148, 246);">
+            <ui:VisualElement name="diary-icon" class="diary-icon" style="left: -38px; background-color: rgb(183, 148, 246);" />
+            <ui:Label name="diary-label" text="SPORAE Diary" class="diary-label" style="white-space: nowrap; -unity-text-align: middle-left; left: -42px; color: rgb(183, 148, 246);" />
+        </ui:Button>
+        <ui:Button name="inventory-btn" text="INV" class="header-button" style="width: 30px; top: 21px; right: 11px; min-width: auto; height: 30px; left: 168px; position: absolute; color: rgb(68, 208, 65); border-left-color: rgb(69, 209, 65); border-right-color: rgb(69, 209, 65); border-top-color: rgb(69, 209, 65); border-bottom-color: rgb(69, 209, 65); background-image: url(&quot;project://database/Assets/_Project/Art/Sprites/UI/Icon_Chevron.png?fileID=21300000&amp;guid=a11f3440920d2134eba375971f965c51&amp;type=3#Icon_Chevron&quot;);" />
+    </ui:VisualElement>
+</ui:UXML>

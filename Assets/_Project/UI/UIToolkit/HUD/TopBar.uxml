@@ -1,0 +1,57 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/TopBar.uss?fileID=7433441132597879392&amp;guid=b96806e35b5e7084e80a6d7636562790&amp;type=3#TopBar" />
+    <ui:VisualElement name="top-bar" class="top-bar" style="min-height: 112px;">
+        <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
+        <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
+        <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
+        <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
+        <ui:VisualElement name="scan-line-top" class="scan-line-bottom" />
+        <ui:VisualElement name="content" class="top-bar-content">
+            <ui:VisualElement name="actions-display" class="metric-box">
+                <ui:VisualElement name="icon-actions" class="icon-placeholder" />
+                <ui:Label text="AZIONI" class="metric-label" />
+                <ui:VisualElement name="actions-bar" class="segmented-bar">
+                    <ui:VisualElement name="segment-0" class="bar-segment" />
+                    <ui:VisualElement name="segment-1" class="bar-segment" />
+                    <ui:VisualElement name="segment-2" class="bar-segment" />
+                    <ui:VisualElement name="segment-3" class="bar-segment" />
+                </ui:VisualElement>
+                <ui:Label name="actions-value" text="3/4" class="metric-value" />
+            </ui:VisualElement>
+            <ui:VisualElement name="mutation-display" class="metric-box">
+                <ui:VisualElement name="mutation-orbit" class="mutation-orbit">
+                    <ui:VisualElement name="icon-mutation" class="icon-placeholder-center" />
+                    <ui:VisualElement name="orbit-dot-1" class="orbit-dot" />
+                    <ui:VisualElement name="orbit-dot-2" class="orbit-dot" />
+                    <ui:VisualElement name="orbit-dot-3" class="orbit-dot" />
+                </ui:VisualElement>
+                <ui:Label text="MUTATION" class="metric-label" />
+                <ui:Label name="mutation-value" text="INDEX 0.42" class="metric-value" />
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-display" class="metric-box-ph">
+                <ui:Label text="pH DRIFT" class="metric-label-ph" />
+                <ui:Label name="ph-value" text="7.2" class="ph-value" />
+                <ui:VisualElement name="ph-slider" class="ph-slider">
+                    <ui:VisualElement name="ph-gradient" class="ph-gradient" />
+                    <ui:VisualElement name="ph-neutral-zone" class="ph-neutral-zone" />
+                    <ui:VisualElement name="ph-marker" class="ph-marker" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="condensation-display" class="metric-box">
+                <ui:VisualElement name="icon-condensation" class="icon-placeholder" />
+                <ui:Label text="CONDENSATION" class="metric-label" />
+                <ui:Label name="condensation-value" text="78%" class="metric-value-large" />
+            </ui:VisualElement>
+            <ui:VisualElement name="grate-display" class="metric-box">
+                <ui:VisualElement name="icon-grate" class="icon-placeholder" />
+                <ui:Label text="GRATE" class="metric-label" />
+                <ui:Label name="grate-value" text="+12" class="metric-value" />
+            </ui:VisualElement>
+            <ui:VisualElement name="cry-display" class="metric-box">
+                <ui:VisualElement name="icon-cry" class="icon-placeholder" />
+                <ui:Label text="CRY BALANCE" class="metric-label" />
+                <ui:Label name="cry-value" text="1,245" class="metric-value-large" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

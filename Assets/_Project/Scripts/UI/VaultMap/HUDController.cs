@@ -154,45 +154,21 @@ public class HUDController : MonoBehaviour
 
     private void UpdateActions(int actions)
     {
+        // Azioni ora gestite dalla TopBar UI Toolkit - nascondi il testo nella vecchia HUD
         if (actionsText != null)
         {
-            actionsText.text = $"Azioni: {actions}";
-            
-            // Cambia colore in base alle azioni rimanenti
-            if (actions <= 0)
-            {
-                actionsText.color = Color.red;
-            }
-            else if (actions <= 1)
-            {
-                actionsText.color = Color.yellow;
-            }
-            else
-            {
-                actionsText.color = Color.white;
-            }
+            actionsText.text = ""; // Rimuovi il testo "Azioni: X"
+            actionsText.gameObject.SetActive(false); // Nascondi completamente l'elemento
         }
     }
 
     private void UpdateCRY(int cry)
     {
+        // CRY ora gestito dalla TopBar UI Toolkit - nascondi il testo nella vecchia HUD
         if (cryText != null)
         {
-            cryText.text = $"CRY: {cry}";
-            
-            // Cambia colore in base ai CRY rimanenti
-            if (cry <= 10)
-            {
-                cryText.color = Color.red;
-            }
-            else if (cry <= 25)
-            {
-                cryText.color = Color.yellow;
-            }
-            else
-            {
-                cryText.color = Color.white;
-            }
+            cryText.text = ""; // Rimuovi il testo "CRY: X"
+            cryText.gameObject.SetActive(false); // Nascondi completamente l'elemento
         }
     }
 

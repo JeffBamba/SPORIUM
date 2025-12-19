@@ -42,8 +42,13 @@ namespace Sporae.Core
         
         public void ResetActions(int specificAmount)
         {
-            ActionsLeft += specificAmount;
-            MaxActions += specificAmount;
+            // BUG FIX: ResetActions dovrebbe RESETTARE, non aggiungere
+            // Se ActionsLeft = 0 e specificAmount = 4, dovrebbe diventare 4, non 0+4=4 (ok)
+            // Ma MaxActions dovrebbe essere resettato a specificAmount, non aggiunto
+            // Se MaxActions = 4 e specificAmount = 4, dovrebbe rimanere 4, non diventare 8!
+            ActionsLeft = specificAmount;
+            MaxActions = specificAmount;
+            
             OnActionsChanged?.Invoke(ActionsLeft);
         }
 

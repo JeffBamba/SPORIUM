@@ -1,0 +1,302 @@
+/* TopBar - Main Container */
+.top-bar {
+    width: 100%;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    background-color: rgba(30, 40, 42, 0.9);
+    border-bottom-width: 4px;
+    border-bottom-color: rgba(127, 255, 122, 0.6);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* TODO: Glow effects (box-shadow triple-layer) - implementazione futura via Outline component o shader */
+
+/* Scanline Overlay */
+.scan-line-bottom {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    background-color: rgba(127, 255, 122, 0.1);
+    opacity: 0.1;
+    /* Note: repeating-linear-gradient not fully supported, using background-color as fallback */
+}
+
+/* Content Container */
+.top-bar-content {
+    width: 100%;
+    height: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Metric Box (Base) */
+.metric-box {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    margin-right: 24px; /* Spacing tra metriche (sostituisce gap) */
+}
+
+/* Note: :last-child pseudo-class not supported in UI Toolkit USS - margin-right extra on last element is acceptable */
+
+.metric-box-ph {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    margin-right: 24px;
+}
+
+/* Metric Labels */
+.metric-label {
+    font-size: 10px;
+    color: rgb(192, 200, 197);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    letter-spacing: 1px;
+    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+}
+
+.metric-label-ph {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.85);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    letter-spacing: 1px;
+    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+}
+
+/* Metric Values */
+.metric-value {
+    font-size: 11px;
+    color: rgb(192, 200, 197);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    /* Note: font-family monospace not supported in USS, configure at project level */
+}
+
+.metric-value-large {
+    font-size: 16px;
+    color: rgb(93, 182, 227);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    text-shadow: 0px 0px 4px rgba(93, 182, 227, 0.8);
+    /* Note: font-family monospace not supported in USS, configure at project level */
+}
+
+/* Icon Placeholders */
+.icon-placeholder {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    border-width: 2px;
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.1);
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+}
+
+.icon-placeholder-center {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border-width: 2px;
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.1);
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -12px;
+    margin-top: -12px;
+}
+
+/* Segmented Bar (Actions) */
+.segmented-bar {
+    width: 100%;
+    height: 16px;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0px;
+    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+}
+
+.bar-segment {
+    flex-grow: 1;
+    height: 100%;
+    min-width: 12px;
+    background-color: rgb(30, 40, 42);
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.6);
+    margin-right: 4px; /* Spacing tra segmenti (sostituisce gap) */
+}
+
+/* Note: :last-child pseudo-class not supported in UI Toolkit USS - margin-right extra on last segment is acceptable */
+
+.bar-segment.filled {
+    background-color: rgb(230, 201, 111);
+    border-color: rgb(230, 201, 111);
+    /* TODO: Add glow effect */
+}
+
+/* Mutation Orbit */
+.mutation-orbit {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+}
+
+.orbit-dot {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px;
+    background-color: rgb(127, 255, 122);
+    border-radius: 50%;
+    position: absolute;
+    /* Position will be set dynamically via C# */
+}
+
+/* pH Slider */
+.ph-slider {
+    width: 100%;
+    height: 8px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.2);
+    overflow: visible;
+}
+
+.ph-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    /* Note: Linear gradient not fully supported in UI Toolkit USS, will be set via C# */
+    background-color: rgb(255, 42, 42); /* Red fallback */
+}
+
+.ph-neutral-zone {
+    position: absolute;
+    width: 40%;
+    height: 100%;
+    left: 30%;
+    top: 0px;
+    background-color: rgba(216, 255, 229, 0.35);
+    border-radius: 0px;
+    /* Note: pointer-events not supported in USS */
+}
+
+.ph-marker {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    position: absolute;
+    top: 50%;
+    margin-top: -6px;
+    background-color: rgb(255, 255, 255);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    /* TODO: Add triple-layer glow effect */
+}
+
+.ph-value {
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: normal;
+    -unity-text-align: middle-right;
+    width: 100%;
+    /* Note: font-family monospace not supported in USS, configure at project level */
+}
+
+/* Pixel Corners */
+.pixel-corner {
+    width: 3px;
+    height: 3px;
+    position: absolute;
+    background-color: rgb(127, 255, 122);
+    /* TODO: Add glow effect 0 0 4px #7FFF7A */
+}
+
+.corner-top-left {
+    top: 0px;
+    left: 0px;
+    border-right-width: 0px;
+    border-bottom-width: 0px;
+    border-left-width: 2px;
+    border-top-width: 2px;
+    border-top-color: rgb(127, 255, 122);
+    border-left-color: rgb(127, 255, 122);
+}
+
+.corner-top-right {
+    top: 0px;
+    right: 0px;
+    border-left-width: 0px;
+    border-bottom-width: 0px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-top-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+}
+
+.corner-bottom-left {
+    bottom: 0px;
+    left: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-left-width: 2px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(127, 255, 122);
+    border-left-color: rgb(127, 255, 122);
+}
+
+.corner-bottom-right {
+    bottom: 0px;
+    right: 0px;
+    border-left-width: 0px;
+    border-top-width: 0px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+}
+
+/* Animations */
+/* Note: @keyframes not fully supported in UI Toolkit USS, animations will be handled via C# coroutines */
+/* @keyframes borderGlowScan - implemented via C# */
+/* @keyframes phPulse - implemented via C# */
+/* @keyframes mutationOrbit - implemented via C# coroutine */
+

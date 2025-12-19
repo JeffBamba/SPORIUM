@@ -1,0 +1,205 @@
+/* BottomNavigation - Main Container */
+.bottom-nav {
+    width: 100%;
+    height: 100px;
+    min-height: 100px;
+    max-height: 100px;
+    background-color: rgba(30, 40, 42, 0.9);
+    border-top-width: 4px;
+    border-top-color: rgba(127, 255, 122, 0.6);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* TODO: Glow effects (box-shadow triple-layer) - implementazione futura via Outline component o shader */
+
+/* Scanline Overlay */
+.scan-line-top {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    background-color: rgba(127, 255, 122, 0.1);
+    opacity: 0.1;
+    /* Note: repeating-linear-gradient not fully supported, using background-color as fallback */
+}
+
+/* Navigation Content */
+.bottom-nav-content {
+    width: 100%;
+    height: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Room Button Base */
+.room-button {
+    width: 140px;
+    height: 70px;
+    min-width: 140px;
+    min-height: 70px;
+    border-width: 2px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px; /* Spacing tra bottoni (sostituisce gap) */
+    /* Transition handled via C# for scale animation */
+}
+
+/* Note: :last-child pseudo-class not supported in UI Toolkit USS - margin-right extra on last button is acceptable */
+
+/* Room Button States */
+.room-active {
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.2);
+    /* TODO: Add triple-layer glow effect */
+}
+
+.room-available {
+    border-color: rgba(127, 255, 122, 0.4);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.room-locked {
+    border-color: rgba(211, 95, 95, 0.4);
+    background-color: rgba(0, 0, 0, 0.4);
+    opacity: 0.6;
+}
+
+/* Room Label */
+.room-label {
+    font-size: 12px;
+    color: rgb(192, 200, 197);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    letter-spacing: 1px;
+    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+    /* Note: text-transform and font-family not supported in USS */
+}
+
+.room-active .room-label {
+    color: rgb(127, 255, 122);
+}
+
+.room-locked .room-label {
+    color: rgb(211, 95, 95);
+}
+
+/* Room Floor Subtext */
+.room-floor {
+    font-size: 9px;
+    color: rgba(127, 255, 122, 0.6);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    letter-spacing: 2px;
+    /* Note: text-transform and font-family not supported in USS */
+}
+
+.room-active .room-floor {
+    color: rgba(127, 255, 122, 0.8);
+}
+
+.room-locked .room-floor {
+    color: rgba(211, 95, 95, 0.6);
+}
+
+/* Icon Placeholders in Room Buttons */
+.room-button .icon-placeholder {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    border-width: 2px;
+    border-color: rgb(192, 200, 197);
+    background-color: rgba(192, 200, 197, 0.1);
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.room-active .icon-placeholder {
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.1);
+    /* TODO: Add glow effect drop-shadow(0 0 4px #7FFF7A) */
+}
+
+.room-locked .icon-placeholder {
+    border-color: rgb(211, 95, 95);
+    background-color: rgba(211, 95, 95, 0.1);
+    /* TODO: Add glow effect drop-shadow(0 0 4px #D35F5F) */
+}
+
+/* Pixel Corners */
+.pixel-corner {
+    width: 3px;
+    height: 3px;
+    position: absolute;
+    background-color: rgb(127, 255, 122);
+    /* TODO: Add glow effect 0 0 4px #7FFF7A */
+}
+
+.corner-top-left {
+    top: 0px;
+    left: 0px;
+    border-right-width: 0px;
+    border-bottom-width: 0px;
+    border-left-width: 2px;
+    border-top-width: 2px;
+    border-top-color: rgb(127, 255, 122);
+    border-left-color: rgb(127, 255, 122);
+}
+
+.corner-top-right {
+    top: 0px;
+    right: 0px;
+    border-left-width: 0px;
+    border-bottom-width: 0px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-top-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+}
+
+.corner-bottom-left {
+    bottom: 0px;
+    left: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-left-width: 2px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(127, 255, 122);
+    border-left-color: rgb(127, 255, 122);
+}
+
+.corner-bottom-right {
+    bottom: 0px;
+    right: 0px;
+    border-left-width: 0px;
+    border-top-width: 0px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+}
+
+/* Hover Effects (handled via C# for scale animation) */
+/* .room-available:hover - border → #7FFF7A 70%, background → #7FFF7A 10%, scale 1.05 */
+

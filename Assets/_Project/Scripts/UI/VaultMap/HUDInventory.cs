@@ -77,8 +77,11 @@ namespace _Project
 
         private void Start()
         {
+            // Pulsante Inventory ora gestito dal Player Status Panel UI Toolkit - nascondi il pulsante vecchio
             if (_showInventoryButton != null)
-                _showInventoryButton.onClick.AddListener(Toggle);
+            {
+                _showInventoryButton.gameObject.SetActive(false); // Nascondi completamente il pulsante
+            }
             
             if (_inventory != null)
                 _inventory.OnInventoryChanged += UpdateInventory;
@@ -117,7 +120,7 @@ namespace _Project
             }
         }
 
-        private void Toggle()
+        public void Toggle()
         {
             if (_inventoryPage.activeSelf)
                 Close();

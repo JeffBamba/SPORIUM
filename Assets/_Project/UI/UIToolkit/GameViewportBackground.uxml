@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/_Project/UI/UIToolkit/GameViewportBackground.uss?fileID=7433445139675422219&amp;type=3#GameViewportBackground" />
+    <ui:VisualElement name="game-viewport-background" class="game-viewport">
+        <!-- Background principale con gradiente (fallback: colore solido centrale) -->
+        <ui:VisualElement name="viewport-gradient" class="viewport-gradient" />
+        <!-- Overlay vignette laterale (opzionale) -->
+        <ui:VisualElement name="viewport-vignette" class="viewport-vignette" />
+    </ui:VisualElement>
+</ui:UXML>
+
