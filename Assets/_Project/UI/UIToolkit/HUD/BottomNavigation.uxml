@@ -1,73 +1,52 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uss?fileID=7433441132597879392&amp;guid=5069f2ddb50b7ef4fad7d296a7a5306c&amp;type=3#BottomNavigation" />
     <ui:VisualElement name="bottom-nav" class="bottom-nav">
-        <!-- Pixel Corners -->
         <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
         <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
         <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
-        
-        <!-- Scanline Overlay -->
         <ui:VisualElement name="scan-line-bottom" class="scan-line-top" />
-        
-        <!-- Navigation Content -->
-        <ui:VisualElement name="nav-content" class="bottom-nav-content">
-            <!-- VISITOR ROOM -->
+        <ui:VisualElement name="nav-content" class="bottom-nav-content" style="justify-content: center; height: 84px;">
             <ui:Button name="btn-visitor" class="room-button room-available">
-                <ui:VisualElement name="icon-visitor" class="icon-placeholder">👥</ui:VisualElement>
+                <ui:VisualElement name="icon-visitor" class="icon-placeholder" />
                 <ui:Label text="VISITOR ROOM" class="room-label" />
                 <ui:Label text="Ground Floor" class="room-floor" />
             </ui:Button>
-            
-            <!-- SEED STORAGE -->
             <ui:Button name="btn-storage" class="room-button room-available">
-                <ui:VisualElement name="icon-storage" class="icon-placeholder">📦</ui:VisualElement>
+                <ui:VisualElement name="icon-storage" class="icon-placeholder" />
                 <ui:Label text="SEED STORAGE" class="room-label" />
                 <ui:Label text="Ground Floor" class="room-floor" />
             </ui:Button>
-            
-            <!-- DOME (Default Active) -->
             <ui:Button name="btn-dome" class="room-button room-active">
-                <ui:VisualElement name="icon-dome" class="icon-placeholder">🌿</ui:VisualElement>
+                <ui:VisualElement name="icon-dome" class="icon-placeholder" />
                 <ui:Label text="DOME" class="room-label" />
                 <ui:Label text="Floor -1" class="room-floor" />
             </ui:Button>
-            
-            <!-- LABORATORY -->
             <ui:Button name="btn-lab" class="room-button room-available">
-                <ui:VisualElement name="icon-lab" class="icon-placeholder">⚗️</ui:VisualElement>
+                <ui:VisualElement name="icon-lab" class="icon-placeholder" />
                 <ui:Label text="LABORATORY" class="room-label" />
                 <ui:Label text="Floor -1" class="room-floor" />
             </ui:Button>
-            
-            <!-- KITCHEN -->
             <ui:Button name="btn-kitchen" class="room-button room-available">
-                <ui:VisualElement name="icon-kitchen" class="icon-placeholder">🍳</ui:VisualElement>
+                <ui:VisualElement name="icon-kitchen" class="icon-placeholder" />
                 <ui:Label text="KITCHEN" class="room-label" />
                 <ui:Label text="Floor -2" class="room-floor" />
             </ui:Button>
-            
-            <!-- DORMITORY -->
             <ui:Button name="btn-dormitory" class="room-button room-available">
-                <ui:VisualElement name="icon-dormitory" class="icon-placeholder">🛏️</ui:VisualElement>
+                <ui:VisualElement name="icon-dormitory" class="icon-placeholder" />
                 <ui:Label text="DORMITORY" class="room-label" />
                 <ui:Label text="Floor -2" class="room-floor" />
             </ui:Button>
-            
-            <!-- RESTRICTED AREA 1 (Locked) -->
             <ui:Button name="btn-restricted1" class="room-button room-locked">
-                <ui:VisualElement name="icon-restricted1" class="icon-placeholder">🚫</ui:VisualElement>
+                <ui:VisualElement name="icon-restricted1" class="icon-placeholder" />
                 <ui:Label text="RESTRICTED" class="room-label" />
                 <ui:Label text="Floor -3" class="room-floor" />
             </ui:Button>
-            
-            <!-- RESTRICTED AREA 2 (Locked) -->
             <ui:Button name="btn-restricted2" class="room-button room-locked">
-                <ui:VisualElement name="icon-restricted2" class="icon-placeholder">🚫</ui:VisualElement>
+                <ui:VisualElement name="icon-restricted2" class="icon-placeholder" />
                 <ui:Label text="RESTRICTED" class="room-label" />
                 <ui:Label text="Floor -3" class="room-floor" />
             </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
-

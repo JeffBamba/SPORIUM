@@ -1,0 +1,732 @@
+PLANT HUD V2.0 - MISURE, DISTANZE E COLORI
+PALETTE COLORI
+Verde LED:       #7FFF7A
+Blu Info:        #5DB6E3
+Rosso Warning:   #D35F5F
+Giallo Standard: #E6C96F
+Violetto Growth: #B580D1
+Grigio Text:     #C0C8C5
+BG Dark:         #0a1216
+BG Darker:       #0f1416
+Metal Light:     #3a4a4f
+Metal Dark:      #1a2325
+MODAL OVERLAY
+Dimensioni:     Full screen (1920×1080)
+Background:     rgba(0, 0, 0, 0.7)
+Backdrop-blur:  4px
+MAIN CARD CONTAINER
+Width:          1400px
+Height:         90vh
+Background:     rgba(10, 18, 22, 0.98)
+Border:         2px solid #7FFF7A
+Padding:        24px
+Border-radius:  0
+Folder Edge Top
+Height:         1.5px
+Background:     #7FFF7A
+Opacity:        0.3
+Pixel Corners (4x)
+Size:           12px × 12px
+Border:         2px solid #7FFF7A
+Opacity:        0.6
+HEADER SECTION
+Padding-bottom: 20px
+Border-bottom:  1px solid rgba(127, 255, 122, 0.2)
+Margin-bottom:  20px
+Gap:            16px (tra elementi)
+Specimen ID Badge
+Padding:        12px
+Border:         1px solid #7FFF7A
+Background:     rgba(127, 255, 122, 0.1)
+Box-shadow:     0 0 12px rgba(127, 255, 122, 0.25)
+
+Label "SPECIMEN":
+- Font-size:    10px
+- Color:        rgba(127, 255, 122, 0.7)
+- Tracking:     widest (0.1em)
+
+ID "PLT-101":
+- Font-size:    16px
+- Color:        #7FFF7A
+- Text-shadow:  0 0 8px #7FFF7A
+- Tracking:     widest
+Plant Name Info
+Gap:            4px (tra elementi)
+
+Nome pianta:
+- Font-size:    24px
+- Color:        #7FFF7A
+- Text-shadow:  0 0 8px #7FFF7A
+
+Sottotitolo:
+- Font-size:    12px
+- Color:        rgba(192, 200, 197, 0.8)
+
+Descrizione:
+- Font-size:    default (non specificato)
+- Color:        rgba(192, 200, 197, 0.7)
+Condition Label (centrato)
+Gap:            8px
+
+Label "CONDIZIONE:":
+- Font-size:    11px
+- Color:        rgba(192, 200, 197, 0.7)
+
+Badge:
+- Padding:      8px 16px
+- Border:       2px solid (colore dinamico)
+- Background:   (colore dinamico con opacity 0.2)
+- Font-size:    11px
+- Tracking:     widest
+
+Colori dinamici:
+- Healthy:      #7FFF7A
+- Stressed:     #E6C96F
+- Critical:     #D35F5F
+Growth Stage Label
+Gap:            12px
+
+Label "GROWTH STAGE:":
+- Font-size:    11px
+- Color:        rgba(192, 200, 197, 0.7)
+
+Badge container:
+- Padding:      8px 12px
+- Border:       2px solid #B580D1
+- Background:   rgba(181, 128, 209, 0.1)
+- Gap:          8px (tra elementi)
+
+Testo "GROWTH":
+- Font-size:    11px
+- Color:        #B580D1
+- Text-shadow:  0 0 8px #B580D1
+
+Progress bar:
+- Segmenti:     7
+- Width:        1px each
+- Height:       12px each
+- Gap:          2px
+- Filled:       #B580D1 con box-shadow 0 0 4px #B580D1
+- Empty:        rgba(181, 128, 209, 0.3)
+
+Counter "3/7":
+- Font-size:    11px
+- Color:        rgba(181, 128, 209, 0.7)
+Close Button
+Size:           32px × 32px
+Border:         2px solid #D35F5F
+Background:     rgba(211, 95, 95, 0.1)
+Hover bg:       rgba(211, 95, 95, 0.2)
+Icon size:      16px
+Icon color:     #D35F5F
+MAIN LAYOUT ROW
+Gap:            24px
+Direction:      row
+LEFT COLUMN
+Width:          480px
+Gap:            16px (tra elementi)
+Plant Preview Box
+Padding:        16px
+Border:         2px solid rgba(127, 255, 122, 0.6)
+Background:     rgba(10, 18, 22, 0.5)
+Box-shadow:     0 0 20px rgba(127, 255, 122, 0.3),
+                inset 0 0 30px rgba(127, 255, 122, 0.1)
+
+Pixel Corners:  
+- Size:         8px × 8px
+- Border:       2px solid #7FFF7A
+Live Indicator (top-right)
+Gap:            6px
+
+LED dot:
+- Size:         8px × 8px
+- Border-radius: 50%
+- Background:   #7FFF7A
+- Box-shadow:   0 0 8px #7FFF7A
+- Animation:    pulse (opacity 1 → 0.3 → 1, 2s loop)
+
+Label "LIVE":
+- Font-size:    10px
+- Color:        rgba(127, 255, 122, 0.8)
+- Tracking:     widest
+pH Drift Overlay (top-left)
+Padding:        6px 10px
+Border:         1px solid rgba(230, 201, 111, 0.5)
+Background:     rgba(230, 201, 111, 0.1)
+Gap:            4px
+
+Label "pH DRIFT":
+- Font-size:    9px
+- Color:        rgba(192, 200, 197, 0.7)
+- Tracking:     wider
+
+Value "+2/day":
+- Font-size:    12px
+- Color:        #E6C96F
+- Text-shadow:  0 0 6px #E6C96F
+Plant Image
+Max-width:      100%
+Max-height:     100%
+Object-fit:     contain
+Drop-shadow:    0 0 20px rgba(127, 255, 122, 0.3)
+Action Buttons Row
+Gap:            12px
+Direction:      row
+PLANT Button (disabled)
+Flex:           1
+Padding:        16px
+Border:         2px solid rgba(127, 255, 122, 0.3)
+Background:     rgba(127, 255, 122, 0.05)
+Opacity:        0.5
+Gap:            8px
+
+Icon size:      24px
+Label font:     12px
+Sublabel font:  10px
+Sublabel color: rgba(192, 200, 197, 0.4)
+REMOVE Button
+Flex:           1
+Padding:        16px
+Border:         2px solid #D35F5F
+Background:     rgba(211, 95, 95, 0.1)
+Hover bg:       rgba(211, 95, 95, 0.2)
+Box-shadow:     0 0 12px rgba(211, 95, 95, 0.4)
+Gap:            8px
+
+Icon size:      24px
+Icon color:     #D35F5F
+Label font:     12px
+Label color:    #D35F5F
+Sublabel font:  10px
+Sublabel color: rgba(211, 95, 95, 0.7)
+RIGHT COLUMN
+Flex:           1
+Gap:            16px
+Tab Switcher
+Gap:            8px
+Direction:      row
+Tab Button (generico)
+Flex:           1
+Padding:        12px 16px
+Border:         1px solid (colore con opacity 0.3)
+Background:     (colore con opacity 0.05) inactive
+                (colore con opacity 0.2) active
+Gap:            8px
+Transition:     0.15s
+
+Icon size:      16px
+Font-size:      11px
+Tracking:       widest
+
+Tab 1 color:    #5DB6E3 (blu)
+Tab 2 color:    #E6C96F (giallo)
+
+Active shadow:  0 0 12px (colore con opacity 0.6)
+VITAL PARAMETERS TAB
+Parameters Grid
+Columns:        2
+Gap:            12px
+Parameter Box (generico)
+Padding:        12px
+Border:         1px solid (colore con opacity 0.4)
+Background:     (colore con opacity 0.05)
+Gap:            8px
+
+Header:
+- Direction:    row, space-between
+- Icon size:    16px
+- Label font:   11px
+- Label color:  rgba(192, 200, 197, 0.8)
+- Tracking:     wider
+
+Value:
+- Font-size:    36px
+- Color:        (colore specifico)
+- Text-shadow:  0 0 8px (colore)
+
+Segmented Bar:
+- Height:       4px
+- Segments:     10
+- Segment gap:  2px
+- Filled:       colore pieno + box-shadow 0 0 4px colore
+- Empty:        colore con opacity 0.2
+
+Range info:
+- Font-size:    10px
+- Color:        rgba(192, 200, 197, 0.6)
+Colori specifici parametri:
+Hydration:       #5DB6E3 (fisso)
+Fertilizer:      dinamico (#7FFF7A / #E6C96F / #D35F5F)
+Light Stress:    #E6C96F (fisso)
+Condizione:      dinamico (#7FFF7A / #E6C96F / #D35F5F)
+Mold Risk:       #E6C96F (fisso)
+pH Affinity:     #E6C96F (fisso)
+Active Power Section
+Margin-top:     12px
+Padding-top:    12px
+Border-top:     1px solid rgba(127, 255, 122, 0.3)
+Gap:            8px
+
+Label:
+- Font-size:    11px
+- Color:        rgba(192, 200, 197, 0.7)
+- Icon size:    12px
+
+Power box:
+- Padding:      12px
+- Border-left:  2px solid #7FFF7A
+- Background:   rgba(127, 255, 122, 0.05)
+- Gap:          6px
+
+Nome potere:
+- Font-size:    14px
+- Color:        #7FFF7A
+- Text-shadow:  0 0 6px #7FFF7A
+
+Bullet points:
+- Font-size:    11px
+- Color:        rgba(192, 200, 197, 0.7)
+Fruit Cycles Info
+Margin-top:     12px
+Padding-top:    12px
+Border-top:     1px solid rgba(93, 182, 227, 0.3)
+Direction:      row, space-between
+
+Label:
+- Font-size:    11px
+- Color:        rgba(192, 200, 197, 0.7)
+- Icon size:    12px
+
+Value:
+- Font-size:    18px
+- Color:        #5DB6E3
+- Text-shadow:  0 0 8px #5DB6E3
+NOTE DA DIARIO TAB
+Diary Header
+Direction:      row, space-between
+Padding-bottom: 12px
+Border-bottom:  1px solid rgba(230, 201, 111, 0.2)
+Margin-bottom:  16px
+
+Label:
+- Font-size:    11px
+- Color:        #E6C96F
+- Tracking:     widest
+
+Add Note Button:
+- Size:         24px × 24px
+- Border:       1px solid rgba(127, 255, 122, 0.5)
+- Background:   rgba(127, 255, 122, 0.1)
+- Hover bg:     rgba(127, 255, 122, 0.2)
+- Box-shadow:   0 0 8px rgba(127, 255, 122, 0.3)
+- Icon size:    14px
+- Icon color:   #7FFF7A
+Prodotti Section
+Margin-bottom:  16px
+Gap:            12px
+Header
+Padding-bottom: 8px
+Border-bottom:  1px solid rgba(127, 255, 122, 0.2)
+Gap:            6px
+
+Icon size:      14px
+Label font:     11px
+Label color:    #7FFF7A
+Tracking:       widest
+Content Box
+Padding:        12px
+Border:         2px solid rgba(127, 255, 122, 0.4)
+Background:     rgba(127, 255, 122, 0.05)
+Gap:            10px (tra prodotti)
+Prodotto Item
+Gap:            4px
+
+Title:
+- Font-size:    default (NON overridato)
+- Color:        #7FFF7A (fruit), #5DB6E3 (leaves), #E6C96F (seeds)
+- Text-shadow:  0 0 6px (colore corrispondente)
+
+Subtitle:
+- Font-size:    default (NON overridato)
+- Color:        rgba(192, 200, 197, 0.7)
+
+Details (indentati):
+- Padding-left: 16px
+- Font-size:    default (NON overridato)
+- Color:        rgba(192, 200, 197, 0.6)
+- Line-height:  1.6
+Notes List (ScrollView)
+Flex:           1
+Gap:            8px
+Overflow-y:     auto
+Note Item
+Padding:        8px
+Border-left:    2px solid rgba(230, 201, 111, 0.3)
+Background:     rgba(230, 201, 111, 0.05)
+
+Font-size:      default (NON overridato)
+Color:          rgba(192, 200, 197, 0.8)
+Line-height:    1.5
+Add Note Panel
+Margin-top:     12px
+Gap:            8px
+Textarea
+Rows:           3
+Padding:        8px
+Border:         1px solid rgba(230, 201, 111, 0.4)
+Background:     rgba(10, 18, 22, 0.5)
+Font-size:      default
+Color:          #C0C8C5
+Focus border:   1px solid #E6C96F
+
+Placeholder:
+- Color:        rgba(192, 200, 197, 0.4)
+Button Row
+Gap:            8px
+Direction:      row
+SAVE NOTE Button
+Flex:           1
+Padding:        10px 16px
+Border:         2px solid #7FFF7A
+Background:     #0a1216
+Box-shadow:     0 0 8px rgba(127, 255, 122, 0.4),
+                inset 0 0 20px rgba(127, 255, 122, 0.1)
+Hover shadow:   0 0 16px rgba(127, 255, 122, 0.6)
+Gap:            8px
+
+LED dot:
+- Size:         3px × 3px
+- Border-radius: 50%
+- Background:   #7FFF7A
+- Box-shadow:   0 0 4px #7FFF7A
+
+Text:
+- Font-size:    11px
+- Color:        #7FFF7A
+- Tracking:     wider
+CANCEL Button
+Flex:           1
+Padding:        10px 16px
+Border:         2px solid #D35F5F
+Background:     #0a1216
+Box-shadow:     0 0 8px rgba(211, 95, 95, 0.4)
+Hover shadow:   0 0 16px rgba(211, 95, 95, 0.6)
+Gap:            6px
+
+Icon size:      12px
+Icon color:     #D35F5F
+
+Text:
+- Font-size:    11px
+- Color:        #D35F5F
+- Tracking:     wider
+METAL SEPARATOR
+Height:         12px
+Margin:         20px 0
+Metal Ridge
+Height:         12px
+Background:     linear-gradient(180deg, #2a3a3f 0%, #1a2325 50%, #2a3a3f 100%)
+Box-shadow:     0 3px 0 #0a0f10,
+                0 -2px 0 #3a4a4f,
+                inset 0 1px 3px rgba(0, 0, 0, 0.9)
+Rivets (12x)
+Size:           10px × 10px
+Border-radius:  50%
+Background:     radial-gradient(circle, #4a5a5f 0%, #2a3a3f 100%)
+Box-shadow:     inset 0 1px 2px rgba(0, 0, 0, 0.9),
+                0 1px 1px rgba(255, 255, 255, 0.1)
+Gap:            distribuzione uniforme orizzontale
+CONTROL PANEL ROW
+Gap:            20px
+Direction:      row
+QUICK ACTIONS PANEL
+Panel Container
+Flex:           1
+Padding:        20px
+Border:         4px solid #3a4a4f
+Background:     linear-gradient(180deg, #1a2325 0%, #141a1c 50%, #1a2325 100%)
+Box-shadow:     0 0 0 2px #0a0f10,
+                0 6px 0 #0a0f10,
+                inset 0 0 40px rgba(0, 0, 0, 0.7),
+                inset 0 3px 6px rgba(58, 74, 79, 0.4)
+
+Background-image: repeating-linear-gradient(90deg,
+                  transparent 0px, transparent 2px,
+                  rgba(42, 58, 63, 0.15) 2px, rgba(42, 58, 63, 0.15) 4px)
+
+Pixel Corners:
+- Size:         4px × 4px
+- Color:        #3a4a4f
+Panel Header
+Padding-bottom: 12px
+Margin-bottom:  16px
+Border-bottom:  2px solid #2a3a3f
+Box-shadow:     0 2px 0 rgba(58, 74, 79, 0.3)
+Direction:      row, space-between
+Header Left
+Gap:            8px
+
+LED bar:
+- Width:        4px
+- Height:       32px
+- Background:   linear-gradient(180deg, #E6C96F 0%, rgba(230, 201, 111, 0.3) 100%)
+- Box-shadow:   0 0 8px rgba(230, 201, 111, 0.4)
+
+Text:
+- Font-size:    14px
+- Color:        #E6C96F
+- Text-shadow:  0 0 8px #E6C96F
+- Tracking:     widest
+Header Right
+Gap:            8px
+
+LED on:
+- Size:         8px × 8px
+- Border-radius: 50%
+- Background:   #E6C96F
+- Box-shadow:   0 0 8px #E6C96F
+- Animation:    pulse (1.5s loop)
+
+LED off:
+- Size:         8px × 8px
+- Border-radius: 50%
+- Background:   rgba(230, 201, 111, 0.3)
+- Opacity:      0.3
+Actions Grid
+Columns:        3
+Gap:            16px
+Quick Action Button (generico)
+Padding:        20px 16px
+Border:         3px solid (colore con opacity 0.6)
+Background:     linear-gradient(180deg, #2a3a3f 0%, #1a2325 50%, #0f1416 100%)
+Gap:            8px
+Direction:      column, centered
+
+Box-shadow DEFAULT:
+- 0 0 12px (colore con opacity 0.4)
+- inset 0 2px 4px rgba(0, 0, 0, 0.6)
+- 0 4px 0 #0a0f10
+
+Box-shadow HOVER:
+- 0 0 20px (colore con opacity 0.8)
+- inset 0 -2px 8px (colore con opacity 0.3)
+- 0 2px 0 #0a0f10
+- Transform: translate-y -2px
+
+Box-shadow PRESSED:
+- inset 0 2px 8px rgba(0, 0, 0, 0.8)
+- 0 1px 0 #0a0f10
+- Transform: translate-y 1px
+
+Icon/Emoji:
+- Size:         36px
+
+Divider:
+- Height:       1px
+- Width:        40px
+- Background:   linear-gradient(90deg, transparent, colore, transparent)
+- Opacity:      0.4
+
+Label:
+- Font-size:    12px
+- Color:        colore
+- Tracking:     widest
+- Text-shadow:  0 0 6px colore
+
+Sublabel:
+- Font-size:    10px
+- Color:        rgba(192, 200, 197, 0.7)
+Colori pulsanti:
+Spray:      #5DB6E3
+Prune:      #7FFF7A
+Fertilize:  #E6C96F
+MANUAL SYSTEMS PANEL
+Panel Container
+Identico a Quick Actions Panel
+Panel Header
+Identico a Quick Actions ma:
+
+LED bar color:  #5DB6E3
+
+Text:
+- Content:      "MANUAL SYSTEMS"
+- Color:        #5DB6E3
+- Text-shadow:  0 0 8px #5DB6E3
+
+Badge "SYS OK":
+- Padding:      4px 8px
+- Background:   #0a0f10
+- Border:       1px solid #2a3a3f
+- Box-shadow:   inset 0 1px 3px rgba(0, 0, 0, 0.8)
+- Font-size:    8px
+- Color:        #7FFF7A
+- Tracking:     widest
+Systems Grid
+Columns:        2
+Gap:            20px
+IRRIGATION - ROTARY TOGGLE
+Container
+Padding:        16px
+Border:         2px solid #2a3a3f
+Background:     #0f1416
+Box-shadow:     inset 0 2px 6px rgba(0, 0, 0, 0.8)
+Gap:            12px
+Header
+Direction:      row, space-between
+
+Label:
+- Font-size:    10px
+- Color:        rgba(192, 200, 197, 0.8)
+- Tracking:     wider
+
+Icon:
+- Size:         16px
+- Color:        rgba(93, 182, 227, 0.6)
+Housing
+Width:          100%
+Height:         80px
+Padding:        8px
+Border:         3px solid #2a3a3f
+Background:     linear-gradient(180deg, #0a0f10 0%, #1a2325 100%)
+Box-shadow:     inset 0 4px 8px rgba(0, 0, 0, 0.8)
+Position:       relative
+Position Markers
+Font-size:      8px
+Position:       absolute, top 4px
+
+OFF (left 25%):
+- Color:        rgba(211, 95, 95, 0.5)
+
+ON (right 75%):
+- Color:        rgba(127, 255, 122, 0.5)
+Rotary Knob
+Size:           64px × 64px
+Border:         4px solid #3a4a4f
+Border-radius:  50%
+Background:     radial-gradient(circle, #2a3a3f 0%, #1a2325 50%, #0f1416 100%)
+Box-shadow:     0 4px 0 #0a0f10,
+                inset 0 2px 4px rgba(0, 0, 0, 0.6)
+Cursor:         pointer
+
+Rotation OFF:   -45deg
+Rotation ON:    45deg
+Transition:     0.3s spring (stiffness 200, damping 15)
+
+PRESSED:
+- Transform:    translate-y 2px
+- Box-shadow:   0 2px 0 #0a0f10
+Indicator Line
+Width:          2px
+Height:         16px
+Position:       absolute, top 4px, center-x
+Background:     #5DB6E3 (OFF) / #7FFF7A (ON)
+Box-shadow:     0 0 4px (colore corrispondente)
+Transform:      rotate with knob
+Center LED
+Size:           16px × 16px (outer)
+Border:         2px solid #1a2325
+Border-radius:  50%
+Background:     #0a0f10
+Box-shadow:     inset 0 1px 3px rgba(0, 0, 0, 0.8)
+Position:       absolute, center
+
+Inner LED:
+- Size:         12px × 12px
+- Border-radius: 50%
+- Background:   #5DB6E3 (OFF) / #7FFF7A (ON)
+- Box-shadow:   0 0 8px (colore)
+- Animation ON: pulse opacity 1 → 0.6 → 1 (1.5s loop)
+Status Label
+Margin-top:     12px
+Text-align:     center
+Font-size:      9px
+Color:          #5DB6E3 (OFF) / #7FFF7A (ON)
+
+Content:
+- OFF:          "○ STANDBY"
+- ON:           "● ACTIVE"
+ILLUMINAZIONE - ROTARY KNOB
+Container, Header, Housing
+Identico a Irrigation
+Position Markers
+Font-size:      8px
+Position:       absolute, top 4px
+
+B (left 25%):
+- Color:        rgba(93, 182, 227, 0.5)
+
+OFF (center 50%):
+- Color:        rgba(192, 200, 197, 0.3)
+
+R (right 75%):
+- Color:        rgba(211, 95, 95, 0.5)
+Rotary Knob
+Identico a Irrigation ma:
+
+Rotation BLUE:  -45deg
+Rotation OFF:   0deg
+Rotation RED:   45deg
+
+Indicator Line:
+- Color:        #7FFF7A (sempre verde, non cambia)
+Center LED
+Identico ma:
+
+Inner LED color:
+- BLUE:         #5DB6E3 con box-shadow 0 0 8px #5DB6E3
+- OFF:          #3a4a4f (grigio spento) senza glow
+- RED:          #D35F5F con box-shadow 0 0 8px #D35F5F
+
+Animation pulse: solo se BLUE o RED attivi
+Status Label
+Font-size:      9px
+Text-align:     center
+
+Colors:
+- BLUE:         #5DB6E3
+- OFF:          #C0C8C5
+- RED:          #D35F5F
+
+Content:
+- OFF:          "○ OFFLINE"
+- BLUE:         "● BLUE ACTIVE"
+- RED:          "● RED ACTIVE"
+EFFETTI GLOBALI
+CRT Scanlines
+Position:       absolute, inset 0
+Pointer-events: none
+Background:     repeating-linear-gradient(0deg,
+                transparent 0px, transparent 2px,
+                rgba(127, 255, 122, 0.03) 2px, rgba(127, 255, 122, 0.03) 3px)
+Opacity:        0.5
+Grid Pattern
+Position:       absolute, inset 0
+Pointer-events: none
+Background:     repeating-linear-gradient(0deg, #7FFF7A 0px, transparent 1px, transparent 2px, #7FFF7A 3px),
+                repeating-linear-gradient(90deg, #7FFF7A 0px, transparent 1px, transparent 2px, #7FFF7A 3px)
+Background-size: 30px 30px
+Opacity:        0.05
+Glow Effects
+Text glow:
+- text-shadow:  0 0 8px (colore)
+
+Box glow light:
+- box-shadow:   0 0 12px (colore con opacity 0.4)
+
+Box glow intense:
+- box-shadow:   0 0 20px (colore con opacity 0.8)
+
+LED glow:
+- box-shadow:   0 0 8px (colore),
+                inset 0 1px 2px rgba(0, 0, 0, 0.4)
+FONT SIZES RECAP
+10px:  Specimen label, Live label, pH Drift label, range info, sublabel pulsanti, header labels parametri
+11px:  Condition label, Growth label, Tab labels, Parameter headers, Power label, Cycles label, Diary header, Save/Cancel text
+12px:  pH Drift value, Plant name subtitle, Quick Action labels, Prodotti values (default)
+14px:  Specimen ID, Plant Name subtitle, Panel headers, Power name
+16px:  Icons vari, Tab icons
+18px:  Fruit cycles value
+24px:  Plant name, Close button, Add Note button, pH Affinity value
+28px:  Icons pulsanti (Scissors, Beaker)
+36px:  Vital parameters values, Quick Action icons/emoji
+FINE SPECIFICHE MISURE

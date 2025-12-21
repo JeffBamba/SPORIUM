@@ -6,17 +6,16 @@
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
         <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
         <ui:VisualElement name="scan-line-top" class="scan-line-bottom" />
-        <ui:VisualElement name="content" class="top-bar-content">
-            <ui:VisualElement name="actions-display" class="metric-box">
+        <ui:VisualElement name="content" class="top-bar-content" style="justify-content: space-around;">
+            <ui:VisualElement name="actions-display" class="metric-box" style="align-items: center;">
                 <ui:VisualElement name="icon-actions" class="icon-placeholder" />
                 <ui:Label text="AZIONI" class="metric-label" />
-                <ui:VisualElement name="actions-bar" class="segmented-bar">
+                <ui:VisualElement name="actions-bar" class="segmented-bar" style="align-items: flex-start; justify-content: flex-end; left: 1px;">
                     <ui:VisualElement name="segment-0" class="bar-segment" />
                     <ui:VisualElement name="segment-1" class="bar-segment" />
                     <ui:VisualElement name="segment-2" class="bar-segment" />
                     <ui:VisualElement name="segment-3" class="bar-segment" />
                 </ui:VisualElement>
-                <ui:Label name="actions-value" text="3/4" class="metric-value" />
             </ui:VisualElement>
             <ui:VisualElement name="mutation-display" class="metric-box">
                 <ui:VisualElement name="mutation-orbit" class="mutation-orbit">
@@ -26,10 +25,9 @@
                     <ui:VisualElement name="orbit-dot-3" class="orbit-dot" />
                 </ui:VisualElement>
                 <ui:Label text="MUTATION" class="metric-label" />
-                <ui:Label name="mutation-value" text="INDEX 0.42" class="metric-value" />
             </ui:VisualElement>
             <ui:VisualElement name="ph-display" class="metric-box-ph">
-                <ui:Label text="pH DRIFT" class="metric-label-ph" />
+                <ui:Label text="pH DRIFT" class="metric-label-ph" style="-unity-font-style: bold; color: rgba(83, 144, 255, 0.85);" />
                 <ui:Label name="ph-value" text="7.2" class="ph-value" />
                 <ui:VisualElement name="ph-slider" class="ph-slider">
                     <ui:VisualElement name="ph-gradient" class="ph-gradient" />
