@@ -43,7 +43,12 @@ namespace _Project
 
         public void Show()
         {
+            SporiumLogger.LogDebug(LogCategory.UI, "[DiaryUI] Show() chiamato");
+            SporiumLogger.LogDebug(LogCategory.UI, $"[DiaryUI] GameObject stato prima: activeSelf={gameObject.activeSelf}, activeInHierarchy={gameObject.activeInHierarchy}");
+            
             gameObject.SetActive(true);
+            
+            SporiumLogger.LogDebug(LogCategory.UI, $"[DiaryUI] GameObject stato dopo SetActive(true): activeSelf={gameObject.activeSelf}, activeInHierarchy={gameObject.activeInHierarchy}");
 
             _titleLabel.text = $"Day {_dayCycleSystem.CurrentDay} - Diary";
             _textsLabel.text = $"" +
@@ -55,6 +60,8 @@ namespace _Project
             
             if (_voicesText.Count > 0)
                 _voiceLabel.text = _voicesText[Random.Range(0, _voicesText.Count)];
+            
+            SporiumLogger.LogInfo(LogCategory.UI, "[DiaryUI] DiaryUI mostrato correttamente");
         }
 
         public void Hide()

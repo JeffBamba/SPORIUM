@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="actions-bar" class="segmented-bar" style="align-items: flex-start; justify-content: flex-end; left: 1px;">
+        <ui:VisualElement name="segment-0" class="bar-segment" />
+        <ui:VisualElement name="segment-1" class="bar-segment" />
+        <ui:VisualElement name="segment-2" class="bar-segment" />
+        <ui:VisualElement name="segment-3" class="bar-segment" />
+    </ui:VisualElement>
+</ui:UXML>

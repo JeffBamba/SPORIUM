@@ -1,0 +1,374 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss?fileID=7433441132597879392&amp;guid=0edaeeaa3d5b0e240843cdd6d934829a&amp;type=3#PlantCardV2" />
+    <ui:VisualElement name="plant-card-v2-overlay" class="plant-card-overlay" style="height: 1094px; top: 0; left: 1px;">
+        <ui:VisualElement name="folder-edge-top" class="folder-edge-top" />
+        <ui:VisualElement name="main-card-container" class="plant-card-v2" style="min-height: 1080px; background-image: none; -unity-background-scale-mode: scale-to-fit; border-top-width: 5px; border-right-width: 5px; border-bottom-width: 5px; border-left-width: 5px;">
+            <ui:VisualElement name="crt-effect" class="crt-effect" style="height: 1082px;" />
+            <ui:VisualElement name="grid-pattern" class="grid-pattern" style="top: 0;" />
+            <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
+            <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
+            <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
+            <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
+            <ui:VisualElement name="header-section" class="header-section">
+                <ui:VisualElement name="header-top-row" class="header-top-row">
+                    <ui:VisualElement name="specimen-badge" class="specimen-badge">
+                        <ui:Label name="specimen-label" text="SPECIMEN" class="specimen-label" />
+                        <ui:Label name="specimen-id" text="PLT-101" class="specimen-id-text" style="font-size: 12px;" />
+                    </ui:VisualElement>
+                    <ui:Button name="close-button" class="close-button" />
+                </ui:VisualElement>
+                <ui:VisualElement name="plant-name-info" class="plant-name-info" style="left: 146px;">
+                    <ui:Label name="plant-name" text="Arctic Hask" class="plant-name" />
+                    <ui:Label name="plant-subtitle" text="Pure · Growth Stage · Level 1" class="plant-subtitle" />
+                    <ui:Label name="plant-description" text="Pianta pura che eleva il pH dell&apos;ambiente, perfetta per ecosistemi alcalini." class="plant-description" />
+                </ui:VisualElement>
+                <ui:VisualElement name="condition-growth-row" class="condition-growth-row">
+                    <ui:Label name="condition-label" text="CICLI COMPLETI" class="condition-label-text" />
+                    <ui:VisualElement name="Cicles" class="condition-badge" style="background-color: rgb(27, 27, 27);">
+                        <ui:Label name="condition-value" text="1" class="condition-value-text" style="color: rgb(255, 255, 255);" />
+                        <ui:VisualElement name="condition-tooltip" class="condition-tooltip" style="display: none;">
+                            <ui:Label name="condition-tooltip-text" class="tooltip-text" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="condition-container" class="condition-container" />
+                    <ui:VisualElement name="growth-stage-container" class="growth-stage-container">
+                        <ui:Label name="growth-stage-label" text="CONDITIONS:" class="growth-stage-label-text" />
+                        <ui:VisualElement name="conditions_bagde" focusable="true" class="growth-stage-badge" style="background-color: rgba(59, 233, 54, 0.1); border-left-color: rgb(143, 209, 128); border-right-color: rgb(143, 209, 128); border-top-color: rgb(143, 209, 128); border-bottom-color: rgb(143, 209, 128);">
+                            <ui:Label name="growth-stage-text" text="SANA" class="growth-stage-text" style="-unity-text-align: upper-center; color: rgb(39, 255, 35);" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="growth-stage-container" class="growth-stage-container">
+                        <ui:Label name="growth-stage-label" text="STADIO CRESCITA:" class="growth-stage-label-text" />
+                        <ui:VisualElement name="crescita-stage-badge" class="growth-stage-badge">
+                            <ui:Label name="growth-stage-text" text="GROWTH" class="growth-stage-text" />
+                            <ui:VisualElement name="growth-progress-bar" class="growth-progress-bar">
+                                <ui:VisualElement name="growth-segment-0" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-1" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-2" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-3" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-4" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-5" class="growth-segment" />
+                                <ui:VisualElement name="growth-segment-6" class="growth-segment" />
+                                <ui:VisualElement name="growth-tooltip" class="growth-tooltip" style="display: none;">
+                                    <ui:Label name="growth-tooltip-text" class="tooltip-text" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label name="growth-counter" text="3/7" class="growth-counter" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="main-layout-row" class="main-layout-row">
+                <ui:VisualElement name="left-column" class="left-column">
+                    <ui:VisualElement name="plant-preview-box" class="plant-preview-box" style="height: 577px; border-top-left-radius: 14px; border-top-right-radius: 14px; border-bottom-right-radius: 14px; border-bottom-left-radius: 14px;">
+                        <ui:VisualElement name="live-indicator" class="live-indicator">
+                            <ui:VisualElement name="live-led" class="live-led" />
+                            <ui:Label name="live-label" text="LIVE" class="live-label" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="ph-drift-overlay" class="ph-drift-overlay" style="top: 56px; left: 17px;">
+                            <ui:Label name="ph-drift-label" text="pH DRIFT" class="ph-drift-label" />
+                            <ui:Label name="ph-drift-value" text="+2/day" class="ph-drift-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="plant-image-container" class="plant-image-container">
+                            <ui:VisualElement name="plant-image" class="plant-image" style="background-color: rgba(40, 107, 37, 0.1);" />
+                        </ui:VisualElement>
+                        <ui:Button name="plant-action-button" class="ph-drift-overlay" style="top: 462px; left: 21px; background-color: rgba(130, 180, 133, 0.1); border-left-color: rgba(135, 230, 111, 0.5); border-right-color: rgba(135, 230, 111, 0.5); border-top-color: rgba(135, 230, 111, 0.5); border-bottom-color: rgba(135, 230, 111, 0.5);">
+                            <ui:Label name="ph-drift-label" text="AZIONE" class="ph-drift-label" style="-unity-text-align: upper-center;" />
+                            <ui:Label name="ph-drift-value" text="PIANTA" class="ph-drift-value" style="-unity-text-align: upper-center;" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="action-buttons-row" class="action-buttons-row" />
+                </ui:VisualElement>
+                <ui:VisualElement name="right-column" class="right-column" style="border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); border-top-left-radius: 14px; border-top-right-radius: 14px; border-bottom-right-radius: 14px; border-bottom-left-radius: 14px;">
+                    <ui:VisualElement name="tab-switcher" class="tab-switcher">
+                        <ui:Button name="tab-vital-parameters" class="tab-button tab-button-active" style="border-top-width: 0.5px; border-right-width: 0.5px; border-bottom-width: 0.5px; border-left-width: 0.5px;">
+                            <ui:Label text="VITAL PARAMETERS" class="tab-label" />
+                        </ui:Button>
+                        <ui:Button name="tab-notes" class="tab-button" style="border-top-width: 0.5px; border-right-width: 0.5px; border-bottom-width: 0.5px; border-left-width: 0.5px; background-color: rgba(30, 35, 37, 0.05);">
+                            <ui:Label text="NOTE DA DIARIO" class="tab-label" style="background-color: rgba(30, 35, 37, 0);" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="tab-content-container" class="tab-content-container">
+                        <ui:VisualElement name="vital-parameters-tab" class="tab-content tab-active" style="height: 578px;">
+                            <ui:VisualElement name="parameters-grid" class="parameters-grid">
+                                <ui:VisualElement name="parameter-hydration" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="HYDRATION" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="hydration-value" text="54%" class="vital-value-large" style="font-size: 32px; top: -1px;" />
+                                    <ui:VisualElement name="hydration-bar" class="stat-bar segmented-bar" style="width: 174px; height: 246px;">
+                                        <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="hydration-range" text="Range Ideale: " class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="parameter-fertilizer" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 9px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05); position: relative; flex-direction: column;">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="FERTILIZER LEVEL" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="fertilizer-value" text="72%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(41, 147, 129);" />
+                                    <ui:VisualElement name="hydration-bar" class="stat-bar segmented-bar" style="width: 174px; height: 246px;">
+                                        <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="fertilizer-range" text="Range Ideale: " class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="parameter-lightstress" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="LIGHT STRESS" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="lights-value" text="46%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(224, 199, 116);" />
+                                    <ui:VisualElement name="hydration-bar" class="stat-bar segmented-bar" style="width: 174px; height: 246px;">
+                                        <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="light-range" text="Range Ideale: " class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="parameter-conditions" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 9px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05); position: relative; flex-direction: column;">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="CONDITIONS" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="condizione-value" text="87%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(128, 241, 125);" />
+                                    <ui:VisualElement name="hydration-bar" class="stat-bar segmented-bar" style="width: 174px; height: 246px;">
+                                        <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="conditions-range" text="Range Ideale: " class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="parameter-mold" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="MOLD RISK&#10;" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="mold-value" text="5%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(224, 199, 116);" />
+                                    <ui:VisualElement name="hydration-bar" class="stat-bar segmented-bar" style="width: 174px; height: 246px;">
+                                        <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-1" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-2" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-3" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-4" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-5" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-6" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-7" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
+                                        <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="mold-range" text="Range Ideale: " class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="parameter-affinity" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 9px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05); position: relative; flex-direction: column;">
+                                    <ui:VisualElement name="parameter-header" class="parameter-header">
+                                        <ui:Label text="PH AFFINITY" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
+                                        <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="phaffinity-value" text="50-100" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(241, 209, 67);" />
+                                    <ui:Label name="phaffinity-range" text="Optimal PH Range" class="range-info" style="top: 11px;" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="active-power-section" class="active-power-section" style="top: 325px;">
+                                <ui:VisualElement name="active-power-header" class="section-header">
+                                    <ui:Label text="✨" class="section-icon" />
+                                    <ui:Label text="POTERE ATTIVO" class="section-label" style="top: -3px;" />
+                                    <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: -2px; left: -118px;" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="active-power-box" class="active-power-box" style="background-color: rgb(17, 25, 21); -unity-text-outline-color: rgb(17, 25, 21);">
+                                    <ui:Label name="active-power-name" text="Arctic Purification" class="active-power-name" style="left: 0;" />
+                                    <ui:VisualElement name="active-power-list" class="active-power-list">
+                                        <ui:Label text="• +5pH/al giorno" class="active-power-item" />
+                                        <ui:Label text="• Cura Muffe ogni 2 giorni" class="active-power-item" />
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="fruit-cycles-info" class="fruit-cycles-info" style="left: -498px; width: 472px; top: 549px;">
+                                <ui:VisualElement name="fruit-cycles-header" class="section-header">
+                                    <ui:Label text="🍎" class="section-icon" />
+                                    <ui:Label text="CICLI FRUTTI FATTI" class="section-label" />
+                                </ui:VisualElement>
+                                <ui:Label name="fruit-cycles-value" text="3" class="fruit-cycles-value" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="growth-stats-info" class="growth-stats-info" style="display: none;">
+                                <ui:Label name="growth-points-label" text="Growth Points:" class="growth-stats-label" />
+                                <ui:Label name="growth-points-value" text="W:0 L:0 F:0 (Tot: 0/3)" class="growth-stats-value" />
+                                <ui:Label name="optimal-days-label" text="Optimal Days:" class="growth-stats-label" />
+                                <ui:Label name="optimal-days-value" text="0" class="growth-stats-value" />
+                            </ui:VisualElement>
+                            <ui:Label name="rarity-label" text="Rarity: Common" class="rarity-label" style="display: none;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="note-diario-tab" class="tab-content">
+                            <ui:VisualElement name="diary-header" class="diary-header">
+                                <ui:Label text="SPORE DIARY OBSERVATIONS" class="diary-header-label" />
+                                <ui:Button name="add-note-button" class="add-note-button">
+                                    <ui:Label text="+" class="add-note-icon" />
+                                </ui:Button>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="prodotti-section" class="prodotti-section">
+                                <ui:VisualElement name="prodotti-header" class="prodotti-header">
+                                    <ui:Label text="🍃" class="prodotti-icon" />
+                                    <ui:Label text="Prodotti di questa pianta" class="prodotti-title" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="prodotti-content" class="prodotti-content">
+                                    <ui:VisualElement name="prodotti-fruit" class="prodotti-item">
+                                        <ui:Label text="🍏 ARCTIC POD" class="prodotti-fruit-title" />
+                                        <ui:Label text="Effetto: Tono Vitale" class="prodotti-subtitle" />
+                                        <ui:VisualElement name="prodotti-fruit-details" class="prodotti-details">
+                                            <ui:Label text="• +1 Azione immediata" class="prodotti-detail-text" />
+                                            <ui:Label text="• +10% consumo idrico personale" class="prodotti-detail-text" />
+                                            <ui:Label text="• Durata: 1 giorno" class="prodotti-detail-text" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="prodotti-leaves" class="prodotti-item">
+                                        <ui:Label text="🌿 Foglie di Arctic Hask" class="prodotti-leaves-title" />
+                                        <ui:Label text="PRD-PURE-001A — catalizzatori purificanti" class="prodotti-subtitle" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="prodotti-seeds" class="prodotti-item">
+                                        <ui:Label text="🌱 SDE-PURE-001" class="prodotti-seeds-title" />
+                                        <ui:Label text="Seme stabile, ibridabile in HYB-203 (Ferric Purifier)" class="prodotti-subtitle" />
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:ScrollView name="notes-list" class="notes-list" />
+                            <ui:VisualElement name="add-note-panel" class="add-note-panel" style="display: none;">
+                                <ui:TextField name="note-textarea" multiline="true" class="note-textarea" />
+                                <ui:VisualElement name="note-buttons-row" class="note-buttons-row">
+                                    <ui:Button name="save-note-button" class="save-note-button">
+                                        <ui:VisualElement name="led-dot-left" class="led-dot" />
+                                        <ui:Label text="SAVE NOTE" class="save-note-text" />
+                                        <ui:VisualElement name="led-dot-right" class="led-dot" />
+                                    </ui:Button>
+                                    <ui:Button name="cancel-note-button" class="cancel-note-button">
+                                        <ui:Label text="✕" class="cancel-icon" />
+                                        <ui:Label text="CANCEL" class="cancel-text" />
+                                    </ui:Button>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="control-panel-row" class="control-panel-row" style="top: -38px;">
+                <ui:VisualElement name="quick-actions-panel" class="control-panel-solid quick-actions-panel">
+                    <ui:VisualElement name="panel-header" class="panel-header">
+                        <ui:VisualElement name="header-left" class="header-left">
+                            <ui:VisualElement name="led-bar" class="led-bar led-bar-yellow" />
+                            <ui:Label text="QUICK ACTIONS" class="panel-header-text" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="header-right" class="header-right">
+                            <ui:VisualElement name="led-on" class="led-indicator led-on" />
+                            <ui:VisualElement name="led-off" class="led-indicator led-off" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="actions-grid" class="actions-grid">
+                        <ui:Button name="spray-button" class="quick-action-button spray-button">
+                            <ui:Label text="💨" class="action-icon" />
+                            <ui:VisualElement name="action-divider" class="action-divider" />
+                            <ui:Label text="SPRAY" class="action-label" />
+                            <ui:Label text="Antifungal" class="action-sublabel" />
+                        </ui:Button>
+                        <ui:Button name="prune-button" class="quick-action-button prune-button">
+                            <ui:Label text="✂️" class="action-icon" />
+                            <ui:VisualElement name="action-divider" class="action-divider" />
+                            <ui:Label text="PRUNE" class="action-label" />
+                            <ui:Label text="Trim leaves" class="action-sublabel" />
+                        </ui:Button>
+                        <ui:Button name="fertilize-button" class="quick-action-button fertilize-button">
+                            <ui:Label text="🧪" class="action-icon" />
+                            <ui:VisualElement name="action-divider" class="action-divider" />
+                            <ui:Label text="FERTILIZE" class="action-label" />
+                            <ui:Label text="Boost growth" class="action-sublabel" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="manual-systems-panel" class="control-panel-solid manual-systems-panel">
+                    <ui:VisualElement name="panel-header" class="panel-header">
+                        <ui:VisualElement name="header-left" class="header-left">
+                            <ui:VisualElement name="led-bar" class="led-bar led-bar-blue" />
+                            <ui:Label text="MANUAL SYSTEMS" class="panel-header-text" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="header-right" class="header-right">
+                            <ui:VisualElement name="sys-ok-badge" class="sys-ok-badge">
+                                <ui:Label text="SYS OK" class="sys-ok-text" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="systems-grid" class="systems-grid">
+                        <ui:VisualElement name="irrigation-container" class="rotary-container">
+                            <ui:VisualElement name="rotary-header" class="rotary-header">
+                                <ui:Label text="IRRIGATION" class="rotary-label" />
+                                <ui:Label text="💧" class="rotary-icon" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="rotary-housing" class="rotary-housing">
+                                <ui:Label name="position-off" text="OFF" class="position-marker position-left" />
+                                <ui:Label name="position-on" text="ON" class="position-marker position-right" />
+                                <ui:VisualElement name="rotary-knob" class="rotary-knob irrigation-knob">
+                                    <ui:VisualElement name="indicator-line" class="indicator-line" />
+                                    <ui:VisualElement name="center-led" class="center-led">
+                                        <ui:VisualElement name="inner-led" class="inner-led" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="click-area-off" class="click-area click-area-left" />
+                                    <ui:VisualElement name="click-area-on" class="click-area click-area-right" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label name="irrigation-status" text="○ STANDBY" class="rotary-status-label" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="illuminazione-container" class="rotary-container">
+                            <ui:VisualElement name="rotary-header" class="rotary-header">
+                                <ui:Label text="ILLUMINAZIONE" class="rotary-label" />
+                                <ui:Label text="⚡" class="rotary-icon" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="rotary-housing" class="rotary-housing">
+                                <ui:Label name="position-blue" text="B" class="position-marker position-left" />
+                                <ui:Label name="position-off" text="OFF" class="position-marker position-center" />
+                                <ui:Label name="position-red" text="R" class="position-marker position-right" />
+                                <ui:VisualElement name="rotary-knob" class="rotary-knob illuminazione-knob">
+                                    <ui:VisualElement name="indicator-line" class="indicator-line" />
+                                    <ui:VisualElement name="center-led" class="center-led">
+                                        <ui:VisualElement name="inner-led" class="inner-led" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="click-area-blue" class="click-area click-area-left" />
+                                    <ui:VisualElement name="click-area-off" class="click-area click-area-top" />
+                                    <ui:VisualElement name="click-area-red" class="click-area click-area-right" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:Label name="illuminazione-status" text="○ OFFLINE" class="rotary-status-label" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

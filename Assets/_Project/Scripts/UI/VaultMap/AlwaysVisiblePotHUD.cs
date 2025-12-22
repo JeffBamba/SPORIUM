@@ -269,6 +269,26 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         hudInstance.waterCircle = container.transform.Find("WaterCircle")?.GetComponent<Image>();
         hudInstance.ledCircle = container.transform.Find("LedCircle")?.GetComponent<Image>();
         
+        // DEBUG_SAFE_FIX: Disabilita raycastTarget per elementi non interattivi del prefab
+        if (hudInstance.plantPreviewImage != null)
+        {
+            hudInstance.plantPreviewImage.raycastTarget = false;
+        }
+        if (hudInstance.waterCircle != null)
+        {
+            hudInstance.waterCircle.raycastTarget = false;
+        }
+        if (hudInstance.ledCircle != null)
+        {
+            hudInstance.ledCircle.raycastTarget = false;
+        }
+        // Cerca e disabilita raycastTarget per il background se esiste
+        Image backgroundImage = container.transform.Find("Background")?.GetComponent<Image>();
+        if (backgroundImage != null)
+        {
+            backgroundImage.raycastTarget = false;
+        }
+        
         // IMPORTANTE: Abilita raycastTarget per GrowthStateText se esiste (necessario per EventTrigger)
         if (hudInstance.growthStateText != null)
         {
@@ -325,6 +345,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         bgGO.transform.SetParent(container.transform, false);
         Image bgImage = bgGO.AddComponent<Image>();
         bgImage.color = backgroundColor;
+        bgImage.raycastTarget = false; // DEBUG_SAFE_FIX: Disabilita raycast per non bloccare click sul mondo
         RectTransform bgRect = bgGO.GetComponent<RectTransform>();
         bgRect.anchorMin = Vector2.zero;
         bgRect.anchorMax = Vector2.one;
@@ -336,6 +357,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         previewGO.transform.SetParent(container.transform, false);
         hudInstance.plantPreviewImage = previewGO.AddComponent<Image>();
         hudInstance.plantPreviewImage.color = Color.white;
+        hudInstance.plantPreviewImage.raycastTarget = false; // DEBUG_SAFE_FIX: Disabilita raycast per non bloccare click sul mondo
         RectTransform previewRect = previewGO.GetComponent<RectTransform>();
         previewRect.anchorMin = new Vector2(0f, 0.5f);
         previewRect.anchorMax = new Vector2(0f, 0.5f);
@@ -427,6 +449,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         waterGO.transform.SetParent(container.transform, false);
         hudInstance.waterCircle = waterGO.AddComponent<Image>();
         hudInstance.waterCircle.color = Color.gray;
+        hudInstance.waterCircle.raycastTarget = false; // DEBUG_SAFE_FIX: Disabilita raycast per non bloccare click sul mondo
         RectTransform waterRect = waterGO.GetComponent<RectTransform>();
         waterRect.anchorMin = new Vector2(0f, 0f);
         waterRect.anchorMax = new Vector2(0f, 0f);
@@ -439,6 +462,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         ledGO.transform.SetParent(container.transform, false);
         hudInstance.ledCircle = ledGO.AddComponent<Image>();
         hudInstance.ledCircle.color = Color.gray;
+        hudInstance.ledCircle.raycastTarget = false; // DEBUG_SAFE_FIX: Disabilita raycast per non bloccare click sul mondo
         RectTransform ledRect = ledGO.GetComponent<RectTransform>();
         ledRect.anchorMin = new Vector2(0f, 0f);
         ledRect.anchorMax = new Vector2(0f, 0f);

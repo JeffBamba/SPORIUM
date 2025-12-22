@@ -14,33 +14,6 @@ namespace Sporae.Dome.UI
     /// </summary>
     public class PruningDialog : MonoBehaviour
     {
-        // #region agent log helper
-        private static void WriteDebugLog(string sessionId, string runId, string hypothesisId, string location, string message, object data)
-        {
-            try
-            {
-                // Serializza manualmente i dati comuni
-                string dataJson = "{}";
-                if (data != null)
-                {
-                    // Prova a serializzare con JsonUtility, altrimenti usa ToString
-                    try {
-                        dataJson = JsonUtility.ToJson(data);
-                        if (string.IsNullOrEmpty(dataJson) || dataJson == "{}")
-                        {
-                            // Fallback: serializza manualmente i campi comuni
-                            dataJson = data.ToString();
-                        }
-                    } catch {
-                        dataJson = data.ToString();
-                    }
-                }
-                var logEntry = $"{{\"sessionId\":\"{sessionId}\",\"runId\":\"{runId}\",\"hypothesisId\":\"{hypothesisId}\",\"location\":\"{location}\",\"message\":\"{message}\",\"data\":{dataJson},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logEntry);
-            }
-            catch { }
-        }
-        // #endregion
         [Header("UI References")]
         [SerializeField] private GameObject dialogPanel;
         [SerializeField] private TextMeshProUGUI titleText;
@@ -100,13 +73,6 @@ namespace Sporae.Dome.UI
         /// </summary>
         private void OnToggleValueChanged(bool isOn)
         {
-            // #region agent log
-            try {
-                var dataJson = $"{{\"isOn\":{isOn.ToString().ToLower()},\"sprayToggleNull\":{(sprayToggle == null).ToString().ToLower()},\"interactable\":{(sprayToggle != null ? sprayToggle.interactable : false).ToString().ToLower()},\"hasSprayAvailable\":{_hasSprayAvailable.ToString().ToLower()}}}";
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-TOGGLE\",\"location\":\"PruningDialog.cs:OnToggleValueChanged\",\"message\":\"Toggle value changed\",\"data\":{dataJson},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
             SporiumLogger.LogDebug(LogCategory.UI, $"Toggle value changed: {isOn} (hasSprayAvailable: {_hasSprayAvailable})");
             
             // BUG FIX: Se l'utente prova a selezionare il toggle ma non c'è STR-004, resetta
@@ -158,13 +124,6 @@ namespace Sporae.Dome.UI
             // Memorizza disponibilità STR-004
             _hasSprayAvailable = hasSprayAvailable;
             
-            // #region agent log
-            try {
-                var dataJson = $"{{\"hasSprayAvailable\":{hasSprayAvailable.ToString().ToLower()},\"sprayToggleNull\":{(sprayToggle == null).ToString().ToLower()}}}";
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-A\",\"location\":\"PruningDialog.cs:Show\",\"message\":\"Show: Dialog opened with spray availability\",\"data\":{dataJson},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
             if (dialogPanel != null)
                 dialogPanel.SetActive(true);
             
@@ -195,15 +154,7 @@ namespace Sporae.Dome.UI
                     SporiumLogger.LogWarning(LogCategory.UI, "Toggle non ha targetGraphic! Il toggle potrebbe non funzionare.");
                 }
                 
-                // #region agent log
-                try {
-                    var canvasHasRaycaster = canvas != null && canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() != null;
-                    var hasTargetGraphic = sprayToggle.targetGraphic != null;
-                    var dataJson = $"{{\"interactable\":{sprayToggle.interactable.ToString().ToLower()},\"isOn\":{sprayToggle.isOn.ToString().ToLower()},\"canvasHasRaycaster\":{canvasHasRaycaster.ToString().ToLower()},\"hasTargetGraphic\":{hasTargetGraphic.ToString().ToLower()}}}";
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-A\",\"location\":\"PruningDialog.cs:Show\",\"message\":\"Show: Toggle configured\",\"data\":{dataJson},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
+                // Setup toggle
                 
                 // Aggiorna testo toggle
                 var toggleLabel = sprayToggle.GetComponentInChildren<TextMeshProUGUI>();
@@ -232,22 +183,7 @@ namespace Sporae.Dome.UI
         
         private void HandleConfirm()
         {
-            // #region agent log
-            try {
-                var sprayToggleIsOn = sprayToggle != null ? sprayToggle.isOn : false;
-                var dataJson = $"{{\"sprayToggleNull\":{(sprayToggle == null).ToString().ToLower()},\"sprayToggleIsOn\":{sprayToggleIsOn.ToString().ToLower()}}}";
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-C\",\"location\":\"PruningDialog.cs:95\",\"message\":\"HandleConfirm: Reading sprayToggle state\",\"data\":{dataJson},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
             bool useSpray = sprayToggle != null && sprayToggle.isOn;
-            // #region agent log
-            try {
-                var dataJson2 = $"{{\"useSpray\":{useSpray.ToString().ToLower()}}}";
-                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-C\",\"location\":\"PruningDialog.cs:97\",\"message\":\"HandleConfirm: useSpray value calculated\",\"data\":{dataJson2},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-            } catch { }
-            // #endregion
             OnDialogResult?.Invoke(true, useSpray);
             Hide();
         }

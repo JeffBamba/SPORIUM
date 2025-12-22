@@ -6,6 +6,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.PlantCard;
+using UIButton = UnityEngine.UI.Button;
+using UIElements = UnityEngine.UIElements;
 
 namespace _Project
 {
@@ -39,6 +42,15 @@ namespace _Project
         
         public event Action<string> OnFertilizerSelected; // fertilizerTypeId
         public event Action OnCancelled;
+        
+        /// <summary>
+        /// Rimuove tutti i subscriber dagli eventi (per permettere a PlantCardV2Controller di sottoscriversi senza conflitti)
+        /// </summary>
+        public void ClearAllSubscribers()
+        {
+            OnFertilizerSelected = null;
+            OnCancelled = null;
+        }
         
         private void Awake()
         {
@@ -177,6 +189,20 @@ namespace _Project
             
             selectorPanel.SetActive(true);
             
+            // DEBUG_SAFE_FIX: Abilita il Canvas quando viene mostrato (come UISeedSelector)
+            var canvas = selectorPanel.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                // CRITICAL FIX: Il sorting order funziona solo con ScreenSpaceOverlay o ScreenSpaceCamera
+                // Se il Canvas è in WorldSpace, il sorting order non funziona!
+                if (canvas.renderMode != RenderMode.ScreenSpaceOverlay && canvas.renderMode != RenderMode.ScreenSpaceCamera)
+                {
+                    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                }
+                
+                canvas.enabled = true;
+            }
+            
             // Configura solo il Canvas sorting order
             SetupCanvasSortingOrder();
             
@@ -206,6 +232,13 @@ namespace _Project
             if (selectorPanel != null)
             {
                 selectorPanel.SetActive(false);
+                
+                // DEBUG_SAFE_FIX: Disabilita il Canvas per evitare che blocchi i click sulla HUD (come UISeedSelector)
+                var canvas = selectorPanel.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.enabled = false;
+                }
             }
             
             ClearFertilizerButtons();
@@ -474,6 +507,9 @@ namespace _Project
         public bool IsVisible => selectorPanel != null && selectorPanel.activeSelf;
         
         /// <summary>
+        /// Configura il Canvas per renderlo sopra la HUD della pianta
+        /// </summary>
+        /// <summary>
         /// Imposta solo il sorting order del Canvas (senza modificare colori o dimensioni)
         /// </summary>
         private void SetupCanvasSortingOrder()
@@ -496,11 +532,15 @@ namespace _Project
                 }
             }
             
-            // Se trovato, imposta sorting order più alto
+            // Se trovato, imposta sorting order più alto (come UISeedSelector)
             if (selectorCanvas != null)
             {
                 selectorCanvas.sortingOrder = canvasSortingOrder;
-                SporiumLogger.LogDebug(LogCategory.UI, $"Canvas sorting order impostato a {canvasSortingOrder}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"Canvas sorting order impostato a {canvasSortingOrder} per renderlo sopra la HUD della pianta");
+            }
+            else
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, "Canvas non trovato per UIFertilizerSelector. Il selettore potrebbe non essere visibile sopra la HUD del POT.");
             }
         }
         
@@ -558,13 +598,14 @@ namespace _Project
                 GameObject canvasGO = new GameObject("Canvas_FertilizerSelector");
                 canvas = canvasGO.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = canvasSortingOrder;
+                canvas.sortingOrder = canvasSortingOrder; // Imposta sorting order alto (come UISeedSelector)
                 canvasGO.AddComponent<CanvasScaler>();
                 canvasGO.AddComponent<GraphicRaycaster>();
-                SporiumLogger.LogInfo(LogCategory.UI, $"Creato Canvas con sorting order {canvasSortingOrder}");
+                SporiumLogger.LogInfo(LogCategory.UI, $"Creato Canvas per UIFertilizerSelector con sorting order {canvasSortingOrder}");
             }
             else
             {
+                // Se esiste già un Canvas, assicurati che abbia sorting order alto (come UISeedSelector)
                 if (canvas.sortingOrder < canvasSortingOrder)
                 {
                     canvas.sortingOrder = canvasSortingOrder;

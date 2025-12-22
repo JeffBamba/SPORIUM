@@ -34,6 +34,14 @@ public class PotActions : MonoBehaviour
     private DayCycleSystem _dayCycleSystem;
     private PhSystem _phSystem;
     
+    // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
+    private bool _isPlantingInProgress = false;
+    private bool _isLightingInProgress = false;
+    private bool _isWateringInProgress = false;
+    private bool _isSprayingInProgress = false;
+    private bool _isHarvestingInProgress = false;
+    private bool _isUprootingInProgress = false;
+    
     // Proprietà pubbliche
     public PotSlot PotSlot => potSlot;
     public PotStateModel PotState => _potState;
@@ -433,25 +441,11 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool HasSprayAntifungal()
     {
-        // #region agent log
-        try {
-            var logData = new { inventoryNull = _playerInventory == null };
-            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-B\",\"location\":\"PotActions.cs:414\",\"message\":\"HasSprayAntifungal: Entry\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-        } catch { }
-        // #endregion
         if (_playerInventory == null)
             return false;
         
         // Verifica presenza STR-004 nell'inventario
         bool hasItem = _playerInventory.Has(Items.SprayAntifungal, 1);
-        // #region agent log
-        try {
-            var logData2 = new { hasItem = hasItem, itemCode = "STR-004" };
-            var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG3-B\",\"location\":\"PotActions.cs:420\",\"message\":\"HasSprayAntifungal: Result\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-        } catch { }
-        // #endregion
         return hasItem;
     }
     
@@ -489,117 +483,150 @@ public class PotActions : MonoBehaviour
     /// <param name="seedTypeId">TypeId del seme da piantare. Se null, cerca automaticamente il primo seme disponibile.</param>
     public bool DoPlant(string seedTypeId = null)
     {
-        if (!CanPlant())
+        // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
+        if (_isPlantingInProgress)
         {
-            string reason = GetPlantFailureReason();
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, reason);
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant già in esecuzione! Ignorando chiamata duplicata per seedTypeId: {seedTypeId}");
             return false;
         }
         
-        // Consuma le risorse
-        if (!TryConsumeResources())
-        {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
-            return false;
-        }
+        _isPlantingInProgress = true;
         
-        // Se seedTypeId non specificato, cerca automaticamente (compatibilità retroattiva)
-        if (string.IsNullOrEmpty(seedTypeId))
+        try
         {
-            seedTypeId = FindSeedTypeId();
-            if (string.IsNullOrEmpty(seedTypeId))
+            if (!CanPlant())
             {
-                SporiumLogger.LogError(LogCategory.Inventory, "Impossible to find seed in inventory");
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Nessun seme disponibile");
+                string reason = GetPlantFailureReason();
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, reason);
                 return false;
             }
-        }
-        
-        // Verifica che il seme specificato esista nell'inventario
-        if (!_playerInventory.Has(seedTypeId))
-        {
-            SporiumLogger.LogError(LogCategory.Inventory, $"Seme '{seedTypeId}' non disponibile nell'inventario");
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
-            return false;
-        }
-        
-        // Cerca PlantData dal database usando il TypeId del seme
-        PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
-        string plantCode = plantData?.PlantCode;
-        
-        if (plantData == null)
-        {
-            if (showDebugLogs)
+            
+            // DEBUG_SAFE_FIX: Log prima del consumo risorse per tracciare chiamate multiple
+            int actionsBefore = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant chiamato - Azioni prima: {actionsBefore}, seedTypeId: {seedTypeId}");
+            
+            // Consuma le risorse
+            if (!TryConsumeResources())
             {
-                SporiumLogger.LogWarning(LogCategory.Pot, $"Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
-            }
-            // IMPORTANTE: Anche se PlantData non è trovato, piantiamo comunque il seme
-            // ma senza PlantCode, quindi non avrà drift pH
-        }
-        else
-        {
-            if (showDebugLogs)
-            {
-                SporiumLogger.LogInfo(LogCategory.Pot, $"PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
+                return false;
             }
             
-            // Verifica che PlantCode non sia null o vuoto
-            if (string.IsNullOrEmpty(plantCode))
+            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
+            
+            // Se seedTypeId non specificato, cerca automaticamente (compatibilità retroattiva)
+            if (string.IsNullOrEmpty(seedTypeId))
             {
-                SporiumLogger.LogError(LogCategory.Pot, $"PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
+                seedTypeId = FindSeedTypeId();
+                if (string.IsNullOrEmpty(seedTypeId))
+                {
+                    SporiumLogger.LogError(LogCategory.Inventory, "Impossible to find seed in inventory");
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Nessun seme disponibile");
+                    return false;
+                }
             }
-        }
-        
-        // Consuma il seme dall'inventario
-        if (!_playerInventory.Consume(seedTypeId))
-        {
-            SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
-            return false;
-        }
-        
-        // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
-        _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
-        
-        // DEBUG: Verifica che PlantCode sia stato salvato correttamente
-        if (showDebugLogs)
-        {
-            if (string.IsNullOrEmpty(_potState.PlantCode))
+            
+            // Verifica che il seme specificato esista nell'inventario
+            if (!_playerInventory.Has(seedTypeId))
             {
-                SporiumLogger.LogWarning(LogCategory.Pot, $"PlantCode NON salvato correttamente nel PotStateModel! PotId: {potSlot.PotId}, PlantCode passato: '{plantCode}'");
+                SporiumLogger.LogError(LogCategory.Inventory, $"Seme '{seedTypeId}' non disponibile nell'inventario");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
+                return false;
+            }
+            
+            // Cerca PlantData dal database usando il TypeId del seme
+            PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+            string plantCode = plantData?.PlantCode;
+            
+            if (plantData == null)
+            {
+                if (showDebugLogs)
+                {
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
+                }
+                // IMPORTANTE: Anche se PlantData non è trovato, piantiamo comunque il seme
+                // ma senza PlantCode, quindi non avrà drift pH
             }
             else
             {
-                SporiumLogger.LogInfo(LogCategory.Pot, $"PlantCode salvato correttamente: {_potState.PlantCode} per vaso {potSlot.PotId}");
+                if (showDebugLogs)
+                {
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+                }
+                
+                // Verifica che PlantCode non sia null o vuoto
+                if (string.IsNullOrEmpty(plantCode))
+                {
+                    SporiumLogger.LogError(LogCategory.Pot, $"PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
+                }
             }
+            
+            // Consuma il seme dall'inventario
+            if (!_playerInventory.Consume(seedTypeId))
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
+                return false;
+            }
+            
+            // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
+            _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
+            
+            // DEBUG: Verifica che PlantCode sia stato salvato correttamente
+            if (showDebugLogs)
+            {
+                if (string.IsNullOrEmpty(_potState.PlantCode))
+                {
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"PlantCode NON salvato correttamente nel PotStateModel! PotId: {potSlot.PotId}, PlantCode passato: '{plantCode}'");
+                }
+                else
+                {
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"PlantCode salvato correttamente: {_potState.PlantCode} per vaso {potSlot.PotId}");
+                }
+            }
+            
+            // Notifica il sistema di crescita (BLK-01.03A)
+            if (potGrowthController)
+                potGrowthController.OnPlanted();
+            
+            // Registra il vaso nel sistema di crescita (ora ha una pianta)
+            // DEBUG_SAFE_FIX: Assicurati che il vaso venga registrato dopo aver piantato
+            // Questo è critico per il calcolo del pH a fine giornata
+            RegisterPotIfNeeded();
+            
+            // DEBUG_SAFE_FIX: Verifica che la registrazione sia avvenuta correttamente
+            if (showDebugLogs && dayCycleController != null && _potState.HasPlant)
+            {
+                // Verifica che il vaso sia stato registrato (controllo indiretto)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"Verifica post-piantagione: HasPlant={_potState.HasPlant}, Stage={_potState.Stage}, PlantCode={_potState.PlantCode ?? "NULL"}, dayCycleController disponibile");
+            }
+        
+            // Notifica il cambio stato
+            PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
+            PotEvents.EmitChanged(potSlot);
+            
+            if (showDebugLogs)
+            {
+                string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
+            }
+            
+            return true;
         }
-        
-        // Notifica il sistema di crescita (BLK-01.03A)
-        if (potGrowthController)
-            potGrowthController.OnPlanted();
-        
-        // Registra il vaso nel sistema di crescita (ora ha una pianta)
-        // DEBUG_SAFE_FIX: Assicurati che il vaso venga registrato dopo aver piantato
-        // Questo è critico per il calcolo del pH a fine giornata
-        RegisterPotIfNeeded();
-        
-        // DEBUG_SAFE_FIX: Verifica che la registrazione sia avvenuta correttamente
-        if (showDebugLogs && dayCycleController != null && _potState.HasPlant)
+        finally
         {
-            // Verifica che il vaso sia stato registrato (controllo indiretto)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"Verifica post-piantagione: HasPlant={_potState.HasPlant}, Stage={_potState.Stage}, PlantCode={_potState.PlantCode ?? "NULL"}, dayCycleController disponibile");
+            // Reset del flag nel prossimo frame per permettere nuove chiamate
+            StartCoroutine(ResetPlantingFlag());
         }
-        
-        // Notifica il cambio stato
-        PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
-        PotEvents.EmitChanged(potSlot);
-        
-        if (showDebugLogs)
-        {
-            string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
-            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
-        }
-        
-        return true;
+    }
+    
+    /// <summary>
+    /// Reset del flag di planting nel prossimo frame
+    /// </summary>
+    private System.Collections.IEnumerator ResetPlantingFlag()
+    {
+        yield return null; // Aspetta un frame
+        _isPlantingInProgress = false;
     }
     
     public bool DoUproot()
@@ -642,47 +669,80 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool DoWater()
     {
-        if (!CanWater())
+        // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
+        if (_isWateringInProgress)
         {
-            string reason = GetWaterFailureReason();
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, reason);
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater già in esecuzione! Ignorando chiamata duplicata.");
             return false;
         }
         
-        // Consuma solo 1 Azione per il toggle (non WAT-RAW o CRY - consumo giornaliero)
-        if (!TryConsumeResources())
+        _isWateringInProgress = true;
+        
+        try
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
-            return false;
-        }
+            if (!CanWater())
+            {
+                string reason = GetWaterFailureReason();
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, reason);
+                return false;
+            }
+            
+            // DEBUG_SAFE_FIX: Log prima del consumo risorse
+            int actionsBefore = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater chiamato - Azioni prima: {actionsBefore}");
+            
+            // Consuma solo 1 Azione per il toggle (non WAT-RAW o CRY - consumo giornaliero)
+            if (!TryConsumeResources())
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
+                return false;
+            }
+            
+            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
 
-        // Toggle del sistema irrigazione
-        _potState.WateringSystemOn = !_potState.WateringSystemOn;
-        
-        // Aggiorna contatori in base al nuovo stato
-        if (_potState.WateringSystemOn)
-        {
-            // Sistema attivato: incrementa contatore giorni ON
-            // (verrà incrementato anche a fine giornata se rimane ON)
-        }
-        else
-        {
-            // Sistema disattivato: reset contatori
-            _potState.DaysWateringSystemOn = 0;
-            _potState.WateringRawWaterAccumulator = 0f;
-        }
+            // Toggle del sistema irrigazione
+            _potState.WateringSystemOn = !_potState.WateringSystemOn;
             
-        // Notifica il cambio stato
-        PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
-        PotEvents.EmitChanged(potSlot);
+            // Aggiorna contatori in base al nuovo stato
+            if (_potState.WateringSystemOn)
+            {
+                // Sistema attivato: incrementa contatore giorni ON
+                // (verrà incrementato anche a fine giornata se rimane ON)
+            }
+            else
+            {
+                // Sistema disattivato: reset contatori
+                _potState.DaysWateringSystemOn = 0;
+                _potState.WateringRawWaterAccumulator = 0f;
+            }
+                
+            // Notifica il cambio stato
+            PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
+            PotEvents.EmitChanged(potSlot);
+                
+            if (showDebugLogs)
+            {
+                string stateMsg = _potState.WateringSystemOn ? "ON" : "OFF";
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
+            }
             
-        if (showDebugLogs)
-        {
-            string stateMsg = _potState.WateringSystemOn ? "ON" : "OFF";
-            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
+            return true;
         }
-        
-        return true;
+        finally
+        {
+            // Reset del flag nel prossimo frame per permettere nuove chiamate
+            StartCoroutine(ResetWateringFlag());
+        }
+    }
+    
+    /// <summary>
+    /// Reset del flag di watering nel prossimo frame
+    /// </summary>
+    private System.Collections.IEnumerator ResetWateringFlag()
+    {
+        yield return null; // Aspetta un frame
+        _isWateringInProgress = false;
     }
     
     /// <summary>
@@ -719,87 +779,120 @@ public class PotActions : MonoBehaviour
     /// <param name="newState">Stato desiderato. Se null, cicla: Off → Blue → Red → Off</param>
     public bool DoLight(LedSystemState? newState = null)
     {
-        if (!CanLight())
+        // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
+        if (_isLightingInProgress)
         {
-            string reason = GetLightFailureReason();
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, reason);
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] DoLight già in esecuzione! Ignorando chiamata duplicata.");
             return false;
         }
         
-        // Consuma solo 1 Azione per il toggle (non CRY - consumo giornaliero)
-        if (!TryConsumeResources())
-        {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Insufficient resources");
-            return false;
-        }
+        _isLightingInProgress = true;
         
-        // Salva stato precedente per rimuovere contributo pH se necessario
-        LedSystemState oldState = _potState.LedSystemState;
-        
-        // Toggle o set esplicito
-        if (newState.HasValue)
+        try
         {
-            _potState.SetLedSystemState(newState.Value);
-        }
-        else
-        {
-            // Ciclo: Off → Blue → Red → Off
-            LedSystemState nextState = (LedSystemState)(((int)_potState.LedSystemState + 1) % 3);
-            _potState.SetLedSystemState(nextState);
-        }
-        
-        // BLK-02.07 BUG FIX: Rimuovi contributo pH se LED è stato spento
-        if (oldState != LedSystemState.Off && _potState.LedSystemState == LedSystemState.Off)
-        {
-            // LED spento: rimuovi contributo pH del LED precedente
-            if (_phSystem != null)
+            if (!CanLight())
             {
-                string actionName = oldState == LedSystemState.Blue ? "BlueLED" : "RedLED";
-                // Rimuovi tutti i contributi di questo LED per questo vaso (inclusi quelli con moltiplicatori)
-                _phSystem.RemoveActionContribution("BlueLED", potSlot.PotId);
-                _phSystem.RemoveActionContribution("RedLED", potSlot.PotId);
-                // Rimuovi anche varianti con moltiplicatori
-                _phSystem.RemoveActionContribution("BlueLED_x1.5", potSlot.PotId);
-                _phSystem.RemoveActionContribution("BlueLED_x2", potSlot.PotId);
-                _phSystem.RemoveActionContribution("RedLED_x1.5", potSlot.PotId);
-                _phSystem.RemoveActionContribution("RedLED_x2", potSlot.PotId);
-                
-                if (showDebugLogs)
-                    SporiumLogger.LogDebug(LogCategory.Ph, $"{potSlot.PotId}: Contributo pH LED rimosso (LED spento: {oldState} → Off)");
+                string reason = GetLightFailureReason();
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, reason);
+                return false;
             }
+            
+            // DEBUG_SAFE_FIX: Log prima del consumo risorse per tracciare chiamate multiple
+            int actionsBefore = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoLight chiamato - Azioni prima: {actionsBefore}, newState: {newState}");
+            
+            // Consuma solo 1 Azione per il toggle (non CRY - consumo giornaliero)
+            if (!TryConsumeResources())
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Insufficient resources");
+                return false;
+            }
+            
+            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoLight - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
+            
+            // Salva stato precedente per rimuovere contributo pH se necessario
+            LedSystemState oldState = _potState.LedSystemState;
+            
+            // Toggle o set esplicito
+            if (newState.HasValue)
+            {
+                _potState.SetLedSystemState(newState.Value);
+            }
+            else
+            {
+                // Ciclo: Off → Blue → Red → Off
+                LedSystemState nextState = (LedSystemState)(((int)_potState.LedSystemState + 1) % 3);
+                _potState.SetLedSystemState(nextState);
+            }
+            
+            // BLK-02.07 BUG FIX: Rimuovi contributo pH se LED è stato spento
+            if (oldState != LedSystemState.Off && _potState.LedSystemState == LedSystemState.Off)
+            {
+                // LED spento: rimuovi contributo pH del LED precedente
+                if (_phSystem != null)
+                {
+                    string actionName = oldState == LedSystemState.Blue ? "BlueLED" : "RedLED";
+                    // Rimuovi tutti i contributi di questo LED per questo vaso (inclusi quelli con moltiplicatori)
+                    _phSystem.RemoveActionContribution("BlueLED", potSlot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED", potSlot.PotId);
+                    // Rimuovi anche varianti con moltiplicatori
+                    _phSystem.RemoveActionContribution("BlueLED_x1.5", potSlot.PotId);
+                    _phSystem.RemoveActionContribution("BlueLED_x2", potSlot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED_x1.5", potSlot.PotId);
+                    _phSystem.RemoveActionContribution("RedLED_x2", potSlot.PotId);
+                    
+                    if (showDebugLogs)
+                        SporiumLogger.LogDebug(LogCategory.Ph, $"{potSlot.PotId}: Contributo pH LED rimosso (LED spento: {oldState} → Off)");
+                }
+            }
+            
+            // COMPATIBILITÀ: Aggiorna LastLedType per sistemi legacy
+            if (_potState.LedSystemState == LedSystemState.Blue)
+                _potState.LastLedType = LedType.Blue;
+            else if (_potState.LedSystemState == LedSystemState.Red)
+                _potState.LastLedType = LedType.Red;
+            else
+                _potState.LastLedType = null;
+            
+            // BLK-02.07: Aggiorna luci Unity
+            if (ledLightController != null)
+            {
+                ledLightController.UpdateLights(_potState.LedSystemState);
+            }
+            
+            // NOTA: NON applicare effetti pH qui - vengono applicati a fine giornata
+            // NOTA: NON incrementare LightExposure qui - viene fatto a fine giornata
+            
+            // Toast notifica cambio stato (gestito da PotNotifications tramite PotEvents.OnPotAction)
+            // I toast vengono mostrati automaticamente quando viene emesso PotEvents.EmitAction()
+            
+            // Notifica il cambio stato
+            PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
+            PotEvents.EmitChanged(potSlot);
+            
+            if (showDebugLogs)
+            {
+                string stateMsg = _potState.LedSystemState.ToString();
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
+            }
+            
+            return true;
         }
-        
-        // COMPATIBILITÀ: Aggiorna LastLedType per sistemi legacy
-        if (_potState.LedSystemState == LedSystemState.Blue)
-            _potState.LastLedType = LedType.Blue;
-        else if (_potState.LedSystemState == LedSystemState.Red)
-            _potState.LastLedType = LedType.Red;
-        else
-            _potState.LastLedType = null;
-        
-        // BLK-02.07: Aggiorna luci Unity
-        if (ledLightController != null)
+        finally
         {
-            ledLightController.UpdateLights(_potState.LedSystemState);
+            // Reset del flag nel prossimo frame per permettere nuove chiamate
+            StartCoroutine(ResetLightingFlag());
         }
-        
-        // NOTA: NON applicare effetti pH qui - vengono applicati a fine giornata
-        // NOTA: NON incrementare LightExposure qui - viene fatto a fine giornata
-        
-        // Toast notifica cambio stato (gestito da PotNotifications tramite PotEvents.OnPotAction)
-        // I toast vengono mostrati automaticamente quando viene emesso PotEvents.EmitAction()
-        
-        // Notifica il cambio stato
-        PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
-        PotEvents.EmitChanged(potSlot);
-        
-        if (showDebugLogs)
-        {
-            string stateMsg = _potState.LedSystemState.ToString();
-            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
-        }
-        
-        return true;
+    }
+    
+    /// <summary>
+    /// Reset del flag di lighting nel prossimo frame
+    /// </summary>
+    private System.Collections.IEnumerator ResetLightingFlag()
+    {
+        yield return null; // Aspetta un frame
+        _isLightingInProgress = false;
     }
     
     /// <summary>
@@ -933,45 +1026,15 @@ public class PotActions : MonoBehaviour
         // Ottieni stadio corrente
         PlantStage currentStage = (PlantStage)_potState.Stage;
         
-        // #region agent log
-        try {
-            var logData = new { useSpray = useSpray, currentStage = currentStage.ToString(), potId = potSlot != null ? potSlot.PotId : "null" };
-            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-E\",\"location\":\"PotActions.cs:901\",\"message\":\"DoPruning: Before TryPrune\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-        } catch { }
-        // #endregion
         // Esegui potatura
         PruningResult result = PruningSystem.TryPrune(_potState, currentStage, useSpray, pruningConfig);
-        // #region agent log
-        try {
-            var logData2 = new { resultSuccess = result.Success, resultType = result.ResultType.ToString(), resultMessage = result.Message };
-            var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-D\",\"location\":\"PotActions.cs:903\",\"message\":\"DoPruning: After TryPrune\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-        } catch { }
-        // #endregion
         
             // Gestisci risultato
             if (result.Success)
             {
-                // #region agent log
-                try {
-                    var logData = new { moldRiskLevelBefore = _potState.MoldRiskLevel, daysWithoutPruningBefore = _potState.DaysWithoutPruning };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-A\",\"location\":\"PotActions.cs:937\",\"message\":\"DoPruning: Before RemoveInfestation\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
-                
                 // BLK-07.01: Rimuove infestazione
                 MoldSystem.RemoveInfestation(_potState);
                 _potState.DaysWithoutPruning = 0;
-                
-                // #region agent log
-                try {
-                    var logData2 = new { moldRiskLevelAfter = _potState.MoldRiskLevel, daysWithoutPruningAfter = _potState.DaysWithoutPruning };
-                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-A\",\"location\":\"PotActions.cs:942\",\"message\":\"DoPruning: After RemoveInfestation\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-                } catch { }
-                // #endregion
                 
                 // Se è Growth pre-Flowering e non ha già bonus resa, applica bonus
                 if (result.ResultType == PruningResultType.SuccessResa)
@@ -1277,8 +1340,30 @@ public class PotActions : MonoBehaviour
         
         int actionsCost = GetActionsCost();
         
+        // DEBUG_SAFE_FIX: Verifica che actionsCost sia valido
+        if (actionsCost <= 0)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, $"[{potSlot?.PotId}] TryConsumeResources: actionsCost è {actionsCost}! Dovrebbe essere > 0. Usando 1 come fallback.");
+            actionsCost = 1;
+        }
+        
+        int actionsBefore = _gameManager.ActionsLeft;
+        SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] TryConsumeResources: actionsCost={actionsCost}, actionsBefore={actionsBefore}");
+        
         // Usa il metodo TrySpendAction del GameManager esistente
-        return _gameManager.TrySpendAction(actionsCost);
+        bool success = _gameManager.TrySpendAction(actionsCost);
+        
+        int actionsAfter = _gameManager.ActionsLeft;
+        int consumed = actionsBefore - actionsAfter;
+        SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] TryConsumeResources risultato: success={success}, actionsAfter={actionsAfter}, consumate={consumed}");
+        
+        // DEBUG_SAFE_FIX: Verifica che il consumo sia corretto
+        if (success && consumed != actionsCost)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, $"[{potSlot?.PotId}] TryConsumeResources: Consumo errato! Richiesto: {actionsCost}, Consumato: {consumed}");
+        }
+        
+        return success;
     }
     
     /// <summary>

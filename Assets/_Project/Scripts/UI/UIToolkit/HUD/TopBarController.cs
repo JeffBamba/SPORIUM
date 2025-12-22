@@ -330,17 +330,6 @@ namespace Sporae.UI.UIToolkit.HUD
             _phGradient = _root.Q<VisualElement>("ph-gradient");
             _phNeutralZone = _root.Q<VisualElement>("ph-neutral-zone");
             
-            // #region agent log
-            var logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-            try
-            {
-                var timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                var guid = System.Guid.NewGuid().ToString().Substring(0, 8);
-                var logLine = $"{{\"id\":\"log_{timestamp}_{guid}\",\"timestamp\":{timestamp},\"location\":\"TopBarController.cs:InitializeUI\",\"message\":\"pH elements queried\",\"data\":{{\"phDisplayExists\":{(_phDisplay != null).ToString().ToLower()},\"phSliderExists\":{(_phSlider != null).ToString().ToLower()},\"phMarkerExists\":{(_phMarker != null).ToString().ToLower()},\"phGradientExists\":{(_phGradient != null).ToString().ToLower()},\"phNeutralZoneExists\":{(_phNeutralZone != null).ToString().ToLower()}}},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"E\"}}\n";
-                System.IO.File.AppendAllText(logPath, logLine);
-            }
-            catch { }
-            // #endregion
             _condensationValueLabel = _root.Q<Label>("condensation-value");
             _mutationValueLabel = _root.Q<Label>("mutation-value");
             _cryValueLabel = _root.Q<Label>("cry-value");
@@ -507,35 +496,12 @@ namespace Sporae.UI.UIToolkit.HUD
         /// </summary>
         public void UpdatePh(float value)
         {
-            // #region agent log
-            var logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-            try
-            {
-                var timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                var guid = System.Guid.NewGuid().ToString().Substring(0, 8);
-                var logLine = $"{{\"id\":\"log_{timestamp}_{guid}\",\"timestamp\":{timestamp},\"location\":\"TopBarController.cs:UpdatePh\",\"message\":\"UpdatePh called\",\"data\":{{\"value\":{value},\"phLevelBefore\":{_phLevel}}},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\"}}\n";
-                System.IO.File.AppendAllText(logPath, logLine);
-            }
-            catch { }
-            // #endregion
-            
             _phLevel = value;
             
             // Converti da range PhSystem (-100/+100) a scala visualizzazione (0-14)
             // Mapping: -100 → 0, 0 → 7, +100 → 14
             float phVisualScale = ((value + 100f) / 200f) * 14f;
             phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-            
-            // #region agent log
-            try
-            {
-                var timestamp2 = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                var guid2 = System.Guid.NewGuid().ToString().Substring(0, 8);
-                var logLine2 = $"{{\"id\":\"log_{timestamp2}_{guid2}\",\"timestamp\":{timestamp2},\"location\":\"TopBarController.cs:UpdatePh\",\"message\":\"pH conversion calculated\",\"data\":{{\"phVisualScale\":{phVisualScale},\"normalizedPos\":{phVisualScale / 14f}}},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}}\n";
-                System.IO.File.AppendAllText(logPath, logLine2);
-            }
-            catch { }
-            // #endregion
             
             if (_phValueLabel != null)
             {
@@ -548,19 +514,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 // Posiziona marker: (phVisualScale / 14) * 100%
                 // Il marker è largo 12px, quindi dobbiamo centrarlo: left = (normalizedPos * 100%) - (6px / sliderWidth)
                 float normalizedPos = phVisualScale / 14f;
-                
-                // #region agent log
-                try
-                {
-                    var timestamp3 = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    var guid3 = System.Guid.NewGuid().ToString().Substring(0, 8);
-                    var markerLeftBefore = _phMarker.resolvedStyle.left;
-                    var sliderWidthLog = _phSlider != null ? _phSlider.resolvedStyle.width : 0f;
-                    var logLine3 = $"{{\"id\":\"log_{timestamp3}_{guid3}\",\"timestamp\":{timestamp3},\"location\":\"TopBarController.cs:UpdatePh\",\"message\":\"Setting marker position\",\"data\":{{\"normalizedPos\":{normalizedPos},\"markerLeftPercent\":{normalizedPos * 100f},\"markerLeftBefore\":{markerLeftBefore},\"sliderWidth\":{sliderWidthLog},\"markerExists\":true,\"gradientExists\":true,\"sliderExists\":{(_phSlider != null).ToString().ToLower()}}},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"C\"}}\n";
-                    System.IO.File.AppendAllText(logPath, logLine3);
-                }
-                catch { }
-                // #endregion
                 
                 // Usa left in percentuale per posizionare il marker
                 // Il marker è largo 12px, quindi per centrarlo dobbiamo sottrarre metà della larghezza
@@ -586,19 +539,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 
                 // Reset margin-left per evitare conflitti
                 _phMarker.style.marginLeft = 0f;
-                
-                // #region agent log
-                try
-                {
-                    var timestamp4 = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    var guid4 = System.Guid.NewGuid().ToString().Substring(0, 8);
-                    var markerLeftAfter = _phMarker.resolvedStyle.left;
-                    var markerMarginLeft = _phMarker.resolvedStyle.marginLeft;
-                    var logLine4 = $"{{\"id\":\"log_{timestamp4}_{guid4}\",\"timestamp\":{timestamp4},\"location\":\"TopBarController.cs:UpdatePh\",\"message\":\"Marker position set\",\"data\":{{\"markerLeftAfter\":{markerLeftAfter},\"markerMarginLeft\":{markerMarginLeft}}},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\"}}\n";
-                    System.IO.File.AppendAllText(logPath, logLine4);
-                }
-                catch { }
-                // #endregion
                 
                 // Colore marker interpolato dal gradiente
                 Color markerColor = GetPhColorFromScale(phVisualScale);

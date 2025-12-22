@@ -184,8 +184,15 @@ public class GameManager : MonoBehaviour
         return true;
     }
     
-    public bool TrySpendAction(int amount = 0)
+    public bool TrySpendAction(int amount = 1)
     {
+        // DEBUG_SAFE_FIX: Se amount è 0 o negativo, usa 1 come default
+        if (amount <= 0)
+        {
+            SporiumLogger.LogWarning(LogCategory.Core, $"TrySpendAction chiamato con amount={amount}! Usando 1 come default.");
+            amount = 1;
+        }
+        
         if (!_actionSystem.CanSpendAction(amount)) 
             return false;
 

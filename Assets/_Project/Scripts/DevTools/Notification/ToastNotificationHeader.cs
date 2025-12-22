@@ -31,56 +31,21 @@ namespace Sporae.DevTools
         /// </summary>
         public event System.Action<bool> OnToggleExpansion;
         
-        // #region agent log
-        private static void LogDebug(string hypothesisId, string location, string message, System.Collections.Generic.Dictionary<string, object> data)
-        {
-            try
-            {
-                long timestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                System.Text.StringBuilder dataJson = new System.Text.StringBuilder("{");
-                bool first = true;
-                foreach (var kvp in data)
-                {
-                    if (!first) dataJson.Append(",");
-                    first = false;
-                    dataJson.Append($"\"{kvp.Key}\":");
-                    if (kvp.Value is bool) dataJson.Append(kvp.Value.ToString().ToLower());
-                    else if (kvp.Value is string) dataJson.Append($"\"{kvp.Value}\"");
-                    else if (kvp.Value == null) dataJson.Append("null");
-                    else dataJson.Append(kvp.Value.ToString().Replace(",", "."));
-                }
-                dataJson.Append("}");
-                string json = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"{hypothesisId}\",\"location\":\"{location}\",\"message\":\"{message}\",\"timestamp\":{timestamp},\"data\":{dataJson}}}";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", json + "\n");
-            }
-            catch { }
-        }
-        // #endregion
         
         /// <summary>
         /// Inizializza l'header con la configurazione
         /// </summary>
         public void Initialize(ToastNotificationConfig config)
         {
-            // #region agent log
-            LogDebug("A", "ToastNotificationHeader.cs:38", "Initialize called", new System.Collections.Generic.Dictionary<string, object> { { "configNotNull", config != null }, { "toggleButtonNotNull", _toggleButton != null }, { "chevronTransformNotNull", _chevronTransform != null }, { "isExpanded", _isExpanded } });
-            // #endregion
             _config = config;
             SetupUI();
             SetupToggleButton();
-            
-            // #region agent log
-            LogDebug("E", "ToastNotificationHeader.cs:48", "Initialize completed - checking chevron initial rotation", new System.Collections.Generic.Dictionary<string, object> { { "chevronTransformNotNull", _chevronTransform != null }, { "chevronCurrentRotation", _chevronTransform != null ? (object)_chevronTransform.localEulerAngles.z : (object)(-1f) }, { "expectedRotation", 0f }, { "isExpanded", _isExpanded } });
-            // #endregion
             
             // Sincronizza rotazione iniziale del chevron con stato espanso
             if (_chevronTransform != null)
             {
                 float expectedRotation = _isExpanded ? 0f : 180f;
                 _chevronTransform.localEulerAngles = new Vector3(0, 0, expectedRotation);
-                // #region agent log
-                LogDebug("E", "ToastNotificationHeader.cs:56", "Chevron initial rotation synchronized", new System.Collections.Generic.Dictionary<string, object> { { "setRotation", expectedRotation }, { "actualRotation", _chevronTransform.localEulerAngles.z }, { "isExpanded", _isExpanded } });
-                // #endregion
             }
         }
         
@@ -113,25 +78,10 @@ namespace Sporae.DevTools
         
         private void SetupToggleButton()
         {
-            // #region agent log
-            LogDebug("A", "ToastNotificationHeader.cs:98", "SetupToggleButton entry", new System.Collections.Generic.Dictionary<string, object> { { "toggleButtonNotNull", _toggleButton != null } });
-            // #endregion
             if (_toggleButton != null)
             {
-                // #region agent log
-                LogDebug("A", "ToastNotificationHeader.cs:103", "Button state before setup", new System.Collections.Generic.Dictionary<string, object> { { "isInteractable", _toggleButton.interactable }, { "enabled", _toggleButton.enabled }, { "listenersCount", _toggleButton.onClick.GetPersistentEventCount() } });
-                // #endregion
                 _toggleButton.onClick.RemoveAllListeners();
                 _toggleButton.onClick.AddListener(ToggleExpansion);
-                // #region agent log
-                LogDebug("B", "ToastNotificationHeader.cs:108", "Button listener added", new System.Collections.Generic.Dictionary<string, object> { { "listenersCount", _toggleButton.onClick.GetPersistentEventCount() }, { "isInteractable", _toggleButton.interactable } });
-                // #endregion
-            }
-            else
-            {
-                // #region agent log
-                LogDebug("A", "ToastNotificationHeader.cs:114", "ERROR: _toggleButton is null", new System.Collections.Generic.Dictionary<string, object>());
-                // #endregion
             }
         }
         
@@ -140,46 +90,23 @@ namespace Sporae.DevTools
         /// </summary>
         public void ToggleExpansion()
         {
-            // #region agent log
-            LogDebug("B", "ToastNotificationHeader.cs:125", "ToggleExpansion CALLED", new System.Collections.Generic.Dictionary<string, object> { { "isExpandedBefore", _isExpanded } });
-            // #endregion
             _isExpanded = !_isExpanded;
 
-            // #region agent log
-            LogDebug("C", "ToastNotificationHeader.cs:130", "Before chevron animation", new System.Collections.Generic.Dictionary<string, object> { { "isExpandedAfter", _isExpanded }, { "chevronTransformNotNull", _chevronTransform != null }, { "chevronCurrentRotation", _chevronTransform != null ? (object)_chevronTransform.localEulerAngles.z : (object)(-1f) } });
-            // #endregion
             // Rotazione chevron 180°
             if (_chevronTransform != null)
             {
                 float targetRotation = _isExpanded ? 0f : 180f;
-                // #region agent log
-                LogDebug("D", "ToastNotificationHeader.cs:136", "Starting DOTween animation", new System.Collections.Generic.Dictionary<string, object> { { "targetRotation", targetRotation }, { "currentRotation", _chevronTransform.localEulerAngles.z }, { "isExpanded", _isExpanded } });
-                // #endregion
                 try
                 {
                     _chevronTransform.DORotate(new Vector3(0, 0, targetRotation), 0.2f);
-                    // #region agent log
-                    LogDebug("D", "ToastNotificationHeader.cs:142", "DOTween animation started successfully", new System.Collections.Generic.Dictionary<string, object> { { "targetRotation", targetRotation } });
-                    // #endregion
                 }
                 catch (System.Exception ex)
                 {
-                    // #region agent log
-                    LogDebug("D", "ToastNotificationHeader.cs:148", "ERROR: DOTween animation failed", new System.Collections.Generic.Dictionary<string, object> { { "error", ex.Message }, { "stackTrace", ex.StackTrace } });
-                    // #endregion
+                    // Gestisci errore silenziosamente
                 }
-            }
-            else
-            {
-                // #region agent log
-                LogDebug("C", "ToastNotificationHeader.cs:155", "ERROR: _chevronTransform is null", new System.Collections.Generic.Dictionary<string, object>());
-                // #endregion
             }
 
             // Evento per mostrare/nascondere toast container
-            // #region agent log
-            LogDebug("B", "ToastNotificationHeader.cs:161", "Invoking OnToggleExpansion event", new System.Collections.Generic.Dictionary<string, object> { { "isExpanded", _isExpanded }, { "hasListeners", OnToggleExpansion != null } });
-            // #endregion
             OnToggleExpansion?.Invoke(_isExpanded);
         }
         

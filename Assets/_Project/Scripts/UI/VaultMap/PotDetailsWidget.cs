@@ -77,12 +77,19 @@ namespace _Project
         [Header("Fertilizer Selector (BLK-03.01-T1)")]
         [SerializeField] private UIFertilizerSelector _fertilizerSelector;
         
+        [Header("UI System Selection")]
+        [Tooltip("Se false, disabilita questa UI legacy e usa PlantCardV2 UIToolkit")]
+        [SerializeField] private bool _useLegacyUI = true;
+        
         private PotSlot _currentSelectedPot;
         private PlantGrowthConfig _growthConfig;
         private GameManager _gameManager;
         private DayCycleSystem _dayCycleSystem;
         private PhSystem _phSystem;
         private PotSystemConfig _potSystemConfig;
+        
+        // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple a DoPlant nello stesso frame
+        private bool _isProcessingSeedSelection = false;
         
         private void Awake()
         {
@@ -239,40 +246,66 @@ namespace _Project
         /// </summary>
         private void OnSeedSelected(string seedTypeId)
         {
-            SporiumLogger.LogDebug(LogCategory.UI, $"OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
-            SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
-            
-            if (_currentSelectedPot == null)
+            // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
+            if (_isProcessingSeedSelection)
             {
-                SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando seme selezionato!");
+                SporiumLogger.LogWarning(LogCategory.UI, $"OnSeedSelected già in esecuzione! Ignorando chiamata duplicata per seedTypeId: {seedTypeId}");
                 return;
             }
             
-            if (_currentSelectedPot.PotActions == null)
+            _isProcessingSeedSelection = true;
+            
+            try
             {
-                SporiumLogger.LogError(LogCategory.UI, "PotActions è NULL quando seme selezionato!");
-                return;
-            }
-            
-            SporiumLogger.LogInfo(LogCategory.UI, $"Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
-            
-            // Piantare il seme selezionato
-            bool success = _currentSelectedPot.PotActions.DoPlant(seedTypeId);
-            
-            if (success)
-            {
-                SporiumLogger.LogInfo(LogCategory.UI, $"Seme {seedTypeId} piantato con successo!");
-                // Aggiorna l'UI
-                UpdateActionButtons(_currentSelectedPot);
+                SporiumLogger.LogDebug(LogCategory.UI, $"OnSeedSelected chiamato con seedTypeId: {seedTypeId}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
                 
-                var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
-                if (growthController != null)
-                    UpdateStageAndProgressUI(_currentSelectedPot);
+                if (_currentSelectedPot == null)
+                {
+                    SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando seme selezionato!");
+                    return;
+                }
+                
+                if (_currentSelectedPot.PotActions == null)
+                {
+                    SporiumLogger.LogError(LogCategory.UI, "PotActions è NULL quando seme selezionato!");
+                    return;
+                }
+                
+                SporiumLogger.LogInfo(LogCategory.UI, $"Piantando seme {seedTypeId} nel vaso {_currentSelectedPot.PotId}");
+                
+                // Piantare il seme selezionato
+                bool success = _currentSelectedPot.PotActions.DoPlant(seedTypeId);
+                
+                if (success)
+                {
+                    SporiumLogger.LogInfo(LogCategory.UI, $"Seme {seedTypeId} piantato con successo!");
+                    // Aggiorna l'UI
+                    UpdateActionButtons(_currentSelectedPot);
+                    
+                    var growthController = _currentSelectedPot.GetComponent<PotGrowthController>();
+                    if (growthController != null)
+                        UpdateStageAndProgressUI(_currentSelectedPot);
+                }
+                else
+                {
+                    SporiumLogger.LogError(LogCategory.UI, $"Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
+                }
             }
-            else
+            finally
             {
-                SporiumLogger.LogError(LogCategory.UI, $"Fallito piantare seme {seedTypeId}! Verifica i log di PotActions per dettagli.");
+                // Reset del flag nel prossimo frame per permettere nuove chiamate
+                StartCoroutine(ResetSeedSelectionFlag());
             }
+        }
+        
+        /// <summary>
+        /// Reset del flag di processing nel prossimo frame
+        /// </summary>
+        private System.Collections.IEnumerator ResetSeedSelectionFlag()
+        {
+            yield return null; // Aspetta un frame
+            _isProcessingSeedSelection = false;
         }
         
         /// <summary>
@@ -468,13 +501,6 @@ namespace _Project
             
             // Esegui potatura
             bool success = _currentSelectedPot.PotActions.DoPruning(useSpray);
-            // #region agent log
-            try {
-                var logData2 = new { success = success };
-                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-D\",\"location\":\"PotDetailsWidget.cs:441\",\"message\":\"OnPruningDialogResult: DoPruning result\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-            } catch { }
-            // #endregion
             
             if (success)
             {
@@ -538,14 +564,16 @@ namespace _Project
         /// </summary>
         private void OnFertilizerSelected(string fertilizerTypeId)
         {
-            SporiumLogger.LogDebug(LogCategory.UI, $"OnFertilizerSelected chiamato con fertilizerTypeId: {fertilizerTypeId}");
-            SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
-            
-            if (_currentSelectedPot == null)
+            // DEBUG_SAFE_FIX: Se la nuova UI è attiva o non c'è un pot selezionato, ignora la chiamata
+            // Questo previene errori quando il fertilizer selector viene aperto da PlantCardV2Controller
+            if (!_useLegacyUI || _currentSelectedPot == null)
             {
-                SporiumLogger.LogError(LogCategory.UI, "_currentSelectedPot è NULL quando fertilizzante selezionato!");
+                SporiumLogger.LogDebug(LogCategory.UI, $"OnFertilizerSelected ignorato: useLegacyUI={_useLegacyUI}, currentPot={(_currentSelectedPot?.PotId ?? "NULL")}");
                 return;
             }
+            
+            SporiumLogger.LogDebug(LogCategory.UI, $"OnFertilizerSelected chiamato con fertilizerTypeId: {fertilizerTypeId}");
+            SporiumLogger.LogDebug(LogCategory.UI, $"_currentSelectedPot: {_currentSelectedPot?.PotId ?? "NULL"}");
             
             if (_currentSelectedPot.PotActions == null)
             {
@@ -577,6 +605,12 @@ namespace _Project
         /// </summary>
         private void OnFertilizerSelectionCancelled()
         {
+            // DEBUG_SAFE_FIX: Se la nuova UI è attiva, ignora la chiamata
+            if (!_useLegacyUI)
+            {
+                return;
+            }
+            
             SporiumLogger.LogDebug(LogCategory.UI, "Selezione fertilizzante annullata");
             // Nessuna azione necessaria
         }
@@ -613,6 +647,13 @@ namespace _Project
         
         private void OnPotSelected(PotSlot pot)
         {
+            // Se nuova UI è attiva, non aprire legacy UI
+            if (!_useLegacyUI)
+            {
+                SporiumLogger.LogDebug(LogCategory.UI, $"Vaso {pot.PotId} selezionato, ma legacy UI disabilitata");
+                return;
+            }
+            
             SporiumLogger.LogDebug(LogCategory.UI, $"Vaso {pot.PotId} selezionato. PotDetailsWidget: apro automaticamente il pannello");
             SporiumLogger.LogDebug(LogCategory.UI, $"PotActions presente: {pot.PotActions != null}");
         
@@ -632,6 +673,13 @@ namespace _Project
         /// </summary>
         public void ShowDetails(PotSlot pot = null)
         {
+            // Se nuova UI è attiva, non mostrare legacy UI
+            if (!_useLegacyUI)
+            {
+                SporiumLogger.LogDebug(LogCategory.UI, "Legacy UI disabilitata, usa PlantCardV2 UIToolkit");
+                return;
+            }
+            
             // Usa il vaso passato o quello già selezionato
             PotSlot targetPot = pot ?? _currentSelectedPot;
             if (targetPot == null)
@@ -656,17 +704,6 @@ namespace _Project
             UpdateStageAndProgressUI(targetPot);
             UpdateActionButtons(targetPot);
         
-            // #region agent log
-            try {
-                var logData4 = new { 
-                    potId = targetPot?.PotId ?? "NULL",
-                    pageActiveAfter = _page != null ? _page.activeSelf : false
-                };
-                var logJson4 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-D\",\"location\":\"PotDetailsWidget.cs:ShowDetails\",\"message\":\"ShowDetails: Exit - page should be active\",\"data\":{JsonUtility.ToJson(logData4)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson4);
-            } catch { }
-            // #endregion
-        
             SporiumLogger.LogDebug(LogCategory.UI, $"ShowDetails: Pannello dettagliato aperto per vaso {targetPot.PotId}");
         }
         
@@ -675,13 +712,6 @@ namespace _Project
         /// </summary>
         public void HideDetails()
         {
-            // #region agent log
-            try {
-                var logData = new { pageActive = _page != null ? _page.activeSelf : false };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"FIX-HUD-SEPARATION\",\"location\":\"PotDetailsWidget.cs:HideDetails\",\"message\":\"HideDetails: Closing details panel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
             
             if (_page != null)
             {
@@ -1543,13 +1573,6 @@ namespace _Project
             // BLK-07.01: Aggiorna Infestation Badge
             if (_infestationBadge != null)
             {
-                // #region agent log
-                try {
-                    var logData = new { moldRiskLevel = state.MoldRiskLevel, conditionResult = !state.IsEmpty && state.HasPlant && state.MoldRiskLevel >= 2 };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG2-A\",\"location\":\"PotDetailsWidget.cs:1296\",\"message\":\"UpdatePlantStatsUI: Infestation badge condition\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
                 // BUG FIX 2: Badge INFESTATA solo se IsInfested = true (dopo 2 giorni a livello 3)
                 bool showBadge = !state.IsEmpty && state.HasPlant && state.IsInfested;
                 _infestationBadge.SetActive(showBadge);
@@ -2124,14 +2147,6 @@ namespace _Project
                 {
                     _growthLabelText = FindTextInChildren("Growth:");
                 }
-                
-                // #region agent log
-                try {
-                    var logData = new { found = _growthLabelText != null, labelName = _growthLabelText != null ? _growthLabelText.name : "null", searchMethod = _growthLabelText != null ? "found" : "not found" };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"Searching for GrowthLabel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
             }
             
             // BUG FIX: Usa la label Growth invece della progress bar per l'EventTrigger
@@ -2141,19 +2156,6 @@ namespace _Project
                 SporiumLogger.LogWarning(LogCategory.UI, "_growthLabelText è null! Tooltip Growth non può essere configurato. Verifica che esista un GameObject con TextMeshProUGUI contenente 'GrowthLabel'.");
                 return;
             }
-            
-            // #region agent log
-            try {
-                var logData = new { 
-                    labelActive = _growthLabelText.gameObject.activeSelf, 
-                    labelEnabled = _growthLabelText.enabled,
-                    hasCanvas = _growthLabelText.GetComponentInParent<Canvas>() != null,
-                    hasGraphicRaycaster = _growthLabelText.GetComponentInParent<Canvas>()?.GetComponent<UnityEngine.UI.GraphicRaycaster>() != null
-                };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"GrowthLabel found, checking setup\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
                 
             // BUG FIX: Il tooltip panel deve essere assegnato manualmente in Unity, non creato in runtime
             if (_growthTooltipPanel == null)
@@ -2185,13 +2187,6 @@ namespace _Project
             if (trigger == null)
             {
                 trigger = _growthLabelText.gameObject.AddComponent<EventTrigger>();
-                // #region agent log
-                try {
-                    var logData = new { eventTriggerAdded = true };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-SETUP\",\"location\":\"PotDetailsWidget.cs:SetupGrowthTooltip\",\"message\":\"EventTrigger added to GrowthLabel\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
             }
             
             // Rimuovi trigger esistenti per evitare duplicati
@@ -2216,14 +2211,6 @@ namespace _Project
             EventTrigger.Entry enterEntry = new EventTrigger.Entry();
             enterEntry.eventID = EventTriggerType.PointerEnter;
             enterEntry.callback.AddListener((data) => {
-                // #region agent log
-                try {
-                    var logData = new { currentSelectedPotNull = _currentSelectedPot == null, potActionsNull = (_currentSelectedPot?.PotActions == null) };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-A\",\"location\":\"PotDetailsWidget.cs:PointerEnter\",\"message\":\"Growth tooltip PointerEnter triggered\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
-                
                 if (_currentSelectedPot != null && _currentSelectedPot.PotActions != null)
                 {
                     // Ottieni stato aggiornato (non cached)
@@ -2235,13 +2222,6 @@ namespace _Project
                         if (_growthTooltipPanel != null)
                         {
                             _growthTooltipPanel.SetActive(true);
-                            // #region agent log
-                            try {
-                                var logData2 = new { tooltipPanelActive = _growthTooltipPanel.activeSelf };
-                                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-B\",\"location\":\"PotDetailsWidget.cs:PointerEnter\",\"message\":\"Growth tooltip panel activated\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-                            } catch { }
-                            // #endregion
                         }
                     }
                 }
@@ -2255,13 +2235,6 @@ namespace _Project
                 if (_growthTooltipPanel != null)
                 {
                     _growthTooltipPanel.SetActive(false);
-                    // #region agent log
-                    try {
-                        var logData = new { tooltipPanelActive = _growthTooltipPanel.activeSelf };
-                        var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-C\",\"location\":\"PotDetailsWidget.cs:PointerExit\",\"message\":\"Growth tooltip panel deactivated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                    } catch { }
-                    // #endregion
                 }
             });
             trigger.triggers.Add(exitEntry);
@@ -2276,14 +2249,6 @@ namespace _Project
             // Auto-trova label se non assegnata
             if (_growthLabelText == null)
             {
-                // #region agent log
-                try {
-                    var logData = $"{{\"searchText\":\"GrowthLabel\"}}";
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Searching for GrowthLabel\",\"data\":{logData},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
-                
                 // BUG FIX: Cerca prima "GrowthLabel" per nome, poi "Growth:" nel testo
                 _growthLabelText = FindTextInChildren("GrowthLabel");
                 
@@ -2291,13 +2256,6 @@ namespace _Project
                 if (_growthLabelText == null)
                 {
                     _growthLabelText = FindTextInChildren("Growth:");
-                    // #region agent log
-                    try {
-                        var logData = new { found = _growthLabelText != null, searchMethod = "Growth: text" };
-                        var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Searching for Growth: text\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                    } catch { }
-                    // #endregion
                 }
                 
                 // Se ancora non trovato, crea dinamicamente la label come fa PotHUDWidget
@@ -2327,26 +2285,9 @@ namespace _Project
                         growthLabelRect.anchoredPosition = new Vector2(0, 0);
                         growthLabelRect.sizeDelta = new Vector2(200, 20);
                         
-                        // #region agent log
-                        try {
-                            var logData = new { created = true, parentName = progressTransform.name };
-                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Created GrowthLabel dynamically\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                        } catch { }
-                        // #endregion
                         SporiumLogger.LogInfo(LogCategory.UI, "GrowthLabel creata dinamicamente perché non trovata nella scena.");
                     }
                 }
-                
-                // #region agent log
-                try {
-                    var found = _growthLabelText != null;
-                    var textName = _growthLabelText != null ? _growthLabelText.name : "null";
-                    var logData2 = $"{{\"found\":{found.ToString().ToLower()},\"textName\":\"{textName}\"}}";
-                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-TOOLTIP-HIERARCHY\",\"location\":\"PotDetailsWidget.cs:UpdateGrowthLabel\",\"message\":\"Final GrowthLabel status\",\"data\":{logData2},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-                } catch { }
-                // #endregion
             }
             
             // BUG FIX: Se ancora null dopo la ricerca, non loggare warning (è opzionale)

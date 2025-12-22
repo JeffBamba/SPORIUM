@@ -63,37 +63,15 @@ namespace Sporae.Dome.PotSystem.Pruning
                 finalSuccessRate = Mathf.Clamp(baseSuccessRate + sprayBonus, 0f, 100f);
             }
             
-            // #region agent log
-            try {
-                var logData = new { baseSuccessRate = baseSuccessRate, finalSuccessRate = finalSuccessRate, useSpray = useSpray, currentStage = currentStage.ToString() };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"PruningSystem.cs:56\",\"message\":\"TryPrune: Success rates calculated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
-            
             // Primo tentativo
             float roll1 = Random.Range(0f, 100f);
             bool firstAttemptSuccess = roll1 < finalSuccessRate;
-            // #region agent log
-            try {
-                var logData2 = new { roll1 = roll1, firstAttemptSuccess = firstAttemptSuccess };
-                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"PruningSystem.cs:66\",\"message\":\"TryPrune: First roll\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-            } catch { }
-            // #endregion
             
             // Se fallisce e usa Spray, esegui reroll
             if (!firstAttemptSuccess && useSpray)
             {
                 float roll2 = Random.Range(0f, 100f);
                 firstAttemptSuccess = roll2 < finalSuccessRate;
-                // #region agent log
-                try {
-                    var logData3 = new { roll2 = roll2, firstAttemptSuccess = firstAttemptSuccess };
-                    var logJson3 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"PruningSystem.cs:71\",\"message\":\"TryPrune: Reroll with spray\",\"data\":{JsonUtility.ToJson(logData3)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson3);
-                } catch { }
-                // #endregion
             }
             
             // Determina tipo risultato

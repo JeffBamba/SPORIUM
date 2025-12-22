@@ -173,6 +173,13 @@ namespace _Project
             
             selectorPanel.SetActive(true);
             
+            // DEBUG_SAFE_FIX: Abilita il Canvas quando viene mostrato
+            var canvas = selectorPanel.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                canvas.enabled = true;
+            }
+            
             // Configura solo il Canvas sorting order (non modifica colori o dimensioni)
             // Le modifiche visive devono essere fatte manualmente nella scena Unity
             SetupCanvasSortingOrder();
@@ -203,6 +210,13 @@ namespace _Project
             if (selectorPanel != null)
             {
                 selectorPanel.SetActive(false);
+                
+                // DEBUG_SAFE_FIX: Disabilita il Canvas per evitare che blocchi i click sulla HUD
+                var canvas = selectorPanel.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.enabled = false;
+                }
             }
             
             ClearSeedButtons();
@@ -400,8 +414,10 @@ namespace _Project
             }
             
             // Emetti evento PRIMA di nascondere il pannello
-            SporiumLogger.LogDebug(LogCategory.UI, $"Emettendo evento OnSeedSelected per seme {seedTypeId}");
+            int subscriberCount = OnSeedSelected?.GetInvocationList()?.Length ?? 0;
+            SporiumLogger.LogDebug(LogCategory.UI, $"[UISeedSelector] Emettendo evento OnSeedSelected per seme {seedTypeId} - Numero sottoscrittori: {subscriberCount}");
             OnSeedSelected?.Invoke(seedTypeId);
+            SporiumLogger.LogDebug(LogCategory.UI, $"[UISeedSelector] Evento OnSeedSelected emesso per seme {seedTypeId}");
             
             // Nascondi dopo aver emesso l'evento
             Hide();

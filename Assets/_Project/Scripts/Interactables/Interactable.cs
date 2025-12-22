@@ -50,12 +50,18 @@ namespace _Project
         
         public void OnMouseDown()
         {
-            if (UIBlocker.IsPointerOverUI())
+            bool isOverUI = UIBlocker.IsPointerOverUI();
+            
+            if (isOverUI)
+            {
                 return;
+            }
 
             if (!PlayerInRange)
+            {
                 return;
-
+            }
+            
             _interacted = true;
             OnInteract?.Invoke();
         }

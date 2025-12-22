@@ -125,7 +125,35 @@ public class ElevatorSystem : MonoBehaviour
         playerInside = state;
         
         if (uiPanel != null)
+        {
+            // DEBUG_SAFE_FIX: Verifica e abilita il Canvas padre quando si mostra la HUD
+            Canvas parentCanvas = uiPanel.GetComponentInParent<Canvas>();
+            if (parentCanvas != null)
+            {
+                if (!parentCanvas.enabled)
+                {
+                    SporiumLogger.LogWarning(LogCategory.UI, $"Canvas dell'ascensore era disabilitato! Abilitazione...");
+                    parentCanvas.enabled = true;
+                }
+                
+                // Verifica sorting order
+                if (state)
+                {
+                    SporiumLogger.LogDebug(LogCategory.UI, $"Elevator HUD: Canvas enabled={parentCanvas.enabled}, sortingOrder={parentCanvas.sortingOrder}, renderMode={parentCanvas.renderMode}");
+                }
+            }
+            else
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, "Canvas padre non trovato per UI_ElevatorPanel!");
+            }
+            
             uiPanel.SetActive(state);
+            
+            if (state)
+            {
+                SporiumLogger.LogDebug(LogCategory.UI, $"Elevator HUD mostrata: uiPanel.activeSelf={uiPanel.activeSelf}, activeInHierarchy={uiPanel.activeInHierarchy}");
+            }
+        }
 
         if (state)
             UpdateAvailablesFloorOptions();

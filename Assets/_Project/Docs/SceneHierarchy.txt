@@ -31,6 +31,10 @@
   [Component] Canvas
   [Component] CanvasScaler
   [Component] GraphicRaycaster
+  - HUD_GameViewportBackground
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] GameViewportBackgroundController
   - EventSystem
     [Component] Transform
     [Component] EventSystem
@@ -2376,6 +2380,19 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+  - PlayerStatusPanel
+    [Component] RectTransform
+    [Component] PlayerStatusPanelController
+    [Component] UIDocument
+  - HUD_TopBar
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] TopBarController
+    [Component] MutationOrbitUI
+  - HUD_BottomNavigation
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] BottomNavigationController
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2849,3 +2866,10 @@
 - ToastNotificationDebugConsole
   [Component] Transform
   [Component] ToastNotificationDebugConsole
+- PlantCardV2
+  [Component] Transform
+  [Component] UIDocument
+  [Component] PlantCardV2Controller
+- PlantCardV2Opener
+  [Component] Transform
+  [Component] PlantCardV2Opener

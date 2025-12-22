@@ -46,6 +46,16 @@ public class PlayerClickMover2D : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // BUG FIX: Se il movimento è sospeso, ferma immediatamente il player
+        if (suspendMovement)
+        {
+            if (hasTarget || isMoving)
+            {
+                StopMovement();
+            }
+            return;
+        }
+        
         if (hasTarget)
         {
             MoveTowardsTarget();

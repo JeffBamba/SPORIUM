@@ -59,11 +59,6 @@ namespace Sporae.UI.UIToolkit
             float fillAmount = max > 0 ? (current / max) : 0f;
             int filledSegments = Mathf.CeilToInt(fillAmount * 10f);
             
-            // #region agent log
-            var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run2\",\"hypothesisId\":\"BUG4\",\"location\":\"SegmentedStatBarController.cs:45\",\"message\":\"UpdateValues called\",\"data\":{{\"current\":{current},\"max\":{max},\"fillAmount\":{fillAmount},\"filledSegments\":{filledSegments},\"segmentsCount\":{_segments.Count}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
-            // #endregion
-            
             // Determina se deve blinkare (range 20-40%)
             bool shouldBlink = (percentage >= 20f && percentage <= 40f);
             

@@ -317,35 +317,11 @@ namespace Sporae.DevTools
             float oldPercent = maxLightExposure > 0 ? (float)oldLightExposure / maxLightExposure * 100f : 0f;
             float newPercentActual = maxLightExposure > 0 ? (float)potState.LightExposure / maxLightExposure * 100f : 0f;
             
-            // #region agent log
-            try {
-                var logData = new { 
-                    potId = potState.PotId, 
-                    oldLightExposure = oldLightExposure, 
-                    newLightExposure = potState.LightExposure,
-                    maxLightExposure = maxLightExposure,
-                    newPercent = newPercent,
-                    potSlotNotNull = _selectedPot.PotSlot != null,
-                    potSlotId = _selectedPot.PotSlot != null ? _selectedPot.PotSlot.PotId : "null"
-                };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotDebugConsole.cs:SetLightPercent\",\"message\":\"SetLightPercent: Before EmitChanged\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
-            
             // BUG FIX: Assicurati che PotSlot non sia null prima di emettere evento
             if (_selectedPot.PotSlot != null)
             {
                 PotEvents.EmitChanged(_selectedPot.PotSlot);
                 // Le HUD sempre visibili si aggiornano automaticamente tramite eventi
-                
-                // #region agent log
-                try {
-                    var logData2 = new { potId = potState.PotId, eventEmitted = true };
-                    var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-LIGHT-HUD\",\"location\":\"PotDebugConsole.cs:SetLightPercent\",\"message\":\"SetLightPercent: After EmitChanged\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-                } catch { }
-                // #endregion
             }
             else
             {

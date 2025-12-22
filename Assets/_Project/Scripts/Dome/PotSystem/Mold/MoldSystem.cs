@@ -125,26 +125,10 @@ namespace Sporae.Dome.PotSystem.Mold
             if (potState == null)
                 return;
             
-            // #region agent log
-            try {
-                var logData = new { potId = potState.PotId, moldRiskLevelBefore = potState.MoldRiskLevel, daysWithoutPruningBefore = potState.DaysWithoutPruning, isInfestedBefore = potState.IsInfested, daysAtLevel3Before = potState.DaysAtMoldRiskLevel3 };
-                var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"MoldSystem.cs:RemoveInfestation\",\"message\":\"RemoveInfestation: Before reset\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-            } catch { }
-            // #endregion
-            
             potState.MoldRiskLevel = 0;
             potState.DaysWithoutPruning = 0;
             potState.IsInfested = false;
             potState.DaysAtMoldRiskLevel3 = 0;
-            
-            // #region agent log
-            try {
-                var logData2 = new { potId = potState.PotId, moldRiskLevelAfter = potState.MoldRiskLevel, daysWithoutPruningAfter = potState.DaysWithoutPruning, isInfestedAfter = potState.IsInfested, daysAtLevel3After = potState.DaysAtMoldRiskLevel3 };
-                var logJson2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1-B\",\"location\":\"MoldSystem.cs:RemoveInfestation\",\"message\":\"RemoveInfestation: After reset\",\"data\":{JsonUtility.ToJson(logData2)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson2);
-            } catch { }
-            // #endregion
             
             SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Infestazione rimossa");
         }

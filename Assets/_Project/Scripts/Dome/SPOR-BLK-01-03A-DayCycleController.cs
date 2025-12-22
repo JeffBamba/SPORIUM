@@ -1447,14 +1447,6 @@ public class DayCycleController : MonoBehaviour
                         pot.Hydration = newHydration;
                         pot.ManualHydrationBase = newHydration; // Aggiorna base per il prossimo giorno
                         
-                        // #region agent log
-                        try {
-                            var logData = new { potId = pot.PotId, oldHydration = oldHydration, newHydration = pot.Hydration, manualBase = pot.ManualHydrationBase, decay = growthConfig.dailyHydrationDecay };
-                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-MANUAL-OVERRIDE\",\"location\":\"DayCycleController.cs:ApplyDecayAndCleanup\",\"message\":\"Hydration decay applicato (MANUALE)\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                        } catch { }
-                        // #endregion
-                        
                         if (enableDebugLogs && oldHydration != pot.Hydration)
                         {
                             SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Decay applicato (MANUALE, base={pot.ManualHydrationBase}) - Hydration: {oldHydration} → {pot.Hydration}/{maxHydration}");
@@ -1523,14 +1515,6 @@ public class DayCycleController : MonoBehaviour
                         int newFertilizerLevel = Mathf.Max(0, Mathf.RoundToInt(pot.ManualFertilizerBase - decayAmount));
                         pot.FertilizerLevel = newFertilizerLevel;
                         pot.ManualFertilizerBase = newFertilizerLevel; // Aggiorna base per il prossimo giorno
-                        
-                        // #region agent log
-                        try {
-                            var logData = new { potId = pot.PotId, oldFertilizerLevel = oldFertilizerLevel, newFertilizerLevel = pot.FertilizerLevel, manualBase = pot.ManualFertilizerBase, decayAmount = decayAmount };
-                            var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG-MANUAL-OVERRIDE\",\"location\":\"DayCycleController.cs:ApplyDecayAndCleanup\",\"message\":\"Fertilizer decay applicato (MANUALE)\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                        } catch { }
-                        // #endregion
                         
                         if (enableDebugLogs && oldFertilizerLevel != pot.FertilizerLevel)
                         {
@@ -1925,14 +1909,6 @@ public class DayCycleController : MonoBehaviour
                 {
                     pot.DaysAtMoldRiskLevel3 = 0; // Reset se non è più a livello 3
                 }
-                
-                // #region agent log
-                try {
-                    var logData = new { potId = pot.PotId, oldMoldRiskLevel = oldMoldRiskLevel, newMoldRiskLevel = pot.MoldRiskLevel, daysAtLevel3 = pot.DaysAtMoldRiskLevel3, isInfested = pot.IsInfested, daysOverwatering = pot.DaysOverwateringConsecutive, daysWithoutPruning = pot.DaysWithoutPruning, currentPh = (_phSystem != null ? _phSystem.CurrentPh : 0f) };
-                    var logJson = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG2-A\",\"location\":\"DayCycleController.cs:1666\",\"message\":\"DayCycle: MoldRiskLevel recalculated\",\"data\":{JsonUtility.ToJson(logData)},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                    System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logJson);
-                } catch { }
-                // #endregion
                 
                 // BUG FIX 2: Infestazione solo dopo 2 giorni consecutivi a livello 3
                 bool shouldInfest = MoldSystem.CheckInfestation(pot.MoldRiskLevel, pot.DaysAtMoldRiskLevel3);

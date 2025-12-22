@@ -84,11 +84,6 @@ namespace Sporae.UI.UIToolkit
         
         private void InitializeUI()
         {
-            // #region agent log
-            var log1 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1\",\"location\":\"PlayerStatusPanelController.cs:77\",\"message\":\"InitializeUI entry\",\"data\":{{\"uiDocumentExists\":{(_uiDocument!=null).ToString().ToLower()}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", log1);
-            // #endregion
-            
             if (_uiDocument == null)
             {
                 SporiumLogger.LogError(LogCategory.UI, "UIDocument non trovato!");
@@ -97,26 +92,11 @@ namespace Sporae.UI.UIToolkit
             
             _root = _uiDocument.rootVisualElement;
             
-            // #region agent log
-            var rootClasses = _root != null ? string.Join(",", _root.GetClasses()) : "null";
-            var log2 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1\",\"location\":\"PlayerStatusPanelController.cs:87\",\"message\":\"Root element check\",\"data\":{{\"rootExists\":{(_root!=null).ToString().ToLower()},\"rootName\":\"{_root?.name ?? "null"}\",\"rootClassList\":\"{rootClasses}\"}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", log2);
-            // #endregion
-            
             if (_root == null)
             {
                 SporiumLogger.LogError(LogCategory.UI, "Root VisualElement non trovato! Assicurati che il file UXML sia collegato.");
                 return;
             }
-            
-            // #region agent log
-            var panelElement = _root.Q<VisualElement>("player-status-panel");
-            var leftVal = panelElement != null ? panelElement.resolvedStyle.left.ToString() : "null";
-            var topVal = panelElement != null ? panelElement.resolvedStyle.top.ToString() : "null";
-            var posVal = panelElement != null ? panelElement.resolvedStyle.position.ToString() : "null";
-            var log3 = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"BUG1\",\"location\":\"PlayerStatusPanelController.cs:95\",\"message\":\"Panel element position check\",\"data\":{{\"panelExists\":{(panelElement!=null).ToString().ToLower()},\"left\":{leftVal},\"top\":{topVal},\"position\":\"{posVal}\"}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", log3);
-            // #endregion
             
             if (_enableDebugLogs)
                 SporiumLogger.LogInfo(LogCategory.UI, "Player Status Panel UI inizializzato");
@@ -279,11 +259,6 @@ namespace Sporae.UI.UIToolkit
             if (_hudInventory == null)
             {
                 _hudInventory = FindObjectOfType<HUDInventory>();
-                
-                // #region agent log
-                var logInv = $"{{\"sessionId\":\"debug-session\",\"runId\":\"inventory-click\",\"hypothesisId\":\"INV_BUTTON\",\"location\":\"PlayerStatusPanelController.cs:228\",\"message\":\"HUDInventory search\",\"data\":{{\"found\":{(_hudInventory!=null).ToString().ToLower()}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logInv);
-                // #endregion
             }
             
             if (_hudInventory != null)
@@ -291,22 +266,12 @@ namespace Sporae.UI.UIToolkit
                 // Chiama Toggle() per aprire/chiudere l'inventario (come il pulsante esistente)
                 _hudInventory.Toggle();
                 
-                // #region agent log
-                var logToggle = $"{{\"sessionId\":\"debug-session\",\"runId\":\"inventory-click\",\"hypothesisId\":\"INV_BUTTON\",\"location\":\"PlayerStatusPanelController.cs:235\",\"message\":\"HUDInventory.Toggle() called\",\"data\":{{}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logToggle);
-                // #endregion
-                
                 if (_enableDebugLogs)
                     SporiumLogger.LogInfo(LogCategory.UI, "Inventory button clicked - HUDInventory.Toggle() chiamato");
             }
             else
             {
                 SporiumLogger.LogWarning(LogCategory.UI, "HUDInventory non trovato! Assicurati che ci sia un GameObject con componente HUDInventory nella scena.");
-                
-                // #region agent log
-                var logError = $"{{\"sessionId\":\"debug-session\",\"runId\":\"inventory-click\",\"hypothesisId\":\"INV_BUTTON\",\"location\":\"PlayerStatusPanelController.cs:242\",\"message\":\"HUDInventory not found\",\"data\":{{}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logError);
-                // #endregion
             }
         }
         
