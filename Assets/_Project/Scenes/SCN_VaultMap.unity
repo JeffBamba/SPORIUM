@@ -3489,7 +3489,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.001255, y: 19.5508}
+  m_AnchoredPosition: {x: -0.001255, y: 160}
   m_SizeDelta: {x: 298.73, y: 22.0405}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &141260833
@@ -14241,7 +14241,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 43.6, y: -38.7}
+  m_AnchoredPosition: {x: 43.6, y: 101.74922}
   m_SizeDelta: {x: 205.1271, y: 47.2987}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &639582436
@@ -35202,6 +35202,7 @@ MonoBehaviour:
   _growthLabelText: {fileID: 0}
   _hydrationStressText: {fileID: 790631609}
   _lightStressText: {fileID: 1786780191}
+  _ledCompatibleText: {fileID: 0}
   _fertilizerText: {fileID: 970309573}
   _growthPointsText: {fileID: 0}
   _optimalDaysText: {fileID: 0}

@@ -669,22 +669,37 @@ namespace Sporae.UI.UIToolkit.PlantCard
             if (_isBindingUI)
                 return;
             
-            // BUG FIX: Temporaneamente disabilita RefreshData per evitare che ripristini lo stato
-            _skipNextRefresh = true;
-            
             if (_potActions == null || _currentPotSlot == null)
                 return;
             
-            // Toggle watering system
-            if (isOn)
+            // DEBUG_SAFE_FIX: Verifica lo stato corrente PRIMA di chiamare DoWater()
+            bool currentState = _potActions.IsWateringSystemOn();
+            
+            // Se lo stato desiderato è uguale a quello corrente, non fare nulla
+            if (isOn == currentState)
+                return;
+            
+            // DEBUG_SAFE_FIX: DoWater() è un toggle, quindi chiamiamolo solo se lo stato è diverso
+            bool success = _potActions.DoWater();
+            
+            // Se DoWater() fallisce, ripristina lo stato del toggle
+            if (!success)
             {
-                _potActions.DoWater();
+                // DEBUG_SAFE_FIX: Ripristina lo stato del toggle allo stato corrente reale
+                if (_dataBinder != null)
+                {
+                    var irrigationKnob = _dataBinder.GetIrrigationKnob();
+                    if (irrigationKnob != null)
+                    {
+                        // Ripristina allo stato corrente reale (che non è cambiato perché DoWater() è fallito)
+                        irrigationKnob.SetIrrigationState(currentState);
+                    }
+                }
             }
             else
             {
-                // Disattiva watering system
-                // Nota: PotActions.DoWater() potrebbe essere un toggle, verificare implementazione
-                _potActions.DoWater(); // Se è toggle, chiamarlo di nuovo lo disattiva
+                // BUG FIX: Temporaneamente disabilita RefreshData per evitare che ripristini lo stato
+                _skipNextRefresh = true;
             }
         }
         

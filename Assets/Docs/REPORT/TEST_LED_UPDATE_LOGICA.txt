@@ -1,0 +1,428 @@
+================================================================================
+TEST GUIDE: LED Update Logica (BLK-02.08)
+================================================================================
+Data Creazione: 2025-01-XX
+Versione Sistema: BLK-02.08
+Scopo: Verificare che il nuovo sistema LED basato su famiglia funzioni correttamente
+
+================================================================================
+PREREQUISITI
+================================================================================
+
+1. Avere Unity Editor aperto con il progetto Sporae
+2. Avere almeno una pianta di ogni famiglia disponibile nel database:
+   - PLT-PURE-001 (o altra Pure)
+   - PLT-EVIL-001 (o altra Evil)
+   - PLT-STD-001 (o altra Standard)
+3. Avere CRY sufficienti per attivare i LED (25 CRY/giorno)
+4. Avere Save Game funzionante (per test salvataggi)
+
+================================================================================
+TEST 1: VISUALIZZAZIONE HUD - LED COMPATIBILE
+================================================================================
+
+Obiettivo: Verificare che l'HUD mostri correttamente "LED Compatibile" in base alla famiglia
+
+STEP 1.1: Test PlantCardV2 (UI Builder)
+----------------------------------------
+1. Avvia il gioco
+2. Vai al Vault/Dome
+3. Pianta una pianta Pure (es. PLT-PURE-001)
+4. Clicca sul POT per aprire PlantCardV2
+5. Verifica nella LEFT COLUMN (sotto pH DRIFT overlay):
+   ✓ Dovrebbe apparire overlay "LED COMPATIBLE"
+   ✓ Il valore dovrebbe essere "Blue"
+   ✓ Se non appare, verifica che esista elemento "led-compatible-value" nel UXML
+
+STEP 1.2: Test pianta Evil
+---------------------------
+1. Pianta una pianta Evil (es. PLT-EVIL-001)
+2. Apri PlantCardV2
+3. Verifica overlay "LED COMPATIBLE":
+   ✓ Valore dovrebbe essere "Red"
+
+STEP 1.3: Test pianta Standard
+-------------------------------
+1. Pianta una pianta Standard (es. PLT-STD-001)
+2. Apri PlantCardV2
+3. Verifica overlay "LED COMPATIBLE":
+   ✓ Valore dovrebbe essere "ALL"
+
+STEP 1.4: Test PotDetailsWidget (UI Legacy - se ancora attiva)
+---------------------------------------------------------------
+1. Se _useLegacyUI = true in PotDetailsWidget
+2. Pianta pianta Pure/Evil/Standard
+3. Apri HUD pot
+4. Cerca label "LED Compatibile":
+   ✓ Pure: "LED Compatibile: Blue"
+   ✓ Evil: "LED Compatibile: Red"
+   ✓ Standard: "LED Compatibile: ALL"
+   ✓ Se non appare, aggiungi GameObject TextMeshProUGUI "LED Compatible" nella scena
+
+================================================================================
+TEST 2: STAGE REQUIREMENTS - LED RICHIESTI PER STADIO
+================================================================================
+
+Obiettivo: Verificare che i requisiti LED per stage siano corretti per ogni famiglia
+
+STEP 2.1: Test Pure - Stage Growth e Flowering
+-----------------------------------------------
+1. Pianta pianta Pure (es. PLT-PURE-001)
+2. Avanza fino a stage Growth
+3. Apri PlantCardV2 o controllo Condizione
+4. Verifica requisiti LED:
+   ✓ Growth: Dovrebbe richiedere LED Blue
+   ✓ Avanza a Flowering
+   ✓ Flowering: Dovrebbe richiedere LED Blue (NON più Red!)
+
+STEP 2.2: Test Evil - Stage Growth e Flowering
+-----------------------------------------------
+1. Pianta pianta Evil (es. PLT-EVIL-001)
+2. Avanza fino a stage Growth
+3. Apri PlantCardV2 o controllo Condizione
+4. Verifica requisiti LED:
+   ✓ Growth: Dovrebbe richiedere LED Red (NON più Blue!)
+   ✓ Avanza a Flowering
+   ✓ Flowering: Dovrebbe richiedere LED Red
+
+STEP 2.3: Test Standard - Stage Growth e Flowering
+---------------------------------------------------
+1. Pianta pianta Standard (es. PLT-STD-001)
+2. Avanza fino a stage Growth
+3. Apri PlantCardV2 o controllo Condizione
+4. Verifica requisiti LED:
+   ✓ Growth: Nessun LED richiesto (null/opzionale)
+   ✓ Avanza a Flowering
+   ✓ Flowering: Nessun LED richiesto (null/opzionale)
+
+STEP 2.4: Verifica Bonus Condizione
+------------------------------------
+1. Per ogni famiglia, accendi LED corretto per stage
+2. Avanza giorno
+3. Verifica Condizione pianta:
+   ✓ Dovrebbe applicare BonusLightCorrect (+15) quando LED è corretto per stage
+
+================================================================================
+TEST 3: TOGGLE LED LIBERO - PLAYER PUÒ SCEGLIERE QUALSIASI LED
+================================================================================
+
+Obiettivo: Verificare che il player possa attivare qualsiasi LED (anche "sbagliato")
+
+STEP 3.1: Test Pure con LED Blue (Corretto)
+--------------------------------------------
+1. Pianta pianta Pure
+2. Vai a stage Growth o Flowering
+3. Attiva LED Blue tramite UI (rotary knob o button)
+4. Verifica:
+   ✓ LED Blue si attiva correttamente
+   ✓ Consuma 1 Action Point
+   ✓ Nessun warning/blocco
+
+STEP 3.2: Test Pure con LED Red (Incompatibile - Scelta Libera)
+-----------------------------------------------------------------
+1. Pianta pianta Pure
+2. Vai a stage Growth o Flowering
+3. Attiva LED Red (incompatibile con famiglia)
+4. Verifica:
+   ✓ LED Red si attiva correttamente (NON bloccato!)
+   ✓ Consuma 1 Action Point
+   ✓ Nessun warning/blocco immediato
+   ✓ La scelta è libera come richiesto
+
+STEP 3.3: Test Evil con LED Red (Corretto)
+-------------------------------------------
+1. Pianta pianta Evil
+2. Vai a stage Growth o Flowering
+3. Attiva LED Red
+4. Verifica:
+   ✓ LED Red si attiva correttamente
+   ✓ Nessun blocco
+
+STEP 3.4: Test Evil con LED Blue (Incompatibile - Scelta Libera)
+------------------------------------------------------------------
+1. Pianta pianta Evil
+2. Attiva LED Blue (incompatibile)
+3. Verifica:
+   ✓ LED Blue si attiva (NON bloccato!)
+   ✓ Scelta libera
+
+STEP 3.5: Test Standard con Entrambi i LED
+-------------------------------------------
+1. Pianta pianta Standard
+2. Attiva LED Blue
+3. Verifica: OK
+4. Spegni, attiva LED Red
+5. Verifica: OK
+6. Entrambi dovrebbero funzionare
+
+================================================================================
+TEST 4: MALUS CONDIZIONE - LED INCOMPATIBILE
+================================================================================
+
+Obiettivo: Verificare che LED incompatibile con famiglia applichi malus condizione
+
+STEP 4.1: Test Pure con LED Red (Incompatibile)
+------------------------------------------------
+1. Pianta pianta Pure
+2. Attiva LED Red (incompatibile)
+3. Avanza 1 giorno (fine giornata)
+4. Verifica Condizione:
+   ✓ Dovrebbe applicare malus: "LED incompatibile con famiglia (Blue richiesto)"
+   ✓ Malus = -5 * giorni consecutivi
+   ✓ Giorno 1: Malus -5
+   ✓ Giorno 2: Malus -10 (se LED ancora acceso)
+   ✓ Giorno 3: Malus -15 (cumulativo)
+
+STEP 4.2: Test Evil con LED Blue (Incompatibile)
+-------------------------------------------------
+1. Pianta pianta Evil
+2. Attiva LED Blue (incompatibile)
+3. Avanza 1 giorno
+4. Verifica Condizione:
+   ✓ Malus: "LED incompatibile con famiglia (Red richiesto)"
+   ✓ Malus -5 per ogni giorno
+
+STEP 4.3: Test Standard con LED (Nessun Malus)
+-----------------------------------------------
+1. Pianta pianta Standard
+2. Attiva LED Blue
+3. Avanza giorno
+4. Verifica: Nessun malus LED incompatibile
+5. Ripeti con LED Red
+6. Verifica: Nessun malus
+
+STEP 4.4: Test LED Spento (Nessun Malus)
+-----------------------------------------
+1. Pianta qualsiasi pianta
+2. Non attivare LED (o spegni)
+3. Avanza giorno
+4. Verifica: Nessun malus LED incompatibile (solo malus per luce assente se richiesto)
+
+STEP 4.5: Verifica Calcolo Condizione
+--------------------------------------
+1. Pianta Pure, attiva Red LED
+2. Avanza 1 giorno
+3. Apri PlantCardV2 → Tab Vital Parameters → Conditions
+4. Guarda tooltip/contributors condizione:
+   ✓ Dovrebbe mostrare contributore negativo: "LED incompatibile con famiglia (Blue richiesto)"
+   ✓ Valore malus corretto (-5, -10, -15...)
+
+================================================================================
+TEST 5: PH DRIFT - EFFETTI INVARIATI
+================================================================================
+
+Obiettivo: Verificare che gli effetti pH drift dei LED rimangano invariati
+
+STEP 5.1: Test LED Blue - pH Drift
+-----------------------------------
+1. Pianta qualsiasi pianta
+2. Attiva LED Blue
+3. Avanza 1 giorno
+4. Verifica pH Dome:
+   ✓ Dovrebbe aumentare di +5 (o +7.5 se giorni consecutivi 2-3, o +10 se 4+)
+   ✓ Scaling moltiplicatori invariati (x1, x1.5, x2)
+
+STEP 5.2: Test LED Red - pH Drift
+----------------------------------
+1. Pianta qualsiasi pianta
+2. Attiva LED Red
+3. Avanza 1 giorno
+4. Verifica pH Dome:
+   ✓ Dovrebbe diminuire di -5 (o -7.5, -10 con scaling)
+
+STEP 5.3: Test Bilanciamento pH
+--------------------------------
+1. Pianta 2 piante Pure + 2 piante Evil
+2. Pure: Attiva LED Blue
+3. Evil: Attiva LED Red
+4. Avanza giorno
+5. Verifica pH Dome:
+   ✓ Drift dovrebbe essere bilanciato (circa 0 se stesse condizioni)
+   ✓ Pure +5, Evil -5, totale circa 0
+
+================================================================================
+TEST 6: CONSECUTIVE DAYS E SCALING
+================================================================================
+
+Obiettivo: Verificare che il sistema di giorni consecutivi funzioni correttamente
+
+STEP 6.1: Test Consecutive Days Blue
+-------------------------------------
+1. Pianta pianta Pure
+2. Attiva LED Blue
+3. Avanza 1 giorno: Verifica DaysLedBlueConsecutive = 1
+4. Avanza 1 giorno: Verifica DaysLedBlueConsecutive = 2
+5. Avanza 1 giorno: Verifica DaysLedBlueConsecutive = 3
+6. Avanza 1 giorno: Verifica DaysLedBlueConsecutive = 4
+7. Verifica effetti scaling:
+   ✓ Giorno 1: moltiplicatore x1.0
+   ✓ Giorni 2-3: moltiplicatore x1.5
+   ✓ Giorno 4+: moltiplicatore x2.0
+
+STEP 6.2: Test Reset Consecutive Days (Cambio LED)
+---------------------------------------------------
+1. Pianta pianta Pure
+2. Attiva LED Blue (3 giorni consecutivi)
+3. Cambia a LED Red
+4. Verifica:
+   ✓ DaysLedBlueConsecutive = 0 (reset)
+   ✓ DaysLedRedConsecutive = 1 (inizia conteggio)
+
+STEP 6.3: Test Consecutive Days con LED Incompatibile
+------------------------------------------------------
+1. Pianta pianta Pure
+2. Attiva LED Red (incompatibile)
+3. Avanza giorni
+4. Verifica:
+   ✓ DaysLedRedConsecutive aumenta normalmente
+   ✓ Malus condizione = -5 * giorni consecutivi
+   ✓ pH drift applicato normalmente (-5 per Red)
+
+================================================================================
+TEST 7: CRY CONSUMO E AUTO-OFF
+================================================================================
+
+Obiettivo: Verificare che il sistema CRY consumi correttamente e spegna LED se insufficiente
+
+STEP 7.1: Test Consumo CRY
+---------------------------
+1. Aggiungi CRY sufficienti (es. 100)
+2. Attiva LED Blue o Red
+3. Avanza giorno
+4. Verifica:
+   ✓ Consumo 25 CRY per LED acceso
+   ✓ CRY diminuisce di 25
+
+STEP 7.2: Test Auto-Off (CRY Insufficiente)
+--------------------------------------------
+1. Aggiungi CRY = 20 (meno di 25 richiesti)
+2. Attiva LED
+3. Avanza giorno
+4. Verifica:
+   ✓ LED si spegne automaticamente
+   ✓ Toast notification se presente
+   ✓ CRY non va in negativo
+
+================================================================================
+TEST 8: SALVATAGGI E CARICAMENTO
+================================================================================
+
+Obiettivo: Verificare che i salvataggi funzionino correttamente con nuovo sistema
+
+STEP 8.1: Test Salvataggio Stato LED
+-------------------------------------
+1. Pianta pianta Pure
+2. Attiva LED Blue
+3. Avanza 2 giorni (DaysLedBlueConsecutive = 2)
+4. Salva gioco
+5. Esci e ricarica
+6. Verifica:
+   ✓ LED Blue ancora acceso
+   ✓ DaysLedBlueConsecutive = 2
+   ✓ Stato persistente
+
+STEP 8.2: Test Caricamento Salvataggio Vecchio
+-----------------------------------------------
+1. Carica salvataggio creato PRIMA dell'aggiornamento BLK-02.08
+2. Verifica:
+   ✓ Gioco carica senza errori
+   ✓ Migration logic funziona se presente
+   ✓ Stato LED esistente preservato
+
+================================================================================
+TEST 9: EDGE CASES E BUG POTENZIALI
+================================================================================
+
+STEP 9.1: Test Pianta Senza Famiglia (Edge Case)
+-------------------------------------------------
+1. Se esiste pianta con Family = null o Unknown
+2. Verifica:
+   ✓ LedCompatibilityHelper dovrebbe restituire "Both" (default)
+   ✓ Nessun crash
+
+STEP 9.2: Test Stage Seed/Sprout (Nessun LED Richiesto)
+--------------------------------------------------------
+1. Pianta qualsiasi pianta
+2. Resta in stage Seed o Sprout
+3. Verifica:
+   ✓ Nessun LED richiesto (null)
+   ✓ IsLightCorrectForStage restituisce true
+   ✓ Nessun malus per LED mancante
+
+STEP 9.3: Test Switch Rapido LED
+---------------------------------
+1. Attiva LED Blue
+2. Subito dopo attiva LED Red
+3. Subito dopo spegni
+4. Verifica:
+   ✓ Conteggio giorni resettato correttamente
+   ✓ Nessun stato inconsistente
+
+STEP 9.4: Test Multiple Piante Simultaneamente
+------------------------------------------------
+1. Pianta 3 pot:
+   - Pot 1: Pure con Blue LED
+   - Pot 2: Evil con Red LED
+   - Pot 3: Standard con Blue LED
+2. Avanza giorno
+3. Verifica:
+   ✓ Ogni pot calcola condizione correttamente
+   ✓ Malus applicato solo dove appropriato
+   ✓ pH drift globale corretto
+
+================================================================================
+TEST 10: VERIFICA VISIVA UI
+================================================================================
+
+STEP 10.1: Test PlantCardV2 - Posizionamento
+---------------------------------------------
+1. Apri PlantCardV2 per pianta Pure
+2. Verifica overlay "LED COMPATIBLE":
+   ✓ Posizionato sotto pH DRIFT overlay
+   ✓ Stile coerente con ph-drift-overlay
+   ✓ Testo leggibile
+   ✓ Colori appropriati
+
+STEP 10.2: Test Responsive (Se Applicabile)
+--------------------------------------------
+1. Cambia risoluzione schermo
+2. Verifica overlay rimane visibile e posizionato correttamente
+
+================================================================================
+RISULTATI ATTESI
+================================================================================
+
+SUCCESSO se:
+✓ HUD mostra "LED Compatibile" corretto per ogni famiglia
+✓ Pure: Growth e Flowering richiedono Blue (non più Red per Flowering)
+✓ Evil: Growth e Flowering richiedono Red (non più Blue per Growth)
+✓ Standard: Nessun LED richiesto (opzionale)
+✓ Toggle LED è libero (nessun blocco)
+✓ Malus condizione -5/giorno per LED incompatibile
+✓ pH drift invariato (+5 Blue, -5 Red)
+✓ Salvataggi funzionano
+✓ Nessun crash o errore console
+
+FAIL se:
+✗ HUD non mostra LED Compatibile
+✗ Stage requirements errati
+✗ LED bloccato per incompatibilità
+✗ Malus non applicato
+✗ pH drift cambiato
+✗ Salvataggi rotti
+✗ Errori console
+
+================================================================================
+NOTE AGGIUNTIVE
+================================================================================
+
+- Per test più approfonditi, usa DifficultyCalibrationConfig per modificare
+  MalusLedIncompatiblePerDay in runtime
+- Verifica log Unity per eventuali warning/errori
+- Test in Build (non solo Editor) per verificare performance
+- Considera test con piante ibride (Q1 2026) quando disponibili
+
+================================================================================
+FINE TEST GUIDE
+================================================================================
+

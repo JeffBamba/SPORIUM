@@ -507,13 +507,17 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         {
             // Nascondi la HUD se non c'è una pianta
             if (hudInstance.container != null)
+            {
                 hudInstance.container.SetActive(false);
+            }
             return;
         }
         
         // Assicurati che il container sia visibile quando c'è una pianta
         if (hudInstance.container != null)
+        {
             hudInstance.container.SetActive(true);
+        }
         
         // Gestione speciale per vasi vuoti: resetta tutti i testi (non dovrebbe mai arrivare qui se hasPlant è false)
         if (state.IsEmpty || state.Stage == (int)PlantStage.Empty)

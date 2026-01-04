@@ -188,6 +188,23 @@ namespace Sporae.Dome.PotSystem.Condition
                 contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
             }
             
+            // 2b. BLK-02.08: LED incompatibile con famiglia (-5 per ogni giorno che è acceso)
+            if (potState.LedSystemState != LedSystemState.Off && plantData != null)
+            {
+                LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                bool isLedIncompatible = !LedCompatibilityHelper.IsLedCompatible(potState.LedSystemState, compatible);
+                
+                if (isLedIncompatible)
+                {
+                    // -5 per ogni giorno che LED sbagliato è acceso
+                    // Nota: consecutiveDays è già calcolato all'inizio del metodo
+                    int malusAmount = DifficultyCalibrationConfig.MalusLedIncompatiblePerDay * consecutiveDays;
+                    score += malusAmount;
+                    string compatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                    contributors.Add(new ConditionContributor($"LED incompatibile con famiglia ({compatibleDisplay} richiesto)", malusAmount, false));
+                }
+            }
+            
             // 3. pH opposto alla pianta (Pure in acido, Evil in basico)
             if (phSystem != null)
             {

@@ -292,11 +292,11 @@ namespace _Project.Editor
                 }
             };
             
-            // Imposta i LED richiesti usando SetRequiredLed
+            // BLK-02.08: Imposta i LED richiesti usando SetRequiredLed (Standard: nessun LED richiesto - accetta entrambi)
             reqs[0].SetRequiredLed(null); // Seed: nessun LED
             reqs[1].SetRequiredLed(null); // Sprout: nessun LED
-            reqs[2].SetRequiredLed(LedType.Blue); // Growth: Blue LED
-            reqs[3].SetRequiredLed(LedType.Red); // Flowering: Red LED
+            reqs[2].SetRequiredLed(null); // Growth: nessun LED richiesto (accetta Blue o Red)
+            reqs[3].SetRequiredLed(null); // Flowering: nessun LED richiesto (accetta Blue o Red)
             reqs[4].SetRequiredLed(null); // HarvestReady: nessun LED
             reqs[5].SetRequiredLed(null); // Resting: nessun LED
             
@@ -414,11 +414,11 @@ namespace _Project.Editor
                 }
             };
             
-            // Imposta i LED richiesti usando SetRequiredLed
+            // BLK-02.08: Imposta i LED richiesti usando SetRequiredLed (Pure: solo Blue LED)
             reqs[0].SetRequiredLed(null); // Seed: nessun LED
             reqs[1].SetRequiredLed(LedType.Blue); // Sprout: Blue LED consigliato
             reqs[2].SetRequiredLed(LedType.Blue); // Growth: Blue LED richiesto
-            reqs[3].SetRequiredLed(LedType.Red); // Flowering: Red LED richiesto
+            reqs[3].SetRequiredLed(LedType.Blue); // Flowering: Blue LED richiesto (cambiato da Red a Blue per BLK-02.08)
             reqs[4].SetRequiredLed(null); // HarvestReady: nessun LED
             reqs[5].SetRequiredLed(null); // Resting: nessun LED
             
@@ -536,10 +536,10 @@ namespace _Project.Editor
                 }
             };
             
-            // Imposta i LED richiesti usando SetRequiredLed
+            // BLK-02.08: Imposta i LED richiesti usando SetRequiredLed (Evil: solo Red LED)
             reqs[0].SetRequiredLed(null); // Seed: nessun LED
             reqs[1].SetRequiredLed(null); // Sprout: nessun LED
-            reqs[2].SetRequiredLed(LedType.Blue); // Growth: Blue LED accelera
+            reqs[2].SetRequiredLed(LedType.Red); // Growth: Red LED richiesto (cambiato da Blue a Red per BLK-02.08)
             reqs[3].SetRequiredLed(LedType.Red); // Flowering: Red LED richiesto
             reqs[4].SetRequiredLed(null); // HarvestReady: nessun LED
             reqs[5].SetRequiredLed(null); // Resting: nessun LED

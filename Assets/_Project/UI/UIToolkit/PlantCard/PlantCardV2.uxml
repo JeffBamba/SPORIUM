@@ -49,9 +49,6 @@
                                 <ui:VisualElement name="growth-segment-4" class="growth-segment" />
                                 <ui:VisualElement name="growth-segment-5" class="growth-segment" />
                                 <ui:VisualElement name="growth-segment-6" class="growth-segment" />
-                                <ui:VisualElement name="growth-tooltip" class="growth-tooltip" style="display: none;">
-                                    <ui:Label name="growth-tooltip-text" class="tooltip-text" />
-                                </ui:VisualElement>
                             </ui:VisualElement>
                             <ui:Label name="growth-counter" text="3/7" class="growth-counter" />
                         </ui:VisualElement>
@@ -68,6 +65,10 @@
                         <ui:VisualElement name="ph-drift-overlay" class="ph-drift-overlay" style="top: 56px; left: 17px;">
                             <ui:Label name="ph-drift-label" text="pH DRIFT" class="ph-drift-label" />
                             <ui:Label name="ph-drift-value" text="+2/day" class="ph-drift-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="led-compatible-overlay" class="ph-drift-overlay" style="top: 100px; left: 17px;">
+                            <ui:Label name="led-compatible-label" text="LED COMPATIBLE" class="ph-drift-label" />
+                            <ui:Label name="led-compatible-value" text="ALL" class="ph-drift-value" />
                         </ui:VisualElement>
                         <ui:VisualElement name="plant-image-container" class="plant-image-container">
                             <ui:VisualElement name="plant-image" class="plant-image" style="background-color: rgba(40, 107, 37, 0.1);" />

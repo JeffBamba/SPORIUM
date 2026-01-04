@@ -42,6 +42,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private VisualElement _plantImage;
         private VisualElement _liveIndicator;
         private Label _phDriftValueLabel;
+        private Label _ledCompatibleLabel;  // BLK-02.08: LED Compatibile (Blue/Red/ALL)
         private Button _plantButton;
         private Button _removeButton;
         
@@ -66,9 +67,12 @@ namespace Sporae.UI.UIToolkit.PlantCard
         // Callback references per rimuoverli quando necessario
         private EventCallback<MouseEnterEvent> _conditionsBadgeMouseEnterCallback;
         private EventCallback<MouseLeaveEvent> _conditionsBadgeMouseLeaveCallback;
+        private EventCallback<MouseEnterEvent> _growthProgressBarMouseEnterCallback;
+        private EventCallback<MouseLeaveEvent> _growthProgressBarMouseLeaveCallback;
         
         // FIX FLICKERING: Flag per tracciare se il tooltip deve essere nascosto
         private bool _shouldHideConditionTooltip = false;
+        private bool _shouldHideGrowthTooltip = false;
         
         public PlantCardV2DataBinder(VisualElement root, PlantCardV2Config config)
         {
@@ -127,6 +131,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             _plantImage = _root.Q<VisualElement>("plant-image");
             _liveIndicator = _root.Q<VisualElement>("live-indicator");
             _phDriftValueLabel = _root.Q<Label>("ph-drift-value");
+            _ledCompatibleLabel = _root.Q<Label>("led-compatible-value");  // BLK-02.08
             _plantButton = _root.Q<Button>("plant-button");
             _removeButton = _root.Q<Button>("remove-button");
             
@@ -654,6 +659,26 @@ namespace Sporae.UI.UIToolkit.PlantCard
             sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
             sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
             
+            // BLK-02.08: Aggiungi informazione LED compatibile con famiglia
+            if (plantData != null)
+            {
+                LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                string compatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                sb.AppendLine($"  LED compatibile con famiglia: <color=#00FF00>{compatibleDisplay}</color>");
+                
+                // Verifica se LED attuale è incompatibile con famiglia
+                if (state.LedSystemState != LedSystemState.Off)
+                {
+                    bool isLedCompatibleWithFamily = LedCompatibilityHelper.IsLedCompatible(state.LedSystemState, compatible);
+                    if (!isLedCompatibleWithFamily)
+                    {
+                        string currentLedName = state.LedSystemState == LedSystemState.Blue ? "Blue" : "Red";
+                        sb.AppendLine($"  <color=#FF0000>⚠️ LED {currentLedName} attivo è INCOMPATIBILE con famiglia {plantData.Family}!</color>");
+                        sb.AppendLine($"  <color=#FF0000>   Malus condizione: -5 per ogni giorno che è acceso</color>");
+                    }
+                }
+            }
+            
             if (!lightOk)
             {
                 sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
@@ -663,7 +688,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
                     bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
                     if (ledRequired != "Nessuno" && !ledRequirementMet)
                     {
-                        sb.AppendLine($"  LED richiesto: {ledRequired} (<color=#FF0000>NON OK</color>)");
+                        sb.AppendLine($"  LED richiesto per stage: {ledRequired} (<color=#FF0000>NON OK</color>)");
                     }
                 }
             }
@@ -826,25 +851,185 @@ namespace Sporae.UI.UIToolkit.PlantCard
         /// </summary>
         private void SetupGrowthTooltip(PotStateModel state, PlantData plantData)
         {
-            var growthProgressBar = _root.Q<VisualElement>("growth-progress-bar");
-            var growthTooltip = _root.Q<VisualElement>("growth-tooltip");
-            var growthTooltipText = _root.Q<Label>("growth-tooltip-text");
-            
-            if (growthProgressBar == null || growthTooltip == null || growthTooltipText == null)
+            if (_growthProgressBar == null)
                 return;
             
-            // Build tooltip text
-            string tooltipText = BuildGrowthTooltipText(state, plantData);
-            growthTooltipText.text = tooltipText;
+            // Cerca il tooltip nel root (creato dinamicamente)
+            var growthTooltip = _root.Q<VisualElement>("growth-tooltip-dynamic");
+            var growthTooltipText = growthTooltip?.Q<Label>("growth-tooltip-text");
+            
+            // Se non esiste, crealo nel root
+            if (growthTooltip == null)
+            {
+                growthTooltip = new VisualElement();
+                growthTooltip.name = "growth-tooltip-dynamic";
+                growthTooltip.AddToClassList("growth-tooltip");
+                
+                // Stili identici al tooltip Conditions
+                growthTooltip.style.backgroundColor = new Color(13f/255f, 21f/255f, 25f/255f, 0.95f); // #0d1519 con opacità 95%
+                growthTooltip.style.borderTopWidth = 1f;
+                growthTooltip.style.borderRightWidth = 1f;
+                growthTooltip.style.borderBottomWidth = 1f;
+                growthTooltip.style.borderLeftWidth = 1f;
+                // Border viola per coerenza con growth stage
+                Color violetBorder = _config?.VioletGrowth ?? new Color(181f/255f, 128f/255f, 209f/255f, 1f);
+                growthTooltip.style.borderTopColor = violetBorder;
+                growthTooltip.style.borderRightColor = violetBorder;
+                growthTooltip.style.borderBottomColor = violetBorder;
+                growthTooltip.style.borderLeftColor = violetBorder;
+                
+                // Posizionamento assoluto rispetto al root
+                growthTooltip.style.position = Position.Absolute;
+                growthTooltip.style.left = 0f;
+                growthTooltip.style.top = 0f;
+                growthTooltip.style.width = 450f;
+                growthTooltip.style.maxWidth = 450f;
+                growthTooltip.style.minHeight = 200f;
+                growthTooltip.style.paddingTop = 8f;
+                growthTooltip.style.paddingRight = 8f;
+                growthTooltip.style.paddingBottom = 8f;
+                growthTooltip.style.paddingLeft = 8f;
+                
+                // Aggiungi label per il testo
+                growthTooltipText = new Label();
+                growthTooltipText.name = "growth-tooltip-text";
+                growthTooltipText.AddToClassList("tooltip-text");
+                growthTooltipText.style.whiteSpace = WhiteSpace.Normal;
+                growthTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
+                growthTooltipText.style.fontSize = 12f;
+                growthTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
+                growthTooltipText.enableRichText = true;
+                growthTooltipText.style.marginTop = 4f;
+                growthTooltipText.style.marginRight = 4f;
+                growthTooltipText.style.marginBottom = 4f;
+                growthTooltipText.style.marginLeft = 4f;
+                
+                growthTooltip.Add(growthTooltipText);
+                _root.Add(growthTooltip); // Aggiungi al root
+                
+                // Nascondi inizialmente
+                growthTooltip.style.display = DisplayStyle.None;
+            }
+            
+            if (growthTooltipText == null)
+                return;
+            
+            // Assicurati che il tooltip sia nascosto se non c'è pianta
+            if (state == null || !state.HasPlant || plantData == null)
+            {
+                growthTooltip.style.display = DisplayStyle.None;
+                return;
+            }
+            
+            // Porta in primo piano
+            growthTooltip.BringToFront();
+            growthTooltip.style.backgroundColor = new Color(13f/255f, 21f/255f, 25f/255f, 0.95f);
+            
+            // Disabilita picking per evitare flickering
+            growthTooltip.pickingMode = PickingMode.Ignore;
+            
+            // Rimuovi callback precedenti per evitare duplicati
+            if (_growthProgressBarMouseEnterCallback != null)
+            {
+                _growthProgressBar.UnregisterCallback<MouseEnterEvent>(_growthProgressBarMouseEnterCallback);
+            }
+            if (_growthProgressBarMouseLeaveCallback != null)
+            {
+                _growthProgressBar.UnregisterCallback<MouseLeaveEvent>(_growthProgressBarMouseLeaveCallback);
+            }
+            
+            // Crea closure con stato corrente
+            PotStateModel currentState = state;
+            PlantData currentPlantData = plantData;
             
             // Setup hover events
-            growthProgressBar.RegisterCallback<MouseEnterEvent>(evt => {
+            _growthProgressBarMouseEnterCallback = evt => {
+                _shouldHideGrowthTooltip = false;
+                
+                // Aggiorna tooltip con dati più recenti
+                if (currentState != null && currentPlantData != null)
+                {
+                    string tooltipText = BuildGrowthTooltipText(currentState, currentPlantData);
+                    growthTooltipText.text = tooltipText;
+                }
+                
+                // Mostra il tooltip
                 growthTooltip.style.display = DisplayStyle.Flex;
-            });
+                growthTooltip.BringToFront();
+                growthTooltip.style.backgroundColor = new Color(13f/255f, 21f/255f, 25f/255f, 0.95f);
+                
+                // Posizionamento dinamico
+                growthTooltip.schedule.Execute(() => {
+                    growthTooltip.BringToFront();
+                    growthTooltip.style.backgroundColor = new Color(13f/255f, 21f/255f, 25f/255f, 0.95f);
+                    
+                    var progressBarWorldBounds = _growthProgressBar.worldBound;
+                    var rootWorldBounds = _root.worldBound;
+                    
+                    float tooltipWidth = 450f;
+                    float tooltipHeight = growthTooltip.resolvedStyle.height > 0 ? growthTooltip.resolvedStyle.height : 250f;
+                    
+                    // Calcola posizione assoluta rispetto al root
+                    float tooltipX = progressBarWorldBounds.xMin + (progressBarWorldBounds.width - tooltipWidth) / 2f; // Centrato orizzontalmente
+                    float tooltipY = progressBarWorldBounds.yMin - tooltipHeight - 10f; // Sopra con margine di 10px
+                    
+                    // Converti da coordinate mondo a coordinate locali del root
+                    float localX = tooltipX - rootWorldBounds.xMin;
+                    float localY = tooltipY - rootWorldBounds.yMin;
+                    
+                    // Se non c'è spazio sopra, posiziona sotto
+                    if (tooltipY < rootWorldBounds.yMin)
+                    {
+                        localY = (progressBarWorldBounds.yMax - rootWorldBounds.yMin) + 10f; // Sotto con margine
+                    }
+                    
+                    // Assicurati che il tooltip non esca dai bordi
+                    if (localX + tooltipWidth > rootWorldBounds.width)
+                    {
+                        localX = rootWorldBounds.width - tooltipWidth - 10f;
+                    }
+                    if (localX < 0)
+                    {
+                        localX = 10f;
+                    }
+                    
+                    // Imposta posizione assoluta
+                    growthTooltip.style.left = localX;
+                    growthTooltip.style.top = localY;
+                });
+            };
             
-            growthProgressBar.RegisterCallback<MouseLeaveEvent>(evt => {
-                growthTooltip.style.display = DisplayStyle.None;
-            });
+            _growthProgressBarMouseLeaveCallback = evt => {
+                // Delay prima di nascondere per evitare flickering
+                _shouldHideGrowthTooltip = true;
+                growthTooltip.schedule.Execute(() => {
+                    if (_shouldHideGrowthTooltip)
+                    {
+                        growthTooltip.style.display = DisplayStyle.None;
+                        _shouldHideGrowthTooltip = false;
+                    }
+                }).ExecuteLater(100); // Delay di 100ms
+            };
+            
+            _growthProgressBar.RegisterCallback<MouseEnterEvent>(_growthProgressBarMouseEnterCallback);
+            _growthProgressBar.RegisterCallback<MouseLeaveEvent>(_growthProgressBarMouseLeaveCallback);
+        }
+        
+        /// <summary>
+        /// Helper: Ottiene il prossimo stadio di crescita
+        /// </summary>
+        private PlantStage? GetNextStage(PlantStage currentStage)
+        {
+            return currentStage switch
+            {
+                PlantStage.Seed => PlantStage.Sprout,
+                PlantStage.Sprout => PlantStage.Growth,
+                PlantStage.Growth => PlantStage.Flowering,
+                PlantStage.Flowering => PlantStage.HarvestReady,
+                PlantStage.HarvestReady => PlantStage.Resting,
+                PlantStage.Resting => null, // Ciclo completo o richiede fertilizzante
+                _ => null
+            };
         }
         
         /// <summary>
@@ -856,7 +1041,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             if (state == null || !state.HasPlant || plantData == null)
             {
-                sb.AppendLine("Crescita: Informazioni non disponibili");
+                sb.AppendLine("<b>Crescita: Informazioni non disponibili</b>");
                 return sb.ToString();
             }
             
@@ -865,7 +1050,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             if (stageReq == null)
             {
-                sb.AppendLine("Crescita: Requisiti stadio non disponibili");
+                sb.AppendLine("<b>Crescita: Requisiti stadio non disponibili</b>");
                 return sb.ToString();
             }
             
@@ -876,23 +1061,165 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
             
-            // Calcola stress percentage
-            int consecutiveDays = state.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
-            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-            bool lightOk = stressPercentage == 0;
+            // Verifica LED requirement
+            bool ledOk = stageReq.IsLedRequirementMet(state.LedSystemState);
             
-            bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+            // Fertilizzante: opzionale per Seed/Sprout
+            bool fertilizerOk = false;
+            if (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout)
+            {
+                fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel) || state.FertilizerLevel == 0;
+            }
+            else
+            {
+                fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+            }
             
-            sb.AppendLine($"Stadio: {PlantCardFormatters.FormatGrowthStage(currentStage)}");
-            sb.AppendLine($"Giorni nello stadio: {state.DaysInCurrentStage}/{plantData.GetStageDurationDays(currentStage)}");
+            // Calcola punti e requisiti avanzamento
+            int totalPoints = state.GrowthPointsWater + state.GrowthPointsLight + state.GrowthPointsFertilizer;
+            int requiredPoints = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout) ? 2 : 3;
+            bool pointsOk = totalPoints >= requiredPoints;
+            
+            // Calcola giorni richiesti con modificatori
+            PlantCondition currentCondition = (PlantCondition)state.ConditionLabel;
+            int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
+            int phDaysModifier = 0;
+            if (_phSystem != null && plantData != null)
+            {
+                float currentPh = _phSystem.CurrentPh;
+                if (plantData.IsPhInOptimalRange(currentPh))
+                {
+                    phDaysModifier = -1;
+                }
+            }
+            int effectiveRequiredDays = stageReq.durationDays + daysModifier + phDaysModifier;
+            bool durationOk = state.DaysInCurrentStage >= effectiveRequiredDays;
+            
+            // Giorni consecutivi ottimali richiesti
+            int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : stageReq.durationDays;
+            bool optimalDaysOk = state.DaysConsecutiveOptimal >= optimalDaysRequired;
+            
+            // Verifica blocchi avanzamento
+            bool isBlockedByCondition = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
+            bool isBlockedByMold = state.MoldRiskLevel >= 2; // Severe o Critical
+            
+            // Calcola se può avanzare
+            bool canAdvance = !isBlockedByCondition && !isBlockedByMold &&
+                             waterOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
+            
+            // Prossimo stadio
+            PlantStage? nextStage = GetNextStage(currentStage);
+            
+            // Header: Stadio corrente e prossimo
+            sb.AppendLine($"<b>Stadio Corrente: {PlantCardFormatters.FormatGrowthStage(currentStage)}</b>");
+            if (nextStage.HasValue)
+            {
+                sb.AppendLine($"<b>Prossimo Stadio: {PlantCardFormatters.FormatGrowthStage(nextStage.Value)}</b>");
+            }
+            else
+            {
+                sb.AppendLine("<b>Prossimo Stadio: Ciclo completo</b>");
+            }
             sb.AppendLine();
-            sb.AppendLine($"Idratazione: {hydrationPercent}% {(waterOk ? "✓" : "✗")}");
-            sb.AppendLine($"Light Stress: {stressPercentage:F0}% {(lightOk ? "✓" : "✗")}");
-            sb.AppendLine($"Fertilizzante: {state.FertilizerLevel}% {(fertilizerOk ? "✓" : "✗")}");
+            
+            // Progresso giorni
+            int maxDaysDisplay = plantData.GetStageDurationDays(currentStage);
+            sb.AppendLine($"<color=#00FFFF>Giorni nello stadio:</color> <color=#FFFFFF>{state.DaysInCurrentStage}/{maxDaysDisplay}</color> (richiesti: {effectiveRequiredDays})");
+            if (daysModifier != 0 || phDaysModifier != 0)
+            {
+                string modifierText = "";
+                if (daysModifier != 0) modifierText += $"condizione: {daysModifier:+0;-0}";
+                if (phDaysModifier != 0)
+                {
+                    if (modifierText != "") modifierText += ", ";
+                    modifierText += $"pH: {phDaysModifier:+0;-0}";
+                }
+                sb.AppendLine($"  <color=#888888>(modificatori: {modifierText})</color>");
+            }
             sb.AppendLine();
-            sb.AppendLine($"Growth Points: W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer}");
-            sb.AppendLine($"Giorni Ottimali: {state.DaysConsecutiveOptimal}");
+            
+            // Requisiti espliciti per avanzamento
+            sb.AppendLine("<b>Requisiti per Avanzamento:</b>");
+            sb.AppendLine();
+            
+            // Idratazione
+            string waterStatus = waterOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#3F6FFF>Idratazione:</color> {waterStatus}");
+            sb.AppendLine($"  Range richiesto: <color=#FFFFFF>{stageReq.hydrationMin}%-{stageReq.hydrationMed}%-{stageReq.hydrationMax}%</color>");
+            sb.AppendLine($"  Attuale: <color=#FFFFFF>{hydrationPercent}%</color>");
+            sb.AppendLine();
+            
+            // LED
+            string ledStatus = ledOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#FFD700>LED:</color> {ledStatus}");
+            LedType? requiredLed = stageReq.GetRequiredLed();
+            if (requiredLed.HasValue)
+            {
+                string ledName = requiredLed.Value == LedType.Blue ? "Blue" : "Red";
+                sb.AppendLine($"  LED richiesto: <color=#FFFFFF>{ledName}</color>");
+            }
+            else
+            {
+                sb.AppendLine($"  LED richiesto: <color=#FFFFFF>Nessuno</color>");
+            }
+            string currentLedName = state.LedSystemState == LedSystemState.Blue ? "Blue" : 
+                                   state.LedSystemState == LedSystemState.Red ? "Red" : "Off";
+            sb.AppendLine($"  LED attuale: <color=#FFFFFF>{currentLedName}</color>");
+            sb.AppendLine();
+            
+            // Fertilizzante
+            string fertilizerStatus = fertilizerOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#9B59B6>Fertilizzante:</color> {fertilizerStatus}");
+            if (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout)
+            {
+                sb.AppendLine($"  Range richiesto: <color=#FFFFFF>{stageReq.fertilizerMin}%-{stageReq.fertilizerMed}%-{stageReq.fertilizerMax}%</color> <color=#888888>(opzionale)</color>");
+            }
+            else
+            {
+                sb.AppendLine($"  Range richiesto: <color=#FFFFFF>{stageReq.fertilizerMin}%-{stageReq.fertilizerMed}%-{stageReq.fertilizerMax}%</color>");
+            }
+            sb.AppendLine($"  Attuale: <color=#FFFFFF>{state.FertilizerLevel}%</color>");
+            sb.AppendLine();
+            
+            // Punti crescita
+            string pointsStatus = pointsOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#00FFFF>Punti Crescita:</color> {pointsStatus}");
+            sb.AppendLine($"  Richiesti: <color=#FFFFFF>{requiredPoints}</color> (W:Water + L:Light{(requiredPoints == 3 ? " + F:Fertilizer" : "")})");
+            sb.AppendLine($"  Attuali: <color=#FFFFFF>{totalPoints}</color> (W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer})");
+            sb.AppendLine();
+            
+            // Giorni consecutivi ottimali
+            string optimalDaysStatus = optimalDaysOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#00FFFF>Giorni Consecutivi Ottimali:</color> {optimalDaysStatus}");
+            sb.AppendLine($"  Richiesti: <color=#FFFFFF>{optimalDaysRequired}</color>");
+            sb.AppendLine($"  Attuali: <color=#FFFFFF>{state.DaysConsecutiveOptimal}</color>");
+            sb.AppendLine();
+            
+            // Stato avanzamento
+            if (isBlockedByCondition)
+            {
+                sb.AppendLine("<color=#FF0000>⚠️ Avanzamento BLOCCATO: Condizione critica o appassita</color>");
+            }
+            else if (isBlockedByMold)
+            {
+                sb.AppendLine("<color=#FF0000>⚠️ Avanzamento BLOCCATO: Infestazione muffa grave</color>");
+            }
+            else if (canAdvance)
+            {
+                sb.AppendLine("<color=#00FF00>✓ Tutti i requisiti soddisfatti - Pronta per avanzare!</color>");
+            }
+            else
+            {
+                sb.AppendLine("<color=#FFAA00>⏳ Avanzamento in corso - Alcuni requisiti non ancora soddisfatti</color>");
+                sb.AppendLine();
+                sb.AppendLine("Requisiti mancanti:");
+                if (!waterOk) sb.AppendLine("  • Idratazione fuori range");
+                if (!ledOk) sb.AppendLine("  • LED non corretto");
+                if (!durationOk) sb.AppendLine($"  • Giorni insufficienti ({state.DaysInCurrentStage}/{effectiveRequiredDays})");
+                if (!optimalDaysOk) sb.AppendLine($"  • Giorni ottimali consecutivi insufficienti ({state.DaysConsecutiveOptimal}/{optimalDaysRequired})");
+                if (!fertilizerOk) sb.AppendLine("  • Fertilizzante fuori range");
+                if (!pointsOk) sb.AppendLine($"  • Punti crescita insufficienti ({totalPoints}/{requiredPoints})");
+            }
             
             return sb.ToString();
         }
@@ -914,6 +1241,14 @@ namespace Sporae.UI.UIToolkit.PlantCard
             if (_phDriftValueLabel != null && plantData != null)
             {
                 _phDriftValueLabel.text = PlantCardFormatters.FormatPhDrift(plantData.DailyPhDrift);
+            }
+            
+            // BLK-02.08: LED Compatibile (mostra LED compatibili per famiglia)
+            if (_ledCompatibleLabel != null && plantData != null)
+            {
+                LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                string displayText = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                _ledCompatibleLabel.text = displayText;
             }
             
             // BUG C FIX: Plant Image - mostra gli status visivi della pianta (vaso vuoto, sprout, etc)

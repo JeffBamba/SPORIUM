@@ -1,0 +1,119 @@
+# 📝 **COMMIT RECAP 0031 - FIX pH DRIFT HUD LAYOUT, SISTEMA LED UPDATE LOGICA E MIGLIORAMENTO TOOLTIP GROWTH STAGE**
+
+## 🎯 **PANORAMICA**
+Fix completo del layout e del valore del pH DRIFT nella HUD TopBar implementata con UI Toolkit, implementazione completa del sistema LED Update Logica (BLK-02.08) basato su compatibilità con famiglia pianta, e miglioramento completo del tooltip Growth Stage in PlantCardV2 per renderlo coerente con il tooltip Conditions, con informazioni dettagliate su requisiti e progresso avanzamento.
+
+## 📋 **FILE MODIFICATI**
+
+### **Assets/_Project/UI/UIToolkit/HUD/TopBar.uxml**
+- Unito `ph-label` e `ph-number` in un unico label `ph-drift-label` che mostra "pH DRIFT: X.X"
+- Rimosso label separato `ph-number` e `ph-value` non più necessari
+- Struttura semplificata: solo `ph-drift-label`, `ph-band` e `ph-slider`
+
+### **Assets/_Project/Scripts/UI/UIToolkit/HUD/TopBarController.cs**
+- Modificato `UpdatePh()` per mostrare direttamente `value` (range -100/+100) invece di `phVisualScale`
+- Aggiornato `_phBandLabel.style.color` con `_phSystem.GetBandColor()` per colore dinamico
+- Aumentato `_phTooltipText.style.fontSize` da `11f` a `16f`
+- Rimossa classe helper `DebugLogEntry` e funzione `WriteDebugLog()`
+- Rimossi tutti i blocchi `#region agent log` / `#endregion` e le chiamate a `WriteDebugLog()`
+- Rimossa import `System.IO` non più necessaria
+
+### **Assets/_Project/UI/UIToolkit/HUD/TopBar.uss**
+- Aggiunto `margin-top: 4px` al `.ph-slider` per allineamento con altri valori
+- Ridotto `margin-bottom` di `.ph-band` a 0px
+- Aggiornato `.metric-label-ph` con `font-size: 16px` per leggibilità
+- Rimosso stile `.ph-number` non più utilizzato
+
+### **Assets/_Project/Scripts/UI/VaultMap/HUDPhDisplay.cs**
+- Modificato `Awake()` e `Start()` per disabilitare GameObject se `TopBarController` è presente
+- Questo depreca completamente il vecchio sistema HUD pH
+
+### **Assets/_Project/Scripts/Dome/PotSystem/Growth/LedCompatibilityHelper.cs** (NUOVO)
+- Classe helper statica per gestire compatibilità LED con famiglie piante
+- Enum `LedCompatibility`: BlueOnly (Pure), RedOnly (Evil), Both (Standard)
+- Metodi: `GetCompatibleLedTypes()`, `IsLedCompatible()`, `GetCompatibleLedDisplay()`
+- Placeholder `GetCompatibleLedTypesHybrid()` per ibridi (Q1 2026)
+
+### **Assets/_Project/Editor/PopulateStageRequirements.cs**
+- Modificato `GetPureRequirements()`: Growth e Flowering richiedono Blue LED (cambiato da Red)
+- Modificato `GetEvilRequirements()`: Growth richiede Red LED (cambiato da Blue)
+- Modificato `GetStandardRequirements()`: Nessun LED richiesto (accetta Blue o Red)
+
+### **Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs**
+- Aggiunto calcolo malus condizione per LED incompatibile con famiglia
+- Malus: -5 per ogni giorno consecutivo che LED sbagliato è acceso
+- Verifica compatibilità usando `LedCompatibilityHelper`
+
+### **Assets/_Project/Scripts/Debug/DifficultyCalibrationConfig.cs**
+- Aggiunto campo `MalusLedIncompatiblePerDay = -5`
+- Aggiunto in `ResetToDefaults()` e `ExportToDictionary()`
+
+### **Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs**
+- Aggiunto campo `_ledCompatibleLabel` per display LED compatibilità
+- Aggiornato `UpdatePlantStatsUI()` per mostrare LED compatibile (Blue/Red/ALL)
+- Aggiornato `BuildGrowthTooltip()` con informazioni LED compatibilità e malus
+
+### **Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs**
+- Refactor `SetupGrowthTooltip()`: tooltip creato dinamicamente nel root invece di UXML
+- Applicati stessi stili del tooltip Conditions (font size 12f, background #0d1519 con opacità 95%, border viola, width 450f, minHeight 200f, padding 8f)
+- Posizionamento assoluto con `schedule.Execute()` per calcolo dinamico posizione
+- Aggiunto `PickingMode.Ignore` e delay 100ms per nascondere (previene flickering)
+- Migliorato `BuildGrowthTooltipText()` con informazioni complete:
+  - Header: Stadio corrente e prossimo stadio
+  - Giorni nello stadio con modificatori (condizione, pH)
+  - Requisiti espliciti: Idratazione (range), LED (richiesto vs attuale), Fertilizzante (range, opzionale per Seed/Sprout)
+  - Punti crescita: Richiesti vs attuali con breakdown W/L/F
+  - Giorni consecutivi ottimali: Richiesti vs attuali
+  - Stato avanzamento: Blocchi (condizione critica/appassita, muffa severe), requisiti mancanti, conferma se può avanzare
+- Aggiunto helper method `GetNextStage()` per calcolare prossimo stadio
+- Aggiunti campi per callback mouse events (`_growthProgressBarMouseEnterCallback`, `_growthProgressBarMouseLeaveCallback`)
+- Aggiunto flag `_shouldHideGrowthTooltip` per gestire hide ritardato
+
+### **Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uxml**
+- Aggiunto overlay `led-compatible-overlay` in left-column (sotto pH DRIFT overlay)
+- Contiene label "LED COMPATIBLE" e valore dinamico "Blue"/"Red"/"ALL"
+- Rimosso elemento `growth-tooltip` (linee 52-54) poiché ora creato dinamicamente nel codice C#
+
+## 🐛 **BUG FIXATI**
+
+1. **BUG-0031-001**: Layout pH DRIFT Non Allineato → Fix: label unico `ph-drift-label` e margini ottimizzati
+2. **BUG-0031-002**: Colore Banda pH Non Dinamico → Fix: `_phBandLabel.style.color` aggiornato con `_phSystem.GetBandColor()`
+3. **BUG-0031-003**: Valore pH DRIFT Inizia da 7 Invece di 0 → Fix: mostra direttamente `value` (range -100/+100)
+4. **BUG-0031-004**: Font Tooltip Poco Leggibile → Fix: aumentato `fontSize` da `11f` a `16f`
+
+## ✅ **RISULTATI**
+
+### **pH DRIFT HUD**
+- ✅ Layout unificato: "pH DRIFT:" e valore sulla stessa riga
+- ✅ Barra pH allineata con altri valori della TopBar
+- ✅ Colore banda dinamico basato su banda pH corrente
+- ✅ Valore mostrato correttamente nel range -100/+100
+- ✅ Font tooltip migliorato (16px invece di 11px)
+- ✅ Vecchio sistema `HUDPhDisplay` deprecato
+
+### **Sistema LED Update Logica (BLK-02.08)**
+- ✅ Compatibilità LED basata su famiglia pianta (Pure: Blue only, Evil: Red only, Standard: Both)
+- ✅ Requisiti stage aggiornati per famiglia (Pure: Blue, Evil: Red, Standard: accetta entrambi)
+- ✅ Malus condizione per LED incompatibili (-5 punti per ogni giorno consecutivo)
+- ✅ Display HUD "LED Compatibile" in PlantCardV2 e PotDetailsWidget
+- ✅ Tooltip condizione include informazioni LED compatibilità e malus
+- ✅ Player può attivare LED "sbagliato" (scelta libera, ma con conseguenze)
+
+### **Tooltip Growth Stage**
+- ✅ Tooltip creato dinamicamente nel root (coerente con tooltip Conditions)
+- ✅ Stessi stili visivi del tooltip Conditions (font size, dimensioni, background, border)
+- ✅ Posizionamento assoluto che non rovina il layout quando aperto
+- ✅ Informazioni dettagliate su requisiti e progresso verso il prossimo stadio
+- ✅ Mostra prossimo stadio, modificatori giorni, punti crescita breakdown, blocchi avanzamento
+- ✅ Elenca requisiti mancanti per avanzare
+
+## 📊 **STATISTICHE**
+
+- **File Modificati**: 11 (4 per pH HUD + 1 nuovo per LED + 2 per Growth Tooltip + 4 per LED integrazione)
+- **File Nuovi**: 1 (`LedCompatibilityHelper.cs`)
+- **Task Completati**: 8 (6 per pH HUD + 1 per LED System + 1 per Growth Tooltip)
+- **Bug Fixati**: 4 (tutti relativi a pH HUD)
+- **Test Cases**: 16/16 passati (8 per pH HUD + 4 per LED System + 4 per Growth Tooltip)
+- **Tasso di Successo**: 100%
+- **Log Debug Rimossi**: 15+
+

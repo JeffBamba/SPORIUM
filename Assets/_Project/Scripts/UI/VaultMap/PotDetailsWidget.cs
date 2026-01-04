@@ -41,6 +41,7 @@ namespace _Project
         [Header("Plant Stats UI")]
         [SerializeField] private TextMeshProUGUI _hydrationStressText;
         [SerializeField] private TextMeshProUGUI _lightStressText;
+        [SerializeField] private TextMeshProUGUI _ledCompatibleText;  // BLK-02.08: LED Compatibile (Blue/Red/ALL)
         [SerializeField] private TextMeshProUGUI _fertilizerText;  // BLK-03.01-T1
         [SerializeField] private TextMeshProUGUI _growthPointsText;  // BLK-03.01-T2
         [SerializeField] private TextMeshProUGUI _optimalDaysText;  // BLK-03.01-T2
@@ -149,6 +150,31 @@ namespace _Project
             PotEvents.OnPlantGrew -= OnPlantGrew;
             PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
             PotEvents.OnPlantDied -= OnPlantDied;
+            
+            // DEBUG_SAFE_FIX: Rimuovi sottoscrizione a OnActionsChanged
+            if (_gameManager != null && _gameManager.ActionSystem != null)
+            {
+                _gameManager.ActionSystem.OnActionsChanged -= OnActionsChanged;
+            }
+        }
+        
+        /// <summary>
+        /// DEBUG_SAFE_FIX: Chiamato quando le azioni disponibili cambiano
+        /// </summary>
+        private void OnActionsChanged(int actionsLeft)
+        {
+            // Aggiorna i bottoni del pot selezionato quando le azioni cambiano
+            // Usa _currentSelectedPot se disponibile, altrimenti trova il pot selezionato
+            PotSlot potToUpdate = _currentSelectedPot;
+            if (potToUpdate == null)
+            {
+                potToUpdate = FindSelectedPot();
+            }
+            
+            if (potToUpdate != null)
+            {
+                UpdateActionButtons(potToUpdate);
+            }
         }
         
         private void Initialize()
@@ -157,6 +183,12 @@ namespace _Project
             _dayCycleSystem.OnDayChanged += HandleDayChanged;
             
             _gameManager = FindObjectOfType<GameManager>();
+            
+            // DEBUG_SAFE_FIX: Sottoscrivi a OnActionsChanged se ActionSystem è disponibile
+            if (_gameManager != null && _gameManager.ActionSystem != null)
+            {
+                _gameManager.ActionSystem.OnActionsChanged += OnActionsChanged;
+            }
             
             // Inizializza PhSystem e PotSystemConfig per calcolo condizione
             _phSystem = ServiceContainer.Instance.Get<PhSystem>(suppressWarning: true);
@@ -1169,6 +1201,12 @@ namespace _Project
                 _lightStressText = FindTextInChildren("Light stress");
             }
             
+            // BLK-02.08: Auto-trova LED Compatible text se non assegnato
+            if (_ledCompatibleText == null)
+            {
+                _ledCompatibleText = FindTextInChildren("LED Compatible");
+            }
+            
             // BLK-03.01-T1: Auto-trova fertilizer text se non assegnato
             if (_fertilizerText == null)
             {
@@ -1392,6 +1430,33 @@ namespace _Project
             if (_lightProgressBar != null)
             {
                 _lightProgressBar.gameObject.SetActive(false);
+            }
+            
+            // BLK-02.08: Aggiorna LED Compatibile (mostra LED compatibili per famiglia)
+            if (_ledCompatibleText != null)
+            {
+                _ledCompatibleText.richText = true;
+                
+                string ledCompatibleDisplay = "ALL";
+                if (!string.IsNullOrEmpty(state.PlantCode))
+                {
+                    var plantDatabase = PlantDatabase.Instance;
+                    if (plantDatabase != null)
+                    {
+                        var plantData = plantDatabase.GetPlantDataByCode(state.PlantCode);
+                        if (plantData != null)
+                        {
+                            LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                            ledCompatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                        }
+                    }
+                }
+                
+                _ledCompatibleText.text = $"<color=#CCCCCC>LED Compatibile:</color> <color=#00FF00>{ledCompatibleDisplay}</color>";
+            }
+            else
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, "_ledCompatibleText non trovato! Collega il riferimento nella scena Unity o aggiungi un GameObject 'LED Compatible' con TextMeshProUGUI.");
             }
             
             // BLK-03.01-T1: Aggiorna Fertilizzante (mostra livello corrente e range ideale per lo stadio)
@@ -2514,6 +2579,26 @@ namespace _Project
             sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
             // BUG FIX: Mostra sempre il range ideale (come nella HUD Light Stress), non solo quando NON OK
             sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
+            
+            // BLK-02.08: Aggiungi informazione LED compatibile con famiglia
+            if (plantData != null)
+            {
+                LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                string compatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                sb.AppendLine($"  LED compatibile con famiglia: <color=#00FF00>{compatibleDisplay}</color>");
+                
+                // Verifica se LED attuale è incompatibile con famiglia
+                if (state.LedSystemState != LedSystemState.Off)
+                {
+                    bool isLedCompatibleWithFamily = LedCompatibilityHelper.IsLedCompatible(state.LedSystemState, compatible);
+                    if (!isLedCompatibleWithFamily)
+                    {
+                        string currentLedName = state.LedSystemState == LedSystemState.Blue ? "Blue" : "Red";
+                        sb.AppendLine($"  <color=#FF0000>⚠️ LED {currentLedName} attivo è INCOMPATIBILE con famiglia {plantData.Family}!</color>");
+                        sb.AppendLine($"  <color=#FF0000>   Malus condizione: -5 per ogni giorno che è acceso</color>");
+                    }
+                }
+            }
             
             if (!lightOk)
             {

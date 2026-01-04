@@ -31,6 +31,7 @@ namespace Sporae.DevTools
         public static int MalusMoldMild = 10;                  // default 10
         public static int MalusMoldSevere = 30;                // default 30
         public static int MalusBurnStress = 20;                // default 20
+        public static int MalusLedIncompatiblePerDay = -5;     // BLK-02.08: default -5 per ogni giorno che LED sbagliato è acceso
         
         // ============================================
         // BONUS CRESCITA (PlantConditionSystem)
@@ -158,6 +159,7 @@ namespace Sporae.DevTools
             MalusMoldMild = 10;
             MalusMoldSevere = 30;
             MalusBurnStress = 20;
+            MalusLedIncompatiblePerDay = -5;
             
             // BONUS
             BonusHydrationOptimal = 20;
@@ -264,6 +266,7 @@ namespace Sporae.DevTools
                 { "MalusMoldMild", MalusMoldMild },
                 { "MalusMoldSevere", MalusMoldSevere },
                 { "MalusBurnStress", MalusBurnStress },
+                { "MalusLedIncompatiblePerDay", MalusLedIncompatiblePerDay },
                 
                 // BONUS
                 { "BonusHydrationOptimal", BonusHydrationOptimal },

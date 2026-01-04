@@ -211,12 +211,15 @@ namespace _Project
             {
                 selectorPanel.SetActive(false);
                 
-                // DEBUG_SAFE_FIX: Disabilita il Canvas per evitare che blocchi i click sulla HUD
-                var canvas = selectorPanel.GetComponentInParent<Canvas>();
-                if (canvas != null)
-                {
-                    canvas.enabled = false;
-                }
+                // DEBUG_SAFE_FIX: NON disabilitare il Canvas - questo disabilita anche altre HUD!
+                // Il problema è che questo canvas è condiviso con altre HUD (MinimalHUD, Condensation button)
+                // Disabilitarlo causa la scomparsa di tutti gli elementi HUD
+                // Il selectorPanel.SetActive(false) è sufficiente per nascondere il selettore
+                // var canvas = selectorPanel.GetComponentInParent<Canvas>();
+                // if (canvas != null)
+                // {
+                //     canvas.enabled = false;
+                // }
             }
             
             ClearSeedButtons();
