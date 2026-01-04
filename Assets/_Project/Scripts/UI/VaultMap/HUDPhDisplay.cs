@@ -39,6 +39,22 @@ namespace _Project
     
     private void Awake()
     {
+        // DEPRECATO: HUDPhDisplay è stato sostituito da TopBarController (UI Toolkit)
+        // Nascondi/disabilita il vecchio sistema per evitare duplicazioni
+        enabled = false;
+        
+        // Nascondi anche gli elementi UI se esistono
+        if (phValueText != null)
+        {
+            phValueText.gameObject.SetActive(false);
+        }
+        if (phBandText != null)
+        {
+            phBandText.gameObject.SetActive(false);
+        }
+        
+        return; // Non eseguire più nulla
+        
         // Auto-setup: crea UI se mancante
         if (autoCreateUI)
         {
@@ -48,6 +64,8 @@ namespace _Project
     
     private void Start()
     {
+        // DEPRECATO - non eseguire nulla
+        return;
         // Cerca PhSystem nel ServiceContainer o crea uno temporaneo
         TryGetPhSystem();
         

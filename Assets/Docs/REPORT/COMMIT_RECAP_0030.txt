@@ -1,0 +1,104 @@
+# 📝 **COMMIT RECAP 0030 - FIX POT HUD UI E CLEANUP DEBUG LOGS**
+
+## 🎯 **PANORAMICA**
+Fix completo di tutti i bug critici relativi alla nuova HUD del POT implementata con UIToolkit (PlantCardV2), inclusi problemi di UI blocking, consumo eccessivo di azioni, rotary knob non funzionante, display incorretti, layering del fertilizer selector, tooltip flickering e background, e il cleanup completo di tutti i log temporanei di debug.
+
+## 📋 **FILE MODIFICATI**
+
+### **Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs**
+- Impostato `raycastTarget = false` su background images, plant preview images, water circles e LED circles
+- Solo `growthStateText` mantiene `raycastTarget = true` per il tooltip
+- Fix applicato sia per HUD create dinamicamente che per quelle istanziate da prefab
+
+### **Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs**
+- Aggiunto controllo esplicito per assicurare che il Canvas parent sia abilitato
+- Verificato sorting order del Canvas
+
+### **Assets/_Project/Scripts/UI/VaultMap/PotDetailsWidget.cs**
+- Aggiunto flag `_isProcessingSeedSelection` per prevenire chiamate multiple a `OnSeedSelected`
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/Dome/PotActions.cs**
+- Aggiunti flag `_isPlantingInProgress`, `_isLightingInProgress`, `_isWateringInProgress` per prevenire chiamate multiple
+- Ogni flag viene resettato tramite coroutine dopo un frame
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/Core/GameManager.cs**
+- Corretto `TrySpendAction` per gestire correttamente `amount <= 0` (default a 1 azione)
+
+### **Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Controller.cs**
+- Aggiunto flag `_isBindingUI` per prevenire azioni automatiche durante il binding UI
+- `RefreshData()` imposta `_isBindingUI = true` all'inizio e `false` in un `finally` block
+- `OnIrrigationStateChanged()` e `OnLedStateChanged()` controllano `_isBindingUI` e ritornano early se è `true`
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/UI/UIToolkit/PlantCard/Components/RotaryKnobUI.cs**
+- Modificato `SetupClickAreas()` per evitare che `_clickAreaLeft` usi `click-area-off` come fallback
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs**
+- Modificato `BindHeaderData` per usare `PlantData.name` per `plant-name` e `PlantData.PlantCode` per `specimen-id`
+- Aggiunto helper method `GetPlantDisplayName(string plantCode)`
+- Implementato `BuildGrowthTooltipForConditionsBadge()` che replica la logica di `PotDetailsWidget.BuildGrowthTooltip`
+- Implementato `SetupConditionTooltip()` con fix per flickering e background
+- Modificata logica in `BindHeaderData` per prioritizzare i cicli completati quando il label indica "CICLI"
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/UI/VaultMap/UIFertilizerSelector.cs**
+- Modificato `Show()` per impostare esplicitamente `selectorCanvas.renderMode = RenderMode.ScreenSpaceOverlay`
+- Aggiunto metodo `ClearAllSubscribers()` per permettere la pulizia degli event listeners
+- Rimossi tutti i log temporanei di debug
+
+### **Assets/_Project/Scripts/UI/VaultMap/UISeedSelector.cs**
+- Rimossi tutti i log temporanei di debug
+
+### **Altri file con cleanup log temporanei:**
+- `PlantCardV2Opener.cs`
+- `SPOR-BLK-01-03A-DayCycleController.cs`
+- `MoldSystem.cs`
+- `PruningSystem.cs`
+- `PruningDialog.cs`
+- `Interactable.cs`
+- `TopBarController.cs`
+- `PlayerStatusPanelController.cs`
+- `SegmentedStatBarController.cs`
+- `ToastNotificationManager.cs`
+- `ToastNotificationHeader.cs`
+- `PotDebugConsole.cs`
+
+## 🐛 **BUG FIXATI**
+
+1. **BUG-0030-001**: UI Blocking - BED Non Interattivo → Fix: `raycastTarget = false` su elementi UI non interattivi
+2. **BUG-0030-002**: Elevator HUD Non Visibile → Fix: controllo esplicito Canvas parent abilitato
+3. **BUG-0030-003**: Azione PIANTA Consuma Tutte le Azioni → Fix: flag `_isProcessingSeedSelection` e `_isPlantingInProgress`
+4. **BUG-0030-004**: Azioni Light/Water Si Attivano Automaticamente → Fix: flag `_isBindingUI` per prevenire azioni durante binding UI
+5. **BUG-0030-005**: Rotary Knob Luce Blu Non Funziona → Fix: `_clickAreaLeft` non usa `click-area-off` come fallback
+6. **BUG-0030-006**: Plant Name Mostra Codice → Fix: `PlantData.name` per `plant-name`
+7. **BUG-0030-007**: Specimen ID Mostra PotId → Fix: `PlantData.PlantCode` per `specimen-id`
+8. **BUG-0030-008**: Fertilizer Selector Renderizzato Sotto POT HUD → Fix: `renderMode = ScreenSpaceOverlay`
+9. **BUG-0030-009**: Tooltip Flickering → Fix: `pickingMode.Ignore` e hide ritardato
+10. **BUG-0030-010**: Tooltip Background Non Visibile → Fix: tooltip aggiunto al `_root` e `BringToFront()`
+11. **BUG-0030-011**: Errore Dopo AZIONE PIANTA → Fix: controlli null per `state` e `plantData`
+12. **BUG-0030-012**: Cicles Mostra Condizione → Fix: logica prioritizzata per cicli completati quando label indica "CICLI"
+
+## ✅ **RISULTATI**
+
+- ✅ Fix completo UI blocking (BED, Elevator)
+- ✅ Fix consumo eccessivo azioni (Plant, Light, Water)
+- ✅ Fix rotary knob luce blu
+- ✅ Fix display plant-name e specimen-id
+- ✅ Fix fertilizer selector layering
+- ✅ Implementazione tooltip conditions_badge
+- ✅ Fix tooltip flickering e background
+- ✅ Fix Cicles display
+- ✅ Cleanup completo log temporanei di debug
+- ✅ Tutti i test cases passati con successo
+
+## 📊 **STATISTICHE**
+
+- **File Modificati**: 20+
+- **Bug Fixati**: 12
+- **Test Cases**: 19/19 passati
+- **Tasso di Successo**: 100%
+- **Log Temporanei Rimossi**: 50+
+

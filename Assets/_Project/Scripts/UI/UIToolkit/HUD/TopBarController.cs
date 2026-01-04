@@ -37,7 +37,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private SegmentedBarUI _actionsBar;
         private Label _actionsValueLabel;
         private VisualElement _phDisplay;
-        private Label _phValueLabel;
+        private Label _phDriftLabel;
+        private Label _phBandLabel;
         private VisualElement _phMarker;
         private VisualElement _phGradient;
         private VisualElement _phNeutralZone;
@@ -141,29 +142,52 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
                 
                 // Collega PhSystem
-                _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
-                if (_phSystem != null)
+                TryConnectPhSystem();
+                
+                // Sottoscrivi all'evento OnServiceRegistered per collegarsi quando PhSystem viene registrato
+                if (ServiceContainer.Instance != null)
                 {
-                    // Sottoscrivi agli eventi
-                    _phSystem.OnPhChanged += OnPhChanged;
-                    
-                    // Aggiorna valore iniziale
-                    _phLevel = _phSystem.CurrentPh;
-                    UpdatePh(_phLevel);
-                    
-                    if (_enableDebugLogs)
-                    {
-                        SporiumLogger.LogInfo(LogCategory.UI, $"TopBarController: PhSystem collegato - pH: {_phLevel}");
-                    }
-                }
-                else
-                {
-                    SporiumLogger.LogWarning(LogCategory.UI, "TopBarController: PhSystem non trovato nel ServiceContainer.");
+                    ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
                 }
             }
             else
             {
                 SporiumLogger.LogWarning(LogCategory.UI, "TopBarController: GameManager non trovato. Usando valori mock.");
+            }
+        }
+        
+        private void TryConnectPhSystem()
+        {
+            _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            
+            if (_phSystem != null)
+            {
+                // Sottoscrivi agli eventi
+                _phSystem.OnPhChanged += OnPhChanged;
+                
+                // Aggiorna valore iniziale
+                _phLevel = _phSystem.CurrentPh;
+                UpdatePh(_phLevel);
+                
+                
+                if (_enableDebugLogs)
+                {
+                    SporiumLogger.LogInfo(LogCategory.UI, $"TopBarController: PhSystem collegato - pH: {_phLevel}");
+                }
+            }
+            else
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, "TopBarController: PhSystem non trovato nel ServiceContainer. Riproverà quando verrà registrato.");
+            }
+        }
+        
+        private void OnServiceRegistered(object service)
+        {
+            
+            // Se PhSystem viene registrato e non siamo ancora collegati, connettiamoci
+            if (service is PhSystem && _phSystem == null)
+            {
+                TryConnectPhSystem();
             }
         }
         
@@ -188,6 +212,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         private void OnPhChanged(float newPh, float delta)
         {
+            
             if (_phSystem != null)
             {
                 _phLevel = newPh;
@@ -228,7 +253,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltipText.name = "ph-tooltip-text";
             _phTooltipText.style.whiteSpace = WhiteSpace.Normal;
             _phTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
-            _phTooltipText.style.fontSize = 11f;
+            _phTooltipText.style.fontSize = 16f; // Aumentato da 11f per leggibilità (BUG X)
             _phTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
             _phTooltipText.enableRichText = true;
             _phTooltip.Add(_phTooltipText);
@@ -300,6 +325,8 @@ namespace Sporae.UI.UIToolkit.HUD
             
             // Aggiungi banda pH
             string bandName = _phSystem.GetBandName();
+            Color bandColor = _phSystem.GetBandColor();
+            
             string tooltipContent = $"<b>pH DRIFT</b>\n<b>Banda: {bandName}</b>\n\n{breakdown}";
             
             _phTooltipText.text = tooltipContent;
@@ -324,7 +351,8 @@ namespace Sporae.UI.UIToolkit.HUD
             var actionsBarContainer = _root.Q<VisualElement>("actions-bar");
             _actionsValueLabel = _root.Q<Label>("actions-value");
             _phDisplay = _root.Q<VisualElement>("ph-display");
-            _phValueLabel = _root.Q<Label>("ph-value");
+            _phDriftLabel = _root.Q<Label>("ph-drift-label");
+            _phBandLabel = _root.Q<Label>("ph-band");
             _phSlider = _root.Q<VisualElement>("ph-slider");
             _phMarker = _root.Q<VisualElement>("ph-marker");
             _phGradient = _root.Q<VisualElement>("ph-gradient");
@@ -498,19 +526,43 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             _phLevel = value;
             
-            // Converti da range PhSystem (-100/+100) a scala visualizzazione (0-14)
-            // Mapping: -100 → 0, 0 → 7, +100 → 14
-            float phVisualScale = ((value + 100f) / 200f) * 14f;
-            phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
+            // Mostra direttamente il valore pH nel range -100/+100 (come il vecchio sistema)
+            // NON convertire in scala 0-14 - il vecchio sistema mostrava currentPh direttamente
+            float phDisplayValue = value;
             
-            if (_phValueLabel != null)
+            // Colore base per "pH DRIFT:" (stesso colore per label e banda)
+            Color phDriftColor = new Color(0.392f, 0.565f, 0.933f, 0.85f); // rgba(83, 144, 255, 0.85)
+            
+            // Aggiorna label "pH DRIFT: X.X" sulla stessa riga (mostra valore diretto -100/+100)
+            if (_phDriftLabel != null)
             {
-                // Mostra pH nella scala 0-14
-                _phValueLabel.text = phVisualScale.ToString("F1");
+                _phDriftLabel.text = $"pH DRIFT: {phDisplayValue:F1}";
+                _phDriftLabel.style.color = new StyleColor(phDriftColor);
+            }
+            
+            // Aggiorna label banda pH con stesso colore di "pH DRIFT" ma cambia in base alla banda
+            if (_phBandLabel != null && _phSystem != null)
+            {
+                string bandName = _phSystem.GetBandName();
+                Color bandColor = _phSystem.GetBandColor();
+                
+                // Usa il colore della banda invece del colore fisso
+                _phBandLabel.text = $"Banda: {bandName}";
+                _phBandLabel.style.color = new StyleColor(bandColor);
+            }
+            else if (_phBandLabel != null)
+            {
+                // Fallback: usa colore default se PhSystem non disponibile
+                _phBandLabel.style.color = new StyleColor(phDriftColor);
             }
             
             if (_phMarker != null && _phGradient != null)
             {
+                // Converti da range PhSystem (-100/+100) a scala visualizzazione (0-14) SOLO per il marker
+                // Mapping: -100 → 0, 0 → 7, +100 → 14
+                float phVisualScale = ((value + 100f) / 200f) * 14f;
+                phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
+                
                 // Posiziona marker: (phVisualScale / 14) * 100%
                 // Il marker è largo 12px, quindi dobbiamo centrarlo: left = (normalizedPos * 100%) - (6px / sliderWidth)
                 float normalizedPos = phVisualScale / 14f;
@@ -729,11 +781,11 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             while (true)
             {
-                float delay = Random.Range(0.9f, 1.5f);
+                float delay = UnityEngine.Random.Range(0.9f, 1.5f);
                 yield return new WaitForSeconds(delay);
                 
                 // Variazione ±1%
-                float variation = Random.Range(-1f, 1f);
+                float variation = UnityEngine.Random.Range(-1f, 1f);
                 float displayValue = Mathf.Clamp(_condensation + variation, 0f, 100f);
                 
                 if (_condensationValueLabel != null)
@@ -819,6 +871,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged -= OnCRYChanged;
             }
             
+            // Unsubscribe from ServiceContainer event
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+            }
+            
             if (_phSystem != null)
             {
                 _phSystem.OnPhChanged -= OnPhChanged;
@@ -865,6 +923,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged -= OnCRYChanged;
             }
             
+            // Unsubscribe from ServiceContainer event
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+            }
+            
             if (_phSystem != null)
             {
                 _phSystem.OnPhChanged -= OnPhChanged;
@@ -884,7 +948,18 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged += OnCRYChanged;
             }
             
-            if (_phSystem != null)
+            // Re-subscribe to ServiceContainer event
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+            }
+            
+            // Try to reconnect PhSystem
+            if (_phSystem == null)
+            {
+                TryConnectPhSystem();
+            }
+            else
             {
                 _phSystem.OnPhChanged += OnPhChanged;
             }

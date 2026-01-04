@@ -73,12 +73,12 @@
 }
 
 .metric-label-ph {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.85);
+    font-size: 16px;
+    color: rgba(83, 144, 255, 0.85);
     -unity-font-style: normal;
     -unity-text-align: middle-center;
     letter-spacing: 1px;
-    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+    margin-bottom: 0px; /* Spacing ridotto - stesso livello di metric-label */
 }
 
 /* Metric Values */
@@ -96,6 +96,7 @@
     -unity-font-style: normal;
     -unity-text-align: middle-center;
     text-shadow: 0px 0px 4px rgba(93, 182, 227, 0.8);
+    margin-top: 4px; /* Spacing dopo label per allineamento */
     /* Note: font-family monospace not supported in USS, configure at project level */
 }
 
@@ -194,6 +195,10 @@
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.2);
     overflow: visible;
+    margin-top: 4px;
+    margin-bottom: 0px;
+    /* Allineato con metric-value-large (16px) - la barra è alla stessa altezza degli altri valori come "78%" */
+    /* margin-top: 4px allinea la barra con i valori dopo il label (come metric-value-large) */
 }
 
 .ph-gradient {
@@ -232,12 +237,15 @@
     /* TODO: Add triple-layer glow effect */
 }
 
-.ph-value {
-    font-size: 12px;
-    color: rgb(255, 255, 255);
+.ph-band {
+    font-size: 14px;
+    color: rgba(83, 144, 255, 0.85);
     -unity-font-style: normal;
-    -unity-text-align: middle-right;
+    -unity-text-align: middle-center;
     width: 100%;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-weight: normal;
     /* Note: font-family monospace not supported in USS, configure at project level */
 }
 

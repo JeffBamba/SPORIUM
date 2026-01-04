@@ -27,8 +27,8 @@
                 <ui:Label text="MUTATION" class="metric-label" />
             </ui:VisualElement>
             <ui:VisualElement name="ph-display" class="metric-box-ph">
-                <ui:Label text="pH DRIFT" class="metric-label-ph" style="-unity-font-style: bold; color: rgba(83, 144, 255, 0.85);" />
-                <ui:Label name="ph-value" text="7.2" class="ph-value" />
+                <ui:Label name="ph-drift-label" text="pH DRIFT: 0.0" class="metric-label-ph" />
+                <ui:Label name="ph-band" text="Banda: --" class="ph-band" />
                 <ui:VisualElement name="ph-slider" class="ph-slider">
                     <ui:VisualElement name="ph-gradient" class="ph-gradient" />
                     <ui:VisualElement name="ph-neutral-zone" class="ph-neutral-zone" />
