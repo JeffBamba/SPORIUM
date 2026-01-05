@@ -20,18 +20,18 @@ namespace Sporae.DevTools
         // MALUS CRESCITA (PlantConditionSystem)
         // ============================================
         public static int BaseScore = 50;                      // default 50
-        public static int MalusHydrationOutOfRange = 15;       // default 15
-        public static int MalusLightWrongOrAbsent = 10;        // default 10
-        public static int MalusPhOpposite = 20;                // default 20
-        public static int MalusPhUltra = 15;                   // default 15
-        public static int MalusPhOutOfRangeMin = 5;            // default 5 - Malus minimo fuori range
-        public static int MalusPhOutOfRangeMax = 35;           // default 35 - Malus massimo fuori range
-        public static int MalusPhExtreme = 50;                 // default 50 - Malus per pH estremi (≥+80 o ≤-80)
-        public static int MalusOverwatering = 25;              // default 25
-        public static int MalusMoldMild = 10;                  // default 10
-        public static int MalusMoldSevere = 30;                // default 30
-        public static int MalusBurnStress = 20;                // default 20
-        public static int MalusLedIncompatiblePerDay = -5;     // BLK-02.08: default -5 per ogni giorno che LED sbagliato è acceso
+        public static int MalusHydrationOutOfRange = 9;        // default 9 (ridotto del 40% da 15)
+        public static int MalusLightWrongOrAbsent = 6;         // default 6 (ridotto del 40% da 10)
+        public static int MalusPhOpposite = 12;                // default 12 (ridotto del 40% da 20)
+        public static int MalusPhUltra = 9;                    // default 9 (ridotto del 40% da 15)
+        public static int MalusPhOutOfRangeMin = 5;           // default 5 - Malus minimo fuori range (mantenuto)
+        public static int MalusPhOutOfRangeMax = 21;           // default 21 (ridotto del 40% da 35) - Malus massimo fuori range
+        public static int MalusPhExtreme = 30;                  // default 30 (ridotto del 40% da 50) - Malus per pH estremi (≥+80 o ≤-80)
+        public static int MalusOverwatering = 15;              // default 15 (ridotto del 40% da 25)
+        public static int MalusMoldMild = 10;                  // default 10 (mantenuto)
+        public static int MalusMoldSevere = 0;                 // default 0 (rimosso dal calcolo, già blocca l'avanzamento - mantenuto per retrocompatibilità)
+        public static int MalusBurnStress = 12;                // default 12 (ridotto del 40% da 20)
+        public static int MalusLedIncompatiblePerDay = -5;     // BLK-02.08: default -5 per ogni giorno che LED sbagliato è acceso (mantenuto)
         
         // ============================================
         // BONUS CRESCITA (PlantConditionSystem)
@@ -118,10 +118,10 @@ namespace Sporae.DevTools
         // ============================================
         // SOGLIE CONDIZIONE (PlantConditionSystem)
         // ============================================
-        public static int ConditionThresholdRigogliosa = 90;   // default 90
-        public static int ConditionThresholdSana = 70;        // default 70
-        public static int ConditionThresholdStressata = 40;    // default 40
-        public static int ConditionThresholdAppassita = 20;   // default 20
+        public static int ConditionThresholdRigogliosa = 80;   // default 80 (ridotto da 90)
+        public static int ConditionThresholdSana = 40;          // default 40 (ridotto da 70) - ora copre 40-80
+        public static int ConditionThresholdStressata = 40;     // default 40 (mantenuto per retrocompatibilità, ma non più usato nella logica)
+        public static int ConditionThresholdAppassita = 20;    // default 20 (invariato)
         public static int ForecastDeltaUp = 5;                 // default >5
         public static int ForecastDeltaDown = -5;              // default <-5
         
@@ -148,18 +148,18 @@ namespace Sporae.DevTools
             
             // MALUS
             BaseScore = 50;
-            MalusHydrationOutOfRange = 15;
-            MalusLightWrongOrAbsent = 10;
-            MalusPhOpposite = 20;
-            MalusPhUltra = 15;
-            MalusPhOutOfRangeMin = 5;
-            MalusPhOutOfRangeMax = 35;
-            MalusPhExtreme = 50;
-            MalusOverwatering = 25;
-            MalusMoldMild = 10;
-            MalusMoldSevere = 30;
-            MalusBurnStress = 20;
-            MalusLedIncompatiblePerDay = -5;
+            MalusHydrationOutOfRange = 9;      // Ridotto del 40% da 15
+            MalusLightWrongOrAbsent = 6;       // Ridotto del 40% da 10
+            MalusPhOpposite = 12;              // Ridotto del 40% da 20
+            MalusPhUltra = 9;                  // Ridotto del 40% da 15
+            MalusPhOutOfRangeMin = 5;          // Mantenuto
+            MalusPhOutOfRangeMax = 21;         // Ridotto del 40% da 35
+            MalusPhExtreme = 30;               // Ridotto del 40% da 50
+            MalusOverwatering = 15;            // Ridotto del 40% da 25
+            MalusMoldMild = 10;                // Mantenuto
+            MalusMoldSevere = 0;               // Rimosso dal calcolo (già blocca l'avanzamento), mantenuto per retrocompatibilità
+            MalusBurnStress = 12;              // Ridotto del 40% da 20
+            MalusLedIncompatiblePerDay = -5;   // Mantenuto
             
             // BONUS
             BonusHydrationOptimal = 20;
@@ -228,10 +228,10 @@ namespace Sporae.DevTools
             MoldSevereLevelReduction = 3;
             
             // CONDIZIONE
-            ConditionThresholdRigogliosa = 90;
-            ConditionThresholdSana = 70;
-            ConditionThresholdStressata = 40;
-            ConditionThresholdAppassita = 20;
+            ConditionThresholdRigogliosa = 80;    // Ridotto da 90
+            ConditionThresholdSana = 40;            // Ridotto da 70 (ora copre 40-80)
+            ConditionThresholdStressata = 40;       // Mantenuto per retrocompatibilità (non più usato nella logica)
+            ConditionThresholdAppassita = 20;       // Invariato
             ForecastDeltaUp = 5;
             ForecastDeltaDown = -5;
             
@@ -264,7 +264,7 @@ namespace Sporae.DevTools
                 { "MalusPhExtreme", MalusPhExtreme },
                 { "MalusOverwatering", MalusOverwatering },
                 { "MalusMoldMild", MalusMoldMild },
-                { "MalusMoldSevere", MalusMoldSevere },
+                { "MalusMoldSevere", MalusMoldSevere },  // Mantenuto per retrocompatibilità (sempre 0, non più usato nel calcolo)
                 { "MalusBurnStress", MalusBurnStress },
                 { "MalusLedIncompatiblePerDay", MalusLedIncompatiblePerDay },
                 

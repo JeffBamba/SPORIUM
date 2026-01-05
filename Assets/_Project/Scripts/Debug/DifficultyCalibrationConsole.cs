@@ -317,7 +317,7 @@ namespace Sporae.DevTools
         private float DrawMalusSection(float width, float startY)
         {
             float y = startY;
-            y += DrawSectionDescription("Penalità applicate al score di condizione della pianta quando i parametri sono fuori range o in condizioni negative. Valori più alti = penalità più severe. Il Base Score è il punto di partenza per il calcolo della condizione.", width, y);
+            y += DrawSectionDescription("Penalità applicate al score di condizione della pianta quando i parametri sono fuori range o in condizioni negative. Valori più alti = penalità più severe. Il Base Score è il punto di partenza per il calcolo della condizione. NOTA: I malus sono stati ridotti del 40% per rendere il sistema meno punitivo. Malus Mold Severe rimosso (già blocca l'avanzamento).", width, y);
             y += DrawSlider("Base Score", ref DifficultyCalibrationConfig.BaseScore, 0, 100, width, y);
             y += DrawSlider("Malus Idratazione Fuori Range", ref DifficultyCalibrationConfig.MalusHydrationOutOfRange, 0, 50, width, y);
             y += DrawSlider("Malus Luce Assente/Sbagliata", ref DifficultyCalibrationConfig.MalusLightWrongOrAbsent, 0, 50, width, y);
@@ -328,7 +328,7 @@ namespace Sporae.DevTools
             y += DrawSlider("Malus pH Estremo", ref DifficultyCalibrationConfig.MalusPhExtreme, 30, 70, width, y);
             y += DrawSlider("Malus Overwatering", ref DifficultyCalibrationConfig.MalusOverwatering, 0, 50, width, y);
             y += DrawSlider("Malus Mold Mild", ref DifficultyCalibrationConfig.MalusMoldMild, 0, 50, width, y);
-            y += DrawSlider("Malus Mold Severe", ref DifficultyCalibrationConfig.MalusMoldSevere, 0, 50, width, y);
+            // Malus Mold Severe rimosso (già blocca l'avanzamento, non più usato nel calcolo)
             y += DrawSlider("Malus Burn Stress", ref DifficultyCalibrationConfig.MalusBurnStress, 0, 50, width, y);
             return y - startY;
         }
@@ -425,11 +425,11 @@ namespace Sporae.DevTools
         private float DrawMoldSection(float width, float startY)
         {
             float y = startY;
-            y += DrawSectionDescription("Controlla il sistema di muffe. Le soglie determinano quando il rischio muffe diventa Mild, Severe o Critical. Overwatering, pH acido e negligenza nella potatura aumentano il rischio. Le penalità si applicano quando la pianta è infestata.", width, y);
+            y += DrawSectionDescription("Controlla il sistema di muffe. Le soglie determinano quando il rischio muffe diventa Mild, Severe o Critical. NOTA: Il rischio muffe è ora calcolato SOLO da overwatering prolungato (1 livello per ogni giorno oltre la soglia). Le penalità si applicano quando la pianta è infestata.", width, y);
             y += DrawSlider("Mold Soglia Mild", ref DifficultyCalibrationConfig.MoldMildThreshold, 0, 5, width, y);
             y += DrawSlider("Mold Soglia Severe", ref DifficultyCalibrationConfig.MoldSevereThreshold, 1, 10, width, y);
             y += DrawSlider("Mold Soglia Critical", ref DifficultyCalibrationConfig.MoldCriticalThreshold, 2, 10, width, y);
-            y += DrawSlider("Giorni Overwatering per +1 Rischio", ref DifficultyCalibrationConfig.MoldOverwateringDaysThreshold, 1, 10, width, y);
+            y += DrawSlider("Giorni Overwatering Soglia (1 livello per ogni giorno oltre)", ref DifficultyCalibrationConfig.MoldOverwateringDaysThreshold, 1, 10, width, y);
             y += DrawSlider("pH Acido Threshold", ref DifficultyCalibrationConfig.MoldAcidicPhThreshold, -50f, -10f, width, y);
             y += DrawSlider("Accumulo Negligenza Potatura", ref DifficultyCalibrationConfig.MoldPruningNeglectAccumulation, 0f, 2.0f, width, y);
             y += DrawSlider("Penalità Score Mild", ref DifficultyCalibrationConfig.MoldMildScorePenalty, 0, 50, width, y);
@@ -442,10 +442,10 @@ namespace Sporae.DevTools
         private float DrawConditionSection(float width, float startY)
         {
             float y = startY;
-            y += DrawSectionDescription("Definisce le soglie per le condizioni della pianta basate sul score totale (0-100). Rigogliosa = migliore, Appassita = peggiore. I Forecast Delta determinano quando mostrare previsioni di miglioramento/peggioramento.", width, y);
+            y += DrawSectionDescription("Definisce le soglie per le condizioni della pianta basate sul score totale (0-100). Rigogliosa = migliore, Sana = normale (range ampliato 40-80), Appassita = peggiore. Stressata rimosso dalla logica. I Forecast Delta determinano quando mostrare previsioni di miglioramento/peggioramento.", width, y);
             y += DrawSlider("Soglia Rigogliosa", ref DifficultyCalibrationConfig.ConditionThresholdRigogliosa, 70, 100, width, y);
-            y += DrawSlider("Soglia Sana", ref DifficultyCalibrationConfig.ConditionThresholdSana, 50, 90, width, y);
-            y += DrawSlider("Soglia Stressata", ref DifficultyCalibrationConfig.ConditionThresholdStressata, 30, 70, width, y);
+            y += DrawSlider("Soglia Sana", ref DifficultyCalibrationConfig.ConditionThresholdSana, 30, 90, width, y);  // Range aggiornato: min 30 (default 40)
+            // Soglia Stressata rimosso (non più usato nella logica, mantenuto solo per retrocompatibilità)
             y += DrawSlider("Soglia Appassita", ref DifficultyCalibrationConfig.ConditionThresholdAppassita, 10, 50, width, y);
             y += DrawSlider("Forecast Delta Up", ref DifficultyCalibrationConfig.ForecastDeltaUp, 3, 20, width, y);
             y += DrawSlider("Forecast Delta Down", ref DifficultyCalibrationConfig.ForecastDeltaDown, -20, -3, width, y);
@@ -511,7 +511,7 @@ namespace Sporae.DevTools
             ExportParam(sb, "MalusPhExtreme", allParams);
             ExportParam(sb, "MalusOverwatering", allParams);
             ExportParam(sb, "MalusMoldMild", allParams);
-            ExportParam(sb, "MalusMoldSevere", allParams);
+            // MalusMoldSevere rimosso dal calcolo (già blocca l'avanzamento), non più esportato
             ExportParam(sb, "MalusBurnStress", allParams);
             sb.AppendLine();
             

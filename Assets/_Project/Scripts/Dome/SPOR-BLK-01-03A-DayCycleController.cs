@@ -10,6 +10,8 @@ using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
 using Sporae.DevTools;
+using System.IO;
+using System;
 
 /// <summary>
 /// Controller per il ciclo giornaliero del sistema di crescita delle piante.
@@ -34,6 +36,31 @@ public class DayCycleController : MonoBehaviour
     private GameManager _gameManager;
     private UINotification _uiNotification;
     private ToastNotificationManager _toastManager;
+
+    // #region agent log
+    // DEBUG: Helper per logging NDJSON
+    private static void LogToDebugFile(string location, string message, object data, string hypothesisId = null, string runId = "debug")
+    {
+        try
+        {
+            string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
+            var logEntry = new
+            {
+                id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                location = location,
+                message = message,
+                data = data,
+                sessionId = "debug-session",
+                runId = runId,
+                hypothesisId = hypothesisId
+            };
+            string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
+            File.AppendAllText(logPath, jsonLine);
+        }
+        catch { }
+    }
+    // #endregion
 
     private void Awake()
     {
@@ -85,7 +112,7 @@ public class DayCycleController : MonoBehaviour
             // Se ancora non trovato, prova a cercare anche oggetti disattivati
             if (_uiNotification == null)
             {
-                _uiNotification = Object.FindObjectOfType<UINotification>(true); // true = include inactive
+                _uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>(true); // true = include inactive
             }
             
             // DEBUG_SAFE_FIX: Non mostrare warning se ServiceContainer non è ancora disponibile
@@ -264,7 +291,7 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Fallback: cerca nella scena
-        _uiNotification = Object.FindObjectOfType<UINotification>();
+        _uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
         if (_uiNotification != null && enableDebugLogs)
         {
             SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato nella scena!");
@@ -478,10 +505,39 @@ public class DayCycleController : MonoBehaviour
         var pointsResult = GrowthPointsCalculator.CalculateDailyPoints(
             pot, plantData, _potSystemConfig);
         
-        // BLK-03.01-T2: Aggiorna tracking giorni consecutivi ottimali
-        // DEBUG_SAFE_FIX: Per Seed, consideriamo ottimali anche i giorni con solo water + light (2 punti)
+        // #region agent log
+        // DEBUG: Log calcolo punti giornalieri (per capire perché DaysConsecutiveOptimal non incrementa)
         PlantStage currentStageForOptimal = (PlantStage)pot.Stage;
-        int requiredOptimalPoints = (currentStageForOptimal == PlantStage.Seed) ? 2 : 3;  // Seed: 2 punti, altri: 3 punti
+        // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
+        // perché il fertilizzante è opzionale per questi stadi
+        int requiredOptimalPoints = (currentStageForOptimal == PlantStage.Seed || currentStageForOptimal == PlantStage.Sprout) ? 2 : 3;
+        int oldDaysConsecutiveOptimal = pot.DaysConsecutiveOptimal;
+        LogToDebugFile(
+            "DayCycleController:ResolveGrowthForPot:POINTS_CALCULATION",
+            $"Calcolo Punti Giornalieri - PotId={pot.PotId}, Day={dayIndex}",
+            new {
+                potId = pot.PotId,
+                day = dayIndex,
+                stage = currentStageForOptimal.ToString(),
+                hydrationPercent = hydrationPercent,
+                wateringSystemOn = pot.WateringSystemOn,
+                ledSystemState = pot.LedSystemState.ToString(),
+                fertilizerLevel = pot.FertilizerLevel,
+                waterPoint = pointsResult.WaterPoint,
+                lightPoint = pointsResult.LightPoint,
+                fertilizerPoint = pointsResult.FertilizerPoint,
+                totalPoints = pointsResult.TotalPoints,
+                requiredOptimalPoints = requiredOptimalPoints,
+                oldDaysConsecutiveOptimal = oldDaysConsecutiveOptimal,
+                willIncrement = pointsResult.TotalPoints >= requiredOptimalPoints
+            },
+            "F"
+        );
+        // #endregion
+        
+        // BLK-03.01-T2: Aggiorna tracking giorni consecutivi ottimali
+        // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
+        // perché il fertilizzante è opzionale per questi stadi
         
         if (pointsResult.TotalPoints >= requiredOptimalPoints)
         {
@@ -497,6 +553,29 @@ public class DayCycleController : MonoBehaviour
             pot.DaysConsecutiveOptimal = 0;
             pot.DayOptimalParametersStarted = -1;
         }
+        
+        // #region agent log
+        // DEBUG: Log dopo aggiornamento DaysConsecutiveOptimal
+        bool wasIncremented = pointsResult.TotalPoints >= requiredOptimalPoints;
+        bool wasReset = pointsResult.TotalPoints < requiredOptimalPoints;
+        
+        SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_OPTIMAL_DAYS] {pot.PotId} Day={dayIndex}: Stage={currentStageForOptimal}, Points={pointsResult.TotalPoints}/{requiredOptimalPoints} (W={pointsResult.WaterPoint}, L={pointsResult.LightPoint}, F={pointsResult.FertilizerPoint}), OldDays={oldDaysConsecutiveOptimal} → NewDays={pot.DaysConsecutiveOptimal}, Incremented={wasIncremented}, Reset={wasReset}");
+        
+        LogToDebugFile(
+            "DayCycleController:ResolveGrowthForPot:OPTIMAL_DAYS_UPDATE",
+            $"Aggiornamento Giorni Ottimali - PotId={pot.PotId}, Day={dayIndex}",
+            new {
+                potId = pot.PotId,
+                day = dayIndex,
+                oldDaysConsecutiveOptimal = oldDaysConsecutiveOptimal,
+                newDaysConsecutiveOptimal = pot.DaysConsecutiveOptimal,
+                dayOptimalParametersStarted = pot.DayOptimalParametersStarted,
+                wasIncremented = wasIncremented,
+                wasReset = wasReset
+            },
+            "F"
+        );
+        // #endregion
         
         if (enableDebugLogs)
         {
@@ -540,13 +619,13 @@ public class DayCycleController : MonoBehaviour
                 if (phInRange)
                 {
                     // 30% possibilità doppio frutto se pH in range
-                    float fruitsToAdd = (Random.Range(0f, 1f) < 0.3f) ? 2f : 1f;
+                    float fruitsToAdd = (UnityEngine.Random.Range(0f, 1f) < 0.3f) ? 2f : 1f;
                     pot.AmountFruits = Mathf.Min(pot.AmountFruits + fruitsToAdd, 3f);
                 }
                 else
                 {
                     // Possibilità mancata produzione (20%) se pH fuori range
-                    if (Random.Range(0f, 1f) >= 0.2f)
+                    if (UnityEngine.Random.Range(0f, 1f) >= 0.2f)
                     {
                         pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f, 3f);
                     }
@@ -694,7 +773,24 @@ public class DayCycleController : MonoBehaviour
             bool hydrationOk = currentStageReq.IsHydrationInRange(hydrationPercent);
             
             // Verifica LED richiesto (BLK-02.07: usa LedSystemState invece di LastLedType)
-            bool ledOk = currentStageReq.IsLedRequirementMet(pot.LedSystemState);
+            // DEBUG_SAFE_FIX: Se LED è OFF ma lo stress è nel range ottimale, considera OK
+            bool ledOk = false;
+            if (pot.LedSystemState == LedSystemState.Off)
+            {
+                // Quando LED è OFF, verifica se lo stress è nel range ottimale (tra 0% e 100%)
+                int consecutiveDays = pot.GetConsecutiveLedDays();
+                int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
+                float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+                // Stress è nel range ottimale se è tra 0% e 100% (esclusi gli estremi)
+                bool stressInOptimalRange = stressPercentage > 0f && stressPercentage < 100f;
+                ledOk = stressInOptimalRange; // OK se stress nel range anche con LED OFF
+                
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT] {pot.PotId} LED OFF: ConsecutiveDays={consecutiveDays}, Stress%={stressPercentage:F1}, InOptimalRange={stressInOptimalRange}, LedOk={ledOk}");
+            }
+            else
+            {
+                ledOk = currentStageReq.IsLedRequirementMet(pot.LedSystemState);
+            }
             
             // BLK-03.01-T2: Verifica giorni minimi con modificatore condizione
             int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
@@ -725,17 +821,18 @@ public class DayCycleController : MonoBehaviour
             }
             
             // BLK-03.01-T2: Verifica anche fertilizzante nel range
-            // BUG FIX: Per Seed e Sprout (stadi pre-Growth), rendiamo il fertilizzante opzionale (non bloccante se è 0%)
+            // DEBUG_SAFE_FIX: Per Seed e Sprout (stadi pre-Growth), rendiamo il fertilizzante opzionale (non bloccante se è 0%)
+            // DEBUG_SAFE_FIX: Il fertilizzante over range NON blocca, solo under range blocca
             bool fertilizerOk = false;
             if (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout)
             {
-                // Per Seed e Sprout: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato)
-                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel) || pot.FertilizerLevel == 0;
+                // Per Seed e Sprout: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato) OPPURE se è over range
+                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel) || pot.FertilizerLevel == 0 || pot.FertilizerLevel > currentStageReq.fertilizerMax;
             }
             else
             {
-                // Per Growth e stadi successivi: fertilizzante obbligatorio nel range
-                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel);
+                // Per Growth e stadi successivi: fertilizzante OK se è >= min (over range è OK, solo under range blocca)
+                fertilizerOk = pot.FertilizerLevel >= currentStageReq.fertilizerMin;
             }
             
             // BLK-03.01-T2: Verifica punti accumulati
@@ -751,9 +848,50 @@ public class DayCycleController : MonoBehaviour
             requirementsMet = !isBlockedByCondition && !isBlockedByMold &&
                              hydrationOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
+            // #region agent log
+            // DEBUG: Log requisiti avanzamento (per capire perché non avanza)
+            int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
+            bool blocksAdvancement = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
+            // isBlockedByMold è già definita sopra alla riga 829
+            
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT] {pot.PotId} Day={dayIndex} Stage={currentStage}: Hydration={hydrationOk} ({hydrationPercent}%), LED={ledOk} ({pot.LedSystemState}), Duration={durationOk} ({pot.DaysInCurrentStage}/{effectiveRequiredDays}), OptimalDays={optimalDaysOk} ({pot.DaysConsecutiveOptimal}/{optimalDaysRequired}), Fertilizer={fertilizerOk} ({pot.FertilizerLevel}%, range={currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}), Points={pointsOk} ({totalPoints}/{requiredPoints}), Condition={currentCondition} (blocks={blocksAdvancement}), MoldBlock={isBlockedByMold}, RequirementsMet={requirementsMet}");
+            
+            // DEBUG: Log quando l'avanzamento è bloccato
+            if (!requirementsMet)
+            {
+                SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_ADVANCEMENT_FAILED] {pot.PotId} Day={dayIndex} Stage={currentStage}: AVANZAMENTO BLOCCATO - Hydration={hydrationOk}, LED={ledOk}, Duration={durationOk}, OptimalDays={optimalDaysOk}, Fertilizer={fertilizerOk}, Points={pointsOk}, BlockedByCondition={isBlockedByCondition}, BlockedByMold={isBlockedByMold}");
+            }
+            
+            LogToDebugFile(
+                "DayCycleController:ResolveGrowthForPot:ADVANCEMENT_CHECK",
+                $"Verifica Avanzamento - PotId={pot.PotId}, Day={dayIndex}",
+                new {
+                    potId = pot.PotId,
+                    day = dayIndex,
+                    stage = currentStage.ToString(),
+                    hydrationOk = hydrationOk,
+                    ledOk = ledOk,
+                    durationOk = durationOk,
+                    daysInCurrentStage = pot.DaysInCurrentStage,
+                    effectiveRequiredDays = effectiveRequiredDays,
+                    optimalDaysOk = optimalDaysOk,
+                    daysConsecutiveOptimal = pot.DaysConsecutiveOptimal,
+                    optimalDaysRequired = optimalDaysRequired,
+                    fertilizerOk = fertilizerOk,
+                    fertilizerLevel = pot.FertilizerLevel,
+                    pointsOk = pointsOk,
+                    totalPoints = totalPoints,
+                    requiredPoints = requiredPoints,
+                    currentCondition = currentCondition.ToString(),
+                    blocksAdvancement = blocksAdvancement,
+                    requirementsMet = requirementsMet
+                },
+                "H"
+            );
+            // #endregion
+            
             if (enableDebugLogs)
             {
-                int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
                 SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Stage {currentStage} requisiti - " +
                          $"Hydration: {hydrationPercent}% (range: {currentStageReq.hydrationMin}-{currentStageReq.hydrationMax}) [{hydrationOk}], " +
                          $"LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], " +
@@ -768,6 +906,7 @@ public class DayCycleController : MonoBehaviour
         {
             // Se non ci sono requisiti specifici, considera sempre soddisfatti
             requirementsMet = true;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT] {pot.PotId} Day={dayIndex}: Nessun requisito specifico per stage {currentStage}, avanzamento automatico");
             if (enableDebugLogs)
                 SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Nessun requisito specifico per stage {currentStage}, avanzamento automatico");
         }
@@ -775,6 +914,7 @@ public class DayCycleController : MonoBehaviour
         // BLK-02.02: Avanzamento stadi con requisiti specifici
         if (requirementsMet)
         {
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT_SUCCESS] {pot.PotId} Day={dayIndex}: TUTTI I REQUISITI SODDISFATTI per avanzare da {currentStage}");
             switch (currentStage)
             {
                 case PlantStage.Seed:
@@ -1209,6 +1349,26 @@ public class DayCycleController : MonoBehaviour
     {
         // Salva stato precedente per verificare se è stato spento
         LedSystemState stateBeforeCheck = pot.LedSystemState;
+        int oldBlueDays = pot.DaysLedBlueConsecutive;
+        int oldRedDays = pot.DaysLedRedConsecutive;
+        
+        // #region agent log
+        // DEBUG: Log stato LED prima di applicare effetti
+        int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+        LogToDebugFile(
+            "DayCycleController:ApplyLedSystemEffectsForPot:START",
+            $"LED Effects Start - PotId={pot.PotId}, Day={currentDay}",
+            new {
+                potId = pot.PotId,
+                day = currentDay,
+                ledSystemState = pot.LedSystemState.ToString(),
+                daysLedBlueConsecutive = oldBlueDays,
+                daysLedRedConsecutive = oldRedDays,
+                consecutiveDaysBefore = pot.GetConsecutiveLedDays()
+            },
+            "G"
+        );
+        // #endregion
         
         if (pot.LedSystemState == LedSystemState.Off)
         {
@@ -1216,10 +1376,36 @@ public class DayCycleController : MonoBehaviour
             bool hadBlueDays = pot.DaysLedBlueConsecutive > 0;
             bool hadRedDays = pot.DaysLedRedConsecutive > 0;
             
+            // DEBUG_SAFE_FIX: Non azzerare completamente i contatori quando LED è OFF
+            // Mantieni almeno 1 giorno per evitare che lo stress si azzeri completamente
+            // Questo evita drop insensati di condizione quando i parametri sono comunque in range
             if (pot.DaysLedBlueConsecutive > 0)
-                pot.DaysLedBlueConsecutive = Mathf.Max(0, pot.DaysLedBlueConsecutive - 1);
+            {
+                pot.DaysLedBlueConsecutive = Mathf.Max(1, pot.DaysLedBlueConsecutive - 1); // Mantieni almeno 1
+            }
             if (pot.DaysLedRedConsecutive > 0)
-                pot.DaysLedRedConsecutive = Mathf.Max(0, pot.DaysLedRedConsecutive - 1);
+            {
+                pot.DaysLedRedConsecutive = Mathf.Max(1, pot.DaysLedRedConsecutive - 1); // Mantieni almeno 1
+            }
+            
+            // #region agent log
+            // DEBUG: Log decadimento contatori quando LED è spento
+            LogToDebugFile(
+                "DayCycleController:ApplyLedSystemEffectsForPot:LED_OFF_DECAY",
+                $"LED OFF Decay - PotId={pot.PotId}, Day={currentDay}",
+                new {
+                    potId = pot.PotId,
+                    day = currentDay,
+                    oldBlueDays = oldBlueDays,
+                    newBlueDays = pot.DaysLedBlueConsecutive,
+                    oldRedDays = oldRedDays,
+                    newRedDays = pot.DaysLedRedConsecutive,
+                    consecutiveDaysAfter = pot.GetConsecutiveLedDays(),
+                    wasReset = (oldBlueDays > 0 && pot.DaysLedBlueConsecutive == 0) || (oldRedDays > 0 && pot.DaysLedRedConsecutive == 0)
+                },
+                "G"
+            );
+            // #endregion
             
             if (enableDebugLogs && (hadBlueDays || hadRedDays))
             {
@@ -1231,6 +1417,25 @@ public class DayCycleController : MonoBehaviour
         // Incrementa contatori giorni consecutivi
         pot.IncrementConsecutiveLedDays();
         int consecutiveDays = pot.GetConsecutiveLedDays();
+        
+        // #region agent log
+        // DEBUG: Log incremento contatori quando LED è acceso
+        LogToDebugFile(
+            "DayCycleController:ApplyLedSystemEffectsForPot:LED_ON_INCREMENT",
+            $"LED ON Increment - PotId={pot.PotId}, Day={currentDay}",
+            new {
+                potId = pot.PotId,
+                day = currentDay,
+                ledSystemState = pot.LedSystemState.ToString(),
+                oldBlueDays = oldBlueDays,
+                newBlueDays = pot.DaysLedBlueConsecutive,
+                oldRedDays = oldRedDays,
+                newRedDays = pot.DaysLedRedConsecutive,
+                consecutiveDaysAfter = consecutiveDays
+            },
+            "G"
+        );
+        // #endregion
         
         // Calcola scaling effetti
         float effectMultiplier = GetLedEffectMultiplier(consecutiveDays);
@@ -1807,13 +2012,49 @@ public class DayCycleController : MonoBehaviour
                 continue;
             }
             
+            // #region agent log
+            // DEBUG: Log dati INPUT prima del calcolo (Ipotesi A: parametri diversi da UI)
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
+            int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
+            float currentPh = _phSystem != null ? _phSystem.CurrentPh : 0f;
+            bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, maxHydration);
+            int consecutiveLedDays = pot.GetConsecutiveLedDays();
+            float stressPercentage = _potSystemConfig != null ? Mathf.Clamp01((float)consecutiveLedDays / _potSystemConfig.MaxDaysForFullStress) * 100f : 0f;
+            
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_INPUT] {pot.PotId} Day={dayIndex}: Score={pot.ConditionScore}, PrevScore={pot.PreviousDayConditionScore}, Cond={pot.ConditionLabel}, Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), pH={currentPh:F1}, Overwatering={isOverwatering}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, ConsecutiveDays={consecutiveLedDays}, Stress%={stressPercentage:F1}, Stage={pot.Stage}, Fertilizer={pot.FertilizerLevel}, MoldRisk={pot.MoldRiskLevel}, Infested={pot.IsInfested}");
+            
+            LogToDebugFile(
+                "DayCycleController:CalculatePlantConditions:INPUT",
+                $"INPUT Calcolo Condizione - PotId={pot.PotId}, Day={dayIndex}",
+                new {
+                    potId = pot.PotId,
+                    day = dayIndex,
+                    previousConditionScore = pot.ConditionScore,
+                    previousDayConditionScore = pot.PreviousDayConditionScore,
+                    previousConditionLabel = pot.ConditionLabel,
+                    hydration = pot.Hydration,
+                    maxHydration = maxHydration,
+                    hydrationPercent = hydrationPercent,
+                    currentPh = currentPh,
+                    isOverwatering = isOverwatering,
+                    wateringSystemOn = pot.WateringSystemOn,
+                    ledSystemState = pot.LedSystemState.ToString(),
+                    consecutiveLedDays = consecutiveLedDays,
+                    stressPercentage = stressPercentage,
+                    stage = pot.Stage,
+                    fertilizerLevel = pot.FertilizerLevel,
+                    moldRiskLevel = pot.MoldRiskLevel,
+                    isInfested = pot.IsInfested,
+                    plantCode = pot.PlantCode,
+                    daysInCurrentStage = pot.DaysInCurrentStage
+                },
+                "A"
+            );
+            // #endregion
+            
             // DEBUG: Log dati prima del calcolo
             if (enableDebugLogs)
             {
-                int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
-                int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
-                float currentPh = _phSystem != null ? _phSystem.CurrentPh : 0f;
-                bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, maxHydration);
                 SporiumLogger.LogDebug(LogCategory.Pot, $"DEBUG Calcolo Condizione {pot.PotId}: Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), Overwatering={isOverwatering}, pH={currentPh:F1}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, Stage={pot.Stage}");
             }
             
@@ -1826,14 +2067,68 @@ public class DayCycleController : MonoBehaviour
                 dayIndex, 
                 previousScore);
             
+            // #region agent log
+            // DEBUG: Log OUTPUT dopo calcolo (Ipotesi C: PreviousDayConditionScore non salvato correttamente)
+            int oldCondition = pot.ConditionLabel;
+            int oldScore = pot.ConditionScore;
+            
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_OUTPUT] {pot.PotId} Day={dayIndex}: OldCond={oldCondition} (Score={oldScore}) → NewCond={(int)result.Condition} (Score={result.Score}), Delta={result.ScoreDelta}, Forecast={result.Forecast}, Contributors={result.Contributors?.Length ?? 0}");
+            
+            if (oldCondition != (int)result.Condition)
+            {
+                SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_CONDITION_CHANGE] {pot.PotId} Day={dayIndex}: CONDIZIONE CAMBIATA da {oldCondition} (Score={oldScore}) a {(int)result.Condition} (Score={result.Score}), Delta={result.ScoreDelta}");
+            }
+            
+            LogToDebugFile(
+                "DayCycleController:CalculatePlantConditions:OUTPUT",
+                $"OUTPUT Calcolo Condizione - PotId={pot.PotId}, Day={dayIndex}",
+                new {
+                    potId = pot.PotId,
+                    day = dayIndex,
+                    oldConditionLabel = oldCondition,
+                    oldConditionScore = oldScore,
+                    newConditionLabel = (int)result.Condition,
+                    newConditionScore = result.Score,
+                    scoreDelta = result.ScoreDelta,
+                    forecast = result.Forecast.ToString(),
+                    previousDayScoreUsed = previousScore,
+                    isFirstCalculation = isFirstCalculation,
+                    contributorsCount = result.Contributors != null ? result.Contributors.Length : 0
+                },
+                "C"
+            );
+            // #endregion
+            
             // Salva score precedente prima di aggiornare
             pot.PreviousDayConditionScore = pot.ConditionScore;
             
             // Aggiorna score e condizione
-            int oldCondition = pot.ConditionLabel;
             pot.ConditionScore = result.Score;
             pot.ConditionLabel = (int)result.Condition;
             pot.ForecastDirection = (int)result.Forecast;
+            
+            // #region agent log
+            // DEBUG: Log cambio stato (Ipotesi E: cambio inaspettato)
+            if (oldCondition != pot.ConditionLabel)
+            {
+                LogToDebugFile(
+                    "DayCycleController:CalculatePlantConditions:STATE_CHANGE",
+                    $"CAMBIO STATO - PotId={pot.PotId}, Day={dayIndex}",
+                    new {
+                        potId = pot.PotId,
+                        day = dayIndex,
+                        oldCondition = oldCondition,
+                        newCondition = pot.ConditionLabel,
+                        oldScore = oldScore,
+                        newScore = result.Score,
+                        scoreDelta = result.ScoreDelta,
+                        thresholdSana = DifficultyCalibrationConfig.ConditionThresholdSana,
+                        thresholdAppassita = DifficultyCalibrationConfig.ConditionThresholdAppassita
+                    },
+                    "E"
+                );
+            }
+            // #endregion
             
             // Verifica cambio condizione per notifica Toast
             // Mostra il toast solo se il delta score è almeno ±20 (20%) per evitare spam su variazioni minime
@@ -1893,8 +2188,8 @@ public class DayCycleController : MonoBehaviour
             if (moldConfig != null && plantData != null)
             {
                 // Traccia overwatering consecutivo
-                bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, _potSystemConfig.MaxHydration);
-                if (isOverwatering)
+                bool isOverwateringForMold = PlantConditionSystem.IsOverwatering(pot, _potSystemConfig.MaxHydration);
+                if (isOverwateringForMold)
                 {
                     pot.DaysOverwateringConsecutive++;
                 }
@@ -1953,7 +2248,8 @@ public class DayCycleController : MonoBehaviour
                 
                 if (enableDebugLogs && pot.MoldRiskLevel > 0)
                 {
-                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, DaysWithoutPruning: {pot.DaysWithoutPruning})");
+                    // NOTA: Mold Risk ora calcolato SOLO da overwatering prolungato (1 livello per ogni giorno oltre soglia)
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, Threshold: {moldConfig.overwateringDaysThreshold})");
                 }
             }
         }

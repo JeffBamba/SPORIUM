@@ -3,15 +3,16 @@ using UnityEngine;
 namespace Sporae.Dome.PotSystem.Condition
 {
     /// <summary>
-    /// Condizione di salute della pianta (Rigogliosa, Sana, Stressata, Appassita, Critica)
+    /// Condizione di salute della pianta (Rigogliosa, Sana, Appassita, Critica)
+    /// NOTA: Stressata rimosso dalla logica (mantenuto solo enum per retrocompatibilità con dati salvati)
     /// </summary>
     public enum PlantCondition
     {
-        Rigogliosa = 0,   // 90-100: Verde scuro, forecast positivo
-        Sana = 1,         // 70-89: Verde, forecast neutro/positivo
-        Stressata = 2,    // 40-69: Giallo, forecast neutro/negativo
-        Appassita = 3,    // 20-39: Arancione, forecast negativo
-        Critica = 4       // 0-19: Rosso, forecast negativo grave (Burned/Infestata/Sterile)
+        Rigogliosa = 0,   // 80-100: Verde scuro, forecast positivo
+        Sana = 1,         // 40-80: Verde, forecast neutro/positivo (range ampliato)
+        Stressata = 2,    // RIMOSSO dalla logica - mantenuto solo per retrocompatibilità (dati salvati vecchi)
+        Appassita = 3,    // 20-40: Arancione, forecast negativo
+        Critica = 4       // 0-20: Rosso, forecast negativo grave (Burned/Infestata/Sterile)
     }
     
     /// <summary>

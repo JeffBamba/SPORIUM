@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Mold;
 using _Project; // Per PhSystem
 using _Project.Sporae.Core;
 using Sporae.DevTools; // Per DifficultyCalibrationConfig
+using System.IO;
+using System;
 
 namespace Sporae.Dome.PotSystem.Condition
 {
@@ -14,6 +17,31 @@ namespace Sporae.Dome.PotSystem.Condition
     /// </summary>
     public static class PlantConditionSystem
     {
+        // #region agent log
+        // DEBUG: Helper per logging NDJSON
+        private static void LogToDebugFile(string location, string message, object data, string hypothesisId = null, string runId = "debug")
+        {
+            try
+            {
+                string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
+                var logEntry = new
+                {
+                    id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
+                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    location = location,
+                    message = message,
+                    data = data,
+                    sessionId = "debug-session",
+                    runId = runId,
+                    hypothesisId = hypothesisId
+                };
+                string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
+                File.AppendAllText(logPath, jsonLine);
+            }
+            catch { }
+        }
+        // #endregion
+        
         // Parametri ora configurabili via DifficultyCalibrationConfig
         
         /// <summary>
@@ -44,11 +72,26 @@ namespace Sporae.Dome.PotSystem.Condition
             int score = DifficultyCalibrationConfig.BaseScore;
             List<ConditionContributor> contributors = new List<ConditionContributor>();
             
-            // Calcola stress percentage una volta all'inizio per riutilizzarlo in più sezioni
-            // BUG FIX: Quando lo stress è nel range (tra 0% e 100%), non applicare né bonus né malus per la luce
+            // #region agent log
+            // DEBUG: Log inizio calcolo (Ipotesi D: problema con stress percentage)
             int consecutiveDays = potState.GetConsecutiveLedDays();
             int maxDaysForFullStress = potConfig != null ? potConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            LogToDebugFile(
+                "PlantConditionSystem:CalculateCondition:START",
+                $"START Calcolo - PotId={potState.PotId}, Day={currentDay}",
+                new {
+                    potId = potState.PotId,
+                    day = currentDay,
+                    baseScore = DifficultyCalibrationConfig.BaseScore,
+                    consecutiveLedDays = consecutiveDays,
+                    maxDaysForFullStress = maxDaysForFullStress,
+                    stressPercentage = stressPercentage,
+                    previousDayScore = previousDayScore
+                },
+                "D"
+            );
+            // #endregion
             
             // === CONTRIBUTI POSITIVI ===
             
@@ -58,10 +101,48 @@ namespace Sporae.Dome.PotSystem.Condition
             
             // Verifica range ottimale per stadio (50-75% per la maggior parte degli stadi)
             bool isHydrationOptimal = IsHydrationInOptimalRange(potState, plantData, maxHydration);
+            
+            // DEBUG: Verifica anche se l'idratazione è nel range accettabile (non solo ottimale)
+            bool isHydrationInAcceptableRange = false;
+            if (plantData != null)
+            {
+                PlantStage currentStage = (PlantStage)potState.Stage;
+                var stageReq = plantData.GetStageRequirements(currentStage);
+                if (stageReq != null)
+                {
+                    isHydrationInAcceptableRange = stageReq.IsHydrationInRange(hydrationPercent);
+                }
+            }
+            
+            // #region agent log
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_HYDRATION] {potState.PotId} Day={currentDay}: Hydration={potState.Hydration}/{maxHydration} ({hydrationPercent}%), IsOptimal={isHydrationOptimal}, IsInAcceptableRange={isHydrationInAcceptableRange}, WateringSystemOn={potState.WateringSystemOn}");
+            
+            LogToDebugFile(
+                "PlantConditionSystem:CalculateCondition:HYDRATION",
+                $"HYDRATION Check - PotId={potState.PotId}",
+                new {
+                    potId = potState.PotId,
+                    hydration = potState.Hydration,
+                    maxHydration = maxHydration,
+                    hydrationPercent = hydrationPercent,
+                    isHydrationOptimal = isHydrationOptimal,
+                    isHydrationInAcceptableRange = isHydrationInAcceptableRange,
+                    wateringSystemOn = potState.WateringSystemOn,
+                    scoreBefore = score
+                },
+                "A"
+            );
+            // #endregion
+            int scoreBeforeHydration = score;
             if (isHydrationOptimal)
             {
                 score += DifficultyCalibrationConfig.BonusHydrationOptimal;
                 contributors.Add(new ConditionContributor("Idratazione ottimale", DifficultyCalibrationConfig.BonusHydrationOptimal, true));
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Idratazione ottimale = +{DifficultyCalibrationConfig.BonusHydrationOptimal}, Score: {scoreBeforeHydration} → {score}");
+            }
+            else
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO BONUS Idratazione (IsOptimal={isHydrationOptimal}, Hydration%={hydrationPercent}), Score: {score}");
             }
             
             // 2. Luce corretta per stadio (LED corretto)
@@ -78,50 +159,50 @@ namespace Sporae.Dome.PotSystem.Condition
             // BUG FIX: Quando lo stress è nel range (tra 0% e 100%), il bonus viene applicato anche se il LED è spento
             // Questo evita che il bonus venga rimosso immediatamente quando si spegne il LED con stress nel range
             // Il bonus viene rimosso solo a fine giornata quando lo stress viene ricalcolato
+            int scoreBeforeLight = score;
             if (hasCorrectLight && (isLedOn && (stressPercentage > 0f && stressPercentage < 100f) || (stressPercentage == 0f || stressPercentage >= 100f)))
             {
                 score += DifficultyCalibrationConfig.BonusLightCorrect;
                 contributors.Add(new ConditionContributor("Luce corretta (LED)", DifficultyCalibrationConfig.BonusLightCorrect, true));
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Luce corretta (LED) = +{DifficultyCalibrationConfig.BonusLightCorrect}, Score: {scoreBeforeLight} → {score}");
             }
             else if (!isLedOn && (stressPercentage > 0f && stressPercentage < 100f))
             {
-                // BUG FIX: Quando lo stress è nel range e il LED è spento, mantieni il bonus se il LED precedente era corretto
-                // Questo evita che il bonus venga rimosso immediatamente quando si spegne il LED con stress nel range
-                // Verifica se il LED precedente era corretto controllando DaysLedBlueConsecutive/DaysLedRedConsecutive
-                // Se uno dei due è > 0, significa che il LED era acceso prima di essere spento
-                bool hadLedOnBefore = potState.DaysLedBlueConsecutive > 0 || potState.DaysLedRedConsecutive > 0;
-                if (hadLedOnBefore)
-                {
-                    // Verifica se il LED precedente era corretto per lo stadio
-                    PlantStage currentStage = (PlantStage)potState.Stage;
-                    StageRequirements stageReq = plantData?.GetStageRequirements(currentStage);
-                    LedType? requiredLed = stageReq?.GetRequiredLed();
-                    
-                    bool previousLedWasCorrect = false;
-                    if (requiredLed.HasValue)
-                    {
-                        // Se il LED richiesto è Blue e DaysLedBlueConsecutive > 0, il LED precedente era corretto
-                        // Se il LED richiesto è Red e DaysLedRedConsecutive > 0, il LED precedente era corretto
-                        if (requiredLed.Value == LedType.Blue && potState.DaysLedBlueConsecutive > 0)
-                            previousLedWasCorrect = true;
-                        else if (requiredLed.Value == LedType.Red && potState.DaysLedRedConsecutive > 0)
-                            previousLedWasCorrect = true;
-                    }
-                    
-                    if (previousLedWasCorrect)
-                    {
-                        // Mantieni il bonus perché il LED precedente era corretto e lo stress è nel range
-                        score += DifficultyCalibrationConfig.BonusLightCorrect;
-                        contributors.Add(new ConditionContributor("Luce corretta (LED) - stress nel range", DifficultyCalibrationConfig.BonusLightCorrect, true));
-                    }
-                }
+                // DEBUG_SAFE_FIX: Quando lo stress è nel range ottimale e il LED è spento, dai comunque il bonus
+                // Questo evita drop insensati di condizione quando il LED è spento ma lo stress è nel range
+                // Il bonus viene dato perché lo stress è nel range ottimale, indipendentemente dallo stato del LED
+                score += DifficultyCalibrationConfig.BonusLightCorrect;
+                contributors.Add(new ConditionContributor("Luce corretta (stress nel range, LED OFF)", DifficultyCalibrationConfig.BonusLightCorrect, true));
+                
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Luce corretta (LED OFF, stress in range) = +{DifficultyCalibrationConfig.BonusLightCorrect}, Score: {scoreBeforeLight} → {score}");
+            }
+            else
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO BONUS Luce (hasCorrectLight={hasCorrectLight}, isLedOn={isLedOn}, stress%={stressPercentage:F1}), Score: {score}");
             }
             
-            // 3. Watering System ON e dosaggio corretto
-            if (potState.WateringSystemOn && isHydrationOptimal)
+            // 3. Idratazione ottimale (bonus pieno se idratazione è in range ottimale, indipendentemente da WateringSystemOn)
+            // DEBUG_SAFE_FIX: Il bonus viene dato quando l'idratazione è ottimale, indipendentemente dallo stato del sistema
+            // I malus vengono applicati solo quando l'idratazione è fuori range (sotto o sopra)
+            int scoreBeforeWateringBonus = score;
+            if (isHydrationOptimal)
             {
+                // BUG FIX: Il bonus deve essere aggiunto allo score PRIMA di controllare WateringSystemOn
                 score += DifficultyCalibrationConfig.BonusWateringOn;
-                contributors.Add(new ConditionContributor("Watering ON e dosaggio corretto", DifficultyCalibrationConfig.BonusWateringOn, true));
+                if (potState.WateringSystemOn)
+                {
+                    contributors.Add(new ConditionContributor("Idratazione ottimale (Watering ON)", DifficultyCalibrationConfig.BonusWateringOn, true));
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Idratazione ottimale (Watering ON) = +{DifficultyCalibrationConfig.BonusWateringOn}, Score: {scoreBeforeWateringBonus} → {score}");
+                }
+                else
+                {
+                    contributors.Add(new ConditionContributor("Idratazione ottimale (Watering OFF)", DifficultyCalibrationConfig.BonusWateringOn, true));
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Idratazione ottimale (Watering OFF) = +{DifficultyCalibrationConfig.BonusWateringOn}, Score: {scoreBeforeWateringBonus} → {score}");
+                }
+            }
+            else
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO BONUS Idratazione ottimale (IsOptimal={isHydrationOptimal}, Hydration%={hydrationPercent}, WateringSystemOn={potState.WateringSystemOn}), Score: {score}");
             }
             
             // 4. pH Dome in banda affinità pianta
@@ -156,6 +237,20 @@ namespace Sporae.Dome.PotSystem.Condition
                 moldRiskLevel = MoldSystem.GetMoldRiskLevel(potState, phSystem, plantData, moldConfig);
             }
             bool hasNoMoldRisk = (moldRiskLevel == 0);
+            // #region agent log
+            LogToDebugFile(
+                "PlantConditionSystem:CalculateCondition:MOLD",
+                $"MOLD Check - PotId={potState.PotId}",
+                new {
+                    potId = potState.PotId,
+                    moldRiskLevel = moldRiskLevel,
+                    hasNoMoldRisk = hasNoMoldRisk,
+                    isInfested = potState.IsInfested,
+                    scoreBefore = score
+                },
+                "B"
+            );
+            // #endregion
             if (hasNoMoldRisk)
             {
                 score += DifficultyCalibrationConfig.BonusNoMold;
@@ -167,12 +262,18 @@ namespace Sporae.Dome.PotSystem.Condition
             // Nota: stressPercentage è già calcolato all'inizio del metodo
             
             // 1. Idratazione fuori range (Dry/Wet)
+            int scoreBeforeHydrationMalus = score;
             if (!isHydrationOptimal)
             {
                 if (hydrationPercent < DifficultyCalibrationConfig.HydrationDryThreshold || hydrationPercent > DifficultyCalibrationConfig.HydrationWetThreshold)
                 {
                     score -= DifficultyCalibrationConfig.MalusHydrationOutOfRange;
                     contributors.Add(new ConditionContributor("Idratazione fuori range", -DifficultyCalibrationConfig.MalusHydrationOutOfRange, false));
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: MALUS Idratazione fuori range = -{DifficultyCalibrationConfig.MalusHydrationOutOfRange}, Score: {scoreBeforeHydrationMalus} → {score}");
+                }
+                else
+                {
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO MALUS Idratazione (IsOptimal={isHydrationOptimal}, Hydration%={hydrationPercent}, DryThreshold={DifficultyCalibrationConfig.HydrationDryThreshold}, WetThreshold={DifficultyCalibrationConfig.HydrationWetThreshold}), Score: {score}");
                 }
             }
             
@@ -181,11 +282,39 @@ namespace Sporae.Dome.PotSystem.Condition
             // Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus per la luce
             
             // Applica malus solo quando stress è esattamente 0% (nessuna luce) o 100% (burned)
+            // DEBUG_SAFE_FIX: Non applicare malus quando stress è 0% se i parametri sono comunque in range
+            // Il malus viene applicato solo se lo stress è 0% E il LED è richiesto per lo stadio
             // Quando lo stress è nel range (tra 0% e 100%), non applicare malus per luce assente/spettro sbagliato
-            if (!hasCorrectLight && (stressPercentage == 0f || stressPercentage >= 100f))
+            int scoreBeforeLightMalus = score;
+            if (!hasCorrectLight && stressPercentage >= 100f)
             {
+                // Stress 100% (burned) → sempre malus
                 score -= DifficultyCalibrationConfig.MalusLightWrongOrAbsent;
-                contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
+                contributors.Add(new ConditionContributor("Luce assente o spettro sbagliato (burned)", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: MALUS Luce assente (burned) = -{DifficultyCalibrationConfig.MalusLightWrongOrAbsent}, Score: {scoreBeforeLightMalus} → {score}");
+            }
+            else if (!hasCorrectLight && stressPercentage == 0f)
+            {
+                // Stress 0% → malus solo se LED è richiesto per lo stadio
+                PlantStage currentStage = (PlantStage)potState.Stage;
+                StageRequirements stageReq = plantData?.GetStageRequirements(currentStage);
+                bool ledRequired = stageReq != null && stageReq.GetRequiredLed().HasValue;
+                
+                if (ledRequired)
+                {
+                    score -= DifficultyCalibrationConfig.MalusLightWrongOrAbsent;
+                    contributors.Add(new ConditionContributor("Luce assente (LED richiesto)", -DifficultyCalibrationConfig.MalusLightWrongOrAbsent, false));
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: MALUS Luce assente (LED richiesto) = -{DifficultyCalibrationConfig.MalusLightWrongOrAbsent}, Score: {scoreBeforeLightMalus} → {score}");
+                }
+                else
+                {
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO MALUS Luce assente (LED non richiesto, stress=0%), Score: {score}");
+                }
+                // Se LED non è richiesto, non applicare malus anche se stress è 0%
+            }
+            else
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO MALUS Luce (hasCorrectLight={hasCorrectLight}, stress%={stressPercentage:F1}), Score: {score}");
             }
             
             // 2b. BLK-02.08: LED incompatibile con famiglia (-5 per ogni giorno che è acceso)
@@ -210,6 +339,23 @@ namespace Sporae.Dome.PotSystem.Condition
             {
                 float currentPh = phSystem.CurrentPh;
                 PhSystem.PhBand phBand = phSystem.EvaluateState();
+                
+                // #region agent log
+                LogToDebugFile(
+                    "PlantConditionSystem:CalculateCondition:PH",
+                    $"PH Check - PotId={potState.PotId}",
+                    new {
+                        potId = potState.PotId,
+                        currentPh = currentPh,
+                        phBand = phBand.ToString(),
+                        plantFamily = plantData.Family.ToString(),
+                        isPhInOptimalRange = plantData.IsPhInOptimalRange(currentPh),
+                        phDistanceFromOptimal = plantData.IsPhInOptimalRange(currentPh) ? 0f : plantData.GetPhDistanceFromOptimal(currentPh),
+                        scoreBefore = score
+                    },
+                    "E"
+                );
+                // #endregion
                 
                 // Pure preferisce basico, Evil preferisce acido
                 if (plantData.Family == PlantFamily.Pure && (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid))
@@ -251,58 +397,95 @@ namespace Sporae.Dome.PotSystem.Condition
             }
             
             // 5. Overwatering attivo (forza stato Stressata)
+            int scoreBeforeOverwatering = score;
             bool isOverwatering = IsOverwatering(potState, maxHydration);
             if (isOverwatering)
             {
                 score -= DifficultyCalibrationConfig.MalusOverwatering;
                 contributors.Add(new ConditionContributor("Overwatering attivo", -DifficultyCalibrationConfig.MalusOverwatering, false));
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: MALUS Overwatering = -{DifficultyCalibrationConfig.MalusOverwatering}, Score: {scoreBeforeOverwatering} → {score}");
+            }
+            else
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: NO MALUS Overwatering (IsOverwatering={isOverwatering}, Hydration%={hydrationPercent}), Score: {score}");
             }
             
             // 6. Mold Infestation (BUG FIX 2: solo se IsInfested = true, non basato su MoldRiskLevel)
+            // NOTA: MalusMoldSevere rimosso dal calcolo perché già blocca l'avanzamento (MoldRiskLevel >= 2)
             if (potState.IsInfested)
             {
-                // Applica malus in base al livello di rischio al momento dell'infestazione
+                // Applica malus solo per infestazione lieve (Mild)
                 if (potState.MoldRiskLevel == 1) // Mild
                 {
                     score -= DifficultyCalibrationConfig.MalusMoldMild;
                     contributors.Add(new ConditionContributor("Infestazione muffe lieve", -DifficultyCalibrationConfig.MalusMoldMild, false));
                 }
-                else if (potState.MoldRiskLevel >= 2) // Severe o Critical
-                {
-                    score -= DifficultyCalibrationConfig.MalusMoldSevere;
-                    contributors.Add(new ConditionContributor("Infestazione muffe severa", -DifficultyCalibrationConfig.MalusMoldSevere, false));
-                }
+                // Severe/Critical non applica malus qui perché già blocca l'avanzamento
             }
             
             // 7. Burn Stress attivo (solo quando stress è 0% o 100%)
-            // BUG FIX: Il malus viene applicato solo quando lo stress è fuori range (0% = nessuna luce, 100% = burned)
+            // DEBUG_SAFE_FIX: Il malus viene applicato solo quando lo stress è fuori range (0% = nessuna luce, 100% = burned)
             // Quando lo stress è nel range (tra 0% e 100%), non viene applicato alcun malus
             // Nota: consecutiveDays, maxDaysForFullStress e stressPercentage sono già calcolati all'inizio della sezione CONTRIBUTI NEGATIVI
             
             // Applica malus solo quando stress è esattamente 0% (nessuna luce) o 100% (burned)
-            if (stressPercentage == 0f || stressPercentage >= 100f)
+            // DEBUG_SAFE_FIX: Non applicare malus quando stress è 0% se i parametri sono comunque in range
+            // Il malus viene applicato solo se lo stress è 0% E il LED è richiesto per lo stadio
+            if (stressPercentage >= 100f)
             {
-                // Verifica se il LED è richiesto per lo stadio corrente
+                // Stress massimo (burned) → sempre malus
+                score -= DifficultyCalibrationConfig.MalusBurnStress;
+                contributors.Add(new ConditionContributor("Burn Stress attivo (100%)", -DifficultyCalibrationConfig.MalusBurnStress, false));
+            }
+            else if (stressPercentage == 0f)
+            {
+                // Stress 0% → malus solo se LED è richiesto per lo stadio
                 PlantStage currentStage = (PlantStage)potState.Stage;
                 StageRequirements stageReq = plantData?.GetStageRequirements(currentStage);
                 bool ledRequired = stageReq != null && stageReq.GetRequiredLed().HasValue;
                 
-                if (stressPercentage == 0f && ledRequired)
+                if (ledRequired)
                 {
-                    // Nessuna luce quando è richiesta → malus
                     score -= DifficultyCalibrationConfig.MalusBurnStress;
                     contributors.Add(new ConditionContributor("Nessuna luce (LED richiesto)", -DifficultyCalibrationConfig.MalusBurnStress, false));
                 }
-                else if (stressPercentage >= 100f)
-                {
-                    // Stress massimo (burned) → malus
-                    score -= DifficultyCalibrationConfig.MalusBurnStress;
-                    contributors.Add(new ConditionContributor("Burn Stress attivo (100%)", -DifficultyCalibrationConfig.MalusBurnStress, false));
-                }
+                // Se LED non è richiesto, non applicare malus anche se stress è 0%
             }
             
             // Clamp score 0-100
+            int scoreBeforeClamp = score;
             score = Mathf.Clamp(score, 0, 100);
+            
+            // #region agent log
+            // DEBUG: Log finale con tutti i contributi (Ipotesi B: malus nascosto)
+            // Usa SporiumLogger per assicurarsi che i log vengano scritti
+            if (potState != null && potState.PotId != null)
+            {
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_SUMMARY] {potState.PotId} Day={currentDay}: Base={DifficultyCalibrationConfig.BaseScore}, BeforeClamp={scoreBeforeClamp}, Final={score}, ThresholdSana={DifficultyCalibrationConfig.ConditionThresholdSana}, ThresholdAppassita={DifficultyCalibrationConfig.ConditionThresholdAppassita}, WateringSystemOn={potState.WateringSystemOn}, Hydration%={hydrationPercent}, IsOptimal={isHydrationOptimal}, LED={potState.LedSystemState}, Stress%={stressPercentage:F1}, Contributors: {contributors.Count} (Pos: {contributors.Count(c => c.IsPositive)}, Neg: {contributors.Count(c => !c.IsPositive)})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_CONTRIBUTORS] {potState.PotId} Day={currentDay}: TUTTI I CONTRIBUTI:");
+                foreach (var c in contributors)
+                {
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_CONTRIBUTORS] {potState.PotId} Day={currentDay}:   {c.Source} = {(c.IsPositive ? "+" : "-")}{Mathf.Abs(c.Value)}");
+                }
+            }
+            
+            LogToDebugFile(
+                "PlantConditionSystem:CalculateCondition:FINAL",
+                $"FINAL Score - PotId={potState.PotId}",
+                new {
+                    potId = potState.PotId,
+                    baseScore = DifficultyCalibrationConfig.BaseScore,
+                    scoreBeforeClamp = scoreBeforeClamp,
+                    finalScore = score,
+                    contributors = contributors.Select(c => new { source = c.Source, value = c.Value, isPositive = c.IsPositive }).ToArray(),
+                    positiveCount = contributors.Count(c => c.IsPositive),
+                    negativeCount = contributors.Count(c => !c.IsPositive),
+                    thresholdSana = DifficultyCalibrationConfig.ConditionThresholdSana,
+                    thresholdAppassita = DifficultyCalibrationConfig.ConditionThresholdAppassita
+                },
+                "B"
+            );
+            // #endregion
             
             // DEBUG: Log dettagliato del calcolo
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -343,14 +526,10 @@ namespace Sporae.Dome.PotSystem.Condition
             
             if (stageReq != null)
             {
-                // Range ottimale: tra hydrationMin e hydrationMax (range accettabile per lo stadio)
-                // Per il bonus "ottimale", usiamo un range più stretto intorno a hydrationMed (50-75% del range)
-                int rangeSize = stageReq.hydrationMax - stageReq.hydrationMin;
-                int optimalTolerance = Mathf.Max(5, rangeSize / 4); // 25% del range, minimo 5%
-                int optimalMin = Mathf.Max(stageReq.hydrationMin, stageReq.hydrationMed - optimalTolerance);
-                int optimalMax = Mathf.Min(stageReq.hydrationMax, stageReq.hydrationMed + optimalTolerance);
-                
-                return hydrationPercent >= optimalMin && hydrationPercent <= optimalMax;
+                // DEBUG_SAFE_FIX: Range ottimale = range accettabile completo (hydrationMin - hydrationMax)
+                // Se l'idratazione è nel range accettabile, è considerata ottimale
+                // Questo evita drop insensati quando i parametri sono in range ma non esattamente al mediano
+                return hydrationPercent >= stageReq.hydrationMin && hydrationPercent <= stageReq.hydrationMax;
             }
             
             // Fallback: se non ci sono requisiti specifici, usa range generico 50-75%
@@ -408,21 +587,26 @@ namespace Sporae.Dome.PotSystem.Condition
         
         /// <summary>
         /// Mappa score (0-100) a condizione
+        /// NOTA: Stressata rimosso dalla logica, mantenuto solo l'enum per retrocompatibilità
         /// </summary>
         private static PlantCondition MapScoreToCondition(int score, bool isOverwatering)
         {
-            // Overwatering forza stato Stressata indipendentemente dallo score
-            if (isOverwatering && score >= DifficultyCalibrationConfig.ConditionThresholdStressata)
+            // Overwatering forza stato Sana se score >= 40 (nuovo threshold Sana)
+            // Con i nuovi threshold, overwatering con score >= 40 risulterà in "Sana"
+            if (isOverwatering && score >= DifficultyCalibrationConfig.ConditionThresholdSana)
             {
-                return PlantCondition.Stressata;
+                return PlantCondition.Sana;  // Verrà mostrato come "Sana (Overwatering)" in GetConditionName
             }
             
+            // Nuova logica senza Stressata:
+            // Score >= 80 → Rigogliosa
+            // Score >= 40 → Sana
+            // Score >= 20 → Appassita
+            // Score < 20 → Critica
             if (score >= DifficultyCalibrationConfig.ConditionThresholdRigogliosa)
                 return PlantCondition.Rigogliosa;
             if (score >= DifficultyCalibrationConfig.ConditionThresholdSana)
                 return PlantCondition.Sana;
-            if (score >= DifficultyCalibrationConfig.ConditionThresholdStressata)
-                return PlantCondition.Stressata;
             if (score >= DifficultyCalibrationConfig.ConditionThresholdAppassita)
                 return PlantCondition.Appassita;
             return PlantCondition.Critica;
@@ -442,19 +626,27 @@ namespace Sporae.Dome.PotSystem.Condition
         
         /// <summary>
         /// Ottiene il nome della condizione in italiano
+        /// NOTA: Stressata rimosso dalla logica, mantenuto solo l'enum per retrocompatibilità
         /// </summary>
         public static string GetConditionName(PlantCondition condition, bool isOverwatering = false)
         {
-            if (isOverwatering && condition == PlantCondition.Stressata)
+            // Overwatering ora forza "Sana" (con i nuovi threshold, score >= 40 → Sana)
+            if (isOverwatering && condition == PlantCondition.Sana)
             {
-                return "Stressata (Overwatering)";
+                return "Sana (Overwatering)";
+            }
+            
+            // Gestione retrocompatibilità: se per qualche motivo arriva Stressata (dati salvati vecchi), mostra "Sana"
+            // Questo può accadere solo con dati salvati vecchi, il sistema non genera più Stressata
+            if (condition == PlantCondition.Stressata)
+            {
+                return "Sana";  // Retrocompatibilità: Stressata → Sana
             }
             
             return condition switch
             {
                 PlantCondition.Rigogliosa => "Rigogliosa",
                 PlantCondition.Sana => "Sana",
-                PlantCondition.Stressata => "Stressata",
                 PlantCondition.Appassita => "Appassita",
                 PlantCondition.Critica => "Critica",
                 _ => "Sconosciuta"

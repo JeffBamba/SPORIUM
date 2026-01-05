@@ -2426,11 +2426,13 @@ namespace _Project
                         conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
                         
                         // Colore in base alla condizione
+                        // NOTA: Stressata rimosso dalla logica, mantenuto solo l'enum per retrocompatibilità
+                        // Se arriva Stressata (dati vecchi), viene mappato a Sana
                         _growthLabelText.color = condition switch
                         {
                             PlantCondition.Rigogliosa => new Color(0f, 0.5f, 0f),      // Verde scuro
                             PlantCondition.Sana => new Color(0f, 0.8f, 0f),          // Verde
-                            PlantCondition.Stressata => new Color(1f, 0.8f, 0f),      // Giallo
+                            PlantCondition.Stressata => new Color(0f, 0.8f, 0f),      // Verde (retrocompatibilità: Stressata → Sana)
                             PlantCondition.Appassita => new Color(1f, 0.5f, 0f),     // Arancione
                             PlantCondition.Critica => new Color(0.8f, 0f, 0f),        // Rosso
                             _ => Color.white

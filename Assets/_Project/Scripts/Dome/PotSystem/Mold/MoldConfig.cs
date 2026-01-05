@@ -20,13 +20,13 @@ namespace Sporae.Dome.PotSystem.Mold
         public int criticalRiskThreshold = 3;
         
         [Header("Fattori Rischio")]
-        [Tooltip("Giorni consecutivi overwatering per +1 rischio")]
+        [Tooltip("Giorni consecutivi overwatering prima che inizi il rischio muffe. Dopo questa soglia, ogni giorno aggiuntivo aumenta il livello di 1 (es. soglia 3: 4 giorni = Level 1, 5 giorni = Level 2, 6 giorni = Level 3)")]
         public int overwateringDaysThreshold = 3;
         
-        [Tooltip("Valore pH acido per +1 rischio (≤-20)")]
+        [Tooltip("Valore pH acido per +1 rischio (≤-20) - DEPRECATO: non più usato nel calcolo")]
         public float acidicPhThreshold = -20f;
         
-        [Tooltip("Accumulo rischio per giorno senza potatura (es. 0.5 per giorno)")]
+        [Tooltip("Accumulo rischio per giorno senza potatura (es. 0.5 per giorno) - DEPRECATO: non più usato nel calcolo")]
         public float pruningNeglectAccumulation = 0.5f;
         
         [Header("Effetti Infestazione")]

@@ -24,9 +24,9 @@ MonoBehaviour:
   optimalPhMax: -50
   stageRequirements:
   - stage: 1
-    hydrationMin: 25
+    hydrationMin: 20
     hydrationMed: 40
-    hydrationMax: 55
+    hydrationMax: 60
     requiredLed:
       hasValue: 0
       value: 0
@@ -34,13 +34,13 @@ MonoBehaviour:
     lightMed: 50
     lightMax: 100
     fertilizerMin: 60
-    fertilizerMed: 75
+    fertilizerMed: 80
     fertilizerMax: 90
     durationDays: 2
     notes: "Pianta Evil pi\xF9 tollerante"
   - stage: 2
     hydrationMin: 30
-    hydrationMed: 45
+    hydrationMed: 50
     hydrationMax: 60
     requiredLed:
       hasValue: 0
@@ -69,9 +69,9 @@ MonoBehaviour:
     durationDays: 3
     notes: Crescita Evil, Blue LED accelera
   - stage: 4
-    hydrationMin: 35
+    hydrationMin: 30
     hydrationMed: 50
-    hydrationMax: 65
+    hydrationMax: 70
     requiredLed:
       hasValue: 1
       value: 1
@@ -85,7 +85,7 @@ MonoBehaviour:
     notes: Fioritura Evil, Red LED richiesto
   - stage: 5
     hydrationMin: 0
-    hydrationMed: 45
+    hydrationMed: 50
     hydrationMax: 100
     requiredLed:
       hasValue: 0
@@ -100,7 +100,7 @@ MonoBehaviour:
     notes: Raccolta Evil, tollerante a condizioni variabili
   - stage: 6
     hydrationMin: 0
-    hydrationMed: 40
+    hydrationMed: 50
     hydrationMax: 100
     requiredLed:
       hasValue: 0

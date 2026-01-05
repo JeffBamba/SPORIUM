@@ -1,6 +1,8 @@
 using System;
 using Sporae.Dome.PotSystem.Growth;
 using UnityEngine;
+using System.IO;
+using Sporae.DevTools;
 
 /// <summary>
 /// Modello dati per lo stato di un vaso.
@@ -70,7 +72,7 @@ public class PotStateModel
     public int ConditionScore = 50;  // Score neutro di default
     [Tooltip("Score del giorno precedente (per calcolo forecast)")]
     public int PreviousDayConditionScore = -1;  // -1 se non disponibile
-    [Tooltip("Condizione attuale (Rigogliosa/Sana/Stressata/Appassita/Critica)")]
+    [Tooltip("Condizione attuale (Rigogliosa/Sana/Appassita/Critica) - Stressata rimosso dalla logica, mantenuto solo enum per retrocompatibilità")]
     public int ConditionLabel = 1;  // Default: Sana (enum PlantCondition)
     [Tooltip("Direzione forecast (Up/Stable/Down)")]
     public int ForecastDirection = 1;  // Default: Stable (enum ForecastDirection)
@@ -425,22 +427,81 @@ public class PotStateModel
     public void SetLedSystemState(LedSystemState newState)
     {
         LedSystemState oldState = LedSystemState;
+        int oldBlueDays = DaysLedBlueConsecutive;
+        int oldRedDays = DaysLedRedConsecutive;
+        
+        // DEBUG_SAFE_FIX: Non fare nulla se lo stato non è cambiato
+        // Questo evita reset inutili dei contatori quando SetLedSystemState viene chiamato con lo stesso stato
+        if (oldState == newState)
+        {
+            // Stato non cambiato: non fare nulla, mantieni i contatori
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: SetLedSystemState chiamato con stesso stato ({oldState}), nessun reset");
+            return;
+        }
+        
         LedSystemState = newState;
         
         // Reset contatori SOLO se cambiato tipo (Blue ↔ Red)
         // NON resettare quando si spegne (Off) per permettere decrescita graduale dello stress
-        if (newState == LedSystemState.Blue)
+        // DEBUG_SAFE_FIX: Reset solo se si cambia da un tipo LED all'altro (Blue ↔ Red)
+        // NON resettare se si passa da Off a Blue/Red (i contatori partono da 0 comunque)
+        if (newState == LedSystemState.Blue && oldState == LedSystemState.Red)
         {
-            // Cambiato a Blue: reset Red (cambio tipo)
+            // Cambiato da Red a Blue: reset Red (cambio tipo)
             DaysLedRedConsecutive = 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio Red → Blue, reset Red counter (Blue mantiene {DaysLedBlueConsecutive})");
         }
-        else if (newState == LedSystemState.Red)
+        else if (newState == LedSystemState.Red && oldState == LedSystemState.Blue)
         {
-            // Cambiato a Red: reset Blue (cambio tipo)
+            // Cambiato da Blue a Red: reset Blue (cambio tipo)
             DaysLedBlueConsecutive = 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio Blue → Red, reset Blue counter (Red mantiene {DaysLedRedConsecutive})");
+        }
+        else if (newState == LedSystemState.Off)
+        {
+            // Cambiato a Off: NON resettare i contatori!
+            // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio a Off, mantengo contatori (Blue: {DaysLedBlueConsecutive}, Red: {DaysLedRedConsecutive})");
+        }
+        else if ((newState == LedSystemState.Blue || newState == LedSystemState.Red) && oldState == LedSystemState.Off)
+        {
+            // Cambiato da Off a Blue/Red: NON resettare i contatori esistenti
+            // I contatori verranno incrementati a fine giornata
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio Off → {newState}, mantengo contatori (Blue: {DaysLedBlueConsecutive}, Red: {DaysLedRedConsecutive})");
         }
         // Se newState == Off: NON resettare i contatori!
         // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
+        
+        // #region agent log
+        // DEBUG: Log cambio stato LED (per tracciare azzeramenti)
+        try
+        {
+            string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
+            var logEntry = new
+            {
+                id = $"log_{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
+                timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                location = "PotStateModel:SetLedSystemState",
+                message = $"LED State Changed - PotId={PotId}",
+                data = new {
+                    potId = PotId,
+                    oldState = oldState.ToString(),
+                    newState = newState.ToString(),
+                    oldBlueDays = oldBlueDays,
+                    newBlueDays = DaysLedBlueConsecutive,
+                    oldRedDays = oldRedDays,
+                    newRedDays = DaysLedRedConsecutive,
+                    wasReset = (oldBlueDays > 0 && DaysLedBlueConsecutive == 0) || (oldRedDays > 0 && DaysLedRedConsecutive == 0)
+                },
+                sessionId = "debug-session",
+                runId = "debug",
+                hypothesisId = "G"
+            };
+            string jsonLine = JsonUtility.ToJson(logEntry) + System.Environment.NewLine;
+            System.IO.File.AppendAllText(logPath, jsonLine);
+        }
+        catch { }
+        // #endregion
     }
     
     /// <summary>
@@ -462,10 +523,23 @@ public class PotStateModel
     /// </summary>
     public void IncrementConsecutiveLedDays()
     {
+        int oldBlueDays = DaysLedBlueConsecutive;
+        int oldRedDays = DaysLedRedConsecutive;
+        
         if (LedSystemState == LedSystemState.Blue)
+        {
             DaysLedBlueConsecutive++;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_INCREMENT] {PotId}: Increment Blue counter: {oldBlueDays} → {DaysLedBlueConsecutive}");
+        }
         else if (LedSystemState == LedSystemState.Red)
+        {
             DaysLedRedConsecutive++;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_INCREMENT] {PotId}: Increment Red counter: {oldRedDays} → {DaysLedRedConsecutive}");
+        }
+        else
+        {
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_INCREMENT] {PotId}: LED è Off, nessun incremento (Blue: {DaysLedBlueConsecutive}, Red: {DaysLedRedConsecutive})");
+        }
         // Off non incrementa
     }
     

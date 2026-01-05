@@ -1012,9 +1012,18 @@ namespace Sporae.DevTools
                 GUI.Label(new Rect(10f, relativeY, 200f, 25f), 
                     $"Mold Risk Level: {potState.MoldRiskLevel} ({moldRiskName})", labelStyle);
                 GUI.Label(new Rect(220f, relativeY, 200f, 25f), 
-                    $"Days w/o Pruning: {potState.DaysWithoutPruning}", labelStyle);
-                GUI.Label(new Rect(430f, relativeY, 200f, 25f), 
                     $"Days Overwatering: {potState.DaysOverwateringConsecutive}", labelStyle);
+                if (_moldConfig != null)
+                {
+                    GUI.Label(new Rect(430f, relativeY, 200f, 25f), 
+                        $"Threshold: {_moldConfig.overwateringDaysThreshold} giorni", labelStyle);
+                }
+                relativeY += 30f;
+                
+                // NOTA: Mold Risk ora calcolato SOLO da overwatering (1 livello per ogni giorno oltre soglia)
+                // Days w/o Pruning non influisce più sul calcolo
+                GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
+                    $"Days w/o Pruning: {potState.DaysWithoutPruning} (non più usato per Mold Risk)", labelStyle);
                 relativeY += 30f;
                 
                 // Calcola rischio in tempo reale se possibile
@@ -1023,8 +1032,9 @@ namespace Sporae.DevTools
                     var moldPlantData = potState.GetPlantData();
                     float moldRisk = MoldSystem.CalculateMoldRisk(potState, _phSystem, moldPlantData, _moldConfig);
                     int calculatedLevel = MoldSystem.GetMoldRiskLevel(potState, _phSystem, moldPlantData, _moldConfig);
-                    GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
-                        $"Rischio calcolato: {moldRisk:F1} (Level: {calculatedLevel})", labelStyle);
+                    int daysOverThreshold = Mathf.Max(0, potState.DaysOverwateringConsecutive - _moldConfig.overwateringDaysThreshold);
+                    GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
+                        $"Rischio calcolato: {moldRisk:F1} (Level: {calculatedLevel}) - Giorni oltre soglia: {daysOverThreshold}", labelStyle);
                     relativeY += 30f;
                 }
                 

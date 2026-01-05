@@ -829,7 +829,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             case 0: return "Empty";
             case 1: return "Seed";
             case 2: return "Sprout";
-            case 3: return "HarvestReady";
+            case 3: return "Growth";  // BUG FIX: Era "HarvestReady", corretto a "Growth"
             case 4: return "Flowering";
             case 5: return "HarvestReady";
             case 6: return "Resting";

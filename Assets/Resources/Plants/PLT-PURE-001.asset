@@ -25,9 +25,9 @@ MonoBehaviour:
   optimalPhMax: 100
   stageRequirements:
   - stage: 1
-    hydrationMin: 35
+    hydrationMin: 30
     hydrationMed: 50
-    hydrationMax: 65
+    hydrationMax: 70
     requiredLed:
       hasValue: 0
       value: 0
@@ -40,9 +40,9 @@ MonoBehaviour:
     durationDays: 2
     notes: Pianta Pure richiede cura attenta
   - stage: 2
-    hydrationMin: 45
-    hydrationMed: 55
-    hydrationMax: 65
+    hydrationMin: 40
+    hydrationMed: 50
+    hydrationMax: 70
     requiredLed:
       hasValue: 1
       value: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
     notes: Germoglio Pure, Blue LED consigliato
   - stage: 3
     hydrationMin: 40
-    hydrationMed: 55
+    hydrationMed: 50
     hydrationMax: 70
     requiredLed:
       hasValue: 1
@@ -70,9 +70,9 @@ MonoBehaviour:
     durationDays: 3
     notes: Crescita Pure, Blue LED richiesto
   - stage: 4
-    hydrationMin: 45
-    hydrationMed: 55
-    hydrationMax: 65
+    hydrationMin: 40
+    hydrationMed: 50
+    hydrationMax: 70
     requiredLed:
       hasValue: 1
       value: 1
@@ -86,7 +86,7 @@ MonoBehaviour:
     notes: Fioritura Pure, Red LED richiesto
   - stage: 5
     hydrationMin: 40
-    hydrationMed: 55
+    hydrationMed: 50
     hydrationMax: 70
     requiredLed:
       hasValue: 0

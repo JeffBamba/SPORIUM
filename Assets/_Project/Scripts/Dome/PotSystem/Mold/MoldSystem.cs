@@ -14,41 +14,23 @@ namespace Sporae.Dome.PotSystem.Mold
     public static class MoldSystem
     {
         /// <summary>
-        /// Calcola rischio muffe (0-3) basato su fattori
+        /// Calcola rischio muffe (0-3) basato SOLO su overwatering prolungato
+        /// 1 livello per ogni giorno oltre la soglia (es. soglia 3: 4 giorni = Level 1, 5 giorni = Level 2, 6 giorni = Level 3)
         /// </summary>
         public static float CalculateMoldRisk(PotStateModel potState, PhSystem phSystem, PlantData plantData, MoldConfig config)
         {
             if (potState == null || config == null)
                 return 0f;
             
-            float risk = 0f;
+            // Calcola giorni oltre la soglia: se soglia è 3, allora:
+            // 3 giorni = 0 (ancora sotto soglia)
+            // 4 giorni = 1 livello (1 giorno oltre)
+            // 5 giorni = 2 livelli (2 giorni oltre)
+            // 6 giorni = 3 livelli (3 giorni oltre)
+            int daysOverThreshold = Mathf.Max(0, potState.DaysOverwateringConsecutive - config.overwateringDaysThreshold);
             
-            // 1. Overwatering prolungato: +1 per giorno oltre soglia
-            if (potState.DaysOverwateringConsecutive >= config.overwateringDaysThreshold)
-            {
-                risk += 1f;
-            }
-            
-            // 2. pH acido (≤-20): +1
-            if (phSystem != null)
-            {
-                float currentPh = phSystem.CurrentPh;
-                if (currentPh <= config.acidicPhThreshold)
-                {
-                    risk += 1f;
-                }
-            }
-            
-            // 3. Piante Evil: +1 bonus rischio
-            if (plantData != null && plantData.Family == PlantFamily.Evil)
-            {
-                risk += 1f;
-            }
-            
-            // 4. Mancata potatura: +0.5 per giorno senza potatura (accumulo)
-            risk += potState.DaysWithoutPruning * config.pruningNeglectAccumulation;
-            
-            return Mathf.Clamp(risk, 0f, 3f);
+            // Clamp a 0-3 (massimo 3 livelli)
+            return Mathf.Clamp(daysOverThreshold, 0f, 3f);
         }
         
         /// <summary>

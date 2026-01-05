@@ -24,7 +24,7 @@ MonoBehaviour:
   stageRequirements:
   - stage: 1
     hydrationMin: 30
-    hydrationMed: 45
+    hydrationMed: 50
     hydrationMax: 60
     requiredLed:
       hasValue: 0
@@ -53,9 +53,9 @@ MonoBehaviour:
     durationDays: 2
     notes: Germoglio attivo
   - stage: 3
-    hydrationMin: 35
-    hydrationMed: 55
-    hydrationMax: 75
+    hydrationMin: 30
+    hydrationMed: 50
+    hydrationMax: 70
     requiredLed:
       hasValue: 1
       value: 0
