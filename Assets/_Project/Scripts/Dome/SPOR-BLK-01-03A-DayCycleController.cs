@@ -37,30 +37,6 @@ public class DayCycleController : MonoBehaviour
     private UINotification _uiNotification;
     private ToastNotificationManager _toastManager;
 
-    // #region agent log
-    // DEBUG: Helper per logging NDJSON
-    private static void LogToDebugFile(string location, string message, object data, string hypothesisId = null, string runId = "debug")
-    {
-        try
-        {
-            string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-            var logEntry = new
-            {
-                id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                location = location,
-                message = message,
-                data = data,
-                sessionId = "debug-session",
-                runId = runId,
-                hypothesisId = hypothesisId
-            };
-            string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
-            File.AppendAllText(logPath, jsonLine);
-        }
-        catch { }
-    }
-    // #endregion
 
     private void Awake()
     {
@@ -505,14 +481,16 @@ public class DayCycleController : MonoBehaviour
         var pointsResult = GrowthPointsCalculator.CalculateDailyPoints(
             pot, plantData, _potSystemConfig);
         
-        // #region agent log
         // DEBUG: Log calcolo punti giornalieri (per capire perché DaysConsecutiveOptimal non incrementa)
         PlantStage currentStageForOptimal = (PlantStage)pot.Stage;
         // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
         // perché il fertilizzante è opzionale per questi stadi
         int requiredOptimalPoints = (currentStageForOptimal == PlantStage.Seed || currentStageForOptimal == PlantStage.Sprout) ? 2 : 3;
         int oldDaysConsecutiveOptimal = pot.DaysConsecutiveOptimal;
-        LogToDebugFile(
+        
+        // Log critico: Calcolo punti giornalieri completo
+        SporiumLogger.LogDebugWithLocation(
+            LogCategory.Pot,
             "DayCycleController:ResolveGrowthForPot:POINTS_CALCULATION",
             $"Calcolo Punti Giornalieri - PotId={pot.PotId}, Day={dayIndex}",
             new {
@@ -531,9 +509,9 @@ public class DayCycleController : MonoBehaviour
                 oldDaysConsecutiveOptimal = oldDaysConsecutiveOptimal,
                 willIncrement = pointsResult.TotalPoints >= requiredOptimalPoints
             },
-            "F"
+            "F",
+            "debug"
         );
-        // #endregion
         
         // BLK-03.01-T2: Aggiorna tracking giorni consecutivi ottimali
         // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
@@ -554,14 +532,15 @@ public class DayCycleController : MonoBehaviour
             pot.DayOptimalParametersStarted = -1;
         }
         
-        // #region agent log
         // DEBUG: Log dopo aggiornamento DaysConsecutiveOptimal
         bool wasIncremented = pointsResult.TotalPoints >= requiredOptimalPoints;
         bool wasReset = pointsResult.TotalPoints < requiredOptimalPoints;
         
         SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_OPTIMAL_DAYS] {pot.PotId} Day={dayIndex}: Stage={currentStageForOptimal}, Points={pointsResult.TotalPoints}/{requiredOptimalPoints} (W={pointsResult.WaterPoint}, L={pointsResult.LightPoint}, F={pointsResult.FertilizerPoint}), OldDays={oldDaysConsecutiveOptimal} → NewDays={pot.DaysConsecutiveOptimal}, Incremented={wasIncremented}, Reset={wasReset}");
         
-        LogToDebugFile(
+        // Log critico: Tracking giorni ottimali consecutivi
+        SporiumLogger.LogDebugWithLocation(
+            LogCategory.Pot,
             "DayCycleController:ResolveGrowthForPot:OPTIMAL_DAYS_UPDATE",
             $"Aggiornamento Giorni Ottimali - PotId={pot.PotId}, Day={dayIndex}",
             new {
@@ -573,9 +552,9 @@ public class DayCycleController : MonoBehaviour
                 wasIncremented = wasIncremented,
                 wasReset = wasReset
             },
-            "F"
+            "F",
+            "debug"
         );
-        // #endregion
         
         if (enableDebugLogs)
         {
@@ -848,7 +827,6 @@ public class DayCycleController : MonoBehaviour
             requirementsMet = !isBlockedByCondition && !isBlockedByMold &&
                              hydrationOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
-            // #region agent log
             // DEBUG: Log requisiti avanzamento (per capire perché non avanza)
             int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
             bool blocksAdvancement = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
@@ -862,7 +840,9 @@ public class DayCycleController : MonoBehaviour
                 SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_ADVANCEMENT_FAILED] {pot.PotId} Day={dayIndex} Stage={currentStage}: AVANZAMENTO BLOCCATO - Hydration={hydrationOk}, LED={ledOk}, Duration={durationOk}, OptimalDays={optimalDaysOk}, Fertilizer={fertilizerOk}, Points={pointsOk}, BlockedByCondition={isBlockedByCondition}, BlockedByMold={isBlockedByMold}");
             }
             
-            LogToDebugFile(
+            // Log critico: Verifica requisiti avanzamento stadio
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "DayCycleController:ResolveGrowthForPot:ADVANCEMENT_CHECK",
                 $"Verifica Avanzamento - PotId={pot.PotId}, Day={dayIndex}",
                 new {
@@ -886,9 +866,9 @@ public class DayCycleController : MonoBehaviour
                     blocksAdvancement = blocksAdvancement,
                     requirementsMet = requirementsMet
                 },
-                "H"
+                "H",
+                "debug"
             );
-            // #endregion
             
             if (enableDebugLogs)
             {
@@ -1352,23 +1332,7 @@ public class DayCycleController : MonoBehaviour
         int oldBlueDays = pot.DaysLedBlueConsecutive;
         int oldRedDays = pot.DaysLedRedConsecutive;
         
-        // #region agent log
-        // DEBUG: Log stato LED prima di applicare effetti
         int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
-        LogToDebugFile(
-            "DayCycleController:ApplyLedSystemEffectsForPot:START",
-            $"LED Effects Start - PotId={pot.PotId}, Day={currentDay}",
-            new {
-                potId = pot.PotId,
-                day = currentDay,
-                ledSystemState = pot.LedSystemState.ToString(),
-                daysLedBlueConsecutive = oldBlueDays,
-                daysLedRedConsecutive = oldRedDays,
-                consecutiveDaysBefore = pot.GetConsecutiveLedDays()
-            },
-            "G"
-        );
-        // #endregion
         
         if (pot.LedSystemState == LedSystemState.Off)
         {
@@ -1388,24 +1352,6 @@ public class DayCycleController : MonoBehaviour
                 pot.DaysLedRedConsecutive = Mathf.Max(1, pot.DaysLedRedConsecutive - 1); // Mantieni almeno 1
             }
             
-            // #region agent log
-            // DEBUG: Log decadimento contatori quando LED è spento
-            LogToDebugFile(
-                "DayCycleController:ApplyLedSystemEffectsForPot:LED_OFF_DECAY",
-                $"LED OFF Decay - PotId={pot.PotId}, Day={currentDay}",
-                new {
-                    potId = pot.PotId,
-                    day = currentDay,
-                    oldBlueDays = oldBlueDays,
-                    newBlueDays = pot.DaysLedBlueConsecutive,
-                    oldRedDays = oldRedDays,
-                    newRedDays = pot.DaysLedRedConsecutive,
-                    consecutiveDaysAfter = pot.GetConsecutiveLedDays(),
-                    wasReset = (oldBlueDays > 0 && pot.DaysLedBlueConsecutive == 0) || (oldRedDays > 0 && pot.DaysLedRedConsecutive == 0)
-                },
-                "G"
-            );
-            // #endregion
             
             if (enableDebugLogs && (hadBlueDays || hadRedDays))
             {
@@ -1417,25 +1363,6 @@ public class DayCycleController : MonoBehaviour
         // Incrementa contatori giorni consecutivi
         pot.IncrementConsecutiveLedDays();
         int consecutiveDays = pot.GetConsecutiveLedDays();
-        
-        // #region agent log
-        // DEBUG: Log incremento contatori quando LED è acceso
-        LogToDebugFile(
-            "DayCycleController:ApplyLedSystemEffectsForPot:LED_ON_INCREMENT",
-            $"LED ON Increment - PotId={pot.PotId}, Day={currentDay}",
-            new {
-                potId = pot.PotId,
-                day = currentDay,
-                ledSystemState = pot.LedSystemState.ToString(),
-                oldBlueDays = oldBlueDays,
-                newBlueDays = pot.DaysLedBlueConsecutive,
-                oldRedDays = oldRedDays,
-                newRedDays = pot.DaysLedRedConsecutive,
-                consecutiveDaysAfter = consecutiveDays
-            },
-            "G"
-        );
-        // #endregion
         
         // Calcola scaling effetti
         float effectMultiplier = GetLedEffectMultiplier(consecutiveDays);
@@ -2012,7 +1939,6 @@ public class DayCycleController : MonoBehaviour
                 continue;
             }
             
-            // #region agent log
             // DEBUG: Log dati INPUT prima del calcolo (Ipotesi A: parametri diversi da UI)
             int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
@@ -2023,7 +1949,9 @@ public class DayCycleController : MonoBehaviour
             
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_INPUT] {pot.PotId} Day={dayIndex}: Score={pot.ConditionScore}, PrevScore={pot.PreviousDayConditionScore}, Cond={pot.ConditionLabel}, Hydration={pot.Hydration}/{maxHydration} ({hydrationPercent}%), pH={currentPh:F1}, Overwatering={isOverwatering}, WateringON={pot.WateringSystemOn}, LED={pot.LedSystemState}, ConsecutiveDays={consecutiveLedDays}, Stress%={stressPercentage:F1}, Stage={pot.Stage}, Fertilizer={pot.FertilizerLevel}, MoldRisk={pot.MoldRiskLevel}, Infested={pot.IsInfested}");
             
-            LogToDebugFile(
+            // Log critico: Input completo per calcolo condizione
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "DayCycleController:CalculatePlantConditions:INPUT",
                 $"INPUT Calcolo Condizione - PotId={pot.PotId}, Day={dayIndex}",
                 new {
@@ -2048,9 +1976,9 @@ public class DayCycleController : MonoBehaviour
                     plantCode = pot.PlantCode,
                     daysInCurrentStage = pot.DaysInCurrentStage
                 },
-                "A"
+                "A",
+                "debug"
             );
-            // #endregion
             
             // DEBUG: Log dati prima del calcolo
             if (enableDebugLogs)
@@ -2067,7 +1995,6 @@ public class DayCycleController : MonoBehaviour
                 dayIndex, 
                 previousScore);
             
-            // #region agent log
             // DEBUG: Log OUTPUT dopo calcolo (Ipotesi C: PreviousDayConditionScore non salvato correttamente)
             int oldCondition = pot.ConditionLabel;
             int oldScore = pot.ConditionScore;
@@ -2079,7 +2006,9 @@ public class DayCycleController : MonoBehaviour
                 SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_CONDITION_CHANGE] {pot.PotId} Day={dayIndex}: CONDIZIONE CAMBIATA da {oldCondition} (Score={oldScore}) a {(int)result.Condition} (Score={result.Score}), Delta={result.ScoreDelta}");
             }
             
-            LogToDebugFile(
+            // Log critico: Output completo calcolo condizione
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "DayCycleController:CalculatePlantConditions:OUTPUT",
                 $"OUTPUT Calcolo Condizione - PotId={pot.PotId}, Day={dayIndex}",
                 new {
@@ -2095,9 +2024,9 @@ public class DayCycleController : MonoBehaviour
                     isFirstCalculation = isFirstCalculation,
                     contributorsCount = result.Contributors != null ? result.Contributors.Length : 0
                 },
-                "C"
+                "C",
+                "debug"
             );
-            // #endregion
             
             // Salva score precedente prima di aggiornare
             pot.PreviousDayConditionScore = pot.ConditionScore;
@@ -2107,28 +2036,6 @@ public class DayCycleController : MonoBehaviour
             pot.ConditionLabel = (int)result.Condition;
             pot.ForecastDirection = (int)result.Forecast;
             
-            // #region agent log
-            // DEBUG: Log cambio stato (Ipotesi E: cambio inaspettato)
-            if (oldCondition != pot.ConditionLabel)
-            {
-                LogToDebugFile(
-                    "DayCycleController:CalculatePlantConditions:STATE_CHANGE",
-                    $"CAMBIO STATO - PotId={pot.PotId}, Day={dayIndex}",
-                    new {
-                        potId = pot.PotId,
-                        day = dayIndex,
-                        oldCondition = oldCondition,
-                        newCondition = pot.ConditionLabel,
-                        oldScore = oldScore,
-                        newScore = result.Score,
-                        scoreDelta = result.ScoreDelta,
-                        thresholdSana = DifficultyCalibrationConfig.ConditionThresholdSana,
-                        thresholdAppassita = DifficultyCalibrationConfig.ConditionThresholdAppassita
-                    },
-                    "E"
-                );
-            }
-            // #endregion
             
             // Verifica cambio condizione per notifica Toast
             // Mostra il toast solo se il delta score è almeno ±20 (20%) per evitare spam su variazioni minime

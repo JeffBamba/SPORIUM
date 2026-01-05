@@ -41,6 +41,10 @@ namespace Sporae.DevTools
         private static List<LogEntry> _logHistory = new List<LogEntry>();
         private const int MAX_HISTORY = 1000;
         
+        // File logging NDJSON (disabilitato di default per performance)
+        private static bool _enableImmediateFileLogging = false;
+        private static string _immediateLogFilePath = null;
+        
         static SporiumLogger()
         {
             // Inizializza tutte le categorie come abilitate
@@ -343,6 +347,87 @@ namespace Sporae.DevTools
         public static void LogAudio(LogLevel level, string message, object data = null)
         {
             Log(level, LogCategory.Audio, message, data);
+        }
+        
+        // ============================================
+        // FILE LOGGING NDJSON (OPZIONALE)
+        // ============================================
+        
+        /// <summary>
+        /// Abilita/disabilita la scrittura immediata su file NDJSON.
+        /// Disabilitato di default per evitare overhead di performance.
+        /// Abilitare solo quando serve debugging approfondito dei loop crescita.
+        /// </summary>
+        /// <param name="enabled">True per abilitare file logging, false per disabilitare</param>
+        /// <param name="filePath">Path del file NDJSON (opzionale, usa default se null)</param>
+        public static void SetImmediateFileLogging(bool enabled, string filePath = null)
+        {
+            _enableImmediateFileLogging = enabled;
+            if (enabled)
+            {
+                _immediateLogFilePath = filePath ?? Path.Combine(Application.persistentDataPath, "sporium_debug.ndjson");
+            }
+            else
+            {
+                _immediateLogFilePath = null;
+            }
+        }
+        
+        /// <summary>
+        /// Log debug con supporto per location, hypothesisId e runId.
+        /// Utile per debugging approfondito dei loop crescita delle piante.
+        /// Salva sempre in memoria (history) e opzionalmente su file NDJSON se abilitato.
+        /// </summary>
+        /// <param name="category">Categoria del log</param>
+        /// <param name="location">Location nel codice (es: "DayCycleController:ResolveGrowthForPot:POINTS_CALCULATION")</param>
+        /// <param name="message">Messaggio del log</param>
+        /// <param name="data">Dati aggiuntivi (oggetto serializzabile)</param>
+        /// <param name="hypothesisId">ID ipotesi di debug (opzionale)</param>
+        /// <param name="runId">ID run di test (opzionale)</param>
+        public static void LogDebugWithLocation(LogCategory category, string location, string message, object data = null, string hypothesisId = null, string runId = null)
+        {
+            // Log normale in SporiumLogger (salva in memoria e console)
+            LogDebug(category, message, data);
+            
+            // Se file logging abilitato, scrivi anche su file NDJSON
+            if (_enableImmediateFileLogging)
+            {
+                WriteToNDJSONFile(location, message, data, hypothesisId, runId, LogLevel.Debug, category);
+            }
+        }
+        
+        /// <summary>
+        /// Scrive un log su file NDJSON in formato compatibile con LogToDebugFile esistente.
+        /// Formato: una riga JSON per entry (NDJSON).
+        /// </summary>
+        private static void WriteToNDJSONFile(string location, string message, object data, string hypothesisId, string runId, LogLevel level, LogCategory category)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_immediateLogFilePath))
+                    return;
+                
+                var logEntry = new
+                {
+                    id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
+                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    location = location,
+                    message = message,
+                    data = data,
+                    level = level.ToString(),
+                    category = category.ToString(),
+                    sessionId = "sporium-session",
+                    runId = runId ?? "default",
+                    hypothesisId = hypothesisId
+                };
+                
+                string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
+                File.AppendAllText(_immediateLogFilePath, jsonLine);
+            }
+            catch
+            {
+                // Silently fail per non interrompere il gioco
+            }
         }
     }
 }

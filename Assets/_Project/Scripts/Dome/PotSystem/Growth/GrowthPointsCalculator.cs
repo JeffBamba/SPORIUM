@@ -1,7 +1,5 @@
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
-using System.IO;
-using System;
 using Sporae.DevTools;
 
 namespace Sporae.Dome.PotSystem.Growth
@@ -11,30 +9,6 @@ namespace Sporae.Dome.PotSystem.Growth
     /// </summary>
     public static class GrowthPointsCalculator
     {
-        // #region agent log
-        // DEBUG: Helper per logging NDJSON
-        private static void LogToDebugFile(string location, string message, object data, string hypothesisId = null, string runId = "debug")
-        {
-            try
-            {
-                string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-                var logEntry = new
-                {
-                    id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
-                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    location = location,
-                    message = message,
-                    data = data,
-                    sessionId = "debug-session",
-                    runId = runId,
-                    hypothesisId = hypothesisId
-                };
-                string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
-                File.AppendAllText(logPath, jsonLine);
-            }
-            catch { }
-        }
-        // #endregion
         
         /// <summary>
         /// Calcola e assegna punti giornalieri basati su valori nel range ideale
@@ -66,28 +40,8 @@ namespace Sporae.Dome.PotSystem.Growth
             int hydrationPercent = maxHydration > 0 ? 
                 Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
             
-            // #region agent log
             bool hydrationInRange = stageReq.IsHydrationInRange(hydrationPercent);
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_POINTS] {pot.PotId} Water: {pot.Hydration}/{maxHydration} ({hydrationPercent}%), Range={stageReq.hydrationMin}-{stageReq.hydrationMax}, InRange={hydrationInRange}, WateringSystemOn={pot.WateringSystemOn}");
-            
-            LogToDebugFile(
-                "GrowthPointsCalculator:CalculateDailyPoints:WATER_CHECK",
-                $"Verifica Water Point - PotId={pot.PotId}",
-                new {
-                    potId = pot.PotId,
-                    stage = currentStage.ToString(),
-                    hydration = pot.Hydration,
-                    maxHydration = maxHydration,
-                    hydrationPercent = hydrationPercent,
-                    hydrationMin = stageReq.hydrationMin,
-                    hydrationMax = stageReq.hydrationMax,
-                    hydrationMed = stageReq.hydrationMed,
-                    isInRange = hydrationInRange,
-                    waterPointBefore = result.WaterPoint
-                },
-                "F"
-            );
-            // #endregion
             
             if (hydrationInRange)
             {
@@ -98,25 +52,8 @@ namespace Sporae.Dome.PotSystem.Growth
             // 2. Verifica light nel range ideale (LED corretto + intensità nel range)
             bool lightInRange = IsLightInOptimalRange(pot, plantData, stageReq, potConfig);
             
-            // #region agent log
             bool isLedRequirementMet = stageReq.IsLedRequirementMet(pot.LedSystemState);
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_POINTS] {pot.PotId} Light: LED={pot.LedSystemState}, Required={stageReq.GetRequiredLed()?.ToString() ?? "None"}, Met={isLedRequirementMet}, InRange={lightInRange}");
-            
-            LogToDebugFile(
-                "GrowthPointsCalculator:CalculateDailyPoints:LIGHT_CHECK",
-                $"Verifica Light Point - PotId={pot.PotId}",
-                new {
-                    potId = pot.PotId,
-                    stage = currentStage.ToString(),
-                    ledSystemState = pot.LedSystemState.ToString(),
-                    requiredLed = stageReq.GetRequiredLed()?.ToString() ?? "None",
-                    isLedRequirementMet = isLedRequirementMet,
-                    isLightInRange = lightInRange,
-                    lightPointBefore = result.LightPoint
-                },
-                "F"
-            );
-            // #endregion
             
             if (lightInRange)
             {
@@ -127,25 +64,7 @@ namespace Sporae.Dome.PotSystem.Growth
             // 3. Verifica fertilizer nel range ideale (FertilizerLevel 0-100% nel range)
             bool fertilizerInRange = stageReq.IsFertilizerInRange(pot.FertilizerLevel);
             
-            // #region agent log
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_POINTS] {pot.PotId} Fertilizer: {pot.FertilizerLevel}%, Range={stageReq.fertilizerMin}-{stageReq.fertilizerMax}, InRange={fertilizerInRange}");
-            
-            LogToDebugFile(
-                "GrowthPointsCalculator:CalculateDailyPoints:FERTILIZER_CHECK",
-                $"Verifica Fertilizer Point - PotId={pot.PotId}",
-                new {
-                    potId = pot.PotId,
-                    stage = currentStage.ToString(),
-                    fertilizerLevel = pot.FertilizerLevel,
-                    fertilizerMin = stageReq.fertilizerMin,
-                    fertilizerMax = stageReq.fertilizerMax,
-                    fertilizerMed = stageReq.fertilizerMed,
-                    isInRange = fertilizerInRange,
-                    fertilizerPointBefore = result.FertilizerPoint
-                },
-                "F"
-            );
-            // #endregion
             
             if (fertilizerInRange)
             {
@@ -153,10 +72,11 @@ namespace Sporae.Dome.PotSystem.Growth
                 pot.GrowthPointsFertilizer += 1;
             }
             
-            // #region agent log
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_POINTS] {pot.PotId} RESULT: W={result.WaterPoint}, L={result.LightPoint}, F={result.FertilizerPoint}, Total={result.TotalPoints}, Accumulated: W={pot.GrowthPointsWater}, L={pot.GrowthPointsLight}, F={pot.GrowthPointsFertilizer}");
             
-            LogToDebugFile(
+            // Log critico: Risultato finale calcolo punti
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "GrowthPointsCalculator:CalculateDailyPoints:RESULT",
                 $"Risultato Calcolo Punti - PotId={pot.PotId}",
                 new {
@@ -170,9 +90,9 @@ namespace Sporae.Dome.PotSystem.Growth
                     growthPointsLight = pot.GrowthPointsLight,
                     growthPointsFertilizer = pot.GrowthPointsFertilizer
                 },
-                "F"
+                "F",
+                "debug"
             );
-            // #endregion
             
             return result;
         }

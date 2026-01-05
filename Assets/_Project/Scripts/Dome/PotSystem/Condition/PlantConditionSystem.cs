@@ -6,8 +6,6 @@ using Sporae.Dome.PotSystem.Mold;
 using _Project; // Per PhSystem
 using _Project.Sporae.Core;
 using Sporae.DevTools; // Per DifficultyCalibrationConfig
-using System.IO;
-using System;
 
 namespace Sporae.Dome.PotSystem.Condition
 {
@@ -17,30 +15,6 @@ namespace Sporae.Dome.PotSystem.Condition
     /// </summary>
     public static class PlantConditionSystem
     {
-        // #region agent log
-        // DEBUG: Helper per logging NDJSON
-        private static void LogToDebugFile(string location, string message, object data, string hypothesisId = null, string runId = "debug")
-        {
-            try
-            {
-                string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-                var logEntry = new
-                {
-                    id = $"log_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid().ToString().Substring(0, 8)}",
-                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    location = location,
-                    message = message,
-                    data = data,
-                    sessionId = "debug-session",
-                    runId = runId,
-                    hypothesisId = hypothesisId
-                };
-                string jsonLine = JsonUtility.ToJson(logEntry) + Environment.NewLine;
-                File.AppendAllText(logPath, jsonLine);
-            }
-            catch { }
-        }
-        // #endregion
         
         // Parametri ora configurabili via DifficultyCalibrationConfig
         
@@ -72,12 +46,14 @@ namespace Sporae.Dome.PotSystem.Condition
             int score = DifficultyCalibrationConfig.BaseScore;
             List<ConditionContributor> contributors = new List<ConditionContributor>();
             
-            // #region agent log
             // DEBUG: Log inizio calcolo (Ipotesi D: problema con stress percentage)
             int consecutiveDays = potState.GetConsecutiveLedDays();
             int maxDaysForFullStress = potConfig != null ? potConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-            LogToDebugFile(
+            
+            // Log critico: Inizio calcolo condizione
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "PlantConditionSystem:CalculateCondition:START",
                 $"START Calcolo - PotId={potState.PotId}, Day={currentDay}",
                 new {
@@ -89,9 +65,9 @@ namespace Sporae.Dome.PotSystem.Condition
                     stressPercentage = stressPercentage,
                     previousDayScore = previousDayScore
                 },
-                "D"
+                "D",
+                "debug"
             );
-            // #endregion
             
             // === CONTRIBUTI POSITIVI ===
             
@@ -114,25 +90,7 @@ namespace Sporae.Dome.PotSystem.Condition
                 }
             }
             
-            // #region agent log
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_HYDRATION] {potState.PotId} Day={currentDay}: Hydration={potState.Hydration}/{maxHydration} ({hydrationPercent}%), IsOptimal={isHydrationOptimal}, IsInAcceptableRange={isHydrationInAcceptableRange}, WateringSystemOn={potState.WateringSystemOn}");
-            
-            LogToDebugFile(
-                "PlantConditionSystem:CalculateCondition:HYDRATION",
-                $"HYDRATION Check - PotId={potState.PotId}",
-                new {
-                    potId = potState.PotId,
-                    hydration = potState.Hydration,
-                    maxHydration = maxHydration,
-                    hydrationPercent = hydrationPercent,
-                    isHydrationOptimal = isHydrationOptimal,
-                    isHydrationInAcceptableRange = isHydrationInAcceptableRange,
-                    wateringSystemOn = potState.WateringSystemOn,
-                    scoreBefore = score
-                },
-                "A"
-            );
-            // #endregion
             int scoreBeforeHydration = score;
             if (isHydrationOptimal)
             {
@@ -237,20 +195,6 @@ namespace Sporae.Dome.PotSystem.Condition
                 moldRiskLevel = MoldSystem.GetMoldRiskLevel(potState, phSystem, plantData, moldConfig);
             }
             bool hasNoMoldRisk = (moldRiskLevel == 0);
-            // #region agent log
-            LogToDebugFile(
-                "PlantConditionSystem:CalculateCondition:MOLD",
-                $"MOLD Check - PotId={potState.PotId}",
-                new {
-                    potId = potState.PotId,
-                    moldRiskLevel = moldRiskLevel,
-                    hasNoMoldRisk = hasNoMoldRisk,
-                    isInfested = potState.IsInfested,
-                    scoreBefore = score
-                },
-                "B"
-            );
-            // #endregion
             if (hasNoMoldRisk)
             {
                 score += DifficultyCalibrationConfig.BonusNoMold;
@@ -340,22 +284,6 @@ namespace Sporae.Dome.PotSystem.Condition
                 float currentPh = phSystem.CurrentPh;
                 PhSystem.PhBand phBand = phSystem.EvaluateState();
                 
-                // #region agent log
-                LogToDebugFile(
-                    "PlantConditionSystem:CalculateCondition:PH",
-                    $"PH Check - PotId={potState.PotId}",
-                    new {
-                        potId = potState.PotId,
-                        currentPh = currentPh,
-                        phBand = phBand.ToString(),
-                        plantFamily = plantData.Family.ToString(),
-                        isPhInOptimalRange = plantData.IsPhInOptimalRange(currentPh),
-                        phDistanceFromOptimal = plantData.IsPhInOptimalRange(currentPh) ? 0f : plantData.GetPhDistanceFromOptimal(currentPh),
-                        scoreBefore = score
-                    },
-                    "E"
-                );
-                // #endregion
                 
                 // Pure preferisce basico, Evil preferisce acido
                 if (plantData.Family == PlantFamily.Pure && (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid))
@@ -456,7 +384,6 @@ namespace Sporae.Dome.PotSystem.Condition
             int scoreBeforeClamp = score;
             score = Mathf.Clamp(score, 0, 100);
             
-            // #region agent log
             // DEBUG: Log finale con tutti i contributi (Ipotesi B: malus nascosto)
             // Usa SporiumLogger per assicurarsi che i log vengano scritti
             if (potState != null && potState.PotId != null)
@@ -469,7 +396,9 @@ namespace Sporae.Dome.PotSystem.Condition
                 }
             }
             
-            LogToDebugFile(
+            // Log critico: Risultato finale calcolo condizione
+            SporiumLogger.LogDebugWithLocation(
+                LogCategory.Pot,
                 "PlantConditionSystem:CalculateCondition:FINAL",
                 $"FINAL Score - PotId={potState.PotId}",
                 new {
@@ -483,9 +412,9 @@ namespace Sporae.Dome.PotSystem.Condition
                     thresholdSana = DifficultyCalibrationConfig.ConditionThresholdSana,
                     thresholdAppassita = DifficultyCalibrationConfig.ConditionThresholdAppassita
                 },
-                "B"
+                "B",
+                "debug"
             );
-            // #endregion
             
             // DEBUG: Log dettagliato del calcolo
             #if UNITY_EDITOR || DEVELOPMENT_BUILD

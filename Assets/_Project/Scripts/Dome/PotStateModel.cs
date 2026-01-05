@@ -472,36 +472,6 @@ public class PotStateModel
         // Se newState == Off: NON resettare i contatori!
         // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
         
-        // #region agent log
-        // DEBUG: Log cambio stato LED (per tracciare azzeramenti)
-        try
-        {
-            string logPath = @"d:\Sporae_Build_Beta\.cursor\debug.log";
-            var logEntry = new
-            {
-                id = $"log_{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
-                timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                location = "PotStateModel:SetLedSystemState",
-                message = $"LED State Changed - PotId={PotId}",
-                data = new {
-                    potId = PotId,
-                    oldState = oldState.ToString(),
-                    newState = newState.ToString(),
-                    oldBlueDays = oldBlueDays,
-                    newBlueDays = DaysLedBlueConsecutive,
-                    oldRedDays = oldRedDays,
-                    newRedDays = DaysLedRedConsecutive,
-                    wasReset = (oldBlueDays > 0 && DaysLedBlueConsecutive == 0) || (oldRedDays > 0 && DaysLedRedConsecutive == 0)
-                },
-                sessionId = "debug-session",
-                runId = "debug",
-                hypothesisId = "G"
-            };
-            string jsonLine = JsonUtility.ToJson(logEntry) + System.Environment.NewLine;
-            System.IO.File.AppendAllText(logPath, jsonLine);
-        }
-        catch { }
-        // #endregion
     }
     
     /// <summary>

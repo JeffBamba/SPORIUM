@@ -131,16 +131,6 @@ namespace _Project
             // Traccia contributo in base alla sorgente (solo il delta del valore base)
             TrackContribution(baseDelta, source);
             
-            // #region agent log
-            try 
-            { 
-                var dataObj = new { currentPh = CurrentPh, actualDelta = actualDelta, oldPh = oldPh, subscribersCount = OnPhChanged?.GetInvocationList()?.Length ?? 0 };
-                string dataJson = JsonUtility.ToJson(dataObj);
-                var logData = $"{{\"location\":\"PhSystem.cs:134\",\"message\":\"ApplyInstantDelta - OnPhChanged invocato\",\"data\":{dataJson},\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}}";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData + "\n"); 
-            } 
-            catch { }
-            // #endregion
             
             OnPhChanged?.Invoke(CurrentPh, actualDelta);
         }
@@ -185,16 +175,6 @@ namespace _Project
             _currentPh = Mathf.Clamp(newPh, MIN_PH, MAX_PH);
             float delta = CurrentPh - oldPh;
             
-            // #region agent log
-            try 
-            { 
-                var dataObj = new { currentPh = CurrentPh, delta = delta, oldPh = oldPh, subscribersCount = OnPhChanged?.GetInvocationList()?.Length ?? 0 };
-                string dataJson = JsonUtility.ToJson(dataObj);
-                var logData = $"{{\"location\":\"PhSystem.cs:182\",\"message\":\"SetPh - OnPhChanged invocato\",\"data\":{dataJson},\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}}";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData + "\n"); 
-            } 
-            catch { }
-            // #endregion
             
             OnPhChanged?.Invoke(CurrentPh, delta);
         }
@@ -687,16 +667,6 @@ namespace _Project
             _queuedEventsDrift = 0f;
             _queuedDailyDrift = 0f;
             
-            // #region agent log
-            try 
-            { 
-                var dataObj = new { currentPh = CurrentPh, actualDelta = actualDelta, oldPh = oldPh, subscribersCount = OnPhChanged?.GetInvocationList()?.Length ?? 0 };
-                string dataJson = JsonUtility.ToJson(dataObj);
-                var logData = $"{{\"location\":\"PhSystem.cs:680\",\"message\":\"ApplyQueuedDrifts - OnPhChanged invocato\",\"data\":{dataJson},\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()},\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}}";
-                File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData + "\n"); 
-            } 
-            catch { }
-            // #endregion
             
             OnPhChanged?.Invoke(CurrentPh, actualDelta);
             
