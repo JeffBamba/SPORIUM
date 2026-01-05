@@ -70,26 +70,38 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
         private void SetupClickAreas()
         {
             // Trova click areas
-            // DEBUG_SAFE_FIX: Non usare click-area-off come fallback per click-area-left perché potrebbe essere condiviso con click-area-top
-            _clickAreaLeft = _knobElement.Q<VisualElement>("click-area-left") ?? 
-                            _knobElement.Q<VisualElement>("click-area-blue");
-            
-            _clickAreaRight = _knobElement.Q<VisualElement>("click-area-right") ?? 
-                             _knobElement.Q<VisualElement>("click-area-on") ??
-                             _knobElement.Q<VisualElement>("click-area-red");
-            
-            _clickAreaTop = _knobElement.Q<VisualElement>("click-area-top") ?? 
-                           _knobElement.Q<VisualElement>("click-area-off");
-            
-            // DEBUG_SAFE_FIX: Se _clickAreaLeft e _clickAreaTop puntano allo stesso elemento, rimuovi il fallback per _clickAreaLeft
-            if (_clickAreaLeft != null && _clickAreaTop != null && _clickAreaLeft == _clickAreaTop)
+            // BUG1 FIX: Per Irrigation, click-area-left si chiama "click-area-off" nell'UXML
+            // Per Illuminazione, click-area-left si chiama "click-area-blue"
+            if (_type == KnobType.Irrigation)
             {
-                // Se sono lo stesso elemento, cerca solo click-area-left o click-area-blue senza fallback
-                _clickAreaLeft = _knobElement.Q<VisualElement>("click-area-left") ?? 
-                                _knobElement.Q<VisualElement>("click-area-blue");
+                // Irrigation: click-area-off (left) e click-area-on (right)
+                _clickAreaLeft = _knobElement.Q<VisualElement>("click-area-off");
+                _clickAreaRight = _knobElement.Q<VisualElement>("click-area-on");
+                _clickAreaTop = null; // Irrigation non ha click-area-top
+            }
+            else
+            {
+                // Illuminazione: click-area-blue (left), click-area-off (top), click-area-red (right)
+                _clickAreaLeft = _knobElement.Q<VisualElement>("click-area-blue");
+                _clickAreaRight = _knobElement.Q<VisualElement>("click-area-red");
+                _clickAreaTop = _knobElement.Q<VisualElement>("click-area-off");
             }
             
-            // DEBUG_SAFE_FIX: Assicura che le click areas possano ricevere click
+            // Fallback per compatibilità (cerca anche per nome generico)
+            if (_clickAreaLeft == null)
+            {
+                _clickAreaLeft = _knobElement.Q<VisualElement>("click-area-left");
+            }
+            if (_clickAreaRight == null)
+            {
+                _clickAreaRight = _knobElement.Q<VisualElement>("click-area-right");
+            }
+            if (_clickAreaTop == null && _type == KnobType.Illuminazione)
+            {
+                _clickAreaTop = _knobElement.Q<VisualElement>("click-area-top");
+            }
+            
+            // BUG1 FIX: Assicura che le click areas possano ricevere click
             if (_clickAreaLeft != null)
             {
                 _clickAreaLeft.pickingMode = PickingMode.Position;

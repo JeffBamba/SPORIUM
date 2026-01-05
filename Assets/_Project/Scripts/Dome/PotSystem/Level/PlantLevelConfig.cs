@@ -11,7 +11,7 @@ namespace Sporae.Dome.PotSystem.Level
     {
         [Header("Soglie Cicli per Livello")]
         [Tooltip("Cicli richiesti per salire di livello. Array 4 elementi: Lvl 1→2, 2→3, 3→4, 4→5")]
-        public int[] cyclesThresholds = new int[] { 1, 2, 3, 4 };
+        public int[] cyclesThresholds = new int[] { 1, 2, 2, 3 };
         
         [Header("Modificatori Resa per Livello")]
         [Tooltip("Riduzione percentuale quantità frutti per livello oltre 2 (es. Lvl 3: -15%, Lvl 4: -30%, Lvl 5: -45%)")]
@@ -38,6 +38,19 @@ namespace Sporae.Dome.PotSystem.Level
                 return 0f; // Nessuna riduzione per Lvl 1-2
             else
                 return -quantityReductionPerLevel * (level - 2); // -15% per livello oltre 2
+        }
+        
+        /// <summary>
+        /// Ottiene il modificatore qualità resa per livello (proporzionale alla riduzione quantità)
+        /// </summary>
+        /// <param name="level">Livello della pianta (1-5)</param>
+        /// <returns>Bonus qualità percentuale (es. Lvl 3: +15%, Lvl 4: +30%, Lvl 5: +45%)</returns>
+        public float GetQualityModifier(int level)
+        {
+            if (level <= 2)
+                return 0f; // Nessun bonus per Lvl 1-2
+            else
+                return quantityReductionPerLevel * (level - 2); // +15% per livello oltre 2 (proporzionale alla riduzione quantità)
         }
     }
 }

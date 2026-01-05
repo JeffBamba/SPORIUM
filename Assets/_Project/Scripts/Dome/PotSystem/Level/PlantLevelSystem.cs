@@ -77,6 +77,16 @@ namespace Sporae.Dome.PotSystem.Level
                 SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Livello ridotto di {levelsLost} (Lvl {potState.PlantLevel + levelsLost} → Lvl {potState.PlantLevel})");
             }
         }
+        
+        /// <summary>
+        /// Verifica se una pianta può essere spostata in uno slot passivo (requisito: Livello 5)
+        /// </summary>
+        /// <param name="potState">Stato del vaso</param>
+        /// <returns>True se la pianta può essere spostata in slot passivo (Lvl 5)</returns>
+        public static bool CanMoveToPassiveSlot(PotStateModel potState)
+        {
+            return potState != null && potState.HasPlant && potState.PlantLevel >= 5;
+        }
     }
 }
 

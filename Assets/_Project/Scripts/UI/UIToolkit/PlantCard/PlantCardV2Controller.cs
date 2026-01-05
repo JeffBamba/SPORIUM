@@ -8,6 +8,7 @@ using Sporae.Dome;
 using Sporae.Dome.UI;
 using _Project;
 using _Project.UI.HUDNotifications2_0;
+using System.IO;
 
 namespace Sporae.UI.UIToolkit.PlantCard
 {
@@ -53,6 +54,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
         
         // DEBUG_SAFE_FIX: Flag per prevenire l'esecuzione di azioni durante il binding dell'UI
         private bool _isBindingUI = false;
+        
+        // BUG1 FIX: Flag per prevenire chiamate multiple a DoWater() nello stesso frame
+        private bool _isProcessingIrrigationToggle = false;
         
         // BUG FIX: Riferimento al player mover per sospendere il movimento quando la HUD è aperta
         private PlayerClickMover2D _playerMover;
@@ -279,6 +283,17 @@ namespace Sporae.UI.UIToolkit.PlantCard
             // Binding dati
             RefreshData();
             
+            // BUG FIX: Forza un refresh aggiuntivo dopo che la UI è stata mostrata per assicurarsi
+            // che i valori visualizzati siano sempre sincronizzati con lo stato corrente.
+            // Questo risolve il problema dove la HUD mostra valori vecchi quando viene aperta dopo un cambio giorno.
+            // Il refresh viene fatto dopo un breve delay per assicurarsi che la UI sia completamente inizializzata.
+            if (_root != null)
+            {
+                _root.schedule.Execute(() => {
+                    RefreshData();
+                }).ExecuteLater(50); // Delay di 50ms per assicurarsi che la UI sia completamente inizializzata
+            }
+            
             // Setup rotary knobs handlers
             SetupRotaryKnobsHandlers();
             
@@ -333,6 +348,12 @@ namespace Sporae.UI.UIToolkit.PlantCard
         /// </summary>
         public void RefreshData()
         {
+            if (_skipNextRefresh)
+            {
+                _skipNextRefresh = false;
+                return;
+            }
+            
             if (_currentPotSlot == null || _dataBinder == null)
                 return;
             
@@ -364,7 +385,22 @@ namespace Sporae.UI.UIToolkit.PlantCard
                     }
                 }
                 
-                // Binding completo
+                // BUG FIX: Imposta callback PRIMA di BindAllData così è disponibile quando vengono creati i tooltip
+                _dataBinder.SetStateGetter(() => {
+                    PotStateModel currentState = _potActions != null ? _potActions.PotState : null;
+                    if (currentState == null) return null;
+                    
+                    PlantData currentPlantData = null;
+                    if (!string.IsNullOrEmpty(currentState.PlantCode))
+                    {
+                        currentPlantData = PlantDatabase.Instance?.GetPlantDataByCode(currentState.PlantCode);
+                    }
+                    
+                    if (currentPlantData == null) return null;
+                    return (currentState, currentPlantData);
+                });
+                
+                // Binding completo (dopo aver impostato SetStateGetter)
                 _dataBinder.BindAllData(state, plantData, plantSprite);
             }
             finally
@@ -464,6 +500,22 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 return;
             
             _potActions.DoSprayAntifungal();
+            
+            // BUG FIX: Aggiorna l'UI dopo lo spray per mostrare il rischio muffa azzerato
+            // Usa un delay per assicurarsi che lo stato sia aggiornato prima del refresh
+            // (DoSprayAntifungal potrebbe emettere PotEvents.OnPotStateChanged che triggera RefreshData,
+            // ma vogliamo assicurarci che il refresh avvenga dopo che lo stato è stato aggiornato)
+            if (_root != null)
+            {
+                _root.schedule.Execute(() => {
+                    RefreshData();
+                }).ExecuteLater(10); // Delay di 10ms per assicurarsi che lo stato sia aggiornato
+            }
+            else
+            {
+                // Fallback: refresh immediato se _root non è disponibile
+                RefreshData();
+            }
         }
         
         private void OnPruneButtonClicked()
@@ -665,42 +717,75 @@ namespace Sporae.UI.UIToolkit.PlantCard
         
         private void OnIrrigationStateChanged(bool isOn)
         {
+            // BUG1 FIX: Prevenire chiamate multiple nello stesso frame
+            if (_isProcessingIrrigationToggle)
+            {
+                return;
+            }
+            
             // DEBUG_SAFE_FIX: Ignora eventi durante binding UI per prevenire azioni automatiche
             if (_isBindingUI)
+            {
                 return;
+            }
             
             if (_potActions == null || _currentPotSlot == null)
+            {
                 return;
+            }
             
             // DEBUG_SAFE_FIX: Verifica lo stato corrente PRIMA di chiamare DoWater()
             bool currentState = _potActions.IsWateringSystemOn();
             
-            // Se lo stato desiderato è uguale a quello corrente, non fare nulla
+            // BUG1 FIX: DoWater() è un toggle. Chiamiamolo solo se lo stato desiderato è diverso da quello corrente.
+            // Se lo stato è già quello desiderato, significa che è stato aggiornato da RefreshData() e non dobbiamo fare nulla.
             if (isOn == currentState)
-                return;
-            
-            // DEBUG_SAFE_FIX: DoWater() è un toggle, quindi chiamiamolo solo se lo stato è diverso
-            bool success = _potActions.DoWater();
-            
-            // Se DoWater() fallisce, ripristina lo stato del toggle
-            if (!success)
             {
-                // DEBUG_SAFE_FIX: Ripristina lo stato del toggle allo stato corrente reale
-                if (_dataBinder != null)
+                return;
+            }
+            
+            // BUG1 FIX: Imposta flag per prevenire chiamate multiple
+            _isProcessingIrrigationToggle = true;
+            
+            try
+            {
+                // DEBUG_SAFE_FIX: DoWater() è un toggle, quindi chiamiamolo solo se lo stato è diverso
+                bool success = _potActions.DoWater();
+                
+                // Se DoWater() fallisce, ripristina lo stato del toggle
+                if (!success)
                 {
-                    var irrigationKnob = _dataBinder.GetIrrigationKnob();
-                    if (irrigationKnob != null)
+                    // DEBUG_SAFE_FIX: Ripristina lo stato del toggle allo stato corrente reale
+                    if (_dataBinder != null)
                     {
-                        // Ripristina allo stato corrente reale (che non è cambiato perché DoWater() è fallito)
-                        irrigationKnob.SetIrrigationState(currentState);
+                        var irrigationKnob = _dataBinder.GetIrrigationKnob();
+                        if (irrigationKnob != null)
+                        {
+                            // Ripristina allo stato corrente reale (che non è cambiato perché DoWater() è fallito)
+                            irrigationKnob.SetIrrigationState(currentState);
+                        }
                     }
                 }
+                else
+                {
+                    // BUG FIX: Temporaneamente disabilita RefreshData per evitare che ripristini lo stato
+                    _skipNextRefresh = true;
+                }
             }
-            else
+            finally
             {
-                // BUG FIX: Temporaneamente disabilita RefreshData per evitare che ripristini lo stato
-                _skipNextRefresh = true;
+                // BUG1 FIX: Reset flag nel prossimo frame per permettere nuove chiamate
+                StartCoroutine(ResetIrrigationToggleFlag());
             }
+        }
+        
+        /// <summary>
+        /// Reset del flag di irrigation toggle nel prossimo frame
+        /// </summary>
+        private System.Collections.IEnumerator ResetIrrigationToggleFlag()
+        {
+            yield return null; // Aspetta un frame
+            _isProcessingIrrigationToggle = false;
         }
         
         private void OnLedStateChanged(LedSystemState state)
@@ -745,6 +830,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
             // Aggiorna UI se è il pot corrente
             if (_currentPotSlot != null && pot != null && pot.PotId == _currentPotSlot.PotId)
             {
+                // BUG FIX: Forza refresh anche se PlantCardV2 è già aperta
+                // Questo assicura che i tooltip e tutti i dati vengano aggiornati quando
+                // i valori vengono modificati dalla console debug o da altri sistemi
                 RefreshData();
             }
         }

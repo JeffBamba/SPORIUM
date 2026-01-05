@@ -37,20 +37,37 @@ namespace Sporae.DevTools
         
         // Valore stadio da impostare
         private int _stageInputValue = 0;
+        private string _stageInputString = "0";
         
-        // BLK-03.01-T2: Valori debug per Fertilizzante, Watering e Luce %
+        // BLK-03.01-T2: Valori debug per Fertilizzante, Watering e Light Stress
         private int _fertilizerInputValue = 0;
+        private string _fertilizerInputString = "0";
         private int _hydrationInputValue = 0;
-        private int _lightPercentInputValue = 0;
+        private string _hydrationInputString = "0";
+        private int _lightStressPercentInputValue = 0;
+        private string _lightStressPercentInputString = "0";
         
         // Valori debug per nuovi sistemi
         private int _plantLevelInputValue = 1;
+        private string _plantLevelInputString = "1";
         private int _completedCyclesInputValue = 0;
+        private string _completedCyclesInputString = "0";
         private int _moldRiskLevelInputValue = 0;
+        private string _moldRiskLevelInputString = "0";
         private int _conditionScoreInputValue = 50;
+        private string _conditionScoreInputString = "50";
         private int _ledStateInputValue = 0; // 0=Off, 1=Blue, 2=Red
         private int _ledDaysInputValue = 0;
+        private string _ledDaysInputString = "0";
         private bool _wateringSystemToggle = false;
+        
+        // Valori debug per FRUITS
+        private float _amountFruitsInputValue = 0f;
+        private string _amountFruitsInputString = "0";
+        private int _maxFruitsInputValue = 3;
+        private string _maxFruitsInputString = "3";
+        private float _fruitQualityInputValue = 0f;
+        private string _fruitQualityInputString = "0";
         
         // Cache per sistemi
         private PhSystem _phSystem;
@@ -293,8 +310,8 @@ namespace Sporae.DevTools
             SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Idratazione cambiata {oldHydration}/{maxHydration} → {potState.Hydration}/{maxHydration} (MANUALE)");
         }
         
-        // BLK-03.01-T2: Imposta luce percentuale
-        private void SetLightPercent(int newPercent)
+        // BUG FIX: Imposta Light Stress percentuale (come visualizzato nella HUD)
+        private void SetLightStressPercent(int newStressPercent)
         {
             if (_selectedPot == null || _selectedPot.PotState == null)
             {
@@ -303,19 +320,32 @@ namespace Sporae.DevTools
             }
             
             var potState = _selectedPot.PotState;
-            int maxLightExposure = _selectedPot.GetMaxLightExposure();
-            int oldLightExposure = potState.LightExposure;
+            int oldConsecutiveDays = potState.GetConsecutiveLedDays();
             
-            // Converti percentuale in valore LightExposure
-            int newLightExposure = Mathf.RoundToInt((newPercent / 100f) * maxLightExposure);
-            potState.LightExposure = Mathf.Clamp(newLightExposure, 0, maxLightExposure);
+            // Calcola giorni consecutivi necessari per raggiungere la percentuale di stress desiderata
+            // Formula: consecutiveDays = (stressPercent / 100f) * maxDaysForFullStress
+            const int maxDaysForFullStress = 4;
+            int newConsecutiveDays = Mathf.RoundToInt((newStressPercent / 100f) * maxDaysForFullStress);
+            newConsecutiveDays = Mathf.Clamp(newConsecutiveDays, 0, maxDaysForFullStress);
             
-            // BUG FIX: Marca come impostato manualmente e salva valore base per decay
-            potState.IsLightExposureManuallySet = true;
-            potState.ManualLightExposureBase = potState.LightExposure;
+            // Calcola percentuale effettiva dopo clamp
+            float actualStressPercent = Mathf.Clamp01((float)newConsecutiveDays / maxDaysForFullStress) * 100f;
             
-            float oldPercent = maxLightExposure > 0 ? (float)oldLightExposure / maxLightExposure * 100f : 0f;
-            float newPercentActual = maxLightExposure > 0 ? (float)potState.LightExposure / maxLightExposure * 100f : 0f;
+            // Imposta i giorni consecutivi in base allo stato LED corrente
+            if (potState.LedSystemState == LedSystemState.Blue)
+            {
+                potState.DaysLedBlueConsecutive = newConsecutiveDays;
+            }
+            else if (potState.LedSystemState == LedSystemState.Red)
+            {
+                potState.DaysLedRedConsecutive = newConsecutiveDays;
+            }
+            else
+            {
+                // Se LED è spento, imposta entrambi (GetConsecutiveLedDays ritorna il massimo)
+                potState.DaysLedBlueConsecutive = newConsecutiveDays;
+                potState.DaysLedRedConsecutive = newConsecutiveDays;
+            }
             
             // BUG FIX: Assicurati che PotSlot non sia null prima di emettere evento
             if (_selectedPot.PotSlot != null)
@@ -329,8 +359,8 @@ namespace Sporae.DevTools
                 AddLog($"⚠️ PotSlot null - evento non emesso");
             }
             
-            AddLog($"✅ {potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE - decay partirà da questo valore)");
-            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Luce cambiata {oldLightExposure}/{maxLightExposure} ({oldPercent:F0}%) → {potState.LightExposure}/{maxLightExposure} ({newPercentActual:F0}%) (MANUALE)");
+            AddLog($"✅ {potState.PotId}: Light Stress cambiato {oldConsecutiveDays} giorni ({Mathf.RoundToInt((float)oldConsecutiveDays / maxDaysForFullStress * 100f)}%) → {newConsecutiveDays} giorni ({actualStressPercent:F0}%)");
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Light Stress cambiato {oldConsecutiveDays} giorni → {newConsecutiveDays} giorni ({actualStressPercent:F0}%)");
         }
         
         // Metodi per nuovi sistemi
@@ -364,6 +394,28 @@ namespace Sporae.DevTools
             
             PotEvents.EmitChanged(_selectedPot.PotSlot);
             AddLog($"✅ {potState.PotId}: Cicli completati cambiati {oldCycles} → {potState.CompletedCycles}");
+        }
+        
+        private void ForceLevelUp()
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            if (potState.PlantLevel >= 5)
+            {
+                AddLog("⚠️ Livello massimo già raggiunto (Lvl 5)!");
+                return;
+            }
+            
+            int oldLevel = potState.PlantLevel;
+            potState.PlantLevel++;
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            AddLog($"✅ {potState.PotId}: Livello aumentato {oldLevel} → {potState.PlantLevel} (Force Level Up)");
         }
         
         private void SetMoldRiskLevel(int newLevel)
@@ -412,6 +464,96 @@ namespace Sporae.DevTools
             
             PotEvents.EmitChanged(_selectedPot.PotSlot);
             AddLog($"✅ {potState.PotId}: LED State cambiato {oldState} → {newState}");
+        }
+        
+        private void SetLedBlue(bool isOn)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            LedSystemState newState = isOn ? LedSystemState.Blue : LedSystemState.Off;
+            LedSystemState oldState = potState.LedSystemState;
+            
+            // Se Red è attivo, spegnilo prima
+            if (isOn && potState.LedSystemState == LedSystemState.Red)
+            {
+                potState.SetLedSystemState(LedSystemState.Blue);
+            }
+            else if (!isOn && potState.LedSystemState == LedSystemState.Blue)
+            {
+                potState.SetLedSystemState(LedSystemState.Off);
+            }
+            else if (isOn)
+            {
+                potState.SetLedSystemState(LedSystemState.Blue);
+            }
+            
+            // Aggiorna le luci Unity di scena
+            var ledLightController = _selectedPot.GetComponent<LedLightController>();
+            if (ledLightController != null)
+            {
+                ledLightController.UpdateLights(potState.LedSystemState);
+            }
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            AddLog($"✅ {potState.PotId}: LED Blue {(isOn ? "ON" : "OFF")} (State: {oldState} → {potState.LedSystemState})");
+        }
+        
+        private void SetLedRed(bool isOn)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            LedSystemState newState = isOn ? LedSystemState.Red : LedSystemState.Off;
+            LedSystemState oldState = potState.LedSystemState;
+            
+            // Se Blue è attivo, spegnilo prima
+            if (isOn && potState.LedSystemState == LedSystemState.Blue)
+            {
+                potState.SetLedSystemState(LedSystemState.Red);
+            }
+            else if (!isOn && potState.LedSystemState == LedSystemState.Red)
+            {
+                potState.SetLedSystemState(LedSystemState.Off);
+            }
+            else if (isOn)
+            {
+                potState.SetLedSystemState(LedSystemState.Red);
+            }
+            
+            // Aggiorna le luci Unity di scena
+            var ledLightController = _selectedPot.GetComponent<LedLightController>();
+            if (ledLightController != null)
+            {
+                ledLightController.UpdateLights(potState.LedSystemState);
+            }
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            AddLog($"✅ {potState.PotId}: LED Red {(isOn ? "ON" : "OFF")} (State: {oldState} → {potState.LedSystemState})");
+        }
+        
+        private void SetAmountFruits(float newAmount)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            float oldAmount = potState.AmountFruits;
+            potState.AmountFruits = Mathf.Clamp(newAmount, 0f, _maxFruitsInputValue);
+            
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            AddLog($"✅ {potState.PotId}: Frutti presenti cambiati {oldAmount:F1} → {potState.AmountFruits:F1}");
         }
         
         private void SetLedDays(int newDays)
@@ -570,21 +712,59 @@ namespace Sporae.DevTools
                     _selectedPot = pot;
                     _selectedPotId = potState.PotId;
                     _stageInputValue = potState.Stage;
+                    _stageInputString = potState.Stage.ToString();
                     // BLK-03.01-T2: Inizializza valori debug quando si seleziona un POT
                     _fertilizerInputValue = potState.FertilizerLevel;
+                    _fertilizerInputString = potState.FertilizerLevel.ToString();
                     _hydrationInputValue = potState.Hydration;
-                    int maxLight = pot.GetMaxLightExposure();
-                    _lightPercentInputValue = maxLight > 0 ? 
-                        Mathf.RoundToInt((float)potState.LightExposure / maxLight * 100f) : 0;
+                    _hydrationInputString = potState.Hydration.ToString();
+                    // Calcola Light Stress percentuale da giorni consecutivi LED (come nella HUD)
+                    int consecutiveDays = potState.GetConsecutiveLedDays();
+                    const int maxDaysForFullStress = 4;
+                    float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+                    _lightStressPercentInputValue = Mathf.RoundToInt(stressPercentage);
+                    _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
                     
                     // Inizializza valori nuovi sistemi
                     _plantLevelInputValue = potState.PlantLevel;
+                    _plantLevelInputString = potState.PlantLevel.ToString();
                     _completedCyclesInputValue = potState.CompletedCycles;
+                    _completedCyclesInputString = potState.CompletedCycles.ToString();
                     _moldRiskLevelInputValue = potState.MoldRiskLevel;
+                    _moldRiskLevelInputString = potState.MoldRiskLevel.ToString();
                     _conditionScoreInputValue = potState.ConditionScore;
+                    _conditionScoreInputString = potState.ConditionScore.ToString();
                     _ledStateInputValue = (int)potState.LedSystemState;
                     _ledDaysInputValue = potState.GetConsecutiveLedDays();
+                    _ledDaysInputString = _ledDaysInputValue.ToString();
                     _wateringSystemToggle = potState.WateringSystemOn;
+                    
+                    // Inizializza valori FRUITS
+                    _amountFruitsInputValue = potState.AmountFruits;
+                    _amountFruitsInputString = _amountFruitsInputValue.ToString("F1");
+                    _maxFruitsInputValue = 3; // Max fisso a 3
+                    _maxFruitsInputString = "3";
+                    
+                    // Calcola qualità attesa frutti
+                    ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                    if (fruitConfig != null)
+                    {
+                        float baseQuality = fruitConfig.MaxQuality;
+                        float expectedQuality = baseQuality;
+                        if (_plantLevelConfig != null && potState.PlantLevel >= 3)
+                        {
+                            float qualityModifier = _plantLevelConfig.GetQualityModifier(potState.PlantLevel);
+                            expectedQuality = baseQuality * (1f + qualityModifier / 100f);
+                            expectedQuality = Mathf.Clamp(expectedQuality, baseQuality, baseQuality * 2f);
+                        }
+                        _fruitQualityInputValue = expectedQuality;
+                        _fruitQualityInputString = expectedQuality.ToString("F1");
+                    }
+                    else
+                    {
+                        _fruitQualityInputValue = 0f;
+                        _fruitQualityInputString = "0";
+                    }
                     
                     AddLog($"POT selezionato: {potState.PotId}");
                 }
@@ -607,10 +787,10 @@ namespace Sporae.DevTools
                 // Altezza totale contenuto editing (calcolata sommando tutti gli elementi)
                 // Titolo: 30, Info: 75, Input Stadio: 35, Debug Parametri: 3*35+40=145, 
                 // Plant Condition: 30+30+35=95, Mold: 30+30+30+35=125, Plant Level: 30+30+30+35=125,
-                // pH Affinity: 30+~170=200, Growth Points: 30+30+35=95, LED: 30+30+30+35=125, Watering: 30+30+35=95,
-                // Pulsanti stadi: 30+30+40=100
-                // Totale: ~1250px
-                float editingContentHeight = 1250f;
+                // pH Affinity: 30+~170=200, Growth Points: 30+30+35=95, LED: 30+30+30+35=125, 
+                // FRUITS: 30+35+35+40=140, Watering: 30+30+35=95, Pulsanti stadi: 30+30+40=100
+                // Totale: ~1390px (aumentato per includere sezione FRUITS e margine)
+                float editingContentHeight = 1450f;
                 
                 // Inizia scroll view per sezione editing
                 _editingScrollPosition = GUI.BeginScrollView(
@@ -649,14 +829,29 @@ namespace Sporae.DevTools
                 
                 // Input stadio manuale
                 GUI.Label(new Rect(10f, relativeY, 180f, 25f), "Nuovo Stadio (0-6):", labelStyle);
-                string stageInput = GUI.TextField(new Rect(200f, relativeY, 100f, 25f), _stageInputValue.ToString());
-                if (int.TryParse(stageInput, out int parsedStage))
+                _stageInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _stageInputString);
+                if (int.TryParse(_stageInputString, out int parsedStage))
                 {
                     _stageInputValue = Mathf.Clamp(parsedStage, 0, 6);
+                    _stageInputString = _stageInputValue.ToString();
                 }
-                
-                if (GUI.Button(new Rect(310f, relativeY, 120f, 25f), "Imposta Stadio", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _stageInputValue = Mathf.Max(0, _stageInputValue - 1);
+                    _stageInputString = _stageInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _stageInputValue = Mathf.Min(6, _stageInputValue + 1);
+                    _stageInputString = _stageInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Stadio", buttonStyle))
+                {
+                    if (int.TryParse(_stageInputString, out int finalStage))
+                    {
+                        _stageInputValue = Mathf.Clamp(finalStage, 0, 6);
+                        _stageInputString = _stageInputValue.ToString();
+                    }
                     SetPotStage(_stageInputValue);
                 }
                 relativeY += 35f; // Aumentato spazio
@@ -668,52 +863,101 @@ namespace Sporae.DevTools
                 
                 // Fertilizzante (0-100%)
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Fertilizzante (0-100%):", labelStyle);
-                string fertilizerInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _fertilizerInputValue.ToString());
-                if (int.TryParse(fertilizerInput, out int parsedFertilizer))
+                _fertilizerInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _fertilizerInputString);
+                if (int.TryParse(_fertilizerInputString, out int parsedFertilizer))
                 {
                     _fertilizerInputValue = Mathf.Clamp(parsedFertilizer, 0, 100);
+                    _fertilizerInputString = _fertilizerInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Fert.", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _fertilizerInputValue = Mathf.Max(0, _fertilizerInputValue - 1);
+                    _fertilizerInputString = _fertilizerInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _fertilizerInputValue = Mathf.Min(100, _fertilizerInputValue + 1);
+                    _fertilizerInputString = _fertilizerInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Fert.", buttonStyle))
+                {
+                    if (int.TryParse(_fertilizerInputString, out int finalFertilizer))
+                    {
+                        _fertilizerInputValue = Mathf.Clamp(finalFertilizer, 0, 100);
+                        _fertilizerInputString = _fertilizerInputValue.ToString();
+                    }
                     SetFertilizerLevel(_fertilizerInputValue);
                 }
                 // Mostra valore corrente
-                GUI.Label(new Rect(410f, relativeY, 200f, 25f), 
+                GUI.Label(new Rect(455f, relativeY, 200f, 25f), 
                     $"Corrente: {potState.FertilizerLevel}%", labelStyle);
                 relativeY += 35f;
                 
                 // Watering (0-MaxHydration)
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), $"Watering (0-{maxHydration}):", labelStyle);
-                string hydrationInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _hydrationInputValue.ToString());
-                if (int.TryParse(hydrationInput, out int parsedHydration))
+                _hydrationInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _hydrationInputString);
+                if (int.TryParse(_hydrationInputString, out int parsedHydration))
                 {
                     _hydrationInputValue = Mathf.Clamp(parsedHydration, 0, maxHydration);
+                    _hydrationInputString = _hydrationInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Water", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _hydrationInputValue = Mathf.Max(0, _hydrationInputValue - 1);
+                    _hydrationInputString = _hydrationInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _hydrationInputValue = Mathf.Min(maxHydration, _hydrationInputValue + 1);
+                    _hydrationInputString = _hydrationInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Water", buttonStyle))
+                {
+                    if (int.TryParse(_hydrationInputString, out int finalHydration))
+                    {
+                        _hydrationInputValue = Mathf.Clamp(finalHydration, 0, maxHydration);
+                        _hydrationInputString = _hydrationInputValue.ToString();
+                    }
                     SetHydration(_hydrationInputValue);
                 }
                 // Mostra valore corrente
-                GUI.Label(new Rect(410f, relativeY, 200f, 25f), 
+                GUI.Label(new Rect(455f, relativeY, 200f, 25f), 
                     $"Corrente: {potState.Hydration}/{maxHydration}", labelStyle);
                 relativeY += 35f;
                 
-                // Luce % (0-100%)
-                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Luce % (0-100%):", labelStyle);
-                string lightPercentInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _lightPercentInputValue.ToString());
-                if (int.TryParse(lightPercentInput, out int parsedLightPercent))
+                // Light Stress (0-100%) - come visualizzato nella HUD
+                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Light Stress (0-100%):", labelStyle);
+                _lightStressPercentInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _lightStressPercentInputString);
+                if (int.TryParse(_lightStressPercentInputString, out int parsedLightStress))
                 {
-                    _lightPercentInputValue = Mathf.Clamp(parsedLightPercent, 0, 100);
+                    _lightStressPercentInputValue = Mathf.Clamp(parsedLightStress, 0, 100);
+                    _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Luce %", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
-                    SetLightPercent(_lightPercentInputValue);
+                    _lightStressPercentInputValue = Mathf.Max(0, _lightStressPercentInputValue - 1);
+                    _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
                 }
-                // Mostra valore corrente
-                float currentLightPercent = maxLightExposure > 0 ? 
-                    (float)potState.LightExposure / maxLightExposure * 100f : 0f;
-                GUI.Label(new Rect(410f, relativeY, 200f, 25f), 
-                    $"Corrente: {potState.LightExposure}/{maxLightExposure} ({currentLightPercent:F0}%)", labelStyle);
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _lightStressPercentInputValue = Mathf.Min(100, _lightStressPercentInputValue + 1);
+                    _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Stress", buttonStyle))
+                {
+                    if (int.TryParse(_lightStressPercentInputString, out int finalLightStress))
+                    {
+                        _lightStressPercentInputValue = Mathf.Clamp(finalLightStress, 0, 100);
+                        _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
+                    }
+                    SetLightStressPercent(_lightStressPercentInputValue);
+                }
+                // Mostra valore corrente (calcolato come nella HUD)
+                int currentConsecutiveDays = potState.GetConsecutiveLedDays();
+                const int maxDaysForFullStress = 4;
+                float currentStressPercent = Mathf.Clamp01((float)currentConsecutiveDays / maxDaysForFullStress) * 100f;
+                GUI.Label(new Rect(455f, relativeY, 200f, 25f), 
+                    $"Corrente: {currentStressPercent:F0}% ({currentConsecutiveDays}/{maxDaysForFullStress} giorni)", labelStyle);
                 relativeY += 40f;
                 
                 // === SEZIONE PLANT CONDITION ===
@@ -732,13 +976,29 @@ namespace Sporae.DevTools
                 relativeY += 30f;
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set Score (0-100):", labelStyle);
-                string conditionInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _conditionScoreInputValue.ToString());
-                if (int.TryParse(conditionInput, out int parsedCondition))
+                _conditionScoreInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _conditionScoreInputString);
+                if (int.TryParse(_conditionScoreInputString, out int parsedCondition))
                 {
                     _conditionScoreInputValue = Mathf.Clamp(parsedCondition, 0, 100);
+                    _conditionScoreInputString = _conditionScoreInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Score", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _conditionScoreInputValue = Mathf.Max(0, _conditionScoreInputValue - 1);
+                    _conditionScoreInputString = _conditionScoreInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _conditionScoreInputValue = Mathf.Min(100, _conditionScoreInputValue + 1);
+                    _conditionScoreInputString = _conditionScoreInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Score", buttonStyle))
+                {
+                    if (int.TryParse(_conditionScoreInputString, out int finalCondition))
+                    {
+                        _conditionScoreInputValue = Mathf.Clamp(finalCondition, 0, 100);
+                        _conditionScoreInputString = _conditionScoreInputValue.ToString();
+                    }
                     SetConditionScore(_conditionScoreInputValue);
                 }
                 relativeY += 35f;
@@ -760,25 +1020,41 @@ namespace Sporae.DevTools
                 // Calcola rischio in tempo reale se possibile
                 if (_phSystem != null && _moldConfig != null && potState.HasPlant)
                 {
-                    var plantData = potState.GetPlantData();
-                    float moldRisk = MoldSystem.CalculateMoldRisk(potState, _phSystem, plantData, _moldConfig);
-                    int calculatedLevel = MoldSystem.GetMoldRiskLevel(potState, _phSystem, plantData, _moldConfig);
+                    var moldPlantData = potState.GetPlantData();
+                    float moldRisk = MoldSystem.CalculateMoldRisk(potState, _phSystem, moldPlantData, _moldConfig);
+                    int calculatedLevel = MoldSystem.GetMoldRiskLevel(potState, _phSystem, moldPlantData, _moldConfig);
                     GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
                         $"Rischio calcolato: {moldRisk:F1} (Level: {calculatedLevel})", labelStyle);
                     relativeY += 30f;
                 }
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set Mold Risk (0-3):", labelStyle);
-                string moldInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _moldRiskLevelInputValue.ToString());
-                if (int.TryParse(moldInput, out int parsedMold))
+                _moldRiskLevelInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _moldRiskLevelInputString);
+                if (int.TryParse(_moldRiskLevelInputString, out int parsedMold))
                 {
                     _moldRiskLevelInputValue = Mathf.Clamp(parsedMold, 0, 3);
+                    _moldRiskLevelInputString = _moldRiskLevelInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Risk", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _moldRiskLevelInputValue = Mathf.Max(0, _moldRiskLevelInputValue - 1);
+                    _moldRiskLevelInputString = _moldRiskLevelInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _moldRiskLevelInputValue = Mathf.Min(3, _moldRiskLevelInputValue + 1);
+                    _moldRiskLevelInputString = _moldRiskLevelInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Risk", buttonStyle))
+                {
+                    if (int.TryParse(_moldRiskLevelInputString, out int finalMold))
+                    {
+                        _moldRiskLevelInputValue = Mathf.Clamp(finalMold, 0, 3);
+                        _moldRiskLevelInputString = _moldRiskLevelInputValue.ToString();
+                    }
                     SetMoldRiskLevel(_moldRiskLevelInputValue);
                 }
-                if (GUI.Button(new Rect(410f, relativeY, 120f, 25f), "Rimuovi Infest.", buttonStyle))
+                if (GUI.Button(new Rect(455f, relativeY, 120f, 25f), "Rimuovi Infest.", buttonStyle))
                 {
                     RemoveMoldInfestation();
                 }
@@ -803,28 +1079,110 @@ namespace Sporae.DevTools
                 relativeY += 30f;
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set Level (1-5):", labelStyle);
-                string levelInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _plantLevelInputValue.ToString());
-                if (int.TryParse(levelInput, out int parsedLevel))
+                _plantLevelInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _plantLevelInputString);
+                if (int.TryParse(_plantLevelInputString, out int parsedLevel))
                 {
                     _plantLevelInputValue = Mathf.Clamp(parsedLevel, 1, 5);
+                    _plantLevelInputString = _plantLevelInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Level", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _plantLevelInputValue = Mathf.Max(1, _plantLevelInputValue - 1);
+                    _plantLevelInputString = _plantLevelInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _plantLevelInputValue = Mathf.Min(5, _plantLevelInputValue + 1);
+                    _plantLevelInputString = _plantLevelInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Level", buttonStyle))
+                {
+                    if (int.TryParse(_plantLevelInputString, out int finalLevel))
+                    {
+                        _plantLevelInputValue = Mathf.Clamp(finalLevel, 1, 5);
+                        _plantLevelInputString = _plantLevelInputValue.ToString();
+                    }
                     SetPlantLevel(_plantLevelInputValue);
                 }
                 relativeY += 30f;
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set Cycles:", labelStyle);
-                string cyclesInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _completedCyclesInputValue.ToString());
-                if (int.TryParse(cyclesInput, out int parsedCycles))
+                _completedCyclesInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _completedCyclesInputString);
+                if (int.TryParse(_completedCyclesInputString, out int parsedCycles))
                 {
                     _completedCyclesInputValue = Mathf.Max(0, parsedCycles);
+                    _completedCyclesInputString = _completedCyclesInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Cycles", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _completedCyclesInputValue = Mathf.Max(0, _completedCyclesInputValue - 1);
+                    _completedCyclesInputString = _completedCyclesInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _completedCyclesInputValue = _completedCyclesInputValue + 1;
+                    _completedCyclesInputString = _completedCyclesInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Cycles", buttonStyle))
+                {
+                    if (int.TryParse(_completedCyclesInputString, out int finalCycles))
+                    {
+                        _completedCyclesInputValue = Mathf.Max(0, finalCycles);
+                        _completedCyclesInputString = _completedCyclesInputValue.ToString();
+                    }
                     SetCompletedCycles(_completedCyclesInputValue);
                 }
                 relativeY += 35f;
+                
+                // Modificatori Resa (Lvl X):
+                if (_plantLevelConfig != null)
+                {
+                    float quantityModifier = _plantLevelConfig.GetQuantityModifier(potState.PlantLevel);
+                    float qualityModifier = _plantLevelConfig.GetQualityModifier(potState.PlantLevel);
+                    
+                    GUI.Label(new Rect(10f, relativeY, 250f, 25f), 
+                        $"Modificatori Resa (Lvl {potState.PlantLevel}):", labelStyle);
+                    relativeY += 25f;
+                    
+                    GUI.Label(new Rect(20f, relativeY, 300f, 25f), 
+                        $"  - Quantità: {quantityModifier:0}%", labelStyle);
+                    relativeY += 25f;
+                    
+                    GUI.Label(new Rect(20f, relativeY, 300f, 25f), 
+                        $"  - Qualità: +{qualityModifier:0}%", labelStyle);
+                    relativeY += 30f;
+                    
+                    // Qualità frutti attesa
+                    ItemConfig levelFruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                    if (levelFruitConfig != null)
+                    {
+                        float baseQuality = levelFruitConfig.MaxQuality;
+                        float expectedQuality = baseQuality;
+                        if (potState.PlantLevel >= 3)
+                        {
+                            expectedQuality = baseQuality * (1f + qualityModifier / 100f);
+                            expectedQuality = Mathf.Clamp(expectedQuality, baseQuality, baseQuality * 2f);
+                        }
+                        GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
+                            $"Qualità frutti attesa: {expectedQuality:F1} (base: {baseQuality:F1} + {qualityModifier:0}%)", labelStyle);
+                        relativeY += 30f;
+                    }
+                    
+                    // Check slot passivi
+                    bool canMoveToPassive = PlantLevelSystem.CanMoveToPassiveSlot(potState);
+                    string passiveSlotStatus = canMoveToPassive 
+                        ? "Slot Passivi: Disponibile" 
+                        : "Slot Passivi: Non disponibile (richiede Lvl 5)";
+                    GUI.Label(new Rect(10f, relativeY, 400f, 25f), passiveSlotStatus, labelStyle);
+                    relativeY += 30f;
+                    
+                    // Pulsante Force Level Up
+                    if (GUI.Button(new Rect(10f, relativeY, 150f, 25f), "Force Level Up", buttonStyle))
+                    {
+                        ForceLevelUp();
+                    }
+                    relativeY += 35f;
+                }
                 
                 // === SEZIONE GROWTH POINTS ===
                 GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f), 
@@ -854,17 +1212,17 @@ namespace Sporae.DevTools
                 
                 if (potState.HasPlant && !string.IsNullOrEmpty(potState.PlantCode) && _phSystem != null)
                 {
-                    var plantData = potState.GetPlantData();
-                    if (plantData != null)
+                    var phPlantData = potState.GetPlantData();
+                    if (phPlantData != null)
                     {
                         float currentPh = _phSystem.CurrentPh;
-                        bool inRange = plantData.IsPhInOptimalRange(currentPh);
-                        float phDistance = plantData.GetPhDistanceFromOptimal(currentPh);
+                        bool inRange = phPlantData.IsPhInOptimalRange(currentPh);
+                        float phDistance = phPlantData.GetPhDistanceFromOptimal(currentPh);
                         PhSystem.PhBand phBand = _phSystem.EvaluateState();
                         
                         // Range Ottimale
                         GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
-                            $"Range Ottimale: {plantData.OptimalPhMin:F1} - {plantData.OptimalPhMax:F1}", labelStyle);
+                            $"Range Ottimale: {phPlantData.OptimalPhMin:F1} - {phPlantData.OptimalPhMax:F1}", labelStyle);
                         relativeY += 25f;
                         
                         // pH Corrente Dome
@@ -950,29 +1308,143 @@ namespace Sporae.DevTools
                     $"Burn Risk: {burnRiskLevel} ({burnRiskName})", labelStyle);
                 relativeY += 30f;
                 
-                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set LED State:", labelStyle);
-                string ledStateInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _ledStateInputValue.ToString());
-                if (int.TryParse(ledStateInput, out int parsedLedState))
+                // LED CONSIGLIATO basato su famiglia pianta
+                PlantData plantData = potState.GetPlantData();
+                if (plantData != null)
                 {
-                    _ledStateInputValue = Mathf.Clamp(parsedLedState, 0, 2);
+                    LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
+                    string compatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                    GUI.Label(new Rect(10f, relativeY, 300f, 25f), 
+                        $"LED CONSIGLIATO: {compatibleDisplay} (Famiglia: {plantData.Family})", labelStyle);
+                    relativeY += 25f;
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta LED", buttonStyle))
+                
+                // Controlli LED Blue e Red separati
+                bool isBlueOn = potState.LedSystemState == LedSystemState.Blue;
+                bool isRedOn = potState.LedSystemState == LedSystemState.Red;
+                
+                GUI.Label(new Rect(10f, relativeY, 120f, 25f), "LED Blue:", labelStyle);
+                if (GUI.Button(new Rect(140f, relativeY, 80f, 25f), isBlueOn ? "ON" : "OFF", buttonStyle))
                 {
-                    SetLedSystemState((LedSystemState)_ledStateInputValue);
+                    SetLedBlue(!isBlueOn);
+                }
+                
+                GUI.Label(new Rect(230f, relativeY, 120f, 25f), "LED Red:", labelStyle);
+                if (GUI.Button(new Rect(360f, relativeY, 80f, 25f), isRedOn ? "ON" : "OFF", buttonStyle))
+                {
+                    SetLedRed(!isRedOn);
                 }
                 relativeY += 30f;
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set LED Days:", labelStyle);
-                string ledDaysInput = GUI.TextField(new Rect(170f, relativeY, 100f, 25f), _ledDaysInputValue.ToString());
-                if (int.TryParse(ledDaysInput, out int parsedLedDays))
+                _ledDaysInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _ledDaysInputString);
+                if (int.TryParse(_ledDaysInputString, out int parsedLedDays))
                 {
                     _ledDaysInputValue = Mathf.Max(0, parsedLedDays);
+                    _ledDaysInputString = _ledDaysInputValue.ToString();
                 }
-                if (GUI.Button(new Rect(280f, relativeY, 120f, 25f), "Imposta Days", buttonStyle))
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
                 {
+                    _ledDaysInputValue = Mathf.Max(0, _ledDaysInputValue - 1);
+                    _ledDaysInputString = _ledDaysInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _ledDaysInputValue = _ledDaysInputValue + 1;
+                    _ledDaysInputString = _ledDaysInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Days", buttonStyle))
+                {
+                    if (int.TryParse(_ledDaysInputString, out int finalLedDays))
+                    {
+                        _ledDaysInputValue = Mathf.Max(0, finalLedDays);
+                        _ledDaysInputString = _ledDaysInputValue.ToString();
+                    }
                     SetLedDays(_ledDaysInputValue);
                 }
                 relativeY += 35f;
+                
+                // === SEZIONE FRUITS ===
+                GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f), 
+                    "=== FRUITS Production ===", labelStyle);
+                relativeY += 30f;
+                
+                // Frutti presenti
+                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Frutti Presenti (0-3):", labelStyle);
+                _amountFruitsInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _amountFruitsInputString);
+                if (float.TryParse(_amountFruitsInputString, out float parsedAmountFruits))
+                {
+                    _amountFruitsInputValue = Mathf.Clamp(parsedAmountFruits, 0f, _maxFruitsInputValue);
+                    _amountFruitsInputString = _amountFruitsInputValue.ToString("F1");
+                }
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
+                {
+                    _amountFruitsInputValue = Mathf.Max(0f, _amountFruitsInputValue - 0.5f);
+                    _amountFruitsInputString = _amountFruitsInputValue.ToString("F1");
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _amountFruitsInputValue = Mathf.Min(_maxFruitsInputValue, _amountFruitsInputValue + 0.5f);
+                    _amountFruitsInputString = _amountFruitsInputValue.ToString("F1");
+                }
+                if (GUI.Button(new Rect(325f, relativeY, 120f, 25f), "Imposta Frutti", buttonStyle))
+                {
+                    if (float.TryParse(_amountFruitsInputString, out float finalAmountFruits))
+                    {
+                        _amountFruitsInputValue = Mathf.Clamp(finalAmountFruits, 0f, _maxFruitsInputValue);
+                        _amountFruitsInputString = _amountFruitsInputValue.ToString("F1");
+                    }
+                    SetAmountFruits(_amountFruitsInputValue);
+                }
+                GUI.Label(new Rect(455f, relativeY, 200f, 25f), 
+                    $"Corrente: {potState.AmountFruits:F1}", labelStyle);
+                relativeY += 35f;
+                
+                // Frutti massimi
+                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Frutti Massimi:", labelStyle);
+                _maxFruitsInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _maxFruitsInputString);
+                if (int.TryParse(_maxFruitsInputString, out int parsedMaxFruits))
+                {
+                    _maxFruitsInputValue = Mathf.Clamp(parsedMaxFruits, 1, 10);
+                    _maxFruitsInputString = _maxFruitsInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(260f, relativeY, 25f, 25f), "-", buttonStyle))
+                {
+                    _maxFruitsInputValue = Mathf.Max(1, _maxFruitsInputValue - 1);
+                    _maxFruitsInputString = _maxFruitsInputValue.ToString();
+                }
+                if (GUI.Button(new Rect(290f, relativeY, 25f, 25f), "+", buttonStyle))
+                {
+                    _maxFruitsInputValue = Mathf.Min(10, _maxFruitsInputValue + 1);
+                    _maxFruitsInputString = _maxFruitsInputValue.ToString();
+                }
+                GUI.Label(new Rect(325f, relativeY, 200f, 25f), 
+                    $"Max: {_maxFruitsInputValue} (default: 3)", labelStyle);
+                relativeY += 35f;
+                
+                // Qualità frutti
+                GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Qualità Frutti:", labelStyle);
+                _fruitQualityInputString = GUI.TextField(new Rect(170f, relativeY, 80f, 25f), _fruitQualityInputString);
+                if (float.TryParse(_fruitQualityInputString, out float parsedQuality))
+                {
+                    _fruitQualityInputValue = Mathf.Max(0f, parsedQuality);
+                    _fruitQualityInputString = _fruitQualityInputValue.ToString("F1");
+                }
+                ItemConfig fruitsFruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                if (fruitsFruitConfig != null)
+                {
+                    float baseQuality = fruitsFruitConfig.MaxQuality;
+                    float expectedQuality = baseQuality;
+                    if (_plantLevelConfig != null && potState.PlantLevel >= 3)
+                    {
+                        float qualityModifier = _plantLevelConfig.GetQualityModifier(potState.PlantLevel);
+                        expectedQuality = baseQuality * (1f + qualityModifier / 100f);
+                        expectedQuality = Mathf.Clamp(expectedQuality, baseQuality, baseQuality * 2f);
+                    }
+                    GUI.Label(new Rect(260f, relativeY, 300f, 25f), 
+                        $"Attesa: {expectedQuality:F1} (base: {baseQuality:F1}, Lvl {potState.PlantLevel})", labelStyle);
+                }
+                relativeY += 40f;
                 
                 // === SEZIONE WATERING SYSTEM ===
                 GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f), 

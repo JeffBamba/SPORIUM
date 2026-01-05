@@ -9,6 +9,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.UI;
 using Sporae.DevTools;
+using System.IO;
 
 /// <summary>
 /// Sistema di HUD minimale sempre visibili per tutti i pot.
@@ -840,18 +841,19 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         if (stageReq == null)
             return "Stabile";
         
-        // Calcola percentuale idratazione
+        // Calcola percentuale idratazione (usa lo stesso metodo di PlantCardV2)
         int maxHydration = _potSystemConfig.MaxHydration;
-        int hydrationPercent = maxHydration > 0 ? 
-            Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+        int hydrationPercent = Sporae.UI.UIToolkit.PlantCard.Helpers.PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
         
         // Verifica range per ogni parametro
         bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
         
-        // BUG FIX: Allinea logica con PotDetailsWidget per mostrare lo stesso risultato
-        // Usa la stessa logica di PotDetailsWidget: IsLedRequirementMet && IsLightInRange
-        bool lightOk = stageReq.IsLedRequirementMet(state.LedSystemState) && 
-                      stageReq.IsLightInRange(state.LightExposure);
+        // BUG FIX: Allinea logica con PlantCardV2 (usa Light Stress da GetConsecutiveLedDays)
+        int consecutiveDays = state.GetConsecutiveLedDays();
+        const int maxDaysForFullStress = 4;
+        float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+        int lightStressPercent = Mathf.RoundToInt(stressPercentage);
+        bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
         
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
         
@@ -1126,10 +1128,9 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             return sb.ToString();
         }
         
-        // Calcola percentuale idratazione
+        // Calcola percentuale idratazione (usa lo stesso metodo di PlantCardV2)
         int maxHydration = _potSystemConfig.MaxHydration;
-        int hydrationPercent = maxHydration > 0 ? 
-            Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+        int hydrationPercent = Sporae.UI.UIToolkit.PlantCard.Helpers.PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
         
         // Verifica range per ogni parametro
         bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
@@ -1141,6 +1142,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         int consecutiveDays = state.GetConsecutiveLedDays();
         const int maxDaysForFullStress = 4;
         float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+        int lightStressPercent = Mathf.RoundToInt(stressPercentage);
         bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
         
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);

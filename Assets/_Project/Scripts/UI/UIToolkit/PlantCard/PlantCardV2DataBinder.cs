@@ -7,6 +7,7 @@ using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using _Project;
 using _Project.Sporae.Core;
+using System.IO;
 
 namespace Sporae.UI.UIToolkit.PlantCard
 {
@@ -74,6 +75,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private bool _shouldHideConditionTooltip = false;
         private bool _shouldHideGrowthTooltip = false;
         
+        // BUG FIX: Callback per recuperare lo stato corrente quando i tooltip vengono mostrati
+        private System.Func<(PotStateModel state, PlantData plantData)?> _getCurrentState;
+        
         public PlantCardV2DataBinder(VisualElement root, PlantCardV2Config config)
         {
             _root = root;
@@ -118,8 +122,8 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _conditionsBadgeText = _conditionsBadge.Q<Label>("growth-stage-text");
             }
             
-            _growthStageBadge = _root.Q<VisualElement>("growth-stage-badge");
-            // BUG3 FIX: Cerca growth-stage-text solo dentro growth-stage-badge, non dentro conditions_bagde
+            // BUG3 FIX: L'elemento si chiama "crescita-stage-badge" nell'UXML, non "growth-stage-badge"
+            _growthStageBadge = _root.Q<VisualElement>("crescita-stage-badge");
             if (_growthStageBadge != null)
             {
                 _growthStageTextLabel = _growthStageBadge.Q<Label>("growth-stage-text");
@@ -214,6 +218,14 @@ namespace Sporae.UI.UIToolkit.PlantCard
         }
         
         /// <summary>
+        /// BUG FIX: Imposta callback per recuperare lo stato corrente quando i tooltip vengono mostrati
+        /// </summary>
+        public void SetStateGetter(System.Func<(PotStateModel state, PlantData plantData)?> getter)
+        {
+            _getCurrentState = getter;
+        }
+        
+        /// <summary>
         /// Binding header section
         /// </summary>
         public void BindHeaderData(PotStateModel state, PlantData plantData)
@@ -299,6 +311,47 @@ namespace Sporae.UI.UIToolkit.PlantCard
         }
         
         /// <summary>
+        /// Calcola condizione usando lo stesso metodo di PotDetailsWidget.UpdateConditionUI
+        /// METODO CENTRALE: tutti i punti UI devono usare questo metodo per garantire coerenza
+        /// </summary>
+        private (ConditionResult result, string conditionName) CalculateConditionForUI(PotStateModel state, PlantData plantData)
+        {
+            // BUG FIX: Calcola SEMPRE la condizione, non usare mai state.ConditionLabel (che è solo un valore pre-settato al giorno 1)
+            if (state == null || !state.HasPlant || plantData == null)
+            {
+                // Solo se state è null, usa un fallback
+                return (new ConditionResult(50, PlantCondition.Sana, ForecastDirection.Stable, 0, new ConditionContributor[0]), "Sana");
+            }
+            
+            // Determina quali sistemi usare (preferisci i campi privati, altrimenti recupera dal ServiceContainer)
+            PhSystem phSystemToUse = _phSystem ?? ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            PotSystemConfig potConfigToUse = _potSystemConfig ?? Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            
+            // Se i sistemi non sono disponibili, usa un fallback (non usare state.ConditionLabel)
+            if (phSystemToUse == null || potConfigToUse == null)
+            {
+                return (new ConditionResult(50, PlantCondition.Sana, ForecastDirection.Stable, 0, new ConditionContributor[0]), "Sana");
+            }
+            
+            int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+            // BUG FIX: Usa lo stesso fallback di DayCycleController e PotDetailsWidget quando PreviousDayConditionScore è -1
+            int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+            
+            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                state,
+                plantData,
+                phSystemToUse,
+                potConfigToUse,
+                currentDay,
+                previousDayScore);
+            
+            bool isOverwatering = PlantConditionSystem.IsOverwatering(state, potConfigToUse.MaxHydration);
+            string conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
+            
+            return (result, conditionName);
+        }
+        
+        /// <summary>
         /// Binding condizione (usa PlantConditionSystem)
         /// </summary>
         private void BindCondition(PotStateModel state, PlantData plantData)
@@ -318,15 +371,8 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 return;
             }
             
-            // Calcola condizione usando PlantConditionSystem
-            ConditionResult conditionResult = PlantConditionSystem.CalculateCondition(
-                state,
-                plantData,
-                _phSystem,
-                _potSystemConfig,
-                ServiceContainer.Instance?.Get<DayCycleSystem>()?.CurrentDay ?? 1,
-                state.PreviousDayConditionScore
-            );
+            // Usa metodo centrale per calcolare condizione (stesso di PotDetailsWidget.UpdateConditionUI)
+            var (conditionResult, conditionName) = CalculateConditionForUI(state, plantData);
             
             // BUG5 FIX: condition-value NON deve essere aggiornato qui se condition-label dice "CICLI COMPLETI"
             // condition-value viene aggiornato in BindHeaderData per mostrare i cicli completi
@@ -336,8 +382,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             // BUG3 FIX: conditions_bagde (typo nel UXML) deve mostrare Conditions, non Growth Stage
             if (_conditionsBadgeText != null)
             {
-                string conditionText = PlantCardFormatters.FormatConditionName(conditionResult.Condition);
-                _conditionsBadgeText.text = conditionText;
+                _conditionsBadgeText.text = conditionName;
             }
             
             // Aggiorna colori di conditions_bagde
@@ -476,19 +521,17 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _conditionsBadge.UnregisterCallback<MouseLeaveEvent>(_conditionsBadgeMouseLeaveCallback);
             }
             
-            // Crea closure con stato corrente per aggiornare tooltip con dati più recenti quando viene mostrato
-            PotStateModel currentState = state;
-            PlantData currentPlantData = plantData;
-            
+            // BUG FIX: Non salvare lo stato in closure, recuperalo quando il tooltip viene mostrato
             // Setup hover events sul conditions_badge
             _conditionsBadgeMouseEnterCallback = evt => {
                 // Cancella il flag di nascondere tooltip
                 _shouldHideConditionTooltip = false;
                 
-                // Aggiorna tooltip con dati più recenti prima di mostrarlo
-                if (currentState != null && currentPlantData != null)
+                // BUG FIX: Recupera lo stato corrente quando il tooltip viene mostrato (non usare closure)
+                var currentStateData = _getCurrentState?.Invoke();
+                if (currentStateData.HasValue && currentStateData.Value.state != null && currentStateData.Value.plantData != null)
                 {
-                    string tooltipText = BuildGrowthTooltipForConditionsBadge(currentState, currentPlantData);
+                    string tooltipText = BuildGrowthTooltipForConditionsBadge(currentStateData.Value.state, currentStateData.Value.plantData);
                     conditionTooltipText.text = tooltipText;
                 }
                 
@@ -593,10 +636,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 return sb.ToString();
             }
             
-            // Calcola percentuale idratazione
-            int maxHydration = _potSystemConfig.MaxHydration;
-            int hydrationPercent = maxHydration > 0 ? 
-                Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+            // Calcola percentuale idratazione (usa lo stesso metodo della HUD)
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+            int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             
             // Verifica range per ogni parametro basato SOLO sui valori attuali
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
@@ -605,37 +647,15 @@ namespace Sporae.UI.UIToolkit.PlantCard
             int consecutiveDays = state.GetConsecutiveLedDays();
             const int maxDaysForFullStress = 4;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            int lightStressPercent = Mathf.RoundToInt(stressPercentage);
             
             // Light è OK se stress è tra 0% e 100% (esclusi gli estremi)
             bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
             
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
             
-            // Calcola la condizione usando la stessa logica di PotDetailsWidget
-            string conditionName;
-            if (_phSystem != null)
-            {
-                int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
-                int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
-                
-                ConditionResult result = PlantConditionSystem.CalculateCondition(
-                    state,
-                    plantData,
-                    _phSystem,
-                    _potSystemConfig,
-                    currentDay,
-                    previousDayScore);
-                
-                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
-                conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
-            }
-            else
-            {
-                // Fallback: usa ConditionLabel direttamente
-                PlantCondition condition = (PlantCondition)state.ConditionLabel;
-                bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
-                conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
-            }
+            // Usa metodo centrale per calcolare condizione (stesso di PotDetailsWidget.UpdateConditionUI)
+            var (_, conditionName) = CalculateConditionForUI(state, plantData);
             
             sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
             sb.AppendLine();
@@ -654,48 +674,11 @@ namespace Sporae.UI.UIToolkit.PlantCard
             }
             sb.AppendLine();
             
-            // Light
+            // Light (mostra sempre Light Stress, come nella HUD)
             string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
             sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
             sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
-            
-            // BLK-02.08: Aggiungi informazione LED compatibile con famiglia
-            if (plantData != null)
-            {
-                LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
-                string compatibleDisplay = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
-                sb.AppendLine($"  LED compatibile con famiglia: <color=#00FF00>{compatibleDisplay}</color>");
-                
-                // Verifica se LED attuale è incompatibile con famiglia
-                if (state.LedSystemState != LedSystemState.Off)
-                {
-                    bool isLedCompatibleWithFamily = LedCompatibilityHelper.IsLedCompatible(state.LedSystemState, compatible);
-                    if (!isLedCompatibleWithFamily)
-                    {
-                        string currentLedName = state.LedSystemState == LedSystemState.Blue ? "Blue" : "Red";
-                        sb.AppendLine($"  <color=#FF0000>⚠️ LED {currentLedName} attivo è INCOMPATIBILE con famiglia {plantData.Family}!</color>");
-                        sb.AppendLine($"  <color=#FF0000>   Malus condizione: -5 per ogni giorno che è acceso</color>");
-                    }
-                }
-            }
-            
-            if (!lightOk)
-            {
-                sb.AppendLine($"  Attuale: {stressPercentage:F0}%");
-                if (stressPercentage == 0f || stressPercentage >= 100f)
-                {
-                    string ledRequired = stageReq.GetRequiredLed()?.ToString() ?? "Nessuno";
-                    bool ledRequirementMet = stageReq.IsLedRequirementMet(state.LedSystemState);
-                    if (ledRequired != "Nessuno" && !ledRequirementMet)
-                    {
-                        sb.AppendLine($"  LED richiesto per stage: {ledRequired} (<color=#FF0000>NON OK</color>)");
-                    }
-                }
-            }
-            else
-            {
-                sb.AppendLine($"  Attuale: <color=#00FF00>{stressPercentage:F0}%</color>");
-            }
+            sb.AppendLine($"  Attuale: {(lightOk ? $"<color=#00FF00>{lightStressPercent}%</color>" : $"{lightStressPercent}%")}");
             sb.AppendLine();
             
             // Fertilizer
@@ -750,7 +733,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
         {
             var sb = new System.Text.StringBuilder();
             
-            string conditionName = PlantCardFormatters.FormatConditionName(result.Condition);
+            string conditionName = PlantConditionSystem.GetConditionName(result.Condition);
             string forecastSymbol = result.Forecast switch
             {
                 Sporae.Dome.PotSystem.Condition.ForecastDirection.Up => "↑",
@@ -801,6 +784,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
         /// </summary>
         private void BindGrowthStage(PotStateModel state, PlantData plantData)
         {
+            
             if (state == null || !state.HasPlant) return;
             
             PlantStage stage = (PlantStage)state.Stage;
@@ -938,18 +922,16 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _growthProgressBar.UnregisterCallback<MouseLeaveEvent>(_growthProgressBarMouseLeaveCallback);
             }
             
-            // Crea closure con stato corrente
-            PotStateModel currentState = state;
-            PlantData currentPlantData = plantData;
-            
+            // BUG FIX: Non salvare lo stato in closure, recuperalo quando il tooltip viene mostrato
             // Setup hover events
             _growthProgressBarMouseEnterCallback = evt => {
                 _shouldHideGrowthTooltip = false;
                 
-                // Aggiorna tooltip con dati più recenti
-                if (currentState != null && currentPlantData != null)
+                // BUG FIX: Recupera lo stato corrente quando il tooltip viene mostrato (non usare closure)
+                var currentStateData = _getCurrentState?.Invoke();
+                if (currentStateData.HasValue && currentStateData.Value.state != null && currentStateData.Value.plantData != null)
                 {
-                    string tooltipText = BuildGrowthTooltipText(currentState, currentPlantData);
+                    string tooltipText = BuildGrowthTooltipText(currentStateData.Value.state, currentStateData.Value.plantData);
                     growthTooltipText.text = tooltipText;
                 }
                 
@@ -1054,15 +1036,19 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 return sb.ToString();
             }
             
-            // Calcola percentuale idratazione
+            // Calcola percentuale idratazione (usa lo stesso metodo della HUD)
             int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
-            int hydrationPercent = maxHydration > 0 ? 
-                Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f) : 0;
+            int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
             
-            // Verifica LED requirement
-            bool ledOk = stageReq.IsLedRequirementMet(state.LedSystemState);
+            // BUG A FIX: Light OK basato su stress percentage nel range (stessa logica del tooltip Conditions)
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            const int maxDaysForFullStress = 4;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            int lightStressPercent = Mathf.RoundToInt(stressPercentage);
+            // Light è OK se stress è nel range ottimale (stessa logica del tooltip Conditions)
+            bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
             
             // Fertilizzante: opzionale per Seed/Sprout
             bool fertilizerOk = false;
@@ -1103,9 +1089,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
             bool isBlockedByCondition = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
             bool isBlockedByMold = state.MoldRiskLevel >= 2; // Severe o Critical
             
-            // Calcola se può avanzare
+            // Calcola se può avanzare (BUG A FIX: usa lightOk invece di ledOk)
             bool canAdvance = !isBlockedByCondition && !isBlockedByMold &&
-                             waterOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
+                             waterOk && lightOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
             // Prossimo stadio
             PlantStage? nextStage = GetNextStage(currentStage);
@@ -1149,22 +1135,11 @@ namespace Sporae.UI.UIToolkit.PlantCard
             sb.AppendLine($"  Attuale: <color=#FFFFFF>{hydrationPercent}%</color>");
             sb.AppendLine();
             
-            // LED
-            string ledStatus = ledOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
-            sb.AppendLine($"• <color=#FFD700>LED:</color> {ledStatus}");
-            LedType? requiredLed = stageReq.GetRequiredLed();
-            if (requiredLed.HasValue)
-            {
-                string ledName = requiredLed.Value == LedType.Blue ? "Blue" : "Red";
-                sb.AppendLine($"  LED richiesto: <color=#FFFFFF>{ledName}</color>");
-            }
-            else
-            {
-                sb.AppendLine($"  LED richiesto: <color=#FFFFFF>Nessuno</color>");
-            }
-            string currentLedName = state.LedSystemState == LedSystemState.Blue ? "Blue" : 
-                                   state.LedSystemState == LedSystemState.Red ? "Red" : "Off";
-            sb.AppendLine($"  LED attuale: <color=#FFFFFF>{currentLedName}</color>");
+            // Luce (BUG A FIX: mostra Light Stress invece di LED requirement)
+            string lightStatus = lightOk ? "<color=#00FF00>✓ OK</color>" : "<color=#FF0000>✗ NON OK</color>";
+            sb.AppendLine($"• <color=#FFD700>Luce:</color> {lightStatus}");
+            sb.AppendLine($"  Range richiesto: <color=#FFFFFF>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
+            sb.AppendLine($"  Attuale: <color=#FFFFFF>{lightStressPercent}%</color>");
             sb.AppendLine();
             
             // Fertilizzante
@@ -1214,7 +1189,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 sb.AppendLine();
                 sb.AppendLine("Requisiti mancanti:");
                 if (!waterOk) sb.AppendLine("  • Idratazione fuori range");
-                if (!ledOk) sb.AppendLine("  • LED non corretto");
+                if (!lightOk) sb.AppendLine("  • Luce fuori range");
                 if (!durationOk) sb.AppendLine($"  • Giorni insufficienti ({state.DaysInCurrentStage}/{effectiveRequiredDays})");
                 if (!optimalDaysOk) sb.AppendLine($"  • Giorni ottimali consecutivi insufficienti ({state.DaysConsecutiveOptimal}/{optimalDaysRequired})");
                 if (!fertilizerOk) sb.AppendLine("  • Fertilizzante fuori range");
@@ -1318,7 +1293,6 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 const int maxDaysForFullStress = 4;
                 float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
                 int lightStressPercent = Mathf.RoundToInt(stressPercentage);
-                
                 _lightStressBox.UpdateValue(lightStressPercent, 100); // Usa percentuale, non valore raw
                 
                 // Range info - BUG1 FIX: Usa StageRequirements invece di range fisso

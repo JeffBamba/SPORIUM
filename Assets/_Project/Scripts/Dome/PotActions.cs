@@ -313,23 +313,42 @@ public class PotActions : MonoBehaviour
     
     /// <summary>
     /// Verifica se è possibile attivare/disattivare il sistema irrigazione (GDD AZ-11 - Toggle Persistente)
+    /// BUG1 FIX: Spegnere l'irrigazione è sempre permesso (non richiede azioni), accendere richiede azioni
     /// </summary>
     public bool CanWater()
     {
         if (_potState == null) 
             return false;
         
-        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti (1 Azione)
-        // NOTA: Non verifica più idratazione max o WAT-RAW (consumo giornaliero a fine giorno)
+        // Precondizioni base: vaso ha pianta, player in range
         bool 
             hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
+            inRange = IsPlayerInRange();
         
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Toggle): Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.WateringSystemOn}");
+        if (!hasPlant || !inRange)
+        {
+            if (showDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater: Plant={hasPlant}, Range={inRange} - BLOCKED");
+            return false;
+        }
         
-        return hasPlant && inRange && hasResources;
+        // BUG1 FIX: Se stiamo spegnendo (WateringSystemOn=true), non richiediamo azioni
+        // Se stiamo accendendo (WateringSystemOn=false), richiediamo azioni
+        if (_potState.WateringSystemOn)
+        {
+            // Spegnere: sempre permesso (non consuma azioni)
+            if (showDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Turn OFF): Plant={hasPlant}, Range={inRange} - ALLOWED (no resources needed)");
+            return true;
+        }
+        else
+        {
+            // Accendere: richiede azioni
+            bool hasResources = CanConsumeResources();
+            if (showDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Turn ON): Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+            return hasResources;
+        }
     }
     
     /// <summary>
@@ -680,6 +699,10 @@ public class PotActions : MonoBehaviour
         
         try
         {
+            // BUG1 FIX: Determina se stiamo accendendo o spegnendo PRIMA di qualsiasi controllo
+            bool wasOn = _potState.WateringSystemOn;
+            bool isTurningOn = !wasOn;
+            
             if (!CanWater())
             {
                 string reason = GetWaterFailureReason();
@@ -689,18 +712,27 @@ public class PotActions : MonoBehaviour
             
             // DEBUG_SAFE_FIX: Log prima del consumo risorse
             int actionsBefore = _gameManager?.ActionsLeft ?? 0;
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater chiamato - Azioni prima: {actionsBefore}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater chiamato - Azioni prima: {actionsBefore}, TurningOn: {isTurningOn}");
             
-            // Consuma solo 1 Azione per il toggle (non WAT-RAW o CRY - consumo giornaliero)
-            if (!TryConsumeResources())
+            // BUG1 FIX: Consuma azioni solo quando si ACCENDE, non quando si spegne
+            if (isTurningOn)
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
-                return false;
+                // Consuma solo 1 Azione per accendere (non WAT-RAW o CRY - consumo giornaliero)
+                if (!TryConsumeResources())
+                {
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
+                    return false;
+                }
+                
+                int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
+            }
+            else
+            {
+                // Spegnendo: non consumiamo azioni
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Spegnendo irrigazione (nessun consumo azioni)");
             }
             
-            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
-
             // Toggle del sistema irrigazione
             _potState.WateringSystemOn = !_potState.WateringSystemOn;
             
@@ -1103,10 +1135,50 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
-        // Aggiungi frutti all'inventario
+        // BLK-02.02: Calcola qualità frutti basata su livello
+        float baseQuality = 0f;
+        float finalQuality = 0f;
+        ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+        if (fruitConfig != null)
+        {
+            baseQuality = fruitConfig.MaxQuality;
+            finalQuality = baseQuality;
+            
+            // Applica modificatore qualità se livello >= 3
+            if (levelConfig != null && _potState.PlantLevel >= 3)
+            {
+                float qualityModifier = levelConfig.GetQualityModifier(_potState.PlantLevel);
+                finalQuality = baseQuality * (1f + qualityModifier / 100f);
+                // Clamp tra MaxQuality e MaxQuality * 2 (max +100%)
+                finalQuality = Mathf.Clamp(finalQuality, baseQuality, baseQuality * 2f);
+                
+                if (showDebugLogs)
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Qualità frutti Lvl {_potState.PlantLevel}: +{qualityModifier}% (qualità: {baseQuality} → {finalQuality:F1})");
+            }
+        }
+        
+        // Aggiungi frutti all'inventario con qualità personalizzata
         for (int i = 0; i < fruitsToHarvest; i++)
         {
-            _playerInventory.Add(Items.Fruits);
+            if (fruitConfig != null && levelConfig != null && _potState.PlantLevel >= 3)
+            {
+                // Crea item con qualità personalizzata
+                Item fruitItem = ItemFabric.CreateItemWithQuality(Items.Fruits, finalQuality);
+                if (fruitItem != null)
+                {
+                    _playerInventory.Add(fruitItem);
+                }
+                else
+                {
+                    // Fallback se CreateItemWithQuality fallisce
+                    _playerInventory.Add(Items.Fruits);
+                }
+            }
+            else
+            {
+                // Livelli 1-2: usa qualità base
+                _playerInventory.Add(Items.Fruits);
+            }
         }
         
         // Reset frutti nel vaso
@@ -1119,17 +1191,6 @@ public class PotActions : MonoBehaviour
         _potState.DaysInHarvestReady = 0; // Reset contatore HarvestReady
         _potState.DaysInCurrentStage = 0; // Reset contatore stadio corrente
         _potState.HasPruningResaBonus = false; // AZ-13: Reset bonus resa per nuovo ciclo
-        
-        // BLK-02.02: Incrementa cicli completati e verifica level up
-        _potState.IncrementCompletedCycle();
-        if (levelConfig != null)
-        {
-            bool levelUp = PlantLevelSystem.CheckLevelUp(_potState, levelConfig);
-            if (levelUp && showDebugLogs)
-            {
-                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel}!");
-            }
-        }
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Harvest, potSlot);
@@ -1240,6 +1301,21 @@ public class PotActions : MonoBehaviour
             _potState.Stage = (int)PlantStage.Flowering;
             _potState.DaysInCurrentStage = 0;
             _potState.HasPruningResaBonus = false; // AZ-13: Reset bonus resa per nuovo ciclo
+            
+            // BLK-02.02: Ciclo completo quando si riattiva da Resting → Flowering con fertilizzante
+            // Incrementa cicli completati e verifica level up
+            _potState.IncrementCompletedCycle();
+            PlantLevelConfig levelConfig = Resources.Load<PlantLevelConfig>("Configs/PlantLevelConfig");
+            if (levelConfig != null)
+            {
+                bool levelUp = PlantLevelSystem.CheckLevelUp(_potState, levelConfig);
+                if (levelUp && showDebugLogs)
+                {
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel} (cicli completati: {_potState.CompletedCycles})!");
+                }
+                if (showDebugLogs)
+                    SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Ciclo completo! Cicli completati: {_potState.CompletedCycles}");
+            }
             
             // Notifica cambio stadio
             if (potGrowthController != null)

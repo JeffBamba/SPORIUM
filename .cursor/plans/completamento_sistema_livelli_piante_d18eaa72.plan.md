@@ -4,30 +4,30 @@ overview: "Completare il sistema di progressione dei livelli (1-5) implementando
 todos:
   - id: task-1-1
     content: Aggiungere metodo GetQualityModifier() a PlantLevelConfig per calcolare bonus qualità basato su livello
-    status: pending
+    status: completed
   - id: task-1-2
     content: Estendere ItemFabric con CreateItemWithQuality() per creare Item con qualità personalizzata
-    status: pending
+    status: completed
   - id: task-1-3
     content: Modificare DoHarvest() per calcolare e applicare qualità frutti basata su livello pianta
-    status: pending
+    status: completed
     dependencies:
       - task-1-1
       - task-1-2
   - id: task-2-1
     content: Verificare logica incremento cicli completati (quando viene considerato completo il ciclo)
-    status: pending
+    status: completed
   - id: task-2-2
     content: Correggere logica ciclo completo se necessario (spostare IncrementCompletedCycle da Harvest a Fertilize)
-    status: pending
+    status: completed
     dependencies:
       - task-2-1
   - id: task-3-1
     content: Verificare soglie cicli nel PlantLevelConfig corrispondono alle specifiche GDD
-    status: pending
+    status: completed
   - id: task-4-1
     content: Aggiungere metodo CanMoveToPassiveSlot() a PlantLevelSystem per check livello 5
-    status: pending
+    status: completed
   - id: task-5-1
     content: "Test completo sistema: quantità, qualità, progressione livelli per tutti i livelli 1-5"
     status: pending
@@ -36,7 +36,7 @@ todos:
       - task-2-2
   - id: task-6-1
     content: "Estendere PotDebugConsole con funzionalità sistema livelli: visualizzazione modificatori quantità/qualità, qualità frutti attesa, check slot passivi"
-    status: pending
+    status: completed
     dependencies:
       - task-1-1
       - task-4-1
@@ -297,8 +297,8 @@ Questa sezione fornisce una sequenza dettagliata step-by-step per testare il sis
 - ✅ **Qualità modificata**: `4 * (1 + 0.15) = 4.6` → **4.6** (o arrotondato a 5 se arrotondato)
 - ✅ **Console Unity Log**: 
   ```javascript
-    [Pot] [ACT-005][POT-001] Modificatore resa Lvl 3: -15% (quantità: 3 → 2.55)
-    [Pot] [ACT-005][POT-001] Qualità frutti Lvl 3: +15% (qualità: 4 → 4.6)
+      [Pot] [ACT-005][POT-001] Modificatore resa Lvl 3: -15% (quantità: 3 → 2.55)
+      [Pot] [ACT-005][POT-001] Qualità frutti Lvl 3: +15% (qualità: 4 → 4.6)
   ```
 
 
@@ -354,7 +354,7 @@ Questa sezione fornisce una sequenza dettagliata step-by-step per testare il sis
 3. Verificare nel debug console che **Cicli Completati = 1**
 4. Verificare nel log:
    ```javascript
-      [Pot] [ACT-015][POT-001] Ciclo completo! Cicli completati: 1
+         [Pot] [ACT-015][POT-001] Ciclo completo! Cicli completati: 1
    ```
 
 
@@ -518,5 +518,4 @@ Questa sezione fornisce una sequenza dettagliata step-by-step per testare il sis
 - ✅ Cicli completati incrementano correttamente
 - ✅ Level-up avviene alle soglie corrette
 - ✅ Metodo `CanMoveToPassiveSlot()` disponibile per sistema slot passivi
-- ✅ Logging per debug quantità/qualità applicate
 - ✅ Logging per debug quantità/qualità applicate
