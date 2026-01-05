@@ -324,7 +324,7 @@ namespace Sporae.DevTools
             
             // Calcola giorni consecutivi necessari per raggiungere la percentuale di stress desiderata
             // Formula: consecutiveDays = (stressPercent / 100f) * maxDaysForFullStress
-            const int maxDaysForFullStress = 4;
+            int maxDaysForFullStress = _selectedPot?.GetMaxDaysForFullStress() ?? 5;
             int newConsecutiveDays = Mathf.RoundToInt((newStressPercent / 100f) * maxDaysForFullStress);
             newConsecutiveDays = Mathf.Clamp(newConsecutiveDays, 0, maxDaysForFullStress);
             
@@ -720,7 +720,7 @@ namespace Sporae.DevTools
                     _hydrationInputString = potState.Hydration.ToString();
                     // Calcola Light Stress percentuale da giorni consecutivi LED (come nella HUD)
                     int consecutiveDays = potState.GetConsecutiveLedDays();
-                    const int maxDaysForFullStress = 4;
+                    int maxDaysForFullStress = _selectedPot?.GetMaxDaysForFullStress() ?? 5;
                     float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
                     _lightStressPercentInputValue = Mathf.RoundToInt(stressPercentage);
                     _lightStressPercentInputString = _lightStressPercentInputValue.ToString();
@@ -954,7 +954,7 @@ namespace Sporae.DevTools
                 }
                 // Mostra valore corrente (calcolato come nella HUD)
                 int currentConsecutiveDays = potState.GetConsecutiveLedDays();
-                const int maxDaysForFullStress = 4;
+                int maxDaysForFullStress = _selectedPot?.GetMaxDaysForFullStress() ?? 5;
                 float currentStressPercent = Mathf.Clamp01((float)currentConsecutiveDays / maxDaysForFullStress) * 100f;
                 GUI.Label(new Rect(455f, relativeY, 200f, 25f), 
                     $"Corrente: {currentStressPercent:F0}% ({currentConsecutiveDays}/{maxDaysForFullStress} giorni)", labelStyle);
@@ -1297,7 +1297,8 @@ namespace Sporae.DevTools
                 relativeY += 30f;
                 
                 string ledStateName = GetLedStateName(potState.LedSystemState);
-                int burnRiskLevel = potState.GetBurnRiskLevel();
+                // Riutilizza maxDaysForFullStress già definito sopra (linea 957)
+                int burnRiskLevel = potState.GetBurnRiskLevel(maxDaysForFullStress);
                 string burnRiskName = GetBurnRiskName(burnRiskLevel);
                 
                 GUI.Label(new Rect(10f, relativeY, 200f, 25f), 

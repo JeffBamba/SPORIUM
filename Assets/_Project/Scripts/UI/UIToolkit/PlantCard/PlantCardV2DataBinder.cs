@@ -637,7 +637,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             }
             
             // Calcola percentuale idratazione (usa lo stesso metodo della HUD)
-            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             
             // Verifica range per ogni parametro basato SOLO sui valori attuali
@@ -645,7 +645,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             // Light OK basato su stress percentage (0% = OK) invece di LightExposure
             int consecutiveDays = state.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
+            int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             int lightStressPercent = Mathf.RoundToInt(stressPercentage);
             
@@ -1037,14 +1037,14 @@ namespace Sporae.UI.UIToolkit.PlantCard
             }
             
             // Calcola percentuale idratazione (usa lo stesso metodo della HUD)
-            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
             
             // BUG A FIX: Light OK basato su stress percentage nel range (stessa logica del tooltip Conditions)
             int consecutiveDays = state.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
+            int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             int lightStressPercent = Mathf.RoundToInt(stressPercentage);
             // Light è OK se stress è nel range ottimale (stessa logica del tooltip Conditions)
@@ -1261,7 +1261,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
         {
             if (state == null || !state.HasPlant) return;
             
-            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int maxLightExposure = _potSystemConfig != null ? _potSystemConfig.MaxLightExposure : 3;
             
             // Hydration
@@ -1290,7 +1290,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             {
                 // BUG1 FIX: Light Stress deve essere calcolato da giorni consecutivi LED, non da LightExposure
                 int consecutiveDays = state.GetConsecutiveLedDays();
-                const int maxDaysForFullStress = 4;
+                int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
                 float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
                 int lightStressPercent = Mathf.RoundToInt(stressPercentage);
                 _lightStressBox.UpdateValue(lightStressPercent, 100); // Usa percentuale, non valore raw

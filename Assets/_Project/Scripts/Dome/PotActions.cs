@@ -78,18 +78,18 @@ public class PotActions : MonoBehaviour
             }
         }
         
-        // BUG FIX: Verifica che MaxHydration sia corretto (non 4 del vecchio sistema)
-        if (config != null && config.MaxHydration == 4)
+        // BUG FIX: Verifica che MaxHydration sia corretto (non 4 o 5 del vecchio sistema)
+        if (config != null && config.MaxHydration <= 5)
         {
             if (showDebugLogs)
-                SporiumLogger.LogInfo(LogCategory.Pot, "Config ha MaxHydration=4 (vecchio sistema). Forzo ricaricamento da Resources...");
+                SporiumLogger.LogInfo(LogCategory.Pot, "Config ha MaxHydration<=5 (vecchio sistema). Forzo ricaricamento da Resources...");
             // Forza ricaricamento per ottenere il valore aggiornato
             Resources.UnloadAsset(config);
             config = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             if (config != null && showDebugLogs)
             {
-                if (config.MaxHydration == 4)
-                    SporiumLogger.LogWarning(LogCategory.Pot, $"Config ricaricato ma MaxHydration è ancora 4. Verifica che il file in Resources/Configs/PotSystemConfig.asset abbia MaxHydration corretto.");
+                if (config.MaxHydration <= 5)
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"Config ricaricato ma MaxHydration è ancora <=5. Verifica che il file in Resources/Configs/PotSystemConfig.asset abbia MaxHydration corretto.");
                 else
                     SporiumLogger.LogInfo(LogCategory.Pot, $"Config ricaricato: MaxHydration={config.MaxHydration}");
             }
@@ -1549,7 +1549,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public int GetMaxHydration()
     {
-        return config ? config.MaxHydration : 5; // Fallback a 5 step = 20% ciascuno
+        return config ? config.MaxHydration : 10; // Fallback a 10 step = 10% ciascuno
     }
     
     /// <summary>
@@ -1558,6 +1558,14 @@ public class PotActions : MonoBehaviour
     public int GetMaxLightExposure()
     {
         return config ? config.MaxLightExposure : 3;
+    }
+    
+    /// <summary>
+    /// Restituisce il limite massimo di giorni consecutivi LED per stress completo (100%)
+    /// </summary>
+    public int GetMaxDaysForFullStress()
+    {
+        return config ? config.MaxDaysForFullStress : 5;
     }
     
     /// <summary>

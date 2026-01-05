@@ -15,8 +15,9 @@ MonoBehaviour:
   CostActionsPerPotAction: 1
   CostCryPerPotAction: 1
   InteractDistance: 2
-  MaxHydration: 5
+  MaxHydration: 10
   MaxLightExposure: 3
+  MaxDaysForFullStress: 5
   GenericSeedCode: SDE-001
   PotLayerMask:
     serializedVersion: 2

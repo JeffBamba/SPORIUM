@@ -470,34 +470,35 @@ public class PotStateModel
     }
     
     /// <summary>
-    /// BLK-02.07: Calcola livello Burn Risk in base a giorni consecutivi
+    /// BLK-02.07: Calcola livello Burn Risk in base a giorni consecutivi (usando percentuali)
     /// </summary>
+    /// <param name="maxDaysForFullStress">Massimo giorni per stress completo (100%)</param>
     /// <returns>0 = Nessun rischio, 1 = Medio, 2 = Alto, 3 = Critico</returns>
-    public int GetBurnRiskLevel()
+    public int GetBurnRiskLevel(int maxDaysForFullStress)
     {
         int consecutiveDays = GetConsecutiveLedDays();
         
         if (LedSystemState == LedSystemState.Off || consecutiveDays <= 1)
             return 0;  // Nessun rischio
         
-        if (consecutiveDays >= 2 && consecutiveDays <= 3)
+        // Calcola percentuale stress
+        float stressPercent = (float)consecutiveDays / maxDaysForFullStress * 100f;
+        
+        if (stressPercent < 40f)  // < 2 giorni
+            return 0;
+        if (stressPercent < 80f)  // 2-3 giorni (40-60%)
             return 1;  // Rischio medio
-        
-        if (consecutiveDays >= 4 && consecutiveDays <= 5)
+        if (stressPercent < 100f)  // 4 giorni (80%)
             return 2;  // Rischio alto
-        
-        if (consecutiveDays >= 6)
-            return 3;  // Rischio critico (zona rossa)
-        
-        return 0;
+        return 3;  // 5+ giorni (100%+) - Rischio critico
     }
     
     /// <summary>
-    /// BLK-02.07: Verifica se pianta è in zona rossa (4+ giorni consecutivi)
+    /// BLK-02.07: Verifica se pianta è in zona rossa (100% stress = maxDaysForFullStress giorni consecutivi)
     /// </summary>
-    public bool IsInRedZone()
+    public bool IsInRedZone(int maxDaysForFullStress)
     {
-        return GetConsecutiveLedDays() >= 4 && LedSystemState != LedSystemState.Off;
+        return GetConsecutiveLedDays() >= maxDaysForFullStress && LedSystemState != LedSystemState.Off;
     }
     
     /// <summary>

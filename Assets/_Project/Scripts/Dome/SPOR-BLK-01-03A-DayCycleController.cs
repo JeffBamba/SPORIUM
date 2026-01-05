@@ -462,7 +462,7 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Calcola idratazione percentuale (0-100%)
-        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4; // DEBUG_SAFE_FIX: Fallback aggiornato da 3 a 4
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
         int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
         
         // GDD AZ-11: Usa WateringSystemOn invece di LastWateredDay per determinare idratazione
@@ -1054,7 +1054,7 @@ public class DayCycleController : MonoBehaviour
             }
         }
         
-        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4;
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
         
         foreach (var pot in _registeredPots)
         {
@@ -1120,7 +1120,7 @@ public class DayCycleController : MonoBehaviour
                 // Applica effetti (WAT-RAW già verificato e disponibile)
                 if (pot.WateringSystemOn)
                 {
-                    // Applica +20% idratazione (1 punto se max=5)
+                    // Applica +10% idratazione (1 punto se max=10)
                     bool hydrationIncreased = pot.IncreaseHydration(maxHydration);
                     
                     // Consumo CRY (sempre, anche se accumulatore < 1.0)
@@ -1275,8 +1275,9 @@ public class DayCycleController : MonoBehaviour
             }
         }
         
-        // Toast avviso zona rossa (4+ giorni)
-        if (consecutiveDays >= 4)
+        // Toast avviso zona rossa (100% stress = maxDaysForFullStress giorni)
+        int maxDaysForFullStress = GetMaxDaysForFullStress();
+        if (consecutiveDays >= maxDaysForFullStress)
         {
             ShowLedNotification($"LGT-003: LED {pot.LedSystemState} attivo {consecutiveDays} giorni - Zona rossa!", Color.red);
         }
@@ -1367,7 +1368,8 @@ public class DayCycleController : MonoBehaviour
         
         // TODO BLK-02.08: Applicare malus (Burn Stress, Mold Risk) quando sistemi saranno implementati
         // Per ora solo log
-        if (consecutiveDays >= 4 && enableDebugLogs)
+        int maxDaysForFullStress = GetMaxDaysForFullStress();
+        if (consecutiveDays >= maxDaysForFullStress && enableDebugLogs)
         {
             SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: LED {state} attivo {consecutiveDays} giorni - Zona rossa! (Malus mult: {malusMultiplier:F1})");
         }
@@ -1379,6 +1381,14 @@ public class DayCycleController : MonoBehaviour
     private int GetMaxLightExposureForPot(PotStateModel pot)
     {
         return _potSystemConfig != null ? _potSystemConfig.MaxLightExposure : 3;
+    }
+    
+    /// <summary>
+    /// BLK-02.07: Ottiene max days for full stress (helper)
+    /// </summary>
+    private int GetMaxDaysForFullStress()
+    {
+        return _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
     }
     
     /// <summary>
@@ -1427,7 +1437,7 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void ApplyDecayAndCleanup(int dayIndex)
     {
-        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 4;
+        int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
         
         foreach (var pot in _registeredPots)
         {
@@ -1800,7 +1810,7 @@ public class DayCycleController : MonoBehaviour
             // DEBUG: Log dati prima del calcolo
             if (enableDebugLogs)
             {
-                int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 5;
+                int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
                 int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
                 float currentPh = _phSystem != null ? _phSystem.CurrentPh : 0f;
                 bool isOverwatering = PlantConditionSystem.IsOverwatering(pot, maxHydration);

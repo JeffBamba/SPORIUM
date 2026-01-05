@@ -47,13 +47,13 @@ namespace Sporae.Dome.PotSystem.Condition
             // Calcola stress percentage una volta all'inizio per riutilizzarlo in più sezioni
             // BUG FIX: Quando lo stress è nel range (tra 0% e 100%), non applicare né bonus né malus per la luce
             int consecutiveDays = potState.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
+            int maxDaysForFullStress = potConfig != null ? potConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             
             // === CONTRIBUTI POSITIVI ===
             
             // 1. Idratazione in range ottimale per stadio
-            int maxHydration = potConfig != null ? potConfig.MaxHydration : 4;
+            int maxHydration = potConfig != null ? potConfig.MaxHydration : 10;
             int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)potState.Hydration / maxHydration * 100f) : 0;
             
             // Verifica range ottimale per stadio (50-75% per la maggior parte degli stadi)

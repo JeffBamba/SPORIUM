@@ -34,7 +34,7 @@ namespace Sporae.Dome.PotSystem.Growth
             }
             
             // 1. Verifica water nel range ideale (hydrationPercent nel range)
-            int maxHydration = potConfig != null ? potConfig.MaxHydration : 4;
+            int maxHydration = potConfig != null ? potConfig.MaxHydration : 10;
             int hydrationPercent = maxHydration > 0 ? 
                 Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
             

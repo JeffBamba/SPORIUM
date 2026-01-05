@@ -753,6 +753,26 @@ namespace _Project
         }
         
         /// <summary>
+        /// Ricarica PotSystemConfig e forza aggiornamento UI
+        /// </summary>
+        public void RefreshPotSystemConfig()
+        {
+            _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (_potSystemConfig == null)
+            {
+                var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
+                if (allConfigs != null && allConfigs.Length > 0)
+                {
+                    _potSystemConfig = allConfigs[0];
+                }
+            }
+            if (_currentSelectedPot != null)
+            {
+                UpdateStageAndProgressUI(_currentSelectedPot);
+            }
+        }
+        
+        /// <summary>
         /// Gestisce il click su un pulsante di azione
         /// </summary>
         private void OnActionButtonClicked(PotEvents.PotActionType actionType)
@@ -1296,7 +1316,7 @@ namespace _Project
             }
             
             // Aggiorna Hydration Stress (mostra percentuale e range ideale per lo stadio corrente)
-            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 5; // 5 step = 20% ciascuno
+            int maxHydration = _currentSelectedPot?.PotActions?.GetMaxHydration() ?? 10; // 10 step = 10% ciascuno
             float hydrationPercentage = maxHydration > 0 ? (float)state.Hydration / maxHydration * 100f : 0f;
             
             // GDD AZ-11: Mostra anche lo stato del sistema irrigazione
@@ -1378,14 +1398,15 @@ namespace _Project
                 
                 // Stress calcolato sempre in base ai giorni consecutivi residui
                 // 0 giorni = 0% (nessuno stress)
-                // 1 giorno = 25%
-                // 2 giorni = 50%
-                // 3 giorni = 75%
-                // 4+ giorni = 100% (zona rossa, malus attivo)
-                const int maxDaysForFullStress = 4;
+                // 1 giorno = 20%
+                // 2 giorni = 40%
+                // 3 giorni = 60%
+                // 4 giorni = 80%
+                // 5+ giorni = 100% (zona rossa, malus attivo)
+                int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
                 stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
                 
-                // Nota: Quando LED è spento, i giorni consecutivi decrescono gradualmente (25% al giorno)
+                // Nota: Quando LED è spento, i giorni consecutivi decrescono gradualmente (20% al giorno)
                 // seguendo la stessa logica della crescita ma al contrario
                 
                 // MODIFICA: Colore in base allo stress con nuova scala colori
@@ -2517,7 +2538,7 @@ namespace _Project
             // BUG 3 FIX: Light OK basato su stress percentage (0% = OK) invece di LightExposure
             // Calcola stress percentage (come nella HUD Light Stress)
             int consecutiveDays = state.GetConsecutiveLedDays();
-            const int maxDaysForFullStress = 4;
+            int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
             float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
             
             // BUG FIX: Light è OK se stress è tra 0% e 100% (esclusi gli estremi)

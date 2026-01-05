@@ -41,8 +41,9 @@ public class PotSystemConfig : ScriptableObject
     [SerializeField] public float InteractDistance = 2.0f;
     
     [Header("Resource Caps")]
-    [SerializeField] public int MaxHydration = 5; // 5 step = 20% per punto
+    [SerializeField] public int MaxHydration = 10; // 10 step = 10% per punto
     [SerializeField] public int MaxLightExposure = 3;
+    [SerializeField] public int MaxDaysForFullStress = 5; // 5 giorni = 20% per giorno
     
     [Header("Seed Configuration")]
     [SerializeField] public string GenericSeedCode = "SDE-001";
@@ -188,8 +189,9 @@ public class PotSystemConfig : ScriptableObject
         config.InteractDistance = 2.0f;
         
         // Limiti risorse
-        config.MaxHydration = 5; // 5 step = 20% per punto
+        config.MaxHydration = 10; // 10 step = 10% per punto
         config.MaxLightExposure = 3;
+        config.MaxDaysForFullStress = 5; // 5 giorni = 20% per giorno
         
         // Codice seme
         config.GenericSeedCode = "SDE-001";

@@ -127,6 +127,20 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Ricarica PotSystemConfig e forza aggiornamento di tutte le HUD
+    /// Utile quando MaxHydration o altri parametri vengono modificati
+    /// </summary>
+    public void RefreshPotSystemConfig()
+    {
+        _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+        if (_potSystemConfig != null)
+        {
+            UpdateAllAlwaysVisibleHUDs();
+            SporiumLogger.LogInfo(LogCategory.UI, "PotSystemConfig ricaricato e HUD aggiornate");
+        }
+    }
+    
     private void Update()
     {
         // Aggiorna le HUD sempre visibili periodicamente (ogni 0.5 secondi invece di ogni frame per performance)
@@ -633,7 +647,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             {
                 // Fallback: usa state.ConditionLabel direttamente
                 PlantCondition condition = (PlantCondition)state.ConditionLabel;
-                int maxHydration = _potSystemConfig?.MaxHydration ?? 5;
+                int maxHydration = _potSystemConfig?.MaxHydration ?? 10;
                 bool isOverwatering = PlantConditionSystem.IsOverwatering(state, maxHydration);
                 string conditionName = PlantConditionSystem.GetConditionName(condition, isOverwatering);
                 hudInstance.conditionText.text = $"Condizione: {conditionName}";
@@ -850,7 +864,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         
         // BUG FIX: Allinea logica con PlantCardV2 (usa Light Stress da GetConsecutiveLedDays)
         int consecutiveDays = state.GetConsecutiveLedDays();
-        const int maxDaysForFullStress = 4;
+        int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
         float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
         int lightStressPercent = Mathf.RoundToInt(stressPercentage);
         bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
@@ -1140,7 +1154,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         // OK quando stress è tra 0% e 100% (esclusi gli estremi)
         // Quando lo stress è nel range, è OK anche se le luci sono spente (seguendo la logica del fix)
         int consecutiveDays = state.GetConsecutiveLedDays();
-        const int maxDaysForFullStress = 4;
+        int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
         float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
         int lightStressPercent = Mathf.RoundToInt(stressPercentage);
         bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
