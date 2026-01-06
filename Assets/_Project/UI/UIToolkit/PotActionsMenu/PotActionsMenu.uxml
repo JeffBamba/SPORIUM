@@ -1,0 +1,59 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="PotActionsMenu.uss" />
+
+    <ui:VisualElement name="pot-ops-overlay" class="potops-overlay">
+        <ui:VisualElement name="pot-ops-panel" class="potops-panel">
+            <ui:VisualElement name="pot-ops-grid" class="potops-grid" />
+
+            <ui:VisualElement name="pot-ops-header" class="potops-header">
+                <ui:Label name="pot-ops-title" text="POT OPS" class="potops-title" />
+                <ui:VisualElement name="pot-ops-status" class="potops-status">
+                    <ui:Label name="pot-ops-status-label" text="○ EMPTY" class="potops-status-label" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="pot-ops-list" class="potops-list">
+                <ui:Button name="btn-plant" class="potops-row potops-row-plant">
+                    <ui:Label name="row-icon" text="🌱" class="potops-icon" />
+                    <ui:VisualElement name="row-text" class="potops-text">
+                        <ui:Label name="row-title" text="PLANT" class="potops-row-title" />
+                        <ui:Label name="row-subtitle" text="Insert seed" class="potops-row-subtitle" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="row-dot" class="potops-dot" />
+                </ui:Button>
+
+                <ui:Button name="btn-remove" class="potops-row potops-row-remove">
+                    <ui:Label name="row-icon" text="🗑" class="potops-icon" />
+                    <ui:VisualElement name="row-text" class="potops-text">
+                        <ui:Label name="row-title" text="REMOVE" class="potops-row-title" />
+                        <ui:Label name="row-subtitle" text="Uproot" class="potops-row-subtitle" />
+                    </ui:VisualElement>
+                    <ui:Label name="row-right" text="×" class="potops-right-x" />
+                </ui:Button>
+
+                <ui:Button name="btn-harvest" class="potops-row potops-row-harvest">
+                    <ui:Label name="row-icon" text="🍎" class="potops-icon" />
+                    <ui:VisualElement name="row-text" class="potops-text">
+                        <ui:Label name="row-title" text="HARVEST" class="potops-row-title" />
+                        <ui:Label name="row-subtitle" text="Collect" class="potops-row-subtitle" />
+                    </ui:VisualElement>
+                    <ui:Label name="row-right" text="×" class="potops-right-x" />
+                </ui:Button>
+
+                <ui:Button name="btn-inspect" class="potops-row potops-row-inspect">
+                    <ui:Label name="row-icon" text="👁" class="potops-icon" />
+                    <ui:VisualElement name="row-text" class="potops-text">
+                        <ui:Label name="row-title" text="INSPECT" class="potops-row-title" />
+                        <ui:Label name="row-subtitle" text="Check plant" class="potops-row-subtitle" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="row-dot" class="potops-dot" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:Button name="btn-close" class="potops-close-button">
+                <ui:Label text="×" class="potops-close-x" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

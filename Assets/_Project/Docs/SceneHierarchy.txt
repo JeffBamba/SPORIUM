@@ -2333,53 +2333,6 @@
       [Component] RectTransform
       [Component] VerticalLayoutGroup
       [Component] ContentSizeFitter
-  - HUDNotificationHeader2
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    [Component] HUDNotificationHeader2_0
-    - Background
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - Border
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - Content
-      [Component] RectTransform
-      [Component] HorizontalLayoutGroup
-      - InfoIcon
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-      - HeaderText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-        [Component] LayoutElement
-      - BadgeContainer
-        [Component] RectTransform
-        [Component] LayoutElement
-        - BadgeText
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - ChevronIcon
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-    - ToggleButton
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] Button
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
   - PlayerStatusPanel
     [Component] RectTransform
     [Component] PlayerStatusPanelController

@@ -11,10 +11,14 @@ namespace Sporae.UI.UIToolkit.PlantCard
     {
         [Header("References")]
         [SerializeField] private PlantCardV2Controller _plantCardController;
+
+        [Header("Behavior")]
+        [SerializeField] private bool _autoOpenOnPotSelected = false;
         
         private void OnEnable()
         {
-            PotSlot.OnPotSelected += OnPotSelected;
+            if (_autoOpenOnPotSelected)
+                PotSlot.OnPotSelected += OnPotSelected;
         }
         
         private void OnDisable()
@@ -23,6 +27,21 @@ namespace Sporae.UI.UIToolkit.PlantCard
         }
         
         private void OnPotSelected(PotSlot pot)
+        {
+            if (_plantCardController != null)
+            {
+                _plantCardController.ShowForPot(pot);
+            }
+            else
+            {
+                Debug.LogWarning("PlantCardV2Opener: PlantCardV2Controller non assegnato!");
+            }
+        }
+
+        /// <summary>
+        /// Apre esplicitamente la PlantCardV2 per il pot selezionato (usato dal Pot Ops menu).
+        /// </summary>
+        public void OpenForInspect(PotSlot pot)
         {
             if (_plantCardController != null)
             {

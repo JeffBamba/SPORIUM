@@ -500,7 +500,7 @@ public class PotActions : MonoBehaviour
     /// Esegue l'azione di piantare un seme
     /// </summary>
     /// <param name="seedTypeId">TypeId del seme da piantare. Se null, cerca automaticamente il primo seme disponibile.</param>
-    public bool DoPlant(string seedTypeId = null)
+    public bool DoPlant(string seedTypeId = null, bool irrigate = false)
     {
         // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
         if (_isPlantingInProgress)
@@ -522,18 +522,8 @@ public class PotActions : MonoBehaviour
             
             // DEBUG_SAFE_FIX: Log prima del consumo risorse per tracciare chiamate multiple
             int actionsBefore = _gameManager?.ActionsLeft ?? 0;
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant chiamato - Azioni prima: {actionsBefore}, seedTypeId: {seedTypeId}");
-            
-            // Consuma le risorse
-            if (!TryConsumeResources())
-            {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
-                return false;
-            }
-            
-            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
-            
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant chiamato - Azioni prima: {actionsBefore}, seedTypeId: {seedTypeId}, irrigate: {irrigate}");
+
             // Se seedTypeId non specificato, cerca automaticamente (compatibilità retroattiva)
             if (string.IsNullOrEmpty(seedTypeId))
             {
@@ -553,6 +543,27 @@ public class PotActions : MonoBehaviour
                 PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
                 return false;
             }
+
+            // Se irrigate=true, richiede 2x costo azioni e deve essere verificato prima di consumare.
+            int baseActionsCost = GetActionsCost();
+            int totalActionsCost = irrigate ? baseActionsCost * 2 : baseActionsCost;
+
+            if (_gameManager == null || _gameManager.ActionsLeft < totalActionsCost)
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Azioni insufficienti");
+                return false;
+            }
+
+            // Consuma azioni (in un'unica spesa) per evitare doppi side-effect.
+            bool spendOk = _gameManager.TrySpendAction(totalActionsCost);
+            if (!spendOk)
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
+                return false;
+            }
+
+            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
             
             // Cerca PlantData dal database usando il TypeId del seme
             PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
@@ -590,6 +601,14 @@ public class PotActions : MonoBehaviour
             
             // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
             _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
+
+            // Se richiesto, irrigazione immediata: imposta hydration al 40% del max.
+            if (irrigate)
+            {
+                int maxHydration = GetMaxHydration();
+                int targetHydration = Mathf.Clamp(Mathf.RoundToInt(maxHydration * 0.4f), 0, maxHydration);
+                _potState.Hydration = targetHydration;
+            }
             
             // DEBUG: Verifica che PlantCode sia stato salvato correttamente
             if (showDebugLogs)
@@ -627,7 +646,8 @@ public class PotActions : MonoBehaviour
             if (showDebugLogs)
             {
                 string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
-                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted, state={_potState}{plantInfo}");
+                string irrigateInfo = irrigate ? ", irrigated=true" : "";
+                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted{irrigateInfo}, state={_potState}{plantInfo}");
             }
             
             return true;

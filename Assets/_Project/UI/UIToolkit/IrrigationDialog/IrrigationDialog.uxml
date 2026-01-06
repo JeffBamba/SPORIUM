@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="IrrigationDialog.uss" />
+
+    <ui:VisualElement name="irrig-overlay" class="irrig-overlay">
+        <ui:VisualElement name="irrig-panel" class="irrig-panel">
+            <ui:VisualElement name="irrig-grid" class="irrig-grid" />
+
+            <ui:VisualElement name="irrig-header" class="irrig-header">
+                <ui:VisualElement name="irrig-header-left" class="irrig-header-left">
+                    <ui:Label name="irrig-icon" text="💧" class="irrig-header-icon" />
+                    <ui:VisualElement name="irrig-header-text" class="irrig-header-text">
+                        <ui:Label name="irrig-title" text="IRRIGATION PROTOCOL" class="irrig-title" />
+                        <ui:Label name="irrig-subtitle" text="System query detected" class="irrig-subtitle" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:Label name="irrig-question" text="Vuoi anche irrigare la terra mentre pianti il seme" class="irrig-question" />
+            <ui:Label name="irrig-seedname" text="SEED" class="irrig-seedname" />
+            <ui:Label name="irrig-hint" text="L'irrigazione immediata aumenta la probabilità di germinazione." class="irrig-hint" />
+
+            <ui:VisualElement name="irrig-buttons" class="irrig-buttons">
+                <ui:Button name="btn-irrigate" class="irrig-btn irrig-btn-yes">
+                    <ui:Label text="SÌ, IRRIGA" class="irrig-btn-title" />
+                    <ui:Label text="Plant + Water" class="irrig-btn-sub" />
+                </ui:Button>
+                <ui:Button name="btn-plant-only" class="irrig-btn irrig-btn-no">
+                    <ui:Label text="NO, SOLO PIANTA" class="irrig-btn-title" />
+                    <ui:Label text="Plant only" class="irrig-btn-sub" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

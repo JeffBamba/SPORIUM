@@ -1,0 +1,64 @@
+# 📝 **COMMIT RECAP 0035 - POT OPS + SEED INVENTORY + IRRIGATION (UI TOOLKIT)**
+
+## 🎯 **PANORAMICA**
+Implementato il nuovo flusso di interazione POT basato su UI Toolkit:
+- Click POT → **POT OPS** menu (EMPTY/OCCUPIED)
+- **PLANT** → **SEED INVENTORY** (UI Toolkit, border giallo) → selezione seed
+- → **IRRIGATION PROTOCOL** (UI Toolkit, border blu) → SÌ/NO
+- → `PotActions.DoPlant(seedTypeId, irrigate)` (irrigate=true consuma 2 azioni e imposta hydration al 40% max)
+- POT occupato: **INSPECT / HARVEST / REMOVE** (ordine richiesto) con chiusura menu solo su successo per HARVEST/REMOVE
+- PlantCardV2: non si pianta più dalla card (PLANT hidden/disabled a runtime); apertura solo via INSPECT
+
+## 📋 **FILE AGGIUNTI**
+
+### UI Toolkit - Pot Ops
+- `Assets/_Project/UI/UIToolkit/PotActionsMenu/PotActionsMenu.uxml`
+- `Assets/_Project/UI/UIToolkit/PotActionsMenu/PotActionsMenu.uss`
+- `Assets/_Project/Scripts/UI/UIToolkit/PotActionsMenu/PotActionsMenu.cs`
+- `Assets/_Project/Scripts/UI/UIToolkit/PotActionsMenu/PotActionsMenuOpener.cs`
+
+### UI Toolkit - Seed Inventory
+- `Assets/_Project/UI/UIToolkit/SeedInventory/SeedInventoryMenu.uxml`
+- `Assets/_Project/UI/UIToolkit/SeedInventory/SeedInventoryMenu.uss`
+- `Assets/_Project/Scripts/UI/UIToolkit/SeedInventory/SeedInventoryMenu.cs`
+
+### UI Toolkit - Irrigation Protocol
+- `Assets/_Project/UI/UIToolkit/IrrigationDialog/IrrigationDialog.uxml`
+- `Assets/_Project/UI/UIToolkit/IrrigationDialog/IrrigationDialog.uss`
+- `Assets/_Project/Scripts/UI/UIToolkit/IrrigationDialog/IrrigationDialog.cs`
+
+## ✏️ **FILE MODIFICATI**
+
+### `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Opener.cs`
+- Aggiunto flag `_autoOpenOnPotSelected=false` (default) per disabilitare auto-open al click del pot
+- Aggiunto metodo `OpenForInspect(PotSlot)` per aprire PlantCardV2 solo da INSPECT
+
+### `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Controller.cs`
+- Disabilitati/nascosti a runtime `plant-button` e `plant-action-button` (planting consentito solo via Pot Ops)
+
+### `Assets/_Project/Scripts/Dome/PotActions.cs`
+- Modificata firma: `DoPlant(string seedTypeId = null, bool irrigate = false)`
+- `irrigate=true`: costo azioni 2x + hydration = 40% max
+- Consumo azioni spostato dopo validazione seed (evita perdita azioni su seed mancante)
+
+## 🐛 **BUG FIXATI**
+
+1. **Broken text PPtr / GUID 0000 invalid (UI Toolkit importer)**
+   - Fix: rimosso Style `project://database/...guid=0000...` e usato `Style src="*.uss"` relativo nei nuovi UXML
+
+2. **CS0127 in SeedInventoryMenu**
+   - Fix: `AddEmptyRow()` non ritorna più un oggetto (metodo void), ora aggiunge direttamente alla lista
+
+3. **INSPECT non apriva PlantCardV2**
+   - Fix: in `PotActionsMenu.OnInspectClicked()` salvato `PotSlot` prima di `Hide()` (Hide resettava `_currentPot`)
+
+4. **Ordine bottoni OCCUPIED**
+   - Fix: riordino runtime nel container: INSPECT → HARVEST → REMOVE
+
+## ✅ **RISULTATI**
+- ✅ Flow completo funzionante (POT OPS → Seed Inventory → Irrigation → Plant)
+- ✅ INSPECT apre PlantCardV2 correttamente
+- ✅ Nessun errore di compilazione dopo hotfix
+- ✅ UI Toolkit non blocca input quando nascosta (pickingMode/display gestiti)
+
+

@@ -1,0 +1,29 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="SeedInventoryMenu.uss" />
+
+    <ui:VisualElement name="seedinv-overlay" class="seedinv-overlay">
+        <ui:VisualElement name="seedinv-panel" class="seedinv-panel">
+            <ui:VisualElement name="seedinv-grid" class="seedinv-grid" />
+
+            <ui:VisualElement name="seedinv-header" class="seedinv-header">
+                <ui:VisualElement name="seedinv-header-left" class="seedinv-header-left">
+                    <ui:Label name="seedinv-icon" text="📦" class="seedinv-header-icon" />
+                    <ui:VisualElement name="seedinv-header-text" class="seedinv-header-text">
+                        <ui:Label name="seedinv-title" text="SEED INVENTORY" class="seedinv-title" />
+                        <ui:Label name="seedinv-subtitle" text="Select seed to plant" class="seedinv-subtitle" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="btn-close" class="seedinv-close-button">
+                    <ui:Label text="×" class="seedinv-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:ScrollView name="seedinv-list" class="seedinv-list" />
+
+            <ui:Button name="btn-cancel" class="seedinv-cancel">
+                <ui:Label text="CANCEL" class="seedinv-cancel-text" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

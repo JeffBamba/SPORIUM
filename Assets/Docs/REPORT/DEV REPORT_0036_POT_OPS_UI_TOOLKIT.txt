@@ -1,0 +1,215 @@
+================================================================================
+                    DEV REPORT #0036 - POT OPS + SEED INVENTORY (UI TOOLKIT)
+                    SPORAE BUILD BETA
+                    Data: 2026-01-06
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** Pot Ops Menu + Seed Inventory + Irrigation Protocol (UI Toolkit)
+- **Tipo Report:** Development Report (Feature + UI/UX Flow Refactor)
+- **Data Generazione:** 2026-01-06
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Contesto:** Nuovo flusso d’interazione POT con menu azioni e selezione semi in UI Toolkit; PlantCardV2 solo via INSPECT.
+
+================================================================================
+
+📊 PANORAMICA GENERALE
+======================
+
+Obiettivo raggiunto:
+- Click su POT apre **POT OPS** (UI Toolkit) invece della PlantCardV2.
+- Flusso PLANT aggiornato come mockup:
+  - POT OPS → **SEED INVENTORY** (UI Toolkit, border giallo) → selezione seed
+  - → **IRRIGATION PROTOCOL** (UI Toolkit, border blu) → SÌ/NO
+  - → `PotActions.DoPlant(seedTypeId, irrigate)` + feedback/chiusura
+- POT occupato:
+  - POT OPS mostra **INSPECT / HARVEST / REMOVE** in ordine
+  - INSPECT apre PlantCardV2
+  - HARVEST/REMOVE chiudono il menu **solo su successo**
+- PlantCardV2: **PLANT rimosso dal flusso** (bottoni PLANT nascosti a runtime).
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+
+T-0036-001 — Pot Ops Menu (UI Toolkit)
+- **Descrizione:** Creato menu POT OPS con stato EMPTY/OCCUPIED, pulsanti azione, e gestione input (pickingMode).
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/PotActionsMenu/PotActionsMenu.uxml`
+  - `Assets/_Project/UI/UIToolkit/PotActionsMenu/PotActionsMenu.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/PotActionsMenu/PotActionsMenu.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/PotActionsMenu/PotActionsMenuOpener.cs`
+
+T-0036-002 — Seed Inventory (UI Toolkit)
+- **Descrizione:** Creato selettore semi nuovo in UI Toolkit che legge i semi reali da inventario (ItemConfig.IsSeed) e mostra badge famiglia + quantità.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/SeedInventory/SeedInventoryMenu.uxml`
+  - `Assets/_Project/UI/UIToolkit/SeedInventory/SeedInventoryMenu.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/SeedInventory/SeedInventoryMenu.cs`
+
+T-0036-003 — Irrigation Protocol (UI Toolkit)
+- **Descrizione:** Dialog modale UI Toolkit che chiede irrigazione SÌ/NO dopo selezione seed.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/IrrigationDialog/IrrigationDialog.uxml`
+  - `Assets/_Project/UI/UIToolkit/IrrigationDialog/IrrigationDialog.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/IrrigationDialog/IrrigationDialog.cs`
+
+T-0036-004 — Wiring flow e gating PlantCardV2
+- **Descrizione:** PlantCardV2 non si apre più al click del pot; si apre solo via INSPECT. PLANT non è più disponibile dentro PlantCardV2.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Opener.cs` (flag `_autoOpenOnPotSelected=false`, `OpenForInspect(PotSlot)`)
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Controller.cs` (plant buttons hidden/disabled a runtime)
+
+T-0036-005 — DoPlant irrigate
+- **Descrizione:** Estesa la firma DoPlant per supportare irrigazione immediata (2 azioni + hydration 40%).
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/Scripts/Dome/PotActions.cs` → `DoPlant(string seedTypeId = null, bool irrigate = false)`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+BUG-0036-001 — UI Toolkit “Broken text PPtr … GUID 0000… invalid”
+- **Causa:** UXML conteneva `<Style src="project://database/... guid=0000...">` placeholder non valido.
+- **Soluzione:** Uso di riferimenti relativi ai `.uss`:
+  - `PotActionsMenu.uxml` → `<Style src="PotActionsMenu.uss" />`
+  - `SeedInventoryMenu.uxml` → `<Style src="SeedInventoryMenu.uss" />`
+  - `IrrigationDialog.uxml` → `<Style src="IrrigationDialog.uss" />`
+- **Verifica:** Reimport UXML senza errori importer.
+
+BUG-0036-002 — CS0127: return con void in SeedInventoryMenu.AddEmptyRow
+- **Causa:** Metodo `AddEmptyRow` era `void` ma restituiva un `VisualElement`.
+- **Soluzione:** `AddEmptyRow` aggiunge la riga direttamente alla `_list`.
+- **Verifica:** Compilazione C# ok.
+
+BUG-0036-003 — INSPECT non apriva PlantCardV2
+- **Causa:** `PotActionsMenu.OnInspectClicked()` chiamava `Hide()` prima di `OpenForInspect()`, azzerando `_currentPot`.
+- **Soluzione:** Salvato `PotSlot` in variabile locale prima di `Hide()`.
+- **Verifica:** INSPECT apre PlantCardV2 correttamente.
+
+================================================================================
+
+🧱 ATTIVITÀ DI LAVORO SVOLTE (DETTAGLIO)
+=======================================
+
+1) UI Toolkit
+- Implementati 3 moduli UI Toolkit (PotOps / SeedInventory / IrrigationDialog)
+- Gestione “non bloccare input” con:
+  - `style.display = None/Flex`
+  - `pickingMode = Ignore/Position`
+  - `canvas.enabled = true/false` per UIDocument
+
+2) Integrazione con sistemi esistenti
+- SeedInventory usa:
+  - `Inventory.Items` + filtro `ItemConfig.IsSeed`
+  - `PlantDatabase.GetPlantDataBySeedTypeId(typeId)` per badge famiglia e nome leggibile
+
+3) Gameplay / costs
+- `PotActions.DoPlant(seedTypeId, irrigate)`:
+  - irrigate=false: costo standard
+  - irrigate=true: costo azioni 2x e `_potState.Hydration = 40%` del max
+  - consumo azioni effettuato dopo validazione seed (no “azioni bruciate” se seed mancante)
+
+================================================================================
+
+✅ TEST CASES E RISULTATI
+========================
+
+TC-0036-001: POT empty → POT OPS mostra PLANT (abilitato se CanPlant)
+- Risultato: ✅ PASS
+
+TC-0036-002: PLANT → Seed Inventory mostra semi e quantità
+- Risultato: ✅ PASS
+
+TC-0036-003: Select seed → Irrigation Protocol → SÌ/NO → DoPlant(irrigate)
+- Risultato: ✅ PASS
+
+TC-0036-004: POT occupied → POT OPS mostra INSPECT/HARVEST/REMOVE (ordine corretto)
+- Risultato: ✅ PASS
+
+TC-0036-005: INSPECT → PlantCardV2 si apre
+- Risultato: ✅ PASS
+
+================================================================================
+
+📌 ISTRUZIONI MANUALI (UNITY) — PASSO PASSO
+==========================================
+
+NOTA IMPORTANTE (SCENA):
+- I nuovi GameObject UI Toolkit vanno creati **a root**, NON come figli del `Canvas` principale legacy,
+  per evitare che `canvas.enabled=false` spenga l’intero HUD.
+
+1) Crea questi GameObject (a root, vicino a `PlantCardV2`):
+   - `PotActionsMenu`
+   - `SeedInventoryMenu`
+   - `IrrigationDialog`
+   - `PotActionsMenuOpener`
+
+2) PotActionsMenu
+   - Add Component → `UIDocument`
+   - Add Component → `PotActionsMenu` (script)
+   - UIDocument:
+     - Source Asset: `Assets/_Project/UI/UIToolkit/PotActionsMenu/PotActionsMenu.uxml`
+     - Panel Settings: `Assets/_Project/UI/UIToolkit/PlayerStatusPanelSettings.asset`
+
+3) SeedInventoryMenu
+   - Add Component → `UIDocument`
+   - Add Component → `SeedInventoryMenu` (script)
+   - UIDocument:
+     - Source Asset: `Assets/_Project/UI/UIToolkit/SeedInventory/SeedInventoryMenu.uxml`
+     - Panel Settings: `Assets/_Project/UI/UIToolkit/PlayerStatusPanelSettings.asset`
+
+4) IrrigationDialog
+   - Add Component → `UIDocument`
+   - Add Component → `IrrigationDialog` (script)
+   - UIDocument:
+     - Source Asset: `Assets/_Project/UI/UIToolkit/IrrigationDialog/IrrigationDialog.uxml`
+     - Panel Settings: `Assets/_Project/UI/UIToolkit/PlayerStatusPanelSettings.asset`
+
+5) PotActionsMenuOpener
+   - Add Component → `PotActionsMenuOpener` (script)
+   - Assegna riferimento: trascina il componente `PotActionsMenu` nel campo del opener.
+
+6) Wiring del PotActionsMenu (Inspector)
+   - Nel componente `PotActionsMenu` assegna:
+     - SeedInventoryMenu
+     - IrrigationDialog
+     - PlantCardV2Opener
+
+7) PlantCardV2Opener
+   - Assicurati che `_autoOpenOnPotSelected` sia `false` (default).
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+
+- Nei file UXML è preferibile usare `Style src="NomeFile.uss"` (relativo) per evitare dipendenze da GUID hardcoded.
+- Se un metodo di Hide() resetta lo stato, salva prima i riferimenti necessari (es. `_currentPot`).
+- Evitare di controllare `Canvas.enabled` su Canvas condivisi con UI legacy: posizionare UIDocument a root o usare canvas dedicati.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+
+- Aggiungere icone reali per seed (se disponibile una sorgente sprite per ItemConfig/PlantData).
+- Consolidare/Deprecare `UISeedSelector` legacy quando confermato che nessun altro flusso lo usa.
+- Rifinitura pixel-perfect (grid pattern, glow, spacing) in `.uss` per allineamento completo al mockup.
+
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+

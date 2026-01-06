@@ -208,14 +208,18 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             if (plantButton != null)
             {
-                plantButton.clicked += OnPlantButtonClicked;
+                // Plant è disabilitato: si pianta solo dal Pot Ops menu.
+                plantButton.style.display = DisplayStyle.None;
+                plantButton.SetEnabled(false);
             }
             
             // Plant action button sopra la live view
             var plantActionButton = _root.Q<Button>("plant-action-button");
             if (plantActionButton != null)
             {
-                plantActionButton.clicked += OnPlantButtonClicked;
+                // Plant è disabilitato: si pianta solo dal Pot Ops menu.
+                plantActionButton.style.display = DisplayStyle.None;
+                plantActionButton.SetEnabled(false);
             }
             
             if (removeButton != null)
