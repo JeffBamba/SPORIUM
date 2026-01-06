@@ -1,16 +1,16 @@
 /* BottomNavigation - Main Container */
 .bottom-nav {
     width: 100%;
-    height: 100px;
-    min-height: 100px;
-    max-height: 100px;
+    height: 132px;
+    min-height: 132px;
+    max-height: 132px;
     background-color: rgba(30, 40, 42, 0.9);
     border-top-width: 4px;
     border-top-color: rgba(127, 255, 122, 0.6);
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 18px;
+    padding-bottom: 18px;
     position: absolute;
     bottom: 0px;
     left: 0px;
@@ -45,10 +45,10 @@
 
 /* Room Button Base */
 .room-button {
-    width: 140px;
-    height: 70px;
-    min-width: 140px;
-    min-height: 70px;
+    width: 176px;
+    height: 88px;
+    min-width: 176px;
+    min-height: 88px;
     border-width: 2px;
     padding-left: 16px;
     padding-right: 16px;
@@ -83,7 +83,7 @@
 
 /* Room Label */
 .room-label {
-    font-size: 12px;
+    font-size: 14px;
     color: rgb(192, 200, 197);
     -unity-font-style: normal;
     -unity-text-align: middle-center;
@@ -102,7 +102,7 @@
 
 /* Room Floor Subtext */
 .room-floor {
-    font-size: 9px;
+    font-size: 11px;
     color: rgba(127, 255, 122, 0.6);
     -unity-font-style: normal;
     -unity-text-align: middle-center;
@@ -120,10 +120,10 @@
 
 /* Icon Placeholders in Room Buttons */
 .room-button .icon-placeholder {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    min-height: 20px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     border-width: 2px;
     border-color: rgb(192, 200, 197);
     background-color: rgba(192, 200, 197, 0.1);

@@ -1,9 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss?fileID=7433441132597879392&amp;guid=0edaeeaa3d5b0e240843cdd6d934829a&amp;type=3#PlantCardV2" />
-    <ui:VisualElement name="plant-card-v2-overlay" class="plant-card-overlay" style="height: 1094px; top: 0; left: 1px;">
+    <ui:VisualElement name="plant-card-v2-overlay" class="plant-card-overlay">
         <ui:VisualElement name="folder-edge-top" class="folder-edge-top" />
-        <ui:VisualElement name="main-card-container" class="plant-card-v2" style="min-height: 1080px; background-image: none; -unity-background-scale-mode: scale-to-fit; border-top-width: 5px; border-right-width: 5px; border-bottom-width: 5px; border-left-width: 5px;">
-            <ui:VisualElement name="crt-effect" class="crt-effect" style="height: 1082px;" />
+        <ui:VisualElement name="main-card-container" class="plant-card-v2" style="background-image: none; -unity-background-scale-mode: scale-to-fit; border-top-width: 5px; border-right-width: 5px; border-bottom-width: 5px; border-left-width: 5px;">
+            <ui:VisualElement name="crt-effect" class="crt-effect" />
             <ui:VisualElement name="grid-pattern" class="grid-pattern" style="top: 0;" />
             <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
             <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />

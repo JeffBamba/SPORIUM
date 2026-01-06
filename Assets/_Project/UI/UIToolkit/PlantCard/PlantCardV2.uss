@@ -20,6 +20,7 @@
     background-color: rgba(0, 0, 0, 0.9);
     align-items: center;
     justify-content: center;
+    padding: 24px;
 }
 
 .folder-edge-top {
@@ -33,15 +34,18 @@
 }
 
 .plant-card-v2 {
-    width: 1400px;
-    min-height: 800px;
+    width: 92%;
+    max-width: 1400px;
+    max-height: 92%;
+    min-height: 0;
     background-color: rgb(27, 27, 27);
     border-width: 2px;
     border-color: var(--green-led);
     padding: 24px;
     position: relative;
     flex-direction: column;
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .crt-effect {

@@ -1,0 +1,168 @@
+================================================================================
+                    DEV REPORT #0037 - UI TOOLKIT HUD SCALING + LAYOUT CONSISTENCY
+                    SPORAE BUILD BETA
+                    Data: 2026-01-06
+                    Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-UI-HUD-0037 — Normalizzazione scaling HUD + Fix fullscreen PlantCardV2 + Resize Top/Bottom Bar
+- **Tipo Report:** Development Report (UI/UX + Layout/Scaling)
+- **Data Generazione:** 2026-01-06
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Contesto:** Dopo DEV REPORT #0036 (POT OPS + UI Toolkit), la HUD risultava incoerente tra GameView “zoomata” e Fullscreen; PlantCardV2 “sballava” in fullscreen; Top/Bottom bar risultavano fuori scala rispetto al resto.
+
+================================================================================
+
+📊 PANORAMICA GENERALE
+======================
+
+Obiettivo raggiunto:
+- Stabilizzata la HUD UI Toolkit tra **GameView (Editor)** e **Fullscreen**: stessa proporzione e comportamento.
+- Fixato il caso “PlantCardV2 ok in GameView ma rotta in fullscreen” (mismatch PanelSettings tra UIDocument).
+- Uniformata la “scala percepita” tra moduli: TopBar/BottomNavigation ora non risultano micro rispetto a PlantCard/PlayerStatus.
+
+Nota critica (concetto):
+- **Game View Scale (es. 0.52)** in Unity è **zoom dell’Editor**, NON una risoluzione. In fullscreen torni a scala 1:1, quindi senza regole di scaling coerenti la UI appare “diversa”.
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+
+T-0037-001 — Normalizzazione PanelSettings per HUD UI Toolkit
+- **Descrizione:** Allineati i `PanelSettings` usati dai vari UIDocument (Top/Bottom/PlayerStatus/PlantCard/Background) per evitare mismatch di scale/behavior tra pannelli.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/PlayerStatusPanelSettings.asset`
+  - `Assets/_Project/UI/UIToolkit/HUD/TopNavigationPanel.asset`
+  - `Assets/_Project/UI/UIToolkit/HUD/BottomNavigationPanel.asset`
+  - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2Settings.asset`
+  - `Assets/_Project/UI/UIToolkit/BackgroundSettingsPanel.asset`
+- **Dettagli chiave applicati:**
+  - Reference Resolution: `1920x1080`
+  - Match: `0.5`
+  - Scale Mode: coerente tra tutti i pannelli
+  - Scale globale: impostata per ottenere resa consistente tra windowed e fullscreen (in base alla resa desiderata in Editor)
+
+T-0037-002 — PlantCardV2: clamp su schermo + scroll interno
+- **Descrizione:** Rimossa la dipendenza da height/min-height hardcoded a livello root; aggiunto max-size e overflow per evitare che la card sfori lo schermo.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uxml`
+  - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss`
+
+T-0037-003 — TopBar & BottomNavigation: riallineamento “scala visiva”
+- **Descrizione:** Aumentate dimensioni strutturali (height/padding/font/icon/button size) per rendere Top/Bottom consistenti con il resto della HUD e ridurre l’effetto “micro”.
+- **Status finale:** ✅ COMPLETATO
+- **Evidenza tecnica:**
+  - `Assets/_Project/UI/UIToolkit/HUD/TopBar.uxml`
+  - `Assets/_Project/UI/UIToolkit/HUD/TopBar.uss`
+  - `Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uxml`
+  - `Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uss`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+
+BUG-0037-001 — PlantCardV2 “si scazza” solo in fullscreen (ok in GameView)
+- **Descrizione:** In fullscreen PlantCardV2 cambiava scala/layout rispetto al resto della HUD.
+- **Causa:** UIDocument diversi usavano **PanelSettings con ScaleMode differenti** + test in Editor influenzato dal “GameView Scale” (zoom).
+- **Soluzione:** Uniformati i PanelSettings tra tutti i pannelli; rimossi vincoli hardcoded in PlantCardV2 root e aggiunto overflow/scroll.
+- **Verifica:** In Play Mode, PlantCardV2 coerente tra GameView e fullscreen.
+
+BUG-0037-002 — Top/Bottom bar fuori proporzione rispetto ai pannelli (troppo piccole)
+- **Causa:** Layout disegnato con height/font/button size più bassi (TopBar 80px, bottoni nav 140x70, font piccoli).
+- **Soluzione:** Aumentate dimensioni in USS e rimosse override inline che impedivano l’allineamento.
+- **Verifica:** Top/Bottom visivamente comparabili a PlantCard/PlayerStatus senza creare scaling “speciali” per pannello.
+
+================================================================================
+
+🧱 ATTIVITÀ DI LAVORO SVOLTE (DETTAGLIO)
+=======================================
+
+1) Audit scaling UI Toolkit
+- Identificata la fonte dell’incoerenza: PanelSettings non uniformi + confusione tra “GameView Scale” e risoluzione effettiva.
+
+2) Hardening PlantCardV2
+- Eliminati height/min-height root che forzavano overflow oltre viewport.
+- Aggiunto clamp e scroll per robustezza su aspect ratio diversi.
+
+3) Coerenza tipografica/volumetrica su barre HUD
+- TopBar: height/padding/font/icon/slider dimensionati per allinearsi alla leggibilità del resto.
+- BottomNavigation: dimensioni bottoni e testi riviste per equilibrio visivo.
+
+================================================================================
+
+✅ TEST CASES E RISULTATI
+========================
+
+TC-0037-001: HUD base (Top/Bottom/PlayerStatus) in Play Mode su 1920x1080
+- Risultato: ✅ PASS
+
+TC-0037-002: Fullscreen ON/OFF (stessa scena) — layout invariato
+- Risultato: ✅ PASS
+
+TC-0037-003: Apertura PlantCardV2 (via INSPECT) — non sfora viewport, scroll interno se necessario
+- Risultato: ✅ PASS
+
+TC-0037-004: Coerenza “peso visivo” Top/Bottom vs pannelli centrali
+- Risultato: ✅ PASS
+
+================================================================================
+
+📌 ISTRUZIONI MANUALI (UNITY) — PASSO PASSO
+==========================================
+
+1) Verifica PanelSettings
+   - In Project apri questi asset:
+     - `Assets/_Project/UI/UIToolkit/PlayerStatusPanelSettings.asset`
+     - `Assets/_Project/UI/UIToolkit/HUD/TopNavigationPanel.asset`
+     - `Assets/_Project/UI/UIToolkit/HUD/BottomNavigationPanel.asset`
+     - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2Settings.asset`
+     - `Assets/_Project/UI/UIToolkit/BackgroundSettingsPanel.asset`
+   - Assicurati che i parametri siano coerenti tra loro:
+     - Reference Resolution: `1920x1080`
+     - Match: `0.5`
+     - Scale Mode: uguale su tutti i pannelli
+     - Scale: uguale su tutti i pannelli (se si vuole una resa globale uniforme)
+
+2) Verifica UIDocument (Scene)
+   - Seleziona i GameObject con componente **UIDocument** (TopBar/BottomNav/PlayerStatus/Background/PlantCardV2).
+   - Controlla che **Panel Settings** punti all’asset corretto e coerente.
+
+3) Test fullscreen
+   - Entra in Play Mode.
+   - Apri/chiudi fullscreen della Game View.
+   - Verifica che la HUD non cambi “proporzione” e che PlantCardV2 resti stabile.
+
+4) Nota importante su Game View Scale
+   - La voce “Scale 0.xx” in Game View è zoom editor: NON usarla come riferimento per “dimensione reale” della HUD.
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+
+- In UI Toolkit, **PanelSettings è il riferimento reale** di scaling: se pannelli diversi hanno parametri diversi, la HUD non sarà mai coerente.
+- “Game View Scale” (0.52, 0.75, ecc.) è **zoom**: la validazione del layout va fatta a risoluzione/aspect target e/o in fullscreen.
+- Evitare height/min-height hardcoded su overlay/root di modali: preferire clamp (% + max) e overflow controllato.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+
+- Scegliere una **scala target definitiva** (es. 0.75–0.90) e consolidarla come standard HUD.
+- Ridurre gli inline style in UXML (dove possibile) e introdurre “design tokens” in USS (variabili per font/padding/spacing).
+- Passata di coerenza tipografica: normalizzare font-size tra moduli per eliminare micro-differenze residue.
+
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+
