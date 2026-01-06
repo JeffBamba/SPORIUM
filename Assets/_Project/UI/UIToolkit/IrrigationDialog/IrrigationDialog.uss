@@ -6,7 +6,7 @@
     left: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
 .irrig-panel {
@@ -14,14 +14,14 @@
     --irrig-yellow: rgb(230, 201, 111);
     --irrig-muted: rgba(192, 200, 197, 0.65);
 
-    width: 760px;
-    min-height: 360px;
-    background-color: rgba(10, 18, 22, 0.96);
+    width: 620px;
+    background-color: rgb(10, 18, 22);
     border-width: 2px;
     border-color: var(--irrig-blue);
     padding: 18px;
     flex-direction: column;
     position: relative;
+    max-height: 420px;
 }
 
 .irrig-grid {
@@ -48,9 +48,22 @@
     gap: 10px;
 }
 
-.irrig-header-icon {
-    font-size: 18px;
-    color: var(--irrig-blue);
+.irrig-iconbox {
+    width: 46px;
+    height: 46px;
+    border-width: 2px;
+    border-color: rgba(93, 182, 227, 0.85);
+    background-color: rgb(12, 18, 22);
+    align-items: center;
+    justify-content: center;
+}
+
+.irrig-iconglyph {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.65);
+    background-color: rgb(10, 18, 22);
 }
 
 .irrig-title {
@@ -67,25 +80,33 @@
     margin-top: 4px;
 }
 
+.irrig-divider {
+    height: 1px;
+    background-color: rgba(93, 182, 227, 0.35);
+    margin-top: 10px;
+    margin-bottom: 14px;
+}
+
 .irrig-question {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    color: rgba(240, 246, 250, 0.95);
     margin-top: 4px;
 }
 
 .irrig-seedname {
-    font-size: 14px;
+    font-size: 18px;
     letter-spacing: 1px;
-    color: var(--irrig-blue);
-    text-shadow: 0 0 8px rgba(93, 182, 227, 0.6);
+    color: rgb(127, 255, 122);
+    text-shadow: 0 0 8px rgba(127, 255, 122, 0.55);
     margin-top: 10px;
     -unity-font-style: bold;
 }
 
 .irrig-hint {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--irrig-muted);
     margin-top: 10px;
+    line-height: 1.4;
 }
 
 .irrig-buttons {
@@ -96,33 +117,56 @@
 
 .irrig-btn {
     flex: 1;
-    height: 92px;
+    height: 88px;
     border-width: 2px;
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: rgb(18, 28, 33);
     padding: 12px;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
 }
 
+.irrig-btn-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
 .irrig-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgb(22, 34, 40);
+}
+
+.irrig-btn-iconbox {
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
+    background-color: rgb(12, 18, 22);
+    align-items: center;
+    justify-content: center;
+}
+
+.irrig-btn-iconglyph {
+    width: 14px;
+    height: 14px;
+    border-width: 1px;
+    background-color: rgb(10, 18, 22);
 }
 
 .irrig-btn-title {
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: 2px;
     -unity-font-style: bold;
 }
 
 .irrig-btn-sub {
-    font-size: 10px;
-    margin-top: 6px;
+    font-size: 12px;
+    margin-top: 8px;
     color: var(--irrig-muted);
 }
 
 .irrig-btn-yes {
     border-color: rgba(93, 182, 227, 0.65);
+    background-color: rgb(18, 42, 54);
 }
 
 .irrig-btn-yes .irrig-btn-title {
@@ -130,13 +174,26 @@
     text-shadow: 0 0 6px rgba(93, 182, 227, 0.6);
 }
 
+.irrig-btn-yes:hover { background-color: rgb(20, 50, 64); }
+.irrig-btn-yes:active { background-color: rgb(22, 56, 70); }
+
+.irrig-btn-yes .irrig-btn-iconbox { border-color: rgba(93, 182, 227, 0.85); }
+.irrig-btn-yes .irrig-btn-iconglyph { border-color: rgba(93, 182, 227, 0.65); }
+
 .irrig-btn-no {
     border-color: rgba(230, 201, 111, 0.65);
+    background-color: rgb(52, 46, 28);
 }
 
 .irrig-btn-no .irrig-btn-title {
     color: rgba(230, 201, 111, 0.95);
     text-shadow: 0 0 6px rgba(230, 201, 111, 0.6);
 }
+
+.irrig-btn-no:hover { background-color: rgb(60, 54, 32); }
+.irrig-btn-no:active { background-color: rgb(66, 58, 34); }
+
+.irrig-btn-no .irrig-btn-iconbox { border-color: rgba(230, 201, 111, 0.85); }
+.irrig-btn-no .irrig-btn-iconglyph { border-color: rgba(230, 201, 111, 0.65); }
 
 

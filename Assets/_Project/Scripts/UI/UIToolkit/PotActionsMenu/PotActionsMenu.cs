@@ -15,6 +15,7 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
 
         private VisualElement _root;
         private VisualElement _overlay;
+        private VisualElement _panel;
         private VisualElement _list;
         private Label _statusLabel;
         private Button _btnClose;
@@ -39,6 +40,7 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
             }
 
             _overlay = _root.Q<VisualElement>("pot-ops-overlay");
+            _panel = _root.Q<VisualElement>("pot-ops-panel");
             _list = _root.Q<VisualElement>("pot-ops-list");
             _statusLabel = _root.Q<Label>("pot-ops-status-label");
             _btnClose = _root.Q<Button>("btn-close");
@@ -81,9 +83,14 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
                 _btnPlant.SetEnabled(isEmpty && potActions != null && potActions.CanPlant());
             }
 
-            // INSPECT/HARVEST/REMOVE: solo se ha pianta
+            // INSPECT/HARVEST/REMOVE:
+            // - EMPTY: nascosti (solo PLANT)
+            // - OCCUPIED: mostrati e abilitati secondo gating
             if (_btnInspect != null)
+            {
                 _btnInspect.style.display = hasPlant ? DisplayStyle.Flex : DisplayStyle.None;
+                _btnInspect.SetEnabled(hasPlant);
+            }
 
             if (_btnRemove != null)
             {
@@ -95,6 +102,15 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
             {
                 _btnHarvest.style.display = hasPlant ? DisplayStyle.Flex : DisplayStyle.None;
                 _btnHarvest.SetEnabled(hasPlant && potActions != null && potActions.CanHarvest());
+            }
+
+            // Classe styling per EMPTY (centratura + box compatto)
+            if (_panel != null)
+            {
+                if (isEmpty)
+                    _panel.AddToClassList("potops-empty");
+                else
+                    _panel.RemoveFromClassList("potops-empty");
             }
 
             // Ordine richiesto:

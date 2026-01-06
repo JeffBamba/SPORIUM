@@ -7,7 +7,7 @@
 
             <ui:VisualElement name="seedinv-header" class="seedinv-header">
                 <ui:VisualElement name="seedinv-header-left" class="seedinv-header-left">
-                    <ui:Label name="seedinv-icon" text="📦" class="seedinv-header-icon" />
+                    <ui:VisualElement name="seedinv-iconbox" class="seedinv-iconbox" />
                     <ui:VisualElement name="seedinv-header-text" class="seedinv-header-text">
                         <ui:Label name="seedinv-title" text="SEED INVENTORY" class="seedinv-title" />
                         <ui:Label name="seedinv-subtitle" text="Select seed to plant" class="seedinv-subtitle" />

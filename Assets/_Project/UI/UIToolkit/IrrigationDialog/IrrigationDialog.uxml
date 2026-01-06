@@ -7,7 +7,9 @@
 
             <ui:VisualElement name="irrig-header" class="irrig-header">
                 <ui:VisualElement name="irrig-header-left" class="irrig-header-left">
-                    <ui:Label name="irrig-icon" text="💧" class="irrig-header-icon" />
+                    <ui:VisualElement name="irrig-iconbox" class="irrig-iconbox">
+                        <ui:VisualElement name="irrig-iconglyph" class="irrig-iconglyph" />
+                    </ui:VisualElement>
                     <ui:VisualElement name="irrig-header-text" class="irrig-header-text">
                         <ui:Label name="irrig-title" text="IRRIGATION PROTOCOL" class="irrig-title" />
                         <ui:Label name="irrig-subtitle" text="System query detected" class="irrig-subtitle" />
@@ -15,17 +17,29 @@
                 </ui:VisualElement>
             </ui:VisualElement>
 
+            <ui:VisualElement name="irrig-divider" class="irrig-divider" />
+
             <ui:Label name="irrig-question" text="Vuoi anche irrigare la terra mentre pianti il seme" class="irrig-question" />
             <ui:Label name="irrig-seedname" text="SEED" class="irrig-seedname" />
             <ui:Label name="irrig-hint" text="L'irrigazione immediata aumenta la probabilità di germinazione." class="irrig-hint" />
 
             <ui:VisualElement name="irrig-buttons" class="irrig-buttons">
                 <ui:Button name="btn-irrigate" class="irrig-btn irrig-btn-yes">
-                    <ui:Label text="SÌ, IRRIGA" class="irrig-btn-title" />
+                    <ui:VisualElement name="btn-header" class="irrig-btn-header">
+                        <ui:VisualElement name="btn-icon" class="irrig-btn-iconbox">
+                            <ui:VisualElement name="btn-iconglyph" class="irrig-btn-iconglyph" />
+                        </ui:VisualElement>
+                        <ui:Label text="SÌ, IRRIGA" class="irrig-btn-title" />
+                    </ui:VisualElement>
                     <ui:Label text="Plant + Water" class="irrig-btn-sub" />
                 </ui:Button>
                 <ui:Button name="btn-plant-only" class="irrig-btn irrig-btn-no">
-                    <ui:Label text="NO, SOLO PIANTA" class="irrig-btn-title" />
+                    <ui:VisualElement name="btn-header" class="irrig-btn-header">
+                        <ui:VisualElement name="btn-icon" class="irrig-btn-iconbox">
+                            <ui:VisualElement name="btn-iconglyph" class="irrig-btn-iconglyph" />
+                        </ui:VisualElement>
+                        <ui:Label text="NO, SOLO PIANTA" class="irrig-btn-title" />
+                    </ui:VisualElement>
                     <ui:Label text="Plant only" class="irrig-btn-sub" />
                 </ui:Button>
             </ui:VisualElement>

@@ -6,7 +6,7 @@
     left: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
 .seedinv-panel {
@@ -15,14 +15,14 @@
     --seedinv-red: rgb(211, 95, 95);
     --seedinv-muted: rgba(192, 200, 197, 0.65);
 
-    width: 720px;
-    min-height: 560px;
-    background-color: rgba(10, 18, 22, 0.96);
+    width: 560px;
+    background-color: rgb(10, 18, 22);
     border-width: 2px;
     border-color: var(--seedinv-yellow);
     padding: 18px;
     flex-direction: column;
     position: relative;
+    max-height: 520px;
 }
 
 .seedinv-grid {
@@ -31,7 +31,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.12;
+    opacity: 0.10;
     background-color: rgba(255, 255, 255, 0.0);
     pointer-events: none;
 }
@@ -49,9 +49,12 @@
     gap: 10px;
 }
 
-.seedinv-header-icon {
-    font-size: 18px;
-    color: var(--seedinv-yellow);
+.seedinv-iconbox {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.75);
+    background-color: rgb(12, 18, 22);
 }
 
 .seedinv-title {
@@ -87,11 +90,12 @@
 }
 
 .seedinv-list {
-    flex: 1;
+    flex-grow: 0;
     flex-direction: column;
     gap: 10px;
     overflow-y: auto;
     margin-bottom: 14px;
+    max-height: 300px;
 }
 
 .seedinv-row {
@@ -99,29 +103,32 @@
     padding: 12px;
     border-width: 1px;
     border-color: rgba(230, 201, 111, 0.35);
-    background-color: rgba(230, 201, 111, 0.04);
+    background-color: rgb(26, 26, 22);
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
 }
 
 .seedinv-row:hover {
-    background-color: rgba(230, 201, 111, 0.06);
+    background-color: rgb(32, 32, 26);
 }
 
-.seedinv-iconbox {
+.seedinv-row-iconbox {
     width: 40px;
     height: 40px;
     border-width: 1px;
-    border-color: rgba(230, 201, 111, 0.25);
-    background-color: rgba(0, 0, 0, 0.15);
+    border-color: rgba(230, 201, 111, 0.35);
+    background-color: rgb(12, 18, 22);
     align-items: center;
     justify-content: center;
 }
 
-.seedinv-iconbox-text {
-    font-size: 16px;
-    color: rgba(230, 201, 111, 0.9);
+.seedinv-row-iconglyph {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.65);
+    background-color: rgb(10, 18, 22);
 }
 
 .seedinv-row-main {
@@ -137,6 +144,21 @@
     -unity-font-style: bold;
 }
 
+.seedinv-name-pure {
+    color: rgb(127, 255, 122);
+    text-shadow: 0 0 6px rgba(127, 255, 122, 0.55);
+}
+
+.seedinv-name-standard {
+    color: rgb(230, 201, 111);
+    text-shadow: 0 0 6px rgba(230, 201, 111, 0.55);
+}
+
+.seedinv-name-evil {
+    color: rgb(211, 95, 95);
+    text-shadow: 0 0 6px rgba(211, 95, 95, 0.55);
+}
+
 .seedinv-badges {
     flex-direction: row;
     align-items: center;
@@ -147,7 +169,7 @@
 .seedinv-badge {
     padding: 2px 8px;
     border-width: 1px;
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: rgb(12, 18, 22);
 }
 
 .seedinv-badge-text {
@@ -184,15 +206,21 @@
     color: var(--seedinv-muted);
 }
 
+.seedinv-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
 .seedinv-select {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-width: 1px;
-    border-color: rgba(230, 201, 111, 0.35);
-    background-color: rgba(0, 0, 0, 0.08);
+    border-color: rgba(230, 201, 111, 0.65);
+    background-color: rgb(48, 44, 24);
 }
 
 .seedinv-select:hover {
-    background-color: rgba(230, 201, 111, 0.06);
+    background-color: rgb(56, 52, 28);
 }
 
 .seedinv-select-text {
@@ -205,13 +233,13 @@
     height: 54px;
     border-width: 1px;
     border-color: rgba(211, 95, 95, 0.45);
-    background-color: rgba(211, 95, 95, 0.05);
+    background-color: rgb(36, 16, 16);
     justify-content: center;
     align-items: center;
 }
 
 .seedinv-cancel:hover {
-    background-color: rgba(211, 95, 95, 0.08);
+    background-color: rgb(44, 20, 20);
 }
 
 .seedinv-cancel-text {

@@ -6,7 +6,7 @@
     left: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0.45);
 }
 
 .potops-panel {
@@ -18,8 +18,7 @@
     --potops-metal: rgb(42, 58, 63);
     --potops-muted: rgba(192, 200, 197, 0.65);
 
-    width: 520px;
-    min-height: 520px;
+    width: 440px;
     background-color: rgba(10, 18, 22, 0.96);
     border-width: 2px;
     border-color: var(--potops-green);
@@ -34,7 +33,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.12;
+    opacity: 0.18;
     background-color: rgba(255, 255, 255, 0.0);
     pointer-events: none;
 }
@@ -55,10 +54,12 @@
 }
 
 .potops-status {
+    flex-direction: row;
+    align-items: center;
     border-width: 1px;
     border-color: rgba(93, 182, 227, 0.7);
     background-color: rgba(93, 182, 227, 0.10);
-    padding: 6px 10px;
+    padding: 4px 6px 4px 10px;
 }
 
 .potops-status-label {
@@ -66,6 +67,26 @@
     letter-spacing: 1px;
     color: var(--potops-blue);
     text-shadow: 0 0 6px var(--potops-blue);
+}
+
+.potops-status-close {
+    width: 22px;
+    height: 18px;
+    margin-left: 10px;
+    border-width: 0px;
+    background-color: rgba(0, 0, 0, 0.0);
+    border-left-width: 1px;
+    border-left-color: rgba(93, 182, 227, 0.35);
+}
+
+.potops-status-close:hover {
+    background-color: rgba(93, 182, 227, 0.08);
+}
+
+.potops-status-close-x {
+    -unity-text-align: middle-center;
+    font-size: 14px;
+    color: rgba(93, 182, 227, 0.9);
 }
 
 .potops-list {
@@ -81,22 +102,18 @@
     justify-content: space-between;
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.18);
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: rgb(18, 28, 33);
 }
 
-.potops-row:hover:enabled {
-    background-color: rgba(255, 255, 255, 0.06);
-}
+.potops-row:hover:enabled { background-color: rgb(22, 34, 40); }
+.potops-row:active:enabled { background-color: rgb(24, 38, 44); }
 
-.potops-row:active:enabled {
-    background-color: rgba(255, 255, 255, 0.08);
-}
-
-.potops-icon {
-    font-size: 18px;
-    width: 28px;
-    -unity-text-align: middle-center;
-    color: rgba(192, 200, 197, 0.9);
+.potops-iconbox {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.22);
+    background-color: rgb(12, 18, 22);
 }
 
 .potops-text {
@@ -138,8 +155,10 @@
 
 .potops-row-plant {
     border-color: rgba(127, 255, 122, 0.35);
-    background-color: rgba(127, 255, 122, 0.05);
+    background-color: rgb(22, 54, 34);
 }
+.potops-row-plant:hover:enabled { background-color: rgb(26, 64, 40); }
+.potops-row-plant:active:enabled { background-color: rgb(28, 70, 44); }
 
 .potops-row-plant .potops-row-title {
     color: var(--potops-green);
@@ -152,8 +171,10 @@
 
 .potops-row-inspect {
     border-color: rgba(93, 182, 227, 0.35);
-    background-color: rgba(93, 182, 227, 0.05);
+    background-color: rgb(18, 42, 54);
 }
+.potops-row-inspect:hover:enabled { background-color: rgb(20, 50, 64); }
+.potops-row-inspect:active:enabled { background-color: rgb(22, 56, 70); }
 
 .potops-row-inspect .potops-row-title {
     color: var(--potops-blue);
@@ -166,8 +187,10 @@
 
 .potops-row-harvest {
     border-color: rgba(230, 201, 111, 0.35);
-    background-color: rgba(230, 201, 111, 0.04);
+    background-color: rgb(52, 46, 28);
 }
+.potops-row-harvest:hover:enabled { background-color: rgb(60, 54, 32); }
+.potops-row-harvest:active:enabled { background-color: rgb(66, 58, 34); }
 
 .potops-row-harvest .potops-row-title {
     color: var(--potops-yellow);
@@ -176,8 +199,10 @@
 
 .potops-row-remove {
     border-color: rgba(211, 95, 95, 0.35);
-    background-color: rgba(211, 95, 95, 0.04);
+    background-color: rgb(50, 26, 26);
 }
+.potops-row-remove:hover:enabled { background-color: rgb(60, 30, 30); }
+.potops-row-remove:active:enabled { background-color: rgb(66, 34, 34); }
 
 .potops-row-remove .potops-row-title {
     color: var(--potops-red);
@@ -188,25 +213,27 @@
     opacity: 0.35;
 }
 
-.potops-close-button {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.18);
-    background-color: rgba(255, 255, 255, 0.02);
+/* EMPTY: solo PLANT, centrato come reference */
+.potops-empty .potops-row-plant {
+    justify-content: center;
 }
 
-.potops-close-button:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+.potops-empty .potops-row-plant .potops-iconbox {
+    display: none;
 }
 
-.potops-close-x {
-    -unity-text-align: middle-center;
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.6);
+.potops-empty .potops-row-plant .potops-dot {
+    display: none;
+}
+
+.potops-empty .potops-row-plant .potops-text {
+    margin-left: 0;
+    align-items: center;
+}
+
+.potops-empty .potops-row-plant .potops-row-title,
+.potops-empty .potops-row-plant .potops-row-subtitle {
+    -unity-text-align: upper-center;
 }
 
 

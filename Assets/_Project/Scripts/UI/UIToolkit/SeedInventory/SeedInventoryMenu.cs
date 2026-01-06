@@ -218,10 +218,11 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             row.AddToClassList("seedinv-row");
 
             var iconBox = new VisualElement();
-            iconBox.AddToClassList("seedinv-iconbox");
-            var iconLabel = new Label("🌱");
-            iconLabel.AddToClassList("seedinv-iconbox-text");
-            iconBox.Add(iconLabel);
+            iconBox.AddToClassList("seedinv-row-iconbox");
+            // Placeholder icona (no emoji per evitare missing glyph)
+            var iconGlyph = new VisualElement();
+            iconGlyph.AddToClassList("seedinv-row-iconglyph");
+            iconBox.Add(iconGlyph);
 
             var main = new VisualElement();
             main.AddToClassList("seedinv-row-main");
@@ -229,6 +230,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             string displayName = entry.PlantData != null ? GetPlantDisplayName(entry.PlantData) : entry.SeedTypeId;
             var nameLabel = new Label(displayName);
             nameLabel.AddToClassList("seedinv-seedname");
+            nameLabel.AddToClassList(GetNameColorClass(entry.PlantData));
 
             var badges = new VisualElement();
             badges.AddToClassList("seedinv-badges");
@@ -245,10 +247,13 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             qty.AddToClassList("seedinv-qty");
 
             badges.Add(badge);
-            badges.Add(qty);
 
             main.Add(nameLabel);
             main.Add(badges);
+
+            var right = new VisualElement();
+            right.AddToClassList("seedinv-right");
+            right.Add(qty);
 
             var selectBtn = new Button(() =>
             {
@@ -262,7 +267,8 @@ namespace Sporae.UI.UIToolkit.SeedInventory
 
             row.Add(iconBox);
             row.Add(main);
-            row.Add(selectBtn);
+            right.Add(selectBtn);
+            row.Add(right);
 
             return row;
         }
@@ -273,10 +279,10 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             row.AddToClassList("seedinv-row");
 
             var iconBox = new VisualElement();
-            iconBox.AddToClassList("seedinv-iconbox");
-            var iconLabel = new Label("—");
-            iconLabel.AddToClassList("seedinv-iconbox-text");
-            iconBox.Add(iconLabel);
+            iconBox.AddToClassList("seedinv-row-iconbox");
+            var iconGlyph = new VisualElement();
+            iconGlyph.AddToClassList("seedinv-row-iconglyph");
+            iconBox.Add(iconGlyph);
 
             var main = new VisualElement();
             main.AddToClassList("seedinv-row-main");
@@ -313,6 +319,18 @@ namespace Sporae.UI.UIToolkit.SeedInventory
                 PlantFamily.Evil => "seedinv-badge-evil",
                 PlantFamily.Standard => "seedinv-badge-standard",
                 _ => "seedinv-badge-standard"
+            };
+        }
+
+        private static string GetNameColorClass(PlantData plantData)
+        {
+            if (plantData == null) return string.Empty;
+            return plantData.Family switch
+            {
+                PlantFamily.Pure => "seedinv-name-pure",
+                PlantFamily.Standard => "seedinv-name-standard",
+                PlantFamily.Evil => "seedinv-name-evil",
+                _ => string.Empty
             };
         }
 
