@@ -1,0 +1,40 @@
+/*
+SPORIUM UI FOUNDATION — Badge
+*/
+
+.sp-badge {
+  height: 18px;
+  padding-left: var(--sp-space-sm);
+  padding-right: var(--sp-space-sm);
+  padding-top: 0px;
+  padding-bottom: 0px;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgba(255, 255, 255, 0.03);
+  border-left-width: var(--sp-border-1);
+  border-right-width: var(--sp-border-1);
+  border-top-width: var(--sp-border-1);
+  border-bottom-width: var(--sp-border-1);
+  border-left-color: var(--sp-line);
+  border-right-color: var(--sp-line);
+  border-top-color: var(--sp-line);
+  border-bottom-color: var(--sp-line);
+  border-top-left-radius: var(--sp-radius-sm);
+  border-top-right-radius: var(--sp-radius-sm);
+  border-bottom-left-radius: var(--sp-radius-sm);
+  border-bottom-right-radius: var(--sp-radius-sm);
+
+  color: var(--sp-color-text);
+  font-size: var(--sp-font-size-10);
+  letter-spacing: var(--sp-letter-wide);
+  -unity-font-style: bold;
+}
+
+.sp-badge--green { border-left-color: var(--sp-color-green-led); border-right-color: var(--sp-color-green-led); border-top-color: var(--sp-color-green-led); border-bottom-color: var(--sp-color-green-led); color: var(--sp-color-green-led); }
+.sp-badge--blue  { border-left-color: var(--sp-color-blue-info); border-right-color: var(--sp-color-blue-info); border-top-color: var(--sp-color-blue-info); border-bottom-color: var(--sp-color-blue-info); color: var(--sp-color-blue-info); }
+.sp-badge--violet{ border-left-color: var(--sp-color-violet-growth); border-right-color: var(--sp-color-violet-growth); border-top-color: var(--sp-color-violet-growth); border-bottom-color: var(--sp-color-violet-growth); color: var(--sp-color-violet-growth); }
+.sp-badge--yellow{ border-left-color: var(--sp-color-yellow-standard); border-right-color: var(--sp-color-yellow-standard); border-top-color: var(--sp-color-yellow-standard); border-bottom-color: var(--sp-color-yellow-standard); color: var(--sp-color-yellow-standard); }
+.sp-badge--red   { border-left-color: var(--sp-color-red-warning); border-right-color: var(--sp-color-red-warning); border-top-color: var(--sp-color-red-warning); border-bottom-color: var(--sp-color-red-warning); color: var(--sp-color-red-warning); }
+
+

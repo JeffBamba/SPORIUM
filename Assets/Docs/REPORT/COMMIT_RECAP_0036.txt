@@ -1,0 +1,143 @@
+# 📝 **COMMIT RECAP 0036 - SISTEMA ADDITIVI pH + MOLD RISK DISPLAY FIX**
+
+## 🎯 **PANORAMICA**
+Implementazione completa del sistema Additivi pH (Basico/Acido) che sostituisce lo Spray Antifungino, con selezione da inventario, integrazione con sistema muffe, pH e HUD esistenti. Inoltre, fix del bug dove PlantCardV2 non mostrava il Mold Risk Level impostato dalla debug console POT.
+
+## 📋 **FILE AGGIUNTI**
+
+### Item System
+- `Assets/Resources/Items/STR-004-Basic.asset` (ItemConfig Additivo Basico)
+- `Assets/Resources/Items/STR-004-Acid.asset` (ItemConfig Additivo Acido)
+
+### UI Toolkit - Additive Selector
+- `Assets/_Project/UI/UIToolkit/AdditiveSelector/AdditiveSelector.uxml`
+- `Assets/_Project/UI/UIToolkit/AdditiveSelector/AdditiveSelector.uss`
+- `Assets/_Project/Scripts/UI/UIToolkit/AdditiveSelector/AdditiveSelectorController.cs`
+
+## ✏️ **FILE MODIFICATI**
+
+### `Assets/_Project/Scripts/Core/ItemsSystem/Items.cs`
+- **Aggiunte costanti:**
+  - `public const string AdditiveBasic = "STR-004-Basic";`
+  - `public const string AdditiveAcid = "STR-004-Acid";`
+- **Mantenuto:** `SprayAntifungal = "STR-004"` per retrocompatibilità
+
+### `Assets/_Project/Scripts/Dome/PotSystem/Mold/MoldSystem.cs`
+- **Aggiunto:** `ReduceMoldRiskLevel(PotStateModel potState)`
+  - Riduce livello muffe di 1 (o azzera se ≤1)
+  - Reset `DaysAtMoldRiskLevel3` e `IsInfested` se scende sotto 3
+- **Aggiunto:** `IncreaseMoldRiskLevel(PotStateModel potState, PotStateModel nearbyPot = null)`
+  - Aumenta livello muffe di 1 (clamp 0-3)
+  - Se livello = 3, infesta pot vicino (se fornito e valido)
+- **Modificato:** `RemoveInfestation(PotStateModel potState)`
+  - Ora chiama `ReduceMoldRiskLevel()` invece di impostare direttamente `MoldRiskLevel = 0`
+
+### `Assets/_Project/Scripts/Dome/PotActions.cs`
+- **Aggiunto:** `FindNearestPot()` (privato)
+  - Trova il pot più vicino usando `FindObjectsOfType<PotSlot>()` e `Vector3.Distance()`
+- **Aggiunto:** `DoApplyAdditive(string additiveTypeId)`
+  - Validazione: verifica item in inventario, risorse, vaso valido
+  - Consumo: risorse (azione) + item additivo
+  - Effetti pH: `RegisterActionDrift(+5 o -5, actionName, potId)`
+  - Effetti muffe:
+    - Basico: `MoldSystem.ReduceMoldRiskLevel(_potState)`
+    - Acido: `MoldSystem.IncreaseMoldRiskLevel(_potState, FindNearestPot())`
+  - Eventi: `PotEvents.EmitAction()` / `PotEvents.EmitChanged()`
+- **Modificato:** `CanSprayAntifungal()` → wrapper che chiama `CanApplyAdditive()`
+- **Aggiunto:** `CanApplyAdditive()` (nuovo metodo principale)
+- **Aggiunto:** `HasAdditive()` (verifica Basic o Acid disponibili)
+- **Modificato:** `GetSprayAntifungalFailureReason()` → wrapper che chiama `GetApplyAdditiveFailureReason()`
+- **Aggiunto:** `GetApplyAdditiveFailureReason()` (nuovo metodo principale)
+- **Modificato:** `DoSprayAntifungal()` → wrapper retrocompatibile
+  - Chiama `DoApplyAdditive(Items.AdditiveBasic)`
+  - Se `AdditiveBasic` non disponibile ma `SprayAntifungal` (legacy) sì, usa `SprayAntifungal` come `AdditiveBasic`
+
+### `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2Controller.cs`
+- **Modificato:** `OnSprayButtonClicked()`
+  - Invece di chiamare direttamente `DoSprayAntifungal()`, chiama `OpenAdditiveSelector(_currentPotSlot)`
+- **Aggiunto:** `OpenAdditiveSelector(PotSlot targetPot)`
+  - Pattern identico a `OpenFertilizerSelector()`
+  - Usa `FindObjectOfType<AdditiveSelectorController>()`
+  - Sottoscrive eventi `OnAdditiveSelected` / `OnCancelled`
+- **Aggiunto:** `OnAdditiveSelected(string additiveTypeId)`
+  - Chiama `_potActions.DoApplyAdditive(additiveTypeId)`
+  - Refresh UI dopo applicazione
+
+### `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+- **Modificato:** Binding Mold Risk Level (riga ~1319)
+  - **Prima:** `int moldRiskLevel = MoldSystem.GetMoldRiskLevel(state, _phSystem, plantData, _moldConfig);`
+  - **Dopo:** `int moldRiskLevel = state.MoldRiskLevel;`
+- **Motivazione:** `GetMoldRiskLevel()` ricalcola basandosi su `CalculateMoldRisk()`, ignorando valori impostati manualmente dalla debug console
+
+### `Assets/_Project/Scripts/Core/GameManager.cs`
+- **Modificato:** Initial inventory seeding
+  - Rimosso: `_playerInventory.Add(Items.SprayAntifungal, 3);`
+  - Aggiunto: `_playerInventory.Add(Items.AdditiveBasic, 2);`
+  - Aggiunto: `_playerInventory.Add(Items.AdditiveAcid, 1);`
+
+## 🐛 **BUG FIXATI**
+
+1. **PlantCardV2 non mostra Mold Risk Level impostato da debug console**
+   - **Problema:** Quando la debug console impostava `MoldRiskLevel = 2`, PlantCardV2 mostrava ancora `0` (None)
+   - **Causa:** Binding utilizzava `MoldSystem.GetMoldRiskLevel()` che ricalcolava ignorando `state.MoldRiskLevel`
+   - **Fix:** Binding ora legge direttamente `state.MoldRiskLevel`
+   - **Verifica:** ✅ Impostato `MoldRiskLevel = 2` → PlantCardV2 mostra "Severe" correttamente
+
+2. **UIAdditiveSelector mostra "NO ADDITIVES" nonostante inventario**
+   - **Problema:** Additive Selector mostrava "NO ADDITIVES" anche quando l'inventario conteneva additivi
+   - **Causa:** `GameManager` stava ancora seminando il vecchio `Items.SprayAntifungal` (`STR-004`), mentre `AdditiveSelectorController` cercava solo `Items.AdditiveBasic` e `Items.AdditiveAcid`
+   - **Fix:** 
+     - Modificato `AdditiveSelectorController.GetQty()` per controllare anche `Items.SprayAntifungal` se `typeId` è `Items.AdditiveBasic`
+     - Modificato `GameManager.cs` per seminare `Items.AdditiveBasic` e `Items.AdditiveAcid` direttamente
+   - **Verifica:** ✅ Additive Selector mostra correttamente Basic e Acid additivi
+
+## 🔍 **DEBUG MODE WORKFLOW (Mold Risk Display Fix)**
+
+1. **Instrumentazione aggiunta:**
+   - Log in `PlantCardV2DataBinder.cs` (valore `state.MoldRiskLevel` e risultato `GetMoldRiskLevel()`)
+   - Log in `MoldSystem.cs` (entry, calcolo, return)
+   - Log in `PlantCardV2Controller.cs` (`RefreshData()`, `OnPotStateChanged()`)
+
+2. **Analisi log:**
+   - Log mostrava: `potStateMoldRiskLevel: 2` ma `calculatedRisk: 0` e `returnedLevel: 0`
+   - Confermato che `GetMoldRiskLevel()` ignorava il valore impostato manualmente
+
+3. **Fix applicato:**
+   - Modificato binding per usare direttamente `state.MoldRiskLevel`
+   - Rimossa tutta l'instrumentazione dopo conferma del fix
+
+## ✅ **RISULTATI**
+
+### Sistema Additivi pH
+- ✅ Flow completo funzionante (PlantCardV2 → Additive Selector → Applicazione → Aggiornamento UI)
+- ✅ Additivo Basico: pH +5, muffe ridotte
+- ✅ Additivo Acido: pH -5, muffe aumentate
+- ✅ Selezione da inventario funziona correttamente
+- ✅ Consumo risorse e item funziona
+- ✅ Pot livello 3 + additivo acido → infestazione pot vicino
+- ✅ Pot livello 1 + additivo basico → azzeramento muffe
+- ✅ HUD pH si aggiorna automaticamente dopo applicazione
+- ✅ Tooltip pH mostra contributo additivo nel breakdown
+- ✅ Retrocompatibilità `DoSprayAntifungal()` (potatura) mantenuta
+- ✅ Retrocompatibilità spray legacy (`STR-004` → Basic) mantenuta
+
+### Fix Mold Risk Level Display
+- ✅ PlantCardV2 mostra correttamente Mold Risk Level impostato dalla debug console
+- ✅ Valore persiste dopo chiusura/riapertura di PlantCardV2
+- ✅ Compatibilità mantenuta con valori calcolati automaticamente dal `DayCycleController`
+- ✅ Tutti i livelli (0-3) vengono correttamente visualizzati
+- ✅ Nessun errore di compilazione
+- ✅ Instrumentazione di debug rimossa
+
+## 📋 **NOTE TECNICHE**
+
+### Sistema Additivi pH
+- **Pattern Consistency:** `UIAdditiveSelector` segue esattamente il pattern di `UIFertilizerSelector` / `UISeedSelector` per coerenza e manutenibilità
+- **Foundation UI Toolkit:** Uso di Foundation (`SP-Foundation.uss`, `SP-Panel-Base.uss`) garantisce coerenza estetica
+- **Target Estetico:** Additive Selector è esteticamente identico a `SeedInventoryMenu` (stesso look & feel del flow POT OPS)
+- **Event-Driven Updates:** HUD si aggiorna automaticamente via eventi (`OnPhChanged`, `OnInventoryChanged`)
+- **Retrocompatibilità:** Wrapper `DoSprayAntifungal()` e supporto item legacy (`STR-004` → Basic) permettono di non rompere codice esistente
+
+### Fix Mold Risk Level Display
+- **Separazione Responsabilità:** `MoldSystem.GetMoldRiskLevel()` è progettato per calcolare il livello basandosi su condizioni di gioco. Quando il valore viene impostato manualmente, il binding deve leggere direttamente dallo stato.
+- **Retrocompatibilità:** Il fix mantiene la compatibilità: il `DayCycleController` continua a calcolare e aggiornare `MoldRiskLevel` automaticamente, e PlantCardV2 mostra correttamente questi valori.

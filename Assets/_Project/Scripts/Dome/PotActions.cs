@@ -378,18 +378,26 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanSprayAntifungal()
     {
+        // Retrocompat: stesso gating del nuovo sistema additivi
+        return CanApplyAdditive();
+    }
+
+    /// <summary>
+    /// Verifica se è possibile applicare un Additivo (sistema additivi pH).
+    /// Precondizioni: vaso ha pianta, player in range, risorse sufficienti.
+    /// </summary>
+    public bool CanApplyAdditive()
+    {
         if (_potState == null)
             return false;
         
-        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
-        // Nota: Spray può essere applicato anche se non ci sono muffe (preventivo)
         bool
             hasPlant = _potState.HasPlantGrowing,
             inRange = IsPlayerInRange(),
             hasResources = CanConsumeResources();
         
         if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanSprayAntifungal: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanApplyAdditive: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
         
         return hasPlant && inRange && hasResources;
     }
@@ -467,6 +475,17 @@ public class PotActions : MonoBehaviour
         bool hasItem = _playerInventory.Has(Items.SprayAntifungal, 1);
         return hasItem;
     }
+
+    /// <summary>
+    /// Verifica se è disponibile almeno un additivo (Basic o Acid) in inventario.
+    /// </summary>
+    public bool HasAdditive()
+    {
+        if (_playerInventory == null)
+            return false;
+
+        return _playerInventory.Has(Items.AdditiveBasic, 1) || _playerInventory.Has(Items.AdditiveAcid, 1);
+    }
     
     #endregion
     
@@ -494,6 +513,42 @@ public class PotActions : MonoBehaviour
             return false;
         
         return _playerInventory.Consume(seedTypeId);
+    }
+
+    /// <summary>
+    /// Trova il pot più vicino a questo (escludendo se stesso) e restituisce il suo PotStateModel.
+    /// </summary>
+    private PotStateModel FindNearestPot()
+    {
+        if (potSlot == null)
+            return null;
+
+        PotSlot[] allPots = FindObjectsOfType<PotSlot>();
+        if (allPots == null || allPots.Length == 0)
+            return null;
+
+        float bestDist = float.MaxValue;
+        PotStateModel best = null;
+
+        Vector3 myPos = potSlot.transform.position;
+        foreach (var p in allPots)
+        {
+            if (p == null || p == potSlot)
+                continue;
+
+            float d = Vector3.Distance(myPos, p.transform.position);
+            if (d >= bestDist)
+                continue;
+
+            var ps = p.PotActions != null ? p.PotActions.PotState : null;
+            if (ps == null)
+                continue;
+
+            bestDist = d;
+            best = ps;
+        }
+
+        return best;
     }
     
     /// <summary>
@@ -992,37 +1047,97 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool DoSprayAntifungal()
     {
-        if (!CanSprayAntifungal())
+        // Wrapper retrocompatibile: prova prima AdditiveBasic, altrimenti accetta STR-004 legacy.
+        if (_playerInventory != null && _playerInventory.Has(Items.AdditiveBasic, 1))
+            return DoApplyAdditive(Items.AdditiveBasic);
+
+        if (_playerInventory != null && _playerInventory.Has(Items.SprayAntifungal, 1))
         {
-            string reason = GetSprayAntifungalFailureReason();
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[ACT-014][{potSlot?.PotId}] DoSprayAntifungal legacy: uso STR-004 come equivalente AdditiveBasic");
+            return DoApplyAdditive(Items.SprayAntifungal);
+        }
+
+        // Fallback: tenta comunque (gestirà failure reason)
+        return DoApplyAdditive(Items.AdditiveBasic);
+    }
+
+    /// <summary>
+    /// Esegue l'azione applicazione additivo.
+    /// - Basic: pH +5, riduce muffe
+    /// - Acid:  pH -5, aumenta muffe (se già lvl 3, propaga a pot vicino)
+    /// </summary>
+    public bool DoApplyAdditive(string additiveTypeId)
+    {
+        if (!CanApplyAdditive())
+        {
+            string reason = GetApplyAdditiveFailureReason(additiveTypeId);
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, reason);
             return false;
         }
         
-        // Consuma le risorse
+        if (string.IsNullOrEmpty(additiveTypeId))
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Additivo non valido");
+            return false;
+        }
+
+        bool isBasic = additiveTypeId == Items.AdditiveBasic || additiveTypeId == Items.SprayAntifungal; // legacy mapping
+        bool isAcid = additiveTypeId == Items.AdditiveAcid;
+        if (!isBasic && !isAcid)
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, $"Additivo sconosciuto: {additiveTypeId}");
+            return false;
+        }
+
+        if (_playerInventory == null || !_playerInventory.Has(additiveTypeId, 1))
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Additivo non disponibile");
+            return false;
+        }
+
+        // Consuma risorse (azione/CRY)
         if (!TryConsumeResources())
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Insufficient resources");
             return false;
         }
         
-        // Applica pH +5 (BLK-02.03)
+        // Consuma item
+        if (!_playerInventory.Consume(additiveTypeId, 1))
+        {
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Impossibile consumare additivo");
+            return false;
+        }
+
+        // Effetti pH
         if (_phSystem != null)
         {
-            _phSystem.RegisterActionDrift(5f, "SprayAntifungal", potSlot.PotId);
+            float drift = isBasic ? 5f : -5f;
+            string actionName = isBasic ? "AdditiveBasic" : "AdditiveAcid";
+            _phSystem.RegisterActionDrift(drift, actionName, potSlot.PotId);
             if (showDebugLogs)
-                SporiumLogger.LogInfo(LogCategory.Ph, $"[ACT-014][{potSlot.PotId}] Spray Antifungino applicato: pH +5");
+                SporiumLogger.LogInfo(LogCategory.Ph, $"[ACT-014][{potSlot.PotId}] {actionName} applicato: pH {(drift > 0 ? "+" : "")}{drift}");
         }
         
-        // BLK-07.01: Rimuove muffe
-        MoldSystem.RemoveInfestation(_potState);
+        // Effetti muffe
+        if (isBasic)
+        {
+            MoldSystem.ReduceMoldRiskLevel(_potState);
+        }
+        else
+        {
+            MoldSystem.IncreaseMoldRiskLevel(_potState, FindNearestPot());
+        }
         
-        // Notifica il cambio stato
+        // Notifica cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Spray, potSlot);
         PotEvents.EmitChanged(potSlot);
             
         if (showDebugLogs)
-            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-014][{potSlot.PotId}] Spray Antifungino OK: muffe rimosse (se presenti), pH +5 applicato");
+        {
+            string label = isBasic ? "Additivo Basico" : "Additivo Acido";
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-014][{potSlot.PotId}] {label} OK: item consumato ({additiveTypeId}), pH aggiornato, muffe aggiornate");
+        }
         
         return true;
     }
@@ -1513,10 +1628,27 @@ public class PotActions : MonoBehaviour
     
     private string GetSprayAntifungalFailureReason()
     {
+        // Retrocompat: usa lo stesso reason del nuovo sistema additivi (basic)
+        return GetApplyAdditiveFailureReason(Items.AdditiveBasic);
+    }
+
+    private string GetApplyAdditiveFailureReason(string additiveTypeId)
+    {
         if (_potState == null) return "Stato vaso non valido";
         if (!_potState.HasPlantGrowing) return "Vaso vuoto";
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
+
+        if (_playerInventory != null && !string.IsNullOrEmpty(additiveTypeId))
+        {
+            // Legacy mapping: se richiesto basic ma c'è STR-004, lo gestisce il wrapper.
+            if (additiveTypeId == Items.AdditiveBasic && !_playerInventory.Has(Items.AdditiveBasic, 1) && _playerInventory.Has(Items.SprayAntifungal, 1))
+                return "Azione non permessa";
+
+            if (!_playerInventory.Has(additiveTypeId, 1))
+                return "Additivo non disponibile";
+        }
+
         return "Azione non permessa";
     }
     

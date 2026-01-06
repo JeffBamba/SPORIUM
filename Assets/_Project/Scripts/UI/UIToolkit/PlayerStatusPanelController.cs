@@ -57,6 +57,10 @@ namespace Sporae.UI.UIToolkit
                         SporiumLogger.LogWarning(LogCategory.UI, "UIDocument creato automaticamente su PlayerStatusPanelController");
                 }
             }
+            
+            // DEBUG_SAFE_FIX: Imposta sortingOrder per HUD base (sotto PlantCard, sopra background)
+            if (_uiDocument != null)
+                _uiDocument.sortingOrder = 50;
         }
         
         private void Start()

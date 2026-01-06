@@ -31,6 +31,19 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
+            
+            // DEBUG_SAFE_FIX: Imposta sortingOrder sia su UIDocument che su Canvas parent (se presente)
+            // PotActionsMenu deve stare sopra PlantCard (300) ma sotto selector modali (500)
+            if (_uiDocument != null)
+            {
+                _uiDocument.sortingOrder = 400;
+                
+                var canvas = _uiDocument.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.sortingOrder = 400;
+                }
+            }
 
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
             if (_root == null)
@@ -224,10 +237,27 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
             if (!success)
                 return;
 
+            // Salva riferimento al pot prima di Hide(), perché Hide() azzera _currentPot
+            var pot = _currentPot;
+
             // Close all on success
             if (_irrigationDialog != null) _irrigationDialog.Hide();
             if (_seedInventoryMenu != null) _seedInventoryMenu.Hide();
             Hide();
+
+            // DEBUG_SAFE_FIX: Apri automaticamente PlantCardV2 dopo il planting per velocizzare il flow
+            // L'utente non deve riaprire Pot Ops menu per vedere la pianta appena piantata
+            if (_plantCardOpener != null)
+            {
+                _plantCardOpener.OpenForInspect(pot);
+            }
+            else
+            {
+                // Fallback: tenta a trovare un opener in scena
+                var opener = FindObjectOfType<Sporae.UI.UIToolkit.PlantCard.PlantCardV2Opener>();
+                if (opener != null)
+                    opener.OpenForInspect(pot);
+            }
         }
 
         private void OnInspectClicked()

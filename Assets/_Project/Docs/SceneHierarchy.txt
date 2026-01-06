@@ -2826,3 +2826,22 @@
 - PlantCardV2Opener
   [Component] Transform
   [Component] PlantCardV2Opener
+- PotActionsMenu
+  [Component] Transform
+  [Component] UIDocument
+  [Component] PotActionsMenu
+- SeedInventoryMenu
+  [Component] Transform
+  [Component] UIDocument
+  [Component] SeedInventoryMenu
+- IrrigationDialog
+  [Component] Transform
+  [Component] UIDocument
+  [Component] IrrigationDialog
+- PotActionsMenuOpener
+  [Component] Transform
+  [Component] PotActionsMenuOpener
+- UIAdditiveSelector
+  [Component] Transform
+  [Component] UIDocument
+  [Component] AdditiveSelectorController

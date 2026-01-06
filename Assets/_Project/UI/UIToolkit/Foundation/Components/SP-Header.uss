@@ -1,0 +1,39 @@
+/*
+SPORIUM UI FOUNDATION — Header
+*/
+
+.sp-header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.sp-header__left {
+  flex-direction: row;
+  align-items: center;
+}
+
+.sp-header__title {
+  font-size: var(--sp-font-size-12);
+  letter-spacing: var(--sp-letter-wide);
+  color: var(--sp-color-text);
+  -unity-font-style: bold;
+}
+
+.sp-header__subtitle {
+  margin-left: var(--sp-space-sm);
+  font-size: var(--sp-font-size-10);
+  color: var(--sp-color-text-dim);
+}
+
+.sp-header__right {
+  flex-direction: row;
+  align-items: center;
+}
+
+.sp-header__badge {
+  margin-left: var(--sp-space-sm);
+}
+
+

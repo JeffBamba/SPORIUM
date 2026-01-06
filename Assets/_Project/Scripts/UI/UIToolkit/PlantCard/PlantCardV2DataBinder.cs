@@ -7,7 +7,6 @@ using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using _Project;
 using _Project.Sporae.Core;
-using System.IO;
 
 namespace Sporae.UI.UIToolkit.PlantCard
 {
@@ -1307,10 +1306,13 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _condizioneBox.UpdateValue(state.ConditionScore, 100);
             }
             
-            // Mold Risk - BUG3 FIX: Assicurati che sia collegato correttamente
+            // Mold Risk - DEBUG_SAFE_FIX: Usa direttamente state.MoldRiskLevel invece di GetMoldRiskLevel
+            // per rispettare valori impostati manualmente (es. debug console)
             if (_moldRiskBox != null && _moldConfig != null && plantData != null)
             {
-                int moldRiskLevel = MoldSystem.GetMoldRiskLevel(state, _phSystem, plantData, _moldConfig);
+                // DEBUG_SAFE_FIX: Usa direttamente state.MoldRiskLevel per rispettare valori impostati manualmente
+                int moldRiskLevel = state.MoldRiskLevel;
+                
                 // BUG3 FIX: Passa level (0-3) come value e 3 come max per la barra
                 // La barra mostrerà level/3 * 10 segmenti (0-10 segmenti)
                 _moldRiskBox.UpdateValue(moldRiskLevel, 3);

@@ -1,0 +1,107 @@
+/*
+SPORIUM UI FOUNDATION — Panel Base System
+Dipendenze: importare prima SP-Foundation.uss
+*/
+
+.sp-panel {
+  background-color: var(--sp-bg-panel);
+  border-left-width: var(--sp-border-2);
+  border-right-width: var(--sp-border-2);
+  border-top-width: var(--sp-border-2);
+  border-bottom-width: var(--sp-border-2);
+  border-left-color: var(--sp-line);
+  border-right-color: var(--sp-line);
+  border-top-color: var(--sp-line);
+  border-bottom-color: var(--sp-line);
+
+  padding-left: var(--sp-space-md);
+  padding-right: var(--sp-space-md);
+  padding-top: var(--sp-space-md);
+  padding-bottom: var(--sp-space-md);
+}
+
+.sp-panel--compact {
+  padding-left: var(--sp-space-sm);
+  padding-right: var(--sp-space-sm);
+  padding-top: var(--sp-space-sm);
+  padding-bottom: var(--sp-space-sm);
+}
+
+.sp-panel--large {
+  padding-left: var(--sp-space-lg);
+  padding-right: var(--sp-space-lg);
+  padding-top: var(--sp-space-lg);
+  padding-bottom: var(--sp-space-lg);
+}
+
+/* ===== Formats ===== */
+.sp-panel--bar {
+  height: 64px;
+  min-height: 64px;
+  max-height: 64px;
+  flex-direction: row;
+  align-items: center;
+}
+
+.sp-panel--bar-top {
+  border-top-width: 0px;
+}
+
+.sp-panel--bar-bottom {
+  border-bottom-width: 0px;
+}
+
+.sp-panel--card {
+  border-left-width: var(--sp-border-4);
+  border-right-width: var(--sp-border-4);
+  border-top-width: var(--sp-border-4);
+  border-bottom-width: var(--sp-border-4);
+  border-left-color: var(--sp-line-strong);
+  border-right-color: var(--sp-line-strong);
+  border-top-color: var(--sp-line-strong);
+  border-bottom-color: var(--sp-line-strong);
+  border-top-left-radius: var(--sp-radius-lg);
+  border-top-right-radius: var(--sp-radius-lg);
+  border-bottom-left-radius: var(--sp-radius-lg);
+  border-bottom-right-radius: var(--sp-radius-lg);
+}
+
+.sp-panel--dialog {
+  background-color: var(--sp-bg-panel-dark);
+  border-left-color: var(--sp-line-strong);
+  border-right-color: var(--sp-line-strong);
+  border-top-color: var(--sp-line-strong);
+  border-bottom-color: var(--sp-line-strong);
+}
+
+/* ===== Sections ===== */
+.sp-panel__header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.sp-panel__content {
+  flex-direction: column;
+}
+
+.sp-panel__footer {
+  margin-top: var(--sp-space-sm);
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* ===== Optional overlays/hooks ===== */
+.sp-scanlines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.18;
+  background-color: rgba(0, 0, 0, 0.001); /* placeholder: scanlines gestite meglio via texture/C# */
+}
+
+

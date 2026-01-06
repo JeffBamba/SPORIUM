@@ -14,6 +14,85 @@ namespace Sporae.Dome.PotSystem.Mold
     public static class MoldSystem
     {
         /// <summary>
+        /// Riduce il livello rischio muffe di 1 (o azzera se <= 1).
+        /// Usato da additivi basici e da alcune azioni di pulizia.
+        /// </summary>
+        public static void ReduceMoldRiskLevel(PotStateModel potState)
+        {
+            if (potState == null)
+                return;
+
+            int old = potState.MoldRiskLevel;
+            if (old <= 1)
+            {
+                potState.MoldRiskLevel = 0;
+            }
+            else
+            {
+                potState.MoldRiskLevel = Mathf.Clamp(old - 1, 0, 3);
+            }
+
+            // Se scende sotto 3, reset tracking infestation
+            if (potState.MoldRiskLevel < 3)
+            {
+                potState.DaysAtMoldRiskLevel3 = 0;
+                potState.IsInfested = false;
+            }
+
+            // Non resettiamo DaysOverwateringConsecutive: è calcolato dal DayCycle.
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: MoldRiskLevel ridotto {old} -> {potState.MoldRiskLevel}");
+        }
+
+        /// <summary>
+        /// Aumenta il livello rischio muffe di 1 (clamp 0-3).
+        /// Se il pot è già a livello 3, tenta di aumentare/innescare rischio sul pot vicino.
+        /// </summary>
+        public static void IncreaseMoldRiskLevel(PotStateModel potState, PotStateModel nearbyPot = null)
+        {
+            if (potState == null)
+                return;
+
+            if (potState.MoldRiskLevel < 3)
+            {
+                int old = potState.MoldRiskLevel;
+                potState.MoldRiskLevel = Mathf.Clamp(old + 1, 0, 3);
+
+                if (potState.MoldRiskLevel == 3)
+                {
+                    // Inizia il contatore: DayCycle lo porterà a 2 se resta a 3 anche domani
+                    potState.DaysAtMoldRiskLevel3 = Mathf.Max(1, potState.DaysAtMoldRiskLevel3);
+                }
+
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: MoldRiskLevel aumentato {old} -> {potState.MoldRiskLevel}");
+                return;
+            }
+
+            // Già a livello 3: tenta di propagare al pot vicino
+            if (nearbyPot == null || nearbyPot == potState)
+            {
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: MoldRiskLevel già 3, ma nessun pot vicino valido per propagazione");
+                return;
+            }
+
+            int oldNearby = nearbyPot.MoldRiskLevel;
+            if (nearbyPot.MoldRiskLevel < 3)
+            {
+                nearbyPot.MoldRiskLevel = Mathf.Clamp(nearbyPot.MoldRiskLevel + 1, 0, 3);
+                if (nearbyPot.MoldRiskLevel == 3)
+                {
+                    nearbyPot.DaysAtMoldRiskLevel3 = Mathf.Max(1, nearbyPot.DaysAtMoldRiskLevel3);
+                }
+            }
+            else
+            {
+                // Se anche lui è già a 3, almeno assicuriamo contatore >= 1
+                nearbyPot.DaysAtMoldRiskLevel3 = Mathf.Max(1, nearbyPot.DaysAtMoldRiskLevel3);
+            }
+
+            SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Propagazione muffe su pot vicino {nearbyPot.PotId} (Lvl {oldNearby} -> {nearbyPot.MoldRiskLevel})");
+        }
+
+        /// <summary>
         /// Calcola rischio muffe (0-3) basato SOLO su overwatering prolungato
         /// 1 livello per ogni giorno oltre la soglia (es. soglia 3: 4 giorni = Level 1, 5 giorni = Level 2, 6 giorni = Level 3)
         /// </summary>
@@ -106,13 +185,12 @@ namespace Sporae.Dome.PotSystem.Mold
         {
             if (potState == null)
                 return;
-            
-            potState.MoldRiskLevel = 0;
+
+            // Nuovo comportamento: riduce di 1 (o azzera se <=1)
+            ReduceMoldRiskLevel(potState);
             potState.DaysWithoutPruning = 0;
-            potState.IsInfested = false;
-            potState.DaysAtMoldRiskLevel3 = 0;
-            
-            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: Infestazione rimossa");
+
+            SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: RemoveInfestation eseguito (riduzione rischio / reset daysWithoutPruning)");
         }
     }
 }

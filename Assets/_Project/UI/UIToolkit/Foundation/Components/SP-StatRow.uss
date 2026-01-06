@@ -1,0 +1,43 @@
+/*
+SPORIUM UI FOUNDATION — StatRow
+Row = label + value + bar (optional)
+*/
+
+.sp-stat-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-space-xs);
+}
+
+.sp-stat-row__left {
+  flex-direction: row;
+  align-items: center;
+}
+
+.sp-stat-row__icon {
+  width: 14px;
+  height: 14px;
+  margin-right: var(--sp-space-xs);
+  background-color: rgba(255, 255, 255, 0.06); /* placeholder */
+}
+
+.sp-stat-row__label {
+  font-size: var(--sp-font-size-10);
+  letter-spacing: var(--sp-letter-wide);
+  color: var(--sp-color-text-dim);
+  -unity-font-style: bold;
+}
+
+.sp-stat-row__value {
+  font-size: var(--sp-font-size-12);
+  color: var(--sp-color-text);
+  -unity-font-style: bold;
+}
+
+.sp-stat-row__bar {
+  margin-left: var(--sp-space-sm);
+  width: 120px;
+}
+
+

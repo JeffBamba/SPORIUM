@@ -1,0 +1,219 @@
+/* 
+AdditiveSelector — UI Toolkit panel
+Target estetico: SeedInventoryMenu (POT OPS flow), ma con token Foundation.
+*/
+
+.addsel-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.addsel-panel {
+    /* Override del base sp-panel per matchare SeedInventoryMenu */
+    --addsel-yellow: var(--sp-color-yellow-standard);
+    --addsel-green: var(--sp-color-green-led);
+    --addsel-red: var(--sp-color-red-warning);
+    --addsel-muted: rgba(192, 200, 197, 0.65);
+
+    width: 560px;
+    background-color: var(--sp-bg-panel-dark);
+    border-left-color: var(--addsel-yellow);
+    border-right-color: var(--addsel-yellow);
+    border-top-color: var(--addsel-yellow);
+    border-bottom-color: var(--addsel-yellow);
+    border-left-width: var(--sp-border-2);
+    border-right-width: var(--sp-border-2);
+    border-top-width: var(--sp-border-2);
+    border-bottom-width: var(--sp-border-2);
+    padding: 18px;
+    flex-direction: column;
+    position: relative;
+    max-height: 520px;
+}
+
+.addsel-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.10;
+    background-color: rgba(255, 255, 255, 0.0);
+    pointer-events: none;
+}
+
+.addsel-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.addsel-header-left {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.addsel-iconbox {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.75);
+    background-color: rgb(12, 18, 22);
+}
+
+.addsel-title {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--addsel-yellow);
+    -unity-font-style: bold;
+}
+
+.addsel-subtitle {
+    font-size: 10px;
+    color: var(--addsel-muted);
+    margin-top: 4px;
+}
+
+.addsel-close-button {
+    width: 28px;
+    height: 28px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.55);
+    background-color: rgba(230, 201, 111, 0.05);
+}
+
+.addsel-close-button:hover {
+    background-color: rgba(230, 201, 111, 0.10);
+}
+
+.addsel-close-x {
+    -unity-text-align: middle-center;
+    font-size: 16px;
+    color: rgba(230, 201, 111, 0.85);
+}
+
+.addsel-list {
+    flex-grow: 0;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    margin-bottom: 14px;
+    max-height: 300px;
+}
+
+.addsel-row {
+    height: 78px;
+    padding: 12px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.35);
+    background-color: rgb(26, 26, 22);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.addsel-row:hover {
+    background-color: rgb(32, 32, 26);
+}
+
+.addsel-row-iconbox {
+    width: 40px;
+    height: 40px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.35);
+    background-color: rgb(12, 18, 22);
+    align-items: center;
+    justify-content: center;
+}
+
+.addsel-row-iconglyph {
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.65);
+    background-color: rgb(10, 18, 22);
+}
+
+.addsel-row-main {
+    flex-direction: column;
+    flex-grow: 1;
+    margin-left: 12px;
+}
+
+.addsel-name {
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.92);
+    -unity-font-style: bold;
+}
+
+.addsel-name-basic {
+    color: var(--addsel-green);
+}
+
+.addsel-name-acid {
+    color: var(--addsel-red);
+}
+
+.addsel-desc {
+    font-size: 11px;
+    color: var(--addsel-muted);
+    margin-top: 6px;
+}
+
+.addsel-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.addsel-qty {
+    font-size: 11px;
+    color: var(--addsel-muted);
+}
+
+.addsel-select {
+    padding: 10px 12px;
+    border-width: 1px;
+    border-color: rgba(230, 201, 111, 0.65);
+    background-color: rgb(48, 44, 24);
+}
+
+.addsel-select:hover {
+    background-color: rgb(56, 52, 28);
+}
+
+.addsel-select-text {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(230, 201, 111, 0.95);
+}
+
+.addsel-cancel {
+    height: 54px;
+    border-width: 1px;
+    border-color: rgba(211, 95, 95, 0.45);
+    background-color: rgb(36, 16, 16);
+    justify-content: center;
+    align-items: center;
+}
+
+.addsel-cancel:hover {
+    background-color: rgb(44, 20, 20);
+}
+
+.addsel-cancel-text {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(211, 95, 95, 0.85);
+}
+
+

@@ -1,0 +1,70 @@
+/*
+SPORIUM UI FOUNDATION — Button
+*/
+
+.sp-button {
+  height: 32px;
+  min-width: 90px;
+  padding-left: var(--sp-space-md);
+  padding-right: var(--sp-space-md);
+  padding-top: 0px;
+  padding-bottom: 0px;
+
+  background-color: rgba(255, 255, 255, 0.02);
+  border-left-width: var(--sp-border-2);
+  border-right-width: var(--sp-border-2);
+  border-top-width: var(--sp-border-2);
+  border-bottom-width: var(--sp-border-2);
+  border-left-color: var(--sp-line);
+  border-right-color: var(--sp-line);
+  border-top-color: var(--sp-line);
+  border-bottom-color: var(--sp-line);
+
+  color: var(--sp-color-text);
+  font-size: var(--sp-font-size-10);
+  letter-spacing: var(--sp-letter-wide);
+  -unity-font-style: bold;
+}
+
+.sp-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left-color: var(--sp-line-strong);
+  border-right-color: var(--sp-line-strong);
+  border-top-color: var(--sp-line-strong);
+  border-bottom-color: var(--sp-line-strong);
+}
+
+.sp-button:active {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sp-button:disabled {
+  opacity: 0.45;
+}
+
+/* Variants */
+.sp-button--primary {
+  border-left-color: var(--sp-color-green-led);
+  border-right-color: var(--sp-color-green-led);
+  border-top-color: var(--sp-color-green-led);
+  border-bottom-color: var(--sp-color-green-led);
+  color: var(--sp-color-green-led);
+}
+
+.sp-button--secondary {
+  border-left-color: var(--sp-color-blue-info);
+  border-right-color: var(--sp-color-blue-info);
+  border-top-color: var(--sp-color-blue-info);
+  border-bottom-color: var(--sp-color-blue-info);
+  color: var(--sp-color-blue-info);
+}
+
+.sp-button--danger {
+  border-left-color: var(--sp-color-red-warning);
+  border-right-color: var(--sp-color-red-warning);
+  border-top-color: var(--sp-color-red-warning);
+  border-bottom-color: var(--sp-color-red-warning);
+  color: var(--sp-color-red-warning);
+}
+
+

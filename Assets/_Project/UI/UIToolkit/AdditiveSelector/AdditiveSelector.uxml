@@ -1,0 +1,36 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <!-- Foundation (import order) -->
+    <Style src="../Foundation/SP-Foundation.uss" />
+    <Style src="../Foundation/SP-Panel-Base.uss" />
+    <Style src="../Foundation/Components/SP-Button.uss" />
+    <!-- Local -->
+    <Style src="AdditiveSelector.uss" />
+
+    <!-- Estetica: replica SeedInventoryMenu (POT OPS flow), ma basato su Foundation -->
+    <ui:VisualElement name="addsel-overlay" class="addsel-overlay">
+        <ui:VisualElement name="addsel-panel" class="sp-panel sp-panel--dialog addsel-panel">
+            <ui:VisualElement name="addsel-grid" class="addsel-grid" />
+
+            <ui:VisualElement name="addsel-header" class="addsel-header">
+                <ui:VisualElement name="addsel-header-left" class="addsel-header-left">
+                    <ui:VisualElement name="addsel-iconbox" class="addsel-iconbox" />
+                    <ui:VisualElement name="addsel-header-text" class="addsel-header-text">
+                        <ui:Label name="addsel-title" text="ADDITIVE SELECTOR" class="addsel-title" />
+                        <ui:Label name="addsel-subtitle" text="Select additive to apply" class="addsel-subtitle" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="btn-close" class="addsel-close-button">
+                    <ui:Label text="×" class="addsel-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:ScrollView name="addsel-list" class="addsel-list" />
+
+            <ui:Button name="btn-cancel" class="addsel-cancel">
+                <ui:Label text="CANCEL" class="addsel-cancel-text" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+
+

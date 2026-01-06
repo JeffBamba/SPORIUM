@@ -18,5 +18,9 @@
         
         // AZ-13/AZ-14: Spray Antifungino
         public const string SprayAntifungal = "STR-004";                   // Spray Antifungino (rimuove muffe, pH +5)
+
+        // BLK-??: Additivi pH (sostituiscono Spray Antifungino come consumabile selezionabile)
+        public const string AdditiveBasic = "STR-004-Basic";               // Additivo Basico (pH +5, riduce muffe)
+        public const string AdditiveAcid = "STR-004-Acid";                 // Additivo Acido (pH -5, aumenta muffe)
     }
 }

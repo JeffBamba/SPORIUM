@@ -1,0 +1,97 @@
+/*
+SPORIUM UI FOUNDATION — Design Tokens
+Non-distruttivo: questo file non viene importato dagli UXML esistenti finché non lo aggiungi manualmente.
+Naming: variabili globali --sp-*
+*/
+
+:root {
+  /* ===== Colors (Core) ===== */
+  --sp-color-green-led: #7fff7a;
+  --sp-color-blue-info: #5db6e3;
+  --sp-color-red-warning: #d35f5f;
+  --sp-color-yellow-standard: #e6c96f;
+  --sp-color-violet-growth: #b580d1;
+  --sp-color-text-muted: #c0c8c5;
+  --sp-color-text: #e7f4ff;
+  --sp-color-text-dim: rgba(231, 244, 255, 0.75);
+
+  /* ===== Backgrounds ===== */
+  --sp-bg-panel: rgba(30, 40, 42, 0.90);
+  --sp-bg-panel-dark: #0a1216;
+  --sp-bg-panel-darker: #0f1416;
+  --sp-bg-metal-light: rgba(255, 255, 255, 0.06);
+  --sp-bg-metal-dark: rgba(0, 0, 0, 0.22);
+
+  /* ===== Borders & Lines ===== */
+  --sp-line-weak: rgba(231, 244, 255, 0.12);
+  --sp-line: rgba(231, 244, 255, 0.20);
+  --sp-line-strong: rgba(231, 244, 255, 0.35);
+  --sp-border-1: 1px;
+  --sp-border-2: 2px;
+  --sp-border-4: 4px;
+
+  /* ===== Spacing ===== */
+  --sp-space-xs: 4px;
+  --sp-space-sm: 8px;
+  --sp-space-md: 12px;
+  --sp-space-lg: 16px;
+  --sp-space-xl: 24px;
+  --sp-space-xxl: 32px;
+
+  /* ===== Radius ===== */
+  --sp-radius-xs: 2px;
+  --sp-radius-sm: 6px;
+  --sp-radius-md: 10px;
+  --sp-radius-lg: 14px;
+
+  /* ===== Typography ===== */
+  --sp-font-size-8: 8px;
+  --sp-font-size-10: 10px;
+  --sp-font-size-12: 12px;
+  --sp-font-size-14: 14px;
+  --sp-font-size-16: 16px;
+  --sp-font-size-20: 20px;
+  --sp-font-size-24: 24px;
+
+  --sp-letter-tight: -0.5px;
+  --sp-letter-normal: 0px;
+  --sp-letter-wide: 0.8px;
+
+  /* ===== Focus ===== */
+  --sp-focus: rgba(93, 182, 227, 0.55);
+  --sp-focus-strong: rgba(93, 182, 227, 0.85);
+}
+
+/* ===== Utilities ===== */
+.sp-text {
+  color: var(--sp-color-text);
+}
+
+.sp-text--muted {
+  color: var(--sp-color-text-muted);
+}
+
+.sp-text--dim {
+  color: var(--sp-color-text-dim);
+}
+
+.sp-label {
+  font-size: var(--sp-font-size-10);
+  letter-spacing: var(--sp-letter-wide);
+  color: var(--sp-color-text-dim);
+  -unity-font-style: bold;
+}
+
+.sp-title {
+  font-size: var(--sp-font-size-12);
+  letter-spacing: var(--sp-letter-wide);
+  color: var(--sp-color-text);
+  -unity-font-style: bold;
+}
+
+.sp-divider {
+  height: 1px;
+  background-color: var(--sp-line);
+}
+
+

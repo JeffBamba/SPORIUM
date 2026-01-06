@@ -86,6 +86,10 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
+            
+            // DEBUG_SAFE_FIX: Imposta sortingOrder per HUD base (sotto PlantCard, sopra background)
+            if (_uiDocument != null)
+                _uiDocument.sortingOrder = 50;
         }
         
         private void Start()

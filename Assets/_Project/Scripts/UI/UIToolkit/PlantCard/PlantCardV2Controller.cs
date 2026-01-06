@@ -8,7 +8,6 @@ using Sporae.Dome;
 using Sporae.Dome.UI;
 using _Project;
 using _Project.UI.HUDNotifications2_0;
-using System.IO;
 
 namespace Sporae.UI.UIToolkit.PlantCard
 {
@@ -65,6 +64,21 @@ namespace Sporae.UI.UIToolkit.PlantCard
         {
             _uiDocument = GetComponent<UIDocument>();
             
+            // DEBUG_SAFE_FIX: Imposta sortingOrder sia su UIDocument che su Canvas parent (se presente)
+            // PlantCard deve stare sopra HUD base (50) ma sotto selector modali (200)
+            // Usiamo 300 per essere sicuri che stia sopra tutto tranne i selector modali
+            if (_uiDocument != null)
+            {
+                _uiDocument.sortingOrder = 300;
+                
+                // Se c'è un Canvas parent, imposta anche il suo sortingOrder
+                var canvas = _uiDocument.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.sortingOrder = 300;
+                }
+            }
+            
             // BUG FIX: Trova il player mover per sospendere il movimento quando la HUD è aperta
             _playerMover = FindObjectOfType<PlayerClickMover2D>();
             
@@ -97,6 +111,32 @@ namespace Sporae.UI.UIToolkit.PlantCard
         
         private void Start()
         {
+            // DEBUG_SAFE_FIX: Ribadisce sortingOrder in Start() per assicurarsi che sia applicato dopo l'inizializzazione completa
+            // Questo risolve problemi dove l'ordine nella Hierarchy o PanelSettings diversi causano conflitti
+            if (_uiDocument != null)
+            {
+                _uiDocument.sortingOrder = 300;
+                
+                var canvas = _uiDocument.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.sortingOrder = 300;
+                    
+                    // DEBUG_SAFE_FIX: Forza PlantCard DOPO TopBar/BottomNav nella Hierarchy per garantire rendering sopra
+                    // L'ordine nella Hierarchy può influenzare il rendering quando sortingOrder è uguale
+                    var topBar = GameObject.Find("HUD_TopBar");
+                    var bottomNav = GameObject.Find("HUD_BottomNavigation");
+                    if (topBar != null && bottomNav != null)
+                    {
+                        // Sposta PlantCard dopo TopBar e BottomNav
+                        int topBarIndex = topBar.transform.GetSiblingIndex();
+                        int bottomNavIndex = bottomNav.transform.GetSiblingIndex();
+                        int maxIndex = Mathf.Max(topBarIndex, bottomNavIndex);
+                        transform.SetSiblingIndex(maxIndex + 1);
+                    }
+                }
+            }
+            
             // Nascondi overlay all'avvio
             if (_overlay != null)
             {
@@ -151,14 +191,17 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _closeButton.pickingMode = PickingMode.Position;
             }
             
-            // DEBUG_SAFE_FIX: Assicura che il root e l'overlay possano ricevere click
+            // DEBUG_SAFE_FIX: Root deve essere Position per intercettare eventi, ma overlay deve essere Ignore
+            // per non bloccare click sugli elementi interattivi dentro PlantCard (es. watering ON)
             if (_root != null)
             {
                 _root.pickingMode = PickingMode.Position;
             }
             if (_overlay != null)
             {
-                _overlay.pickingMode = PickingMode.Position;
+                // Overlay deve essere Ignore per non bloccare click sugli elementi interni
+                // Il close button e altri elementi interattivi hanno già PickingMode.Position
+                _overlay.pickingMode = PickingMode.Ignore;
             }
             
             if (_closeButton != null)
@@ -257,6 +300,33 @@ namespace Sporae.UI.UIToolkit.PlantCard
             }
             
             _currentPotSlot = potSlot;
+
+            // DEBUG_SAFE_FIX: ribadisce l'ordine in caso di override da Inspector/scene
+            // Imposta sia UIDocument che Canvas parent (se presente)
+            // E forza l'ordine nella Hierarchy per garantire rendering sopra TopBar/BottomNav
+            if (_uiDocument != null)
+            {
+                _uiDocument.sortingOrder = 300;
+                
+                var canvas = _uiDocument.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.sortingOrder = 300;
+                    
+                    // DEBUG_SAFE_FIX: Forza PlantCard DOPO TopBar/BottomNav nella Hierarchy
+                    // In Unity UI Toolkit, quando più UIDocument condividono lo stesso Canvas,
+                    // l'ordine nella Hierarchy può influenzare il rendering anche con sortingOrder
+                    var topBar = GameObject.Find("HUD_TopBar");
+                    var bottomNav = GameObject.Find("HUD_BottomNavigation");
+                    if (topBar != null && bottomNav != null)
+                    {
+                        int topBarIndex = topBar.transform.GetSiblingIndex();
+                        int bottomNavIndex = bottomNav.transform.GetSiblingIndex();
+                        int maxIndex = Mathf.Max(topBarIndex, bottomNavIndex);
+                        transform.SetSiblingIndex(maxIndex + 1);
+                    }
+                }
+            }
             
             // Ottieni PotActions dal pot
             _potActions = potSlot.GetComponent<PotActions>();
@@ -269,8 +339,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.Flex;
-                // DEBUG_SAFE_FIX: Assicura che l'overlay possa ricevere click
-                _overlay.pickingMode = PickingMode.Position;
+                // DEBUG_SAFE_FIX: Overlay deve essere Ignore per non bloccare click sugli elementi interattivi
+                // (es. watering ON, rotary knobs, buttons). Solo gli elementi interattivi hanno PickingMode.Position
+                _overlay.pickingMode = PickingMode.Ignore;
                 
                 // CRITICAL FIX: Abilita il Canvas quando l'overlay è mostrato
                 // (Il GameObject è già stato abilitato all'inizio del metodo)
@@ -503,23 +574,49 @@ namespace Sporae.UI.UIToolkit.PlantCard
             if (_potActions == null || _currentPotSlot == null)
                 return;
             
-            _potActions.DoSprayAntifungal();
-            
-            // BUG FIX: Aggiorna l'UI dopo lo spray per mostrare il rischio muffa azzerato
-            // Usa un delay per assicurarsi che lo stato sia aggiornato prima del refresh
-            // (DoSprayAntifungal potrebbe emettere PotEvents.OnPotStateChanged che triggera RefreshData,
-            // ma vogliamo assicurarci che il refresh avvenga dopo che lo stato è stato aggiornato)
+            OpenAdditiveSelector();
+        }
+
+        private void OpenAdditiveSelector()
+        {
+            // Cerca AdditiveSelectorController nella scena
+            var selector = FindObjectOfType<Sporae.UI.UIToolkit.AdditiveSelector.AdditiveSelectorController>();
+            if (selector == null)
+            {
+                Debug.LogWarning("PlantCardV2Controller: AdditiveSelectorController non trovato nella scena!");
+                return;
+            }
+
+            // Sottoscrivi eventi
+            selector.OnAdditiveSelected -= OnAdditiveSelected;
+            selector.OnAdditiveSelected += OnAdditiveSelected;
+            selector.OnCancelled -= OnAdditiveSelectionCancelled;
+            selector.OnCancelled += OnAdditiveSelectionCancelled;
+
+            selector.Show();
+        }
+
+        private void OnAdditiveSelected(string additiveTypeId)
+        {
+            if (_potActions == null || _currentPotSlot == null)
+                return;
+
+            _potActions.DoApplyAdditive(additiveTypeId);
+
+            // Refresh UI dopo applicazione additivo
             if (_root != null)
             {
-                _root.schedule.Execute(() => {
-                    RefreshData();
-                }).ExecuteLater(10); // Delay di 10ms per assicurarsi che lo stato sia aggiornato
+                _root.schedule.Execute(() => { RefreshData(); }).ExecuteLater(10);
             }
             else
             {
-                // Fallback: refresh immediato se _root non è disponibile
                 RefreshData();
             }
+        }
+
+        private void OnAdditiveSelectionCancelled()
+        {
+            // Nessuna azione necessaria
         }
         
         private void OnPruneButtonClicked()

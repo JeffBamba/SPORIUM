@@ -37,6 +37,19 @@ namespace Sporae.UI.UIToolkit.SeedInventory
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
+            
+            // DEBUG_SAFE_FIX: Imposta sortingOrder sia su UIDocument che su Canvas parent (se presente)
+            // Selector modali devono stare sopra tutto, incluso PlantCard (300)
+            if (_uiDocument != null)
+            {
+                _uiDocument.sortingOrder = 500;
+                
+                var canvas = _uiDocument.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.sortingOrder = 500;
+                }
+            }
 
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
             if (_root == null)
