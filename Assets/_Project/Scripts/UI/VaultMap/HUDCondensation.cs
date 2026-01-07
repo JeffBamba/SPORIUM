@@ -3,6 +3,7 @@ using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
 {
@@ -119,14 +120,22 @@ namespace _Project
                 if (_uiNotification != null)
                 {
                     // Usa nuovo sistema toast se disponibile
-                    var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-                    if (toastManager != null)
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
                     {
-                        toastManager.ShowToast(ToastNotificationType.ResourceGained, $"You collected Rainwater: {amountToCollect}!", "WATER-001");
+                        foundation.PostToast("WATER-001", new NotificationPayload().With("amount", amountToCollect.ToString()));
                     }
-                    else if (_uiNotification != null)
+                    else
                     {
-                        _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                        var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                        if (toastManager != null)
+                        {
+                            toastManager.ShowToast(ToastNotificationType.ResourceGained, $"You collected Rainwater: {amountToCollect}!", "WATER-001");
+                        }
+                        else if (_uiNotification != null)
+                        {
+                            _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                        }
                     }
                 }
                 _gameManager.PlayerInventory.Add(Items.Water, amountToCollect);

@@ -1,0 +1,50 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="nf-root" class="nf-root">
+        <ui:Button name="nf-header" class="nf-header">
+            <ui:VisualElement name="nf-header-left" class="nf-header-left">
+                <ui:VisualElement name="nf-header-iconbox" class="nf-iconbox nf-header-iconbox">
+                    <ui:Label name="nf-header-icon" text="!" class="nf-header-icon" />
+                </ui:VisualElement>
+                <ui:Label name="nf-header-title" text="NOTIFICATIONS" class="nf-header-title" />
+            </ui:VisualElement>
+            <ui:VisualElement name="nf-header-right" class="nf-header-right">
+                <ui:VisualElement name="nf-badge" class="nf-badge">
+                    <ui:Label name="nf-badge-text" text="0" class="nf-badge-text" />
+                </ui:VisualElement>
+                <ui:Label name="nf-chevron" text="^" class="nf-chevron" />
+            </ui:VisualElement>
+        </ui:Button>
+
+        <ui:VisualElement name="nf-list" class="nf-list">
+            <ui:VisualElement name="nf-row-0" class="nf-row">
+                <ui:VisualElement name="nf-row-0-iconbox" class="nf-iconbox nf-row-iconbox">
+                    <ui:Label name="nf-row-0-icon" text="!" class="nf-row-icon" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nf-row-0-text" class="nf-row-text">
+                    <ui:Label name="nf-row-0-code" text="CODE-000" class="nf-row-code" />
+                    <ui:Label name="nf-row-0-msg" text="Message" class="nf-row-msg" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="nf-row-1" class="nf-row">
+                <ui:VisualElement name="nf-row-1-iconbox" class="nf-iconbox nf-row-iconbox">
+                    <ui:Label name="nf-row-1-icon" text="!" class="nf-row-icon" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nf-row-1-text" class="nf-row-text">
+                    <ui:Label name="nf-row-1-code" text="CODE-000" class="nf-row-code" />
+                    <ui:Label name="nf-row-1-msg" text="Message" class="nf-row-msg" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="nf-row-2" class="nf-row">
+                <ui:VisualElement name="nf-row-2-iconbox" class="nf-iconbox nf-row-iconbox">
+                    <ui:Label name="nf-row-2-icon" text="!" class="nf-row-icon" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nf-row-2-text" class="nf-row-text">
+                    <ui:Label name="nf-row-2-code" text="CODE-000" class="nf-row-code" />
+                    <ui:Label name="nf-row-2-msg" text="Message" class="nf-row-msg" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+
+

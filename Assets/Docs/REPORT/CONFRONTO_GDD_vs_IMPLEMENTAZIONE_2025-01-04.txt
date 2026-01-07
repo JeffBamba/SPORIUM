@@ -1,0 +1,314 @@
+# 📊 CONFRONTO GDD 40 v.08/12/2025 vs IMPLEMENTAZIONE REPOSITORY
+## Differenze tra Design e Implementazione Effettiva
+
+**Data Analisi:** 2025-01-04  
+**Versione GDD Analizzata:** 40 v.08/12/2025  
+**Versione Repository:** Build_Beta (Main)  
+**Autore:** Analisi Automatica Sistema  
+**Scopo:** Identificare differenze tra scelte di design GDD e implementazione effettiva per aggiornare GDD
+
+---
+
+## 📋 PRINCIPI DELL'ANALISI
+
+Questa analisi si concentra **SOLO sui sistemi implementati** nella repository main.
+Non vengono considerate le funzionalità mancanti rispetto al GDD, ma solo le **differenze di implementazione** rispetto alle scelte di design originali.
+
+---
+
+## 🎯 DIFFERENZE IDENTIFICATE
+
+### 1. SISTEMA pH - Valori LED
+
+**GDD (Sezione 3):**
+- Blue LED: **+2 pH** (range +2 a +3)
+- Red LED: **-5 pH**
+
+**IMPLEMENTAZIONE:**
+- Blue LED: **+5 pH** (configurabile in `DifficultyCalibrationConfig.PhDriftLedBlue`)
+- Red LED: **-5 pH** (configurabile in `DifficultyCalibrationConfig.PhDriftLedRed`)
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Core/PhSystem.cs`
+- `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs` (linea 1468)
+
+**Nota Tecnica:**
+Il sistema implementato supporta moltiplicatori per LED attivi per più giorni consecutivi:
+- 2+ giorni consecutivi: moltiplicatore ×1.5
+- 4+ giorni consecutivi: moltiplicatore ×2
+
+**Raccomandazione:**
+Aggiornare GDD per riflettere il valore implementato (+5 invece di +2) o allineare il codice al GDD.
+
+---
+
+### 2. SISTEMA WATERING - Micro-Operations 2.0
+
+**GDD (Sezione 3, AZ-11):**
+- Consumo risorse: **1 WAT-RAW ogni 2 giorni + 2 CRY/giorno** per vaso ON
+- Overwatering: pH shift **-25%** relativo al contributo acqua di quello slot
+
+**IMPLEMENTAZIONE:**
+- Consumo risorse: **0.5 WAT-RAW/giorno** (accumulatore frazionario) + **2 CRY/giorno** per vaso ON
+- Overwatering: pH **-5** immediato quando idratazione supera range ottimale
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Dome/PotActions.cs` (linea 303-861)
+- `Assets/_Project/Scripts/Dome/PotStateModel.cs` (WateringRawWaterAccumulator)
+
+**Differenza Chiave:**
+- GDD: Overwatering causa shift pH relativo (-25% del contributo acqua)
+- Implementazione: Overwatering causa shift pH fisso (-5)
+
+**Raccomandazione:**
+Il sistema implementato è più semplice e deterministico. Valutare se mantenere o allineare al GDD.
+
+---
+
+### 3. SISTEMA LED - Costi Notturni
+
+**GDD (Sezione 5):**
+- LED acceso di notte: **-1 CRY per ora notturna per pianta** (cap notturno: **-6 CRY**)
+- Blue LED notturno: drift pH **+5**
+- Red LED notturno: drift pH **-5**
+
+**IMPLEMENTAZIONE:**
+- LED Blue notturno: **1 + (consecutiveDays / 2) CRY** (1, 1, 2, 2, 3...)
+- LED Red notturno: **2 + consecutiveDays CRY** (2, 3, 4, 5...)
+- Drift pH: Blue **+5**, Red **-5** (con moltiplicatori per giorni consecutivi)
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs` (linea 1442-1482)
+
+**Differenza Chiave:**
+- GDD: Sistema basato su "ore notturne" con cap fisso
+- Implementazione: Sistema basato su "giorni consecutivi" con scaling progressivo
+
+**Raccomandazione:**
+Il sistema implementato è più semplice da gestire. Aggiornare GDD per riflettere la logica effettiva.
+
+---
+
+### 4. SISTEMA STADI CRESCITA - Sequenza Completa
+
+**GDD (Sezione 3):**
+- Stadi: Seed → Sprout → Growth → Flowering → HarvestReady → Resting
+- Transizione Resting → Flowering: richiede **Fertilizzante specifico per famiglia**
+
+**IMPLEMENTAZIONE:**
+- ✅ Stadi completi: Seed → Sprout → Growth → Flowering → HarvestReady → Resting
+- ⚠️ Transizione Resting → Flowering: logica presente ma non completamente testata
+- ⚠️ Fertilizzante sbagliato → morte pianta: logica presente ma non completamente testata
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantStage.cs`
+- `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+
+**Stato:**
+Il sistema è implementato correttamente secondo il GDD, ma necessita di testing completo per verificare tutte le transizioni.
+
+---
+
+### 5. SISTEMA LIVELLI PIANTE - Progressione
+
+**GDD (Sezione 3):**
+- Progressione: Lvl 3 dopo **3 cicli completi**, Lvl 4 dopo altri **2 cicli**, Lvl 5 dopo altri **3 cicli**
+- Resa frutti: Lvl 1-2 invariata, da Lvl 3 in poi quantità **-15%/livello**
+
+**IMPLEMENTAZIONE:**
+- Progressione: Configurabile in `PlantLevelConfig.cyclesThresholds` (default: [1, 2, 2, 3])
+- Resa frutti: Logica presente in `PlantLevelConfig.GetQuantityModifier()` ma **non completamente integrata** nel sistema di raccolta
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Dome/PotSystem/Level/PlantLevelSystem.cs`
+- `Assets/_Project/Scripts/Dome/PotSystem/Level/PlantLevelConfig.cs`
+
+**Differenza:**
+- GDD: Soglie fisse (3→2→3 cicli)
+- Implementazione: Soglie configurabili (default: 1→2→2→3 cicli)
+
+**Raccomandazione:**
+Il sistema implementato è più flessibile. Verificare se le soglie default corrispondono al GDD o aggiornare il GDD.
+
+---
+
+### 6. SISTEMA AZIONI GIORNALIERE - Base e Bonus
+
+**GDD (Sezione 8):**
+- Azioni base: **4 al giorno**
+- Bonus da cibo: +1 (vegetali), +2 (funghi), +3 (carne)
+- Bonus strutturali: cap +3 Azioni permanenti cumulabili
+
+**IMPLEMENTAZIONE:**
+- ✅ Azioni base: **4 al giorno** (configurabile in `GameManager._actionsPerDay`)
+- ❌ Bonus da cibo: **NON IMPLEMENTATO** (Food Room non presente)
+- ❌ Bonus strutturali: **NON IMPLEMENTATO** (slot passivi non presenti)
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Core/GameManager.cs` (linea 21)
+
+**Stato:**
+Il sistema base è implementato correttamente. I bonus non sono implementati perché dipendono da sistemi non ancora completati (Food Room, Slot Passivi).
+
+---
+
+### 7. SISTEMA INVENTARIO - Struttura
+
+**GDD:**
+- Sistema inventario menzionato ma non dettagliato nelle sezioni principali
+
+**IMPLEMENTAZIONE:**
+- Sistema inventario completo con `Inventory`, `InventorySlot`, `Item`, `ItemFabric`
+- Supporto per item stackabili, consumabili, deteriorabili
+- Integrazione con Seed Storage e sistemi di scambio
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Core/ItemsSystem/Inventory.cs`
+- `Assets/_Project/Scripts/Core/ItemsSystem/InventorySlot.cs`
+- `Assets/_Project/Scripts/Core/ItemsSystem/Item.cs`
+
+**Nota:**
+Il sistema inventario implementato è più completo di quanto descritto nel GDD. Potrebbe essere utile aggiungere una sezione dettagliata nel GDD.
+
+---
+
+### 8. SISTEMA CONDIZIONI PIANTE - Score System
+
+**GDD (Sezione 3):**
+- Sistema score 0-100 con mappatura a condizioni (Rigogliosa, Sana, Stressata, Appassita, Critica)
+- Forecast tendenza (↑ → ↓)
+
+**IMPLEMENTAZIONE:**
+- ⚠️ Sistema score parzialmente implementato in `PlantConditionSystem`
+- ⚠️ Forecast non completamente implementato
+- ❌ Progress bar HUD condizioni non presente
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+
+**Stato:**
+Il sistema è in sviluppo ma non completo. La logica base è presente ma manca l'integrazione UI completa.
+
+---
+
+### 9. ARCHITETTURA - ServiceContainer Pattern
+
+**GDD (Sezione 1):**
+- Architettura modulare menzionata
+- GameManager leggero orchestratore
+
+**IMPLEMENTAZIONE:**
+- ✅ ServiceContainer Pattern per dependency injection
+- ✅ Architettura modulare con namespace organizzati (`Sporae.Core`, `Sporae.Dome.PotSystem`, ecc.)
+- ✅ Event-driven communication via EventSystem
+- ✅ ScriptableObject Config per dati configurabili
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Core/ServiceContainer.cs`
+- `Assets/_Project/Scripts/Core/EventSystem.cs`
+
+**Nota:**
+L'architettura implementata è più strutturata e professionale di quanto descritto nel GDD. Potrebbe essere utile documentare meglio l'architettura nel GDD.
+
+---
+
+### 10. SISTEMA CRY - Valori Iniziali
+
+**GDD:**
+- CRY iniziale: **250** (menzionato in vari punti)
+
+**IMPLEMENTAZIONE:**
+- ✅ CRY iniziale: **250** (configurabile in `GameManager._startingCRY`)
+- ✅ Costo giornaliero Vault: **20 CRY** (configurabile in `GameManager._dailyPowerCost`)
+
+**File Implementazione:**
+- `Assets/_Project/Scripts/Core/GameManager.cs` (linea 22-23)
+
+**Stato:**
+Valori allineati al GDD.
+
+---
+
+## 📊 TABELLA RIEPILOGATIVA DIFFERENZE
+
+| Sistema | GDD | Implementazione | Differenza | Azione Consigliata |
+|---------|-----|-----------------|------------|-------------------|
+| **pH LED Blue** | +2 | +5 | Valore diverso | Aggiornare GDD o allineare codice |
+| **pH LED Red** | -5 | -5 | ✅ Allineato | Nessuna |
+| **Watering Overwatering pH** | -25% relativo | -5 fisso | Logica diversa | Valutare quale mantenere |
+| **LED Costi Notturni** | -1 CRY/ora (cap -6) | Scaling progressivo | Sistema diverso | Aggiornare GDD |
+| **Stadi Crescita** | 6 stadi completi | 6 stadi completi | ✅ Allineato | Testing completo |
+| **Livelli Progressione** | 3→2→3 cicli | 1→2→2→3 cicli (config) | Soglie diverse | Verificare bilanciamento |
+| **Azioni Base** | 4/giorno | 4/giorno | ✅ Allineato | Nessuna |
+| **Inventario** | Menzionato | Completo | Più completo | Aggiungere sezione GDD |
+| **Architettura** | Modulare | ServiceContainer + Event-Driven | Più strutturata | Documentare meglio GDD |
+
+---
+
+## 🎯 RACCOMANDAZIONI PER AGGIORNAMENTO GDD
+
+### Priorità ALTA (Differenze Meccaniche)
+
+1. **Sistema pH LED Blue**: Aggiornare valore da +2 a +5 o allineare codice
+2. **Sistema LED Costi Notturni**: Aggiornare descrizione per riflettere sistema scaling progressivo
+3. **Sistema Watering Overwatering**: Chiarire se mantenere -5 fisso o implementare -25% relativo
+
+### Priorità MEDIA (Documentazione)
+
+4. **Sistema Inventario**: Aggiungere sezione dettagliata nel GDD
+5. **Architettura**: Documentare meglio ServiceContainer Pattern e Event-Driven architecture
+6. **Sistema Livelli**: Verificare se soglie default (1→2→2→3) corrispondono al design originale
+
+### Priorità BASSA (Testing)
+
+7. **Sistema Stadi**: Completare testing transizioni Resting → Flowering
+8. **Sistema Condizioni**: Completare implementazione score system e forecast
+
+---
+
+## 📝 NOTE TECNICHE IMPLEMENTAZIONE
+
+### Valori Configurabili
+
+Molti valori sono configurabili tramite ScriptableObjects:
+- `DifficultyCalibrationConfig`: pH thresholds, LED drift, ecc.
+- `PlantLevelConfig`: soglie progressione livelli
+- `GameManager`: azioni base, CRY iniziale, costi giornalieri
+
+Questo permette bilanciamento senza modificare codice.
+
+### Pattern Architetturali
+
+L'implementazione utilizza:
+- **ServiceContainer Pattern**: Dependency injection centralizzata
+- **Event-Driven**: Comunicazione asincrona tra sistemi
+- **ScriptableObject Config**: Dati configurabili in Unity Editor
+- **Namespace Organization**: Separazione logica per dominio
+
+---
+
+## ✅ CONCLUSIONI
+
+L'implementazione è **sostanzialmente allineata** al GDD per i sistemi core implementati.
+
+Le principali differenze sono:
+1. **Valori numerici** (pH LED Blue: +5 vs +2)
+2. **Sistemi di calcolo** (LED costi notturni: scaling vs ore)
+3. **Complessità implementata** (Inventario, Architettura più strutturati)
+
+**Raccomandazione Generale:**
+Aggiornare il GDD per riflettere le scelte implementative effettive, specialmente per:
+- Valori numerici finali (pH LED)
+- Sistemi di calcolo (LED costi)
+- Architettura tecnica (ServiceContainer, Event-Driven)
+
+Questo manterrà il GDD allineato con l'implementazione e utile come riferimento per sviluppo futuro.
+
+---
+
+**FINE REPORT CONFRONTO GDD vs IMPLEMENTAZIONE**
+
+*Generato il 2025-01-04*  
+*Versione Repository: Build_Beta (Main)*  
+*Versione GDD: 40 v.08/12/2025*
+

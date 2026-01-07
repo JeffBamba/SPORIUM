@@ -1,0 +1,303 @@
+/* Notifications Foundation — layout/override only.
+   IMPORTANT: questo USS va usato insieme a:
+   - Assets/_Project/UI/UIToolkit/Foundation/SP-Foundation.uss
+   - Assets/_Project/UI/UIToolkit/Foundation/SP-Panel-Base.uss
+*/
+
+.nf-root {
+    position: absolute;
+    right: 24px;
+    /* Spostato più in basso rispetto alla TopBar (fix overlap) */
+    top: 144px;
+    width: 306px;
+    flex-direction: column;
+}
+
+.nf-header {
+    height: 40px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    background-color: rgba(30, 40, 42, 0.90);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--sp-color-blue-info);
+    border-right-color: var(--sp-color-blue-info);
+    border-top-color: var(--sp-color-blue-info);
+    border-bottom-color: var(--sp-color-blue-info);
+}
+
+.nf-header-left {
+    flex-direction: row;
+    align-items: center;
+}
+
+.nf-iconbox {
+    width: 22px;
+    height: 22px;
+    margin-right: 8px;
+    justify-content: center;
+    align-items: center;
+
+    background-color: rgba(10, 18, 22, 0.80);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--sp-color-blue-info);
+    border-right-color: var(--sp-color-blue-info);
+    border-top-color: var(--sp-color-blue-info);
+    border-bottom-color: var(--sp-color-blue-info);
+}
+
+.nf-header-icon {
+    width: 14px;
+    height: 14px;
+    unity-text-align: middle-center;
+    color: var(--sp-color-blue-info);
+}
+
+.nf-header-title {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--sp-color-blue-info);
+    unity-font-style: bold;
+}
+
+.nf-header-right {
+    flex-direction: row;
+    align-items: center;
+}
+
+.nf-badge {
+    min-width: 20px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-right: 8px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--sp-color-blue-info);
+    border-right-color: var(--sp-color-blue-info);
+    border-top-color: var(--sp-color-blue-info);
+    border-bottom-color: var(--sp-color-blue-info);
+    background-color: rgba(93, 182, 227, 0.15);
+    justify-content: center;
+    align-items: center;
+}
+
+.nf-badge-text {
+    font-size: 12px;
+    color: var(--sp-color-blue-info);
+}
+
+.nf-chevron {
+    width: 16px;
+    height: 16px;
+    unity-text-align: middle-center;
+    color: var(--sp-color-blue-info);
+}
+
+.nf-list {
+    margin-top: 6px;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nf-row {
+    /* Base state for animations */
+    opacity: 1;
+    translate: 0px 0px;
+    scale: 1 1;
+
+    transition-property: opacity, translate, scale;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: rgba(30, 40, 42, 0.90);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--sp-color-blue-info);
+    border-right-color: var(--sp-color-blue-info);
+    border-top-color: var(--sp-color-blue-info);
+    border-bottom-color: var(--sp-color-blue-info);
+}
+
+/* Entry/Exit animation states (applied/removed by controller) */
+.nf-row.nf-anim-enter {
+    opacity: 0;
+    translate: 100px 0px;
+    scale: 0.8 0.8;
+}
+
+.nf-row.nf-anim-exit {
+    opacity: 0;
+    translate: 100px 0px;
+    scale: 0.8 0.8;
+}
+
+.nf-row-icon {
+    width: 14px;
+    height: 14px;
+    unity-text-align: upper-center;
+    color: var(--sp-color-blue-info);
+}
+
+.nf-row-text {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.nf-row-code {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--sp-color-blue-info);
+}
+
+.nf-row-msg {
+    font-size: 13px;
+    color: var(--sp-color-text-muted);
+}
+
+.nf-collapsed .nf-list {
+    display: none;
+}
+
+/* Severity mapping via classes applied from controller */
+.nf-sev-info {
+    --nf-color: var(--sp-color-green-led);
+    --nf-bg: rgba(127, 255, 122, 0.10);
+}
+.nf-sev-success {
+    --nf-color: var(--sp-color-green-led);
+    --nf-bg: rgba(127, 255, 122, 0.10);
+}
+.nf-sev-warning {
+    --nf-color: var(--sp-color-yellow-standard);
+    --nf-bg: rgba(230, 201, 111, 0.10);
+}
+.nf-sev-danger {
+    --nf-color: var(--sp-color-red-warning);
+    --nf-bg: rgba(211, 95, 95, 0.10);
+}
+
+.nf-header.nf-sev-info,
+.nf-header.nf-sev-success,
+.nf-header.nf-sev-warning,
+.nf-header.nf-sev-danger,
+.nf-row.nf-sev-info,
+.nf-row.nf-sev-success,
+.nf-row.nf-sev-warning,
+.nf-row.nf-sev-danger {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-info,
+.nf-row.nf-sev-success,
+.nf-row.nf-sev-warning,
+.nf-row.nf-sev-danger {
+    background-color: var(--nf-bg);
+}
+
+.nf-header.nf-sev-info .nf-header-icon,
+.nf-header.nf-sev-info .nf-header-title,
+.nf-header.nf-sev-info .nf-chevron,
+.nf-header.nf-sev-info .nf-badge-text,
+.nf-header.nf-sev-info .nf-badge,
+.nf-header.nf-sev-info .nf-iconbox {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success .nf-header-icon,
+.nf-header.nf-sev-success .nf-header-title,
+.nf-header.nf-sev-success .nf-chevron,
+.nf-header.nf-sev-success .nf-badge-text,
+.nf-header.nf-sev-success .nf-badge,
+.nf-header.nf-sev-success .nf-iconbox {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning .nf-header-icon,
+.nf-header.nf-sev-warning .nf-header-title,
+.nf-header.nf-sev-warning .nf-chevron,
+.nf-header.nf-sev-warning .nf-badge-text,
+.nf-header.nf-sev-warning .nf-badge,
+.nf-header.nf-sev-warning .nf-iconbox {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger .nf-header-icon,
+.nf-header.nf-sev-danger .nf-header-title,
+.nf-header.nf-sev-danger .nf-chevron,
+.nf-header.nf-sev-danger .nf-badge-text,
+.nf-header.nf-sev-danger .nf-badge,
+.nf-header.nf-sev-danger .nf-iconbox {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+/* Row icon box colored by row severity */
+.nf-row.nf-sev-info .nf-iconbox,
+.nf-row.nf-sev-success .nf-iconbox,
+.nf-row.nf-sev-warning .nf-iconbox,
+.nf-row.nf-sev-danger .nf-iconbox {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-info .nf-row-icon,
+.nf-row.nf-sev-info .nf-row-code {
+    color: var(--nf-color);
+}
+.nf-row.nf-sev-success .nf-row-icon,
+.nf-row.nf-sev-success .nf-row-code {
+    color: var(--nf-color);
+}
+.nf-row.nf-sev-warning .nf-row-icon,
+.nf-row.nf-sev-warning .nf-row-code {
+    color: var(--nf-color);
+}
+.nf-row.nf-sev-danger .nf-row-icon,
+.nf-row.nf-sev-danger .nf-row-code {
+    color: var(--nf-color);
+}
+
+

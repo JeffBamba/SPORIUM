@@ -10817,6 +10817,73 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cb96e2828e54e5990803388acdaa8e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &487210095
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 487210098}
+  - component: {fileID: 487210097}
+  - component: {fileID: 487210096}
+  m_Layer: 0
+  m_Name: Notifications Foundation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &487210096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487210095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d30b18766d4d194c975c5303c924c3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiDocument: {fileID: 0}
+  _spFoundation: {fileID: 7433441132597879392, guid: 41a5d4aa05ca1f9409da757ce7607bf4, type: 3}
+  _spPanelBase: {fileID: 7433441132597879392, guid: 3cc1013e433eec845ab79e73d208a516, type: 3}
+  _notificationsUss: {fileID: 7433441132597879392, guid: f6e5544b0a2c1124496a59a4172e9ad6, type: 3}
+  _startExpanded: 1
+  _enableDebugLogs: 0
+--- !u!114 &487210097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487210095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: 842f2400a00e9fc45b53004a7eeaa5d4, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: b8afacc9360fdb643a278aaacc61fe2a, type: 3}
+  m_SortingOrder: 0
+--- !u!4 &487210098
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487210095}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 878.2181, y: 289.64685, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &491272134
 GameObject:
   m_ObjectHideFlags: 0
@@ -15739,6 +15806,53 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &688953614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 688953616}
+  - component: {fileID: 688953615}
+  m_Layer: 0
+  m_Name: Notifications Foundation - debug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &688953615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688953614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42cb584cc46eeb84e92a89e397f5b89e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableConsole: 1
+  toggleKey: 110
+  showOnStart: 0
+--- !u!4 &688953616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688953614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 878.2181, y: 289.64685, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &697218836
 GameObject:
   m_ObjectHideFlags: 0
@@ -17837,6 +17951,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _uiNotification: {fileID: 2126075641}
   _fadeToBlack: {fileID: 1674815614}
+  _enableFoundationNotifications: 1
+  _enableFoundationRunners: 1
 --- !u!1 &756970440
 GameObject:
   m_ObjectHideFlags: 0
@@ -49504,3 +49620,5 @@ SceneRoots:
   - {fileID: 1041556214}
   - {fileID: 1278232214}
   - {fileID: 389371634}
+  - {fileID: 487210098}
+  - {fileID: 688953616}

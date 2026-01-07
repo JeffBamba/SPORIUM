@@ -2,6 +2,7 @@
 using Sporae.Dome.PotSystem.Growth;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project.Pot
 {
@@ -62,7 +63,24 @@ namespace _Project.Pot
                 _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
             }
             
-            if (_toastManager != null)
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                // In Foundation, usiamo codici univoci per tipologia (in futuro li mapperemo in TypeSpec).
+                string code = type switch
+                {
+                    PotEvents.PotActionType.Light => "POT-LIGHT-FAILED",
+                    PotEvents.PotActionType.Plant => "POT-PLANT-FAILED",
+                    PotEvents.PotActionType.Water => "POT-WATER-FAILED",
+                    PotEvents.PotActionType.Fertilize => "POT-FERTILIZE-FAILED",
+                    PotEvents.PotActionType.Harvest => "POT-HARVEST-FAILED",
+                    PotEvents.PotActionType.Spray => "POT-SPRAY-FAILED",
+                    PotEvents.PotActionType.Uproot => "POT-UPROOT-FAILED",
+                    _ => "POT-ACTION-FAILED"
+                };
+                foundation.PostToast(code, new NotificationPayload().With("message", text), NotificationSeverity.Danger);
+            }
+            else if (_toastManager != null)
             {
                 string code = type switch
                 {
@@ -158,7 +176,24 @@ namespace _Project.Pot
                 _toastManager = ServiceContainer.Instance.Get<ToastNotificationManager>(suppressWarning: true);
             }
             
-            if (_toastManager != null)
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                // Success/info routing: in Foundation useremo TypeSpec + payload (qui usiamo template generico {message}).
+                string code = type switch
+                {
+                    PotEvents.PotActionType.Water => "POT-WATER-SUCCESS",
+                    PotEvents.PotActionType.Light => "POT-LIGHT-SUCCESS",
+                    PotEvents.PotActionType.Plant => "POT-PLANT-SUCCESS",
+                    PotEvents.PotActionType.Fertilize => "POT-FERTILIZE-SUCCESS",
+                    PotEvents.PotActionType.Harvest => "POT-HARVEST-SUCCESS",
+                    PotEvents.PotActionType.Spray => "POT-SPRAY-SUCCESS",
+                    PotEvents.PotActionType.Uproot => "POT-UPROOT-SUCCESS",
+                    _ => "POT-ACTION-SUCCESS"
+                };
+                foundation.PostToast(code, new NotificationPayload().With("message", text), NotificationSeverity.Success);
+            }
+            else if (_toastManager != null)
             {
                 string code = type switch
                 {

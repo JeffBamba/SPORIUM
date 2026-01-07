@@ -3,6 +3,8 @@ using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
+using System;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -11,9 +13,13 @@ namespace _Project.Sporae.Core.Installers
     {
         [SerializeField] private UINotification _uiNotification;
         [SerializeField] private FadeToBlackAnimation _fadeToBlack;
+
+        [Header("Notifications Foundation (ex novo)")]
+        [SerializeField] private bool _enableFoundationNotifications = false;
+        [SerializeField] private bool _enableFoundationRunners = true;
         
         private MissionManager _missionManager;
-        
+
         public void Awake()
         {
             ServiceContainer.Init();
@@ -52,6 +58,28 @@ namespace _Project.Sporae.Core.Installers
             else
             {
                 SporiumLogger.LogWarning(LogCategory.Core, "ToastNotificationManager non trovato nella scena. Toast notifications potrebbero non funzionare.");
+            }
+
+            // Notifications Foundation (ex novo): registra sempre il service, ma può restare disabilitato in coexistence
+            if (!ServiceContainer.Instance.Contains(typeof(FoundationNotificationService)))
+            {
+                var foundationService = new FoundationNotificationService
+                {
+                    Enabled = _enableFoundationNotifications
+                };
+                ServiceContainer.Instance.Register(foundationService);
+            }
+
+            // Se abilitato, crea runners runtime (Tick service + watchers + lore). La UI viene aggiunta in scena manualmente.
+            if (_enableFoundationNotifications && _enableFoundationRunners)
+            {
+                var go = new GameObject("FoundationNotificationsRuntime");
+                go.AddComponent<FoundationNotificationsRunner>();
+                go.AddComponent<FoundationNotificationsWatchersRunner>();
+                go.AddComponent<FoundationLoreSchedulerRunner>();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                go.AddComponent<FoundationNotificationsDebugConsole>();
+#endif
             }
 
             _missionManager = new MissionManager();

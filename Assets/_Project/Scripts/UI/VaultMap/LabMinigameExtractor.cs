@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
 {
@@ -194,15 +195,23 @@ namespace _Project
             if (_isWon)
             {
                 _playerInventory.Add(Items.SporeGeneric);
-                // Usa nuovo sistema toast se disponibile
-                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-                if (toastManager != null)
+                // Usa Foundation se attivo, altrimenti legacy
+                var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (foundation != null && foundation.Enabled)
                 {
-                    toastManager.ShowToast(ToastNotificationType.ItemCollected, "You got a spore!", "SPORE-001");
+                    foundation.PostToast("SPORE-001");
                 }
-                else if (_notification != null)
+                else
                 {
-                    _notification.ShowNotification("You got a spore!", 2, Color.green);
+                    var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                    if (toastManager != null)
+                    {
+                        toastManager.ShowToast(ToastNotificationType.ItemCollected, "You got a spore!", "SPORE-001");
+                    }
+                    else if (_notification != null)
+                    {
+                        _notification.ShowNotification("You got a spore!", 2, Color.green);
+                    }
                 }
             }
 

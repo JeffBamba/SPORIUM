@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
 {
@@ -1053,20 +1054,30 @@ namespace _Project
         /// </summary>
         private void OnPlantDied(string potId, string reason)
         {
-            // Mostra Toast notification
-            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-            if (toastManager != null)
+            // Mostra Notification (Foundation se attivo, altrimenti legacy)
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
             {
-                string toastMessage = $"🚨 Pianta morta! {reason}";
-                toastManager.ShowToast(ToastNotificationType.PlantDied, toastMessage, "PLANT-DEATH-001");
+                foundation.PostToast(
+                    "PLANT-DEATH-001",
+                    new NotificationPayload().With("reason", reason ?? string.Empty));
             }
             else
             {
-                var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
-                if (uiNotification != null)
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
                 {
                     string toastMessage = $"🚨 Pianta morta! {reason}";
-                    uiNotification.ShowNotification(toastMessage, 4f, new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+                    toastManager.ShowToast(ToastNotificationType.PlantDied, toastMessage, "PLANT-DEATH-001");
+                }
+                else
+                {
+                    var uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
+                    if (uiNotification != null)
+                    {
+                        string toastMessage = $"🚨 Pianta morta! {reason}";
+                        uiNotification.ShowNotification(toastMessage, 4f, new Color(1f, 0.2f, 0.2f)); // Rosso per morte
+                    }
                 }
             }
             

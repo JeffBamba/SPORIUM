@@ -6,6 +6,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 using TMPro;
 
@@ -187,14 +188,22 @@ public class PotSlot : MonoBehaviour
         _diaryStatistics.FruitsHarvested += amount;
         
         // Usa nuovo sistema toast se disponibile
-        var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-        if (toastManager != null)
+        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        if (foundation != null && foundation.Enabled)
         {
-            toastManager.ShowToast(ToastNotificationType.ItemCollected, $"New Fruit added to Inventory: {amount}", "INV-FRUIT-001");
+            foundation.PostToast("INV-FRUIT-001", new NotificationPayload().With("amount", amount.ToString()));
         }
-        else if (_uiNotification != null)
+        else
         {
-            _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
+            {
+                toastManager.ShowToast(ToastNotificationType.ItemCollected, $"New Fruit added to Inventory: {amount}", "INV-FRUIT-001");
+            }
+            else if (_uiNotification != null)
+            {
+                _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
+            }
         }
         _inventory.Add(Items.Fruits, amount);
         PotActions.PotState.AmountFruits -= amount;
