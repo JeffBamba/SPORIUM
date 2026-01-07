@@ -1,0 +1,96 @@
+================================================================================
+             DEV REPORT #0039 - NOTIFICATIONS FOUNDATION (EX NOVO) + COEXISTENCE
+             SPORAE BUILD BETA
+             Data: 2026-01-07
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-UI-NOTIF-0039 — Notifications Foundation (unified, ex novo) + UI Panel + Watchers + Lore + Debug Console
+- **Tipo Report:** Development Report (Feature Implementation + Migration Prep + Bug Fix)
+- **Data Generazione:** 2026-01-07
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Contesto:** Sostituzione graduale dei sistemi legacy (Toast System / HUD Notifications 2.0 / UINotification) con un sistema unico “Foundation” basato su UI Toolkit Foundation, con fase di coesistenza via feature flag.
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **NF-001**: Creato core “single source of truth” `FoundationNotificationService` con regole: dedup, cooldown, rate-limit, DANGER persistenti, pinning DANGER top, max 3 righe visibili, lore preemption.
+- **NF-002**: Creato UI panel Foundation (`NotificationsPanel.uxml` + `NotificationsPanel.uss`) in top-right (width ~306px), header sempre visibile con badge + chevron, 3 row slots.
+- **NF-003**: Creato controller UI `FoundationNotificationsPanelController` con binding a service, expand/collapse, badge, severità header, animazioni enter/exit per righe.
+- **NF-004**: Creato runner `FoundationNotificationsRunner` per `Tick()` del service (expiry e queue).
+- **NF-005**: Creati watcher state-driven `FoundationNotificationsWatchersRunner` (pH ULTRA, overwatering, light stress 100%, fertilizer missing/out-range, mold risk/infested, pH per-pot countdown).
+- **NF-006**: Creato lore scheduler `FoundationLoreSchedulerRunner` con preemption gameplay + warmup iniziale.
+- **NF-007**: Creato debug console IMGUI `FoundationNotificationsDebugConsole` (hotkey default: `N`).
+- **NF-008**: Coexistence: aggiunto feature flag in `GamePlayInstaller` per abilitare runtime GO + runner; migrazione call-site progressiva con fallback legacy.
+- **NF-009**: Audit “Linking Toast” (solo preparazione): matrice auto-generata TypeSpec vs trigger reali + proposte trigger 1-per-1 + piano fase successiva.
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **NF-BUG-001 (Compile)**: `NotificationCategory.Actions` mancante → aggiunto enum value.
+- **NF-BUG-002 (Compile)**: `PhSystem` non è `MonoBehaviour` → rimosso `FindObjectOfType<PhSystem>()`, uso `ServiceContainer`.
+- **NF-BUG-003 (Compile)**: `DifficultyCalibrationConfig` scope → fix namespace import.
+- **NF-BUG-004 (Compile)**: `Random` ambiguo → usato `UnityEngine.Random.Range`.
+- **NF-BUG-005 (UI refresh)**: toast che “restavano” → `OnChanged` chiamato anche su expiry in `Tick()`.
+- **NF-BUG-006 (UI/UX)**: box esterno indesiderato rimosso, top offset corretto per non sovrapporre TopBar, font size aumentato, placeholder icon box aggiunti.
+- **NF-BUG-007 (Anim)**: entry/exit animazioni righe implementate e stabilizzate (fix layout drift).
+- **NF-BUG-008 (Start state)**: header in stato “idle” e badge nascosto quando 0; nessuna notifica al boot (warmup lore + priming watchers).
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- Nessuno segnalato come bloccante in questa iterazione.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Nuovi script** (core + UI + runtime):
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationService.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsRunner.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsWatchersRunner.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationLoreSchedulerRunner.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsDebugConsole.cs`
+  - + file support: `NotificationTypeSpec*`, `NotificationEntry`, `NotificationPayload`, `NotificationLocalization`, `NotificationEnums`
+- **Nuovi asset UI Toolkit**:
+  - `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uxml`
+  - `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss`
+- **Coexistence & wiring**:
+  - `Assets/_Project/Scripts/Core/Installers/GamePlayInstaller.cs` (flag + GO runtime)
+  - Migrazione call-site (fallback legacy): `SPOR-BLK-01-03A-DayCycleController`, `PotDetailsWidget`, `HUDCondensation`, `LabMinigameExtractor`, `PotSlot`, `PotNotifications`
+- **Audit linking**:
+  - `Assets/_Project/Docs/NOTIFICATIONS_LINKING_TOAST_MATRIX.md`
+  - `Assets/_Project/Docs/NOTIFICATIONS_LINKING_TOAST_PROPOSALS.md`
+  - `Assets/_Project/Docs/NOTIFICATIONS_LINKING_TOAST_IMPLEMENTATION_PLAN.md`
+  - Script audit: `.cursor/tools/linking_toast_audit.ps1`
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- **TypeSpec come “contratto”**: se un code non è in registry/defaults, la notifica non appare → serve matrice “triggered/referenced/missing”.
+- **UI Toolkit anim**: rimuovere classi anim con `schedule.Execute` è più affidabile di eventi layout (evita drift).
+- **Boot hygiene**: per HUD persistenti serve stato `Idle` esplicito + warmup lore + priming watchers per evitare spam all’avvio.
+
+================================================================================
+
+➡️ PROSSIMI PASSI (fase successiva)
+==================================
+- Implementare trigger mancanti prioritari (P0): `ACT-050`, `CRY-777`, `SYS-001`, `INV-000`, `SYS-003`, `SYS-999`, `SPORAE-001`, `LAB-001` (secondo doc “Implementation Plan”).
+- Ridurre `REFERENCED` → `TRIGGERED` dove opportuno (codici selezionati via variabile, es. pot actions).
+
+================================================================================
+
+FOOTER
+------
+================================================================================
+
+

@@ -13,21 +13,25 @@ public static class UIBlocker
     static List<RaycastResult> _results = new List<RaycastResult>();
     static PointerEventData _ped;
 
+    // DEBUG_SAFE_FIX: ignora il background UI Toolkit full-screen, altrimenti blocca tutti i click mondo.
+    private static GameObject _cachedViewportBackgroundGO;
+    private static bool TryIsViewportBackground(GameObject go)
+    {
+        if (go == null) return false;
+        if (_cachedViewportBackgroundGO == null)
+        {
+            _cachedViewportBackgroundGO = GameObject.Find("HUD_GameViewportBackground");
+        }
+        if (_cachedViewportBackgroundGO == null) return false;
+        return go == _cachedViewportBackgroundGO || go.transform.IsChildOf(_cachedViewportBackgroundGO.transform);
+    }
+
     /// <summary>
     /// Verifica se il puntatore è sopra un elemento UI
     /// </summary>
     public static bool IsPointerOverUI()
     {
-        // Caso 1: API standard (mouse) - più veloce
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-        {
-            #if UNITY_EDITOR
-            SporiumLogger.LogDebug(LogCategory.UI, "Puntatore sopra UI (API standard)");
-            #endif
-            return true;
-        }
-
-        // Caso 2: Raycast manuale (robusto per new input system)
+        // Caso 1/2: Raycast manuale (robusto e filtrabile: necessario per UI Toolkit full-screen)
         if (EventSystem.current != null)
         {
             if (_ped == null) _ped = new PointerEventData(EventSystem.current);
@@ -35,7 +39,14 @@ public static class UIBlocker
 
             _results.Clear();
             EventSystem.current.RaycastAll(_ped, _results);
-            
+
+            int originalCount = _results.Count;
+            if (originalCount > 0)
+            {
+                // DEBUG_SAFE_FIX: rimuovi hit del background viewport, altrimenti risulta sempre "sopra UI"
+                _results.RemoveAll(r => TryIsViewportBackground(r.gameObject));
+            }
+
             bool isOverUI = _results.Count > 0;
             #if UNITY_EDITOR
             if (isOverUI)

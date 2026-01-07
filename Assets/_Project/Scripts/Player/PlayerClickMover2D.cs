@@ -98,7 +98,9 @@ public class PlayerClickMover2D : MonoBehaviour
             
             Vector2 clickPosition = GetMouseWorldPosition();
             
-            if (IsValidTargetPosition(clickPosition))
+            bool isValid = IsValidTargetPosition(clickPosition);
+
+            if (isValid)
             {
                 SetTarget(clickPosition);
             }

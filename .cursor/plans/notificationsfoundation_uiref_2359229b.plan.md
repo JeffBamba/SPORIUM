@@ -154,8 +154,3 @@ Creare un **nuovo sistema di Notifications ex novo** basato su **UI Toolkit Foun
 - Modifica cooldown/rate limit e verifica comportamento.
 
 6. Migra un singolo call-site (es. PotNotifications) alla nuova API e verifica che il gameplay non cambi.
-7. Ripeti per gli altri call-site finché tutto converge al nuovo service.
-
-### Note
-
-- Questo plan **sostituisce** qualsiasi versione precedente del piano Notifications.

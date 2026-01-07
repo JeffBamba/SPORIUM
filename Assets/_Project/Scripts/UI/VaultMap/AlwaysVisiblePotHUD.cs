@@ -30,6 +30,14 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.8f);
     [Tooltip("Colore del testo")]
     [SerializeField] private Color textColor = Color.white;
+
+    [Header("Layout Safe Area")]
+    [Tooltip("Se assegnato, la HUD minimale non andrà mai sotto il bordo superiore di questo RectTransform (es. HUD_BottomNavigation).")]
+    [SerializeField] private RectTransform bottomBarRect;
+    [Tooltip("Padding extra (in px/canvas units) sopra la bottom bar.")]
+    [SerializeField] private float bottomBarPadding = 10f;
+    [Tooltip("Se true e bottomBarRect non è assegnato, prova a trovare automaticamente 'HUD_BottomNavigation' nella scena.")]
+    [SerializeField] private bool autoFindBottomBar = true;
     
     [Header("References")]
     [Tooltip("Riferimento al pannello dettagliato (opzionale, cercato automaticamente se non assegnato)")]
@@ -45,6 +53,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     
     private Canvas _parentCanvas;
     private bool _isInitialized;
+    private float _minBottomYOffset; // distanza minima dal bordo inferiore per stare sopra la bottom bar
     
     // Sistema HUD sempre visibili per tutti i pot
     private class MinimalHUDInstance
@@ -97,6 +106,8 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         {
             potDetailsWidget = FindObjectOfType<PotDetailsWidget>();
         }
+
+        ResolveBottomBarSafeArea();
         
         // Crea le 4 HUD minimale sempre visibili
         CreateAlwaysVisibleMinimalHUDs();
@@ -113,6 +124,28 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         
         _isInitialized = true;
         SporiumLogger.LogInfo(LogCategory.UI, "AlwaysVisiblePotHUD inizializzato correttamente.");
+    }
+
+    private void ResolveBottomBarSafeArea()
+    {
+        _minBottomYOffset = Mathf.Max(0f, bottomRightOffset.y);
+
+        if (bottomBarRect == null && autoFindBottomBar)
+        {
+            var bottomGO = GameObject.Find("HUD_BottomNavigation");
+            if (bottomGO != null)
+            {
+                bottomBarRect = bottomGO.GetComponent<RectTransform>();
+            }
+        }
+
+        if (bottomBarRect == null)
+            return;
+
+        // Assumiamo bottom bar ancorata in basso: l'altezza è una buona stima della safe area.
+        // Se in futuro cambia anchoring, si può passare a worldCorners->RectTransformUtility.
+        float barHeight = bottomBarRect.rect.height;
+        _minBottomYOffset = Mathf.Max(_minBottomYOffset, barHeight + bottomBarPadding);
     }
     
     private void OnDestroy()
@@ -259,7 +292,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         
         // Calcola posizione in base all'indice e al layout usando le dimensioni REALI del prefab
         float xOffset = bottomRightOffset.x;
-        float yOffset = bottomRightOffset.y;
+        float yOffset = Mathf.Max(bottomRightOffset.y, _minBottomYOffset);
         
         if (verticalLayout)
         {
@@ -339,7 +372,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         
         // Calcola posizione in base all'indice e al layout
         float xOffset = bottomRightOffset.x;
-        float yOffset = bottomRightOffset.y;
+        float yOffset = Mathf.Max(bottomRightOffset.y, _minBottomYOffset);
         
         if (verticalLayout)
         {

@@ -11,6 +11,9 @@ namespace Sporae.UI.UIToolkit
     public class GameViewportBackgroundController : MonoBehaviour
     {
         [Header("Configuration")]
+        [Tooltip("Se attivo, usa il background della Camera e disabilita questo GameObject (modalità legacy). Lascia OFF per usare il background UI Toolkit (es. mappa placeholder).")]
+        [SerializeField] private bool _useCameraBackgroundAndDisableUI = false;
+        
         [Tooltip("Colore principale (centro gradiente): Blu-Grigio metallico #1a2328")]
         [SerializeField] private Color _mainColor = new Color(26f / 255f, 35f / 255f, 40f / 255f, 1f);
         
@@ -41,30 +44,34 @@ namespace Sporae.UI.UIToolkit
         
         private void OnEnable()
         {
-            if (_uiDocument != null)
-            {
-                _uiDocument.rootVisualElement.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            }
+            if (_uiDocument == null)
+                _uiDocument = GetComponent<UIDocument>();
+            
+            InitializeUI();
+            
+            if (_root != null)
+                _root.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
         }
         
         private void OnDisable()
         {
-            if (_uiDocument != null && _root != null)
-            {
+            if (_root != null)
                 _root.UnregisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            }
         }
         
         private void Start()
         {
-            // Imposta background color sulla camera principale invece di UI Toolkit
+            if (!_useCameraBackgroundAndDisableUI)
+                return;
+            
+            // Modalità legacy: imposta background color sulla camera principale invece di UI Toolkit
             var mainCamera = Camera.main;
             if (mainCamera != null)
             {
                 // Usa il colore principale del gradiente come background della camera
                 mainCamera.backgroundColor = _mainColor;
             }
-            
+
             // Nascondi il background UI Toolkit perché ora usiamo il background della camera
             // Il background UI Toolkit copre la gameview, quindi lo disabilitiamo
             gameObject.SetActive(false);
