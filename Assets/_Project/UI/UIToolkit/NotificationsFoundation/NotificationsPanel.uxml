@@ -1,4 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss?fileID=7433441132597879392&amp;guid=f6e5544b0a2c1124496a59a4172e9ad6&amp;type=3#NotificationsPanel" />
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Foundation.uss?fileID=7433441132597879392&amp;guid=41a5d4aa05ca1f9409da757ce7607bf4&amp;type=3#SP-Foundation" />
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Panel-Base.uss?fileID=7433441132597879392&amp;guid=3cc1013e433eec845ab79e73d208a516&amp;type=3#SP-Panel-Base" />
     <ui:VisualElement name="nf-root" class="nf-root">
         <ui:Button name="nf-header" class="nf-header">
             <ui:VisualElement name="nf-header-left" class="nf-header-left">
@@ -11,40 +14,37 @@
                 <ui:VisualElement name="nf-badge" class="nf-badge">
                     <ui:Label name="nf-badge-text" text="0" class="nf-badge-text" />
                 </ui:VisualElement>
-                <ui:Label name="nf-chevron" text="^" class="nf-chevron" />
+                <ui:Label name="nf-chevron" text="^" class="nf-chevron" style="justify-content: center; align-items: flex-end; align-self: center; width: 18px; height: 18px;" />
             </ui:VisualElement>
         </ui:Button>
-
         <ui:VisualElement name="nf-list" class="nf-list">
-            <ui:VisualElement name="nf-row-0" class="nf-row">
+            <ui:VisualElement name="nf-row-0" class="nf-row" style="height: 55px;">
                 <ui:VisualElement name="nf-row-0-iconbox" class="nf-iconbox nf-row-iconbox">
                     <ui:Label name="nf-row-0-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-0-text" class="nf-row-text">
-                    <ui:Label name="nf-row-0-code" text="CODE-000" class="nf-row-code" />
-                    <ui:Label name="nf-row-0-msg" text="Message" class="nf-row-msg" />
+                    <ui:Label name="nf-row-0-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
+                    <ui:Label name="nf-row-0-msg" text="Message" class="nf-row-msg" style="top: -16px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="nf-row-1" class="nf-row">
+            <ui:VisualElement name="nf-row-1" class="nf-row" style="height: 55px;">
                 <ui:VisualElement name="nf-row-1-iconbox" class="nf-iconbox nf-row-iconbox">
                     <ui:Label name="nf-row-1-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-1-text" class="nf-row-text">
-                    <ui:Label name="nf-row-1-code" text="CODE-000" class="nf-row-code" />
-                    <ui:Label name="nf-row-1-msg" text="Message" class="nf-row-msg" />
+                    <ui:Label name="nf-row-1-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
+                    <ui:Label name="nf-row-1-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="nf-row-2" class="nf-row">
+            <ui:VisualElement name="nf-row-2" class="nf-row" style="height: 55px;">
                 <ui:VisualElement name="nf-row-2-iconbox" class="nf-iconbox nf-row-iconbox">
                     <ui:Label name="nf-row-2-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-2-text" class="nf-row-text">
-                    <ui:Label name="nf-row-2-code" text="CODE-000" class="nf-row-code" />
-                    <ui:Label name="nf-row-2-msg" text="Message" class="nf-row-msg" />
+                    <ui:Label name="nf-row-2-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
+                    <ui:Label name="nf-row-2-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
-
-

@@ -124,6 +124,9 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 _badgeText.text = badgeCount.ToString();
             if (_badge != null)
                 _badge.style.display = badgeCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            // Chevron: se non ci sono notifiche, non mostrare l'espansione
+            if (_chevron != null)
+                _chevron.style.display = badgeCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
             // Header severity
             ApplySeverityClass(_headerButton, _service.GetHeaderSeverity());

@@ -8,9 +8,16 @@
     position: absolute;
     right: 24px;
     /* Spostato più in basso rispetto alla TopBar (fix overlap) */
-    top: 144px;
+    top: 136px;
     width: 306px;
     flex-direction: column;
+    align-items: stretch;
+}
+
+.nf-header,
+.nf-row {
+    width: 100%;
+    align-self: stretch;
 }
 
 .nf-header {
@@ -112,6 +119,7 @@
     margin-top: 6px;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
 }
 
 .nf-row {
@@ -130,7 +138,8 @@
     padding-bottom: 8px;
     flex-direction: row;
     align-items: flex-start;
-    background-color: rgba(30, 40, 42, 0.90);
+    /* Default (override via severity vars below) */
+    background-color: rgba(10, 18, 22, 0.92);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -184,19 +193,19 @@
 /* Severity mapping via classes applied from controller */
 .nf-sev-info {
     --nf-color: var(--sp-color-green-led);
-    --nf-bg: rgba(127, 255, 122, 0.10);
+    --nf-bg: rgba(18, 40, 28, 0.94);
 }
 .nf-sev-success {
     --nf-color: var(--sp-color-green-led);
-    --nf-bg: rgba(127, 255, 122, 0.10);
+    --nf-bg: rgba(18, 40, 28, 0.94);
 }
 .nf-sev-warning {
     --nf-color: var(--sp-color-yellow-standard);
-    --nf-bg: rgba(230, 201, 111, 0.10);
+    --nf-bg: rgba(44, 38, 18, 0.94);
 }
 .nf-sev-danger {
     --nf-color: var(--sp-color-red-warning);
-    --nf-bg: rgba(211, 95, 95, 0.10);
+    --nf-bg: rgba(46, 22, 22, 0.94);
 }
 
 .nf-header.nf-sev-info,

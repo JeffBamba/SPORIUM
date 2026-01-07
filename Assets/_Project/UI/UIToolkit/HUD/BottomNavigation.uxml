@@ -4,7 +4,7 @@
         <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
         <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
-        <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" style="background-color: rgb(30, 40, 42);" />
+        <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
         <ui:VisualElement name="scan-line-bottom" class="scan-line-top" />
         <ui:VisualElement name="nav-content" class="bottom-nav-content" style="justify-content: center;">
             <ui:Button name="btn-visitor" class="room-button room-available">

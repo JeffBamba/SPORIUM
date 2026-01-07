@@ -27612,14 +27612,14 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -5.7746115, y: 11.537176}
-      - {x: -2.271431, y: 3.8172832}
-      - {x: -9.951302, y: 3.6469688}
+    - - {x: -1.1172743, y: 6.2514668}
+      - {x: -0.9038, y: 1.3407626}
+      - {x: -9.729523, y: 0.20941114}
       - {x: -10.577097, y: -6.620535}
       - {x: -3.0382562, y: -6.177754}
       - {x: -3.062059, y: -17.70221}
       - {x: 16.958431, y: -16.98108}
-      - {x: 16.970951, y: 10.567707}
+      - {x: 16.194727, y: 3.5077753}
   m_UseDelaunayMesh: 0
 --- !u!4 &1217975324
 Transform:
@@ -31521,7 +31521,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -1000
-  m_Sprite: {fileID: 21300000, guid: 194908e8b7677234aa2aa9a2f89c446c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dc2296b66502f7d40b973fdf04e1297d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

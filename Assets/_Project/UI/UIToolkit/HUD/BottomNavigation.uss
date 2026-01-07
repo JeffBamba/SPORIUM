@@ -4,13 +4,15 @@
     height: 132px;
     min-height: 132px;
     max-height: 132px;
+    /* E: deve matchare la TopBar */
     background-color: rgba(30, 40, 42, 0.9);
     border-top-width: 4px;
     border-top-color: rgba(127, 255, 122, 0.6);
     padding-left: 32px;
     padding-right: 32px;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    /* Più spazio utile interno per evitare taglio testi nei bottoni */
+    padding-top: 14px;
+    padding-bottom: 14px;
     position: absolute;
     bottom: 0px;
     left: 0px;
@@ -29,7 +31,9 @@
     height: 100%;
     top: 0px;
     left: 0px;
-    background-color: rgba(127, 255, 122, 0.1);
+    /* Match TopBar look: overlay scuro (la TopBar lo forza via UXML) */
+    background-color: rgba(30, 40, 42, 0.1);
+    /* Match TopBar */
     opacity: 0.1;
     /* Note: repeating-linear-gradient not fully supported, using background-color as fallback */
 }
@@ -46,17 +50,23 @@
 /* Room Button Base */
 .room-button {
     width: 176px;
-    height: 88px;
+    /* Più spazio per label + floor senza clipping */
+    height: 100px;
     min-width: 176px;
-    min-height: 88px;
-    border-width: 2px;
+    min-height: 100px;
+    /* A: border più spesso come la ref */
+    border-width: 3px;
+    /* Glow (simulato) - di default off */
+    outline-width: 0px;
+    outline-offset: 0px;
     padding-left: 16px;
     padding-right: 16px;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 8px;
+    padding-bottom: 10px;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* D: layout come ref (stack dall'alto, non centrato) */
+    justify-content: flex-start;
     margin-right: 12px; /* Spacing tra bottoni (sostituisce gap) */
     /* Transition handled via C# for scale animation */
 }
@@ -66,18 +76,22 @@
 /* Room Button States */
 .room-active {
     border-color: rgb(127, 255, 122);
-    background-color: rgba(127, 255, 122, 0.2);
-    /* TODO: Add triple-layer glow effect */
+    /* B: bordo "più spesso" senza rubare spazio al contenuto: usa outline */
+    outline-width: 3px;
+    outline-color: rgba(127, 255, 122, 0.35);
+    outline-offset: 2px;
+    /* C: non "fill totale" verde: scuro con tinta verde tipo glow */
+    background-color: rgba(17, 34, 26, 0.92);
 }
 
 .room-available {
     border-color: rgba(127, 255, 122, 0.4);
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.45);
 }
 
 .room-locked {
     border-color: rgba(211, 95, 95, 0.4);
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.45);
     opacity: 0.6;
 }
 
@@ -88,7 +102,8 @@
     -unity-font-style: normal;
     -unity-text-align: middle-center;
     letter-spacing: 1px;
-    margin-bottom: 4px; /* Spacing (sostituisce gap) */
+    /* D: spacing più simile alla ref, senza tagliare il floor */
+    margin-bottom: 2px; /* Spacing (sostituisce gap) */
     /* Note: text-transform and font-family not supported in USS */
 }
 
@@ -107,6 +122,8 @@
     -unity-font-style: normal;
     -unity-text-align: middle-center;
     letter-spacing: 2px;
+    margin-top: 0px;
+    margin-bottom: 0px;
     /* Note: text-transform and font-family not supported in USS */
 }
 
@@ -124,7 +141,8 @@
     height: 28px;
     min-width: 28px;
     min-height: 28px;
-    border-width: 2px;
+    /* A: border icona più spesso come la ref */
+    border-width: 3px;
     border-color: rgb(192, 200, 197);
     background-color: rgba(192, 200, 197, 0.1);
     align-items: center;
@@ -132,7 +150,8 @@
     font-size: 14px;
     -unity-font-style: normal;
     -unity-text-align: middle-center;
-    margin-bottom: 4px;
+    /* D: distanza icona -> testo (ref) */
+    margin-bottom: 6px;
 }
 
 .room-active .icon-placeholder {

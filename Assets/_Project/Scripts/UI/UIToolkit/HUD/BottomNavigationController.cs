@@ -150,6 +150,10 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             var button = _root.Q<Button>(buttonName);
             if (button == null) return;
+
+            // Pulisci eventuali override inline (hover) che altrimenti vincono sul USS.
+            // Questo garantisce che SOLO un bottone appaia "active" alla volta.
+            ClearInlineVisualOverrides(button);
             
             // Rimuovi tutte le classi di stato
             button.RemoveFromClassList("room-active");
@@ -172,6 +176,24 @@ namespace Sporae.UI.UIToolkit.HUD
                 button.AddToClassList("room-available");
                 button.SetEnabled(true);
             }
+        }
+
+        private static void ClearInlineVisualOverrides(VisualElement el)
+        {
+            if (el == null) return;
+
+            // Reset colors overridden in hover handlers
+            el.style.borderTopColor = StyleKeyword.Null;
+            el.style.borderRightColor = StyleKeyword.Null;
+            el.style.borderBottomColor = StyleKeyword.Null;
+            el.style.borderLeftColor = StyleKeyword.Null;
+            el.style.backgroundColor = StyleKeyword.Null;
+
+            // Reset border widths (in caso venissero settate inline da altri handler)
+            el.style.borderTopWidth = StyleKeyword.Null;
+            el.style.borderRightWidth = StyleKeyword.Null;
+            el.style.borderBottomWidth = StyleKeyword.Null;
+            el.style.borderLeftWidth = StyleKeyword.Null;
         }
         
         private void OnRoomButtonClicked(string roomId)
