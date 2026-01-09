@@ -47,6 +47,9 @@ namespace _Project
             SporiumLogger.LogDebug(LogCategory.UI, $"[DiaryUI] GameObject stato prima: activeSelf={gameObject.activeSelf}, activeInHierarchy={gameObject.activeInHierarchy}");
             
             gameObject.SetActive(true);
+
+            // DEBUG_SAFE_FIX: ensure diary panel is rendered on top within the same Canvas hierarchy.
+            transform.SetAsLastSibling(); // DEBUG_SAFE_FIX
             
             SporiumLogger.LogDebug(LogCategory.UI, $"[DiaryUI] GameObject stato dopo SetActive(true): activeSelf={gameObject.activeSelf}, activeInHierarchy={gameObject.activeInHierarchy}");
 

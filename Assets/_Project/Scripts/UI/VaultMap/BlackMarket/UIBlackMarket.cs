@@ -65,6 +65,9 @@ namespace _Project.BlackMarket
         public void Show()
         {
             gameObject.SetActive(true);
+
+            // DEBUG_SAFE_FIX: ensure black market panel is rendered on top within the same Canvas hierarchy.
+            transform.SetAsLastSibling(); // DEBUG_SAFE_FIX
         }
 
         public void Hide()

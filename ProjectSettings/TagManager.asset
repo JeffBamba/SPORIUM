@@ -12,7 +12,7 @@ TagManager:
   - Water
   - UI
   - GROUND
-  - 
+  - WalkBlocker
   - LAYER_INTERACTABLE
   - LAYER_PLAYER
   - LAYER_GROUND

@@ -1,0 +1,37 @@
+# 📝 **COMMIT RECAP 0037 - VAULTMAP 2.5D (TRAPEZIO) + COLLIDERS + SLIDE + UI FIX**
+
+## 🎯 **PANORAMICA**
+Introduzione del movimento “2.5D” su VaultMap con WalkArea trapezoidale per stanza (UV→World), scaling/sorting per profondità, collisioni con slide contro muri/arredi (`WalkBlocker`) e fix UI per rendere visibili al primo tentativo le interazioni Bed/BlackMarket (ordine Canvas).
+
+## 📋 **FILE AGGIUNTI**
+- `Assets/_Project/Scripts/World/VaultMap/PerspectiveWalkArea2D.cs`
+- `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+- `Assets/_Project/Scripts/Player/PlayerDepthScaleAndSort.cs`
+- `Assets/_Project/Scripts/Player/PlayerMoverRouter2D.cs`
+- `Assets/_Project/Docs/VAULTMAP_2_5D_SETUP.md`
+- `Assets/Docs/REPORT/DEV REPORT_0040.txt`
+- `Assets/Docs/REPORT/COMMIT_RECAP_0037.txt`
+
+## ✏️ **FILE MODIFICATI**
+- `Assets/_Project/Scripts/Player/PlayerAnimator.cs`
+  - Rimosso vincolo `[RequireComponent(typeof(PlayerClickMover2D))]` → ora richiede `Rigidbody2D` (anim basata su velocity).
+- `Assets/_Project/Scripts/UI/VaultMap/Diary/DiaryUI.cs`
+  - **Fix UI**: in `Show()` aggiunto `transform.SetAsLastSibling()` per garantire visibilità nel Canvas.
+- `Assets/_Project/Scripts/UI/VaultMap/BlackMarket/UIBlackMarket.cs`
+  - **Fix UI**: in `Show()` aggiunto `transform.SetAsLastSibling()` per garantire visibilità nel Canvas.
+- `.cursor/plans/vaultmap_2.5d_+_colliders_fe4fab85.plan.md`
+  - Aggiornato todo doc/manual ops a **completed** e link alla guida setup.
+
+## 🐛 **BUG FIXATI**
+1. **Sticking su collider (letto/corner) durante slide**
+   - **Sintomo**: con WASD, dopo contatti ripetuti, il player si bloccava vicino agli angoli del blocker.
+   - **Fix**: migliorato resolver slide + pass-through tangenziale con check predittivo di overlap in `PlayerPerspectiveMover2D`.
+2. **UI Bed/BlackMarket non visibile al primo tentativo**
+   - **Sintomo**: input/interact ok, ma UI non appariva finché non avveniva una transizione/tempo; poi ok fino a restart Play.
+   - **Fix**: `SetAsLastSibling()` in `DiaryUI.Show()` e `UIBlackMarket.Show()`.
+
+## ✅ **RISULTATI**
+- ✅ Movimento 2.5D con profondità credibile (UV + scaling).
+- ✅ Collisioni con muri/arredi (letto) + slide stabile anche sui corner.
+- ✅ Interazioni Bed/BlackMarket visibili e funzionanti al primo tentativo.
+

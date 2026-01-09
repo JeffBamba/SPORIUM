@@ -3,7 +3,7 @@ using Sporae.DevTools;
 
 namespace _Project
 {
-    [RequireComponent(typeof(PlayerClickMover2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerAnimator : MonoBehaviour
     {
         private static readonly int k_idleAnimation = Animator.StringToHash("Idle");

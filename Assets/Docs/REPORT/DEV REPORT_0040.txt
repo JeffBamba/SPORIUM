@@ -1,0 +1,106 @@
+================================================================================
+             DEV REPORT #0040 - VAULTMAP 2.5D (TRAPEZIO) + COLLIDERS + SLIDE
+             SPORAE BUILD BETA
+             Data: 2026-01-09
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-VAULTMAP-0040 — VaultMap 2.5D (Opzione B Trapezio) + WalkArea per stanza + Colliders + Slide + UI Interactions Fix
+- **Tipo Report:** Development Report (Feature Implementation + Bug Fix)
+- **Data Generazione:** 2026-01-09
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Piano di riferimento:** `.cursor/plans/vaultmap_2.5d_+_colliders_fe4fab85.plan.md`
+- **Setup manuale (Unity):** `Assets/_Project/Docs/VAULTMAP_2_5D_SETUP.md`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **VM-2.5D-001**: Implementato sistema WalkArea trapezoidale 2.5D con mapping UV→World e proiezione inversa World→UV.
+  - Evidence: `Assets/_Project/Scripts/World/VaultMap/PerspectiveWalkArea2D.cs`
+- **VM-2.5D-002**: Implementato mover 2.5D del player con input ibrido (WASD + click) e selezione WalkArea per stanza.
+  - Evidence: `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+- **VM-2.5D-003**: Implementato collision resolving con **slide** su layer `WalkBlocker` (muri + arredi non calpestabili).
+  - Evidence: `PlayerPerspectiveMover2D.ResolveCollisionsWithSlide()` + `WouldOverlapAt()` (corner tangential pass-through).
+- **VM-2.5D-004**: Implementato scaling & sorting del player in funzione della profondità (v).
+  - Evidence: `Assets/_Project/Scripts/Player/PlayerDepthScaleAndSort.cs`
+- **VM-2.5D-005**: Evitato conflitto tra mover vecchio e nuovo (non-distruttivo).
+  - Evidence: `Assets/_Project/Scripts/Player/PlayerMoverRouter2D.cs` + uso `PlayerClickMover2D.SuspendMovement(true)`
+- **VM-2.5D-006**: Decoupling animazioni: `PlayerAnimator` non richiede più `PlayerClickMover2D`.
+  - Evidence: `Assets/_Project/Scripts/Player/PlayerAnimator.cs`
+- **VM-2.5D-007**: Documentazione completa delle operazioni manuali (beginner) per setup in scena.
+  - Evidence: `Assets/_Project/Docs/VAULTMAP_2_5D_SETUP.md`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **VM-BUG-001 (Sticking su collider letto / corner)**:
+  - **Sintomo:** con WASD, dopo contatti ripetuti con il collider del letto, il player si bloccava senza più “slidare” (soprattutto vicino agli angoli).
+  - **Causa (evidenza runtime):** i cast potevano restituire `hit.distance≈0` su contatti tangenti/corner, causando risoluzione a spostamento nullo ripetuto.
+  - **Fix:** migliorato resolver con:
+    - Cast coerente per capsule (size + offset in world, con scaling)
+    - fallback su tangente quando lo slide risultava quasi nullo
+    - pass-through tangenziale con check predittivo di overlap (`WouldOverlapAt`)
+  - **Evidence:** `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+  - **Verifica:** ✅ riproduzione utente confermata (non si blocca più su corner).
+
+- **VM-BUG-002 (Interazioni Bed/BlackMarket “non visibili” al primo tentativo)**:
+  - **Sintomo:** “Press E to interact” appare, input funziona, ma UI Diary/BlackMarket non risultava visibile al primo tentativo; dopo alcune transizioni stanza appariva e poi funzionava sempre finché non si restartava Play.
+  - **Causa (evidenza runtime):** `Show()` veniva chiamato e `activeInHierarchy=true`, quindi problema di **order/rendering nella gerarchia Canvas**.
+  - **Fix:** in `Show()` portiamo i pannelli in cima alla gerarchia con `transform.SetAsLastSibling()` (fix locale, non distruttivo).
+  - **Evidence:** 
+    - `Assets/_Project/Scripts/UI/VaultMap/Diary/DiaryUI.cs`
+    - `Assets/_Project/Scripts/UI/VaultMap/BlackMarket/UIBlackMarket.cs`
+  - **Verifica:** ✅ conferma utente: UI visibili e aprono al primo tentativo.
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- Nessuno segnalato come bloccante in questa iterazione.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Nuovi script:**
+  - `Assets/_Project/Scripts/World/VaultMap/PerspectiveWalkArea2D.cs`
+  - `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+  - `Assets/_Project/Scripts/Player/PlayerDepthScaleAndSort.cs`
+  - `Assets/_Project/Scripts/Player/PlayerMoverRouter2D.cs`
+- **Script modificati:**
+  - `Assets/_Project/Scripts/Player/PlayerAnimator.cs` (RequireComponent → `Rigidbody2D`)
+  - `Assets/_Project/Scripts/UI/VaultMap/Diary/DiaryUI.cs` (SetAsLastSibling su Show)
+  - `Assets/_Project/Scripts/UI/VaultMap/BlackMarket/UIBlackMarket.cs` (SetAsLastSibling su Show)
+- **Documentazione:**
+  - `Assets/_Project/Docs/VAULTMAP_2_5D_SETUP.md`
+- **Piano aggiornato:**
+  - `.cursor/plans/vaultmap_2.5d_+_colliders_fe4fab85.plan.md` (chiuso task doc/manual ops)
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- **Collisioni + slide su corner**: serve gestire esplicitamente i casi `hit.distance≈0` per evitare “sticking” in contatti ripetuti.
+- **UI “apre ma non si vede”**: quando `activeInHierarchy=true` è spesso un problema di gerarchia Canvas/sibling order, non di input o layer fisici.
+- **Approccio non distruttivo**: router del mover evita di rompere scene/flow esistenti e riduce i side effects.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Replicare setup WalkArea + WalkColliders su tutte le stanze del VaultMap (e corridoi/aree di passaggio).
+- Rifinire parametri `PlayerPerspectiveMover2D` (skinWidth/uvSpeed/stopDistance) per “feel” finale.
+- Eventuale fase 2: occlusione “front layer” con sorting/trigger dedicati.
+
+================================================================================
+
+FOOTER
+------
+================================================================================
+
