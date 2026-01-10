@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,6 +11,56 @@ namespace _Project.Player
     public class PlayerPerspectiveMover2D : MonoBehaviour
     {
         private float _debugNextLogTime = 0f;
+
+        private static ContactFilter2D MakeBlockerFilter(LayerMask mask)
+        {
+            // Use layer mask, but allow triggers and filter them manually (some projects use trigger-walls).
+            var f = new ContactFilter2D();
+            f.useLayerMask = true;
+            f.SetLayerMask(mask);
+            f.useTriggers = true;
+            return f;
+        }
+
+        private static readonly RaycastHit2D[] s_CastHits = new RaycastHit2D[8];
+        private static readonly Collider2D[] s_OverlapHits = new Collider2D[12];
+
+        private static bool IsNonBlockingTrigger(Collider2D c)
+        {
+            if (c == null) return true;
+            if (!c.isTrigger) return false;
+
+            // Triggers that should NOT block movement (zones, walk areas, elevator use-zone, occlusion helpers).
+            // Keep this narrow and evidence-driven.
+            int layer = c.gameObject.layer;
+            if (layer == 0) // Default: usually zones/bounds in this project
+                return true;
+
+            string n = c.name ?? "";
+            if (n.Contains("WALL_profondo", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (n.Contains("ELEV_UseZone", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (n.Contains("RoomZone_", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (n.Contains("Room Camra Bounds", StringComparison.OrdinalIgnoreCase) || n.Contains("Room Camera Bounds", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // WalkArea bounds are triggers and must not block.
+            if (c.GetComponentInParent<PerspectiveWalkArea2D>() != null)
+                return true;
+
+            return false;
+        }
+
+        private static bool IsBlockingHit(RaycastHit2D hit)
+        {
+            var c = hit.collider;
+            if (c == null) return false;
+            if (!c.isTrigger) return true;
+            return !IsNonBlockingTrigger(c);
+        }
+
         [Header("References")]
         [Tooltip("If left null, the mover will try to auto-pick a walk area by click/trigger.")]
         [SerializeField] private PerspectiveWalkArea2D currentWalkArea;
@@ -241,6 +292,14 @@ namespace _Project.Player
 
                 Vector2 newPos = ResolveCollisionsWithSlide(from, desired);
                 _rb.MovePosition(newPos);
+
+                // If we are trying to move but remain stuck, capture a minimal snapshot.
+                float desiredDist = Vector2.Distance(from, desired);
+                float movedDist = Vector2.Distance(from, newPos);
+                if (desiredDist > 0.05f && movedDist < 0.001f && Time.time >= _debugNextLogTime)
+                {
+                    _debugNextLogTime = Time.time + 0.5f;
+                }
 
                 // Re-project after slide so UV stays consistent with actual position
                 if (currentWalkArea.TryProjectWorldToUV(newPos, out Vector2 uv))
@@ -474,15 +533,32 @@ namespace _Project.Player
                 float angle = capsule.transform.eulerAngles.z;
                 Vector2 worldOffset = (Vector2)(capsule.transform.rotation * (Vector3)capsule.offset);
                 worldOffset = new Vector2(worldOffset.x * Mathf.Abs(ls.x), worldOffset.y * Mathf.Abs(ls.y));
-
-                Collider2D hit = Physics2D.OverlapCapsule(worldPos + worldOffset, size, capsule.direction, angle, blockerMask);
-                return hit != null;
+                var filter = MakeBlockerFilter(blockerMask);
+                int n = Physics2D.OverlapCapsule(worldPos + worldOffset, size, capsule.direction, angle, filter, s_OverlapHits);
+                if (n <= 0) return false;
+                for (int i = 0; i < n; i++)
+                {
+                    var c = s_OverlapHits[i];
+                    if (c == null) continue;
+                    if (IsNonBlockingTrigger(c)) continue;
+                    return true;
+                }
+                return false;
             }
 
             float radius = Mathf.Min(_selfCollider.bounds.extents.x, _selfCollider.bounds.extents.y);
             radius = Mathf.Max(0.02f, radius);
-            Collider2D c = Physics2D.OverlapCircle(worldPos, radius, blockerMask);
-            return c != null;
+            var filter2 = MakeBlockerFilter(blockerMask);
+            int n2 = Physics2D.OverlapCircle(worldPos, radius, filter2, s_OverlapHits);
+            if (n2 <= 0) return false;
+            for (int i = 0; i < n2; i++)
+            {
+                var c = s_OverlapHits[i];
+                if (c == null) continue;
+                if (IsNonBlockingTrigger(c)) continue;
+                return true;
+            }
+            return false;
         }
 
         private float TangentFreeDistance(Vector2 origin, Vector2 tangentDir, float wantDistance)
@@ -499,6 +575,8 @@ namespace _Project.Player
 
         private RaycastHit2D CastSelf(Vector2 origin, Vector2 direction, float distance, LayerMask mask)
         {
+            var filter = MakeBlockerFilter(mask);
+
             // We prefer CapsuleCast using the player's CapsuleCollider2D when available
             if (_selfCollider is CapsuleCollider2D capsule)
             {
@@ -513,14 +591,44 @@ namespace _Project.Player
 
                 Vector2 worldOffset = (Vector2)(capsule.transform.rotation * (Vector3)capsule.offset);
                 worldOffset = new Vector2(worldOffset.x * Mathf.Abs(ls.x), worldOffset.y * Mathf.Abs(ls.y));
+                int count = Physics2D.CapsuleCast(origin + worldOffset, size, capDir, angle, direction, filter, s_CastHits, distance);
+                if (count <= 0) return default;
 
-                return Physics2D.CapsuleCast(origin + worldOffset, size, capDir, angle, direction, distance, mask);
+                // pick nearest BLOCKING hit
+                RaycastHit2D bestHit = default;
+                float bestDist = float.PositiveInfinity;
+                for (int i = 0; i < count; i++)
+                {
+                    var h = s_CastHits[i];
+                    if (!IsBlockingHit(h)) continue;
+                    if (h.distance < bestDist)
+                    {
+                        bestDist = h.distance;
+                        bestHit = h;
+                    }
+                }
+                return bestDist < float.PositiveInfinity ? bestHit : default;
             }
 
             // Fallback to a circle cast using bounds extents
             float radius = Mathf.Min(_selfCollider.bounds.extents.x, _selfCollider.bounds.extents.y);
             radius = Mathf.Max(0.02f, radius);
-            return Physics2D.CircleCast(origin, radius, direction, distance, mask);
+            int ccount = Physics2D.CircleCast(origin, radius, direction, filter, s_CastHits, distance);
+            if (ccount <= 0) return default;
+
+            RaycastHit2D cbestHit = default;
+            float cbestDist = float.PositiveInfinity;
+            for (int i = 0; i < ccount; i++)
+            {
+                var h = s_CastHits[i];
+                if (!IsBlockingHit(h)) continue;
+                if (h.distance < cbestDist)
+                {
+                    cbestDist = h.distance;
+                    cbestHit = h;
+                }
+            }
+            return cbestDist < float.PositiveInfinity ? cbestHit : default;
         }
 
         private static bool IsPointerOverUI()

@@ -29,6 +29,22 @@ public class ElevatorSystem : MonoBehaviour
     [Tooltip("DEBUG_SAFE_FIX: If true, shows the existing PlayerInteractAdvice (\"Press E\") prompt while inside the elevator trigger and the menu is closed.")]
     [SerializeField] private bool showInteractAdviceWhileInside = true; // DEBUG_SAFE_FIX
 
+    [Header("Teleport Placement")]
+    [Tooltip("DEBUG_SAFE_FIX: If true, teleport uses the target level Transform X as well as Y. This prevents landing inside walls when floors are not perfectly aligned in X.")]
+    [SerializeField] private bool useTargetLevelXForTeleport = true; // DEBUG_SAFE_FIX
+
+    [Tooltip("DEBUG_SAFE_FIX: Max allowed horizontal correction when using target-level X. If exceeded, we keep the starting X to avoid teleports into other rooms.")]
+    [SerializeField] private float maxTeleportXCorrection = 1.25f; // DEBUG_SAFE_FIX
+
+    private static int WrapIndex(int i, int len)
+    {
+        if (len <= 0) return 0;
+        int m = i % len;
+        return m < 0 ? m + len : m;
+    }
+
+    private static string Bool01(bool v) => v ? "1" : "0";
+
     private bool playerInside = false; // inside trigger (not UI open)
     private bool uiOpen = false;
     private Transform player;
@@ -122,10 +138,15 @@ public class ElevatorSystem : MonoBehaviour
 
             if (canUseKeys)
             {
-                if (upPressed)
-                    GoToLevel((currentLevelIndex + 1) % levels.Length);
-                else
-                    GoToLevel((currentLevelIndex - 1) % levels.Length);
+                int len = levels != null ? levels.Length : 0;
+                if (len <= 0) return;
+
+                int baseIdx = currentLevelIndex;
+                if (baseIdx < 0 || baseIdx >= len)
+                    baseIdx = WrapIndex(baseIdx, len);
+
+                int next = upPressed ? WrapIndex(baseIdx + 1, len) : WrapIndex(baseIdx - 1, len);
+                GoToLevel(next);
             }
         }
     }
@@ -224,17 +245,23 @@ public class ElevatorSystem : MonoBehaviour
             isTeleporting = false;
         }
         
-        currentLevelIndex = levelIndex; 
+        if (levels == null || levels.Length == 0)
+            return;
+
+        int idx = WrapIndex(levelIndex, levels.Length);
+        currentLevelIndex = idx;
         elevatorSection.transform.position = new Vector3(
             elevatorSection.transform.position.x,
-            levels[levelIndex].position.y,
+            levels[idx].position.y,
             elevatorSection.transform.position.z);
     }
     
     public void GoToLevel(int levelIndex)
     {
         if (!CanTeleportToLevel(levelIndex))
+        {
             return;
+        }
 
         if (!IsLevelUnlocked(levelIndex))
         {
@@ -350,13 +377,26 @@ public class ElevatorSystem : MonoBehaviour
                 yield break;
             }
             
-            Vector3 targetPosition = new Vector3(
-                player.position.x, 
-                levels[levelIndex].position.y, 
+            float startX = player.position.x;
+            float requestedFinalX = useTargetLevelXForTeleport ? levels[levelIndex].position.x : startX;
+            float xDelta = Mathf.Abs(requestedFinalX - startX);
+            float finalX = (useTargetLevelXForTeleport && xDelta <= Mathf.Max(0.01f, maxTeleportXCorrection)) ? requestedFinalX : startX;
+
+            // IMPORTANT: animate vertically only to avoid sweeping into colliders on the source floor.
+            Vector3 animTargetPosition = new Vector3(
+                startX,
+                levels[levelIndex].position.y,
                 player.position.z
             );
 
-            while (Vector3.Distance(player.position, targetPosition) > 0.05f)
+            // Final snap/teleport target (can include X correction).
+            Vector3 finalTargetPosition = new Vector3(
+                finalX,
+                levels[levelIndex].position.y,
+                player.position.z
+            );
+
+            while (Vector3.Distance(player.position, animTargetPosition) > 0.05f)
             {
                 // Check null durante il loop (il player potrebbe essere stato distrutto)
                 if (player == null)
@@ -375,7 +415,7 @@ public class ElevatorSystem : MonoBehaviour
                     yield break;
                 }
                 
-                player.position = Vector3.Lerp(player.position, targetPosition, Time.deltaTime * elevatorSpeed);
+                player.position = Vector3.Lerp(player.position, animTargetPosition, Time.deltaTime * elevatorSpeed);
                 elevatorSection.transform.position = new Vector3(
                     elevatorSection.transform.position.x,
                     player.position.y,
@@ -391,15 +431,15 @@ public class ElevatorSystem : MonoBehaviour
                 var perspectiveMover = player.GetComponent<_Project.Player.PlayerPerspectiveMover2D>();
                 if (perspectiveMover != null)
                 {
-                    perspectiveMover.TeleportToWorld(new Vector2(targetPosition.x, targetPosition.y), pickAreaByPoint: true);
+                    perspectiveMover.TeleportToWorld(new Vector2(finalTargetPosition.x, finalTargetPosition.y), pickAreaByPoint: true);
                 }
                 else
                 {
-                    player.position = targetPosition;
+                    player.position = finalTargetPosition;
                     var rb2d = player.GetComponent<Rigidbody2D>();
                     if (rb2d != null)
                     {
-                        rb2d.position = new Vector2(targetPosition.x, targetPosition.y);
+                        rb2d.position = new Vector2(finalTargetPosition.x, finalTargetPosition.y);
                         rb2d.velocity = Vector2.zero;
                     }
                 }
