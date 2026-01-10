@@ -5,6 +5,9 @@
   [Component] Transform
   [Component] BoxCollider2D
   [Component] DeselectHandler
+- PLY_SpawnPoint
+  [Component] Transform
+  [Component] PlayerSpawnPoint
 - PLY_Player
   [Component] Transform
   [Component] Rigidbody2D
@@ -13,6 +16,10 @@
   [Component] PlayerAnimator
   [Component] PlayerEndDayHandler
   [Component] PlayerInteractAdvice
+  [Component] PlayerPerspectiveMover2D
+  [Component] PlayerDepthScaleAndSort
+  [Component] PlayerMoverRouter2D
+  [Component] PlayerShadowCaster2DAutoSetup
   - Sprite
     [Component] Transform
     [Component] SpriteRenderer
@@ -31,11 +38,6 @@
   [Component] Canvas
   [Component] CanvasScaler
   [Component] GraphicRaycaster
-  - InventoryBackgroundBlocker
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    [Component] Button
   - HUD_GameViewportBackground
     [Component] RectTransform
     [Component] UIDocument
@@ -44,23 +46,6 @@
     [Component] Transform
     [Component] EventSystem
     [Component] StandaloneInputModule
-    [Component] BaseInput
-    - BackgroundSettingsPanel
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - PlayerStatusPanelSettings
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - FoundationNotificationsPanel
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - PlantCardV2Settings
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
   - BTN_EndDay
     [Component] RectTransform
     [Component] CanvasRenderer
@@ -782,7 +767,6 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
-            [Component] EventTrigger
         - Stage
           [Component] RectTransform
           [Component] CanvasRenderer
@@ -2365,14 +2349,14 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] BottomNavigationController
-  - PlantCardV2
-    [Component] Transform
-    [Component] UIDocument
-    [Component] PlantCardV2Controller
   - PlayerStatusPanel
     [Component] RectTransform
     [Component] PlayerStatusPanelController
     [Component] UIDocument
+  - PlantCardV2
+    [Component] Transform
+    [Component] UIDocument
+    [Component] PlantCardV2Controller
   - PotActionsMenu
     [Component] Transform
     [Component] UIDocument
@@ -2389,186 +2373,6 @@
     [Component] Transform
     [Component] UIDocument
     [Component] AdditiveSelectorController
-  - MinimalHUD_POT-001
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-002
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-003
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-004
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2746,16 +2550,7 @@
   - ElevatorRoom
     [Component] Transform
     [Component] SpriteRenderer
-  - ElevatorBg
-    [Component] Transform
-    [Component] SpriteRenderer
-  - ElevatorDoorLeft
-    [Component] Transform
-    [Component] SpriteRenderer
-  - ElevatorDoorRight
-    [Component] Transform
-    [Component] SpriteRenderer
-- Placeholderlaceholder
+- Room_Dome_Placeholder
   [Component] Transform
   [Component] SpriteRenderer
   [Component] BoxCollider2D
@@ -2945,6 +2740,25 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+  - WalkAreaPerspective (1)
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
+    - Light_VisitorRoom_main
+      [Component] Transform
+      [Component] Light2D
+  - RoomZone_Visitor (1)
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] RoomLight2DZone
 - ROOM_Visitor
   [Component] Transform
   [Component] VisitorEventController
@@ -2975,6 +2789,58 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+  - WalkAreaPerspective
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
+    - Light_VisitorRoom_main
+      [Component] Transform
+      [Component] Light2D
+    - Light_VisitorRoom_side
+      [Component] Transform
+      [Component] Light2D
+  - RoomZone_Visitor
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] RoomLight2DZone
+- ROOM_Kitchen
+  [Component] Transform
+  - WalkAreaPerspective (1)
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
+  - RoomZone_Kitchen
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] RoomLight2DZone
+  - Light_KitchenRoom_Left
+    [Component] Transform
+    [Component] Light2D
+  - Light_KitchenRoom_Right
+    [Component] Transform
+    [Component] Light2D
+  - Light_KitchenRoom_Main
+    [Component] Transform
+    [Component] Light2D
+  - Mask_KitchenRoom_Floor
+    [Component] Transform
+    [Component] SpriteMask
 - ROOM_Bed
   [Component] Transform
   - BlackMarket
@@ -3007,6 +2873,32 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+  - WalkAreaPerspective
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
+  - RoomZone_Bed
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] RoomLight2DZone
+  - Light_BedRoom_Main
+    [Component] Transform
+    [Component] Light2D
+    [Component] Light2DFlicker
+  - Light_BedRoom_side
+    [Component] Transform
+    [Component] Light2D
+  - Mask_BedRoom_Floor
+    [Component] Transform
+    [Component] SpriteMask
 - GameManager
   [Component] Transform
   [Component] GameManager
@@ -3055,24 +2947,44 @@
 - Notifications Foundation - debug
   [Component] Transform
   [Component] FoundationNotificationsDebugConsole
-- VaultMap_BG
+- VaultMap_BG 
   [Component] Transform
   [Component] SpriteRenderer
-- SceneServicesContainer
+- VaultMap_BG_LitReceiver
   [Component] Transform
-  [Component] ServiceContainer
-- FoundationNotificationsRuntime
+  [Component] SpriteRenderer
+- WalkColliders
   [Component] Transform
-  [Component] FoundationNotificationsRunner
-  [Component] FoundationNotificationsWatchersRunner
-  [Component] FoundationLoreSchedulerRunner
-  [Component] FoundationNotificationsDebugConsole
-- pH_DebugConsole
+  - WALL_Left
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_profondo
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_Left Interno
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_Right
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_Right Interno
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_Right_floor1
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - WALL_Left_floor1
+    [Component] Transform
+    [Component] EdgeCollider2D
+  - BLK_Bed
+    [Component] Transform
+    [Component] PolygonCollider2D
+- railing_left
   [Component] Transform
-  [Component] PhSystemDebugConsole
-- pH_IdleOscillation
+  [Component] SpriteRenderer
+- railing_right
   [Component] Transform
-  [Component] PhSystemIdleOscillation
-- UIFertilizerSelector
+  [Component] SpriteRenderer
+- Mask_elevator_floor_Z
   [Component] Transform
-  [Component] UIFertilizerSelector
+  [Component] SpriteRenderer

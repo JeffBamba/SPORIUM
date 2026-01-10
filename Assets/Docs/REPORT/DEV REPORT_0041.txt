@@ -1,0 +1,157 @@
+================================================================================
+             DEV REPORT #0041 - VAULTMAP 2.5D + ELEVATOR + TELEPORT + SPEED FIX
+             SPORAE BUILD BETA
+             Data: 2026-01-10
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-VAULTMAP-0041 — Fix Ascensore (interazione), Teleport Snap, Area Picking, Velocità WASD costante
+- **Tipo Report:** Development Report (Bug Fix + Gameplay Tuning)
+- **Periodo coperto:** 2026-01-09 → 2026-01-10
+- **Data Generazione:** 2026-01-10
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0040.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **VM-ELEV-001**: Ascensore non più auto-aperto: UI apre solo su input esplicito (tasto `E`) + prompt “Press E to interact”.
+  - Evidence: `Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs`
+- **VM-ELEV-002**: Controlli frecce su/giù validi solo quando la UI ascensore è aperta (evita che sposti il player passando davanti).
+  - Evidence: `ElevatorSystem.Update()` (gate su `uiOpen`)
+- **VM-ELEV-003**: Dopo Teleport, la UI ascensore viene chiusa automaticamente.
+  - Evidence: `ElevatorSystem.TeleportPlayer()` → `ShowFloorOptions(false)` a fine coroutine
+- **VM-MOVE-001**: Teleport robusto del player nel sistema 2.5D: sincronizzazione corretta tra `Transform`, `Rigidbody2D` e UV della WalkArea.
+  - Evidence: `ElevatorSystem.TeleportPlayer()` usa `PlayerPerspectiveMover2D.TeleportToWorld(..., pickAreaByPoint:true)`
+- **VM-WALKAREA-001**: Selezione WalkArea più robusta in presenza di bounds sovrapposti (scelta per errore minimo World→UV→World).
+  - Evidence: `PlayerPerspectiveMover2D.FindAreaByWorldPoint()`
+- **VM-WALKAREA-002**: Guard “anti-switch sbagliato” su cambio area via trigger (evita agganci errati che causano teletrasporti).
+  - Evidence: `PlayerPerspectiveMover2D.OnTriggerEnter2D()` + `guardAreaSwitchByProjectionError`
+- **VM-SPEED-001**: Velocità WASD più costante su superfici calpestabili con trapezi di dimensioni diverse (world-speed clamp-safe).
+  - Evidence: `PlayerPerspectiveMover2D.FixedUpdate()` (modalità `useConstantWorldSpeedForWASD`)
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **VM-BUG-003 (Ascensore apre UI in automatico e blocca il passaggio davanti alle porte)**:
+  - **Sintomo:** entrando nel trigger, UI ascensore si apriva automaticamente e il player non poteva attraversare liberamente il pianerottolo.
+  - **Causa:** trigger usato come “interazione” invece che come “prossimità”; input non gated; UI state non esplicito.
+  - **Fix:** `openMenuOnTriggerEnter=false` (opzione) + apertura su `E`, con prompt “Press E to interact”.
+  - **Evidence:** `Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs`
+  - **Verifica:** ✅ conferma utente.
+
+- **VM-BUG-004 (Frecce su/giù dell’ascensore spostano il player anche senza UI aperta)**:
+  - **Sintomo:** passando davanti all’ascensore, i tasti freccia cambiavano piano/spostavano player senza interazione.
+  - **Fix:** input frecce ammesso solo se `uiOpen==true`.
+  - **Evidence:** `ElevatorSystem.Update()`
+  - **Verifica:** ✅ conferma utente.
+
+- **VM-BUG-005 (Animazione player resta in Idle mentre cammina)**:
+  - **Sintomo:** player si muove ma animazione rimane “Idle”.
+  - **Causa:** movimento via `Rigidbody2D.MovePosition` → `rb.velocity` spesso ≈ 0; transizioni update/fixed causavano sampling inconsistente; clip non in loop.
+  - **Fix:**
+    - `PlayerAnimator` usa delta-position per rilevare movimento + hold-time anti-flicker.
+    - `Idle.anim` e `Walk.anim` con Loop Time ON.
+  - **Evidence:**
+    - `Assets/_Project/Scripts/Player/PlayerAnimator.cs`
+    - `Assets/_Project/Animations/Player/Idle.anim`
+    - `Assets/_Project/Animations/Player/Walk.anim`
+  - **Verifica:** ✅ conferma utente.
+
+- **VM-BUG-006 (UI ascensore resta attiva dopo teleport)**:
+  - **Sintomo:** dopo arrivare a un floor, la UI piani rimaneva aperta e “bloccava” il flow di uscita.
+  - **Fix:** chiusura UI a fine `TeleportPlayer`.
+  - **Evidence:** `ElevatorSystem.TeleportPlayer()` → `ShowFloorOptions(false)`
+  - **Verifica:** ✅ conferma utente.
+
+- **VM-BUG-007 (Snap/teleport al primo input dopo arrivo da ascensore, soprattutto su +1)**:
+  - **Sintomo:** dopo animazione ascensore, al primo WASD/click il player “scatta” verso un punto vicino o verso Seed Storage.
+  - **Cause principali:**
+    - mismatch tra `Transform.position` e `Rigidbody2D.position` / UV interna del mover 2.5D
+    - scelta WalkArea sbagliata quando bounds si sovrappongono (punto contenuto in più aree)
+    - collider non-trigger in zona arrivo (es. handler di deselect) che interferiva con il primo step
+  - **Fix:**
+    - Teleport sempre via `PlayerPerspectiveMover2D.TeleportToWorld(..., pickAreaByPoint:true)` (sincronizza rb + UV)
+    - `FindAreaByWorldPoint()` sceglie l’area con errore minimo di proiezione
+    - guard su `OnTriggerEnter2D` che rifiuta switch area con errore alto
+    - `DeselectHandler` forza `Collider2D.isTrigger=true` (opzionale via toggle)
+  - **Evidence:**
+    - `Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs`
+    - `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+    - `Assets/_Project/Scripts/DeselectHandler.cs`
+  - **Verifica:** ✅ conferma utente (“FUNZIONA MOLTO BENE ORA!”).
+
+- **VM-BUG-008 (Velocità incoerente tra floor con trapezi più grandi/piccoli)**:
+  - **Sintomo:** a parità di `uvSpeed`, su alcuni floor il player andava “sotto steroidi”, su altri lento.
+  - **Causa:** WASD in UV-space: stessa delta UV corrisponde a metri diversi a seconda del trapezio.
+  - **Fix:** modalità “constant world speed” per WASD (stima locale clamp-safe con differenze centrali).
+  - **Evidence:** `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs` (`useConstantWorldSpeedForWASD`, `wasdWorldSpeed`)
+  - **Verifica:** ✅ conferma utente (issue fixed).
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- Nessun bug bloccante segnalato dopo le verifiche finali di ieri+oggi.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script modificati:**
+  - `Assets/_Project/Scripts/World/Elevator/ElevatorSystem.cs`
+    - UI ascensore su interazione (E), prompt, gating frecce, chiusura UI post-teleport, teleport via mover.
+  - `Assets/_Project/Scripts/Player/PlayerPerspectiveMover2D.cs`
+    - area picking robusto (errore minimo), guard switch area via trigger, WASD speed costante.
+  - `Assets/_Project/Scripts/Player/PlayerAnimator.cs`
+    - rilevamento walking via delta-position + hold-time.
+  - `Assets/_Project/Scripts/DeselectHandler.cs`
+    - `forceTriggerCollider` per evitare collisioni indesiderate (teleport/snap).
+- **Asset modificati:**
+  - `Assets/_Project/Animations/Player/Idle.anim` (Loop Time ON)
+  - `Assets/_Project/Animations/Player/Walk.anim` (Loop Time ON)
+- **Strumenti debug:**
+  - Aggiunta instrumentation temporanea NDJSON per evidenza runtime.
+  - ✅ Cleanup completo instrumentation (nessun `#region agent log` residuo).
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- **UV-speed ≠ world-speed**: in un trapezio 2.5D la metrica world varia con la forma; per avere “feel” consistente serve conversione in world-space o compensazione locale.
+- **Bounds sovrapposti**: scegliere “la prima area che contiene il punto” è fragile → meglio scegliere per errore minimo di proiezione.
+- **Teleport + Rigidbody2D**: mai settare solo `Transform.position` se il mover usa `Rigidbody2D.MovePosition`; serve una API di teleport che riallinei stato interno.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Standardizzare (per VaultMap) l’approccio consigliato:
+  - 1 WalkArea “macro” per piano (quando possibile) + `WalkBlocker` per ostacoli
+  - area picking robusto per zone con sovrapposizioni (ascensore/corridoi)
+- Verifica visiva su tutti i floor: passaggio davanti alle porte ascensore + uscita/entrata in Seed Storage/Visitor.
+- (Opzionale) Creare preset dei parametri mover (wasdWorldSpeed, skinWidth, ecc.) per tuning rapido.
+
+================================================================================
+
+OPERAZIONI MANUALI (BEGINNER) — VERIFICA RAPIDA IN UNITY
+========================================================
+1) Play Mode → vai a un floor qualsiasi e passa davanti alle porte dell’ascensore: il player deve camminare liberamente.
+2) Entra nel trigger ascensore: deve comparire “Press E to interact”, ma la UI piani non deve aprirsi da sola.
+3) Premi `E` per aprire UI ascensore: solo ora frecce su/giù devono cambiare piano.
+4) Seleziona un piano → al termine della corsa la UI deve chiudersi automaticamente.
+5) Al nuovo floor, muoviti subito con WASD e click: non deve esserci nessuno “snap/teleport”.
+6) Prova due floor con trapezi molto diversi: la velocità percepita deve rimanere coerente (dx/sx e profondità).
+
+================================================================================
+
+FOOTER
+------
+================================================================================
+

@@ -22,7 +22,15 @@ public class ElevatorSystem : MonoBehaviour
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
 
-    private bool playerInside = false;
+    [Header("Behavior")]
+    [Tooltip("DEBUG_SAFE_FIX: If false, the elevator menu will NOT auto-open when the player enters the trigger. The player must press the open key while inside the trigger.")]
+    [SerializeField] private bool openMenuOnTriggerEnter = true; // DEBUG_SAFE_FIX
+    [SerializeField] private KeyCode openMenuKey = KeyCode.E; // DEBUG_SAFE_FIX
+    [Tooltip("DEBUG_SAFE_FIX: If true, shows the existing PlayerInteractAdvice (\"Press E\") prompt while inside the elevator trigger and the menu is closed.")]
+    [SerializeField] private bool showInteractAdviceWhileInside = true; // DEBUG_SAFE_FIX
+
+    private bool playerInside = false; // inside trigger (not UI open)
+    private bool uiOpen = false;
     private Transform player;
     private bool isTeleporting = false;
     private Coroutine _teleportCoroutine; // DEBUG_SAFE_FIX: Traccia la coroutine per poterla fermare
@@ -30,6 +38,7 @@ public class ElevatorSystem : MonoBehaviour
     private int currentLevelIndex;
     private PlayerClickMover2D playerMover;
     private UINotification uiNotification;
+    private PlayerInteractAdvice interactAdvice; // DEBUG_SAFE_FIX: prompt "Press E"
 
     void Start()
     {
@@ -47,6 +56,7 @@ public class ElevatorSystem : MonoBehaviour
             }
         }
         playerMover = FindObjectOfType<PlayerClickMover2D>();
+        interactAdvice = FindObjectOfType<PlayerInteractAdvice>();
         // Usa ServiceContainer invece di FindObjectOfType per UINotification
         uiNotification = ServiceContainer.Instance?.Get<UINotification>();
         if (uiNotification == null)
@@ -91,11 +101,33 @@ public class ElevatorSystem : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-            GoToLevel((currentLevelIndex + 1) % levels.Length);
-        
-        if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-            GoToLevel((currentLevelIndex - 1) % levels.Length);
+        // DEBUG_SAFE_FIX: Show "Press E" advice while we're inside the trigger and the elevator menu is closed.
+        if (showInteractAdviceWhileInside && playerInside && !uiOpen && interactAdvice != null)
+        {
+            interactAdvice.AddInteractable();
+        }
+
+        // DEBUG_SAFE_FIX: If we don't auto-open, allow explicit open while inside trigger.
+        if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetKeyDown(openMenuKey))
+        {
+            ShowFloorOptions(true);
+        }
+
+        // DEBUG_SAFE_FIX: Up/Down (and W/S) floor selection must ONLY work when the elevator UI is open.
+        bool upPressed = Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow);
+        bool downPressed = Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow);
+        if (upPressed || downPressed)
+        {
+            bool canUseKeys = uiOpen && playerInside;
+
+            if (canUseKeys)
+            {
+                if (upPressed)
+                    GoToLevel((currentLevelIndex + 1) % levels.Length);
+                else
+                    GoToLevel((currentLevelIndex - 1) % levels.Length);
+            }
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -105,7 +137,12 @@ public class ElevatorSystem : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player = other.transform;
-            ShowFloorOptions(true);
+            playerInside = true;
+
+            if (openMenuOnTriggerEnter)
+                ShowFloorOptions(true);
+            else
+                ShowFloorOptions(false);
         }
     }
 
@@ -116,13 +153,14 @@ public class ElevatorSystem : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player = null;
+            playerInside = false;
             ShowFloorOptions(false);
         }
     }
     
     void ShowFloorOptions(bool state)
     {
-        playerInside = state;
+        uiOpen = state;
         
         if (uiPanel != null)
         {
@@ -300,6 +338,7 @@ public class ElevatorSystem : MonoBehaviour
             {
                 SporiumLogger.LogError(LogCategory.Core, "Player è diventato null dopo WaitForSeconds!");
                 isTeleporting = false;
+                ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
                 yield break;
             }
             
@@ -307,6 +346,7 @@ public class ElevatorSystem : MonoBehaviour
             {
                 SporiumLogger.LogError(LogCategory.Core, $"levels[{levelIndex}] è null dopo WaitForSeconds!");
                 isTeleporting = false;
+                ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
                 yield break;
             }
             
@@ -323,6 +363,7 @@ public class ElevatorSystem : MonoBehaviour
                 {
                     SporiumLogger.LogError(LogCategory.Core, "Player è diventato null durante il loop!");
                     isTeleporting = false;
+                    ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
                     yield break;
                 }
                 
@@ -330,6 +371,7 @@ public class ElevatorSystem : MonoBehaviour
                 {
                     SporiumLogger.LogError(LogCategory.Core, "elevatorSection è null!");
                     isTeleporting = false;
+                    ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
                     yield break;
                 }
                 
@@ -344,7 +386,23 @@ public class ElevatorSystem : MonoBehaviour
             
             if (player != null)
             {
-                player.position = targetPosition;
+                // DEBUG_SAFE_FIX: Use the perspective mover's teleport API so internal UV and Rigidbody2D state stay consistent.
+                // This prevents the first post-elevator input from "snapping" the player back to an old UV-projected location.
+                var perspectiveMover = player.GetComponent<_Project.Player.PlayerPerspectiveMover2D>();
+                if (perspectiveMover != null)
+                {
+                    perspectiveMover.TeleportToWorld(new Vector2(targetPosition.x, targetPosition.y), pickAreaByPoint: true);
+                }
+                else
+                {
+                    player.position = targetPosition;
+                    var rb2d = player.GetComponent<Rigidbody2D>();
+                    if (rb2d != null)
+                    {
+                        rb2d.position = new Vector2(targetPosition.x, targetPosition.y);
+                        rb2d.velocity = Vector2.zero;
+                    }
+                }
             }
         
             isTeleporting = false;
@@ -356,6 +414,9 @@ public class ElevatorSystem : MonoBehaviour
 
             currentLevelIndex = levelIndex;
             UpdateAvailablesFloorOptions();
+
+            // DEBUG_SAFE_FIX: Close the elevator UI when we arrive at the destination floor.
+            ShowFloorOptions(false);
         }
     }
 

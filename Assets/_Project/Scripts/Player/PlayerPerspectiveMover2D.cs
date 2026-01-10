@@ -9,6 +9,7 @@ namespace _Project.Player
     [DisallowMultipleComponent]
     public class PlayerPerspectiveMover2D : MonoBehaviour
     {
+        private float _debugNextLogTime = 0f;
         [Header("References")]
         [Tooltip("If left null, the mover will try to auto-pick a walk area by click/trigger.")]
         [SerializeField] private PerspectiveWalkArea2D currentWalkArea;
@@ -25,6 +26,15 @@ namespace _Project.Player
         [Tooltip("How fast UV changes under WASD control.")]
         [SerializeField] private float uvSpeed = 0.75f;
 
+        [Header("WASD Speed Mode")]
+        [Tooltip("DEBUG_SAFE_FIX: If true, WASD movement tries to maintain a constant world-space speed across differently-sized walk areas, instead of a constant UV speed.")]
+        [SerializeField] private bool useConstantWorldSpeedForWASD = true; // DEBUG_SAFE_FIX
+
+        [SerializeField] private float wasdWorldSpeed = 4f;
+
+        [Tooltip("Step in UV used to estimate local world-space axes (bigger = more stable, smaller = more precise).")]
+        [SerializeField] private float uvDerivativeStep = 0.03f;
+
         [Header("Click Validation (Optional)")]
         [Tooltip("If enabled, click targets must overlap this 'walkable' mask. Useful only if you add a floor collider per room.")]
         [SerializeField] private bool requireWalkableForClick = false;
@@ -39,6 +49,12 @@ namespace _Project.Player
         [SerializeField] private int slideIterations = 2;
         [Tooltip("DEBUG_SAFE_FIX: If true, when the movement is almost purely into a surface (slide ~ 0), try sliding along the surface tangent to avoid sticking.")]
         [SerializeField] private bool enableStickySlideFix = true; // DEBUG_SAFE_FIX
+
+        [Header("WalkArea Switching (Trigger Bounds)")]
+        [Tooltip("DEBUG_SAFE_FIX: Prevent switching to a walk area if projecting current position into its UV space would result in a large world-space mismatch (can cause teleports).")]
+        [SerializeField] private bool guardAreaSwitchByProjectionError = true; // DEBUG_SAFE_FIX
+
+        [SerializeField] private float maxAreaSwitchProjectionError = 0.6f;
 
         private Rigidbody2D _rb;
         private Collider2D _selfCollider;
@@ -72,6 +88,67 @@ namespace _Project.Player
             TryInitUVFromCurrentPosition();
         }
 
+        /// <summary>
+        /// Teleports the player to a world position in a way that stays consistent with the mover's internal UV state.
+        /// This avoids "snapping back" on the next FixedUpdate.
+        /// </summary>
+        public void TeleportToWorld(Vector2 worldPosition, bool pickAreaByPoint = true)
+        {
+            _hasTarget = false;
+
+            // Set the rigidbody position directly (kinematic body)
+            if (_rb != null)
+            {
+                _rb.position = worldPosition;
+                _rb.velocity = Vector2.zero;
+            }
+            else
+            {
+                transform.position = worldPosition;
+            }
+
+            if (pickAreaByPoint)
+            {
+                PerspectiveWalkArea2D area = FindAreaByWorldPoint(worldPosition);
+                if (area != null)
+                    currentWalkArea = area;
+            }
+
+            // Reproject UV from the requested position (do NOT rely on _rb.position being synced to transform when teleported externally)
+            if (currentWalkArea != null && currentWalkArea.TryProjectWorldToUV(worldPosition, out Vector2 uv))
+            {
+                _currentUV = new Vector2(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+            }
+            else
+            {
+                _currentUV = new Vector2(0.5f, 0.0f);
+            }
+
+            _targetUV = _currentUV;
+        }
+
+        /// <summary>
+        /// Reprojects the internal UV coordinates from the current world position.
+        /// Useful after external teleports (e.g. EndDay spawn).
+        /// </summary>
+        public void ReprojectUVFromCurrentPosition()
+        {
+            TryInitUVFromCurrentPosition();
+        }
+
+        /// <summary>
+        /// Picks a walk area based on a world point and sets it as current (if found),
+        /// then reprojects UV from current position.
+        /// </summary>
+        public void SetCurrentAreaByWorldPoint(Vector2 worldPoint)
+        {
+            PerspectiveWalkArea2D area = FindAreaByWorldPoint(worldPoint);
+            if (area != null)
+                SetCurrentArea(area);
+            else
+                TryInitUVFromCurrentPosition();
+        }
+
         private void Update()
         {
             if (enableClickToMove)
@@ -92,11 +169,77 @@ namespace _Project.Player
                 _hasTarget = false;
 
                 float dt = Time.fixedDeltaTime;
-                _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvSpeed * dt);
-                _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvSpeed * dt);
 
-                Vector2 desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
-                Vector2 newPos = ResolveCollisionsWithSlide(_rb.position, desired);
+                Vector2 from = _rb.position;
+                Vector2 desired;
+
+                float metersPerU_dbg = 0f;
+                float metersPerV_dbg = 0f;
+                float duStep_dbg = 0f;
+                float dvStep_dbg = 0f;
+
+                if (useConstantWorldSpeedForWASD && currentWalkArea.HasValidCorners)
+                {
+                    // Estimate local world scale (meters per UV) using a symmetric (central) difference around the current UV.
+                    // This avoids clamp artifacts near v=0/1 that can create "magnetic acceleration" effects.
+                    float du = Mathf.Clamp(uvDerivativeStep, 0.005f, 0.15f);
+                    float dv = du;
+
+                    float u0 = Mathf.Clamp01(_currentUV.x);
+                    float v0 = Mathf.Clamp01(_currentUV.y);
+                    float uF = Mathf.Clamp01(u0 + du);
+                    float uB = Mathf.Clamp01(u0 - du);
+                    float vF = Mathf.Clamp01(v0 + dv);
+                    float vB = Mathf.Clamp01(v0 - dv);
+
+                    float duEff = Mathf.Max(0.000001f, uF - uB);
+                    float dvEff = Mathf.Max(0.000001f, vF - vB);
+
+                    Vector2 pU0 = currentWalkArea.MapToWorld(u0, v0);
+                    Vector2 pU1 = currentWalkArea.MapToWorld(uF, v0);
+                    Vector2 pU2 = currentWalkArea.MapToWorld(uB, v0);
+                    Vector2 pV1 = currentWalkArea.MapToWorld(u0, vF);
+                    Vector2 pV2 = currentWalkArea.MapToWorld(u0, vB);
+
+                    float metersPerU = Vector2.Distance(pU1, pU2) / duEff;
+                    float metersPerV = Vector2.Distance(pV1, pV2) / dvEff;
+
+                    metersPerU_dbg = metersPerU;
+                    metersPerV_dbg = metersPerV;
+
+                    // If basis degenerates, fallback to legacy UV mode.
+                    if (metersPerU < 0.0001f || metersPerV < 0.0001f)
+                    {
+                        _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvSpeed * dt);
+                        _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvSpeed * dt);
+                        desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                    }
+                    else
+                    {
+                        // Normalize input so diagonal doesn't exceed target speed.
+                        Vector2 input = wasd.normalized;
+
+                        float duStep = (input.x * wasdWorldSpeed * dt) / metersPerU;
+                        float dvStep = (input.y * wasdWorldSpeed * dt) / metersPerV;
+
+                        duStep_dbg = duStep;
+                        dvStep_dbg = dvStep;
+
+                        _currentUV.x = Mathf.Clamp01(_currentUV.x + duStep);
+                        _currentUV.y = Mathf.Clamp01(_currentUV.y + dvStep);
+
+                        desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                    }
+                }
+                else
+                {
+                    // Legacy UV speed mode
+                    _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvSpeed * dt);
+                    _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvSpeed * dt);
+                    desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                }
+
+                Vector2 newPos = ResolveCollisionsWithSlide(from, desired);
                 _rb.MovePosition(newPos);
 
                 // Re-project after slide so UV stays consistent with actual position
@@ -187,18 +330,43 @@ namespace _Project.Player
         private static void CacheAllAreas()
         {
             s_Areas.Clear();
-            s_Areas.AddRange(Object.FindObjectsOfType<PerspectiveWalkArea2D>(includeInactive: false));
+            s_Areas.AddRange(UnityEngine.Object.FindObjectsOfType<PerspectiveWalkArea2D>(includeInactive: false));
         }
 
         private static PerspectiveWalkArea2D FindAreaByWorldPoint(Vector2 world)
         {
+            // When multiple AreaBounds overlap (common around elevator lobbies / connectors),
+            // picking the "first" match can lead to large UV reprojection errors and apparent teleports.
+            // Prefer the area that best reprojects back to the same world point.
+            PerspectiveWalkArea2D bestArea = null;
+            float bestErr = float.PositiveInfinity;
+
             for (int i = 0; i < s_Areas.Count; i++)
             {
                 PerspectiveWalkArea2D a = s_Areas[i];
-                if (a != null && a.ContainsWorldPoint(world))
-                    return a;
+                if (a == null)
+                    continue;
+
+                if (!a.ContainsWorldPoint(world))
+                    continue;
+
+                if (!a.HasValidCorners)
+                    continue;
+
+                if (!a.TryProjectWorldToUV(world, out Vector2 uv))
+                    continue;
+
+                Vector2 mapped = a.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+                float err = Vector2.Distance(world, mapped);
+
+                if (err < bestErr)
+                {
+                    bestErr = err;
+                    bestArea = a;
+                }
             }
-            return null;
+
+            return bestArea;
         }
 
         private Vector2 ResolveCollisionsWithSlide(Vector2 from, Vector2 desired)
@@ -228,6 +396,7 @@ namespace _Project.Player
                     pos += remaining;
                     break;
                 }
+
 
                 // DEBUG_SAFE_FIX: When the cast reports distance ~0 while moving tangentially (dot >= 0),
                 // treat it as a "touching" contact and allow motion along the tangent, otherwise we can get stuck on corners.
@@ -364,7 +533,7 @@ namespace _Project.Player
         {
             Camera mainCamera = Camera.main;
             if (mainCamera == null)
-                mainCamera = Object.FindObjectOfType<Camera>();
+                mainCamera = UnityEngine.Object.FindObjectOfType<Camera>();
 
             if (mainCamera == null)
                 return Vector2.zero;
@@ -379,6 +548,19 @@ namespace _Project.Player
             PerspectiveWalkArea2D area = other.GetComponentInParent<PerspectiveWalkArea2D>();
             if (area != null && area.AreaBounds == other)
             {
+                if (guardAreaSwitchByProjectionError && _rb != null && area.HasValidCorners)
+                {
+                    Vector2 w = _rb.position;
+                    if (area.TryProjectWorldToUV(w, out Vector2 uv))
+                    {
+                        Vector2 mapped = area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+                        float err = Vector2.Distance(w, mapped);
+                        if (err > Mathf.Max(0.001f, maxAreaSwitchProjectionError))
+                        {
+                            return;
+                        }
+                    }
+                }
                 SetCurrentArea(area);
             }
         }
