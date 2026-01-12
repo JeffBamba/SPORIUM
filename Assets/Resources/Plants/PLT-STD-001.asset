@@ -112,4 +112,5 @@ MonoBehaviour:
     fertilizerMax: 70
     durationDays: 2
     notes: Riposo post-raccolta, riattivabile con fertilizzante
+  visualSet: {fileID: 11400000, guid: 540b51d585a7080479a513b501f1d931, type: 2}
   preferredFaction: 

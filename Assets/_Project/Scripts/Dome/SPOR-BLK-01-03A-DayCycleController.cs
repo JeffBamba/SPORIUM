@@ -10,6 +10,7 @@ using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 using System.IO;
 using System;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -37,6 +38,12 @@ public class DayCycleController : MonoBehaviour
     private GameManager _gameManager;
     private UINotification _uiNotification;
     private ToastNotificationManager _toastManager;
+
+    private static bool IsDead(PotStateModel pot)
+    {
+        if (pot == null) return false;
+        return (PlantCondition)pot.ConditionLabel == PlantCondition.Morta;
+    }
 
 
     private void Awake()
@@ -441,7 +448,7 @@ public class DayCycleController : MonoBehaviour
 
         foreach (var pot in _registeredPots)
         {
-            if (pot is { HasPlant: true })
+            if (pot is { HasPlant: true } && !IsDead(pot))
             {
                 ResolveGrowthForPot(pot, dayIndex);
             }
@@ -1154,15 +1161,27 @@ public class DayCycleController : MonoBehaviour
             {
                 SporiumLogger.LogWarning(LogCategory.Pot, $"{message} Vasi: {string.Join(", ", vasiDaDisattivareList)}");
             }
-            
-            // Emetti evento per UI (mostra toast warning)
-            if (_toastManager != null)
+
+            // Notifications Foundation (preferred). Fallback: old toast/banner.
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
             {
-                _toastManager.ShowWarning(message, "LGT-002");
+                // Pre-warning: deve restare un TOAST (non persistente), anche se LGT-002 è severity Danger di default.
+                foundation.PostToast("LGT-002",
+                    new NotificationPayload().With("message", message),
+                    severityOverride: NotificationSeverity.Warning,
+                    dedupKey: "WATRAW:WILL_DISABLE");
             }
-            else if (_uiNotification != null)
+            else
             {
-                _uiNotification.ShowNotification(message, 3f, Color.yellow);
+                if (_toastManager != null)
+                {
+                    _toastManager.ShowWarning(message, "LGT-002");
+                }
+                else if (_uiNotification != null)
+                {
+                    _uiNotification.ShowNotification(message, 3f, Color.yellow);
+                }
             }
         }
     }
@@ -1186,6 +1205,18 @@ public class DayCycleController : MonoBehaviour
         
         int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
         
+        // Notifications Foundation: se WAT-RAW è tornato disponibile, risolvi eventuali danger persistenti di auto-spegnimento.
+        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        bool hasRawWater = _gameManager.PlayerInventory.Has(Items.Water);
+        if (foundation != null && foundation.Enabled && hasRawWater)
+        {
+            foreach (var p in _registeredPots)
+            {
+                if (p == null) continue;
+                foundation.ResolveDanger($"WATRAW:OFF:{p.PotId}");
+            }
+        }
+        
         foreach (var pot in _registeredPots)
         {
             if (pot == null || !pot.HasPlant)
@@ -1199,16 +1230,21 @@ public class DayCycleController : MonoBehaviour
             {
                 // BUG FIX: Controlla PRIMA se c'è WAT-RAW disponibile (anche se accumulatore < 1.0)
                 // Se non c'è WAT-RAW, disattiva immediatamente il sistema
-                if (!_gameManager.PlayerInventory.Has(Items.Water))
+                if (!hasRawWater)
                 {
                     // FALLBACK: Disattiva sistema automaticamente - WAT-RAW insufficiente
                     pot.WateringSystemOn = false;
                     pot.WateringRawWaterAccumulator = 0f;
                     pot.DaysWateringSystemOn = 0;
                     
-                    string message = $"💧 Sistema irrigazione {pot.PotId} disattivato: WAT-RAW insufficiente";
+                    // Messaggio corto (UI Foundation max 3 righe)
+                    string message = $"Irrigazione spenta nel {pot.PotId}";
                     if (enableDebugLogs)
                         SporiumLogger.LogWarning(LogCategory.Pot, message);
+
+                    // Notifications Foundation: DANGER persistente finché non torna WAT-RAW disponibile.
+                    if (foundation != null && foundation.Enabled)
+                        foundation.UpsertDanger($"WATRAW:OFF:{pot.PotId}", "LGT-002", new NotificationPayload().With("message", message));
                     
                     // Rimuovi eventuali contributi overwatering se presenti
                     if (_phSystem != null)
@@ -1935,17 +1971,27 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void CalculatePlantConditions(int dayIndex)
     {
-        if (_phSystem == null || _potSystemConfig == null)
+        // BUGFIX (POT-CONDITION-TICK): la condizione deve calcolarsi ogni EndDay anche se PhSystem non è ancora disponibile.
+        // Il PlantConditionSystem gestisce phSystem==null (semplicemente non applica bonus/malus pH).
+        if (_potSystemConfig == null && enableDebugLogs)
         {
-            if (enableDebugLogs)
-                SporiumLogger.LogWarning(LogCategory.Pot, "PhSystem o PotSystemConfig non disponibili per calcolo condizione");
-            return;
+            SporiumLogger.LogWarning(LogCategory.Pot, "PotSystemConfig non disponibile per calcolo condizione. Uso valori di default (MaxHydration=10, MaxDaysForFullStress=5).");
         }
         
         foreach (var pot in _registeredPots)
         {
             if (pot == null || !pot.HasPlant)
                 continue;
+            
+            // Morta è persistente: non ricalcolare né sovrascrivere. Rimane finché non Uproot.
+            if (IsDead(pot))
+                continue;
+
+            // Snapshot per capire se dobbiamo notificare le UI a fine tick.
+            int preConditionLabel = pot.ConditionLabel;
+            int preConditionScore = pot.ConditionScore;
+            int preMoldRisk = pot.MoldRiskLevel;
+            bool preInfested = pot.IsInfested;
             
             // Salva score precedente per calcolo forecast
             int previousScore = pot.PreviousDayConditionScore >= 0 ? pot.PreviousDayConditionScore : pot.ConditionScore;
@@ -1955,9 +2001,10 @@ public class DayCycleController : MonoBehaviour
             PlantData plantData = pot.GetPlantData();
             if (plantData == null)
             {
+                // Non bloccare il tick: calcoliamo comunque la condizione in fallback (senza PlantData).
+                // Nota: in PlantConditionSystem, plantData==null restituisce uno score neutro.
                 if (enableDebugLogs)
-                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: PlantData non trovato per calcolo condizione");
-                continue;
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: PlantData non trovato per calcolo condizione (fallback).");
             }
             
             // DEBUG: Log dati INPUT prima del calcolo (Ipotesi A: parametri diversi da UI)
@@ -2056,6 +2103,41 @@ public class DayCycleController : MonoBehaviour
             pot.ConditionScore = result.Score;
             pot.ConditionLabel = (int)result.Condition;
             pot.ForecastDirection = (int)result.Forecast;
+            
+            // Trigger Morta: score resta sotto soglia Critica per >2 giorni (3 consecutivi).
+            int criticalThreshold = Sporae.DevTools.DifficultyCalibrationConfig.ConditionThresholdAppassita;
+            bool isScoreCritical = pot.ConditionScore < criticalThreshold;
+            if (isScoreCritical)
+                pot.DaysCritical++;
+            else
+                pot.DaysCritical = 0;
+            
+            if (pot.DaysCritical >= 3)
+            {
+                pot.ConditionLabel = (int)PlantCondition.Morta;
+                
+                // Spegni sistemi persistenti per evitare consumi/side-effect post-morte.
+                pot.WateringSystemOn = false;
+                pot.LedSystemState = LedSystemState.Off;
+                
+                // Notifica morte
+                string reason = $"Condizione Critica per {pot.DaysCritical} giorni (score<{criticalThreshold})";
+                PotEvents.EmitPlantDied(pot.PotId, reason);
+                
+                // Aggiorna visual/UI
+                PotSlot potSlot = FindPotSlot(pot.PotId);
+                if (potSlot != null)
+                {
+                    var potGrowthController = potSlot.GetComponent<PotGrowthController>();
+                    if (potGrowthController != null)
+                        potGrowthController.UpdateVisuals();
+                    
+                    PotEvents.EmitChanged(potSlot);
+                }
+                
+                // Non calcolare muffe/altro dopo la morte.
+                continue;
+            }
             
             
             // Verifica cambio condizione per notifica Toast
@@ -2190,6 +2272,23 @@ public class DayCycleController : MonoBehaviour
                     SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Mold Risk Level: {pot.MoldRiskLevel} (DaysOverwatering: {pot.DaysOverwateringConsecutive}, Threshold: {moldConfig.overwateringDaysThreshold})");
                 }
             }
+
+            // BUGFIX (POT-CONDITION-UI): se parametri/condizione cambiano a fine giornata, notifica le UI
+            // anche quando il player non ha compiuto azioni (Water/LED/Spray...).
+            bool anyChanged =
+                preConditionLabel != pot.ConditionLabel ||
+                preConditionScore != pot.ConditionScore ||
+                preMoldRisk != pot.MoldRiskLevel ||
+                preInfested != pot.IsInfested;
+
+            if (anyChanged)
+            {
+                PotSlot potSlot = FindPotSlot(pot.PotId);
+                if (potSlot != null)
+                {
+                    PotEvents.EmitChanged(potSlot);
+                }
+            }
         }
     }
     
@@ -2200,19 +2299,15 @@ public class DayCycleController : MonoBehaviour
     {
         SporiumLogger.LogError(LogCategory.Pot, $"Pianta morta per pH estremo! Vaso: {pot.PotId}, Famiglia: {plantData.Family}, pH Band: {phBand}");
         
-        // Resetta stato pianta (come in DoFertilize per morte fertilizzante)
-        pot.HasPlant = false;
-        pot.PlantCode = null;
-        pot.Stage = 0;
-        pot.Hydration = 0;
-        pot.LightExposure = 0;
-        pot.FertilizerLevel = 0;
-        pot.DaysSincePlant = 0;
-        pot.DaysInCurrentStage = 0;
-        pot.GrowthPoints = 0;
-        pot.DaysFertilizerActive = 0;
+        // Morta persistente: non svuotare il pot. Rimane Morta finché non Uproot.
+        pot.ConditionLabel = (int)PlantCondition.Morta;
+        pot.DaysCritical = 3; // coerente con trigger critico
         pot.DaysInExtremePh = 0;
         pot.ExtremePhDeathCountdown = -1;
+        
+        // Spegni sistemi persistenti per evitare consumi/side-effect post-morte.
+        pot.WateringSystemOn = false;
+        pot.LedSystemState = LedSystemState.Off;
         
         // Notifica evento morte pianta
         string reason = $"pH estremo opposto ({phBand}) per famiglia {plantData.Family}";

@@ -380,6 +380,22 @@ namespace Sporae.Dome.PotSystem.Condition
                 // Se LED non è richiesto, non applicare malus anche se stress è 0%
             }
             
+            // 8. Negligenza prolungata (nessuna cura per più giorni consecutivi)
+            // BUGFIX (POT-CONDITION-REGRESSION): senza questo, una pianta può restare "Sana" per sempre anche con Hydration=0 e LED OFF.
+            // Usiamo DaysNeglectedStreak che viene aggiornato ogni EndDay dal DayCycleController.
+            int neglectThreshold = Mathf.Max(0, DifficultyCalibrationConfig.ConditionNeglectThresholdDays);
+            int malusPerDay = Mathf.Max(0, DifficultyCalibrationConfig.MalusNeglectPerDay);
+            if (malusPerDay > 0 && potState.DaysNeglectedStreak >= neglectThreshold && potState.DaysNeglectedStreak > 0)
+            {
+                // Applica malus crescente: al superamento soglia, 1x; poi 2x; ecc.
+                int over = (potState.DaysNeglectedStreak - neglectThreshold) + 1;
+                over = Mathf.Max(1, over);
+                int malus = malusPerDay * over;
+                
+                score -= malus;
+                contributors.Add(new ConditionContributor($"Negligenza ({potState.DaysNeglectedStreak} giorni)", -malus, false));
+            }
+            
             // Clamp score 0-100
             int scoreBeforeClamp = score;
             score = Mathf.Clamp(score, 0, 100);
@@ -559,6 +575,11 @@ namespace Sporae.Dome.PotSystem.Condition
         /// </summary>
         public static string GetConditionName(PlantCondition condition, bool isOverwatering = false)
         {
+            if (condition == PlantCondition.Morta)
+            {
+                return "Morta";
+            }
+            
             // Overwatering ora forza "Sana" (con i nuovi threshold, score >= 40 → Sana)
             if (isOverwatering && condition == PlantCondition.Sana)
             {
@@ -578,6 +599,7 @@ namespace Sporae.Dome.PotSystem.Condition
                 PlantCondition.Sana => "Sana",
                 PlantCondition.Appassita => "Appassita",
                 PlantCondition.Critica => "Critica",
+                PlantCondition.Morta => "Morta",
                 _ => "Sconosciuta"
             };
         }

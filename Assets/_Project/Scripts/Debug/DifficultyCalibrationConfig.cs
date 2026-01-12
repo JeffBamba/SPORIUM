@@ -126,6 +126,15 @@ namespace Sporae.DevTools
         public static int ForecastDeltaDown = -5;              // default <-5
         
         // ============================================
+        // NEGLIGENZA (PlantConditionSystem)
+        // ============================================
+        [Tooltip("Numero di giorni consecutivi senza cura prima di applicare malus Condizione (usa PotStateModel.DaysNeglectedStreak).")]
+        public static int ConditionNeglectThresholdDays = 2;   // default 2
+        
+        [Tooltip("Malus Condizione per giorno oltre la soglia di negligenza (applicato in modo crescente).")]
+        public static int MalusNeglectPerDay = 5;              // default 5
+        
+        // ============================================
         // RANGE IDRATAZIONE FUORI RANGE (PlantConditionSystem)
         // ============================================
         public static int HydrationDryThreshold = 25;          // default <25%
@@ -235,6 +244,10 @@ namespace Sporae.DevTools
             ForecastDeltaUp = 5;
             ForecastDeltaDown = -5;
             
+            // NEGLIGENZA
+            ConditionNeglectThresholdDays = 2;
+            MalusNeglectPerDay = 5;
+            
             // RANGE IDRATAZIONE
             HydrationDryThreshold = 25;
             HydrationWetThreshold = 90;
@@ -341,6 +354,10 @@ namespace Sporae.DevTools
                 { "ConditionThresholdAppassita", ConditionThresholdAppassita },
                 { "ForecastDeltaUp", ForecastDeltaUp },
                 { "ForecastDeltaDown", ForecastDeltaDown },
+                
+                // NEGLIGENZA
+                { "ConditionNeglectThresholdDays", ConditionNeglectThresholdDays },
+                { "MalusNeglectPerDay", MalusNeglectPerDay },
                 
                 // RANGE IDRATAZIONE
                 { "HydrationDryThreshold", HydrationDryThreshold },

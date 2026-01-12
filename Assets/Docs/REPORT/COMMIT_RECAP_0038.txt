@@ -1,0 +1,66 @@
+# 📝 **COMMIT RECAP 0038 - POT SYSTEM: MORTA + WINDOWCONTENT VISUALS + PLANTCARD PARITY + FOUNDATION NOTIFS**
+
+## 🎯 **PANORAMICA**
+Aggiornamento completo del sistema POT in Dome/VaultMap: visuali data-driven su “vetrina interna” (WindowContent) senza toccare il macchinario BG, introduzione condizione persistente **Morta** con gating “solo UPROOT”, fix regressione condizione (tick anche senza azioni), parity UI su PlantCardV2 (layered preview), e migrazione notifiche (Visitor + WAT-RAW irrigazione) su Notifications Foundation con policy colori/persistenza.
+
+## 📋 **FILE AGGIUNTI**
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantVisualSet.cs`
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotSharedVisualsConfig.cs`
+- `Assets/Resources/Configs/PotSharedVisualsConfig.asset`
+- `Assets/Docs/REPORT/DEV REPORT_0042.txt`
+- `Assets/Docs/REPORT/COMMIT_RECAP_0038.txt`
+
+## ✏️ **FILE MODIFICATI**
+### **POT / GAMEPLAY**
+- `Assets/_Project/Scripts/Dome/PotActions.cs`
+  - Gating Morta (solo UPROOT), fertilizzante incompatibile → Morta persistente, UPROOT spegne LED 2D (Light2D).
+- `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+  - Nuovo contatore `DaysCritical` + supporto Morta persistente.
+- `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+  - Fix tick condizione anche senza azioni, trigger Morta (Critica 3 giorni), pH death → Morta persistente.
+  - WAT-RAW irrigazione: notifiche Foundation persistenti finché non si ripristina.
+- `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantCondition.cs`
+  - Aggiunto `PlantCondition.Morta`.
+- `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+  - Supporto label Morta.
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs`
+  - Visual resolver data-driven su WindowContent, overlay (tint/infested/fruit), fix scaling stage (HarvestReady), reuse overlay esistenti.
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs`
+  - Campo `VisualSet` (per specie).
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/ConditionGrowthModifier.cs`
+  - Morta blocca avanzamento.
+- `Assets/_Project/Scripts/Core/SaveManager.cs`
+  - Persistenza `DaysCritical`.
+
+### **UI / NOTIFICATIONS**
+- `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+  - Preview layered: base + condition tint + fruit overlay + infested tint; usa shared + per-specie.
+- `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uxml`
+- `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss`
+  - Layer UI aggiunti per preview.
+- `Assets/_Project/Scripts/Core/Visitors/Visitor.cs`
+  - Visitor waiting → Foundation (persistente) + fallback legacy.
+- `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+  - Aggiunti `VIS-001` e `LGT-002` + tuning severity.
+- `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs`
+  - Classe speciale `nf-code-vis` per color mission/visitor.
+- `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss`
+  - Palette viola per `VIS-001`.
+
+## 🐛 **BUG FIXATI (highlights)**
+1. **Condizione pianta non degrada se non fai nulla dopo PIANTA**
+   - Tick condizione ora sempre attivo + emit UI.
+2. **Morte incoerente (reset immediato)**
+   - Unificato su `PlantCondition.Morta` persistente (Critica prolungata + fertilizzante + pH).
+3. **LED 2D non si spegne dopo UPROOT**
+   - `LedLightController.UpdateLights(Off)` chiamato su UPROOT.
+4. **HarvestReady sfora la finestra**
+   - Scaling stage disabilitato in modalità WindowContent (scale=1).
+5. **Notifiche fuori da Foundation**
+   - Visitor + WAT-RAW irrigazione migrate su Foundation (persistenza + colori corretti).
+
+## ✅ **NOTE OPERATIVE (manual ops)**
+- In scena `ROOM_Dome/Dome_PotsAnchor/Pot_POT-001..004`: usare child `WindowContent` come renderer target di `PotGrowthController`.
+- Shared sprites in `Assets/Resources/Configs/PotSharedVisualsConfig.asset`.
+- Per specie: assegnare `PlantVisualSet` nei `PlantData` in `Assets/Resources/Plants/`.
+

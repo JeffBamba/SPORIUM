@@ -325,6 +325,7 @@ namespace Sporae.Core
                         growthPoints = potState.GrowthPoints,
                         daysSincePlant = potState.DaysSincePlant,
                         daysNeglectedStreak = potState.DaysNeglectedStreak,
+                        daysCritical = potState.DaysCritical,
                         daysInCurrentStage = potState.DaysInCurrentStage,
                         daysInHarvestReady = potState.DaysInHarvestReady,
                         daysFruitsUnharvested = potState.DaysFruitsUnharvested,
@@ -372,6 +373,7 @@ namespace Sporae.Core
                         potState.GrowthPoints = potStateData.growthPoints;
                         potState.DaysSincePlant = potStateData.daysSincePlant;
                         potState.DaysNeglectedStreak = potStateData.daysNeglectedStreak;
+                        potState.DaysCritical = potStateData.daysCritical;
                         potState.DaysInCurrentStage = potStateData.daysInCurrentStage;
                         potState.DaysInHarvestReady = potStateData.daysInHarvestReady;
                         potState.DaysFruitsUnharvested = potStateData.daysFruitsUnharvested;
@@ -530,6 +532,7 @@ namespace Sporae.Core
             public int growthPoints;
             public int daysSincePlant;
             public int daysNeglectedStreak;
+            public int daysCritical = 0;
             public int daysInCurrentStage;
             public int daysInHarvestReady;
             public int daysFruitsUnharvested;

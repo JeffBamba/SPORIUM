@@ -207,6 +207,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 Root.style.display = DisplayStyle.Flex;
 
                 ApplySeverityClass(Root, entry.Severity);
+                ApplyCodeClass(Root, entry.Code);
 
                 if (Code != null) Code.text = entry.Code ?? "N/A";
                 if (Msg != null) Msg.text = entry.Message ?? string.Empty;
@@ -228,6 +229,13 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                         Root.RemoveFromClassList("nf-anim-enter");
                     });
                 }
+            }
+            
+            private static void ApplyCodeClass(VisualElement el, string code)
+            {
+                if (el == null) return;
+                bool isVisitor = string.Equals(code, "VIS-001", StringComparison.Ordinal);
+                el.EnableInClassList("nf-code-vis", isVisitor);
             }
 
             private static string IconFor(NotificationSeverity severity)

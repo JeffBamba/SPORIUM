@@ -242,6 +242,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "notif.lgt_001",
                     "{message}",
                     "{message}"),
+                Spec("LGT-002", NotificationCategory.System, NotificationSeverity.Danger, NotificationChannel.Gameplay, false, false, false, 5f,
+                    "notif.lgt_002",
+                    "{message}",
+                    "{message}"),
                 Spec("LGT-003", NotificationCategory.System, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 2f,
                     "notif.lgt_003",
                     "{message}",
@@ -250,6 +254,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "notif.lgt_004",
                     "{message}",
                     "{message}"),
+
+                // ===== VISITORS =====
+                Spec("VIS-001", NotificationCategory.System, NotificationSeverity.Info, NotificationChannel.Gameplay, true, false, true, 0f,
+                    "notif.vis_001",
+                    "Visitor waiting for player!",
+                    "Visitor waiting for player!"),
 
                 // ===== INVENTORY =====
                 Spec("INV-000", NotificationCategory.Inventory, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 10f,

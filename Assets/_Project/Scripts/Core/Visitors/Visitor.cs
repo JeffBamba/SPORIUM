@@ -4,6 +4,7 @@ using Sporae.DevTools;
 
 using System.Collections;
 using UnityEngine;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
 {
@@ -92,15 +93,25 @@ namespace _Project
             State = VisitorState.Animating;
             StartCoroutine(MoveRoutine(_appearPosition, () =>
             {
-                // Usa nuovo sistema toast per banner se disponibile
-                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-                if (toastManager != null)
+                // Notifications Foundation (preferred). Fallback: ToastNotificationManager / legacy notification system.
+                var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (foundation != null && foundation.Enabled)
                 {
-                    toastManager.ShowBanner("Visitor waiting for player!", ToastNotificationType.Info, out _clearNotification);
+                    const string key = "VISITOR:WAITING";
+                    foundation.UpsertDanger(key, "VIS-001");
+                    _clearNotification = () => foundation.ResolveDanger(key);
                 }
-                else if (_notificationSystem != null)
+                else
                 {
-                    _notificationSystem.ShowBanner("Visitor waiting for player!", Color.magenta, out _clearNotification);
+                    var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                    if (toastManager != null)
+                    {
+                        toastManager.ShowBanner("Visitor waiting for player!", ToastNotificationType.Info, out _clearNotification);
+                    }
+                    else if (_notificationSystem != null)
+                    {
+                        _notificationSystem.ShowBanner("Visitor waiting for player!", Color.magenta, out _clearNotification);
+                    }
                 }
                 State = stateAfterAppear;
             }));

@@ -12,7 +12,8 @@ namespace Sporae.Dome.PotSystem.Condition
         Sana = 1,         // 40-80: Verde, forecast neutro/positivo (range ampliato)
         Stressata = 2,    // RIMOSSO dalla logica - mantenuto solo per retrocompatibilità (dati salvati vecchi)
         Appassita = 3,    // 20-40: Arancione, forecast negativo
-        Critica = 4       // 0-20: Rosso, forecast negativo grave (Burned/Infestata/Sterile)
+        Critica = 4,      // 0-20: Rosso, forecast negativo grave (Burned/Infestata/Sterile)
+        Morta = 5         // Stato irreversibile: rimane finché non si esegue UPROOT
     }
     
     /// <summary>
@@ -71,6 +72,7 @@ namespace Sporae.Dome.PotSystem.Condition
                 PlantCondition.Stressata => new Color(1f, 0.8f, 0f),      // Giallo
                 PlantCondition.Appassita => new Color(1f, 0.5f, 0f),     // Arancione
                 PlantCondition.Critica => new Color(0.8f, 0f, 0f),        // Rosso
+                PlantCondition.Morta => new Color(0.25f, 0.25f, 0.25f),    // Grigio scuro
                 _ => Color.gray
             };
         }

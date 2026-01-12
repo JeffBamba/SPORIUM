@@ -33,7 +33,8 @@ namespace Sporae.Dome.PotSystem.Growth
         public static bool BlocksAdvancement(PlantCondition condition)
         {
             return condition == PlantCondition.Critica || 
-                   condition == PlantCondition.Appassita;
+                   condition == PlantCondition.Appassita ||
+                   condition == PlantCondition.Morta;
         }
     }
 }

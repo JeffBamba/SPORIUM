@@ -44,6 +44,10 @@ namespace Sporae.Dome.PotSystem.Growth
         [Header("Stage Requirements (BLK-02.05)")]
         [Tooltip("Requisiti di crescita per ogni stadio (Seed, Sprout, Growth, Flowering, HarvestReady, Resting)")]
         [SerializeField] private StageRequirements[] stageRequirements = new StageRequirements[0];
+
+        [Header("Visuals (POT System)")]
+        [Tooltip("Set visual per specie (Adult/Flowering/FruitOverlay). Seed/Sprout/Empty/Morta sono gestiti da config shared.")]
+        [SerializeField] private PlantVisualSet visualSet;
         
         [Header("Futuro (placeholder per feature avanzate)")]
         [Tooltip("Fazione preferita (per vendita/baratto)")]
@@ -61,6 +65,7 @@ namespace Sporae.Dome.PotSystem.Growth
         public string Description => description;
         public string ActivePower => activePower;
         public StageRequirements[] StageRequirements => stageRequirements;
+        public PlantVisualSet VisualSet => visualSet;
         
         /// <summary>
         /// Ottiene i requisiti per uno stadio specifico

@@ -1,0 +1,181 @@
+================================================================================
+             DEV REPORT #0042 - POT SYSTEM (VISUALS + CONDITIONS + FOUNDATION)
+             SPORAE BUILD BETA
+             Data: 2026-01-12
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-POT-0042 — POT: Visual Window Overlay + Condizioni (Morta) + Bugfix regressione + Foundation Notifications
+- **Tipo Report:** Development Report (Feature + Bug Fix + UI/UX)
+- **Periodo coperto:** 2026-01-12
+- **Data Generazione:** 2026-01-12
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0041.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **POT-VIS-001**: Separazione corretta “macchinario” vs “vetrina interna” (WindowContent overlay).
+  - **Obiettivo:** non cambiare il look del macchinario (BG), ma aggiornare solo la vetrina interna con sprite di stato.
+  - **Implementazione:** `PotGrowthController` in modalità `useVaultMapBgForEmpty` disabilita il renderer quando Empty e usa `WindowContent` per i contenuti.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs`
+
+- **POT-VIS-002**: Sistema sprite data-driven.
+  - **Shared (global):** Seed, Sprout, Morta via `PotSharedVisualsConfig` in `Resources/Configs`.
+  - **Per-specie:** Adult (Growth+Resting), Flowering, FruitOverlay via `PlantVisualSet` referenziato da `PlantData`.
+  - **Evidence:**
+    - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotSharedVisualsConfig.cs`
+    - `Assets/Resources/Configs/PotSharedVisualsConfig.asset`
+    - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantVisualSet.cs`
+    - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantData.cs`
+
+- **POT-VIS-003**: Parity UI: PlantCardV2 preview layered (base + tint condizione + fruit overlay + infested).
+  - **Implementazione UXML/USS:** aggiunti layer dedicati.
+  - **Binding:** `PlantCardV2DataBinder` ora risolve base sprite in modo coerente con in-world e applica overlay.
+  - **Evidence:**
+    - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uxml`
+    - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss`
+    - `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+
+- **POT-COND-001**: Fix “regressione condizione non parte se seme piantato senza azioni” (tick giornaliero garantito).
+  - **Sintomo:** seed piantato senza irrigazione/luci rimaneva “Sana” indefinitamente.
+  - **Fix:** calcolo condizione anche in assenza di sistemi opzionali + emit UI change a fine tick.
+  - **Evidence:**
+    - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+    - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+    - `Assets/_Project/Scripts/Debug/DifficultyCalibrationConfig.cs`
+
+- **POT-COND-002**: Introduzione condizione **Morta** (persistente) + gating azioni.
+  - **Regola:** Morta è irreversibile e consente solo UPROOT.
+  - **Trigger:** Critica prolungata (3 giorni consecutivi sotto soglia) + fertilizzante incompatibile + pH estremo.
+  - **Persistenza:** aggiunto contatore e salvataggio.
+  - **Evidence:**
+    - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantCondition.cs`
+    - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+    - `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+    - `Assets/_Project/Scripts/Core/SaveManager.cs`
+    - `Assets/_Project/Scripts/Dome/PotActions.cs`
+    - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+
+- **POT-LED-001**: Bugfix: UPROOT spegne sempre le luci 2D (Blue/Red).
+  - **Sintomo:** dopo UPROOT le Light2D restavano fisicamente accese.
+  - **Fix:** in `DoUproot()` chiamata a `LedLightController.UpdateLights(Off)` dopo `ResetToEmpty()`.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotActions.cs`, `Assets/_Project/Scripts/Dome/PotSystem/LedLightController.cs`
+
+- **POT-VIS-004**: Bugfix: HarvestReady “sfora” dalla finestra (scaling stage).
+  - **Causa:** scaling per stage (HarvestReady/Resting) applicato al `WindowContent`.
+  - **Fix:** aggiunto flag `useStageScaling` (default OFF) per mantenere scala 1 in modalità WindowContent.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs`
+
+- **NF-001**: Migrazione notifiche su Notifications Foundation.
+  - **Visitor waiting for player:** ora passa da Foundation (persistente), con fallback ai vecchi sistemi se Foundation disabilitato.
+  - **WAT-RAW insufficiente / irrigazione auto-spenta:** ora DANGER persistente finché WAT-RAW non torna disponibile; testo accorciato per UX.
+  - **Color policy:** Visitor = viola via classe dedicata; WAT-RAW = rosso (Danger).
+  - **Evidence:**
+    - `Assets/_Project/Scripts/Core/Visitors/Visitor.cs`
+    - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+    - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+    - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs`
+    - `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **POT-BUG-001 (Condizione non degrada senza azioni)**:
+  - **Causa:** tick condizione non affidabile quando alcuni sistemi/config non disponibili; UI non veniva notificata su tick senza azioni.
+  - **Fix:** calcolo + emit change a fine giornata.
+  - **Verifica:** ✅ confermato utente (“Ok funziona”).
+
+- **POT-BUG-002 (Morte incoerente/instant reset)**:
+  - **Causa:** alcune morti resettavano il pot (fertilizzante/pH) invece di passare a uno stato coerente.
+  - **Fix:** stato `Morta` persistente e unificazione trigger; gating azioni.
+  - **Verifica:** ✅ verificato in gameplay.
+
+- **POT-BUG-003 (LED rimangono accesi dopo UPROOT)**:
+  - **Causa:** reset stato non applicava UpdateLights sulle Light2D.
+  - **Fix:** UpdateLights(Off) in `DoUproot()`.
+  - **Verifica:** ✅ confermato utente (“Funziona”).
+
+- **UI-BUG-001 (Foundation colors + persistence policy)**:
+  - **Causa:** notifiche usavano PostToast (scadenza) e severity/category non mappate ai colori richiesti.
+  - **Fix:** UpsertDanger per WAT-RAW + mapping viola per VIS-001 + LGT-002 Danger.
+  - **Verifica:** ✅ confermato utente (“Ok ottimo”).
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- Nessun bug bloccante aperto per POT/Notifications dopo le verifiche finali.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script aggiunti:**
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PlantVisualSet.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotSharedVisualsConfig.cs`
+- **Script modificati (core):**
+  - `Assets/_Project/Scripts/Dome/PotActions.cs`
+  - `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+  - `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantCondition.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Condition/PlantConditionSystem.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Growth/PotGrowthController.cs`
+  - `Assets/_Project/Scripts/Core/SaveManager.cs`
+  - `Assets/_Project/Scripts/Core/Visitors/Visitor.cs`
+- **UI Toolkit (PlantCardV2 + Foundation):**
+  - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uxml`
+  - `Assets/_Project/UI/UIToolkit/PlantCard/PlantCardV2.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+  - `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+- **Asset/config coinvolti:**
+  - `Assets/Resources/Configs/PotSharedVisualsConfig.asset`
+  - `Assets/Resources/Plants/*.asset` (es. `PLT-STD-001.asset`)
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Dome / Pot visual window overlay**
+  1) In scena: `ROOM_Dome/Dome_PotsAnchor/Pot_POT-001`
+  2) Stato Empty: `WindowContent` disabilitato → si vede solo vetro OFF nel BG.
+  3) PIANTA: `WindowContent` si abilita e mostra sprite seed.
+  4) HarvestReady: nessuno scaling (scala=1) → sprite non sfora.
+  5) UPROOT: `WindowContent` si spegne + LED 2D si spengono.
+
+- **Condizione Morta**
+  - Critica prolungata: dopo 3 giorni consecutivi sotto soglia → `Morta` + solo UPROOT disponibile.
+  - Fertilizzante incompatibile / pH estremo: transizione a `Morta` persistente.
+
+- **Notifications Foundation**
+  - Visitor waiting: `VIS-001` viola persistente finché il player interagisce.
+  - WAT-RAW insufficiente: `LGT-002` rosso persistente finché WAT-RAW torna disponibile.
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- **No “doppioni di config”**: gli asset di config runtime devono vivere in `Assets/Resources/Configs/` e restare single-source-of-truth.
+- **UI policy Foundation**: Toast = temporaneo; Danger pinned = persistente; per stati “finché non si risolve” usare Upsert/Resolve.
+- **WindowContent**: per overlay su BG, lo scaling per stage introduce drift/sbordo → meglio scala fissa 1 e sprite già normalizzati.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Importare/assegnare `PlantVisualSet` per tutte le specie aggiuntive (Adult/Flowering/FruitOverlay).
+- (Opzionale) introdurre `SpriteMask` per WindowContent per evitare qualunque sbordo da sprite non normalizzate.
+- Localizzazione IT per `VIS-001` (testo) e tuning dei codici “LGT” su categoria dedicata se necessario.
+
+================================================================================
+FINE REPORT
+================================================================================
+

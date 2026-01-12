@@ -47,6 +47,13 @@ public class PotActions : MonoBehaviour
     public PotStateModel PotState => _potState;
     public bool HasPlant => _potState?.HasPlant ?? false;
     
+    private bool IsDead()
+    {
+        if (_potState == null) return false;
+        return (Sporae.Dome.PotSystem.Condition.PlantCondition)_potState.ConditionLabel ==
+               Sporae.Dome.PotSystem.Condition.PlantCondition.Morta;
+    }
+    
     private void Awake()
     {
         _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
@@ -288,6 +295,8 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null) 
             return false;
+        if (IsDead())
+            return false;
         
         bool
             isEmpty = _potState.IsEmpty,
@@ -306,9 +315,9 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null)
             return false;
-        
-        bool hasPlant = _potState.HasPlantGrowing;
-        return hasPlant;
+        if (IsDead())
+            return true;
+        return _potState.HasPlantGrowing;
     }
     
     /// <summary>
@@ -318,6 +327,8 @@ public class PotActions : MonoBehaviour
     public bool CanWater()
     {
         if (_potState == null) 
+            return false;
+        if (IsDead())
             return false;
         
         // Precondizioni base: vaso ha pianta, player in range
@@ -358,6 +369,8 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null)
             return false;
+        if (IsDead())
+            return false;
         
         // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
         // MODIFICA: LED può essere acceso anche subito dopo aver piantato (stadio Seed)
@@ -390,6 +403,8 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null)
             return false;
+        if (IsDead())
+            return false;
         
         bool
             hasPlant = _potState.HasPlantGrowing,
@@ -408,6 +423,8 @@ public class PotActions : MonoBehaviour
     public bool CanHarvest()
     {
         if (_potState == null)
+            return false;
+        if (IsDead())
             return false;
         
         // Precondizioni: vaso ha pianta in HarvestReady, ci sono frutti disponibili, player in range, risorse sufficienti
@@ -430,6 +447,8 @@ public class PotActions : MonoBehaviour
     {
         if (_potState == null)
             return false;
+        if (IsDead())
+            return false;
         
         // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
         bool
@@ -449,6 +468,8 @@ public class PotActions : MonoBehaviour
     public bool CanPruning()
     {
         if (_potState == null)
+            return false;
+        if (IsDead())
             return false;
         
         // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
@@ -738,6 +759,12 @@ public class PotActions : MonoBehaviour
         
         // Reset completo dello stato del vaso (importante per evitare che la pianta continui a influenzare il pH)
         _potState.ResetToEmpty();
+
+        // BLK-02.07: Spegni subito le luci 2D dei LED (altrimenti rimangono fisicamente accese)
+        if (ledLightController != null)
+        {
+            ledLightController.UpdateLights(LedSystemState.Off);
+        }
         
         if (dayCycleController != null)
             dayCycleController.UnregisterPot(_potState);
@@ -1390,19 +1417,20 @@ public class PotActions : MonoBehaviour
         {
             // 🚨 MORTE IMMEDIATA della pianta
             SporiumLogger.LogError(LogCategory.Pot, $"Fertilizzante incompatibile! Pianta MUORE IMMEDIATAMENTE. Vaso: {potSlot.PotId}, Famiglia: {plantData.Family}, Fertilizzante: {fertilizerType}");
+           
+            // Morta persistente: non svuotare il pot. Rimane Morta finché non Uproot.
+            _potState.ConditionLabel = (int)Sporae.Dome.PotSystem.Condition.PlantCondition.Morta;
+            _potState.DaysCritical = 3;
             
-            // Rimuovi pianta dal vaso (morte)
-            _potState.HasPlant = false;
-            _potState.PlantCode = null;
-            _potState.Stage = 0;
-            _potState.Hydration = 0;
-            _potState.LightExposure = 0;
-            _potState.FertilizerLevel = 0;
-            // Reset tutti i contatori
-            _potState.DaysSincePlant = 0;
-            _potState.DaysInCurrentStage = 0;
-            _potState.GrowthPoints = 0;
-            _potState.DaysFertilizerActive = 0;
+            // Spegni sistemi persistenti per evitare consumi/side-effect post-morte.
+            _potState.WateringSystemOn = false;
+            _potState.SetLedSystemState(LedSystemState.Off);
+            
+            // Rimuovi contributi pH della pianta (se presenti) per evitare drift post-morte.
+            if (_phSystem != null && !string.IsNullOrEmpty(_potState.PlantCode))
+            {
+                _phSystem.RemovePlantContributions(potSlot.PotId);
+            }
             
             // Notifica evento morte pianta
             PotEvents.EmitPlantDied(potSlot.PotId, $"Fertilizzante incompatibile: {fertilizerType} su pianta {plantData.Family}");
@@ -1410,7 +1438,7 @@ public class PotActions : MonoBehaviour
             // Consuma comunque il fertilizzante (già usato)
             _playerInventory.Consume(fertilizerItemCode, 1);
             
-            // Aggiorna le visuali del Pot (sprite vuoto)
+            // Aggiorna le visuali del Pot (sprite dead)
             if (potGrowthController != null)
             {
                 potGrowthController.UpdateVisuals();

@@ -208,6 +208,13 @@
     --nf-bg: rgba(46, 22, 22, 0.94);
 }
 
+/* Special-case: visitor/mission notification should be violet (mission-like). */
+.nf-row.nf-code-vis,
+.nf-header.nf-code-vis {
+    --nf-color: rgb(181, 128, 209);
+    --nf-bg: rgba(44, 18, 46, 0.94);
+}
+
 .nf-header.nf-sev-info,
 .nf-header.nf-sev-success,
 .nf-header.nf-sev-warning,

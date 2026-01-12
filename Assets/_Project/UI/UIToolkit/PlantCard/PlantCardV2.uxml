@@ -71,7 +71,10 @@
                             <ui:Label name="led-compatible-value" text="ALL" class="ph-drift-value" />
                         </ui:VisualElement>
                         <ui:VisualElement name="plant-image-container" class="plant-image-container">
-                            <ui:VisualElement name="plant-image" class="plant-image" style="background-color: rgba(40, 107, 37, 0.1);" />
+                            <ui:VisualElement name="plant-image-base" class="plant-image-layer plant-image-base" style="background-color: rgba(40, 107, 37, 0.1);" />
+                            <ui:VisualElement name="plant-image-condition-tint" class="plant-image-layer plant-image-tint" style="display: none;" />
+                            <ui:VisualElement name="plant-image-fruit-overlay" class="plant-image-layer plant-image-fruit" style="display: none;" />
+                            <ui:VisualElement name="plant-image-infested-tint" class="plant-image-layer plant-image-infested" style="display: none;" />
                         </ui:VisualElement>
                         <ui:Button name="plant-action-button" class="ph-drift-overlay" style="top: 462px; left: 21px; background-color: rgba(130, 180, 133, 0.1); border-left-color: rgba(135, 230, 111, 0.5); border-right-color: rgba(135, 230, 111, 0.5); border-top-color: rgba(135, 230, 111, 0.5); border-bottom-color: rgba(135, 230, 111, 0.5);">
                             <ui:Label name="ph-drift-label" text="AZIONE" class="ph-drift-label" style="-unity-text-align: upper-center;" />

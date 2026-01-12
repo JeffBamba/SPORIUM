@@ -23,6 +23,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private MoldConfig _moldConfig;
         private PlantGrowthConfig _growthConfig;
         private DayCycleSystem _dayCycleSystem;
+        private PotSharedVisualsConfig _sharedVisuals;
         
         // UI Elements - Header
         private Label _specimenIdLabel;
@@ -39,7 +40,10 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private Label _growthCounterLabel;
         
         // UI Elements - Left Column
-        private VisualElement _plantImage;
+        private VisualElement _plantImageBase;
+        private VisualElement _plantImageFruitOverlay;
+        private VisualElement _plantImageConditionTint;
+        private VisualElement _plantImageInfestedTint;
         private VisualElement _liveIndicator;
         private Label _phDriftValueLabel;
         private Label _ledCompatibleLabel;  // BLK-02.08: LED Compatibile (Blue/Red/ALL)
@@ -86,6 +90,7 @@ namespace Sporae.UI.UIToolkit.PlantCard
             _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
             _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             _moldConfig = Resources.Load<MoldConfig>("Configs/MoldConfig");
+            _sharedVisuals = Resources.Load<PotSharedVisualsConfig>("Configs/PotSharedVisualsConfig");
             
             // Carica PlantGrowthConfig per il tooltip (come PotDetailsWidget)
             _growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
@@ -131,7 +136,10 @@ namespace Sporae.UI.UIToolkit.PlantCard
             _growthCounterLabel = _root.Q<Label>("growth-counter");
             
             // Left Column
-            _plantImage = _root.Q<VisualElement>("plant-image");
+            _plantImageBase = _root.Q<VisualElement>("plant-image-base") ?? _root.Q<VisualElement>("plant-image");
+            _plantImageFruitOverlay = _root.Q<VisualElement>("plant-image-fruit-overlay");
+            _plantImageConditionTint = _root.Q<VisualElement>("plant-image-condition-tint");
+            _plantImageInfestedTint = _root.Q<VisualElement>("plant-image-infested-tint");
             _liveIndicator = _root.Q<VisualElement>("live-indicator");
             _phDriftValueLabel = _root.Q<Label>("ph-drift-value");
             _ledCompatibleLabel = _root.Q<Label>("led-compatible-value");  // BLK-02.08
@@ -1208,7 +1216,8 @@ namespace Sporae.UI.UIToolkit.PlantCard
             // Live Indicator
             if (_liveIndicator != null)
             {
-                _liveIndicator.style.display = state.HasPlant ? DisplayStyle.Flex : DisplayStyle.None;
+                bool isDead = (PlantCondition)state.ConditionLabel == PlantCondition.Morta;
+                _liveIndicator.style.display = (state.HasPlant && !isDead) ? DisplayStyle.Flex : DisplayStyle.None;
             }
             
             // pH Drift
@@ -1225,24 +1234,55 @@ namespace Sporae.UI.UIToolkit.PlantCard
                 _ledCompatibleLabel.text = displayText;
             }
             
-            // BUG C FIX: Plant Image - mostra gli status visivi della pianta (vaso vuoto, sprout, etc)
-            if (_plantImage != null)
+            // Plant preview layers (base + condition tint + fruit overlay + infested tint)
+            Sprite baseSprite = plantSprite != null ? plantSprite : ResolveBaseSprite(state, plantData);
+            ApplySpriteToElement(_plantImageBase, baseSprite);
+            
+            PlantCondition condition = (PlantCondition)state.ConditionLabel;
+            
+            if (_plantImageConditionTint != null)
             {
-                if (plantSprite != null && plantSprite.texture != null)
+                if (condition == PlantCondition.Appassita)
                 {
-                    // Converti Sprite in Texture2D per UIToolkit
-                    Texture2D spriteTexture = plantSprite.texture;
-                    if (spriteTexture != null)
-                    {
-                        // Crea un StyleBackground da Texture2D
-                        var background = new StyleBackground(spriteTexture);
-                        _plantImage.style.backgroundImage = background;
-                    }
+                    _plantImageConditionTint.style.display = DisplayStyle.Flex;
+                    _plantImageConditionTint.style.backgroundColor = new StyleColor(new Color(1f, 1f, 0.2f, 0.35f));
+                }
+                else if (condition == PlantCondition.Critica)
+                {
+                    _plantImageConditionTint.style.display = DisplayStyle.Flex;
+                    _plantImageConditionTint.style.backgroundColor = new StyleColor(new Color(0.55f, 0.3f, 0.12f, 0.45f));
                 }
                 else
                 {
-                    // Nessuno sprite disponibile - rimuovi background image
-                    _plantImage.style.backgroundImage = StyleKeyword.None;
+                    _plantImageConditionTint.style.display = DisplayStyle.None;
+                }
+            }
+            
+            if (_plantImageFruitOverlay != null)
+            {
+                Sprite fruitSprite = ResolveFruitOverlaySprite(state, plantData);
+                if (fruitSprite != null)
+                {
+                    ApplySpriteToElement(_plantImageFruitOverlay, fruitSprite);
+                    _plantImageFruitOverlay.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _plantImageFruitOverlay.style.display = DisplayStyle.None;
+                    _plantImageFruitOverlay.style.backgroundImage = StyleKeyword.None;
+                }
+            }
+            
+            if (_plantImageInfestedTint != null)
+            {
+                if (state.IsInfested)
+                {
+                    _plantImageInfestedTint.style.display = DisplayStyle.Flex;
+                    _plantImageInfestedTint.style.backgroundColor = new StyleColor(new Color(0.25f, 0.75f, 0.25f, 0.35f));
+                }
+                else
+                {
+                    _plantImageInfestedTint.style.display = DisplayStyle.None;
                 }
             }
             
@@ -1250,6 +1290,62 @@ namespace Sporae.UI.UIToolkit.PlantCard
             if (_plantButton != null)
             {
                 _plantButton.SetEnabled(!state.HasPlant);
+            }
+        }
+
+        private Sprite ResolveBaseSprite(PotStateModel state, PlantData plantData)
+        {
+            if (state == null)
+                return null;
+            
+            PlantCondition condition = (PlantCondition)state.ConditionLabel;
+            if (condition == PlantCondition.Morta)
+                return _sharedVisuals != null ? _sharedVisuals.deadSprite : null;
+            
+            PlantStage stage = (PlantStage)state.Stage;
+            switch (stage)
+            {
+                case PlantStage.Empty:
+                    return _sharedVisuals != null ? _sharedVisuals.emptyPotSprite : null;
+                case PlantStage.Seed:
+                    return _sharedVisuals != null ? _sharedVisuals.seedSprite : null;
+                case PlantStage.Sprout:
+                    return _sharedVisuals != null ? _sharedVisuals.sproutSprite : null;
+                case PlantStage.Growth:
+                case PlantStage.Resting:
+                    return plantData != null && plantData.VisualSet != null ? plantData.VisualSet.adultSprite : null;
+                case PlantStage.Flowering:
+                    return plantData != null && plantData.VisualSet != null ? plantData.VisualSet.floweringSprite : null;
+                case PlantStage.HarvestReady:
+                    return plantData != null && plantData.VisualSet != null ? plantData.VisualSet.adultSprite : null;
+                default:
+                    return null;
+            }
+        }
+        
+        private Sprite ResolveFruitOverlaySprite(PotStateModel state, PlantData plantData)
+        {
+            if (state == null)
+                return null;
+            if ((PlantStage)state.Stage != PlantStage.HarvestReady)
+                return null;
+            if (plantData == null || plantData.VisualSet == null)
+                return null;
+            return plantData.VisualSet.fruitOverlaySprite;
+        }
+        
+        private static void ApplySpriteToElement(VisualElement el, Sprite sprite)
+        {
+            if (el == null)
+                return;
+            
+            if (sprite != null && sprite.texture != null)
+            {
+                el.style.backgroundImage = new StyleBackground(sprite.texture);
+            }
+            else
+            {
+                el.style.backgroundImage = StyleKeyword.None;
             }
         }
         

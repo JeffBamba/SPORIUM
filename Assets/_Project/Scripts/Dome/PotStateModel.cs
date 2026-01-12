@@ -77,6 +77,10 @@ public class PotStateModel
     [Tooltip("Direzione forecast (Up/Stable/Down)")]
     public int ForecastDirection = 1;  // Default: Stable (enum ForecastDirection)
     
+    [Header("Plant Death (Condition Morta)")]
+    [Tooltip("Giorni consecutivi con score in Critica (score < ConditionThresholdAppassita). Se >=3, la pianta diventa Morta.")]
+    public int DaysCritical = 0;
+    
     [Header("Fertilizer System (BLK-03.01-T1)")]
     [Tooltip("Livello fertilizzante attuale (0-100)")]
     public int FertilizerLevel = 0;  // 0 = nessun fertilizzante
@@ -225,6 +229,7 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        DaysCritical = 0;
         FertilizerLevel = 0;
         DaysFertilizerActive = 0;
         // BLK-03.01-T2: Inizializza campi punti crescita
@@ -319,6 +324,7 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        DaysCritical = 0;
         FertilizerLevel = 0;
         DaysFertilizerActive = 0;
         // BLK-03.01-T2: Inizializza campi punti crescita
@@ -387,6 +393,7 @@ public class PotStateModel
         PreviousDayConditionScore = -1;
         ConditionLabel = 1;  // Sana
         ForecastDirection = 1;  // Stable
+        DaysCritical = 0;
         FertilizerLevel = 0;
         DaysFertilizerActive = 0;
         // BLK-03.01-T2: Inizializza campi punti crescita
