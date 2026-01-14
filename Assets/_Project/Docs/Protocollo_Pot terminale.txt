@@ -1,0 +1,35 @@
+═ BIOLOGICAL PROTOCOL DOME_02 ═════════════════════════════════════════════╗
+║ Vital Parameters Interconnection (Vault Bio Systems – Rev. 4.8)       ║
+╠═══════════════════════════════════════════════════════════════════════════╣
+║                                                                           ║
+║ [BIO-PREAMBLE]                                                          ║
+║ All Dome systems operate in symbiosis.                                   ║
+║ Altering one means rewriting the behavior of the others.                 ║
+║ Equilibrium is a theoretical condition, useful only for statistics.      ║
+║ The Dome does not judge — it records and reacts.                         ║
+║                                                                           ║
+║ [CHEMO-AXIS / pH DRIFT]                                                 ║
+║ Chemical axis of the ecosystem.                                          ║
+║ Every pH variation alters metabolic activity, condensation, and active   ║
+║ genetic traits. Stable pH → conservation. Unstable pH → experimentation. ║
+║                                                                           ║
+║ [HYDRO-CYCLE / CONDENSATION]                                            ║
+║ Closed water cycle. Water is not born: it returns.                       ║
+║ Too much → fungal symbiosis. Too little → cellular collapse.             ║
+║ In both cases, the environment takes note and does not forget.           ║
+║                                                                           ║
+║ [GENE-DRIFT / MUTATION]                                                 ║
+║ Evolutionary index of the Vault. It grows in presence of stress or       ║
+║ biological curiosity. It only decreases when everything stops changing.  ║
+║ It is not error: it is unsolicited adaptation.                           ║
+║                                                                           ║
+║ [G-THRESHOLD / G-GATE]                                                  ║
+║ Genetic containment system. Closed → apparent stability.                 ║
+║ Open → expansion, risk, progress.                                        ║
+║ Every Gate adjustment rewrites chemical parameters.                      ║
+║                                                                           ║
+║ [SYSTEMIC SYNAPSIS]                                                     ║
+║ pH influences Condensation. Condensation alters Mutation.                ║
+║ Mutation regulates the G-Gate. The G-Gate, in turn, alters pH.           ║
+║ A perfect cycle of adaptation and failure.                               ║
+║ As long as the Dome breathes, the system works.       

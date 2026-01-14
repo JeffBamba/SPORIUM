@@ -1,0 +1,349 @@
+.pcv3-root {
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 1.0);
+}
+
+.pcv3-window {
+    width: 1400px;
+    height: 800px;
+    background-color: rgba(0, 0, 0, 0.90);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+}
+
+.pcv3-header {
+    height: 56px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(127, 255, 122, 0.6);
+    background-color: rgba(0, 0, 0, 0.60);
+}
+
+.pcv3-title {
+    font-size: 12px;
+    -unity-font-style: normal;
+    color: rgb(127, 255, 122);
+}
+
+.pcv3-header-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.pcv3-pill {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.7);
+    border-right-color: rgba(127, 255, 122, 0.7);
+    border-top-color: rgba(127, 255, 122, 0.7);
+    border-bottom-color: rgba(127, 255, 122, 0.7);
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+.pcv3-pill-text {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+}
+
+.pcv3-close {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+    background-color: rgba(0, 0, 0, 0.0);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+}
+
+.pcv3-body {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.pcv3-left {
+    width: 340px;
+    border-right-width: 2px;
+    border-right-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0, 0, 0, 0.45);
+    padding: 12px;
+    gap: 12px;
+}
+
+.pcv3-potlist {
+    flex-grow: 1;
+}
+
+/* Pot cards (sidebar) */
+.pcv3-potcard {
+    margin-bottom: 10px;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+}
+
+.pcv3-potcard-empty {
+    border-left-color: rgba(180, 180, 180, 0.65);
+    border-right-color: rgba(180, 180, 180, 0.65);
+    border-top-color: rgba(180, 180, 180, 0.65);
+    border-bottom-color: rgba(180, 180, 180, 0.65);
+}
+
+.pcv3-potcard-headerbar {
+    height: 22px;
+    background-color: rgba(180, 180, 180, 0.35);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(180, 180, 180, 0.55);
+    padding-left: 10px;
+    padding-right: 10px;
+    justify-content: center;
+}
+
+.pcv3-potcard-headertext {
+    font-size: 11px;
+    color: rgb(20, 20, 20);
+    -unity-font-style: normal;
+    -unity-text-align: middle-left;
+}
+
+.pcv3-potcard-body {
+    flex-direction: row;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 10px;
+}
+
+.pcv3-potcard-preview {
+    width: 78px;
+    height: 110px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(180, 180, 180, 0.55);
+    border-right-color: rgba(180, 180, 180, 0.55);
+    border-top-color: rgba(180, 180, 180, 0.55);
+    border-bottom-color: rgba(180, 180, 180, 0.55);
+}
+
+.pcv3-potcard-lens {
+    width: 26px;
+    height: 26px;
+    margin-top: 38px;
+    margin-left: auto;
+    margin-right: auto;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(180, 180, 180, 0.35);
+    border-right-color: rgba(180, 180, 180, 0.35);
+    border-top-color: rgba(180, 180, 180, 0.35);
+    border-bottom-color: rgba(180, 180, 180, 0.35);
+    border-top-left-radius: 13px;
+    border-top-right-radius: 13px;
+    border-bottom-left-radius: 13px;
+    border-bottom-right-radius: 13px;
+    opacity: 0.6;
+}
+
+.pcv3-potcard-info {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.pcv3-potcard-standby {
+    font-size: 11px;
+    color: rgba(180, 180, 180, 0.7);
+}
+
+.pcv3-potcard-subtext {
+    margin-top: 4px;
+    font-size: 10px;
+    color: rgba(180, 180, 180, 0.45);
+}
+
+.pcv3-queue {
+    height: 210px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(181, 128, 209, 0.8);
+    border-right-color: rgba(181, 128, 209, 0.8);
+    border-top-color: rgba(181, 128, 209, 0.8);
+    border-bottom-color: rgba(181, 128, 209, 0.8);
+    background-color: rgba(0, 0, 0, 0.60);
+    padding: 10px;
+    gap: 8px;
+}
+
+.pcv3-queue-title {
+    font-size: 12px;
+    color: rgb(181, 128, 209);
+}
+
+.pcv3-queue-clear {
+    height: 28px;
+    background-color: rgba(0,0,0,0.0);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(181, 128, 209, 0.8);
+    border-right-color: rgba(181, 128, 209, 0.8);
+    border-top-color: rgba(181, 128, 209, 0.8);
+    border-bottom-color: rgba(181, 128, 209, 0.8);
+    color: rgb(181, 128, 209);
+    font-size: 12px;
+}
+
+.pcv3-right {
+    flex-grow: 1;
+    padding: 14px;
+    gap: 10px;
+}
+
+.pcv3-console-view,
+.pcv3-protocol-view,
+.pcv3-detail-view {
+    flex-grow: 1;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0,0,0,0.55);
+}
+
+.pcv3-protocol-view,
+.pcv3-detail-view {
+    display: none;
+}
+
+.pcv3-console-scroll,
+.pcv3-protocol-scroll {
+    flex-grow: 1;
+    padding: 14px;
+}
+
+.pcv3-console-text {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+    white-space: normal;
+}
+
+.pcv3-detail-placeholder {
+    padding: 14px;
+    font-size: 12px;
+    color: rgb(230, 201, 111);
+}
+
+.pcv3-prompt {
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0,0,0,0.55);
+}
+
+.pcv3-prompt-prefix {
+    width: 16px;
+    color: rgb(85, 217, 255);
+    font-size: 12px;
+    -unity-text-align: middle-left;
+}
+
+.pcv3-input {
+    flex-grow: 1;
+    flex-shrink: 0;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: rgba(0,0,0,0);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+    color: rgb(127, 255, 122);
+    font-size: 12px;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Unity TextField internal input (default is white) */
+.pcv3-input .unity-text-input,
+.pcv3-input .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(127, 255, 122);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 0px;
+    padding-right: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    -unity-text-align: middle-left;
+}
+
+.pcv3-input:focus {
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+}

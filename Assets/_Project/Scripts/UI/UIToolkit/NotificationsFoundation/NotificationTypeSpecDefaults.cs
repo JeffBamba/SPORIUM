@@ -134,6 +134,20 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "{plantName} {actionName} — {details}",
                     "{plantName} {actionName} — {details}"),
 
+                // ===== POT AUTOMATION (Terminal V3) =====
+                Spec("POT-AUTO-INPROGRESS", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 1f,
+                    "notif.pot_auto_inprogress",
+                    "{message}",
+                    "{message}"),
+                Spec("POT-AUTO-SUCCESS", NotificationCategory.Pot, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.pot_auto_success",
+                    "{message}",
+                    "{message}"),
+                Spec("POT-AUTO-ERROR", NotificationCategory.Pot, NotificationSeverity.Danger, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.pot_auto_error",
+                    "{message}",
+                    "{message}"),
+
                 // ===== COMPAT: codici già usati in-game oggi (migrazione graduale, non rompe nulla) =====
                 Spec("STAGE-UP-001", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 0f,
                     "notif.stage_up",

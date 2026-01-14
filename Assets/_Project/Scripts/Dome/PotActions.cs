@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.IO;
 using _Project.Sporae.Core;
@@ -41,6 +42,32 @@ public class PotActions : MonoBehaviour
     private bool _isSprayingInProgress = false;
     private bool _isHarvestingInProgress = false;
     private bool _isUprootingInProgress = false;
+
+    // Terminal V3 / Automation: quando true, bypassa range check e consumi (AP + item).
+    // Serve per esecuzione scenica ritardata dopo conferma dal terminale.
+    private int _automationContextDepth = 0;
+    private bool IsAutomationContext => _automationContextDepth > 0;
+
+    private sealed class AutomationScope : System.IDisposable
+    {
+        private readonly PotActions _owner;
+        public AutomationScope(PotActions owner) => _owner = owner;
+        public void Dispose()
+        {
+            if (_owner == null) return;
+            _owner._automationContextDepth = Mathf.Max(0, _owner._automationContextDepth - 1);
+        }
+    }
+
+    /// <summary>
+    /// Abilita contesto automazione: no range checks e no consumi (AP/item) durante l'esecuzione.
+    /// Usare con using(...) nel runner.
+    /// </summary>
+    public System.IDisposable BeginAutomationContext()
+    {
+        _automationContextDepth++;
+        return new AutomationScope(this);
+    }
     
     // Proprietà pubbliche
     public PotSlot PotSlot => potSlot;
@@ -300,10 +327,13 @@ public class PotActions : MonoBehaviour
         
         bool
             isEmpty = _potState.IsEmpty,
-            hasSeed = IsPlayerHasSeed(),
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources(),
-            notWateredOnThisDay = _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
+            // Terminal/Automation: il seme viene consumato alla conferma della queue, quindi qui non dobbiamo
+            // richiedere che l'inventario contenga ancora un seme al momento dell'esecuzione ritardata.
+            hasSeed = IsAutomationContext || IsPlayerHasSeed(),
+            inRange = IsAutomationContext || IsPlayerInRange(),
+            hasResources = IsAutomationContext || CanConsumeResources(),
+            // Plant-day gating ha senso per l'interazione live; in automazione non deve bloccare la sequenza.
+            notWateredOnThisDay = IsAutomationContext || _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
         
         if (showDebugLogs)
             SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
@@ -532,7 +562,11 @@ public class PotActions : MonoBehaviour
         string seedTypeId = FindSeedTypeId();
         if (string.IsNullOrEmpty(seedTypeId))
             return false;
-        
+
+        // In automation, la spesa item avviene alla conferma del terminale.
+        if (IsAutomationContext)
+            return true;
+
         return _playerInventory.Consume(seedTypeId);
     }
 
@@ -613,7 +647,7 @@ public class PotActions : MonoBehaviour
             }
             
             // Verifica che il seme specificato esista nell'inventario
-            if (!_playerInventory.Has(seedTypeId))
+            if (!IsAutomationContext && !_playerInventory.Has(seedTypeId))
             {
                 SporiumLogger.LogError(LogCategory.Inventory, $"Seme '{seedTypeId}' non disponibile nell'inventario");
                 PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
@@ -624,18 +658,24 @@ public class PotActions : MonoBehaviour
             int baseActionsCost = GetActionsCost();
             int totalActionsCost = irrigate ? baseActionsCost * 2 : baseActionsCost;
 
-            if (_gameManager == null || _gameManager.ActionsLeft < totalActionsCost)
+            // Terminal/Automation: gli AP vengono già scalati dal runner alla conferma batch.
+            // Qui non dobbiamo bloccare l'esecuzione ritardata in base ad ActionsLeft corrente.
+            if (_gameManager == null || (!IsAutomationContext && _gameManager.ActionsLeft < totalActionsCost))
             {
                 PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Azioni insufficienti");
                 return false;
             }
 
             // Consuma azioni (in un'unica spesa) per evitare doppi side-effect.
-            bool spendOk = _gameManager.TrySpendAction(totalActionsCost);
-            if (!spendOk)
+            // In automation, il costo AP viene scalato alla conferma del terminale.
+            if (!IsAutomationContext)
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
-                return false;
+                bool spendOk = _gameManager.TrySpendAction(totalActionsCost);
+                if (!spendOk)
+                {
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
+                    return false;
+                }
             }
 
             int actionsAfter = _gameManager?.ActionsLeft ?? 0;
@@ -668,11 +708,14 @@ public class PotActions : MonoBehaviour
                 }
             }
             
-            // Consuma il seme dall'inventario
-            if (!_playerInventory.Consume(seedTypeId))
+            // Consuma il seme dall'inventario (skip in automation: già consumato in conferma terminale)
+            if (!IsAutomationContext)
             {
-                SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
-                return false;
+                if (!_playerInventory.Consume(seedTypeId))
+                {
+                    SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
+                    return false;
+                }
             }
             
             // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
@@ -816,24 +859,16 @@ public class PotActions : MonoBehaviour
             int actionsBefore = _gameManager?.ActionsLeft ?? 0;
             SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater chiamato - Azioni prima: {actionsBefore}, TurningOn: {isTurningOn}");
             
-            // BUG1 FIX: Consuma azioni solo quando si ACCENDE, non quando si spegne
-            if (isTurningOn)
+            // DESIGN UPDATE (Terminal V3): Qualsiasi azione costa 1 AP, incluso spegnere irrigazione.
+            // DEBUG_SAFE_FIX: Manteniamo i log espliciti per verificare costo ON/OFF.
+            if (!TryConsumeResources())
             {
-                // Consuma solo 1 Azione per accendere (non WAT-RAW o CRY - consumo giornaliero)
-                if (!TryConsumeResources())
-                {
-                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
-                    return false;
-                }
-                
-                int actionsAfter = _gameManager?.ActionsLeft ?? 0;
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
+                return false;
             }
-            else
-            {
-                // Spegnendo: non consumiamo azioni
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Spegnendo irrigazione (nessun consumo azioni)");
-            }
+            
+            int actionsAfter = _gameManager?.ActionsLeft ?? 0;
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter}), TurningOn: {isTurningOn}");
             
             // Toggle del sistema irrigazione
             _potState.WateringSystemOn = !_potState.WateringSystemOn;
@@ -1116,24 +1151,30 @@ public class PotActions : MonoBehaviour
             return false;
         }
 
-        if (_playerInventory == null || !_playerInventory.Has(additiveTypeId, 1))
+        if (!IsAutomationContext && (_playerInventory == null || !_playerInventory.Has(additiveTypeId, 1)))
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Additivo non disponibile");
             return false;
         }
 
-        // Consuma risorse (azione/CRY)
-        if (!TryConsumeResources())
+        // Consuma risorse (azione/CRY) - in automation già pagate nel terminale
+        if (!IsAutomationContext)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Insufficient resources");
-            return false;
+            if (!TryConsumeResources())
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Insufficient resources");
+                return false;
+            }
         }
         
         // Consuma item
-        if (!_playerInventory.Consume(additiveTypeId, 1))
+        if (!IsAutomationContext)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Impossibile consumare additivo");
-            return false;
+            if (!_playerInventory.Consume(additiveTypeId, 1))
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Impossibile consumare additivo");
+                return false;
+            }
         }
 
         // Effetti pH
@@ -1183,14 +1224,14 @@ public class PotActions : MonoBehaviour
         }
         
         // Se richiesto Spray, verifica disponibilità
-        if (useSpray && !HasSprayAntifungal())
+        if (useSpray && !IsAutomationContext && !HasSprayAntifungal())
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "STR-004 (Spray Antifungino) non disponibile");
             return false;
         }
         
         // Consuma STR-004 se usato
-        if (useSpray)
+        if (useSpray && !IsAutomationContext)
         {
             if (!_playerInventory.Consume(Items.SprayAntifungal, 1))
             {
@@ -1201,11 +1242,14 @@ public class PotActions : MonoBehaviour
                 SporiumLogger.LogInfo(LogCategory.Inventory, $"[ACT-013][{potSlot.PotId}] Consumato STR-004 per potatura");
         }
         
-        // Consuma le risorse (1 azione)
-        if (!TryConsumeResources())
+        // Consuma le risorse (1 azione) - in automation già pagate nel terminale
+        if (!IsAutomationContext)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Insufficient resources");
-            return false;
+            if (!TryConsumeResources())
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Insufficient resources");
+                return false;
+            }
         }
         
         // Carica PruningConfig
@@ -1271,11 +1315,14 @@ public class PotActions : MonoBehaviour
             return false;
         }
         
-        // Consuma le risorse
-        if (!TryConsumeResources())
+        // Consuma le risorse - in automation già pagate nel terminale
+        if (!IsAutomationContext)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Insufficient resources");
-            return false;
+            if (!TryConsumeResources())
+            {
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Insufficient resources");
+                return false;
+            }
         }
         
         // BLK-02.02: Applica modificatori resa basati su livello
@@ -1395,7 +1442,7 @@ public class PotActions : MonoBehaviour
         }
         
         // 2. Verifica fertilizzante nell'inventario
-        if (!_playerInventory.Has(fertilizerItemCode))
+        if (!IsAutomationContext && !_playerInventory.Has(fertilizerItemCode))
         {
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, $"Fertilizzante '{fertilizerItemCode}' non disponibile");
             return false;
@@ -1435,8 +1482,9 @@ public class PotActions : MonoBehaviour
             // Notifica evento morte pianta
             PotEvents.EmitPlantDied(potSlot.PotId, $"Fertilizzante incompatibile: {fertilizerType} su pianta {plantData.Family}");
             
-            // Consuma comunque il fertilizzante (già usato)
-            _playerInventory.Consume(fertilizerItemCode, 1);
+            // Consuma comunque il fertilizzante (già usato) - in automation è già consumato.
+            if (!IsAutomationContext)
+                _playerInventory.Consume(fertilizerItemCode, 1);
             
             // Aggiorna le visuali del Pot (sprite dead)
             if (potGrowthController != null)
@@ -1491,11 +1539,14 @@ public class PotActions : MonoBehaviour
                 SporiumLogger.LogInfo(LogCategory.Pot, $"{potSlot.PotId}: Transizione Resting → Flowering dopo fertilizzante");
         }
         
-        // 8. Consuma fertilizzante dall'inventario
-        if (!_playerInventory.Consume(fertilizerItemCode, 1))
+        // 8. Consuma fertilizzante dall'inventario (skip in automation: già consumato in conferma terminale)
+        if (!IsAutomationContext)
         {
-            SporiumLogger.LogError(LogCategory.Inventory, $"Impossibile consumare fertilizzante '{fertilizerItemCode}'");
-            return false;
+            if (!_playerInventory.Consume(fertilizerItemCode, 1))
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, $"Impossibile consumare fertilizzante '{fertilizerItemCode}'");
+                return false;
+            }
         }
         
         // 9. Aggiorna tracking
@@ -1540,6 +1591,9 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool IsPlayerInRange()
     {
+        if (IsAutomationContext)
+            return true;
+
         if (!potSlot)
             return false;
         
@@ -1560,6 +1614,9 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool CanConsumeResources()
     {
+        if (IsAutomationContext)
+            return true;
+
         if (!_gameManager) 
             return false;
         
@@ -1574,6 +1631,9 @@ public class PotActions : MonoBehaviour
     /// </summary>
     private bool TryConsumeResources()
     {
+        if (IsAutomationContext)
+            return true;
+
         if (!_gameManager) 
             return false;
         
