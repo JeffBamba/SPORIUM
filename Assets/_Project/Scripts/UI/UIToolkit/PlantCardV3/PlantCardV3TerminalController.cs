@@ -82,6 +82,29 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [Header("Debug")]
         [SerializeField] private bool _logFocusDebug = false;
 
+        [Header("Boot Sequence")]
+        [SerializeField] private bool _playBootSequence = true;
+        [SerializeField, Range(0.02f, 0.5f)] private float _bootLineDelay = 0.08f;
+        [SerializeField, Range(0.05f, 1f)] private float _bootSectionDelay = 0.25f;
+
+        [Header("Typewriter")]
+        [SerializeField] private bool _useTypewriterOnCommand = true;
+        [SerializeField, Range(0.001f, 0.05f)] private float _typewriterCharDelay = 0.005f;
+        [SerializeField, Range(0.05f, 1f)] private float _typewriterLongLineMultiplier = 0.35f;
+        [SerializeField, Range(0.05f, 1f)] private float _typewriterFrameLineMultiplier = 0.2f;
+        [SerializeField, Range(40, 200)] private int _typewriterLongLineThreshold = 80;
+        [SerializeField, Range(100, 2000)] private int _typewriterLongOutputChars = 700;
+        [SerializeField, Range(1, 12)] private int _typewriterBlockSizeShort = 1;
+        [SerializeField, Range(2, 24)] private int _typewriterBlockSizeLong = 6;
+        [SerializeField, Range(0.05f, 1f)] private float _typewriterLongOutputMultiplier = 0.2f;
+        [SerializeField, Range(0.05f, 1f)] private float _typewriterGlobalSpeedMultiplier = 0.2f;
+
+        [Header("Typewriter SFX")]
+        [SerializeField] private AudioSource _typewriterAudioSource;
+        [SerializeField] private AudioClip _typewriterSfx;
+        [SerializeField] private AudioClip _bootStartSfx;
+        [SerializeField, Range(0.01f, 0.2f)] private float _typewriterSfxInterval = 0.035f;
+
         private VisualElement _root;
         private Button _btnClose;
         private ScrollView _consoleScroll;
@@ -111,10 +134,20 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private readonly StringBuilder _consoleBuffer = new();
         private bool _isVisible;
+        private Coroutine _bootRoutine;
+        private bool _bootSequenceActive;
+        private bool _typewriterActive;
+        private readonly Queue<string> _typewriterQueue = new();
+        private Coroutine _typewriterRoutine;
+        private float _nextTypewriterSfxTime;
+        private float _typewriterCommandSpeedMultiplier = 1f;
+        private int _typewriterCommandBlockMultiplier = 1;
+        private Coroutine _protocolTypewriterRoutine;
 
         private readonly System.Collections.Generic.List<QueuedAction> _queue = new();
         private InputState _inputState = InputState.Idle;
         private QueuedAction _pendingConfirmAction;
+        private readonly Dictionary<string, int> _reservedItems = new();
 
         private GameManager _gameManager;
         private FoundationNotificationService _foundation;
@@ -678,7 +711,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (_isVisible)
             {
-                RenderWelcome();
+                RenderWelcome(clearConsole: true);
                 RefreshHeader();
                 RefreshSidebar();
             }
@@ -719,6 +752,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void OnDestroy()
         {
+            StopBootSequence();
+            StopTypewriter();
             _outerGlowGenerator?.Dispose();
             _outerGlowGenerator = null;
             _outerGlowMaterialRuntime = null;
@@ -729,7 +764,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             PrepareBackdrop();
             SetVisible(true);
             SwitchToConsole();
-            RenderWelcome();
+            if (_playBootSequence)
+                StartBootSequence();
+            else
+                RenderWelcome(clearConsole: true);
             RefreshHeader();
             RefreshSidebar();
             FocusInput();
@@ -743,6 +781,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         public void Close()
         {
+            StopProtocolTypewriter();
+            StopBootSequence();
             SetVisible(false);
         }
 
@@ -1252,7 +1292,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 row.style.alignItems = Align.Center;
                 row.style.marginBottom = 6;
 
-                var txt = new Label($"🔹 {action.Type.ToString().ToUpperInvariant()} on {action.PotId} [{action.ApCost} AP]");
+                var txt = new Label($"🔹 {GetActionLabel(action.Type)} on {action.PotId} [{action.ApCost} AP]");
                 txt.style.color = new Color(0.71f, 0.50f, 0.82f, 1f);
                 txt.style.fontSize = 11;
                 txt.style.flexGrow = 1;
@@ -1261,6 +1301,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 var remove = new Button(() =>
                 {
                     _queue.Remove(action);
+                    RebuildReservedItems();
                     RefreshHeader();
                     RefreshQueueList();
                 });
@@ -1303,9 +1344,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_detailView != null) _detailView.style.display = DisplayStyle.None;
         }
 
-        private void RenderWelcome()
+        private void RenderWelcome(bool clearConsole)
         {
-            _consoleBuffer.Clear();
+            if (clearConsole)
+                _consoleBuffer.Clear();
 
             AppendRawLine("┌────────────────────────────────────────────────────────────────────────────┐");
             AppendRawLine("│ §TITLE§SPORIUM BOTANICAL INCUBATOR - AUTOMATED CULTIVATION MANAGEMENT v3.1§END§ │");
@@ -1324,14 +1366,286 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             FlushConsole();
         }
 
+        private void StartBootSequence()
+        {
+            StopTypewriter();
+            StopBootSequence();
+            _bootRoutine = StartCoroutine(BootSequenceRoutine());
+        }
+
+        private void StopBootSequence()
+        {
+            if (_bootRoutine != null)
+            {
+                StopCoroutine(_bootRoutine);
+                _bootRoutine = null;
+            }
+            _bootSequenceActive = false;
+            if (_input != null)
+                _input.SetEnabled(true);
+        }
+
+        private IEnumerator BootSequenceRoutine()
+        {
+            _bootSequenceActive = true;
+            if (_input != null)
+                _input.SetEnabled(false);
+
+            PlayBootStartSfx();
+
+            _consoleBuffer.Clear();
+            FlushConsole();
+
+            string[] lines =
+            {
+                "╔═══════════════════════════════════════════════════════════════════════════╗",
+                "║              SPORIUM INCUBATOR CONTROL TERMINAL v3.1                      ║",
+                "║              AUTOMATED CULTIVATION MANAGEMENT SYSTEM                      ║",
+                "╚═══════════════════════════════════════════════════════════════════════════╝",
+                "[BOOT] Initializing system...",
+                "[OK] BIOS checksum verified",
+                "[OK] Memory test passed",
+                "[INIT] Loading cultivation modules...",
+                "  ▸ HVAC-CTRL............ [ONLINE]",
+                "  ▸ HYDRATION-SYS........ [ONLINE]",
+                "  ▸ LED-SPECTRUM-A....... [ONLINE]",
+                "  ▸ LED-SPECTRUM-B....... [ONLINE]",
+                "  ▸ SOIL-SENSORS......... [ONLINE]",
+                "  ▸ pH-MONITOR........... [ONLINE]",
+                "[DB] Connecting to cultivation database...",
+                "[OK] Database mounted: DOME_02_INCUBATOR",
+                "[OK] POT records synchronized (6 units)",
+                "[OK] Historical logs indexed",
+                "[NET] Establishing Vault network link...",
+                "[OK] Connected to SPORIUM-NET",
+                "[OK] Action Queue system ready",
+                "[READY] Incubator Control Terminal initialized"
+            };
+
+            foreach (var line in lines)
+            {
+                AppendRawLine($"<color=#E6C96F>{line}</color>");
+                FlushConsole();
+                float delay = IsBootSectionLine(line) ? _bootSectionDelay : _bootLineDelay;
+                if (delay > 0f)
+                    yield return new WaitForSeconds(delay);
+            }
+
+            AppendRawLine("");
+            RenderWelcome(clearConsole: false);
+
+            _bootSequenceActive = false;
+            if (_input != null)
+                _input.SetEnabled(true);
+        }
+
+        private IEnumerator TypewriterRoutine()
+        {
+            _nextTypewriterSfxTime = 0f;
+            bool longOutputMode = IsLongOutputQueued();
+            while (_typewriterQueue.Count > 0)
+            {
+                string line = _typewriterQueue.Dequeue();
+                if (line == null) line = string.Empty;
+
+                float delay = GetTypewriterDelayForLine(line)
+                              * _typewriterGlobalSpeedMultiplier
+                              * (longOutputMode ? _typewriterLongOutputMultiplier : 1f)
+                              * _typewriterCommandSpeedMultiplier;
+                int blockSize = longOutputMode ? _typewriterBlockSizeLong : _typewriterBlockSizeShort;
+                blockSize = Mathf.Max(1, blockSize * _typewriterCommandBlockMultiplier);
+                blockSize = Mathf.Max(1, blockSize);
+                int i = 0;
+                while (i < line.Length)
+                {
+                    char c = line[i];
+                    if (c == '<')
+                    {
+                        int end = line.IndexOf('>', i);
+                        if (end >= 0)
+                        {
+                            _consoleBuffer.Append(line, i, end - i + 1);
+                            i = end + 1;
+                            FlushConsoleImmediate();
+                            continue;
+                        }
+                    }
+
+                    int wrote = 0;
+                    while (i < line.Length && wrote < blockSize)
+                    {
+                        c = line[i];
+                        if (c == '<')
+                            break;
+                        _consoleBuffer.Append(c);
+                        i++;
+                        wrote++;
+                    }
+                    FlushConsoleImmediate();
+                    TryPlayTypewriterSfx();
+                    if (delay > 0f)
+                        yield return new WaitForSeconds(delay);
+                }
+
+                _consoleBuffer.AppendLine();
+                FlushConsoleImmediate();
+            }
+
+            _typewriterRoutine = null;
+        }
+
+        private bool IsLongOutputQueued()
+        {
+            if (_typewriterQueue.Count == 0)
+                return false;
+
+            int total = 0;
+            foreach (var line in _typewriterQueue)
+            {
+                if (string.IsNullOrEmpty(line)) continue;
+                total += StripRichTextTags(line).Length + 1;
+                if (total >= _typewriterLongOutputChars)
+                    return true;
+            }
+            return false;
+        }
+
+        private void TryPlayTypewriterSfx()
+        {
+            if (_typewriterAudioSource == null || _typewriterSfx == null)
+                return;
+
+            if (Time.unscaledTime < _nextTypewriterSfxTime)
+                return;
+
+            _nextTypewriterSfxTime = Time.unscaledTime + _typewriterSfxInterval;
+            _typewriterAudioSource.PlayOneShot(_typewriterSfx);
+        }
+
+        private void PlayBootStartSfx()
+        {
+            if (_typewriterAudioSource == null || _bootStartSfx == null)
+                return;
+
+            _typewriterAudioSource.PlayOneShot(_bootStartSfx);
+        }
+
+        private float GetTypewriterDelayForLine(string richLine)
+        {
+            float baseDelay = _typewriterCharDelay;
+            if (baseDelay <= 0f)
+                return 0f;
+
+            string plain = StripRichTextTags(richLine);
+            if (IsFrameLine(plain))
+                return baseDelay * _typewriterFrameLineMultiplier;
+
+            if (plain.Length >= _typewriterLongLineThreshold)
+                return baseDelay * _typewriterLongLineMultiplier;
+
+            return baseDelay;
+        }
+
+        private static string StripRichTextTags(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+
+            var sb = new StringBuilder(input.Length);
+            bool inTag = false;
+            foreach (var c in input)
+            {
+                if (c == '<')
+                {
+                    inTag = true;
+                    continue;
+                }
+                if (c == '>' && inTag)
+                {
+                    inTag = false;
+                    continue;
+                }
+                if (!inTag)
+                    sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        private static bool IsFrameLine(string plain)
+        {
+            if (string.IsNullOrWhiteSpace(plain))
+                return false;
+
+            foreach (char c in plain)
+            {
+                if (c == ' ') continue;
+                if (IsFrameChar(c)) continue;
+                return false;
+            }
+            return true;
+        }
+
+        private static bool IsFrameChar(char c)
+        {
+            return c == '╔' || c == '╗' || c == '╚' || c == '╝' || c == '╟'
+                   || c == '╢' || c == '═' || c == '║' || c == '─' || c == '┌'
+                   || c == '┐' || c == '└' || c == '┘' || c == '┼' || c == '┬'
+                   || c == '┴' || c == '├' || c == '┤';
+        }
+
+        private static bool IsBootSectionLine(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return false;
+            return line.StartsWith("[BOOT]", StringComparison.Ordinal)
+                   || line.StartsWith("[INIT]", StringComparison.Ordinal)
+                   || line.StartsWith("[DB]", StringComparison.Ordinal)
+                   || line.StartsWith("[NET]", StringComparison.Ordinal)
+                   || line.StartsWith("[READY]", StringComparison.Ordinal);
+        }
+
+        private System.IDisposable BeginTypewriterScope(float speedMultiplier, int blockMultiplier)
+        {
+            if (!_useTypewriterOnCommand)
+                return null;
+
+            _typewriterActive = true;
+            _typewriterCommandSpeedMultiplier = Mathf.Max(0.05f, speedMultiplier);
+            _typewriterCommandBlockMultiplier = Mathf.Max(1, blockMultiplier);
+            return new TypewriterScope(this);
+        }
+
+        private sealed class TypewriterScope : System.IDisposable
+        {
+            private readonly PlantCardV3TerminalController _owner;
+            public TypewriterScope(PlantCardV3TerminalController owner) => _owner = owner;
+            public void Dispose()
+            {
+                if (_owner == null) return;
+                _owner._typewriterActive = false;
+                _owner._typewriterCommandSpeedMultiplier = 1f;
+                _owner._typewriterCommandBlockMultiplier = 1;
+                _owner.EnsureTypewriterRunning();
+            }
+        }
+
         private void AppendRawLine(string line)
         {
-            _consoleBuffer.AppendLine(ParseColors(line));
+            string parsed = ParseColors(line);
+            if (_typewriterActive)
+                _typewriterQueue.Enqueue(parsed);
+            else
+                _consoleBuffer.AppendLine(parsed);
         }
 
         private void FlushConsole()
         {
             if (_consoleText == null) return;
+
+            if (_typewriterQueue.Count > 0)
+            {
+                EnsureTypewriterRunning();
+                return;
+            }
 
             _consoleText.text = _consoleBuffer.ToString();
 
@@ -1345,6 +1659,31 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // #endregion
 
             AutoScrollConsole();
+        }
+
+        private void FlushConsoleImmediate()
+        {
+            if (_consoleText == null) return;
+            _consoleText.text = _consoleBuffer.ToString();
+            AutoScrollConsole();
+        }
+
+        private void EnsureTypewriterRunning()
+        {
+            if (_typewriterRoutine != null) return;
+            if (_typewriterQueue.Count == 0) return;
+            _typewriterRoutine = StartCoroutine(TypewriterRoutine());
+        }
+
+        private void StopTypewriter()
+        {
+            if (_typewriterRoutine != null)
+            {
+                StopCoroutine(_typewriterRoutine);
+                _typewriterRoutine = null;
+            }
+            _typewriterQueue.Clear();
+            _typewriterActive = false;
         }
 
         private void AutoScrollConsole()
@@ -1452,6 +1791,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
 
             AppendRawLine($"> {trimmed}");
+            FlushConsole();
+
             if (upper == "START" || upper == "HELP")
             {
                 PrintStartCommands();
@@ -1558,12 +1899,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
-            if (upper.StartsWith("HYDRATION"))
+            if (upper.StartsWith("WATERING"))
             {
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: HYDRATION [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: WATERING [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -1657,6 +1998,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 else
                 {
                     _queue.Clear();
+                    RebuildReservedItems();
                     AppendRawLine("§TITLE§✓ ACTION QUEUE CLEARED§END§");
                     AppendRawLine("§INFO§All queued actions removed§END§");
                     AppendRawLine("");
@@ -1728,7 +2070,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             Line(CmdLine("§CMD§UPROOT [POT-ID]§END§", "§TITLE§Queue plant removal (1 AP)§END§"));
             Line("");
             Line("§PURPLE§▸ CULTIVATION OPERATIONS§END§");
-            Line(CmdLine("§CMD§HYDRATION [POT-ID]§END§", "§TITLE§Toggle hydration system ON/OFF (1 AP)§END§"));
+            Line(CmdLine("§CMD§WATERING [POT-ID]§END§", "§TITLE§Toggle watering system ON/OFF (1 AP)§END§"));
             Line(CmdLine("§CMD§SPRAY [POT-ID]§END§", "§TITLE§Queue additive application (1 AP)§END§"));
             Line(CmdLine("§CMD§FERTILIZE [POT-ID]§END§", "§TITLE§Queue nutrient boost (1 AP)§END§"));
             Line(CmdLine("§CMD§PRUNE [POT-ID]§END§", "§TITLE§Queue pruning operation (1 AP)§END§"));
@@ -1884,7 +2226,24 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
             var state = pot.PotActions != null ? pot.PotActions.PotState : null;
 
-            if (type != QueuedActionType.Harvest && type != QueuedActionType.Uproot && (state == null || state.IsEmpty || !state.HasPlant))
+            if (type == QueuedActionType.HydrationToggle)
+            {
+                bool hasPlantNow = state != null && state.HasPlant;
+                bool hasPlantQueued = _queue.Exists(a => a != null && a.Type == QueuedActionType.Plant && string.Equals(a.PotId, potId, StringComparison.OrdinalIgnoreCase));
+                var runner = FindObjectOfType<Sporae.Dome.PotAutomation.PotAutomationRunner>();
+                bool hasPlantPending = runner != null && runner.HasPlantPendingOrRunning(potId);
+
+                if (!hasPlantNow && !hasPlantQueued && !hasPlantPending)
+                {
+                    AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY. PLANT FIRST.§END§");
+                    AppendRawLine("");
+                    FlushConsole();
+                    return;
+                }
+            }
+
+            if (type != QueuedActionType.Harvest && type != QueuedActionType.Uproot && type != QueuedActionType.HydrationToggle
+                && (state == null || state.IsEmpty || !state.HasPlant))
             {
                 AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY.§END§");
                 AppendRawLine("");
@@ -1910,8 +2269,23 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _inputState = InputState.ConfirmingActionToQueue;
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
             AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
-            AppendRawLine($"║ Action:  §DATA§{type.ToString().ToUpperInvariant()}§END§                                                     ║");
+            AppendRawLine($"║ Action:  §DATA§{GetActionLabel(type)}§END§                                                     ║");
             AppendRawLine($"║ Target:  §DATA§{potId}§END§                                                      ║");
+            if (type == QueuedActionType.HydrationToggle)
+            {
+                bool isOn = pot.PotActions != null && pot.PotActions.IsWateringSystemOn();
+                string status = isOn ? "ON" : "OFF";
+                AppendRawLine($"║ System:  §DATA§{status}§END§                                                     ║");
+            }
+            if (type == QueuedActionType.LedRedToggle || type == QueuedActionType.LedBlueToggle)
+            {
+                bool ledOn = pot.PotActions != null && pot.PotActions.IsLedSystemOn();
+                string status = ledOn ? "ON" : "OFF";
+                AppendRawLine($"║ System:  §DATA§{status}§END§                                                     ║");
+                var ledState = pot.PotActions != null ? pot.PotActions.GetLedSystemState() : LedSystemState.Off;
+                string stateLabel = ledState.ToString().ToUpperInvariant();
+                AppendRawLine($"║ State:   §DATA§{stateLabel}§END§                                                     ║");
+            }
             AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
             AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
@@ -1973,7 +2347,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             for (int i = 0; i < options.Count; i++)
             {
                 string typeId = options[i];
-                int qty = GetQuantity(typeId);
+                int qty = GetAvailableQuantity(typeId);
                 AppendRawLine($"║  §CMD§{i + 1}.§END§ §DATA§{typeId}§END§   Quantity: {qty}                                     ║");
             }
             AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
@@ -2034,7 +2408,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine($"§TITLE§✓ SELECTED: {chosen}§END§");
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
             AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
-            AppendRawLine($"║ Action:  §DATA§{_pendingConfirmAction.Type.ToString().ToUpperInvariant()}§END§                                                   ║");
+            AppendRawLine($"║ Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§                                                   ║");
             AppendRawLine($"║ Target:  §DATA§{_pendingConfirmAction.PotId}§END§                                                      ║");
             AppendRawLine($"║ Item:    §DATA§{chosen}§END§                                                     ║");
             AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
@@ -2050,23 +2424,23 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (type == QueuedActionType.Plant)
             {
-                if (_inventory.Has(Items.Seed001)) list.Add(Items.Seed001);
-                if (_inventory.Has(Items.Seed002)) list.Add(Items.Seed002);
-                if (_inventory.Has(Items.Seed003)) list.Add(Items.Seed003);
+                if (GetAvailableQuantity(Items.Seed001) > 0) list.Add(Items.Seed001);
+                if (GetAvailableQuantity(Items.Seed002) > 0) list.Add(Items.Seed002);
+                if (GetAvailableQuantity(Items.Seed003) > 0) list.Add(Items.Seed003);
                 return list;
             }
             if (type == QueuedActionType.Fertilize)
             {
-                if (_inventory.Has(Items.FertilizerStandard)) list.Add(Items.FertilizerStandard);
-                if (_inventory.Has(Items.FertilizerPure)) list.Add(Items.FertilizerPure);
-                if (_inventory.Has(Items.FertilizerProhibited)) list.Add(Items.FertilizerProhibited);
+                if (GetAvailableQuantity(Items.FertilizerStandard) > 0) list.Add(Items.FertilizerStandard);
+                if (GetAvailableQuantity(Items.FertilizerPure) > 0) list.Add(Items.FertilizerPure);
+                if (GetAvailableQuantity(Items.FertilizerProhibited) > 0) list.Add(Items.FertilizerProhibited);
                 return list;
             }
             if (type == QueuedActionType.Spray)
             {
-                if (_inventory.Has(Items.AdditiveBasic)) list.Add(Items.AdditiveBasic);
-                if (_inventory.Has(Items.AdditiveAcid)) list.Add(Items.AdditiveAcid);
-                if (_inventory.Has(Items.SprayAntifungal)) list.Add(Items.SprayAntifungal);
+                if (GetAvailableQuantity(Items.AdditiveBasic) > 0) list.Add(Items.AdditiveBasic);
+                if (GetAvailableQuantity(Items.AdditiveAcid) > 0) list.Add(Items.AdditiveAcid);
+                if (GetAvailableQuantity(Items.SprayAntifungal) > 0) list.Add(Items.SprayAntifungal);
                 return list;
             }
 
@@ -2084,6 +2458,30 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             return 0;
         }
 
+        private int GetReservedQuantity(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId)) return 0;
+            return _reservedItems.TryGetValue(typeId, out int count) ? count : 0;
+        }
+
+        private int GetAvailableQuantity(string typeId)
+        {
+            int total = GetQuantity(typeId);
+            int reserved = GetReservedQuantity(typeId);
+            return Mathf.Max(0, total - reserved);
+        }
+
+        private void RebuildReservedItems()
+        {
+            _reservedItems.Clear();
+            foreach (var action in _queue)
+            {
+                if (action == null || string.IsNullOrEmpty(action.ItemTypeId)) continue;
+                _reservedItems.TryGetValue(action.ItemTypeId, out int cur);
+                _reservedItems[action.ItemTypeId] = cur + 1;
+            }
+        }
+
         private void HandleConfirmToQueue(string upper)
         {
             if (upper == "Y" || upper == "YES")
@@ -2091,8 +2489,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 if (_pendingConfirmAction != null)
                 {
                     _queue.Add(_pendingConfirmAction);
+                    RebuildReservedItems();
                     AppendRawLine("§TITLE§✓ ACTION QUEUED SUCCESSFULLY§END§");
-                    AppendRawLine($"§INFO§+ {_pendingConfirmAction.Type.ToString().ToUpperInvariant()} on {_pendingConfirmAction.PotId} [1 AP]§END§");
+                    AppendRawLine($"§INFO§+ {GetActionLabel(_pendingConfirmAction.Type)} on {_pendingConfirmAction.PotId} [1 AP]§END§");
                     AppendRawLine("");
                 }
                 _pendingConfirmAction = null;
@@ -2138,6 +2537,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 AppendRawLine("");
                 FlushConsole();
                 _queue.Clear();
+                RebuildReservedItems();
                 _inputState = InputState.Idle;
                 Close();
                 return;
@@ -2158,6 +2558,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 AppendRawLine("§WARN§⚠ Automation runner not found in scene. Queue discarded.§END§");
                 AppendRawLine("");
                 _queue.Clear();
+                RebuildReservedItems();
                 FlushConsole();
                 return;
             }
@@ -2177,9 +2578,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 if (_inventory == null || !_inventory.Has(kv.Key, kv.Value))
                 {
+                    string msg = $"Insufficient item {kv.Key} x{kv.Value} for queued actions";
                     AppendRawLine($"§ERROR§⚠ ERROR: INSUFFICIENT ITEM {kv.Key} x{kv.Value}§END§");
                     AppendRawLine("");
                     FlushConsole();
+                    _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", msg));
                     return;
                 }
             }
@@ -2235,18 +2638,31 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 batch.Add(mapped);
             }
 
-            _queue.Clear();
-            RefreshHeader();
-            RefreshQueueList();
-
-            runner.EnqueueBatch(batch);
-            bool ok = runner.ConfirmAndRun();
+            bool ok = runner.EnqueueAndRun(batch);
             if (!ok)
             {
+                _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", "Automation failed: insufficient AP"));
                 AppendRawLine("§ERROR§⚠ Automation could not start (insufficient AP).§END§");
                 AppendRawLine("");
                 FlushConsole();
+                return;
             }
+
+            _queue.Clear();
+            RebuildReservedItems();
+            RefreshHeader();
+            RefreshQueueList();
+        }
+
+        private static string GetActionLabel(QueuedActionType type)
+        {
+            return type switch
+            {
+                QueuedActionType.HydrationToggle => "WATERING",
+                QueuedActionType.LedRedToggle => "LED RED",
+                QueuedActionType.LedBlueToggle => "LED BLUE",
+                _ => type.ToString().ToUpperInvariant()
+            };
         }
 
         private static string ExtractPotIdArgument(string raw)
@@ -2314,11 +2730,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             FlushConsole();
 
             string protocol = TryLoadProtocolFromProjectDocs();
-            if (_protocolText != null)
-                _protocolText.text = protocol;
-            
-            if (_protocolScroll != null && _protocolText != null)
-                _protocolScroll.ScrollTo(_protocolText);
+            StartProtocolTypewriter(protocol);
         }
 
         private string TryLoadProtocolFromProjectDocs()
@@ -2347,6 +2759,44 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 return ParseColors($"§ERROR§⚠ ERROR LOADING PROTOCOL: {ex.GetType().Name}: {ex.Message}§END§");
             }
+        }
+
+        private void StartProtocolTypewriter(string text)
+        {
+            if (_protocolText == null)
+                return;
+
+            StopProtocolTypewriter();
+            _protocolText.text = string.Empty;
+            _protocolTypewriterRoutine = StartCoroutine(ProtocolTypewriterRoutine(text ?? string.Empty));
+        }
+
+        private void StopProtocolTypewriter()
+        {
+            if (_protocolTypewriterRoutine != null)
+            {
+                StopCoroutine(_protocolTypewriterRoutine);
+                _protocolTypewriterRoutine = null;
+            }
+        }
+
+        private IEnumerator ProtocolTypewriterRoutine(string text)
+        {
+            if (_protocolText == null)
+                yield break;
+
+            string[] lines = (text ?? string.Empty).Replace("\r\n", "\n").Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                _protocolText.text += lines[i] + "\n";
+                if (_protocolScroll != null)
+                    _protocolScroll.ScrollTo(_protocolText);
+
+                if (_bootLineDelay > 0f)
+                    yield return new WaitForSeconds(_bootLineDelay);
+            }
+
+            _protocolTypewriterRoutine = null;
         }
 
         private void RequestClose()

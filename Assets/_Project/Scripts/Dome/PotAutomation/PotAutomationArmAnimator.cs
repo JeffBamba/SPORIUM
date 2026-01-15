@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
 
@@ -197,10 +196,6 @@ namespace Sporae.Dome.PotAutomation
         private bool _isAnimating;
         private ArmMotionProfile _profile;
         private System.Random _rng;
-        private int _debugFrameSeq;
-        private bool _boundsLogged;
-        private int _debugPostStopFrames;
-        private int _debugHierarchySeq;
 
         private void Awake()
         {
@@ -227,21 +222,12 @@ namespace Sporae.Dome.PotAutomation
                 _smallArmRestLocal = smallArm.localPosition;
             }
 
-            // #region agent log
-            try
-            {
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H1\",\"location\":\"PotAutomationArmAnimator.Awake\",\"message\":\"refs\",\"data\":{\"largeArm\":\"" + (largeArm != null ? largeArm.name : "null") + "\",\"smallArm\":\"" + (smallArm != null ? smallArm.name : "null") + "\",\"plantRenderer\":\"" + (plantRenderer != null ? plantRenderer.name : "null") + "\",\"windowSprite\":\"" + (windowBoundsSprite != null ? windowBoundsSprite.name : "null") + "\",\"windowCollider\":\"" + (windowBoundsCollider != null ? windowBoundsCollider.name : "null") + "\"},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
-
             ApplyIdleVisibility();
         }
 
         private void Update()
         {
-            if ((!_isAnimating && _debugPostStopFrames <= 0) || largeArm == null || smallArm == null)
+            if (!_isAnimating || largeArm == null || smallArm == null)
                 return;
 
             float dt = Time.deltaTime;
@@ -269,22 +255,6 @@ namespace Sporae.Dome.PotAutomation
             smallPos.x = desiredX;
             smallArm.localPosition = smallPos;
 
-            // #region agent log
-            if ((_debugFrameSeq++ % 30) == 0 || _debugPostStopFrames > 0)
-            {
-                try
-                {
-                    var largeRenderer = largeArm != null ? largeArm.GetComponent<SpriteRenderer>() : null;
-                    var smallRenderer = smallArm != null ? smallArm.GetComponent<SpriteRenderer>() : null;
-                    File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H2\",\"location\":\"PotAutomationArmAnimator.Update\",\"message\":\"frame\",\"data\":{\"baseY\":" + baseY.ToString("F4") + ",\"yStart\":" + _yMotion.start.ToString("F4") + ",\"yTarget\":" + _yMotion.target.ToString("F4") + ",\"yDur\":" + _yMotion.duration.ToString("F3") + ",\"largeY\":" + largeArm.localPosition.y.ToString("F4") + ",\"largeWorldY\":" + largeArm.position.y.ToString("F4") + ",\"largeActive\":" + (largeArm.gameObject.activeSelf ? "true" : "false") + ",\"largeRenderer\":" + (largeRenderer != null && largeRenderer.enabled ? "true" : "false") + ",\"xStart\":" + _xMotion.start.ToString("F4") + ",\"xTarget\":" + _xMotion.target.ToString("F4") + ",\"xDur\":" + _xMotion.duration.ToString("F3") + ",\"smallX\":" + smallArm.localPosition.x.ToString("F4") + ",\"smallWorldX\":" + smallArm.position.x.ToString("F4") + ",\"smallActive\":" + (smallArm.gameObject.activeSelf ? "true" : "false") + ",\"smallRenderer\":" + (smallRenderer != null && smallRenderer.enabled ? "true" : "false") + ",\"postStop\":" + (_debugPostStopFrames > 0 ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-            }
-            // #endregion
-
-            if (_debugPostStopFrames > 0)
-                _debugPostStopFrames--;
         }
 
         public void StartActionAnimation(PotAutomationRunner.AutomationActionType actionType, string potIdSeed = null)
@@ -306,14 +276,6 @@ namespace Sporae.Dome.PotAutomation
             ResetAxis(ref _yMotion, currentYOffset, isVertical: true);
             ResetAxis(ref _xMotion, currentXOffset, isVertical: false);
 
-            // #region agent log
-            try
-            {
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H3\",\"location\":\"PotAutomationArmAnimator.StartActionAnimation\",\"message\":\"start\",\"data\":{\"action\":\"" + actionType + "\",\"pot\":\"" + (potIdSeed ?? "") + "\",\"baseY\":" + baseY.ToString("F4") + ",\"curYOffset\":" + currentYOffset.ToString("F4") + ",\"curXOffset\":" + currentXOffset.ToString("F4") + ",\"yRangeMin\":" + largeArmLocalYRange.x.ToString("F3") + ",\"yRangeMax\":" + largeArmLocalYRange.y.ToString("F3") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
         }
 
         public void StopAnimation()
@@ -340,20 +302,7 @@ namespace Sporae.Dome.PotAutomation
             if (largeArm != null)
                 largeArm.gameObject.SetActive(true);
 
-            // #region agent log
-            try
-            {
-                var largeRenderer = largeArm != null ? largeArm.GetComponent<SpriteRenderer>() : null;
-                var smallRenderer = smallArm != null ? smallArm.GetComponent<SpriteRenderer>() : null;
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H7\",\"location\":\"PotAutomationArmAnimator.StopAnimation\",\"message\":\"stop\",\"data\":{\"largeLocalY\":" + (largeArm != null ? largeArm.localPosition.y.ToString("F4") : "\"null\"") + ",\"smallLocalX\":" + (smallArm != null ? smallArm.localPosition.x.ToString("F4") : "\"null\"") + ",\"largeWorldY\":" + (largeArm != null ? largeArm.position.y.ToString("F4") : "\"null\"") + ",\"largeActive\":" + (largeArm != null && largeArm.gameObject.activeSelf ? "true" : "false") + ",\"smallActive\":" + (smallArm != null && smallArm.gameObject.activeSelf ? "true" : "false") + ",\"largeRenderer\":" + (largeRenderer != null && largeRenderer.enabled ? "true" : "false") + ",\"smallRenderer\":" + (smallRenderer != null && smallRenderer.enabled ? "true" : "false") + ",\"parentActive\":" + (transform != null && transform.gameObject.activeInHierarchy ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
-
             ApplyIdleVisibility();
-            _debugPostStopFrames = 5;
-            LogHierarchyState("StopAnimation");
         }
 
         private float GetBottomRestY(Transform space, float baseY)
@@ -371,69 +320,6 @@ namespace Sporae.Dome.PotAutomation
             if (largeArm != null) largeArm.gameObject.SetActive(show);
             if (smallArm != null) smallArm.gameObject.SetActive(show);
 
-            // #region agent log
-            try
-            {
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H8\",\"location\":\"PotAutomationArmAnimator.ApplyIdleVisibility\",\"message\":\"visibility\",\"data\":{\"hideWhenIdle\":" + (hideWhenIdle ? "true" : "false") + ",\"keepVisibleOnStop\":" + (keepVisibleOnStop ? "true" : "false") + ",\"isAnimating\":" + (_isAnimating ? "true" : "false") + ",\"show\":" + (show ? "true" : "false") + ",\"largeActive\":" + (largeArm != null && largeArm.gameObject.activeSelf ? "true" : "false") + ",\"smallActive\":" + (smallArm != null && smallArm.gameObject.activeSelf ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
-        }
-
-        private void OnEnable()
-        {
-            // #region agent log
-            try
-            {
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H11\",\"location\":\"PotAutomationArmAnimator.OnEnable\",\"message\":\"enabled\",\"data\":{\"selfActive\":" + (gameObject.activeSelf ? "true" : "false") + ",\"inHierarchy\":" + (gameObject.activeInHierarchy ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
-        }
-
-        private void OnDisable()
-        {
-            // #region agent log
-            try
-            {
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H11\",\"location\":\"PotAutomationArmAnimator.OnDisable\",\"message\":\"disabled\",\"data\":{\"selfActive\":" + (gameObject.activeSelf ? "true" : "false") + ",\"inHierarchy\":" + (gameObject.activeInHierarchy ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
-            LogHierarchyState("OnDisable");
-        }
-
-        private void OnTransformParentChanged()
-        {
-            LogHierarchyState("ParentChanged");
-        }
-
-        private void LogHierarchyState(string tag)
-        {
-            if (_debugHierarchySeq++ > 4) return;
-            try
-            {
-                var chain = new System.Text.StringBuilder();
-                Transform t = transform;
-                int depth = 0;
-                while (t != null && depth < 6)
-                {
-                    if (depth > 0) chain.Append(" <- ");
-                    chain.Append(t.name);
-                    chain.Append("[");
-                    chain.Append(t.gameObject.activeSelf ? "A" : "a");
-                    chain.Append(t.gameObject.activeInHierarchy ? "H" : "h");
-                    chain.Append("]");
-                    t = t.parent;
-                    depth++;
-                }
-                File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H12\",\"location\":\"PotAutomationArmAnimator.LogHierarchyState\",\"message\":\"" + tag + "\",\"data\":{\"chain\":\"" + chain + "\"},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
         }
 
         private float GetPlantBaseLocalY(Transform space)
@@ -531,18 +417,6 @@ namespace Sporae.Dome.PotAutomation
                 clamped = Mathf.Clamp(clamped, min.y + windowPadding.y, max.y - windowPadding.y);
             }
 
-            // #region agent log
-            if ((_debugFrameSeq % 60) == 0)
-            {
-                try
-                {
-                    File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H4\",\"location\":\"PotAutomationArmAnimator.ClampVertical\",\"message\":\"clamp\",\"data\":{\"inY\":" + localY.ToString("F4") + ",\"baseY\":" + baseY.ToString("F4") + ",\"clamped\":" + clamped.ToString("F4") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-            }
-            // #endregion
-
             return clamped;
         }
 
@@ -572,14 +446,6 @@ namespace Sporae.Dome.PotAutomation
             }
             else
             {
-                // #region agent log
-                try
-                {
-                    File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H5\",\"location\":\"PotAutomationArmAnimator.TryGetWindowLocalBounds\",\"message\":\"no_bounds\",\"data\":{},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-                // #endregion
                 return false;
             }
 
@@ -587,19 +453,6 @@ namespace Sporae.Dome.PotAutomation
             Vector3 localMax = space.InverseTransformPoint(bounds.max);
             min = new Vector2(localMin.x, localMin.y);
             max = new Vector2(localMax.x, localMax.y);
-
-            // #region agent log
-            if (!_boundsLogged)
-            {
-                _boundsLogged = true;
-                try
-                {
-                    File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H6\",\"location\":\"PotAutomationArmAnimator.TryGetWindowLocalBounds\",\"message\":\"bounds\",\"data\":{\"minX\":" + min.x.ToString("F4") + ",\"minY\":" + min.y.ToString("F4") + ",\"maxX\":" + max.x.ToString("F4") + ",\"maxY\":" + max.y.ToString("F4") + ",\"space\":\"" + (space != null ? space.name : "null") + "\",\"sizeX\":" + (max.x - min.x).ToString("F4") + ",\"sizeY\":" + (max.y - min.y).ToString("F4") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-            }
-            // #endregion
 
             // Degenerate bounds (zero size) -> skip window clamp.
             if (Mathf.Abs(max.x - min.x) < 0.001f || Mathf.Abs(max.y - min.y) < 0.001f)

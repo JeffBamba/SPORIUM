@@ -45,8 +45,9 @@ namespace Sporae.Dome.PotAutomation
         [SerializeField] private bool useArmAnimation = true;
         [SerializeField, Range(0.1f, 2f)] private float delayMultiplier = 0.25f;
 
-        private readonly Queue<AutomationAction> _queue = new();
-        private bool _isRunning;
+        private readonly Dictionary<string, Queue<AutomationAction>> _potQueues = new();
+        private readonly HashSet<string> _runningPotIds = new();
+        private readonly Dictionary<string, AutomationAction> _currentActions = new();
 
         private GameManager _gameManager;
         private FoundationNotificationService _foundation;
@@ -60,7 +61,54 @@ namespace Sporae.Dome.PotAutomation
             _foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
         }
 
-        public bool HasPending => _queue.Count > 0 || _isRunning;
+        public bool HasPending => HasQueuedActions() || _runningPotIds.Count > 0;
+
+        public bool EnqueueAndRun(IEnumerable<AutomationAction> actions)
+        {
+            if (actions == null) return true;
+
+            var list = new List<AutomationAction>();
+            int totalAp = 0;
+            foreach (var a in actions)
+            {
+                if (a == null || string.IsNullOrEmpty(a.PotId)) continue;
+                list.Add(a);
+                totalAp += Mathf.Max(0, a.ApCost);
+            }
+            if (list.Count == 0) return true;
+
+            if (_gameManager == null || !_gameManager.TrySpendAction(totalAp))
+            {
+                PostToast("POT-AUTO-ERROR", $"Automation failed: insufficient AP ({totalAp})");
+                return false;
+            }
+
+            EnqueueBatch(list);
+
+            return true;
+        }
+
+        public bool HasPlantPendingOrRunning(string potId)
+        {
+            if (string.IsNullOrEmpty(potId))
+                return false;
+
+            if (_currentActions.TryGetValue(potId, out var running)
+                && running != null
+                && running.Type == AutomationActionType.Plant)
+                return true;
+
+            if (_potQueues.TryGetValue(potId, out var queue))
+            {
+                foreach (var a in queue)
+                {
+                    if (a != null && a.Type == AutomationActionType.Plant)
+                        return true;
+                }
+            }
+
+            return false;
+        }
 
         public void EnqueueBatch(IEnumerable<AutomationAction> actions)
         {
@@ -68,7 +116,13 @@ namespace Sporae.Dome.PotAutomation
             foreach (var a in actions)
             {
                 if (a == null || string.IsNullOrEmpty(a.PotId)) continue;
-                _queue.Enqueue(a);
+                if (!_potQueues.TryGetValue(a.PotId, out var queue))
+                {
+                    queue = new Queue<AutomationAction>();
+                    _potQueues[a.PotId] = queue;
+                }
+                queue.Enqueue(a);
+                EnsurePotCoroutine(a.PotId);
             }
         }
 
@@ -77,11 +131,14 @@ namespace Sporae.Dome.PotAutomation
         /// </summary>
         public bool ConfirmAndRun()
         {
-            if (_queue.Count == 0) return true;
+            if (!HasQueuedActions()) return true;
 
             int totalAp = 0;
-            foreach (var a in _queue)
-                totalAp += a != null ? Mathf.Max(0, a.ApCost) : 0;
+            foreach (var q in _potQueues.Values)
+            {
+                foreach (var a in q)
+                    totalAp += a != null ? Mathf.Max(0, a.ApCost) : 0;
+            }
 
             if (_gameManager == null || !_gameManager.TrySpendAction(totalAp))
             {
@@ -89,21 +146,22 @@ namespace Sporae.Dome.PotAutomation
                 return false;
             }
 
-            if (!_isRunning)
-                StartCoroutine(RunLoop());
+            foreach (var potId in new List<string>(_potQueues.Keys))
+                EnsurePotCoroutine(potId);
 
             return true;
         }
 
-        private IEnumerator RunLoop()
+        private IEnumerator RunPotQueue(string potId)
         {
-            _isRunning = true;
+            if (string.IsNullOrEmpty(potId))
+                yield break;
 
-            while (_queue.Count > 0)
+            while (_potQueues.TryGetValue(potId, out var queue) && queue.Count > 0)
             {
-                var action = _queue.Dequeue();
+                var action = queue.Dequeue();
                 if (action == null) continue;
-
+                _currentActions[potId] = action;
                 PotSlot pot = null;
                 PotAutomationArmAnimator armAnimator = null;
                 if (useArmAnimation)
@@ -112,7 +170,6 @@ namespace Sporae.Dome.PotAutomation
                     if (pot != null)
                         armAnimator = pot.GetComponentInChildren<PotAutomationArmAnimator>(includeInactive: true);
                 }
-
                 float effectiveMultiplier = delayMultiplier * 0.5f;
                 float delay = UnityEngine.Random.Range(delaySecondsRange.x, delaySecondsRange.y) * effectiveMultiplier;
                 delay = Mathf.Max(1f, delay);
@@ -121,33 +178,35 @@ namespace Sporae.Dome.PotAutomation
                     new NotificationPayload().With("message", $"{action.PotId}: {action.Type} in progress — ETA {Mathf.CeilToInt(delay)}s"));
                 // Keep progress visible until success; avoid expiring toast.
 
-                // #region agent log
-                try
-                {
-                    System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H9\",\"location\":\"PotAutomationRunner.RunLoop\",\"message\":\"inprogress_toast\",\"data\":{\"potId\":\"" + action.PotId + "\",\"type\":\"" + action.Type + "\",\"delay\":" + delay.ToString("F2") + ",\"delayMultiplier\":" + delayMultiplier.ToString("F2") + ",\"effectiveMultiplier\":" + effectiveMultiplier.ToString("F2") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-                // #endregion
-
                 armAnimator?.StartActionAnimation(action.Type, action.PotId);
                 yield return new WaitForSeconds(delay);
 
                 ExecuteAction(action);
                 armAnimator?.StopAnimation();
                 _foundation?.ResolveDanger(dangerKey);
-
-                // #region agent log
-                try
-                {
-                    System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H10\",\"location\":\"PotAutomationRunner.RunLoop\",\"message\":\"action_complete\",\"data\":{\"potId\":\"" + action.PotId + "\",\"type\":\"" + action.Type + "\",\"dangerKey\":\"" + dangerKey + "\",\"potActive\":" + (pot != null && pot.gameObject.activeInHierarchy ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-                // #endregion
+                _currentActions.Remove(potId);
             }
+            _runningPotIds.Remove(potId);
+            _currentActions.Remove(potId);
+        }
 
-            _isRunning = false;
+        private void EnsurePotCoroutine(string potId)
+        {
+            if (string.IsNullOrEmpty(potId)) return;
+            if (_runningPotIds.Contains(potId)) return;
+
+            _runningPotIds.Add(potId);
+            StartCoroutine(RunPotQueue(potId));
+        }
+
+        private bool HasQueuedActions()
+        {
+            foreach (var q in _potQueues.Values)
+            {
+                if (q != null && q.Count > 0)
+                    return true;
+            }
+            return false;
         }
 
         private void ExecuteAction(AutomationAction action)

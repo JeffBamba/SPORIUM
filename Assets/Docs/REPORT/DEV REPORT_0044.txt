@@ -1,0 +1,130 @@
+================================================================================
+             DEV REPORT #0044 - POT AUTOMATION ARM + TOAST FLOW
+             SPORAE BUILD BETA
+             Data: 2026-01-15 19:10:00
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PCV3-0044 — Bracci meccanici automazione Pot + durata scena + toast persistente
+- **Tipo Report:** Development Report (Feature + Bug Fix + UX)
+- **Periodo coperto:** 2026-01-15
+- **Data Generazione:** 2026-01-15 19:10:00
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0043.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **POT-AUTO-ARM-001**: Animazione procedurale bracci meccanici per automazione Pot.
+  - **Implementazione:** nuovo script con profili per azione, range e velocità configurabili.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`
+
+- **POT-AUTO-ARM-002**: Aggancio animazione alla coda automazione.
+  - **Implementazione:** start/stop animazione per ogni azione in `PotAutomationRunner`.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+
+- **POT-AUTO-ARM-003**: Parenting automatico braccio piccolo al braccio grande.
+  - **Implementazione:** auto-parent con `autoParentSmallArm`.
+  - **Evidence:** `PotAutomationArmAnimator.cs`
+
+- **POT-AUTO-ARM-004**: Estensione range e velocità per movimenti più ampi e rapidi.
+  - **Implementazione:** range base + moltiplicatori `rangeMultiplier` e `speedMultiplier`.
+  - **Evidence:** `PotAutomationArmAnimator.cs`
+
+- **POT-AUTO-ARM-005**: Posizionamento bracci in basso a fine scena.
+  - **Implementazione:** stop animation forza Y al fondo window/offset.
+  - **Evidence:** `PotAutomationArmAnimator.cs`
+
+- **POT-AUTO-SCENE-001**: Durata scena ridotta (più corta).
+  - **Implementazione:** `delayMultiplier` ridotto (effettivo 0.25).
+  - **Evidence:** `PotAutomationRunner.cs`
+
+- **POT-AUTO-TOAST-001**: Toast “in progress” persistente fino al success.
+  - **Implementazione:** `UpsertDanger` + `ResolveDanger` con key per Pot.
+  - **Evidence:** `PotAutomationRunner.cs`
+
+- **PCV3-BACKDROP-001**: Fix capture backdrop Terminale (no errore EndOfFrame).
+  - **Implementazione:** capture in coroutine `WaitForEndOfFrame`.
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **POT-AUTO-ARM-BUG-001 (braccio grande fermo)**:
+  - **Causa:** bounds finestra degeneri, clamp bloccava Y.
+  - **Fix:** clamp finestra ignorato se bounds invalidi.
+  - **Verifica:** ✅ confermato in runtime.
+
+- **PCV3-BACKDROP-BUG-001 (CaptureScreenshotAsTexture error)**:
+  - **Causa:** capture prima di EndOfFrame.
+  - **Fix:** capture differita.
+  - **Verifica:** ✅ confermato.
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- Nessuno.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script nuovi:**
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`
+- **Script modificati:**
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Automazione PLANT:** apri terminale, fai `PLANT`, conferma coda → osserva bracci in scena.
+- **Range e velocità:** verifica movimenti ampi e rapidi in finestra.
+- **Toast progressivo:** toast “in progress” resta fino al success.
+- **Fine scena:** bracci restano visibili e si posizionano in basso.
+- **Backdrop:** apri terminale e verifica assenza errori console.
+
+================================================================================
+
+🧭 STEP MANUALI (per principianti)
+=================================
+1) Apri la scena con i pot (es. `ROOM_Dome`).
+2) Seleziona il GameObject del pot (es. `Pot_POT-001`).
+3) Crea un GameObject figlio chiamato `PotArmRig`.
+4) Dentro `PotArmRig` crea due GameObject:
+   - `Arm_Large` (con SpriteRenderer)
+   - `Arm_Small` (con SpriteRenderer, figlio di `Arm_Large`)
+5) Aggiungi il **script** `PotAutomationArmAnimator` su `PotArmRig`.
+6) Assegna i riferimenti nel **script**:
+   - `Large Arm` → `Arm_Large`
+   - `Small Arm` → `Arm_Small`
+   - `Window Bounds Sprite` → sprite finestra (es. `WindowContent`)
+7) Ripeti per ogni pot o crea un prefab di `PotArmRig` e duplicalo.
+8) Entra in Play Mode e prova una coda `PLANT` dal terminale.
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- Per animazioni sceniche, i bounds della window possono essere degeneri: serve fallback.
+- `UpsertDanger/ResolveDanger` è il pattern corretto per messaggi persistenti in Notifications Foundation.
+- Coroutines a EndOfFrame evitano errori di screenshot in UI Toolkit.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Eventuale tuning fine dei range per ciascuna azione.
+- Hook diretto su `PotAutomationService` se introdotto in futuro.
+
+================================================================================
+FINE REPORT
+================================================================================
