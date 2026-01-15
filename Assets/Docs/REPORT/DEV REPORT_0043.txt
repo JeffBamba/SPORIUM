@@ -1,0 +1,154 @@
+================================================================================
+             DEV REPORT #0043 - PLANTCARD V3 TERMINAL + UI GLOW
+             SPORAE BUILD BETA
+             Data: 2026-01-15 17:52:29
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PCV3-0043 — PlantCard V3 Terminal (UI/UX + Glow/Shader) + Notifications Glow
+- **Tipo Report:** Development Report (Feature + Bug Fix + UI/UX)
+- **Periodo coperto:** 2026-01-14 → 2026-01-15
+- **Data Generazione:** 2026-01-15 17:52:29
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0042.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **PCV3-TERM-001**: Terminale sempre “type-ready” senza click.
+  - **Implementazione:** Focus guard + refocus schedulato + focus su internal input element.
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-002**: Soppressione UI non-distruttiva (evita riaperture seed selector).
+  - **Implementazione:** hide/restore su `UIDocument.rootVisualElement` + disable Interactable temporaneo.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-003**: Queue actions “PLANT” realmente eseguite in automazione.
+  - **Implementazione:** bypass checks in automation context + try/catch in runner.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotActions.cs`, `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+
+- **PCV3-TERM-004**: Console auto-scroll stabile (multi-schedule).
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-005**: Typewriter effect console + controlli per bypass (START list).
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-006**: Layout guard prompt/input (stop “sliding”/cutoff TextField).
+  - **Evidence:** `PlantCardV3TerminalController.cs`, `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+- **PCV3-TERM-007**: Welcome/START commands allineati a reference (colori + box ASCII).
+  - **Evidence:** `PlantCardV3TerminalController.cs`, `PlantCardV3_Terminal.uss`
+
+- **PCV3-TERM-008**: Parità UI Builder con runtime (dimensioni fisse root).
+  - **Evidence:** `PlantCardV3_Terminal.uss`
+
+- **PCV3-TERM-009**: Backdrop blur del terminale (gameview visibile con dim).
+  - **Evidence:** `PlantCardV3TerminalController.cs`, `PlantCardV3_Terminal.uxml/.uss`
+
+- **PCV3-TERM-010**: Scrollbar custom LED (green + purple).
+  - **Evidence:** `PlantCardV3_Terminal.uss`
+
+- **UI-GLOW-001**: Glow terminal (text + border) via USS.
+  - **Evidence:** `PlantCardV3_Terminal.uss`
+
+- **UI-GLOW-002**: Shader glow (Option C) + RenderTexture generator.
+  - **Evidence:** `Assets/_Project/Rendering/Shaders/SP_UI_GlowFrame.shader`, `Assets/_Project/Scripts/UI/UIToolkit/HUD/Components/UiGlowFrameGenerator.cs`
+
+- **UI-GLOW-003**: TopBar/BottomBar glow frame (edge-only).
+  - **Evidence:** `TopBar.uxml/.uss`, `BottomNavigation.uxml/.uss`,
+    `TopBarController.cs`, `BottomNavigationController.cs`
+
+- **NF-GLOW-001**: Notifications Foundation glow (header + rows) con colore per severity.
+  - **Evidence:** `NotificationsPanel.uxml/.uss`, `FoundationNotificationsPanelController.cs`
+
+- **PCV3-GLOW-OUTER-001**: Glow esterno per outliner terminale (Option 1).
+  - **Evidence:** `PlantCardV3_Terminal.uxml/.uss`, `PlantCardV3TerminalController.cs`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **PCV3-BUG-001 (PLANT non esegue in queue)**:
+  - **Causa:** check inventory/range/actions attivi anche in automation.
+  - **Fix:** bypass in `AutomationContext` + try/catch runner.
+  - **Verifica:** ✅ confermato in runtime.
+
+- **PCV3-BUG-002 (Auto-scroll console non raggiunge fondo)**:
+  - **Fix:** schedule multipla su `highValue`.
+  - **Verifica:** ✅ confermato.
+
+- **PCV3-BUG-003 (TextField “scivola”/cutoff)**:
+  - **Fix:** layout guard + padding/height/white-space.
+  - **Verifica:** ✅ confermato.
+
+- **PCV3-BUG-004 (UI precedente riappare dopo chiusura terminale)**:
+  - **Fix:** hide/show su UIDocument root + suppress Interactable.
+  - **Verifica:** ✅ confermato.
+
+- **UI-GLOW-BUG-001 (Shader fill interno quando border=0)**:
+  - **Fix:** clamp: se border thickness=0 → border=0.
+  - **Verifica:** ✅ confermato.
+
+================================================================================
+
+⏳ BUG NON FIXATI / PENDENTI
+===========================
+- **PCV3-GLOW-OUTER-002**: Fine tuning glow esterno (intensità/falloff) per match perfetto reference.
+- **PCV3-TYPEWRITER-001**: richiesta “home senza typewriter, resto 5x più veloce” sospesa su richiesta utente.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script modificati (UI/UX Terminale):**
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+- **UI Toolkit Terminal:**
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uxml`
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+- **Glow/Shader/Generators:**
+  - `Assets/_Project/Rendering/Shaders/SP_UI_GlowFrame.shader`
+  - `Assets/_Project/Scripts/UI/UIToolkit/HUD/Components/UiGlowFrameGenerator.cs`
+- **HUD Glow Integration:**
+  - `Assets/_Project/UI/UIToolkit/HUD/TopBar.uxml/.uss`
+  - `Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uxml/.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/HUD/TopBarController.cs`
+  - `Assets/_Project/Scripts/UI/UIToolkit/HUD/BottomNavigationController.cs`
+- **Notifications Foundation Glow:**
+  - `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uxml/.uss`
+  - `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs`
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Terminale focus continuo:** apri terminale e digita comandi consecutivi senza click.
+- **Auto-scroll console:** spam output e verifica che l’ultima riga resti visibile.
+- **Queue PLANT:** comando `PLANT` in queue + conferma → pianta eseguita in pot.
+- **UI Builder parity:** verifica root 1920x1080 in UI Builder.
+- **Glow HUD/Notifications:** modifica materiale in runtime (Top/Bottom), glow visibile su header/rows.
+- **Glow esterno PCV3:** verifica glow solo sul bordo esterno, senza fill interno.
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- **Glow in UI Toolkit**: per bloom controllabile servono shader + RenderTexture, USS non basta.
+- **UIDocument toggling**: è più sicuro di disabling Behaviour (evita OnEnable side-effects).
+- **ASCII art terminal**: monospaziato + `white-space: pre` indispensabili per chiusure box.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Tuning finale glow esterno PCV3 (intensità/falloff/padding) per match reference.
+- Eventuale esposizione parametri glow PCV3 in runtime (toggle live update).
+- Riprendere task typewriter “home off / resto più veloce” se richiesto.
+
+================================================================================
+FINE REPORT
+================================================================================

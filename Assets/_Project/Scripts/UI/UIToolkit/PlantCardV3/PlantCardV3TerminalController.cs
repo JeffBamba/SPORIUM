@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Sporae.Core;
@@ -106,6 +107,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private VisualElement _outerGlow;
         private UiGlowFrameGenerator _outerGlowGenerator;
         private Material _outerGlowMaterialRuntime;
+        private bool _backdropCapturePending;
 
         private readonly StringBuilder _consoleBuffer = new();
         private bool _isVisible;
@@ -790,6 +792,20 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (!_useBlurredBackdrop || _backdrop == null || _dimOverlay == null) return;
 
             _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
+            if (Screen.width < 64 || Screen.height < 64)
+            {
+                // Render target too small (minimized or not ready) -> skip capture.
+                return;
+            }
+
+            if (!_backdropCapturePending)
+                StartCoroutine(CaptureBackdropNextFrame());
+        }
+
+        private IEnumerator CaptureBackdropNextFrame()
+        {
+            _backdropCapturePending = true;
+            yield return new WaitForEndOfFrame();
 
             Texture2D src = null;
             try
@@ -801,22 +817,25 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 src = null;
             }
 
-            if (src == null) return;
+            if (src != null)
+            {
+                try
+                {
+                    var down = DownsampleTexture(src, Mathf.Max(2, _backdropDownsample));
+                    var blurred = BoxBlur(down, Mathf.Max(1, _backdropBlurRadius), Mathf.Max(1, _backdropBlurIterations));
+                    if (_backdropTexture != null)
+                        Destroy(_backdropTexture);
+                    _backdropTexture = blurred;
+                    _backdrop.style.backgroundImage = new StyleBackground(_backdropTexture);
+                    _backdrop.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop;
+                }
+                finally
+                {
+                    Destroy(src);
+                }
+            }
 
-            try
-            {
-                var down = DownsampleTexture(src, Mathf.Max(2, _backdropDownsample));
-                var blurred = BoxBlur(down, Mathf.Max(1, _backdropBlurRadius), Mathf.Max(1, _backdropBlurIterations));
-                if (_backdropTexture != null)
-                    Destroy(_backdropTexture);
-                _backdropTexture = blurred;
-                _backdrop.style.backgroundImage = new StyleBackground(_backdropTexture);
-                _backdrop.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop;
-            }
-            finally
-            {
-                Destroy(src);
-            }
+            _backdropCapturePending = false;
         }
 
         private Texture2D DownsampleTexture(Texture2D src, int factor)

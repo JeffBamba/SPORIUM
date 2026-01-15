@@ -42,6 +42,8 @@ namespace Sporae.Dome.PotAutomation
 
         [Header("Timing")]
         [SerializeField] private Vector2 delaySecondsRange = new Vector2(60f, 180f);
+        [SerializeField] private bool useArmAnimation = true;
+        [SerializeField, Range(0.1f, 2f)] private float delayMultiplier = 0.25f;
 
         private readonly Queue<AutomationAction> _queue = new();
         private bool _isRunning;
@@ -102,12 +104,47 @@ namespace Sporae.Dome.PotAutomation
                 var action = _queue.Dequeue();
                 if (action == null) continue;
 
-                float delay = UnityEngine.Random.Range(delaySecondsRange.x, delaySecondsRange.y);
-                PostToast("POT-AUTO-INPROGRESS", $"{action.PotId}: {action.Type} in progress — ETA {Mathf.CeilToInt(delay)}s");
+                PotSlot pot = null;
+                PotAutomationArmAnimator armAnimator = null;
+                if (useArmAnimation)
+                {
+                    pot = FindPotById(action.PotId);
+                    if (pot != null)
+                        armAnimator = pot.GetComponentInChildren<PotAutomationArmAnimator>(includeInactive: true);
+                }
 
+                float effectiveMultiplier = delayMultiplier * 0.5f;
+                float delay = UnityEngine.Random.Range(delaySecondsRange.x, delaySecondsRange.y) * effectiveMultiplier;
+                delay = Mathf.Max(1f, delay);
+                string dangerKey = $"POT-AUTO:{action.PotId}";
+                _foundation?.UpsertDanger(dangerKey, "POT-AUTO-INPROGRESS",
+                    new NotificationPayload().With("message", $"{action.PotId}: {action.Type} in progress — ETA {Mathf.CeilToInt(delay)}s"));
+                // Keep progress visible until success; avoid expiring toast.
+
+                // #region agent log
+                try
+                {
+                    System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
+                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H9\",\"location\":\"PotAutomationRunner.RunLoop\",\"message\":\"inprogress_toast\",\"data\":{\"potId\":\"" + action.PotId + "\",\"type\":\"" + action.Type + "\",\"delay\":" + delay.ToString("F2") + ",\"delayMultiplier\":" + delayMultiplier.ToString("F2") + ",\"effectiveMultiplier\":" + effectiveMultiplier.ToString("F2") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
+                }
+                catch { }
+                // #endregion
+
+                armAnimator?.StartActionAnimation(action.Type, action.PotId);
                 yield return new WaitForSeconds(delay);
 
                 ExecuteAction(action);
+                armAnimator?.StopAnimation();
+                _foundation?.ResolveDanger(dangerKey);
+
+                // #region agent log
+                try
+                {
+                    System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
+                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"H10\",\"location\":\"PotAutomationRunner.RunLoop\",\"message\":\"action_complete\",\"data\":{\"potId\":\"" + action.PotId + "\",\"type\":\"" + action.Type + "\",\"dangerKey\":\"" + dangerKey + "\",\"potActive\":" + (pot != null && pot.gameObject.activeInHierarchy ? "true" : "false") + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
+                }
+                catch { }
+                // #endregion
             }
 
             _isRunning = false;

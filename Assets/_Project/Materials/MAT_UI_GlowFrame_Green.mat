@@ -47,8 +47,10 @@ Material:
     - _EnableExternalAlpha: 0
     - _GlowFalloff: 1.25
     - _GlowIntensity: 1
+    - _GlowMode: 0
     - _GlowSize: 14
     - _GradStrength: 0
+    - _InnerPad: 0
     m_Colors:
     - _BorderColor: {r: 0.49803922, g: 1, b: 0.47843137, a: 0.6}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
