@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.HUD.Components;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -20,11 +21,20 @@ namespace Sporae.UI.UIToolkit.HUD
         
         [Header("Configuration")]
         [SerializeField] private bool _enableDebugLogs = false;
+
+        [Header("UI Glow Frame")]
+        [SerializeField] private Material _glowFrameMaterial;
+        [SerializeField] private bool _glowFrameLiveUpdate = true;
         
         // UI Elements
         private VisualElement _root;
         private Dictionary<string, Button> _roomButtons;
         private Dictionary<string, string> _roomIds; // Button name -> Room ID mapping
+
+        private VisualElement _glowFrame;
+        private UiGlowFrameGenerator _glowFrameGenerator;
+        private Material _glowFrameMaterialRuntime;
+        private const string GlowShaderName = "Sporae/UI/GlowFrame";
         
         // Events
         public event Action<string> OnRoomButtonClick;
@@ -60,6 +70,70 @@ namespace Sporae.UI.UIToolkit.HUD
                 SporiumLogger.LogError(LogCategory.UI, "Root VisualElement non trovato!");
                 return;
             }
+
+            _glowFrame = _root.Q<VisualElement>("glow-frame");
+            SetupGlowFrame();
+        }
+
+        private void SetupGlowFrame()
+        {
+            if (_glowFrame == null) return;
+
+            if (_glowFrameMaterial == null)
+            {
+                var shader = Shader.Find(GlowShaderName);
+                if (shader != null)
+                    _glowFrameMaterial = new Material(shader);
+            }
+
+            if (_glowFrameMaterial != null)
+            {
+                ApplyGlowDefaults(_glowFrameMaterial);
+                _glowFrameMaterialRuntime = new Material(_glowFrameMaterial);
+                _glowFrameGenerator = new UiGlowFrameGenerator(_glowFrame, _glowFrameMaterialRuntime);
+            }
+
+            _glowFrameLiveUpdate = true;
+
+        }
+
+        private static void ApplyGlowDefaults(Material mat)
+        {
+            // Glow frame should be transparent; bar background is handled by USS.
+            var bg = new Color(0f, 0f, 0f, 0f);
+            // Border: #7FFF7A @ 60%
+            var border = new Color(127f / 255f, 255f / 255f, 122f / 255f, 0.60f);
+            // Glow: same green, stronger alpha for bloom
+            var glow = new Color(127f / 255f, 255f / 255f, 122f / 255f, 0.90f);
+
+            mat.SetColor("_GradTop", bg);
+            mat.SetColor("_GradBottom", bg);
+            mat.SetFloat("_GradStrength", 0.0f);
+            mat.SetColor("_BorderColor", border);
+            mat.SetColor("_GlowColor", glow);
+            mat.SetFloat("_BorderThickness", 4.0f);
+            mat.SetFloat("_BorderSoftness", 1.0f);
+            mat.SetFloat("_GlowSize", 14.0f);
+            mat.SetFloat("_GlowIntensity", 1.0f);
+            mat.SetFloat("_GlowFalloff", 1.25f);
+        }
+
+        private void Update()
+        {
+            if (_glowFrameLiveUpdate && _glowFrameGenerator != null)
+            {
+                if (_glowFrameMaterialRuntime != null && _glowFrameMaterial != null)
+                    _glowFrameMaterialRuntime.CopyPropertiesFromMaterial(_glowFrameMaterial);
+                if (_glowFrameMaterialRuntime != null)
+                    _glowFrameMaterialRuntime.SetFloat("_EdgeMode", 1.0f); // top edge only
+                _glowFrameGenerator.Render();
+            }
+        }
+
+        private void OnDisable()
+        {
+            _glowFrameGenerator?.Dispose();
+            _glowFrameGenerator = null;
         }
         
         private void InitializeRoomButtons()

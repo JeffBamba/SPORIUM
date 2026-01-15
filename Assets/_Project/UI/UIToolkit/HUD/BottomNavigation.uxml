@@ -48,5 +48,6 @@
                 <ui:Label text="Floor -3" class="room-floor" />
             </ui:Button>
         </ui:VisualElement>
+        <ui:VisualElement name="glow-frame" class="glow-frame glow-frame-top" />
     </ui:VisualElement>
 </ui:UXML>

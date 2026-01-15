@@ -51,5 +51,6 @@
                 <ui:Label name="cry-value" text="1,245" class="metric-value-large" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="glow-frame" class="glow-frame glow-frame-bottom" />
     </ui:VisualElement>
 </ui:UXML>

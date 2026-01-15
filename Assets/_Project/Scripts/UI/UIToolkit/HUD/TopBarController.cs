@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
+using System;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.DevTools;
 using _Project.Sporae.Core;
 using _Project;
 using Sporae.Core;
+using Sporae.UI.UIToolkit.HUD.Components;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -28,6 +30,10 @@ namespace Sporae.UI.UIToolkit.HUD
         
         [Header("Configuration")]
         [SerializeField] private bool _enableDebugLogs = false;
+
+        [Header("UI Glow Frame")]
+        [SerializeField] private Material _glowFrameMaterial;
+        [SerializeField] private bool _glowFrameLiveUpdate = true;
         
         // Suppress warning for unused field (used in Inspector)
         #pragma warning disable 0414
@@ -47,6 +53,11 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _mutationValueLabel;
         private Label _cryValueLabel;
         private Label _grateValueLabel;
+
+        private VisualElement _glowFrame;
+        private UiGlowFrameGenerator _glowFrameGenerator;
+        private Material _glowFrameMaterialRuntime;
+        private const string GlowShaderName = "Sporae/UI/GlowFrame";
         
         // Tooltip
         private VisualElement _phTooltip;
@@ -350,6 +361,9 @@ namespace Sporae.UI.UIToolkit.HUD
                 SporiumLogger.LogError(LogCategory.UI, "Root VisualElement non trovato!");
                 return;
             }
+
+            _glowFrame = _root.Q<VisualElement>("glow-frame");
+            SetupGlowFrame();
             
             // Query UI elements
             var actionsBarContainer = _root.Q<VisualElement>("actions-bar");
@@ -390,6 +404,67 @@ namespace Sporae.UI.UIToolkit.HUD
                     _yellowWarning
                 );
             }
+        }
+
+        private void SetupGlowFrame()
+        {
+            if (_glowFrame == null) return;
+
+            if (_glowFrameMaterial == null)
+            {
+                var shader = Shader.Find(GlowShaderName);
+                if (shader != null)
+                    _glowFrameMaterial = new Material(shader);
+            }
+
+            if (_glowFrameMaterial != null)
+            {
+                ApplyGlowDefaults(_glowFrameMaterial);
+                _glowFrameMaterialRuntime = new Material(_glowFrameMaterial);
+                _glowFrameGenerator = new UiGlowFrameGenerator(_glowFrame, _glowFrameMaterialRuntime);
+            }
+
+            _glowFrameLiveUpdate = true;
+
+        }
+
+        private static void ApplyGlowDefaults(Material mat)
+        {
+            // Glow frame should be transparent; bar background is handled by USS.
+            var bg = new Color(0f, 0f, 0f, 0f);
+            // Border: #7FFF7A @ 60%
+            var border = new Color(127f / 255f, 255f / 255f, 122f / 255f, 0.60f);
+            // Glow: same green, stronger alpha for bloom
+            var glow = new Color(127f / 255f, 255f / 255f, 122f / 255f, 0.90f);
+
+            mat.SetColor("_GradTop", bg);
+            mat.SetColor("_GradBottom", bg);
+            mat.SetFloat("_GradStrength", 0.0f);
+            mat.SetColor("_BorderColor", border);
+            mat.SetColor("_GlowColor", glow);
+            mat.SetFloat("_BorderThickness", 4.0f);
+            mat.SetFloat("_BorderSoftness", 1.0f);
+            mat.SetFloat("_GlowSize", 14.0f);
+            mat.SetFloat("_GlowIntensity", 1.0f);
+            mat.SetFloat("_GlowFalloff", 1.25f);
+        }
+
+        private void Update()
+        {
+            if (_glowFrameLiveUpdate && _glowFrameGenerator != null)
+            {
+                if (_glowFrameMaterialRuntime != null && _glowFrameMaterial != null)
+                    _glowFrameMaterialRuntime.CopyPropertiesFromMaterial(_glowFrameMaterial);
+                if (_glowFrameMaterialRuntime != null)
+                    _glowFrameMaterialRuntime.SetFloat("_EdgeMode", 2.0f); // bottom edge only
+                _glowFrameGenerator.Render();
+            }
+        }
+
+        private void OnDisable()
+        {
+            _glowFrameGenerator?.Dispose();
+            _glowFrameGenerator = null;
         }
         
         private void InitializeComponents()
@@ -912,31 +987,6 @@ namespace Sporae.UI.UIToolkit.HUD
             
             if (_phPulseCoroutine != null)
                 StopCoroutine(_phPulseCoroutine);
-        }
-        
-        private void OnDisable()
-        {
-            // Unsubscribe when disabled
-            if (_actionSystem != null)
-            {
-                _actionSystem.OnActionsChanged -= OnActionsChanged;
-            }
-            
-            if (_economySystem != null)
-            {
-                _economySystem.OnCRYChanged -= OnCRYChanged;
-            }
-            
-            // Unsubscribe from ServiceContainer event
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
-            }
-            
-            if (_phSystem != null)
-            {
-                _phSystem.OnPhChanged -= OnPhChanged;
-            }
         }
         
         private void OnEnable()

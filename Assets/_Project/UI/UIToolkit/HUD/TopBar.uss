@@ -17,10 +17,27 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
+    box-shadow: 0 0 24px rgba(127, 255, 122, 0.84);
 }
 
 /* TODO: Glow effects (box-shadow triple-layer) - implementazione futura via Outline component o shader */
+
+.glow-frame {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    picking-mode: ignore;
+}
+
+.glow-frame-bottom {
+    top: auto;
+    height: 24px;
+    bottom: -12px;
+}
 
 /* Scanline Overlay */
 .scan-line-bottom {
@@ -114,6 +131,7 @@
     font-size: 14px;
     -unity-font-style: normal;
     -unity-text-align: middle-center;
+    box-shadow: 0 0 20px rgba(127, 255, 122, 0.90);
 }
 
 .icon-placeholder-center {
@@ -134,6 +152,7 @@
     top: 50%;
     margin-left: -16px;
     margin-top: -16px;
+    box-shadow: 0 0 20px rgba(127, 255, 122, 0.90);
 }
 
 /* Segmented Bar (Actions) */
@@ -161,7 +180,7 @@
 .bar-segment.filled {
     background-color: rgb(230, 201, 111);
     border-color: rgb(230, 201, 111);
-    /* TODO: Add glow effect */
+    box-shadow: 0 0 16px rgba(230, 201, 111, 1.0);
 }
 
 /* Mutation Orbit */
@@ -184,6 +203,7 @@
     border-radius: 50%;
     position: absolute;
     /* Position will be set dynamically via C# */
+    box-shadow: 0 0 12px rgba(127, 255, 122, 1.0);
 }
 
 /* pH Slider */
@@ -255,7 +275,7 @@
     height: 3px;
     position: absolute;
     background-color: rgb(127, 255, 122);
-    /* TODO: Add glow effect 0 0 4px #7FFF7A */
+    box-shadow: 0 0 12px rgba(127, 255, 122, 1.0);
 }
 
 .corner-top-left {

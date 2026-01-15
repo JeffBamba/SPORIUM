@@ -1,6 +1,6 @@
 .pcv3-root {
-    width: 100%;
-    height: 100%;
+    width: 1920px;
+    height: 1080px;
     flex-grow: 1;
     position: absolute;
     left: 0px;
@@ -10,7 +10,28 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 1.0);
+    background-color: rgba(0, 0, 0, 0.0);
+}
+
+.pcv3-backdrop {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: rgba(0, 0, 0, 0.0);
+    -unity-background-scale-mode: scale-and-crop;
+    picking-mode: ignore;
+}
+
+.pcv3-dim {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: rgba(0, 0, 0, 0.95);
+    picking-mode: ignore;
 }
 
 .pcv3-window {
@@ -25,30 +46,48 @@
     border-right-color: rgb(127, 255, 122);
     border-top-color: rgb(127, 255, 122);
     border-bottom-color: rgb(127, 255, 122);
+    box-shadow: 0 0 12px rgba(127, 255, 122, 0.42);
+    overflow: visible;
+}
+
+.pcv3-outer-glow {
+    position: absolute;
+    left: -16px;
+    right: -16px;
+    top: -16px;
+    bottom: -16px;
+    picking-mode: ignore;
 }
 
 .pcv3-header {
     height: 56px;
+    min-height: 56px;
+    max-height: 56px;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start; /* allinea a sinistra come nel mock */
     padding-left: 18px;
     padding-right: 18px;
     border-bottom-width: 2px;
     border-bottom-color: rgba(127, 255, 122, 0.6);
     background-color: rgba(0, 0, 0, 0.60);
+    gap: 12px;
 }
 
 .pcv3-title {
     font-size: 12px;
     -unity-font-style: normal;
     color: rgb(127, 255, 122);
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 .pcv3-header-right {
     flex-direction: row;
     align-items: center;
     gap: 10px;
+    flex-grow: 1; /* occupa spazio per distanziare dal titolo */
 }
 
 .pcv3-pill {
@@ -70,6 +109,9 @@
 .pcv3-pill-text {
     font-size: 12px;
     color: rgb(127, 255, 122);
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 .pcv3-close {
@@ -80,6 +122,10 @@
     border-right-width: 0px;
     border-top-width: 0px;
     border-bottom-width: 0px;
+    margin-left: auto; /* spinge il close verso destra */
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 .pcv3-body {
@@ -89,6 +135,8 @@
 
 .pcv3-left {
     width: 340px;
+    min-width: 340px;
+    max-width: 340px;
     border-right-width: 2px;
     border-right-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0, 0, 0, 0.45);
@@ -233,12 +281,20 @@
     flex-grow: 1;
     padding: 14px;
     gap: 10px;
+    height: 740px;
+    min-height: 740px;
+    max-height: 740px;
 }
 
 .pcv3-console-view,
 .pcv3-protocol-view,
 .pcv3-detail-view {
     flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0px;
+    height: 668px;
+    min-height: 668px;
+    max-height: 668px;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -248,6 +304,9 @@
     border-top-color: rgba(127, 255, 122, 0.5);
     border-bottom-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0,0,0,0.55);
+    padding-left: 10px;   /* distanzia il testo dal bordo sinistro del box */
+    padding-right: 10px;  /* distanzia il testo dal bordo destro del box */
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.30);
 }
 
 .pcv3-protocol-view,
@@ -259,12 +318,105 @@
 .pcv3-protocol-scroll {
     flex-grow: 1;
     padding: 14px;
+    padding-bottom: 26px;
+}
+
+/* ----------------------------- */
+/* Retro LED Scrollbar Styles    */
+/* ----------------------------- */
+/* GREEN LED (primary) */
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller,
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller,
+.pcv3-potlist .unity-scroll-view__vertical-scroller {
+    width: 12px;
+    background-color: #1A2325;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: #2A3436;
+    border-right-color: #2A3436;
+    border-top-color: #2A3436;
+    border-bottom-color: #2A3436;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb,
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb,
+.pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    background-image: linear-gradient(#7FFF7A, #5FB65A);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: #1A2325;
+    border-right-color: #1A2325;
+    border-top-color: #1A2325;
+    border-bottom-color: #1A2325;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 0 8px rgba(127, 255, 122, 0.6);
+}
+
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover,
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover,
+.pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
+    background-image: linear-gradient(#88FF88, #6FC66A);
+    box-shadow: 0 0 12px rgba(127, 255, 122, 0.8);
+}
+
+/* PURPLE LED (queue / diary-like) */
+.pcv3-queue-list .unity-scroll-view__vertical-scroller {
+    width: 10px;
+    background-color: #1A2325;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: #2A3436;
+    border-right-color: #2A3436;
+    border-top-color: #2A3436;
+    border-bottom-color: #2A3436;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.pcv3-queue-list .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    background-image: linear-gradient(#B580D1, #9060B1);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: #1A2325;
+    border-right-color: #1A2325;
+    border-top-color: #1A2325;
+    border-bottom-color: #1A2325;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 0 8px rgba(181, 128, 209, 0.5);
+}
+
+.pcv3-queue-list .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
+    background-image: linear-gradient(#C590E1, #A070C1);
+    box-shadow: 0 0 12px rgba(181, 128, 209, 0.7);
 }
 
 .pcv3-console-text {
     font-size: 12px;
     color: rgb(127, 255, 122);
-    white-space: normal;
+    white-space: pre;
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 .pcv3-detail-placeholder {
@@ -274,9 +426,9 @@
 }
 
 .pcv3-prompt {
-    height: 46px;
-    min-height: 46px;
-    max-height: 46px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
     flex-direction: row;
     align-items: center;
     padding-left: 12px;
@@ -290,6 +442,7 @@
     border-top-color: rgba(127, 255, 122, 0.5);
     border-bottom-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0,0,0,0.55);
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.30);
 }
 
 .pcv3-prompt-prefix {
@@ -321,6 +474,9 @@
     -unity-text-align: middle-left;
     white-space: nowrap;
     overflow: hidden;
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    -unity-text-outline-width: 0.6px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 /* Unity TextField internal input (default is white) */

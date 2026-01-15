@@ -12039,7 +12039,14 @@ MonoBehaviour:
   _spPanelBase: {fileID: 7433441132597879392, guid: 3cc1013e433eec845ab79e73d208a516, type: 3}
   _notificationsUss: {fileID: 7433441132597879392, guid: f6e5544b0a2c1124496a59a4172e9ad6, type: 3}
   _startExpanded: 1
-  _enableDebugLogs: 0
+  _enableDebugLogs: 1
+  _glowFrameMaterial: {fileID: 2100000, guid: e170c7eca5aa4c242a5ee6334677476f, type: 2}
+  _glowFrameLiveUpdate: 1
+  _glowSize: 12
+  _glowIntensity: 1
+  _glowFalloff: 1.25
+  _glowSoftness: 1
+  _glowBorderThickness: 0
 --- !u!114 &487210097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15237,7 +15244,9 @@ MonoBehaviour:
   _mutationIndex: 0.42
   _cryBalance: 1245
   _grateValue: 12
-  _enableDebugLogs: 0
+  _enableDebugLogs: 1
+  _glowFrameMaterial: {fileID: 2100000, guid: e170c7eca5aa4c242a5ee6334677476f, type: 2}
+  _glowFrameLiveUpdate: 1
 --- !u!114 &606924781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32770,6 +32779,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _uiDocument: {fileID: 0}
   _startVisibleInEditor: 0
+  _useBlurredBackdrop: 1
+  _backdropDimAlpha: 0.85
+  _backdropDownsample: 8
+  _backdropBlurRadius: 2
+  _backdropBlurIterations: 2
+  _consoleMonoFont: {fileID: 0}
   _logFocusDebug: 1
   suppressDebugConsolesWhileTerminalOpen: 1
   hideOtherUiWhileTerminalOpen: 1
@@ -37329,7 +37344,9 @@ MonoBehaviour:
   _lockedRooms:
   - restricted1
   - restricted2
-  _enableDebugLogs: 0
+  _enableDebugLogs: 1
+  _glowFrameMaterial: {fileID: 2100000, guid: e170c7eca5aa4c242a5ee6334677476f, type: 2}
+  _glowFrameLiveUpdate: 1
 --- !u!114 &1475634572
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,15 +3,18 @@
     <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Panel-Base.uss?fileID=7433441132597879392&amp;guid=3cc1013e433eec845ab79e73d208a516&amp;type=3#SP-Panel-Base" />
     <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss?fileID=7433441132597879392&amp;guid=b37f4bda32a0604459559f294aa66d24&amp;type=3#PlantCardV3_Terminal" />
     <ui:VisualElement name="pcv3-root" class="pcv3-root">
+        <ui:VisualElement name="pcv3-backdrop" class="pcv3-backdrop" />
+        <ui:VisualElement name="pcv3-dim" class="pcv3-dim" />
         <ui:VisualElement name="pcv3-window" class="pcv3-window">
+            <ui:VisualElement name="pcv3-outer-glow" class="pcv3-outer-glow" />
             <ui:VisualElement name="pcv3-header" class="pcv3-header">
-                <ui:Label name="pcv3-title" text="INCUBATOR CONTROL TERMINAL v3.1" class="pcv3-title" />
+                <ui:Label name="pcv3-title" text="INCUBATOR CONTROL TERMINAL v3.1" class="pcv3-title" style="letter-spacing: 9px;" />
                 <ui:VisualElement class="pcv3-header-right">
-                    <ui:VisualElement name="pcv3-ap-box" class="pcv3-pill pcv3-pill-ap">
-                        <ui:Label name="pcv3-ap-label" text="ACTION POINTS: 0/0" class="pcv3-pill-text" />
+                    <ui:VisualElement name="pcv3-ap-box" class="pcv3-pill pcv3-pill-ap" style="height: 33px;">
+                        <ui:Label name="pcv3-ap-label" text="ACTION POINTS: 0/0" class="pcv3-pill-text" style="-unity-text-align: middle-left;" />
                     </ui:VisualElement>
-                    <ui:VisualElement name="pcv3-queued-box" class="pcv3-pill pcv3-pill-queued">
-                        <ui:Label name="pcv3-queued-label" text="QUEUED: 0" class="pcv3-pill-text" />
+                    <ui:VisualElement name="pcv3-queued-box" class="pcv3-pill pcv3-pill-queued" style="right: -22px; height: 30px; border-left-color: rgba(205, 255, 203, 0.7); border-right-color: rgba(205, 255, 203, 0.7); border-top-color: rgba(205, 255, 203, 0.7); border-bottom-color: rgba(205, 255, 203, 0.7);">
+                        <ui:Label name="pcv3-queued-label" text="QUEUED: 0" class="pcv3-pill-text" style="-unity-text-align: middle-left; font-size: 10px; justify-content: flex-start; top: -2px;" />
                     </ui:VisualElement>
                     <ui:Button name="pcv3-close-button" text="[ESC] CLOSE" class="pcv3-close" />
                 </ui:VisualElement>
@@ -19,7 +22,7 @@
             <ui:VisualElement name="pcv3-body" class="pcv3-body">
                 <ui:VisualElement name="pcv3-left" class="pcv3-left">
                     <ui:ScrollView name="pcv3-potlist" class="pcv3-potlist" />
-                    <ui:VisualElement name="pcv3-queue" class="pcv3-queue">
+                    <ui:VisualElement name="pcv3-queue" class="pcv3-queue" style="height: 160px;">
                         <ui:Label name="pcv3-queue-title" text="ACTION QUEUE" class="pcv3-queue-title" />
                         <ui:ScrollView name="pcv3-queue-list" class="pcv3-queue-list" />
                         <ui:Button name="pcv3-queue-clear" text="CLEAR ALL" class="pcv3-queue-clear" />

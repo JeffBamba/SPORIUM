@@ -10,6 +10,7 @@ using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
 using System.Collections.Generic;
 using _Project.Player;
+using Sporae.UI.UIToolkit.HUD.Components;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -63,6 +64,20 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [Header("Behavior")]
         [SerializeField] private bool _startVisibleInEditor = false;
 
+        [Header("Backdrop Blur")]
+        [SerializeField] private bool _useBlurredBackdrop = true;
+        [SerializeField, Range(0.5f, 0.99f)] private float _backdropDimAlpha = 0.95f;
+        [SerializeField, Range(2, 16)] private int _backdropDownsample = 8;
+        [SerializeField, Range(1, 6)] private int _backdropBlurRadius = 2;
+        [SerializeField, Range(1, 4)] private int _backdropBlurIterations = 2;
+
+        [Header("Console Font")]
+        [SerializeField] private Font _consoleMonoFont;
+
+        [Header("Outer Glow Frame")]
+        [SerializeField] private Material _outerGlowMaterial;
+        [SerializeField] private bool _outerGlowLiveUpdate = false;
+
         [Header("Debug")]
         [SerializeField] private bool _logFocusDebug = false;
 
@@ -85,6 +100,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private ScrollView _potList;
         private ScrollView _queueList;
         private Button _btnQueueClear;
+        private VisualElement _backdrop;
+        private VisualElement _dimOverlay;
+        private Texture2D _backdropTexture;
+        private VisualElement _outerGlow;
+        private UiGlowFrameGenerator _outerGlowGenerator;
+        private Material _outerGlowMaterialRuntime;
 
         private readonly StringBuilder _consoleBuffer = new();
         private bool _isVisible;
@@ -157,6 +178,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _potList = _root.Q<ScrollView>("pcv3-potlist");
             _queueList = _root.Q<ScrollView>("pcv3-queue-list");
             _btnQueueClear = _root.Q<Button>("pcv3-queue-clear");
+            _backdrop = _root.Q<VisualElement>("pcv3-backdrop");
+            _dimOverlay = _root.Q<VisualElement>("pcv3-dim");
+            _outerGlow = _root.Q<VisualElement>("pcv3-outer-glow");
+
+            ApplyConsoleFont();
 
             if (_consoleText != null)
                 _consoleText.enableRichText = true;
@@ -199,6 +225,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             EnsureBlinkCursor();
             InstallFocusGuard();
 
+            SetupOuterGlowFrame();
+
             // Hide by default
             SetVisible(_startVisibleInEditor);
         }
@@ -212,6 +240,41 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"" + hypothesisId + "\",\"location\":\"" + location + "\",\"message\":\"" + message + "\",\"data\":" + (string.IsNullOrEmpty(dataJson) ? "{}" : dataJson) + ",\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
             }
             catch { }
+        }
+
+        private void ApplyConsoleFont()
+        {
+            Font font = _consoleMonoFont;
+            if (font == null)
+            {
+                font = FindLoadedFont("PixelOperatorMono_Bold")
+                    ?? FindLoadedFont("IBMPlexMono-Regular")
+                    ?? FindLoadedFont("IBMPlexMono-Medium")
+                    ?? FindLoadedFont("IBMPlexMono");
+            }
+
+            if (font == null) return;
+
+            if (_consoleText != null)
+                _consoleText.style.unityFont = font;
+            if (_protocolText != null)
+                _protocolText.style.unityFont = font;
+        }
+
+        private static Font FindLoadedFont(string containsName)
+        {
+            try
+            {
+                var fonts = Resources.FindObjectsOfTypeAll<Font>();
+                foreach (var f in fonts)
+                {
+                    if (f == null) continue;
+                    if (!string.IsNullOrEmpty(f.name) && f.name.Contains(containsName))
+                        return f;
+                }
+            }
+            catch { }
+            return null;
         }
 
         private void LogLayoutSnapshot(string tag)
@@ -232,6 +295,35 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                               + "}";
 
                 DebugLog("LAYOUT", "Snapshot", "layout", json);
+            }
+            catch { }
+        }
+
+        private void DumpResolvedLayout(string tag)
+        {
+            try
+            {
+                var win = _root?.Q<VisualElement>("pcv3-window");
+                var header = _root?.Q<VisualElement>("pcv3-header");
+                var left = _root?.Q<VisualElement>("pcv3-left");
+                var right = _root?.Q<VisualElement>("pcv3-right");
+                var prompt = _promptRoot;
+                var input = _input;
+                var console = _consoleView;
+
+                string json = "{"
+                              + "\"tag\":\"" + tag + "\""
+                              + ",\"root\":{\"w\":" + (_root?.resolvedStyle.width ?? -1f) + ",\"h\":" + (_root?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"window\":{\"w\":" + (win?.resolvedStyle.width ?? -1f) + ",\"h\":" + (win?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"header\":{\"h\":" + (header?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"left\":{\"w\":" + (left?.resolvedStyle.width ?? -1f) + "}"
+                              + ",\"right\":{\"w\":" + (right?.resolvedStyle.width ?? -1f) + ",\"h\":" + (right?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"console\":{\"h\":" + (console?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"prompt\":{\"h\":" + (prompt?.resolvedStyle.height ?? -1f) + "}"
+                              + ",\"input\":{\"h\":" + (input?.resolvedStyle.height ?? -1f) + ",\"font\":" + (input?.resolvedStyle.fontSize ?? -1f) + "}"
+                              + "}";
+
+                DebugLog("LAYOUT", "DumpResolvedLayout", "resolved", json);
             }
             catch { }
         }
@@ -303,6 +395,36 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Optional: log focus-in as well (useful to see if focus ever reaches internal element).
             _input.RegisterCallback<FocusInEvent>(_ => { FocusDebug("TextField FocusInEvent"); });
+        }
+
+        private void SetupOuterGlowFrame()
+        {
+            if (_outerGlow == null) return;
+
+            if (_outerGlowMaterial == null)
+            {
+                var shader = Shader.Find("Sporae/UI/GlowFrame");
+                if (shader != null)
+                    _outerGlowMaterial = new Material(shader);
+            }
+
+            if (_outerGlowMaterial == null) return;
+
+            _outerGlowMaterialRuntime = new Material(_outerGlowMaterial);
+            ApplyOuterGlowDefaults(_outerGlowMaterialRuntime);
+            _outerGlowGenerator = new UiGlowFrameGenerator(_outerGlow, _outerGlowMaterialRuntime);
+            _outerGlowGenerator.Render();
+        }
+
+        private static void ApplyOuterGlowDefaults(Material mat)
+        {
+            if (mat == null) return;
+            mat.SetFloat("_GradStrength", 0.0f);
+            mat.SetFloat("_BorderThickness", 0.0f);
+            mat.SetFloat("_BorderSoftness", 1.0f);
+            mat.SetFloat("_EdgeMode", 0.0f);
+            mat.SetFloat("_GlowMode", 1.0f); // outward only
+            mat.SetFloat("_InnerPad", 0.0f);
         }
 
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
@@ -567,6 +689,20 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (!_isVisible) return;
 
+            // Allow runtime tweaking of dim alpha in Inspector.
+            if (_dimOverlay != null)
+            {
+                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
+            }
+
+            if (_outerGlowLiveUpdate && _outerGlowGenerator != null && _outerGlowMaterialRuntime != null)
+            {
+                if (_outerGlowMaterial != null)
+                    _outerGlowMaterialRuntime.CopyPropertiesFromMaterial(_outerGlowMaterial);
+                ApplyOuterGlowDefaults(_outerGlowMaterialRuntime);
+                _outerGlowGenerator.Render();
+            }
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 // In MVP chiude subito. In fase parser completo: aprirà prompt conferma queue.
@@ -579,8 +715,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             RefreshHeader();
         }
 
+        private void OnDestroy()
+        {
+            _outerGlowGenerator?.Dispose();
+            _outerGlowGenerator = null;
+            _outerGlowMaterialRuntime = null;
+        }
+
         public void Open()
         {
+            PrepareBackdrop();
             SetVisible(true);
             SwitchToConsole();
             RenderWelcome();
@@ -589,6 +733,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             FocusInput();
             // Some Unity/UI Toolkit setups require a next-tick focus to actually stick.
             RequestRefocusSoon();
+
+            // Capture resolved layout after UI settles (for UI Builder parity).
+            _root?.schedule.Execute(() => DumpResolvedLayout("open_t0")).ExecuteLater(0);
+            _root?.schedule.Execute(() => DumpResolvedLayout("open_t100")).ExecuteLater(100);
         }
 
         public void Close()
@@ -635,6 +783,104 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (visible) StartBlinkCursor();
             else StopBlinkCursor();
+        }
+
+        private void PrepareBackdrop()
+        {
+            if (!_useBlurredBackdrop || _backdrop == null || _dimOverlay == null) return;
+
+            _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
+
+            Texture2D src = null;
+            try
+            {
+                src = ScreenCapture.CaptureScreenshotAsTexture();
+            }
+            catch
+            {
+                src = null;
+            }
+
+            if (src == null) return;
+
+            try
+            {
+                var down = DownsampleTexture(src, Mathf.Max(2, _backdropDownsample));
+                var blurred = BoxBlur(down, Mathf.Max(1, _backdropBlurRadius), Mathf.Max(1, _backdropBlurIterations));
+                if (_backdropTexture != null)
+                    Destroy(_backdropTexture);
+                _backdropTexture = blurred;
+                _backdrop.style.backgroundImage = new StyleBackground(_backdropTexture);
+                _backdrop.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop;
+            }
+            finally
+            {
+                Destroy(src);
+            }
+        }
+
+        private Texture2D DownsampleTexture(Texture2D src, int factor)
+        {
+            int w = Mathf.Max(1, src.width / factor);
+            int h = Mathf.Max(1, src.height / factor);
+            var dst = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var pixels = new Color[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                float v = h > 1 ? (float)y / (h - 1) : 0f;
+                for (int x = 0; x < w; x++)
+                {
+                    float u = w > 1 ? (float)x / (w - 1) : 0f;
+                    pixels[y * w + x] = src.GetPixelBilinear(u, v);
+                }
+            }
+            dst.SetPixels(pixels);
+            dst.Apply();
+            return dst;
+        }
+
+        private Texture2D BoxBlur(Texture2D src, int radius, int iterations)
+        {
+            int w = src.width;
+            int h = src.height;
+            var srcPixels = src.GetPixels();
+            var dstPixels = new Color[srcPixels.Length];
+
+            int r = Mathf.Max(1, radius);
+            for (int it = 0; it < iterations; it++)
+            {
+                for (int y = 0; y < h; y++)
+                {
+                    int yMin = Mathf.Max(0, y - r);
+                    int yMax = Mathf.Min(h - 1, y + r);
+                    for (int x = 0; x < w; x++)
+                    {
+                        int xMin = Mathf.Max(0, x - r);
+                        int xMax = Mathf.Min(w - 1, x + r);
+                        Color sum = Color.clear;
+                        int count = 0;
+                        for (int yy = yMin; yy <= yMax; yy++)
+                        {
+                            int row = yy * w;
+                            for (int xx = xMin; xx <= xMax; xx++)
+                            {
+                                sum += srcPixels[row + xx];
+                                count++;
+                            }
+                        }
+                        dstPixels[y * w + x] = sum / Mathf.Max(1, count);
+                    }
+                }
+                var tmp = srcPixels;
+                srcPixels = dstPixels;
+                dstPixels = tmp;
+            }
+
+            var outTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            outTex.SetPixels(srcPixels);
+            outTex.Apply();
+            Destroy(src);
+            return outTex;
         }
 
         private void SuppressOtherUi()
@@ -1413,30 +1659,72 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void PrintStartCommands()
         {
-            AppendRawLine("╔═ AVAILABLE COMMANDS ══════════════════════════════════════════════════════╗");
-            AppendRawLine("║                                                                           ║");
-            AppendRawLine("║ §TITLE§▸ POT MANAGEMENT & MONITORING§END§                                         ║");
-            AppendRawLine("║   §CMD§STATUS§END§              - Display all POT status & vitals            ║");
-            AppendRawLine("║   §CMD§FORECAST§END§ or §CMD§[F]§END§    - Monitoring Live Forecast (placeholder)   ║");
-            AppendRawLine("║   §CMD§OPEN [POT-ID]§END§       - Open detailed POT analysis screen          ║");
-            AppendRawLine("║   §CMD§NOTE [POT-ID]§END§       - Open POT diary notes viewer                ║");
-            AppendRawLine("║   §CMD§PLANT [POT-ID]§END§      - Queue planting action (TODO)               ║");
-            AppendRawLine("║   §CMD§FERTILIZE [POT-ID]§END§  - Queue fertilizer application (TODO)        ║");
-            AppendRawLine("║   §CMD§SPRAY [POT-ID]§END§      - Queue spray treatment (TODO)               ║");
-            AppendRawLine("║   §CMD§HYDRATION [POT-ID]§END§  - Toggle hydration system ON/OFF (TODO)      ║");
-            AppendRawLine("║   §CMD§LED RED [POT-ID]§END§    - Toggle red light spectrum ON/OFF (TODO)    ║");
-            AppendRawLine("║   §CMD§LED BLUE [POT-ID]§END§   - Toggle blue light spectrum ON/OFF (TODO)   ║");
-            AppendRawLine("║   §CMD§HARVEST [POT-ID]§END§    - Queue harvest operation (TODO)             ║");
-            AppendRawLine("║   §CMD§UPROOT [POT-ID]§END§     - Queue plant removal (1 AP)                 ║");
-            AppendRawLine("║                                                                           ║");
-            AppendRawLine("║ §WARN§▸ SYSTEM CONTROLS§END§                                                   ║");
-            AppendRawLine("║   §CMD§PROTOCOL§END§            - View Biological Protocol DOME_02           ║");
-            AppendRawLine("║   §CMD§START§END§               - Display this command reference             ║");
-            AppendRawLine("║   §CMD§CLEAR§END§               - Clear action queue                         ║");
-            AppendRawLine("║   §CMD§CLOSE§END§               - Close detailed POT analysis                ║");
-            AppendRawLine("║   §CMD§EXIT§END§                - Close terminal & confirm sequence          ║");
-            AppendRawLine("║                                                                           ║");
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
+            const int innerWidth = 75;
+
+            string VisibleText(string s)
+            {
+                return s.Replace("§TITLE§", "")
+                    .Replace("§CMD§", "")
+                    .Replace("§INFO§", "")
+                    .Replace("§DATA§", "")
+                    .Replace("§VAL§", "")
+                    .Replace("§WARN§", "")
+                    .Replace("§ERROR§", "")
+                    .Replace("§END§", "");
+            }
+
+            int VisibleLen(string s) => VisibleText(s).Length;
+
+            string Top(string title)
+            {
+                string label = $"═ {title} ";
+                int fill = Mathf.Max(0, innerWidth - label.Length);
+                return "╔" + label + new string('═', fill) + "╗";
+            }
+
+            string Bottom() => "╚" + new string('═', innerWidth) + "╝";
+
+            void Line(string content)
+            {
+                int padding = Mathf.Max(0, innerWidth - 1 - VisibleLen(content));
+                string pad = new string('\u00A0', padding);
+                AppendRawLine("║ " + content + pad + "║");
+            }
+
+            string CmdLine(string cmd, string desc)
+            {
+                int cmdCol = 22;
+                int pad = Mathf.Max(0, cmdCol - VisibleLen(cmd));
+                return $"  {cmd}{new string(' ', pad)}- {desc}";
+            }
+
+            AppendRawLine(Top("AVAILABLE COMMANDS"));
+            Line("");
+            Line("§TITLE§▸ POT MANAGEMENT & MONITORING§END§");
+            Line(CmdLine("§CMD§STATUS§END§", "§TITLE§Display all POT status & vitals§END§"));
+            Line(CmdLine("§CMD§FORECAST§END§ or §CMD§[F]§END§", "§TITLE§Monitoring Live Forecast (stage prediction)§END§"));
+            Line(CmdLine("§CMD§OPEN [POT-ID]§END§", "§TITLE§Open detailed POT analysis screen§END§"));
+            Line(CmdLine("§CMD§NOTE [POT-ID]§END§", "§TITLE§Open POT diary notes viewer§END§"));
+            Line(CmdLine("§CMD§PLANT [POT-ID]§END§", "§TITLE§Queue planting action (1 AP)§END§"));
+            Line(CmdLine("§CMD§UPROOT [POT-ID]§END§", "§TITLE§Queue plant removal (1 AP)§END§"));
+            Line("");
+            Line("§PURPLE§▸ CULTIVATION OPERATIONS§END§");
+            Line(CmdLine("§CMD§HYDRATION [POT-ID]§END§", "§TITLE§Toggle hydration system ON/OFF (1 AP)§END§"));
+            Line(CmdLine("§CMD§SPRAY [POT-ID]§END§", "§TITLE§Queue additive application (1 AP)§END§"));
+            Line(CmdLine("§CMD§FERTILIZE [POT-ID]§END§", "§TITLE§Queue nutrient boost (1 AP)§END§"));
+            Line(CmdLine("§CMD§PRUNE [POT-ID]§END§", "§TITLE§Queue pruning operation (1 AP)§END§"));
+            Line(CmdLine("§CMD§LED RED [POT-ID]§END§", "§TITLE§Toggle red light spectrum ON/OFF (1 AP)§END§"));
+            Line(CmdLine("§CMD§LED BLUE [POT-ID]§END§", "§TITLE§Toggle blue light spectrum ON/OFF (1 AP)§END§"));
+            Line(CmdLine("§CMD§HARVEST [POT-ID]§END§", "§TITLE§Queue harvest operation (1 AP)§END§"));
+            Line("");
+            Line("§WARN§▸ SYSTEM CONTROLS§END§");
+            Line(CmdLine("§CMD§PROTOCOL§END§", "§TITLE§View Biological Protocol DOME_02§END§"));
+            Line(CmdLine("§CMD§START§END§", "§TITLE§Display this command reference§END§"));
+            Line(CmdLine("§CMD§CLEAR§END§", "§TITLE§Clear action queue§END§"));
+            Line(CmdLine("§CMD§CLOSE§END§", "§TITLE§Close detailed POT analysis§END§"));
+            Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Close terminal & confirm sequence§END§"));
+            Line("");
+            AppendRawLine(Bottom());
             AppendRawLine("");
         }
 
@@ -2106,6 +2394,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 .Replace("§DATA§", $"<color={cyan}>")
                 .Replace("§VAL§", $"<color={yellow}>")
                 .Replace("§WARN§", $"<color={yellow}>")
+                .Replace("§PURPLE§", $"<color={purple}>")
                 .Replace("§ERROR§", $"<color={red}>")
                 .Replace("§END§", "</color>");
         }
