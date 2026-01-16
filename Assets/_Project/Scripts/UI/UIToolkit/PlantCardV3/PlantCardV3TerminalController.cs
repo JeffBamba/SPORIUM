@@ -2,16 +2,21 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Sporae.Core;
 using _Project; // per Interactable
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.Dome;
+using Sporae.Dome.PotSystem;
+using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Growth;
 using System.Collections.Generic;
 using _Project.Player;
 using Sporae.UI.UIToolkit.HUD.Components;
+using Sporae.UI.UIToolkit.PlantCard.Helpers;
+using Sporae.UI.UIToolkit.PlantCard.Components;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -61,12 +66,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         [Header("References")]
         [SerializeField] private UIDocument _uiDocument;
+        [SerializeField] private VisualTreeAsset _potCardTemplate;
+        [SerializeField] private VisualTreeAsset _detailPageTemplate;
 
         [Header("Behavior")]
         [SerializeField] private bool _startVisibleInEditor = false;
 
         [Header("Backdrop Blur")]
         [SerializeField] private bool _useBlurredBackdrop = true;
+        [SerializeField] private bool _outsideShowsGameView = true;
         [SerializeField, Range(0.5f, 0.99f)] private float _backdropDimAlpha = 0.95f;
         [SerializeField, Range(2, 16)] private int _backdropDownsample = 8;
         [SerializeField, Range(1, 6)] private int _backdropBlurRadius = 2;
@@ -114,7 +122,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private VisualElement _consoleView;
         private VisualElement _protocolView;
         private VisualElement _detailView;
+        private VisualElement _currentDetailPage;
         private TextField _input;
+        
+        // Custom scrollbars
+        private VisualElement _potListScrollbar;
+        private VisualElement _potListScrollbarTrack;
+        private VisualElement _potListScrollbarThumb;
+        private VisualElement _queueScrollbar;
+        private VisualElement _queueScrollbarTrack;
+        private VisualElement _queueScrollbarThumb;
         private Label _inputHintOverlay;
         private VisualElement _promptRoot;
         private VisualElement _blinkCursor;
@@ -152,6 +169,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private GameManager _gameManager;
         private FoundationNotificationService _foundation;
         private Inventory _inventory;
+        private DayCycleSystem _dayCycleSystem;
+        private PhSystem _phSystem;
+        private PotSystemConfig _potSystemConfig;
 
         private SelectionContext _selection;
 
@@ -216,6 +236,17 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _backdrop = _root.Q<VisualElement>("pcv3-backdrop");
             _dimOverlay = _root.Q<VisualElement>("pcv3-dim");
             _outerGlow = _root.Q<VisualElement>("pcv3-outer-glow");
+
+            // Custom scrollbars
+            _potListScrollbar = _root.Q<VisualElement>("pcv3-potlist-scrollbar");
+            _potListScrollbarTrack = _root.Q<VisualElement>("pcv3-potlist-scrollbar-track");
+            _potListScrollbarThumb = _root.Q<VisualElement>("pcv3-potlist-scrollbar-thumb");
+            _queueScrollbar = _root.Q<VisualElement>("pcv3-queue-scrollbar");
+            _queueScrollbarTrack = _root.Q<VisualElement>("pcv3-queue-scrollbar-track");
+            _queueScrollbarThumb = _root.Q<VisualElement>("pcv3-queue-scrollbar-thumb");
+
+            // Inizializza scrollbar custom
+            InitializeCustomScrollbars();
 
             ApplyConsoleFont();
 
@@ -703,6 +734,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             _inventory = _gameManager != null ? _gameManager.PlayerInventory : null;
+            _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+            _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (_potSystemConfig == null)
+            {
+                var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
+                if (allConfigs != null && allConfigs.Length > 0)
+                    _potSystemConfig = allConfigs[0];
+            }
 
             // Cache player mover for point&click suspension while terminal is open
             _playerMover = FindObjectOfType<PlayerClickMover2D>();
@@ -720,6 +760,143 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             TryMoveAfterHud();
         }
 
+        private void InitializeCustomScrollbars()
+        {
+            // Setup scrollbar per pot list
+            if (_potList != null && _potListScrollbar != null && _potListScrollbarTrack != null && _potListScrollbarThumb != null)
+            {
+                SetupScrollbar(_potList, _potListScrollbar, _potListScrollbarTrack, _potListScrollbarThumb);
+            }
+
+            // Setup scrollbar per queue list
+            if (_queueList != null && _queueScrollbar != null && _queueScrollbarTrack != null && _queueScrollbarThumb != null)
+            {
+                SetupScrollbar(_queueList, _queueScrollbar, _queueScrollbarTrack, _queueScrollbarThumb);
+            }
+        }
+
+        private void SetupScrollbar(ScrollView scrollView, VisualElement scrollbar, VisualElement track, VisualElement thumb)
+        {
+            if (scrollView == null || scrollbar == null || track == null || thumb == null)
+                return;
+
+            // Nascondi scrollbar se non c'è contenuto da scrollare
+            UpdateScrollbarVisibility(scrollView, scrollbar);
+
+            // Sincronizza scrollbar quando lo scroll cambia
+            scrollView.RegisterCallback<GeometryChangedEvent>(_ => UpdateScrollbar(scrollView, track, thumb));
+            scrollView.verticalScroller.valueChanged += _ => UpdateScrollbar(scrollView, track, thumb);
+
+            // Permetti drag del thumb per controllare lo scroll
+            bool isDragging = false;
+            float dragStartY = 0f;
+            float scrollStartValue = 0f;
+
+            thumb.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                isDragging = true;
+                dragStartY = evt.localMousePosition.y;
+                scrollStartValue = scrollView.verticalScroller.value;
+                thumb.CaptureMouse();
+                evt.StopPropagation();
+            });
+
+            thumb.RegisterCallback<MouseMoveEvent>(evt =>
+            {
+                if (isDragging && thumb.HasMouseCapture())
+                {
+                    float trackHeight = track.resolvedStyle.height;
+                    float deltaY = evt.localMousePosition.y - dragStartY;
+                    float scrollRange = scrollView.verticalScroller.highValue - scrollView.verticalScroller.lowValue;
+                    float thumbHeight = thumb.resolvedStyle.height;
+                    float maxThumbY = trackHeight - thumbHeight;
+
+                    if (maxThumbY > 0 && scrollRange > 0)
+                    {
+                        float scrollDelta = (deltaY / maxThumbY) * scrollRange;
+                        scrollView.verticalScroller.value = Mathf.Clamp(scrollStartValue + scrollDelta, scrollView.verticalScroller.lowValue, scrollView.verticalScroller.highValue);
+                    }
+                    evt.StopPropagation();
+                }
+            });
+
+            thumb.RegisterCallback<MouseUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    thumb.ReleaseMouse();
+                    evt.StopPropagation();
+                }
+            });
+
+            // Click sul track per scrollare
+            track.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.target == track)
+                {
+                    float trackHeight = track.resolvedStyle.height;
+                    float clickY = evt.localMousePosition.y;
+                    float scrollRange = scrollView.verticalScroller.highValue - scrollView.verticalScroller.lowValue;
+                    float thumbHeight = thumb.resolvedStyle.height;
+                    float maxThumbY = trackHeight - thumbHeight;
+
+                    if (maxThumbY > 0 && scrollRange > 0)
+                    {
+                        float normalizedY = clickY / trackHeight;
+                        scrollView.verticalScroller.value = Mathf.Clamp(normalizedY * scrollRange, scrollView.verticalScroller.lowValue, scrollView.verticalScroller.highValue);
+                    }
+                    evt.StopPropagation();
+                }
+            });
+        }
+
+        private void UpdateScrollbar(ScrollView scrollView, VisualElement track, VisualElement thumb)
+        {
+            if (scrollView == null || track == null || thumb == null)
+                return;
+
+            float scrollValue = scrollView.verticalScroller.value;
+            float scrollRange = scrollView.verticalScroller.highValue - scrollView.verticalScroller.lowValue;
+            float contentHeight = scrollView.contentContainer.resolvedStyle.height;
+            float viewportHeight = scrollView.contentViewport.resolvedStyle.height;
+
+            if (contentHeight <= viewportHeight || scrollRange <= 0)
+            {
+                thumb.style.display = DisplayStyle.None;
+                return;
+            }
+
+            thumb.style.display = DisplayStyle.Flex;
+
+            float trackHeight = track.resolvedStyle.height;
+            float thumbHeight = Mathf.Max(20f, (viewportHeight / contentHeight) * trackHeight);
+            float maxThumbY = trackHeight - thumbHeight;
+            float normalizedScroll = (scrollValue - scrollView.verticalScroller.lowValue) / scrollRange;
+            float thumbY = normalizedScroll * maxThumbY;
+
+            thumb.style.height = thumbHeight;
+            thumb.style.top = thumbY;
+        }
+
+        private void UpdateScrollbarVisibility(ScrollView scrollView, VisualElement scrollbar)
+        {
+            if (scrollView == null || scrollbar == null)
+                return;
+
+            float contentHeight = scrollView.contentContainer.resolvedStyle.height;
+            float viewportHeight = scrollView.contentViewport.resolvedStyle.height;
+
+            if (contentHeight <= viewportHeight)
+            {
+                scrollbar.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                scrollbar.style.display = DisplayStyle.Flex;
+            }
+        }
+
         private void Update()
         {
             if (!_isVisible) return;
@@ -727,7 +904,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Allow runtime tweaking of dim alpha in Inspector.
             if (_dimOverlay != null)
             {
-                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
+                float dimAlpha = _outsideShowsGameView ? 0f : Mathf.Clamp01(_backdropDimAlpha);
+                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, dimAlpha);
             }
 
             if (_outerGlowLiveUpdate && _outerGlowGenerator != null && _outerGlowMaterialRuntime != null)
@@ -829,7 +1007,17 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void PrepareBackdrop()
         {
-            if (!_useBlurredBackdrop || _backdrop == null || _dimOverlay == null) return;
+            if (_backdrop == null || _dimOverlay == null) return;
+
+            if (_outsideShowsGameView)
+            {
+                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
+                _backdrop.style.backgroundImage = new StyleBackground();
+                _backdrop.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
+                return;
+            }
+
+            if (!_useBlurredBackdrop) return;
 
             _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
             if (Screen.width < 64 || Screen.height < 64)
@@ -1171,29 +1359,23 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private VisualElement BuildPotCard(PotSlot pot)
         {
-            var root = new VisualElement();
-            root.AddToClassList("pcv3-potcard");
-            root.style.borderLeftWidth = 2;
-            root.style.borderRightWidth = 2;
-            root.style.borderTopWidth = 2;
-            root.style.borderBottomWidth = 2;
-
             string potId = pot != null ? pot.PotId : "POT-???";
             var state = pot != null && pot.PotActions != null ? pot.PotActions.PotState : null;
+            var plantData = state != null ? state.GetPlantData() : null;
             bool empty = state == null || state.IsEmpty || !state.HasPlant;
-            int score = !empty ? state.ConditionScore : 0;
-            bool critical = !empty && score < 40;
 
             if (empty)
             {
-                root.AddToClassList("pcv3-potcard-empty");
+                var emptyRoot = new VisualElement();
+                emptyRoot.AddToClassList("pcv3-potcard");
+                emptyRoot.AddToClassList("pcv3-potcard-empty");
 
                 var headerBar = new VisualElement();
                 headerBar.AddToClassList("pcv3-potcard-headerbar");
                 var headerText = new Label(potId);
                 headerText.AddToClassList("pcv3-potcard-headertext");
                 headerBar.Add(headerText);
-                root.Add(headerBar);
+                emptyRoot.Add(headerBar);
 
                 var body = new VisualElement();
                 body.AddToClassList("pcv3-potcard-body");
@@ -1215,57 +1397,147 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 info.Add(sub);
                 body.Add(info);
 
-                root.Add(body);
-                return root;
+                emptyRoot.Add(body);
+                return emptyRoot;
             }
 
-            Color border = critical ? new Color(0.827f, 0.373f, 0.373f, 1f) : new Color(0.365f, 0.714f, 0.890f, 1f);
-            root.style.borderLeftColor = border;
-            root.style.borderRightColor = border;
-            root.style.borderTopColor = border;
-            root.style.borderBottomColor = border;
+            if (_potCardTemplate == null)
+            {
+                Debug.LogError("PlantCardV3TerminalController: _potCardTemplate non assegnato!");
+                return new VisualElement();
+            }
 
-            // Existing (non-empty) card layout
-            root.style.paddingLeft = 10;
-            root.style.paddingRight = 10;
-            root.style.paddingTop = 10;
-            root.style.paddingBottom = 10;
+            var templateRoot = _potCardTemplate.Instantiate();
+            // Se il template ha un solo elemento root, Instantiate() restituisce quell'elemento direttamente
+            // Altrimenti cerca l'elemento con name="pcv3-potcard"
+            VisualElement cardRoot = templateRoot;
+            if (templateRoot.name != "pcv3-potcard")
+            {
+                cardRoot = templateRoot.Q<VisualElement>("pcv3-potcard");
+                if (cardRoot == null)
+                {
+                    Debug.LogError("PlantCardV3TerminalController: Template non contiene pcv3-potcard!");
+                    return templateRoot;
+                }
+            }
 
-            var header = new Label($"{potId} - {GetPlantDisplayName(state.PlantCode)}");
-            header.style.color = border;
-            header.style.fontSize = 12;
-            header.style.unityFontStyleAndWeight = FontStyle.Bold;
-            root.Add(header);
+            bool hasCondition = TryGetCondition(state, plantData, out int conditionScore, out string conditionName);
+            Color familyColor = GetFamilyColor(plantData != null ? plantData.Family : PlantFamily.Standard);
 
-            var line1 = new Label($"STAGE: {PlantStageLabel(state.Stage)}");
-            line1.style.color = new Color(0.78f, 0.78f, 0.78f, 1f);
-            line1.style.fontSize = 11;
-            line1.style.marginTop = 6;
-            root.Add(line1);
+            var topbar = cardRoot.Q<VisualElement>("pcv3-potcard-topbar");
+            var titleLabel = cardRoot.Q<Label>("pcv3-potcard-title");
+            var badgeLabel = cardRoot.Q<Label>("pcv3-potcard-badge");
+            var plantBox = cardRoot.Q<VisualElement>("pcv3-potcard-plantbox");
+            var plantImage = cardRoot.Q<VisualElement>("pcv3-potcard-plant-image");
+            var liveDot = cardRoot.Q<VisualElement>("pcv3-potcard-live-dot");
+            var descLabel = cardRoot.Q<Label>("pcv3-potcard-desc");
+            var statsContainer = cardRoot.Q<VisualElement>("pcv3-potcard-stats");
+            var footer = cardRoot.Q<VisualElement>("pcv3-potcard-footer");
+            var openButton = cardRoot.Q<Button>("pcv3-potcard-open");
 
-            var line2 = new Label($"CONDITION: {score}%");
-            line2.style.color = critical ? border : new Color(0.498f, 1f, 0.478f, 1f);
-            line2.style.fontSize = 11;
-            root.Add(line2);
+            if (titleLabel != null)
+                titleLabel.text = $"{potId} -- {GetPlantDisplayName(state.PlantCode)}";
+            if (badgeLabel != null)
+                badgeLabel.text = FormatPlantFamilyBadge(state.PlantCode);
 
-            var btn = new Button(() => HandleCommand($"OPEN {potId}"));
-            btn.text = "[+] OPEN DETAIL";
-            btn.style.marginTop = 8;
-            btn.style.height = 28;
-            btn.style.backgroundColor = new Color(0, 0, 0, 0);
-            btn.style.borderLeftWidth = 2;
-            btn.style.borderRightWidth = 2;
-            btn.style.borderTopWidth = 2;
-            btn.style.borderBottomWidth = 2;
-            btn.style.borderLeftColor = border;
-            btn.style.borderRightColor = border;
-            btn.style.borderTopColor = border;
-            btn.style.borderBottomColor = border;
-            btn.style.color = border;
-            btn.style.fontSize = 11;
-            root.Add(btn);
+            if (plantBox != null)
+            {
+                plantBox.style.borderLeftColor = familyColor;
+                plantBox.style.borderRightColor = familyColor;
+                plantBox.style.borderTopColor = familyColor;
+                plantBox.style.borderBottomColor = familyColor;
+            }
 
-            return root;
+            Sprite previewSprite = null;
+            if (pot != null)
+            {
+                Transform windowContent = pot.transform.Find("WindowContent");
+                if (windowContent != null)
+                    previewSprite = windowContent.GetComponent<SpriteRenderer>()?.sprite;
+                if (previewSprite == null)
+                    previewSprite = pot.GetComponentInChildren<SpriteRenderer>()?.sprite;
+            }
+
+            if (plantImage != null && previewSprite != null)
+            {
+                plantImage.style.backgroundImage = new StyleBackground(previewSprite);
+                plantImage.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+            }
+
+            if (liveDot != null)
+            {
+                bool dotOn = true;
+                liveDot.schedule.Execute(() =>
+                {
+                    liveDot.style.opacity = dotOn ? 1f : 0.4f;
+                    dotOn = !dotOn;
+                }).Every(500);
+            }
+
+            if (descLabel != null)
+            {
+                string description = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
+                descLabel.text = description;
+            }
+
+            if (statsContainer != null)
+            {
+                // Popola i valori delle stat rows esistenti nel template invece di ricrearle
+                string stageText = state != null ? PlantCardFormatters.FormatGrowthStage((PlantStage)state.Stage) : "---";
+                string levelText = state != null ? state.PlantLevel.ToString() : "---";
+                string conditionText = hasCondition ? conditionName.ToUpperInvariant() : "---";
+                string phAffinityText = plantData != null ? PlantCardFormatters.FormatPhRange(plantData.OptimalPhMin, plantData.OptimalPhMax) : "---";
+                float drift = plantData != null ? plantData.DailyPhDrift : 0f;
+                string phDriftText = plantData != null ? PlantCardFormatters.FormatPhDrift(drift) : "---";
+                string growthText = state != null ? $"W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer}" : "---";
+                string hydrationText = state != null && _potSystemConfig != null
+                    ? $"{PlantCardCalculators.CalculateHydrationPercent(state.Hydration, _potSystemConfig.MaxHydration)}%"
+                    : "---";
+                string lightStressText = state != null && _potSystemConfig != null
+                    ? $"{PlantCardCalculators.CalculateLightStressPercent(state.LightExposure, _potSystemConfig.MaxLightExposure)}%"
+                    : "---";
+
+                // Trova le stat rows esistenti e popola i valori
+                var statRows = statsContainer.Query<VisualElement>(className: "pcv3-potcard-stat-row").ToList();
+                int rowIndex = 0;
+                
+                void UpdateStatValue(int index, string value, string valueClass)
+                {
+                    if (index < statRows.Count)
+                    {
+                        var valueLabel = statRows[index].Q<Label>(className: "pcv3-potcard-stat-value");
+                        if (valueLabel != null)
+                        {
+                            valueLabel.text = value;
+                            // Rimuovi tutte le classi di colore e aggiungi quella corretta
+                            valueLabel.RemoveFromClassList("pcv3-value-green");
+                            valueLabel.RemoveFromClassList("pcv3-value-blue");
+                            valueLabel.RemoveFromClassList("pcv3-value-yellow");
+                            valueLabel.RemoveFromClassList("pcv3-value-red");
+                            if (!string.IsNullOrEmpty(valueClass))
+                                valueLabel.AddToClassList(valueClass);
+                        }
+                    }
+                }
+
+                UpdateStatValue(rowIndex++, stageText, "pcv3-value-green");
+                UpdateStatValue(rowIndex++, levelText, "pcv3-value-yellow");
+                UpdateStatValue(rowIndex++, conditionText, "pcv3-value-green");
+                UpdateStatValue(rowIndex++, phAffinityText, "pcv3-value-blue");
+                UpdateStatValue(rowIndex++, phDriftText, drift > 0 ? "pcv3-value-red" : "pcv3-value-blue");
+                UpdateStatValue(rowIndex++, growthText, "pcv3-value-green");
+                // Separator è già nel template, skip
+                rowIndex++; // Skip separator
+                UpdateStatValue(rowIndex++, hydrationText, "pcv3-value-blue");
+                UpdateStatValue(rowIndex++, lightStressText, "pcv3-value-yellow");
+            }
+
+            if (openButton != null)
+            {
+                openButton.clicked += () => HandleCommand($"OPEN {potId}");
+            }
+
+            return cardRoot;
         }
 
         private void RefreshQueueList()
@@ -1335,6 +1607,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_consoleView != null) _consoleView.style.display = DisplayStyle.Flex;
             if (_protocolView != null) _protocolView.style.display = DisplayStyle.None;
             if (_detailView != null) _detailView.style.display = DisplayStyle.None;
+
+            // Rimuovi detail page corrente se esiste
+            if (_currentDetailPage != null)
+            {
+                _currentDetailPage.RemoveFromHierarchy();
+                _currentDetailPage = null;
+            }
         }
 
         private void SwitchToProtocol()
@@ -2160,18 +2439,304 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_consoleView != null) _consoleView.style.display = DisplayStyle.None;
             if (_protocolView != null) _protocolView.style.display = DisplayStyle.None;
 
-            var placeholder = _root.Q<Label>("pcv3-detail-placeholder");
+            // Rimuovi placeholder e detail page precedente se esistono
+            var placeholder = _detailView?.Q<Label>("pcv3-detail-placeholder");
             if (placeholder != null)
+                placeholder.RemoveFromHierarchy();
+
+            if (_currentDetailPage != null)
             {
-                string plantName = GetPlantDisplayName(state.PlantCode);
-                placeholder.text = diaryOnly
-                    ? $"POT DIARY (TODO) — {potId} — {plantName}"
-                    : $"DETAILED ANALYSIS (TODO) — {potId} — {plantName}";
+                _currentDetailPage.RemoveFromHierarchy();
+                _currentDetailPage = null;
             }
+
+            // Carica template detail page
+            if (_detailPageTemplate == null)
+            {
+                Debug.LogError("PlantCardV3TerminalController: _detailPageTemplate non assegnato!");
+                AppendRawLine("§ERROR§⚠ ERROR: DETAIL PAGE TEMPLATE NOT ASSIGNED.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var templateRoot = _detailPageTemplate.Instantiate();
+            VisualElement detailPage = templateRoot;
+            if (templateRoot.name != "pcv3-detail-page")
+            {
+                detailPage = templateRoot.Q<VisualElement>("pcv3-detail-page");
+                if (detailPage == null)
+                {
+                    Debug.LogError("PlantCardV3TerminalController: Template non contiene pcv3-detail-page!");
+                    AppendRawLine("§ERROR§⚠ ERROR: INVALID DETAIL PAGE TEMPLATE.§END§");
+                    AppendRawLine("");
+                    FlushConsole();
+                    return;
+                }
+            }
+
+            _currentDetailPage = detailPage;
+            if (_detailView != null)
+                _detailView.Add(detailPage);
+
+            // Popola dati
+            PopulateDetailPage(detailPage, pot, state, diaryOnly);
 
             AppendRawLine("§INFO§Type CLOSE to return...§END§");
             AppendRawLine("");
             FlushConsole();
+        }
+
+        private void PopulateDetailPage(VisualElement detailPage, PotSlot pot, PotStateModel state, bool diaryOnly)
+        {
+            if (detailPage == null || state == null) return;
+
+            var plantData = state.GetPlantData();
+            bool hasCondition = TryGetCondition(state, plantData, out int conditionScore, out string conditionName);
+
+            // Helper: dotted leaders
+            static string Leader(string key, string value, int dots = 14)
+            {
+                if (string.IsNullOrEmpty(key)) key = "---";
+                if (string.IsNullOrEmpty(value)) value = "---";
+                string k = key;
+                int pad = Mathf.Max(1, dots - k.Length);
+                return $"{k}{new string('.', pad)}: {value}";
+            }
+
+            // Helper: 20-char ascii bar
+            static void SetBar(Label filled, Label empty, int percent)
+            {
+                int p = Mathf.Clamp(percent, 0, 100);
+                int filledCount = Mathf.Clamp(Mathf.RoundToInt(p / 100f * 20f), 0, 20);
+                int emptyCount = 20 - filledCount;
+                if (filled != null) filled.text = new string('█', filledCount);
+                if (empty != null) empty.text = new string('░', emptyCount);
+            }
+
+            // Header / identity
+            string familyCode = FormatPlantFamilyBadge(state.PlantCode);
+            string plantName = GetPlantDisplayName(state.PlantCode).ToUpperInvariant();
+            string oneLiner = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
+
+            var specimen = detailPage.Q<Label>("pcv3d-specimen");
+            if (specimen != null) specimen.text = $"SPECIMEN ID: {state.PotId}";
+
+            var family = detailPage.Q<Label>("pcv3d-family");
+            if (family != null) family.text = familyCode;
+
+            var nameLabel = detailPage.Q<Label>("pcv3d-plant-name");
+            if (nameLabel != null) nameLabel.text = plantName;
+
+            var speciesLevel = detailPage.Q<Label>("pcv3d-species-level");
+            if (speciesLevel != null) speciesLevel.text = $"{familyCode} LEVEL {state.PlantLevel}";
+
+            var oneLinerLabel = detailPage.Q<Label>("pcv3d-one-liner");
+            if (oneLinerLabel != null) oneLinerLabel.text = oneLiner;
+
+            // LED pulsing
+            var led = detailPage.Q<Label>("pcv3d-led");
+            if (led != null)
+            {
+                bool on = true;
+                led.schedule.Execute(() =>
+                {
+                    led.style.opacity = on ? 1f : 0.5f;
+                    on = !on;
+                }).Every(1000); // 2s loop (0.5->1->0.5)
+            }
+
+            // Status lines (rich text for colored values)
+            string conditionValue = hasCondition ? conditionName.ToUpperInvariant() : "---";
+            string stageValue = PlantCardFormatters.FormatGrowthStage((PlantStage)state.Stage).ToUpperInvariant();
+            string phDriftValue = plantData != null ? PlantCardFormatters.FormatPhDrift(plantData.DailyPhDrift) : "---";
+            int totalGrowth = state.GrowthPointsWater + state.GrowthPointsLight + state.GrowthPointsFertilizer;
+            string growthValue = $"+{totalGrowth}/day";
+
+            var conditionLine = detailPage.Q<Label>("pcv3d-condition-line");
+            if (conditionLine != null)
+            {
+                conditionLine.enableRichText = true;
+                conditionLine.text = $"CONDITION........: <color=#7FFF7A>{conditionValue}</color>";
+            }
+
+            var stageLine = detailPage.Q<Label>("pcv3d-stage-line");
+            if (stageLine != null)
+            {
+                stageLine.enableRichText = true;
+                stageLine.text = $"STAGE............: <color=#5DB6E3>{stageValue}</color>";
+            }
+
+            var phDriftLine = detailPage.Q<Label>("pcv3d-phdrift-line");
+            if (phDriftLine != null)
+            {
+                phDriftLine.enableRichText = true;
+                phDriftLine.text = $"pH DRIFT.........: <color=#D35F5F>{phDriftValue}</color>";
+            }
+
+            var growthLine = detailPage.Q<Label>("pcv3d-growth-line");
+            if (growthLine != null)
+            {
+                growthLine.enableRichText = true;
+                growthLine.text = $"GROWTH...........: <color=#7FFF7A>{growthValue}</color>";
+            }
+
+            // Vitals (hydration + light stress)
+            int hydrationPercent = _potSystemConfig != null
+                ? PlantCardCalculators.CalculateHydrationPercent(state.Hydration, _potSystemConfig.MaxHydration)
+                : 0;
+
+            int lightStressPercent = 0;
+            if (_potSystemConfig != null)
+            {
+                int consecutiveDays = state.GetConsecutiveLedDays();
+                int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+                lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
+            }
+
+            SetBar(detailPage.Q<Label>("pcv3d-hydration-filled"), detailPage.Q<Label>("pcv3d-hydration-empty"), hydrationPercent);
+            var hydValue = detailPage.Q<Label>("pcv3d-hydration-value");
+            if (hydValue != null) hydValue.text = $"{hydrationPercent}%";
+
+            SetBar(detailPage.Q<Label>("pcv3d-lightstress-filled"), detailPage.Q<Label>("pcv3d-lightstress-empty"), lightStressPercent);
+            var lsValue = detailPage.Q<Label>("pcv3d-lightstress-value");
+            if (lsValue != null) lsValue.text = $"{lightStressPercent}%";
+
+            // Switch filled color green/yellow depending on stress
+            var lsFilled = detailPage.Q<Label>("pcv3d-lightstress-filled");
+            if (lsFilled != null)
+            {
+                lsFilled.RemoveFromClassList("pcv3d-bar-filled-green");
+                lsFilled.RemoveFromClassList("pcv3d-bar-filled-yellow");
+                lsFilled.AddToClassList(lightStressPercent > 50 ? "pcv3d-bar-filled-yellow" : "pcv3d-bar-filled-green");
+            }
+
+            if (lsValue != null)
+            {
+                lsValue.RemoveFromClassList("pcv3d-value-green");
+                lsValue.RemoveFromClassList("pcv3d-value-yellow");
+                lsValue.AddToClassList(lightStressPercent > 50 ? "pcv3d-value-yellow" : "pcv3d-value-green");
+            }
+
+            // Close button in-card
+            var closeBtn = detailPage.Q<Button>("pcv3d-close");
+            if (closeBtn != null)
+            {
+                closeBtn.clicked += () =>
+                {
+                    SwitchToConsole();
+                    FlushConsole();
+                };
+            }
+
+            // Research Notes (DOS block)
+            var researchTextLabel = detailPage.Q<Label>("pcv3d-research-text");
+            if (researchTextLabel != null)
+            {
+                string researchText = plantData != null && !string.IsNullOrWhiteSpace(plantData.ActivePower)
+                    ? plantData.ActivePower
+                    : (plantData != null && !string.IsNullOrWhiteSpace(plantData.Description)
+                        ? plantData.Description
+                        : "No research data available.");
+                researchTextLabel.text = researchText;
+            }
+
+            // Pot Diary (DOS block)
+            var diaryScroll = detailPage.Q<ScrollView>("pcv3d-diary-scroll");
+            var diaryList = detailPage.Q<VisualElement>("pcv3d-diary-list");
+            var diaryInput = detailPage.Q<TextField>("pcv3d-diary-input");
+            var diaryLogButton = detailPage.Q<Button>("pcv3d-diary-log");
+
+            void RenderDiary()
+            {
+                if (diaryList == null) return;
+                diaryList.Clear();
+
+                if (PlantDiaryManager.Instance == null)
+                {
+                    var emptyRow = new Label("Diary system not available.");
+                    emptyRow.style.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+                    diaryList.Add(emptyRow);
+                    return;
+                }
+
+                var notes = PlantDiaryManager.Instance.GetNotes(state.PotId);
+                if (notes == null || notes.Count <= 0)
+                {
+                    var emptyRow = new Label("No diary entries yet.");
+                    emptyRow.style.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+                    diaryList.Add(emptyRow);
+                    return;
+                }
+
+                foreach (var note in notes.OrderByDescending(n => n.Day))
+                {
+                    var row = new VisualElement();
+                    row.AddToClassList("pcv3d-diary-row");
+
+                    var prefix = new Label("▸");
+                    prefix.AddToClassList("pcv3d-diary-prefix");
+
+                    var text = new Label(note.Text ?? "");
+                    text.AddToClassList("pcv3d-diary-text");
+
+                    row.Add(prefix);
+                    row.Add(text);
+                    diaryList.Add(row);
+                }
+            }
+
+            void SubmitDiaryNote()
+            {
+                if (diaryInput == null) return;
+                if (PlantDiaryManager.Instance == null) return;
+
+                string raw = diaryInput.value ?? string.Empty;
+                string text = raw.Trim();
+                if (string.IsNullOrWhiteSpace(text)) return;
+
+                int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
+                PlantDiaryManager.Instance.AddNote(state.PotId, new PlantDiaryNotes.DiaryNote(currentDay, text));
+
+                diaryInput.value = string.Empty;
+                RenderDiary();
+
+                // Keep focus for rapid note-taking
+                diaryInput.Focus();
+
+                // Scroll to top (latest first)
+                if (diaryScroll != null)
+                    diaryScroll.scrollOffset = Vector2.zero;
+            }
+
+            // Initial render
+            RenderDiary();
+
+            // Bind UI events (detail page is instantiated per-open, so no accumulation)
+            if (diaryLogButton != null)
+            {
+                diaryLogButton.clicked -= SubmitDiaryNote;
+                diaryLogButton.clicked += SubmitDiaryNote;
+            }
+
+            if (diaryInput != null)
+            {
+                diaryInput.RegisterCallback<KeyDownEvent>(evt =>
+                {
+                    if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
+                    {
+                        SubmitDiaryNote();
+                        evt.StopPropagation();
+                    }
+                });
+
+                // UX: placeholder-like hint
+                if (string.IsNullOrEmpty(diaryInput.value))
+                    diaryInput.value = string.Empty;
+
+                if (diaryOnly)
+                    diaryInput.Focus();
+            }
         }
 
         private void BeginConfirmQueueUproot(string potId)
@@ -2699,6 +3264,50 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (string.IsNullOrEmpty(plantCode)) return "---";
             return plantCode.Replace("PLT-", "").Replace("-", " ");
+        }
+
+        private static string FormatPlantFamilyBadge(string plantCode)
+        {
+            if (string.IsNullOrEmpty(plantCode)) return "---";
+            return plantCode.StartsWith("PLT-", StringComparison.OrdinalIgnoreCase)
+                ? plantCode.Substring(4)
+                : plantCode;
+        }
+
+        private static Color GetFamilyColor(PlantFamily family)
+        {
+            return family switch
+            {
+                PlantFamily.Pure => new Color(0.498f, 1f, 0.478f, 1f),
+                PlantFamily.Evil => new Color(0.827f, 0.373f, 0.373f, 1f),
+                PlantFamily.Standard => new Color(0.902f, 0.788f, 0.435f, 1f),
+                _ => new Color(0.72f, 0.72f, 0.72f, 1f)
+            };
+        }
+
+        private bool TryGetCondition(PotStateModel state, PlantData plantData, out int score, out string conditionName)
+        {
+            score = 0;
+            conditionName = "---";
+
+            if (state == null || !state.HasPlant || plantData == null || _phSystem == null || _potSystemConfig == null)
+                return false;
+
+            int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+            int previousDayScore = state.PreviousDayConditionScore >= 0 ? state.PreviousDayConditionScore : state.ConditionScore;
+            ConditionResult result = PlantConditionSystem.CalculateCondition(
+                state,
+                plantData,
+                _phSystem,
+                _potSystemConfig,
+                currentDay,
+                previousDayScore
+            );
+
+            bool isOverwatering = PlantConditionSystem.IsOverwatering(state, _potSystemConfig.MaxHydration);
+            conditionName = PlantConditionSystem.GetConditionName(result.Condition, isOverwatering);
+            score = result.Score;
+            return true;
         }
 
         private static System.Collections.Generic.List<PotSlot> FindPots()

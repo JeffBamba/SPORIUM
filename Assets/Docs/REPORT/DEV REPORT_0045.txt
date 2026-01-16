@@ -1,0 +1,102 @@
+================================================================================
+             DEV REPORT #0045 - PLANTCARDV3 TERMINAL + POT AUTOMATION FLOW
+             SPORAE BUILD BETA
+             Data: 2026-01-15 21:20:00
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PCV3-0045 — Terminal Boot/Typewriter + Queue Automation Parallel + Inventory Reservation
+- **Tipo Report:** Development Report (Feature + UX + Automation)
+- **Periodo coperto:** 2026-01-15
+- **Data Generazione:** 2026-01-15 21:20:00
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0044.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **PCV3-BOOT-001**: Sequenza boot animata al lancio Terminale Pot (testo + timing).
+  - **Implementazione:** coroutine boot con delay per riga e colore giallo dedicato.
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+- **PCV3-TYPE-002**: Typewriter dedicato al comando PROTOCOL.
+  - **Implementazione:** typewriter a righe nel view Protocol con timing boot.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-CMD-003**: Rinomina comando HYDRATION → WATERING.
+  - **Implementazione:** parser + help + label azioni in queue/confirm.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-LED-004**: Conferma LED con stato corrente.
+  - **Implementazione:** System ON/OFF + State RED/BLUE/OFF in prompt conferma.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **AUTO-RUNNER-005**: Automazione parallela per pot diversi.
+  - **Implementazione:** queue per pot e coroutine dedicate; sequenza preservata per pot.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+
+- **PCV3-AP-006**: Avvio automazione con AP/Item feedback visibile.
+  - **Implementazione:** toast errore insufficiente AP o item quando conferma fallisce.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-INV-007**: Riserva item in coda (semi/fertilizzanti/additivi).
+  - **Implementazione:** conteggio “available” aggiornato per item già in queue; rollback su cancel/clear.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+================================================================================
+
+🐛 BUG FIXATI
+=============
+- **AUTO-QUEUE-ERR-001 (azioni non partono con queue multiple)**:
+  - **Causa:** automazione seriale unica bloccava pot diversi.
+  - **Fix:** queue per pot e run parallelo con preservazione ordine per pot.
+  - **Verifica:** ✅ queue multi-pot avvia braccia in parallelo.
+
+- **PCV3-QUEUE-AP-002 (silent fail con AP/Item insufficienti)**:
+  - **Causa:** errore mostrato solo nel terminale chiuso, nessun feedback esterno.
+  - **Fix:** toast error per AP o item insufficienti.
+  - **Verifica:** ✅ toast visibile anche con terminale chiuso.
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script modificati:**
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Boot terminale:** apri terminale → verifica sequenza gialla e tempi.
+- **Protocol typewriter:** comando `PROTOCOL` → testo scorre a righe.
+- **Watering rename:** comando `WATERING` in help e prompt.
+- **LED confirm:** `LED RED/BLUE` → System ON/OFF + State RED/BLUE/OFF.
+- **Queue multi-pot:** accoda Plant su 2+ pot → braccia partono in parallelo.
+- **Queue single-pot:** accoda più azioni stesso pot → restano sequenziali.
+- **Item reserve:** accoda Plant multipli → quantità “available” diminuisce; cancel/clear ripristina.
+
+================================================================================
+
+📚 LEZIONI APPRESE
+=================
+- Automazioni multi-pot richiedono coroutines separate per evitare blocchi seriali.
+- La riserva inventario lato UI evita ambiguità tra coda e quantità reali.
+- Feedback via toast è necessario quando il terminale si chiude.
+
+================================================================================
+
+➡️ PROSSIMI PASSI
+=================
+- Aggiungere indicazione costo totale AP prima di conferma coda.
+- Valutare “queue reorder” automatico per azioni incompatibili nello stesso pot.
+
+================================================================================
+FINE REPORT
+================================================================================

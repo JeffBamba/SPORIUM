@@ -180,6 +180,90 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: 16x32 Idle-Sheet_16
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0bfdc4f428624114856a598493968f14
+      internalID: 617054338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 16x32 Idle-Sheet_17
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 103bc6faacad48fb8597c8744938e620
+      internalID: -1193132689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 16x32 Idle-Sheet_18
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9af980e3c6424b839302cb0e209263f6
+      internalID: -1199342941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 16x32 Idle-Sheet_19
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 0
+        width: 16
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 96875b99d8494b9c9c291bfdcbceeca9
+      internalID: -1787117324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -195,6 +279,10 @@ TextureImporter:
       16x32 Idle-Sheet_1: 1375680998
       16x32 Idle-Sheet_10: 230928879
       16x32 Idle-Sheet_11: 2094007558
+      16x32 Idle-Sheet_16: 617054338
+      16x32 Idle-Sheet_17: -1193132689
+      16x32 Idle-Sheet_18: -1199342941
+      16x32 Idle-Sheet_19: -1787117324
       16x32 Idle-Sheet_2: -1916109244
       16x32 Idle-Sheet_3: 330932726
       16x32 Idle-Sheet_4: 1548953288

@@ -1,0 +1,56 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss?fileID=7433441132597879392&amp;guid=b37f4bda32a0604459559f294aa66d24&amp;type=3#PlantCardV3_Terminal" />
+    <ui:VisualElement name="pcv3-potcard" class="pcv3-potcard" style="width: 400px; height: 271px;">
+        <ui:VisualElement name="pcv3-potcard-topbar" class="pcv3-potcard-topbar" style="height: 26px; background-color: rgb(127, 255, 122);">
+            <ui:Label name="pcv3-potcard-title" text="POT-001 -- ARCTIC MASK" class="pcv3-potcard-title" style="-unity-text-align: middle-left; font-size: 10px; color: rgb(0, 0, 0);" />
+            <ui:Label name="pcv3-potcard-badge" text="PURE-001" class="pcv3-potcard-badge" style="-unity-text-align: middle-left; font-size: 10px; color: rgb(0, 0, 0);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="pcv3-potcard-content" class="pcv3-potcard-content">
+            <ui:VisualElement name="pcv3-potcard-plantbox" class="pcv3-potcard-plantbox" style="width: 140px; border-left-color: rgba(127, 255, 122, 0); border-right-color: rgba(127, 255, 122, 0); border-top-color: rgba(127, 255, 122, 0); border-bottom-color: rgba(127, 255, 122, 0); border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px;">
+                <ui:VisualElement name="pcv3-potcard-live-dot" class="pcv3-potcard-live-dot" />
+                <ui:VisualElement name="pcv3-potcard-plant-image" class="pcv3-potcard-plant-image" style="width: 140px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="pcv3-potcard-info" class="pcv3-potcard-info" style="left: 15px;">
+                <ui:Label name="pcv3-potcard-desc" text="Pianta pura che eleva il pH dell&apos;ambiente, perfetta per ecosistemi alcalini." class="pcv3-potcard-desc" style="color: rgb(127, 255, 122);" />
+                <ui:VisualElement name="pcv3-potcard-stats" class="pcv3-potcard-stats" style="letter-spacing: 0;">
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row pcv3-potcard-stat-row-first">
+                        <ui:Label name="pcv3-potcard-stat-label" text="STAGE:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="HARVEST READY" class="pcv3-potcard-stat-value pcv3-value-green" style="-unity-text-align: middle-left; color: rgb(93, 182, 227);" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -6px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="LEVEL:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="3" class="pcv3-potcard-stat-value pcv3-value-yellow" style="-unity-text-align: middle-left; color: rgb(93, 182, 227);" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -12px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="CONDITION:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="SANA" class="pcv3-potcard-stat-value pcv3-value-green" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -18px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="pH AFFINITY:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="6.5+" class="pcv3-potcard-stat-value pcv3-value-blue" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -24px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="pH DRIFT:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="+2/day" class="pcv3-potcard-stat-value pcv3-value-red" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -30px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="GROWTH:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left; color: rgb(127, 255, 122);" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="+23/d" class="pcv3-potcard-stat-value pcv3-value-green" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-separator" class="pcv3-potcard-separator" style="-unity-text-outline-color: rgba(0, 0, 0, 0); top: -27px;" />
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -33px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="HYDRATION:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left;" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="40%" class="pcv3-potcard-stat-value pcv3-value-blue" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row" style="top: -39px;">
+                        <ui:Label name="pcv3-potcard-stat-label" text="LIGHT STRESS:" class="pcv3-potcard-stat-label" style="-unity-text-align: middle-left;" />
+                        <ui:Label name="pcv3-potcard-stat-value" text="20%" class="pcv3-potcard-stat-value pcv3-value-yellow" style="-unity-text-align: middle-left;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="pcv3-potcard-footer" class="pcv3-potcard-footer" style="margin-right: 30px; width: 254px; right: 0;">
+            <ui:Button name="pcv3-potcard-open" text="[+] OPEN DETAIL" class="pcv3-potcard-open" style="-unity-slice-scale: 3.7px; width: 80%; left: 50px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

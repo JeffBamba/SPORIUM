@@ -8367,6 +8367,24 @@ MonoBehaviour:
   speedMultiplier: 1.4
   hideWhenIdle: 0
   keepVisibleOnStop: 1
+  plantScenicSpeed: 2
+  wateringScenicSpeed: 2
+  ledBlueScenicSpeed: 2
+  ledRedScenicSpeed: 2
+  fertilizeScenicSpeed: 1
+  sprayScenicSpeed: 1
+  harvestScenicSpeed: 1
+  uprootScenicSpeed: 1
+  defaultScenicSpeed: 1
+  plantScenicDuration: 3
+  wateringScenicDuration: 3
+  ledBlueScenicDuration: 3
+  ledRedScenicDuration: 3
+  fertilizeScenicDuration: 0
+  sprayScenicDuration: 0
+  harvestScenicDuration: 60
+  uprootScenicDuration: 0
+  defaultScenicDuration: 0
   plantProfile:
     verticalOffsetRange: {x: -0.12, y: 0.22}
     horizontalOffsetRange: {x: -0.32, y: 0.32}
@@ -10306,6 +10324,139 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 403333621}
   m_CullTransparentMesh: 1
+--- !u!1 &405285447
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 405285448}
+  - component: {fileID: 405285450}
+  - component: {fileID: 405285449}
+  m_Layer: 0
+  m_Name: Light_VisitorRoom
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &405285448
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405285447}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.537, y: 0.36, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 489352158}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &405285449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405285447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 1
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
+--- !u!114 &405285450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405285447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 1
+  m_LightType: 1
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.442
+  m_Color: {r: 0.014239941, g: 0.6037736, b: 0.18678635, a: 1}
+  m_Intensity: 4.94
+  m_LightVolumeIntensity: 1
+  m_LightVolumeIntensityEnabled: 0
+  m_ApplyToSortingLayers: 000000007fe5e60d
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowIntensityEnabled: 0
+  m_ShadowIntensity: 0.75
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0.02490002, y: 0.19785002, z: 0}
+    m_Extent: {x: 0.9555, y: 0.96105003, z: 0}
+  m_PointLightInnerAngle: 360
+  m_PointLightOuterAngle: 360
+  m_PointLightInnerRadius: 0
+  m_PointLightOuterRadius: 1
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 0.77
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -0.16081047, y: 0.033629417, z: 0}
+  - {x: 0.2102387, y: 0.0038032532, z: 0}
+  - {x: 0.21023417, y: 0.36434555, z: 0}
+  - {x: -0.15905714, y: 0.39040947, z: 0}
 --- !u!1 &413479226
 GameObject:
   m_ObjectHideFlags: 0
@@ -12015,6 +12166,7 @@ GameObject:
   m_Component:
   - component: {fileID: 475134308}
   - component: {fileID: 475134309}
+  - component: {fileID: 475134310}
   m_Layer: 8
   m_Name: RedLight
   m_TagString: Untagged
@@ -12087,6 +12239,56 @@ MonoBehaviour:
   - {x: 0.56699896, y: -2.2986605, z: 0}
   - {x: 0.48725796, y: 0.08716345, z: 0}
   - {x: -0.58409643, y: 0.08461523, z: 0}
+--- !u!114 &475134310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 475134307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 2
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
 --- !u!1 &476942232
 GameObject:
   m_ObjectHideFlags: 0
@@ -12218,6 +12420,7 @@ GameObject:
   m_Component:
   - component: {fileID: 478114282}
   - component: {fileID: 478114283}
+  - component: {fileID: 478114284}
   m_Layer: 8
   m_Name: RedLight
   m_TagString: Untagged
@@ -12290,6 +12493,56 @@ MonoBehaviour:
   - {x: 0.79051924, y: -0.7231014, z: 0}
   - {x: 0.5573572, y: 1.5652056, z: 0}
   - {x: -0.5, y: 1.6143684, z: 0}
+--- !u!114 &478114284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478114281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 2
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
 --- !u!1 &480293975
 GameObject:
   m_ObjectHideFlags: 0
@@ -12685,6 +12938,8 @@ Transform:
   - {fileID: 827574952}
   - {fileID: 445321817}
   - {fileID: 517255692}
+  - {fileID: 405285448}
+  - {fileID: 1318586765}
   m_Father: {fileID: 943623787}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &489352159
@@ -13380,7 +13635,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.394
   m_Color: {r: 0.24328054, g: 0.7264151, b: 0.3825088, a: 1}
-  m_Intensity: 5.56
+  m_Intensity: 3.85
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
   m_ApplyToSortingLayers: 000000007fe5e60d
@@ -13397,8 +13652,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0.44630003, y: -0.2903, z: 0}
-    m_Extent: {x: 3.8182, y: 3.3639002, z: 0}
+    m_Center: {x: 0.5166, y: 0.1837, z: 0}
+    m_Extent: {x: 1.6179, y: 1.0771, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -13406,13 +13661,13 @@ MonoBehaviour:
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
-  m_ShapeLightFalloffSize: 2.88
+  m_ShapeLightFalloffSize: 0.95
   m_ShapeLightFalloffOffset: {x: 0, y: 0}
   m_ShapePath:
-  - {x: -0.49217415, y: -0.77390957, z: 0}
-  - {x: 1.3843374, y: -0.73477936, z: 0}
-  - {x: 1.1339054, y: 0.15565586, z: 0}
-  - {x: -0.077395916, y: 0.19478703, z: 0}
+  - {x: -0.1448412, y: 0.05758381, z: 0}
+  - {x: 1.1843581, y: 0.07566452, z: 0}
+  - {x: 1.1444306, y: 0.29248428, z: 0}
+  - {x: -0.1510725, y: 0.31056404, z: 0}
 --- !u!114 &517255694
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13445,6 +13700,14 @@ MonoBehaviour:
   flickerRadius: 0
   radiusNoiseAmount: 0.15
   response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
   bootFlickerDuration: {x: 0.9, y: 1.6}
   bootStableChunks: {x: 0.08, y: 0.22}
   bootNoiseSpeed: 18
@@ -14496,6 +14759,7 @@ GameObject:
   m_Component:
   - component: {fileID: 551342800}
   - component: {fileID: 551342801}
+  - component: {fileID: 551342802}
   m_Layer: 8
   m_Name: BlueLight
   m_TagString: Untagged
@@ -14568,6 +14832,56 @@ MonoBehaviour:
   - {x: 0.9503629, y: -2.3351417, z: 0}
   - {x: 0.57011783, y: 0.079292774, z: 0}
   - {x: -0.5070119, y: 0.107340336, z: 0}
+--- !u!114 &551342802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 551342799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 2
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
 --- !u!1 &560513181
 GameObject:
   m_ObjectHideFlags: 0
@@ -20651,6 +20965,14 @@ MonoBehaviour:
   flickerRadius: 0
   radiusNoiseAmount: 0.15
   response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
   bootFlickerDuration: {x: 0.9, y: 1.6}
   bootStableChunks: {x: 0.08, y: 0.22}
   bootNoiseSpeed: 18
@@ -25557,6 +25879,7 @@ Transform:
   - {fileID: 1321032805}
   - {fileID: 489352158}
   - {fileID: 1369478426}
+  - {fileID: 1555694119}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &946200318
@@ -31818,6 +32141,24 @@ MonoBehaviour:
   speedMultiplier: 1.4
   hideWhenIdle: 0
   keepVisibleOnStop: 1
+  plantScenicSpeed: 1
+  wateringScenicSpeed: 1
+  ledBlueScenicSpeed: 1
+  ledRedScenicSpeed: 1
+  fertilizeScenicSpeed: 1
+  sprayScenicSpeed: 1
+  harvestScenicSpeed: 1
+  uprootScenicSpeed: 1
+  defaultScenicSpeed: 1
+  plantScenicDuration: 15
+  wateringScenicDuration: 15
+  ledBlueScenicDuration: 15
+  ledRedScenicDuration: 15
+  fertilizeScenicDuration: 30
+  sprayScenicDuration: 30
+  harvestScenicDuration: 60
+  uprootScenicDuration: 5
+  defaultScenicDuration: 0
   plantProfile:
     verticalOffsetRange: {x: -0.12, y: 0.22}
     horizontalOffsetRange: {x: -0.32, y: 0.32}
@@ -33766,8 +34107,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _uiDocument: {fileID: 0}
+  _potCardTemplate: {fileID: 9197481963319205126, guid: 2929e8d961b688442ac28d166e3329b6, type: 3}
+  _detailPageTemplate: {fileID: 9197481963319205126, guid: 8ae528728b3b19b4fb2ca1054ba6fee2, type: 3}
   _startVisibleInEditor: 0
   _useBlurredBackdrop: 1
+  _outsideShowsGameView: 1
   _backdropDimAlpha: 0.681
   _backdropDownsample: 8
   _backdropBlurRadius: 2
@@ -34181,6 +34525,139 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1316923507}
   m_CullTransparentMesh: 1
+--- !u!1 &1318586764
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1318586765}
+  - component: {fileID: 1318586767}
+  - component: {fileID: 1318586766}
+  m_Layer: 0
+  m_Name: Light_VisitorRoom (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1318586765
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318586764}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.515, y: 0.576, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 489352158}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1318586766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318586764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 1
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
+--- !u!114 &1318586767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318586764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 1
+  m_LightType: 1
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.442
+  m_Color: {r: 0.014239941, g: 0.6037736, b: 0.18678635, a: 1}
+  m_Intensity: 4.94
+  m_LightVolumeIntensity: 1
+  m_LightVolumeIntensityEnabled: 0
+  m_ApplyToSortingLayers: 000000007fe5e60d
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowIntensityEnabled: 0
+  m_ShadowIntensity: 0.75
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0.060799986, y: 0.05369997, z: 0}
+    m_Extent: {x: 0.9992, y: 1.1423, z: 0}
+  m_PointLightInnerAngle: 360
+  m_PointLightOuterAngle: 360
+  m_PointLightInnerRadius: 0
+  m_PointLightOuterRadius: 1
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 0.77
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -0.16879463, y: -0.3176918, z: 0}
+  - {x: 0.29008436, y: -0.26767254, z: 0}
+  - {x: 0.2741108, y: 0.42822266, z: 0}
+  - {x: -0.15905714, y: 0.39040947, z: 0}
 --- !u!1 &1319589841
 GameObject:
   m_ObjectHideFlags: 0
@@ -37778,6 +38255,14 @@ MonoBehaviour:
   flickerRadius: 0
   radiusNoiseAmount: 0.15
   response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
   bootFlickerDuration: {x: 0.9, y: 1.6}
   bootStableChunks: {x: 0.08, y: 0.22}
   bootNoiseSpeed: 18
@@ -40219,6 +40704,142 @@ MonoBehaviour:
   m_Spacing: {x: 40, y: 40}
   m_Constraint: 1
   m_ConstraintCount: 3
+--- !u!1 &1555694118
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1555694119}
+  - component: {fileID: 1555694121}
+  - component: {fileID: 1555694120}
+  m_Layer: 0
+  m_Name: Light_visitor_main
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1555694119
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555694118}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -13.2, y: 7.58, z: 0.08370102}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 943623787}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1555694120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555694118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 1
+  baseIntensity: 0.9
+  minIntensity: -0.4
+  maxIntensity: 5
+  noiseSpeed: 4
+  noiseAmount: 0.28
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 10
+  dropoutDuration: {x: 0.03, y: 0.16}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.2}
+  burstMultiplier: 1.9
+  randomEnableStablePauses: 1
+  randomStablePauseChancePerSecond: 0.1
+  randomStablePauseDuration: {x: 5, y: 5}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
+--- !u!114 &1555694121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555694118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 1
+  m_LightType: 1
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.494
+  m_Color: {r: 0.8490566, g: 0.845973, b: 0.3724635, a: 1}
+  m_Intensity: 4.49
+  m_LightVolumeIntensity: 1
+  m_LightVolumeIntensityEnabled: 0
+  m_ApplyToSortingLayers: 000000007fe5e60d
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowIntensityEnabled: 0
+  m_ShadowIntensity: 1
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: -0.089349985, y: -0.9604001, z: 0}
+    m_Extent: {x: 2.81885, y: 3.1124, z: 0}
+  m_PointLightInnerAngle: 360
+  m_PointLightOuterAngle: 360
+  m_PointLightInnerRadius: 1.17
+  m_PointLightOuterRadius: 2.06
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 1.65
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -1.2586279, y: -2.4080992, z: 0}
+  - {x: 1.0201063, y: -2.4236069, z: 0}
+  - {x: 1.082098, y: -1.0157738, z: -0.000000037252903}
+  - {x: 1.0255966, y: -0.06486893, z: 0}
+  - {x: 0.4615593, y: 0.5023422, z: 0.00000043958426}
+  - {x: -0.31974316, y: 0.4395237, z: -0.000000037252903}
+  - {x: -0.5015116, y: -0.26111603, z: 0}
 --- !u!1001 &1559193203
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -42619,6 +43240,24 @@ MonoBehaviour:
   speedMultiplier: 1.4
   hideWhenIdle: 0
   keepVisibleOnStop: 1
+  plantScenicSpeed: 2
+  wateringScenicSpeed: 2
+  ledBlueScenicSpeed: 2
+  ledRedScenicSpeed: 2
+  fertilizeScenicSpeed: 1
+  sprayScenicSpeed: 1
+  harvestScenicSpeed: 1
+  uprootScenicSpeed: 1
+  defaultScenicSpeed: 1
+  plantScenicDuration: 3
+  wateringScenicDuration: 3
+  ledBlueScenicDuration: 3
+  ledRedScenicDuration: 3
+  fertilizeScenicDuration: 0
+  sprayScenicDuration: 0
+  harvestScenicDuration: 60
+  uprootScenicDuration: 0
+  defaultScenicDuration: 0
   plantProfile:
     verticalOffsetRange: {x: -0.12, y: 0.22}
     horizontalOffsetRange: {x: -0.32, y: 0.32}
@@ -45731,6 +46370,24 @@ MonoBehaviour:
   speedMultiplier: 1.4
   hideWhenIdle: 0
   keepVisibleOnStop: 1
+  plantScenicSpeed: 2
+  wateringScenicSpeed: 2
+  ledBlueScenicSpeed: 2
+  ledRedScenicSpeed: 2
+  fertilizeScenicSpeed: 1
+  sprayScenicSpeed: 1
+  harvestScenicSpeed: 1
+  uprootScenicSpeed: 1
+  defaultScenicSpeed: 1
+  plantScenicDuration: 3
+  wateringScenicDuration: 3
+  ledBlueScenicDuration: 3
+  ledRedScenicDuration: 3
+  fertilizeScenicDuration: 0
+  sprayScenicDuration: 0
+  harvestScenicDuration: 60
+  uprootScenicDuration: 0
+  defaultScenicDuration: 0
   plantProfile:
     verticalOffsetRange: {x: -0.12, y: 0.22}
     horizontalOffsetRange: {x: -0.32, y: 0.32}
@@ -47982,6 +48639,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1860333508}
   - component: {fileID: 1860333509}
+  - component: {fileID: 1860333510}
   m_Layer: 8
   m_Name: BlueLight
   m_TagString: Untagged
@@ -48054,6 +48712,56 @@ MonoBehaviour:
   - {x: 0.56924725, y: -1.8263483, z: 0}
   - {x: 0.48934674, y: 0.51598024, z: 0}
   - {x: -0.574574, y: 0.50532675, z: 0}
+--- !u!114 &1860333510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1860333507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 2
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 1.2
+  potNoiseAmount: 0.08
+  potMicroDipChancePerSecond: 0.08
+  potMicroDipDuration: {x: 0.08, y: 0.18}
+  potMicroDipMultiplier: 0.92
+  potMicroBoostChancePerSecond: 0.06
+  potMicroBoostDuration: {x: 0.08, y: 0.16}
+  potMicroBoostMultiplier: 1.05
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
 --- !u!1 &1865614045
 GameObject:
   m_ObjectHideFlags: 0

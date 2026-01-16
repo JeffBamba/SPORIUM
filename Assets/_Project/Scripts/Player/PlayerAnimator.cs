@@ -8,7 +8,9 @@ namespace _Project
     public class PlayerAnimator : MonoBehaviour
     {
         private static readonly int k_idleAnimation = Animator.StringToHash("Idle");
-        private static readonly int k_walkingAnimation = Animator.StringToHash("Walking"); 
+        private static readonly int k_walkingAnimation = Animator.StringToHash("Walking");
+        private static readonly int k_idleBackAnimation = Animator.StringToHash("IdleBack");
+        private static readonly int k_walkingBackAnimation = Animator.StringToHash("WalkingBack");
 
         [Header("DEBUG_SAFE_FIX - Movement Detection")]
         [Tooltip("DEBUG_SAFE_FIX: If true, when Rigidbody2D.velocity is ~0 (e.g. MovePosition movement), infer movement from delta position to drive walking animation.")]
@@ -34,6 +36,7 @@ namespace _Project
         private int _currentAnimation;
         private Vector2 _lastPos;
         private float _walkHoldRemaining = 0f;
+        private bool _facingBack = false;
 
         private void Awake()
         {
@@ -52,8 +55,6 @@ namespace _Project
 
         private void Update()
         {
-            int updatedAnimation = k_idleAnimation;
-
             Vector2 pos = _rigidbody != null ? _rigidbody.position : (Vector2)transform.position;
             Vector2 delta = pos - _lastPos;
             _lastPos = pos;
@@ -62,10 +63,30 @@ namespace _Project
             bool walkByVel = Mathf.Abs(velX) > Mathf.Max(0.000001f, minAbsVelocityXForWalk);
             bool walkByDelta = false;
 
+            // Update facing based on movement direction (prefer Y for "back" when moving up).
+            if (walkByVel)
+            {
+                _facingBack = false;
+            }
+            else if (useDeltaPositionForWalking)
+            {
+                float absX = Mathf.Abs(delta.x);
+                float absY = Mathf.Abs(delta.y);
+                if (absX > 0.00001f || absY > 0.00001f)
+                {
+                    if (absY > absX)
+                        _facingBack = delta.y > 0f;
+                    else if (absX > 0.00001f)
+                        _facingBack = false;
+                }
+            }
+
+            int updatedAnimation = _facingBack ? k_idleBackAnimation : k_idleAnimation;
+
             if (walkByVel)
             {
                 _spriteRenderer.flipX = velX > 0;
-                updatedAnimation = k_walkingAnimation;
+                updatedAnimation = _facingBack ? k_walkingBackAnimation : k_walkingAnimation;
             }
             else if (useDeltaPositionForWalking)
             {
@@ -73,9 +94,9 @@ namespace _Project
                 walkByDelta = delta.magnitude > Mathf.Max(0.000001f, minDeltaMagnitudeForWalk);
                 if (walkByDelta)
                 {
-                    if (Mathf.Abs(delta.x) > 0.00001f)
+                    if (!_facingBack && Mathf.Abs(delta.x) > 0.00001f)
                         _spriteRenderer.flipX = delta.x > 0;
-                    updatedAnimation = k_walkingAnimation;
+                    updatedAnimation = _facingBack ? k_walkingBackAnimation : k_walkingAnimation;
                 }
             }
 
@@ -89,7 +110,7 @@ namespace _Project
                     _walkHoldRemaining = Mathf.Max(0f, _walkHoldRemaining - Time.deltaTime);
 
                 if (_walkHoldRemaining > 0f)
-                    updatedAnimation = k_walkingAnimation;
+                    updatedAnimation = _facingBack ? k_walkingBackAnimation : k_walkingAnimation;
             }
 
             if (_currentAnimation == updatedAnimation)

@@ -1,0 +1,22 @@
+================================================================================
+                    COMMIT RECAP - DEV REPORT #0045
+                    Data: 2026-01-15
+================================================================================
+
+Feat/UX/Automation: PlantCardV3 Terminal boot + protocol typewriter, command updates,
+automation parallel per-pot, inventory reservation in queue.
+
+- Boot sequence gialla al launch Terminal Pot + typewriter per PROTOCOL.
+- Rinomina comando HYDRATION → WATERING + label coerenti.
+- Conferma LED con System ON/OFF e State RED/BLUE/OFF.
+- Automazione parallelizzata per pot diversi (sequenza preservata per pot).
+- Feedback toast per AP/Item insufficienti a conferma coda.
+- Riserva item in queue (semi/fertilizzanti/additivi) con quantità “available”.
+
+Files:
+- Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs
+- Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs
+- Assets/Docs/REPORT/DEV REPORT_0045.txt
+
+================================================================================
+

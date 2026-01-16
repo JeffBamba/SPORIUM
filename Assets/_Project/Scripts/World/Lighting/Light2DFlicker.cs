@@ -14,7 +14,8 @@ namespace _Project.World.Lighting
         public enum FlickerMode
         {
             RandomFlicker = 0,
-            StartupSequence = 1
+            StartupSequence = 1,
+            PotGentle = 2
         }
 
         [Header("Mode")]
@@ -59,6 +60,26 @@ namespace _Project.World.Lighting
         [Tooltip("Higher = snappier. Lower = smoother.")]
         [SerializeField] private float response = 25f;
 
+        [Header("Pot Gentle Mode (subtle life)")]
+        [Tooltip("Very subtle noise speed for pot lights.")]
+        [SerializeField] private float potNoiseSpeed = 1.2f;
+        [Tooltip("Very small intensity variance for pot lights.")]
+        [SerializeField] private float potNoiseAmount = 0.08f;
+        [Tooltip("Rare micro dips (per second).")]
+        [SerializeField] private float potMicroDipChancePerSecond = 0.08f;
+        [Tooltip("Duration of micro dips (seconds).")]
+        [SerializeField] private Vector2 potMicroDipDuration = new Vector2(0.08f, 0.18f);
+        [Tooltip("Intensity multiplier during dip (e.g. 0.92 = -8%).")]
+        [Range(0.8f, 1f)]
+        [SerializeField] private float potMicroDipMultiplier = 0.92f;
+        [Tooltip("Rare micro boosts (per second).")]
+        [SerializeField] private float potMicroBoostChancePerSecond = 0.06f;
+        [Tooltip("Duration of micro boosts (seconds).")]
+        [SerializeField] private Vector2 potMicroBoostDuration = new Vector2(0.08f, 0.16f);
+        [Tooltip("Intensity multiplier during boost (e.g. 1.05 = +5%).")]
+        [Range(1f, 1.2f)]
+        [SerializeField] private float potMicroBoostMultiplier = 1.05f;
+
         [Header("Startup Sequence (lab tube)")]
         [Tooltip("Initial fast flicker duration (seconds).")]
         [SerializeField] private Vector2 bootFlickerDuration = new Vector2(0.9f, 1.6f);
@@ -99,6 +120,8 @@ namespace _Project.World.Lighting
 
         private bool _randomInStablePause;
         private float _randomStablePauseEndTime;
+        private float _potMicroEventEndTime;
+        private float _potMicroMultiplier = 1f;
 
         private enum EventMode
         {
@@ -169,6 +192,8 @@ namespace _Project.World.Lighting
 
             if (mode == FlickerMode.StartupSequence)
                 TickStartupSequence(dt);
+            else if (mode == FlickerMode.PotGentle)
+                TickPotGentle(dt);
             else
                 TickRandomFlicker(dt);
 
@@ -389,6 +414,37 @@ namespace _Project.World.Lighting
             };
 
             _targetIntensity = Mathf.Clamp(_targetIntensity, minIntensity, maxIntensity);
+        }
+
+        private void TickPotGentle(float dt)
+        {
+            // Very subtle continuous shimmer
+            float n = Mathf.PerlinNoise(_t * potNoiseSpeed, noiseSeed + 9.13f) * 2f - 1f;
+            float target = baseIntensity + n * potNoiseAmount;
+
+            // End micro event
+            if (_potMicroEventEndTime > 0f && Time.time >= _potMicroEventEndTime)
+            {
+                _potMicroEventEndTime = 0f;
+                _potMicroMultiplier = 1f;
+            }
+
+            // Start micro dip or boost
+            if (_potMicroEventEndTime <= 0f)
+            {
+                if (Random.value < potMicroDipChancePerSecond * dt)
+                {
+                    _potMicroMultiplier = potMicroDipMultiplier;
+                    _potMicroEventEndTime = Time.time + Random.Range(potMicroDipDuration.x, potMicroDipDuration.y);
+                }
+                else if (Random.value < potMicroBoostChancePerSecond * dt)
+                {
+                    _potMicroMultiplier = potMicroBoostMultiplier;
+                    _potMicroEventEndTime = Time.time + Random.Range(potMicroBoostDuration.x, potMicroBoostDuration.y);
+                }
+            }
+
+            _targetIntensity = Mathf.Clamp(target * _potMicroMultiplier, minIntensity, maxIntensity);
         }
     }
 }

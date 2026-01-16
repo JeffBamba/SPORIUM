@@ -17,6 +17,13 @@ namespace Sporae.Dome.PotAutomation
             Bottom
         }
 
+        public enum ScenicSpeed
+        {
+            x1 = 1,
+            x2 = 2,
+            x3 = 3
+        }
+
         [Serializable]
         private struct ArmMotionProfile
         {
@@ -57,6 +64,37 @@ namespace Sporae.Dome.PotAutomation
         [Header("Visibility")]
         [SerializeField] private bool hideWhenIdle = false;
         [SerializeField] private bool keepVisibleOnStop = true;
+
+        [Header("Scenic Speed Overrides (x1/x2/x3)")]
+        [SerializeField] private ScenicSpeed plantScenicSpeed = ScenicSpeed.x2;
+        [SerializeField] private ScenicSpeed wateringScenicSpeed = ScenicSpeed.x2;
+        [SerializeField] private ScenicSpeed ledBlueScenicSpeed = ScenicSpeed.x2;
+        [SerializeField] private ScenicSpeed ledRedScenicSpeed = ScenicSpeed.x2;
+        [SerializeField] private ScenicSpeed fertilizeScenicSpeed = ScenicSpeed.x1;
+        [SerializeField] private ScenicSpeed sprayScenicSpeed = ScenicSpeed.x1;
+        [SerializeField] private ScenicSpeed harvestScenicSpeed = ScenicSpeed.x1;
+        [SerializeField] private ScenicSpeed uprootScenicSpeed = ScenicSpeed.x1;
+        [SerializeField] private ScenicSpeed defaultScenicSpeed = ScenicSpeed.x1;
+
+        [Header("Scenic Duration Overrides (seconds)")]
+        [Tooltip("If > 0, limits the total scenic animation duration for Plant.")]
+        [SerializeField] private float plantScenicDuration = 3f;
+        [Tooltip("If > 0, limits the total scenic animation duration for Watering.")]
+        [SerializeField] private float wateringScenicDuration = 3f;
+        [Tooltip("If > 0, limits the total scenic animation duration for LED Blue.")]
+        [SerializeField] private float ledBlueScenicDuration = 3f;
+        [Tooltip("If > 0, limits the total scenic animation duration for LED Red.")]
+        [SerializeField] private float ledRedScenicDuration = 3f;
+        [Tooltip("If > 0, limits the total scenic animation duration for Fertilize.")]
+        [SerializeField] private float fertilizeScenicDuration = 0f;
+        [Tooltip("If > 0, limits the total scenic animation duration for Spray.")]
+        [SerializeField] private float sprayScenicDuration = 0f;
+        [Tooltip("If > 0, limits the total scenic animation duration for Harvest.")]
+        [SerializeField] private float harvestScenicDuration = 60f;
+        [Tooltip("If > 0, limits the total scenic animation duration for Uproot.")]
+        [SerializeField] private float uprootScenicDuration = 0f;
+        [Tooltip("If > 0, limits the total scenic animation duration for all other actions.")]
+        [SerializeField] private float defaultScenicDuration = 0f;
 
         [Header("Action Profiles")]
         [SerializeField] private ArmMotionProfile plantProfile = new ArmMotionProfile
@@ -196,6 +234,8 @@ namespace Sporae.Dome.PotAutomation
         private bool _isAnimating;
         private ArmMotionProfile _profile;
         private System.Random _rng;
+        private float _scenicEndTime;
+        private bool _scenicDurationActive;
 
         private void Awake()
         {
@@ -234,6 +274,12 @@ namespace Sporae.Dome.PotAutomation
             UpdateAxisMotion(ref _yMotion, dt, isVertical: true);
             UpdateAxisMotion(ref _xMotion, dt, isVertical: false);
 
+            if (_scenicDurationActive && Time.time >= _scenicEndTime)
+            {
+                StopAnimation();
+                return;
+            }
+
             float jitter = _profile.microJitterAmplitude > 0f
                 ? Mathf.Sin(Time.time * _profile.microJitterSpeed) * _profile.microJitterAmplitude
                 : 0f;
@@ -263,6 +309,19 @@ namespace Sporae.Dome.PotAutomation
                 return;
 
             _profile = GetProfile(actionType);
+            float scenicSpeed = GetScenicSpeedMultiplier(actionType);
+            _profile = ApplyScenicSpeed(_profile, scenicSpeed);
+            float scenicDuration = GetScenicDurationSeconds(actionType);
+            if (scenicDuration > 0f)
+            {
+                _scenicDurationActive = true;
+                _scenicEndTime = Time.time + scenicDuration;
+            }
+            else
+            {
+                _scenicDurationActive = false;
+                _scenicEndTime = 0f;
+            }
             int seed = Environment.TickCount ^ (int)actionType ^ (potIdSeed != null ? potIdSeed.GetHashCode() : 0);
             _rng = new System.Random(seed);
 
@@ -282,6 +341,8 @@ namespace Sporae.Dome.PotAutomation
         {
             _isAnimating = false;
             _rng = null;
+            _scenicDurationActive = false;
+            _scenicEndTime = 0f;
 
             if (largeArm != null)
             {
@@ -383,6 +444,49 @@ namespace Sporae.Dome.PotAutomation
             if (motion.isPaused) return 0f;
             if (motion.isStep) return t < 0.3f ? t / 0.3f : 1f;
             return t * t * (3f - 2f * t);
+        }
+
+        private float GetScenicSpeedMultiplier(PotAutomationRunner.AutomationActionType type)
+        {
+            ScenicSpeed speed = type switch
+            {
+                PotAutomationRunner.AutomationActionType.Plant => plantScenicSpeed,
+                PotAutomationRunner.AutomationActionType.HydrationToggle => wateringScenicSpeed,
+                PotAutomationRunner.AutomationActionType.LedBlueToggle => ledBlueScenicSpeed,
+                PotAutomationRunner.AutomationActionType.LedRedToggle => ledRedScenicSpeed,
+                PotAutomationRunner.AutomationActionType.Fertilize => fertilizeScenicSpeed,
+                PotAutomationRunner.AutomationActionType.Spray => sprayScenicSpeed,
+                PotAutomationRunner.AutomationActionType.Harvest => harvestScenicSpeed,
+                PotAutomationRunner.AutomationActionType.Uproot => uprootScenicSpeed,
+                _ => defaultScenicSpeed
+            };
+
+            return Mathf.Max(1f, (float)speed);
+        }
+
+        private float GetScenicDurationSeconds(PotAutomationRunner.AutomationActionType type)
+        {
+            return type switch
+            {
+                PotAutomationRunner.AutomationActionType.Plant => plantScenicDuration,
+                PotAutomationRunner.AutomationActionType.HydrationToggle => wateringScenicDuration,
+                PotAutomationRunner.AutomationActionType.LedBlueToggle => ledBlueScenicDuration,
+                PotAutomationRunner.AutomationActionType.LedRedToggle => ledRedScenicDuration,
+                PotAutomationRunner.AutomationActionType.Fertilize => fertilizeScenicDuration,
+                PotAutomationRunner.AutomationActionType.Spray => sprayScenicDuration,
+                PotAutomationRunner.AutomationActionType.Harvest => harvestScenicDuration,
+                PotAutomationRunner.AutomationActionType.Uproot => uprootScenicDuration,
+                _ => defaultScenicDuration
+            };
+        }
+
+        private static ArmMotionProfile ApplyScenicSpeed(ArmMotionProfile profile, float speed)
+        {
+            float s = Mathf.Max(1f, speed);
+            profile.stepDurationRange = profile.stepDurationRange / s;
+            profile.longDurationRange = profile.longDurationRange / s;
+            profile.pauseDurationRange = profile.pauseDurationRange / s;
+            return profile;
         }
 
         private float ClampAxisTarget(float target, bool isVertical)
