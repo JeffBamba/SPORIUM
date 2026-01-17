@@ -1,0 +1,182 @@
+🎨 PROMPT MASTER — SPORIUM
+PIANTE BOTANICHE — HUD / STATUS VIEW (DIEGETIC UI)
+
+Prompt:
+
+High-definition pixel art illustration of a Sporium plant rendered as a living biological specimen inside a diegetic scientific HUD.
+
+🧬 Plant Identity
+
+Plant Name: {PLANT_NAME}
+
+Plant Code: {PLT-XXX}
+
+Growth Stage: {GROWTH_STAGE}
+(Sprout / Growth / Flowering / HarvestReady / Withered / Mutated)
+
+The plant is shown isolated and floating, with no pot, no soil, no container, as if it is being scanned, catalogued, and monitored by an underground botanical system.
+
+🎮 Visual Style (STRICT)
+
+Pixel art — high definition, NOT low-res 8-bit
+
+Soft, readable pixels
+
+Clean but organic silhouettes
+
+No thick black outlines
+
+No cartoon proportions
+
+No fantasy exaggeration
+
+Subtle CRT / scanline noise, extremely light
+Visual feel of 1980s–1990s scientific / medical terminals
+Retro bios / laboratory monitor aesthetic
+
+🌈 Color Palette (STRICT — NON-NEGOTIABLE)
+
+Dominant
+
+Phosphorescent monitor green
+
+Secondary
+
+Cold green → healthy growth
+
+Green-cyan → vitality / hydration
+
+Minimal accents only
+
+Pale yellow → mature energy / fruits
+
+Muted, desaturated red → only if stress, mutation, or corruption is present
+
+Background
+
+Uniform very dark green or near-black
+
+No gradients
+
+No modern saturated colors
+
+💡 Lighting Rules
+
+Flat frontal illumination, as if scanner-lit
+
+No environmental light sources
+
+No realistic shadows
+
+Subtle internal glow in living tissues
+
+Fruits (if present) emit a soft bioluminescent glow
+
+🌱 Botanical Design Rules
+
+Scientifically plausible anatomy
+
+Realistic botanical structure (not decorative)
+
+Thick leaves adapted to harsh / controlled environments
+
+Clearly readable branching structure at small HUD scale
+
+Visible veins and dense plant tissue
+
+No fantasy shapes, no alien styling unless explicitly mutated
+
+Reference tone: controlled cultivation, not wild nature
+
+🔄 Growth Stage Definitions
+
+(Same organism over time — never redesign the plant)
+
+{GROWTH_STAGE = Sprout}
+
+Small germinated structure
+
+2–3 young leaves
+
+Very faint glow
+
+Fragile but alive
+
+{GROWTH_STAGE = Growth}
+
+Fully developed vertical structure
+
+Dense foliage
+
+Stable, readable silhouette
+
+Slightly stronger internal glow
+
+{GROWTH_STAGE = Flowering}
+
+Mature plant structure
+
+Flowers visible
+
+Subtle luminous highlights on reproductive organs
+
+{GROWTH_STAGE = HarvestReady}
+
+Adult plant
+
+Fruits clearly visible (hanging or embedded)
+
+Fruits softly bioluminescent
+
+Visual message: ready for use / harvest
+
+{GROWTH_STAGE = Withered}
+
+Dehydrated or collapsed tissues
+
+Glow almost gone
+
+Colors shift darker / duller
+
+Still readable as the same plant
+
+{GROWTH_STAGE = Mutated}
+
+Anatomy partially altered
+
+Asymmetry, irregular growth, corrupted tissues
+
+Limited muted red or sickly hues
+
+Still grounded in botanical logic
+
+🧠 Mood & Narrative
+
+The plant must feel:
+
+Observed
+
+Monitored
+
+Catalogued
+
+It is not decoration.
+It is a specimen under control.
+
+Designed to function as:
+
+Central HUD subject
+
+Biological readout
+
+Silent narrative element
+
+❌ Absolute Restrictions
+
+❌ No pots
+❌ No soil
+❌ No natural backgrounds
+❌ No modern realistic rendering
+❌ No cartoon style
+❌ No fantasy style
+❌ No smooth modern gradients

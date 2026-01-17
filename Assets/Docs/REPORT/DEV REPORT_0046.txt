@@ -1,0 +1,87 @@
+================================================================================
+             DEV REPORT #0046 - PLANTCARDV3 DETAILS (DOS) + POT ARM SCENIC CONTROL
+             SPORAE BUILD BETA
+             Data: 2026-01-16 00:40:00
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PCV3-0046 — Details DOS Card + Diary Input + Arm Scenic Duration
+- **Tipo Report:** Development Report (UI/UX + Automation)
+- **Periodo coperto:** 2026-01-16
+- **Data Generazione:** 2026-01-16 00:40:00
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0045.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **PCV3-DETAILS-046-A**: Refactor totale Details in stile DOS (card 420x280).
+  - **Implementazione:** Nuovo UXML con header LED, separatori ASCII, status linee dotted,
+    bar ASCII per HYDRATION/LIGHT STRESS, blocchi Research/Diary.
+  - **Evidence:** `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_DetailPage.uxml`
+
+- **PCV3-DETAILS-046-B**: Styling DOS completo per Details (no rounded, neon green).
+  - **Implementazione:** nuove classi `.pcv3d-*` in USS (DOS terminal look).
+  - **Evidence:** `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+- **PCV3-DETAILS-046-C**: Binding dati reali al layout DOS (specimen, family, stage, etc).
+  - **Implementazione:** aggiornato `PopulateDetailPage` su nuovi elementi.
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+- **PCV3-DIARY-046-D**: Diario pot con input + log (1 nota per riga).
+  - **Implementazione:** input+log in UXML, render lista note da `PlantDiaryManager`,
+    submit con bottone e Enter.
+  - **Evidence:** `PlantCardV3_DetailPage.uxml`, `PlantCardV3TerminalController.cs`
+
+- **POT-AUTO-046-E**: Controlli scenici x1/x2/x3 per animazione bracci.
+  - **Implementazione:** enum `ScenicSpeed` per azione, override per profili.
+  - **Evidence:** `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`
+
+- **POT-AUTO-046-F**: Durata scenica per azione (es. Plant 3s, Harvest 60s).
+  - **Implementazione:** override per `scenicDuration` e stop auto a fine tempo.
+  - **Evidence:** `PotAutomationArmAnimator.cs`
+
+- **LIGHT-046-G**: Nuova modalità flicker “PotGentle” (tremolio impercettibile).
+  - **Implementazione:** rumore lieve + micro dip/boost rari.
+  - **Evidence:** `Assets/_Project/Scripts/World/Lighting/Light2DFlicker.cs`
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script modificati:**
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`
+  - `Assets/_Project/Scripts/World/Lighting/Light2DFlicker.cs`
+
+- **UI modificata:**
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_DetailPage.uxml`
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Details DOS:** `OPEN POT-XXX` → verifica layout DOS, separatori ASCII, status lines.
+- **ASCII bars:** HYDRATION/LIGHT STRESS mostrano 20 char `█/░` con percentuale.
+- **Diary input:** scrivere nota + `LOG` o `Enter` → nuova riga.
+- **Scenic speed:** cambiare x1/x2/x3 in Inspector → animazione più rapida/lenta.
+- **Scenic duration:** Plant a 3s, Harvest a 60s con velocità normale.
+- **PotGentle:** assegnare `Light2DFlicker` mode = `PotGentle` ai POT.
+
+================================================================================
+
+📚 NOTE
+=======
+- Per ottenere durata scenica fissa, usare `Scenic Duration Overrides`.
+- `Scenic Speed Overrides` resta disponibile per regolazioni globali di velocità.
+- Layout Details ora è completamente DOS-style e separato dai vecchi stili `.pcv3-detail-*`.
+
+================================================================================
+FINE REPORT
+================================================================================

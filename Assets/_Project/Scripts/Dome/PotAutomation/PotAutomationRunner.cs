@@ -24,6 +24,7 @@ namespace Sporae.Dome.PotAutomation
             HydrationToggle,
             LedRedToggle,
             LedBlueToggle,
+            Prune,
             Harvest,
             Uproot
         }
@@ -172,7 +173,17 @@ namespace Sporae.Dome.PotAutomation
                 }
                 float effectiveMultiplier = delayMultiplier * 0.5f;
                 float delay = UnityEngine.Random.Range(delaySecondsRange.x, delaySecondsRange.y) * effectiveMultiplier;
-                delay = Mathf.Max(1f, delay);
+
+                // If the arm animation has an explicit scenic duration, sync the runner delay
+                // (and therefore the in-progress + success timing) to what the player sees.
+                if (armAnimator != null)
+                {
+                    float scenicDuration = armAnimator.GetConfiguredScenicDurationSeconds(action.Type);
+                    if (scenicDuration > 0f)
+                        delay = scenicDuration;
+                }
+
+                delay = Mathf.Max(0.25f, delay);
                 string dangerKey = $"POT-AUTO:{action.PotId}";
                 _foundation?.UpsertDanger(dangerKey, "POT-AUTO-INPROGRESS",
                     new NotificationPayload().With("message", $"{action.PotId}: {action.Type} in progress — ETA {Mathf.CeilToInt(delay)}s"));
@@ -242,6 +253,9 @@ namespace Sporae.Dome.PotAutomation
                             break;
                         case AutomationActionType.LedBlueToggle:
                             ok = pot.PotActions.DoLight(LedType.Blue);
+                            break;
+                        case AutomationActionType.Prune:
+                            ok = pot.PotActions.DoPruning(useSpray: false);
                             break;
                         case AutomationActionType.Harvest:
                             ok = pot.PotActions.DoHarvest();

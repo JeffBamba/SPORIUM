@@ -1,0 +1,114 @@
+================================================================================
+             DEV REPORT #0047 - PLANTCARDV3 TERMINAL REFINEMENTS + FORECAST TOOLTIP
+             SPORAE BUILD BETA
+             Data: 2026-01-17 00:00:00
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PCV3-0047 — Terminal Refinements (Queue/Exit) + Forecast Styling + Tooltip + PRUNE + Toast Sync
+- **Tipo Report:** Development Report (UI/UX + Terminal Commands + Pot Automation)
+- **Periodo coperto:** 2026-01-17
+- **Data Generazione:** 2026-01-17 00:00:00
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0046.txt`
+
+================================================================================
+
+✅ TASK COMPLETATI
+=================
+- **PCV3-TERM-047-A**: Rimozione UI Queue dalla sidebar (queue accessibile solo da comando).
+  - **Implementazione:** eliminato pannello queue dal terminal layout.
+  - **Evidence:** `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uxml`, `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+- **PCV3-TERM-047-B**: Rimozione comandi `CONFIRM` e `BACK` e semplificazione UX terminale.
+  - **Implementazione:** flow conferme gestito solo dove necessario (es. chiusura con queue non vuota).
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-047-C**: Fix bug chiusura terminale: `EXIT/ESC` non deve eseguire la queue senza conferma.
+  - **Implementazione:** se `_queue` non è vuota, la chiusura apre prompt `[Y/N]` e non avvia automazioni senza ok.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-047-D**: Nuovo comando `QUEUE SHOW` per ispezione queue nel console output.
+  - **Implementazione:** output testuale in stile terminale, senza UI dedicata.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-047-E**: Comando `FORECAST` in formato “per-pot” (blocco dettagliato) con styling richiesto.
+  - **Implementazione:** output con header pot, label “Prossima”, colori Celeste per `POT-XXX`/Stage, valori fuori range in rosso, riga `STATUS` stile campus (verde/rosso + unmet count).
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-047-F**: Tooltip “Condition” in `FORECAST` (hover sulla riga “Condition: …”).
+  - **Implementazione:** overlay hotspot sopra la console per hit-test su righe “Condition:”, tooltip UI Toolkit con colorazioni stile PlantCardV2.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **PCV3-TERM-047-G**: Update comando `STATUS`: mostra “Condition” al posto di “Health”.
+  - **Implementazione:** tabella status aggiornata a parametro reale (condizione).
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+- **POT-AUTO-047-H**: Integrazione azione `PRUNE` in coda automazioni.
+  - **Implementazione:** aggiunto mapping tipo azione queue → automazione, collegato a sistemi pruning esistenti.
+  - **Evidence:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`,
+               `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`,
+               `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`,
+               `Assets/_Project/Scripts/Dome/PotActions.cs`,
+               `Assets/_Project/Scripts/Dome/PotSystem/Pruning/PruningSystem.cs`
+
+- **POT-AUTO-047-I**: Sync durata Toast “in progress/success” con durata scenica dei bracci automatici.
+  - **Implementazione:** durata toast ricavata dalla durata scenica configurata per azione (es. Seed molto breve → toast coerente).
+  - **Evidence:** `PotAutomationRunner.cs`, `PotAutomationArmAnimator.cs`,
+               `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationService.cs`,
+               `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+
+- **PCV3-TERM-047-J**: Fix “glow” console: colori distinti (rosso non deve virare al verde).
+  - **Implementazione:** rimossi `text-shadow`/outline aggressivi dalla console text per non alterare rich text colors.
+  - **Evidence:** `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+- **PCV3-TERM-047-K**: Cleanup finale: rimossa tutta l’instrumentation temporanea usata per debug tooltip/hover.
+  - **Implementazione:** eliminati blocchi di log, scritture su `.cursor/debug.log`, snapshot debug.
+  - **Evidence:** `PlantCardV3TerminalController.cs`
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+- **Script modificati:**
+  - `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationRunner.cs`
+  - `Assets/_Project/Scripts/Dome/PotAutomation/PotAutomationArmAnimator.cs`
+  - `Assets/_Project/Scripts/Dome/PotActions.cs`
+  - `Assets/_Project/Scripts/Dome/PotSystem/Pruning/PruningSystem.cs`
+
+- **UI modificata:**
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uxml`
+  - `Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss`
+
+================================================================================
+
+🧪 TEST E VERIFICHE (manuali)
+============================
+- **Queue close confirm:** crea queue con `PLANT`/`SEED` ecc → `EXIT`/`ESC` deve chiedere conferma (non auto-run).
+- **Queue show:** `QUEUE SHOW` stampa lista azioni in coda.
+- **Forecast output:** `FORECAST` stampa blocco per pot e:
+  - `POT-XXX`/Stage in Celeste
+  - label “Prossima”
+  - requisiti fuori range in rosso
+  - `STATUS` verde/rosso con conteggio requisiti mancanti
+- **Forecast tooltip:** `FORECAST` → hover su riga `Condition:` → tooltip appare e sparisce al leave.
+- **Status:** `STATUS` mostra “Condition/Condizione” (non “Health”).
+- **Prune:** aggiungi `PRUNE` in queue e avvia automazione → azione eseguita e coerente con sistemi pruning.
+- **Toast sync:** riduci durata scenica in `PotAutomationArmAnimator` (es. Seed) → toast “in progress/success” deve seguire durata scenica.
+- **Console colors:** testo rosso/verde deve restare distinguibile (no glow che tinge tutto di verde).
+
+================================================================================
+
+📚 NOTE
+=======
+- Tooltip `FORECAST` implementato senza cambiare il “typewriter feel”: l’output resta testo, l’hover è gestito da layer overlay.
+- La queue non è più una UI persistente: è consultabile solo via comando, riducendo rumore e spazio in sidebar.
+
+================================================================================
+FINE REPORT
+================================================================================

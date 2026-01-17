@@ -17,6 +17,7 @@ using _Project.Player;
 using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
+using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -44,6 +45,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             HydrationToggle,
             LedRedToggle,
             LedBlueToggle,
+            Prune,
             Harvest,
             Uproot
         }
@@ -117,6 +119,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private Button _btnClose;
         private ScrollView _consoleScroll;
         private Label _consoleText;
+        private VisualElement _forecastConditionTooltip;
+        private Label _forecastConditionTooltipText;
+        private bool _shouldHideForecastConditionTooltip;
+        private VisualElement _forecastHotspotLayer;
+        private VisualElement _forecastHoverAnchor;
+        private readonly List<ForecastConditionHoverRow> _forecastConditionHoverRows = new();
+        private int _forecastHoveredRowIndex = -1;
+        private bool _lastOutputWasForecast;
         private ScrollView _protocolScroll;
         private Label _protocolText;
         private VisualElement _consoleView;
@@ -129,9 +139,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private VisualElement _potListScrollbar;
         private VisualElement _potListScrollbarTrack;
         private VisualElement _potListScrollbarThumb;
-        private VisualElement _queueScrollbar;
-        private VisualElement _queueScrollbarTrack;
-        private VisualElement _queueScrollbarThumb;
         private Label _inputHintOverlay;
         private VisualElement _promptRoot;
         private VisualElement _blinkCursor;
@@ -139,8 +146,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private Label _apLabel;
         private Label _queuedLabel;
         private ScrollView _potList;
-        private ScrollView _queueList;
-        private Button _btnQueueClear;
         private VisualElement _backdrop;
         private VisualElement _dimOverlay;
         private Texture2D _backdropTexture;
@@ -231,8 +236,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _apLabel = _root.Q<Label>("pcv3-ap-label");
             _queuedLabel = _root.Q<Label>("pcv3-queued-label");
             _potList = _root.Q<ScrollView>("pcv3-potlist");
-            _queueList = _root.Q<ScrollView>("pcv3-queue-list");
-            _btnQueueClear = _root.Q<Button>("pcv3-queue-clear");
             _backdrop = _root.Q<VisualElement>("pcv3-backdrop");
             _dimOverlay = _root.Q<VisualElement>("pcv3-dim");
             _outerGlow = _root.Q<VisualElement>("pcv3-outer-glow");
@@ -241,9 +244,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _potListScrollbar = _root.Q<VisualElement>("pcv3-potlist-scrollbar");
             _potListScrollbarTrack = _root.Q<VisualElement>("pcv3-potlist-scrollbar-track");
             _potListScrollbarThumb = _root.Q<VisualElement>("pcv3-potlist-scrollbar-thumb");
-            _queueScrollbar = _root.Q<VisualElement>("pcv3-queue-scrollbar");
-            _queueScrollbarTrack = _root.Q<VisualElement>("pcv3-queue-scrollbar-track");
-            _queueScrollbarThumb = _root.Q<VisualElement>("pcv3-queue-scrollbar-thumb");
 
             // Inizializza scrollbar custom
             InitializeCustomScrollbars();
@@ -254,11 +254,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _consoleText.enableRichText = true;
             if (_protocolText != null)
                 _protocolText.enableRichText = true;
+            EnsureForecastConditionTooltip();
 
             if (_btnClose != null)
                 _btnClose.clicked += RequestClose;
-            if (_btnQueueClear != null)
-                _btnQueueClear.clicked += () => HandleCommand("CLEAR");
 
             // Click anywhere on terminal should re-focus command input
             _root.RegisterCallback<MouseDownEvent>(_ => FocusInput(), TrickleDown.TrickleDown);
@@ -268,15 +267,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _input.RegisterCallback<KeyDownEvent>(OnInputKeyDown);
                 _input.RegisterValueChangedCallback(evt =>
                 {
-                    DebugLog("INPUT", "ValueChanged", "change", "{\"old\":\"" + (evt.previousValue ?? "") + "\",\"new\":\"" + (evt.newValue ?? "") + "\"}");
                 });
                 _input.RegisterCallback<FocusInEvent>(_ =>
                 {
-                    DebugLog("FOCUS", "InputFocus", "in", "{}");
                 });
                 _input.RegisterCallback<FocusOutEvent>(_ =>
                 {
-                    DebugLog("FOCUS", "InputFocus", "out", "{}");
                 });
                 // Placeholder (UX)
                 _input.value = string.Empty;
@@ -295,17 +291,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Hide by default
             SetVisible(_startVisibleInEditor);
-        }
-
-        // #region agent log helper
-        private void DebugLog(string hypothesisId, string location, string message, string dataJson)
-        {
-            try
-            {
-                System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"" + hypothesisId + "\",\"location\":\"" + location + "\",\"message\":\"" + message + "\",\"data\":" + (string.IsNullOrEmpty(dataJson) ? "{}" : dataJson) + ",\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
         }
 
         private void ApplyConsoleFont()
@@ -359,8 +344,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                               + ",\"input\":{\"y\":" + (input?.layout.y ?? -1f) + ",\"h\":" + (input?.layout.height ?? -1f) + ",\"display\":\"" + (input?.resolvedStyle.display.ToString() ?? "null") + "\",\"picking\":\"" + (input?.pickingMode.ToString() ?? "null") + "\"}"
                               + ",\"scroll\":{\"y\":" + (scroll?.layout.y ?? -1f) + ",\"h\":" + (scroll?.layout.height ?? -1f) + ",\"contentH\":" + (scroll?.contentContainer?.layout.height ?? -1f) + "}"
                               + "}";
-
-                DebugLog("LAYOUT", "Snapshot", "layout", json);
             }
             catch { }
         }
@@ -388,8 +371,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                               + ",\"prompt\":{\"h\":" + (prompt?.resolvedStyle.height ?? -1f) + "}"
                               + ",\"input\":{\"h\":" + (input?.resolvedStyle.height ?? -1f) + ",\"font\":" + (input?.resolvedStyle.fontSize ?? -1f) + "}"
                               + "}";
-
-                DebugLog("LAYOUT", "DumpResolvedLayout", "resolved", json);
             }
             catch { }
         }
@@ -767,12 +748,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 SetupScrollbar(_potList, _potListScrollbar, _potListScrollbarTrack, _potListScrollbarThumb);
             }
-
-            // Setup scrollbar per queue list
-            if (_queueList != null && _queueScrollbar != null && _queueScrollbarTrack != null && _queueScrollbarThumb != null)
-            {
-                SetupScrollbar(_queueList, _queueScrollbar, _queueScrollbarTrack, _queueScrollbarThumb);
-            }
         }
 
         private void SetupScrollbar(ScrollView scrollView, VisualElement scrollbar, VisualElement track, VisualElement thumb)
@@ -918,7 +893,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                // In MVP chiude subito. In fase parser completo: aprirà prompt conferma queue.
+                // ESC = close terminal. If queue exists, require confirmation (Y/N).
                 RequestClose();
             }
 
@@ -951,10 +926,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             FocusInput();
             // Some Unity/UI Toolkit setups require a next-tick focus to actually stick.
             RequestRefocusSoon();
-
-            // Capture resolved layout after UI settles (for UI Builder parity).
-            _root?.schedule.Execute(() => DumpResolvedLayout("open_t0")).ExecuteLater(0);
-            _root?.schedule.Execute(() => DumpResolvedLayout("open_t100")).ExecuteLater(100);
         }
 
         public void Close()
@@ -972,8 +943,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             _root.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
-
-            DebugLog("FOCUS", "SetVisible", visible ? "open" : "close", "{\"visible\":" + (visible ? "true" : "false") + "}");
 
             // Visual requirement: when terminal is open, everything behind must be black / hidden.
             if (hideOtherUiWhileTerminalOpen)
@@ -1342,7 +1311,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void RefreshSidebar()
         {
             RefreshPotCards();
-            RefreshQueueList();
         }
 
         private void RefreshPotCards()
@@ -1538,62 +1506,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
 
             return cardRoot;
-        }
-
-        private void RefreshQueueList()
-        {
-            if (_queueList == null) return;
-            _queueList.contentContainer.Clear();
-
-            if (_queue.Count == 0)
-            {
-                var empty = new Label("No actions queued");
-                empty.style.color = new Color(0.6f, 0.6f, 0.6f, 1f);
-                empty.style.fontSize = 11;
-                _queueList.Add(empty);
-                return;
-            }
-
-            foreach (var action in _queue)
-            {
-                if (action == null) continue;
-
-                var row = new VisualElement();
-                row.style.flexDirection = FlexDirection.Row;
-                row.style.justifyContent = Justify.SpaceBetween;
-                row.style.alignItems = Align.Center;
-                row.style.marginBottom = 6;
-
-                var txt = new Label($"🔹 {GetActionLabel(action.Type)} on {action.PotId} [{action.ApCost} AP]");
-                txt.style.color = new Color(0.71f, 0.50f, 0.82f, 1f);
-                txt.style.fontSize = 11;
-                txt.style.flexGrow = 1;
-                row.Add(txt);
-
-                var remove = new Button(() =>
-                {
-                    _queue.Remove(action);
-                    RebuildReservedItems();
-                    RefreshHeader();
-                    RefreshQueueList();
-                });
-                remove.text = "×";
-                remove.style.width = 28;
-                remove.style.height = 22;
-                remove.style.backgroundColor = new Color(0, 0, 0, 0);
-                remove.style.borderLeftWidth = 2;
-                remove.style.borderRightWidth = 2;
-                remove.style.borderTopWidth = 2;
-                remove.style.borderBottomWidth = 2;
-                remove.style.borderLeftColor = new Color(0.71f, 0.50f, 0.82f, 1f);
-                remove.style.borderRightColor = new Color(0.71f, 0.50f, 0.82f, 1f);
-                remove.style.borderTopColor = new Color(0.71f, 0.50f, 0.82f, 1f);
-                remove.style.borderBottomColor = new Color(0.71f, 0.50f, 0.82f, 1f);
-                remove.style.color = new Color(0.71f, 0.50f, 0.82f, 1f);
-                row.Add(remove);
-
-                _queueList.Add(row);
-            }
         }
 
         private void FocusInput()
@@ -1916,6 +1828,477 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _consoleBuffer.AppendLine(parsed);
         }
 
+        private void EnsureForecastConditionTooltip()
+        {
+            if (_root == null) return;
+
+            if (_forecastConditionTooltip != null && _forecastConditionTooltipText != null)
+                return;
+
+            _forecastConditionTooltip = _root.Q<VisualElement>("pcv3-forecast-condition-tooltip");
+            _forecastConditionTooltipText = _forecastConditionTooltip?.Q<Label>("pcv3-forecast-condition-tooltip-text");
+
+            if (_forecastConditionTooltip == null)
+            {
+                _forecastConditionTooltip = new VisualElement();
+                _forecastConditionTooltip.name = "pcv3-forecast-condition-tooltip";
+                _forecastConditionTooltip.style.position = Position.Absolute;
+                _forecastConditionTooltip.style.left = 0f;
+                _forecastConditionTooltip.style.top = 0f;
+                _forecastConditionTooltip.style.width = 450f;
+                _forecastConditionTooltip.style.maxWidth = 450f;
+                _forecastConditionTooltip.style.minHeight = 200f;
+                _forecastConditionTooltip.style.paddingTop = 8f;
+                _forecastConditionTooltip.style.paddingRight = 8f;
+                _forecastConditionTooltip.style.paddingBottom = 8f;
+                _forecastConditionTooltip.style.paddingLeft = 8f;
+
+                // Match PlantCardV2 tooltip look (colors + contrast)
+                _forecastConditionTooltip.style.backgroundColor = new Color(13f / 255f, 21f / 255f, 25f / 255f, 0.95f); // #0d1519 @ 95%
+                _forecastConditionTooltip.style.borderTopWidth = 1f;
+                _forecastConditionTooltip.style.borderRightWidth = 1f;
+                _forecastConditionTooltip.style.borderBottomWidth = 1f;
+                _forecastConditionTooltip.style.borderLeftWidth = 1f;
+                var border = new Color(0f, 0.8f, 0.4f, 1f);
+                _forecastConditionTooltip.style.borderTopColor = border;
+                _forecastConditionTooltip.style.borderRightColor = border;
+                _forecastConditionTooltip.style.borderBottomColor = border;
+                _forecastConditionTooltip.style.borderLeftColor = border;
+
+                _forecastConditionTooltip.pickingMode = PickingMode.Ignore; // avoid flicker / hover stealing
+                _forecastConditionTooltip.style.display = DisplayStyle.None;
+
+                _forecastConditionTooltipText = new Label();
+                _forecastConditionTooltipText.name = "pcv3-forecast-condition-tooltip-text";
+                _forecastConditionTooltipText.enableRichText = true;
+                _forecastConditionTooltipText.style.whiteSpace = WhiteSpace.Normal;
+                _forecastConditionTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // near-white
+                _forecastConditionTooltipText.style.fontSize = 12f;
+                _forecastConditionTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
+                _forecastConditionTooltipText.style.marginTop = 4f;
+                _forecastConditionTooltipText.style.marginRight = 4f;
+                _forecastConditionTooltipText.style.marginBottom = 4f;
+                _forecastConditionTooltipText.style.marginLeft = 4f;
+
+                _forecastConditionTooltip.Add(_forecastConditionTooltipText);
+                _root.Add(_forecastConditionTooltip);
+            }
+        }
+
+        private void HideForecastConditionTooltip()
+        {
+            if (_forecastConditionTooltip != null)
+                _forecastConditionTooltip.style.display = DisplayStyle.None;
+            _shouldHideForecastConditionTooltip = false;
+        }
+
+        private void ShowForecastConditionTooltip(VisualElement anchor, PotStateModel pot, PlantData plantData)
+        {
+            if (anchor == null) return;
+            EnsureForecastConditionTooltip();
+            if (_forecastConditionTooltip == null || _forecastConditionTooltipText == null) return;
+
+            _shouldHideForecastConditionTooltip = false;
+
+            _forecastConditionTooltip.BringToFront();
+            _forecastConditionTooltip.style.display = DisplayStyle.Flex;
+
+            // Update content
+            _forecastConditionTooltipText.text = BuildGrowthTooltipLikePlantCardV2(pot, plantData);
+
+            // Position after layout so resolvedStyle.height is valid
+            _forecastConditionTooltip.schedule.Execute(() =>
+            {
+                if (_forecastConditionTooltip == null || _root == null) return;
+                _forecastConditionTooltip.BringToFront();
+
+                var lineWorld = anchor.worldBound;
+                var rootWorld = _root.worldBound;
+
+                float tooltipWidth = 450f;
+                float tooltipHeight = _forecastConditionTooltip.resolvedStyle.height > 0 ? _forecastConditionTooltip.resolvedStyle.height : 250f;
+
+                float tooltipX = lineWorld.xMin + (lineWorld.width - tooltipWidth) / 2f;
+                float tooltipY = lineWorld.yMin - tooltipHeight - 10f; // above line
+
+                float localX = tooltipX - rootWorld.xMin;
+                float localY = tooltipY - rootWorld.yMin;
+
+                // If no room above, place below
+                if (tooltipY < rootWorld.yMin)
+                    localY = (lineWorld.yMax - rootWorld.yMin) + 10f;
+
+                // Clamp inside root bounds
+                if (localX + tooltipWidth > rootWorld.width)
+                    localX = rootWorld.width - tooltipWidth - 10f;
+                if (localX < 0)
+                    localX = 10f;
+
+                _forecastConditionTooltip.style.left = localX;
+                _forecastConditionTooltip.style.top = localY;
+            });
+        }
+
+        private void EnsureForecastHotspotLayer()
+        {
+            if (_consoleScroll == null) return;
+            var parent = _consoleScroll.contentContainer;
+            if (parent == null) return;
+
+            if (_forecastHotspotLayer == null)
+            {
+                _forecastHotspotLayer = parent.Q<VisualElement>("pcv3-forecast-hotspot-layer");
+                if (_forecastHotspotLayer == null)
+                {
+                    _forecastHotspotLayer = new VisualElement();
+                    _forecastHotspotLayer.name = "pcv3-forecast-hotspot-layer";
+                    _forecastHotspotLayer.style.position = Position.Absolute;
+                    _forecastHotspotLayer.style.left = 0;
+                    _forecastHotspotLayer.style.top = 0;
+                    // NOTE: Some older UI Toolkit versions behave inconsistently with right/bottom sizing.
+                    // We explicitly set width/height from parent layout instead (see GeometryChanged callback).
+                    _forecastHotspotLayer.style.display = DisplayStyle.None;
+                    _forecastHotspotLayer.pickingMode = PickingMode.Position;
+                    parent.Add(_forecastHotspotLayer);
+                }
+
+                // Keep layer size in sync with content (so it can receive hover anywhere in content).
+                parent.RegisterCallback<GeometryChangedEvent>(_ =>
+                {
+                    if (_forecastHotspotLayer != null)
+                    {
+                        _forecastHotspotLayer.style.width = parent.layout.width;
+                        _forecastHotspotLayer.style.height = parent.layout.height;
+                    }
+                });
+            }
+
+            if (_forecastHoverAnchor == null && _forecastHotspotLayer != null)
+            {
+                _forecastHoverAnchor = new VisualElement();
+                _forecastHoverAnchor.name = "pcv3-forecast-hover-anchor";
+                _forecastHoverAnchor.style.position = Position.Absolute;
+                _forecastHoverAnchor.style.left = 0;
+                _forecastHoverAnchor.style.top = 0;
+                _forecastHoverAnchor.style.width = 0;
+                _forecastHoverAnchor.style.height = 0;
+                _forecastHoverAnchor.style.backgroundColor = new Color(0, 0, 0, 0);
+                _forecastHoverAnchor.pickingMode = PickingMode.Ignore;
+                _forecastHotspotLayer.Add(_forecastHoverAnchor);
+            }
+
+            // Robust hover detection: pointer move hit-testing on computed row ranges.
+            if (_forecastHotspotLayer != null)
+            {
+                _forecastHotspotLayer.UnregisterCallback<PointerMoveEvent>(OnForecastPointerMove);
+                _forecastHotspotLayer.UnregisterCallback<PointerLeaveEvent>(OnForecastPointerLeave);
+                _forecastHotspotLayer.RegisterCallback<PointerMoveEvent>(OnForecastPointerMove);
+                _forecastHotspotLayer.RegisterCallback<PointerLeaveEvent>(OnForecastPointerLeave);
+            }
+        }
+
+        private readonly struct ForecastConditionHoverRow
+        {
+            public readonly float YMin;
+            public readonly float YMax;
+            public readonly float X;
+            public readonly float Width;
+            public readonly PotStateModel State;
+            public readonly PlantData PlantData;
+
+            public ForecastConditionHoverRow(float yMin, float yMax, float x, float width, PotStateModel state, PlantData plantData)
+            {
+                YMin = yMin;
+                YMax = yMax;
+                X = x;
+                Width = width;
+                State = state;
+                PlantData = plantData;
+            }
+        }
+
+        private void OnForecastPointerMove(PointerMoveEvent evt)
+        {
+            if (!_lastOutputWasForecast) return;
+            if (_forecastHotspotLayer == null || _consoleText == null) return;
+            if (_forecastConditionHoverRows.Count == 0) return;
+
+            var local = evt.localPosition;
+            float y = local.y;
+
+            int hit = -1;
+            for (int i = 0; i < _forecastConditionHoverRows.Count; i++)
+            {
+                var row = _forecastConditionHoverRows[i];
+                if (y >= row.YMin && y <= row.YMax)
+                {
+                    hit = i;
+                    break;
+                }
+            }
+
+            if (hit == _forecastHoveredRowIndex)
+                return;
+
+            _forecastHoveredRowIndex = hit;
+
+            if (hit < 0)
+            {
+                HideForecastConditionTooltip();
+                return;
+            }
+
+            var r = _forecastConditionHoverRows[hit];
+            if (_forecastHoverAnchor != null)
+            {
+                _forecastHoverAnchor.style.left = r.X;
+                _forecastHoverAnchor.style.top = r.YMin;
+                _forecastHoverAnchor.style.width = r.Width;
+                _forecastHoverAnchor.style.height = Mathf.Max(6f, r.YMax - r.YMin);
+            }
+            ShowForecastConditionTooltip(_forecastHoverAnchor ?? _forecastHotspotLayer, r.State, r.PlantData);
+        }
+
+        private void OnForecastPointerLeave(PointerLeaveEvent evt)
+        {
+            _forecastHoveredRowIndex = -1;
+            HideForecastConditionTooltip();
+        }
+
+        private void ClearForecastConditionHotspots()
+        {
+            _lastOutputWasForecast = false;
+            _forecastHoveredRowIndex = -1;
+            _forecastConditionHoverRows.Clear();
+            if (_forecastHotspotLayer != null)
+            {
+                _forecastHotspotLayer.Clear();
+                _forecastHotspotLayer.style.display = DisplayStyle.None;
+            }
+            HideForecastConditionTooltip();
+        }
+
+        private void ScheduleRebuildForecastConditionHotspots()
+        {
+            _lastOutputWasForecast = true;
+            EnsureForecastHotspotLayer();
+            if (_forecastHotspotLayer == null) return;
+
+            _forecastHotspotLayer.Clear();
+            _forecastHotspotLayer.style.display = DisplayStyle.Flex;
+            _forecastHotspotLayer.BringToFront();
+
+            void TryBuild()
+            {
+                if (!_lastOutputWasForecast) return;
+                if (_consoleText == null || _consoleScroll == null) return;
+
+                // If typewriter is active, wait until output is fully flushed.
+                if (_typewriterQueue.Count > 0 || _typewriterRoutine != null)
+                {
+                    _forecastHotspotLayer.schedule.Execute(TryBuild).ExecuteLater(50);
+                    return;
+                }
+
+                // Wait one layout tick to ensure _consoleText.layout is valid.
+                _forecastHotspotLayer.schedule.Execute(RebuildForecastConditionHotspots).ExecuteLater(0);
+            }
+
+            _forecastHotspotLayer.schedule.Execute(TryBuild).ExecuteLater(0);
+        }
+
+        private void RebuildForecastConditionHotspots()
+        {
+            if (!_lastOutputWasForecast) return;
+            if (_forecastHotspotLayer == null || _consoleText == null) return;
+
+            _forecastHotspotLayer.Clear();
+            HideForecastConditionTooltip();
+            _forecastHotspotLayer.BringToFront();
+            _forecastConditionHoverRows.Clear();
+            _forecastHoveredRowIndex = -1;
+
+            // Re-add hover anchor after Clear()
+            if (_forecastHoverAnchor == null)
+            {
+                _forecastHoverAnchor = new VisualElement();
+                _forecastHoverAnchor.name = "pcv3-forecast-hover-anchor";
+                _forecastHoverAnchor.style.position = Position.Absolute;
+                _forecastHoverAnchor.style.backgroundColor = new Color(0, 0, 0, 0);
+                _forecastHoverAnchor.pickingMode = PickingMode.Ignore;
+            }
+            _forecastHotspotLayer.Add(_forecastHoverAnchor);
+
+            string raw = _consoleText.text ?? string.Empty;
+            if (string.IsNullOrEmpty(raw)) return;
+
+            string[] lines = raw.Split('\n');
+
+            // Some Unity UI Toolkit versions don't expose resolvedStyle.lineHeight.
+            // Prefer measuring average line height from the label layout when possible.
+            int lineCount = lines.Length;
+            if (lineCount > 0 && string.IsNullOrEmpty(lines[^1]))
+                lineCount -= 1; // ignore trailing newline empty line
+
+            float lineHeight = 0f;
+            if (_consoleText.layout.height > 0f && lineCount > 0)
+                lineHeight = _consoleText.layout.height / lineCount;
+
+            float fs = _consoleText.resolvedStyle.fontSize;
+            float fallback = fs > 0 ? fs * 1.2f : 14f;
+            if (lineHeight <= 1f)
+                lineHeight = fallback;
+
+            // Give a bit of extra hit area to make hover easier.
+            float hitHeight = Mathf.Max(10f, lineHeight + 2f);
+
+            float baseX = _consoleText.layout.x;
+            float baseY = _consoleText.layout.y;
+            float width = Mathf.Max(10f, _consoleText.layout.width);
+
+            bool debugLoggedFirst = false;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string plain = StripRichTextTags(lines[i] ?? string.Empty).TrimStart();
+                if (!plain.StartsWith("Condition:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string potId = null;
+                bool foundHeaderArrow = false;
+                for (int j = i; j >= 0; j--)
+                {
+                    string headerPlain = StripRichTextTags(lines[j] ?? string.Empty);
+                    int arrow = headerPlain.IndexOf('►');
+                    if (arrow < 0) continue;
+                    foundHeaderArrow = true;
+
+                    // Expected: "► POT-001 | ..."
+                    string after = headerPlain[(arrow + 1)..].Trim();
+                    int pipe = after.IndexOf('|');
+                    potId = (pipe >= 0 ? after[..pipe] : after).Trim();
+                    if (!string.IsNullOrEmpty(potId))
+                        break;
+                }
+                if (string.IsNullOrEmpty(potId))
+                {
+                    continue;
+                }
+
+                var potSlot = FindPotById(potId);
+                var state = potSlot != null && potSlot.PotActions != null ? potSlot.PotActions.PotState : null;
+                if (state == null || state.IsEmpty || !state.HasPlant)
+                    continue;
+
+                var plantData = state.GetPlantData();
+                if (plantData == null)
+                    continue;
+
+                float yMin = baseY + (i * lineHeight);
+                float yMax = yMin + hitHeight;
+                _forecastConditionHoverRows.Add(new ForecastConditionHoverRow(yMin, yMax, baseX, width, state, plantData));
+            }
+        }
+
+        private string BuildGrowthTooltipLikePlantCardV2(PotStateModel state, PlantData plantData)
+        {
+            var sb = new StringBuilder();
+
+            if (_potSystemConfig == null || state == null || state.IsEmpty || !state.HasPlant || plantData == null)
+            {
+                sb.AppendLine("<b>Crescita: Informazioni non disponibili</b>");
+                return sb.ToString();
+            }
+
+            PlantStage currentStage = (PlantStage)state.Stage;
+            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            if (stageReq == null)
+            {
+                sb.AppendLine("<b>Crescita: Requisiti stadio non disponibili</b>");
+                return sb.ToString();
+            }
+
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
+            int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
+
+            bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
+
+            // Light Stress (same metric used across HUD/PlantCardV2 tooltips)
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+            int lightStressPercent = Mathf.RoundToInt(stressPercentage);
+            bool lightOk = stageReq.IsLightInRange(lightStressPercent);
+
+            bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+
+            string conditionName = ConditionNameForUi(MapScoreToConditionForUi(state.ConditionScore));
+            sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
+            sb.AppendLine();
+            sb.AppendLine("La pianta cresce quando si trova nel <color=#00FF00>range giusto</color> di:");
+            sb.AppendLine();
+
+            // Water
+            string waterStatus = waterOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"• <color=#3F6FFF>Acqua (Water)</color>: {waterStatus}");
+            if (!waterOk)
+            {
+                sb.AppendLine($"  Range ideale: {stageReq.hydrationMin}% - {stageReq.hydrationMax}%");
+                sb.AppendLine($"  Attuale: {hydrationPercent}%");
+            }
+            sb.AppendLine();
+
+            // Light
+            string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
+            sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
+            sb.AppendLine($"  Attuale: {(lightOk ? $"<color=#00FF00>{lightStressPercent}%</color>" : $"{lightStressPercent}%")}");
+            sb.AppendLine();
+
+            // Fertilizer (optional in Seed/Sprout)
+            bool isFertilizerOptional = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout);
+            string fertilizerStatus = fertilizerOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            string fertilizerLabel = isFertilizerOptional
+                ? $"• <color=#90EE90>Fertilizzante</color> (opzionale): {fertilizerStatus}"
+                : $"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}";
+            sb.AppendLine(fertilizerLabel);
+            if (!fertilizerOk)
+            {
+                sb.AppendLine($"  Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%");
+                sb.AppendLine($"  Attuale: {state.FertilizerLevel}%");
+            }
+            if (isFertilizerOptional)
+            {
+                sb.AppendLine("  <color=#FFFF00>Nota: Negli stadi Seed e Sprout, il fertilizzante è opzionale per avanzare.</color>");
+            }
+            sb.AppendLine();
+
+            // Giorni mancanti per avanzare (stessa logica PlantCardV2 tooltip)
+            int daysInStage = state.DaysInCurrentStage;
+            int requiredDays = stageReq.durationDays;
+            int daysRemaining = Mathf.Max(0, requiredDays - daysInStage);
+
+            if (daysRemaining > 0)
+            {
+                sb.AppendLine($"<color=#FFFF00>Giorni mancanti per avanzare:</color> <color=#FFFFFF>{daysRemaining}</color>");
+                sb.AppendLine($"  (Giorni nello stadio: {daysInStage} / {requiredDays})");
+            }
+            else
+            {
+                sb.AppendLine("<color=#00FF00>✓ Giorni minimi raggiunti!</color>");
+                if (waterOk && lightOk && fertilizerOk)
+                {
+                    sb.AppendLine("<color=#00FF00>✓ Tutti i parametri sono nel range ideale!</color>");
+                    sb.AppendLine("<color=#00FF00>La pianta può avanzare al prossimo stadio.</color>");
+                }
+                else
+                {
+                    sb.AppendLine("<color=#FFFF00>⚠️ Metti tutti i parametri nel range ideale per avanzare.</color>");
+                }
+            }
+
+            return sb.ToString();
+        }
+
         private void FlushConsole()
         {
             if (_consoleText == null) return;
@@ -1927,15 +2310,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
 
             _consoleText.text = _consoleBuffer.ToString();
-
-            // #region agent log
-            try
-            {
-                System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"SCROLL\",\"location\":\"PlantCardV3TerminalController.FlushConsole\",\"message\":\"flush\",\"data\":{\"len\":" + _consoleText.text?.Length + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
 
             AutoScrollConsole();
         }
@@ -1968,14 +2342,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void AutoScrollConsole()
         {
             if (_consoleScroll == null) return;
-            // #region agent log
-            try
-            {
-                System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                    "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"SCROLL\",\"location\":\"PlantCardV3TerminalController.AutoScrollConsole\",\"message\":\"autoschedule\",\"data\":{\"contentHeight\":" + (_consoleScroll.contentContainer?.layout.height ?? -1f) + ",\"viewHeight\":" + (_consoleScroll.layout.height) + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-            }
-            catch { }
-            // #endregion
 
             void ScrollToBottom(string tag)
             {
@@ -1985,25 +2351,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 {
                     vs.value = vs.highValue;
                 }
-
-                // #region agent log
-                try
-                {
-                    var vsLog = _consoleScroll.verticalScroller;
-                    float val = vsLog != null ? vsLog.value : -1f;
-                    System.IO.File.AppendAllText("d:\\Sporae_Build_Beta\\.cursor\\debug.log",
-                        "{\"sessionId\":\"debug-session\",\"runId\":\"pre-fix\",\"hypothesisId\":\"SCROLL\",\"location\":\"PlantCardV3TerminalController.AutoScrollConsole\",\"message\":\"scrollto_" + tag + "\",\"data\":{\"vscroll\":" + val + "},\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "}\n");
-                }
-                catch { }
-                // #endregion
             }
 
             _consoleScroll.schedule.Execute(() => ScrollToBottom("t0")).ExecuteLater(0);
             _consoleScroll.schedule.Execute(() => ScrollToBottom("t20")).ExecuteLater(20);
             _consoleScroll.schedule.Execute(() => ScrollToBottom("t60")).ExecuteLater(60);
-
-            // Layout snapshot after scheduling scrolls (current frame)
-            LogLayoutSnapshot("autoschedule");
         }
 
         private void OnInputKeyDown(KeyDownEvent evt)
@@ -2028,8 +2380,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.KeypadEnter)
                 return;
 
-            DebugLog("INPUT", "OnInputKeyDown", "enter", "{\"key\":\"" + evt.keyCode + "\",\"valBefore\":\"" + (_input != null ? _input.value : "") + "\"}");
-
             var cmd = _input != null ? _input.value : string.Empty;
             if (_input != null) _input.value = string.Empty;
 
@@ -2050,8 +2400,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Any command execution (typed or triggered by buttons) should leave the prompt type-ready.
             if (_isVisible) RequestRefocusSoon();
 
-            DebugLog("CMD", "HandleCommand", "start", "{\"raw\":\"" + trimmed + "\",\"upper\":\"" + upper + "\",\"state\":\"" + _inputState + "\"}");
-
             // State-gated input
             if (_inputState == InputState.SelectingItem)
             {
@@ -2069,6 +2417,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
+            // Clear any forecast hover hotspots when running a new command.
+            ClearForecastConditionHotspots();
+
             AppendRawLine($"> {trimmed}");
             FlushConsole();
 
@@ -2085,6 +2436,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 PrintStatusTable();
                 FlushConsole();
                 SwitchToConsole();
+                return;
+            }
+
+            if (upper == "FORECAST" || upper == "F")
+            {
+                SwitchToConsole();
+                PrintForecast();
+                FlushConsole();
+                ScheduleRebuildForecastConditionHotspots();
                 return;
             }
 
@@ -2234,6 +2594,20 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
+            if (upper.StartsWith("PRUNE"))
+            {
+                string potId = ExtractPotIdArgument(trimmed);
+                if (string.IsNullOrEmpty(potId))
+                {
+                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: PRUNE [POT-ID]§END§");
+                    AppendRawLine("");
+                    FlushConsole();
+                    return;
+                }
+                BeginConfirmToggleAction(QueuedActionType.Prune, potId);
+                return;
+            }
+
             if (upper == "CLOSE")
             {
                 // Contestuale: se siamo in protocol/detail, torna a console; altrimenti warning.
@@ -2259,9 +2633,21 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
-            if (upper == "FORECAST" || upper == "F")
+            // NOTE: FORECAST is handled earlier (interactive output with hover tooltip).
+
+            if (upper.StartsWith("QUEUE"))
             {
-                AppendRawLine("§WARN§Not implemented yet§END§");
+                // Queue is console-driven (sidebar removed). Usage: QUEUE SHOW
+                var parts = trimmed.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 1 || (parts.Length >= 2 && string.Equals(parts[1], "SHOW", StringComparison.OrdinalIgnoreCase)))
+                {
+                    SwitchToConsole();
+                    PrintQueue();
+                    FlushConsole();
+                    return;
+                }
+
+                AppendRawLine("§ERROR§⚠ INVALID QUEUE COMMAND. USAGE: QUEUE SHOW§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -2295,6 +2681,533 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine("§ERROR§⚠ INVALID COMMAND. TYPE START FOR HELP§END§");
             AppendRawLine("");
             FlushConsole();
+        }
+
+        private void PrintQueue()
+        {
+            AppendRawLine("╔═ ACTION QUEUE ═════════════════════════════════════════════════════════════╗");
+
+            if (_queue.Count == 0)
+            {
+                AppendRawLine("║ §WARN§(empty)§END§                                                          ║");
+                AppendRawLine("╚════════════════════════════════════════════════════════════════════════════╝");
+                AppendRawLine("");
+                return;
+            }
+
+            AppendRawLine("║ #  │ POT     │ ACTION        │ ITEM                │ AP                    ║");
+            AppendRawLine("╟────┼─────────┼───────────────┼─────────────────────┼───────────────────────╢");
+
+            for (int i = 0; i < _queue.Count; i++)
+            {
+                var a = _queue[i];
+                if (a == null) continue;
+
+                string idx = (i + 1).ToString().PadLeft(2);
+                string pot = (a.PotId ?? "POT-???").PadRight(7).Substring(0, 7);
+                string action = GetActionLabel(a.Type).PadRight(13).Substring(0, 13);
+                string item = (string.IsNullOrEmpty(a.ItemTypeId) ? "-" : a.ItemTypeId).PadRight(19);
+                if (item.Length > 19) item = item.Substring(0, 19);
+                string ap = $"{a.ApCost} AP".PadRight(21);
+                if (ap.Length > 21) ap = ap.Substring(0, 21);
+
+                AppendRawLine($"║ {idx} │ {pot} │ {action} │ {item} │ {ap} ║");
+            }
+
+            int totalAp = 0;
+            foreach (var a in _queue) totalAp += a != null ? a.ApCost : 0;
+
+            AppendRawLine("╚════════════════════════════════════════════════════════════════════════════╝");
+            AppendRawLine($"§INFO§Total actions: {_queue.Count} | Total AP: {totalAp}§END§");
+            AppendRawLine("");
+        }
+
+        private readonly struct EstimatedDailyPoints
+        {
+            public readonly int WaterPoint;
+            public readonly int LightPoint;
+            public readonly int FertilizerPoint;
+            public int TotalPoints => WaterPoint + LightPoint + FertilizerPoint;
+
+            public EstimatedDailyPoints(int water, int light, int fertilizer)
+            {
+                WaterPoint = water;
+                LightPoint = light;
+                FertilizerPoint = fertilizer;
+            }
+        }
+
+        private sealed class StageForecast
+        {
+            public string PotId;
+            public string PlantName;
+            public PlantStage CurrentStage;
+            public PlantStage? NextStage;
+            public bool IsFinalOrManual;
+            public int MoldRiskLevel;
+            public string SoonInConditionName;
+            public int ProgressPercent;
+            public StageRequirements StageReq;
+            public int ConditionScore;
+            public ForecastDirection Trend;
+
+            public bool BlocksAdvancement;
+            public bool BlockedByCondition;
+            public bool BlockedByMold;
+
+            public bool HydrationOk;
+            public bool LedOk;
+            public bool FertilizerOk;
+            public bool DurationOk;
+            public bool OptimalDaysOk;
+            public bool PointsOk;
+
+            public int HydrationPercent;
+            public int EffectiveRequiredDays;
+            public int RequiredPoints;
+            public int TotalPoints;
+            public int RequiredOptimalDays;
+            public int DaysInCurrentStage;
+            public int DaysConsecutiveOptimal;
+
+            public EstimatedDailyPoints EstimatedDailyPoints;
+
+            public int? EstimatedDaysToAdvance; // null = cannot estimate under current conditions
+        }
+
+        private void PrintForecast()
+        {
+            var pots = FindPots();
+            AppendRawLine("§TITLE§MONITORING LIVE FORECAST§END§");
+            AppendRawLine("§INFO§Growth Stage Prediction & Requirements Analysis§END§");
+            AppendRawLine("");
+
+            if (pots == null || pots.Count == 0)
+            {
+                AppendRawLine("§WARN§No pots found in scene.§END§");
+                AppendRawLine("");
+                return;
+            }
+
+            int printed = 0;
+            foreach (var pot in pots)
+            {
+                if (pot == null || pot.PotActions == null) continue;
+                var state = pot.PotActions.PotState;
+                if (state == null || state.IsEmpty || !state.HasPlant) continue;
+
+                var plantData = state.GetPlantData();
+                var row = CalculateStageForecast(state, plantData);
+                if (row == null) continue;
+
+                PrintForecastForPot(pot, state, plantData, row);
+                printed++;
+            }
+
+            if (printed == 0)
+            {
+                AppendRawLine("§WARN§No planted pots to forecast.§END§");
+                AppendRawLine("");
+            }
+        }
+
+        private void PrintForecastForPot(PotSlot potSlot, PotStateModel pot, PlantData plantData, StageForecast f)
+        {
+            AppendRawLine("────────────────────────────────────────────────────────────────────────────");
+            AppendRawLine($"► §DATA§{f.PotId}§END§ | {f.PlantName} | {pot.PlantCode}");
+            AppendRawLine("────────────────────────────────────────────────────────────────────────────");
+            AppendRawLine("");
+
+            // CURRENT STATUS
+            string stageLabel = PlantStageLabel(pot.Stage);
+            string conditionName = ConditionNameForUi(MapScoreToConditionForUi(pot.ConditionScore));
+            string trendLabel = f.Trend switch
+            {
+                ForecastDirection.Up => "▲ CRESCITA",
+                ForecastDirection.Down => "▼ CALO",
+                _ => "■ STABLE"
+            };
+
+            AppendRawLine("CURRENT STATUS");
+            AppendRawLine($"§DATA§Stage: {stageLabel}§END§");
+            AppendRawLine($"Condition: {pot.ConditionScore}% [{conditionName}]");
+            AppendRawLine($"Trend: {trendLabel}");
+            AppendRawLine("");
+
+            // STAGE PROGRESSION
+            int requiredDays = f.EffectiveRequiredDays;
+            if (requiredDays <= 0 && f.StageReq != null) requiredDays = Mathf.Max(1, f.StageReq.durationDays);
+            string daysInStage = requiredDays > 0 ? $"{pot.DaysInCurrentStage}/{requiredDays} days" : $"{pot.DaysInCurrentStage}/— days";
+            int barWidth = 20;
+            int pct = Mathf.Clamp(f.ProgressPercent, 0, 100);
+            int filled = Mathf.RoundToInt((pct / 100f) * barWidth);
+            filled = Mathf.Clamp(filled, 0, barWidth);
+            string bar = new string('█', filled) + new string('░', barWidth - filled);
+
+            string eta = f.EstimatedDaysToAdvance.HasValue ? $"{f.EstimatedDaysToAdvance.Value} days remaining" : "—";
+
+            AppendRawLine("STAGE PROGRESSION");
+            AppendRawLine($"Days in Stage: {daysInStage}");
+            AppendRawLine($"Progress: {bar} {pct}%");
+            AppendRawLine($"Prossima: {f.SoonInConditionName}");
+            AppendRawLine($"Estimated: {eta}");
+            AppendRawLine("");
+
+            // ADVANCEMENT REQUIREMENTS (real data)
+            AppendRawLine("ADVANCEMENT REQUIREMENTS");
+
+            // Condition threshold for target
+            int requiredScore;
+            string conditionReqText;
+            bool conditionReqOk = true;
+            if (f.Trend == ForecastDirection.Up)
+            {
+                // Target is higher/equal
+                requiredScore = f.SoonInConditionName == "Rigogliosa" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
+                    : f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdSana
+                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
+                    : 0;
+                conditionReqOk = pot.ConditionScore >= requiredScore;
+                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condition      {pot.ConditionScore}% | Required: >={requiredScore}%";
+            }
+            else if (f.Trend == ForecastDirection.Down)
+            {
+                // Target is lower/equal: define threshold as "below next band start"
+                requiredScore = f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
+                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdSana
+                    : f.SoonInConditionName == "Critica" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
+                    : 100;
+                conditionReqOk = pot.ConditionScore < requiredScore;
+                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condition      {pot.ConditionScore}% | Required: <{requiredScore}%";
+            }
+            else
+            {
+                conditionReqText = $"✓ Condition      {pot.ConditionScore}% | Required: (stable)";
+            }
+
+            AppendRawLine(conditionReqOk ? conditionReqText : $"§ERROR§{conditionReqText}§END§");
+
+            // Hydration
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
+            int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
+            string hydrationReq = f.StageReq != null ? $"{f.StageReq.hydrationMin}-{f.StageReq.hydrationMax}%" : "—";
+            string hydrationLine = $"{(f.HydrationOk ? "✓" : "✗")} Hydration      {hydrationPercent}% | Required: {hydrationReq}";
+            AppendRawLine(f.HydrationOk ? hydrationLine : $"§ERROR§{hydrationLine}§END§");
+
+            // Fertilizer
+            string fertReq = f.StageReq != null ? $"{f.StageReq.fertilizerMin}-{f.StageReq.fertilizerMax}%" : "—";
+            string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} Fertilizer     {pot.FertilizerLevel}% | Required: {fertReq}";
+            AppendRawLine(f.FertilizerOk ? fertLine : $"§ERROR§{fertLine}§END§");
+
+            // Light stress percent (UI metric)
+            int maxLight = _potSystemConfig != null ? _potSystemConfig.MaxLightExposure : 10;
+            int lightStressPercent = maxLight > 0 ? Mathf.RoundToInt((float)pot.LightExposure / maxLight * 100f) : 0;
+            string lightReq = f.StageReq != null ? $"{f.StageReq.lightMin}-{f.StageReq.lightMax}%" : "—";
+            string lightLine = $"{(f.LedOk ? "✓" : "✗")} Light Stress   {lightStressPercent}% | Required: {lightReq}";
+            AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
+
+            // Mold risk level (0-3). Growth is blocked at >=2.
+            int mold = Mathf.Clamp(pot.MoldRiskLevel, 0, 3);
+            bool moldOk = mold < 2;
+            string moldLine = $"{(moldOk ? "✓" : "✗")} Mold Risk      Level {mold} | Required: <2";
+            AppendRawLine(moldOk ? moldLine : $"§ERROR§{moldLine}§END§");
+
+            AppendRawLine("");
+
+            int unmet = 0;
+            if (!conditionReqOk) unmet++;
+            if (!f.HydrationOk) unmet++;
+            if (!f.FertilizerOk) unmet++;
+            if (!f.LedOk) unmet++;
+            if (!moldOk) unmet++;
+
+            if (f.BlocksAdvancement)
+            {
+                AppendRawLine("§ERROR§► STATUS: BLOCKED§END§");
+            }
+            else if (f.HydrationOk && f.LedOk && f.FertilizerOk && f.DurationOk && f.OptimalDaysOk && f.PointsOk)
+            {
+                AppendRawLine("§TITLE§► STATUS: READY FOR ADVANCEMENT§END§");
+            }
+            else
+            {
+                AppendRawLine($"§ERROR§► STATUS: {unmet} REQUIREMENT(S) NOT MET§END§");
+            }
+
+            AppendRawLine("");
+        }
+
+        private static PlantCondition MapScoreToConditionForUi(int score)
+        {
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdRigogliosa) return PlantCondition.Rigogliosa;
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdSana) return PlantCondition.Sana;
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdAppassita) return PlantCondition.Appassita;
+            return PlantCondition.Critica;
+        }
+
+        private static string ConditionNameForUi(PlantCondition condition)
+        {
+            return condition switch
+            {
+                PlantCondition.Rigogliosa => "Rigogliosa",
+                PlantCondition.Sana => "Sana",
+                PlantCondition.Appassita => "Appassita",
+                PlantCondition.Critica => "Critica",
+                PlantCondition.Stressata => "Sana", // retrocompat
+                _ => condition.ToString()
+            };
+        }
+
+        private static string GetSoonInConditionName(PotStateModel pot)
+        {
+            if (pot == null) return "—";
+
+            var current = MapScoreToConditionForUi(pot.ConditionScore);
+            var trend = (ForecastDirection)pot.ForecastDirection;
+
+            PlantCondition target = current;
+            if (trend == ForecastDirection.Up)
+            {
+                target = current switch
+                {
+                    PlantCondition.Critica => PlantCondition.Appassita,
+                    PlantCondition.Appassita => PlantCondition.Sana,
+                    PlantCondition.Sana => PlantCondition.Rigogliosa,
+                    _ => PlantCondition.Rigogliosa
+                };
+            }
+            else if (trend == ForecastDirection.Down)
+            {
+                target = current switch
+                {
+                    PlantCondition.Rigogliosa => PlantCondition.Sana,
+                    PlantCondition.Sana => PlantCondition.Appassita,
+                    PlantCondition.Appassita => PlantCondition.Critica,
+                    _ => PlantCondition.Critica
+                };
+            }
+
+            return ConditionNameForUi(target);
+        }
+
+        private StageForecast CalculateStageForecast(PotStateModel pot, PlantData plantData)
+        {
+            if (pot == null || !pot.HasPlant)
+                return null;
+
+            string potId = pot.PotId ?? "POT-???";
+            string plantName = GetPlantDisplayName(pot.PlantCode);
+
+            var result = new StageForecast
+            {
+                PotId = potId,
+                PlantName = plantName,
+                CurrentStage = (PlantStage)pot.Stage,
+                DaysInCurrentStage = pot.DaysInCurrentStage,
+                DaysConsecutiveOptimal = pot.DaysConsecutiveOptimal,
+                MoldRiskLevel = pot.MoldRiskLevel,
+                SoonInConditionName = GetSoonInConditionName(pot),
+                ConditionScore = pot.ConditionScore,
+                Trend = (ForecastDirection)pot.ForecastDirection
+            };
+
+            // Manual/terminal stages: HarvestReady and Resting do not auto-advance in current gameplay.
+            if (result.CurrentStage == PlantStage.HarvestReady || result.CurrentStage == PlantStage.Resting)
+            {
+                result.IsFinalOrManual = true;
+                result.NextStage = null;
+                result.EstimatedDaysToAdvance = null;
+                result.HydrationOk = true;
+                result.LedOk = true;
+                result.FertilizerOk = true;
+                result.DurationOk = true;
+                result.OptimalDaysOk = true;
+                result.PointsOk = true;
+                result.ProgressPercent = 100;
+                return result;
+            }
+
+            // Determine next stage (matches DayCycleController switch).
+            result.NextStage = result.CurrentStage switch
+            {
+                PlantStage.Seed => PlantStage.Sprout,
+                PlantStage.Sprout => PlantStage.Growth,
+                PlantStage.Growth => PlantStage.Flowering,
+                PlantStage.Flowering => PlantStage.HarvestReady,
+                _ => (PlantStage?)null
+            };
+
+            if (plantData == null)
+            {
+                result.BlocksAdvancement = true;
+                result.EstimatedDaysToAdvance = null;
+                return result;
+            }
+
+            var stageReq = plantData.GetStageRequirements(result.CurrentStage);
+            result.StageReq = stageReq;
+            if (stageReq == null)
+            {
+                // If no requirements are defined, treat as unknown rather than mutating game logic.
+                result.EstimatedDaysToAdvance = null;
+                result.ProgressPercent = 0;
+                return result;
+            }
+
+            int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
+            int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
+            result.HydrationPercent = hydrationPercent;
+
+            // Match DayCycleController advancement checks (read-only, conservative).
+            result.HydrationOk = stageReq.IsHydrationInRange(hydrationPercent);
+
+            // LED OK: same special case when system OFF but stress% is in (0,100).
+            result.LedOk = false;
+            if (pot.LedSystemState == LedSystemState.Off)
+            {
+                int consecutiveDays = pot.GetConsecutiveLedDays();
+                int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
+                float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+                bool stressInOptimalRange = stressPercentage > 0f && stressPercentage < 100f;
+                result.LedOk = stressInOptimalRange;
+            }
+            else
+            {
+                result.LedOk = stageReq.IsLedRequirementMet(pot.LedSystemState);
+            }
+
+            PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
+            result.BlockedByCondition = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
+            result.BlockedByMold = pot.MoldRiskLevel >= 2;
+            result.BlocksAdvancement = result.BlockedByCondition || result.BlockedByMold;
+
+            int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
+            int phDaysModifier = 0;
+            if (_phSystem != null && plantData != null && plantData.IsPhInOptimalRange(_phSystem.CurrentPh))
+            {
+                phDaysModifier = -1;
+            }
+
+            int effectiveRequiredDays = stageReq.durationDays + daysModifier + phDaysModifier;
+            if (effectiveRequiredDays < 0) effectiveRequiredDays = 0;
+            result.EffectiveRequiredDays = effectiveRequiredDays;
+            result.DurationOk = pot.DaysInCurrentStage >= effectiveRequiredDays;
+
+            // Optimal days required (same as controller).
+            int requiredOptimalDays = result.CurrentStage == PlantStage.Seed ? 1 : stageReq.durationDays;
+            result.RequiredOptimalDays = requiredOptimalDays;
+            result.OptimalDaysOk = pot.DaysConsecutiveOptimal >= requiredOptimalDays;
+
+            // Fertilizer OK (same as controller).
+            if (result.CurrentStage == PlantStage.Seed || result.CurrentStage == PlantStage.Sprout)
+            {
+                result.FertilizerOk = stageReq.IsFertilizerInRange(pot.FertilizerLevel)
+                                      || pot.FertilizerLevel == 0
+                                      || pot.FertilizerLevel > stageReq.fertilizerMax;
+            }
+            else
+            {
+                result.FertilizerOk = pot.FertilizerLevel >= stageReq.fertilizerMin;
+            }
+
+            // Points OK (same thresholds as controller).
+            int totalPoints = pot.GrowthPointsWater + pot.GrowthPointsLight + pot.GrowthPointsFertilizer;
+            int requiredPoints = (result.CurrentStage == PlantStage.Seed || result.CurrentStage == PlantStage.Sprout) ? 2 : 3;
+            result.TotalPoints = totalPoints;
+            result.RequiredPoints = requiredPoints;
+            result.PointsOk = totalPoints >= requiredPoints;
+
+            // Progress: use existing in-game counters (days + accumulated points W/L/F) against required totals.
+            int denom = effectiveRequiredDays + requiredPoints;
+            if (denom <= 0)
+            {
+                result.ProgressPercent = 0;
+            }
+            else
+            {
+                int numer = pot.DaysInCurrentStage + totalPoints;
+                float pct = Mathf.Clamp01((float)numer / denom) * 100f;
+                result.ProgressPercent = Mathf.RoundToInt(pct);
+            }
+
+            // Estimate daily points without mutating pot state.
+            result.EstimatedDailyPoints = EstimateDailyGrowthPointsReadOnly(pot, stageReq, _potSystemConfig);
+
+            // If any static requirement is currently not met, we can't estimate under "conditions stay as-is".
+            if (result.BlocksAdvancement || !result.HydrationOk || !result.LedOk || !result.FertilizerOk)
+            {
+                result.EstimatedDaysToAdvance = null;
+                return result;
+            }
+
+            // Duration always progresses daily.
+            int remainingDuration = Mathf.Max(0, effectiveRequiredDays - pot.DaysInCurrentStage);
+
+            // Optimal days and points progress only if today's estimated points meet required thresholds.
+            int requiredOptimalPoints = requiredPoints;
+            int? remainingOptimal = null;
+            if (result.EstimatedDailyPoints.TotalPoints >= requiredOptimalPoints)
+            {
+                remainingOptimal = Mathf.Max(0, requiredOptimalDays - pot.DaysConsecutiveOptimal);
+            }
+
+            int? remainingPoints = null;
+            if (totalPoints < requiredPoints)
+            {
+                int need = requiredPoints - totalPoints;
+                int perDay = Mathf.Max(0, result.EstimatedDailyPoints.TotalPoints);
+                if (perDay > 0)
+                {
+                    remainingPoints = Mathf.CeilToInt((float)need / perDay);
+                }
+            }
+            else
+            {
+                remainingPoints = 0;
+            }
+
+            if (!remainingOptimal.HasValue)
+            {
+                result.EstimatedDaysToAdvance = null;
+                return result;
+            }
+
+            // Conservative: need to satisfy all counters.
+            int eta = remainingDuration;
+            eta = Mathf.Max(eta, remainingOptimal.Value);
+            if (remainingPoints.HasValue) eta = Mathf.Max(eta, remainingPoints.Value);
+
+            result.EstimatedDaysToAdvance = eta;
+            return result;
+        }
+
+        private static EstimatedDailyPoints EstimateDailyGrowthPointsReadOnly(PotStateModel pot, StageRequirements stageReq, PotSystemConfig config)
+        {
+            if (pot == null || stageReq == null || !pot.HasPlant)
+                return new EstimatedDailyPoints(0, 0, 0);
+
+            int maxHydration = config != null ? config.MaxHydration : 10;
+            int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
+            int water = stageReq.IsHydrationInRange(hydrationPercent) ? 1 : 0;
+
+            int light = 0;
+            if (pot.LedSystemState == LedSystemState.Off)
+            {
+                int consecutiveDays = pot.GetConsecutiveLedDays();
+                int maxDaysForFullStress = config != null ? config.MaxDaysForFullStress : 5;
+                float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
+                bool stressInOptimalRange = stressPercentage > 0f && stressPercentage < 100f;
+                light = stressInOptimalRange ? 1 : 0;
+            }
+            else
+            {
+                light = stageReq.IsLedRequirementMet(pot.LedSystemState) ? 1 : 0;
+            }
+
+            // Fertilizer points: only awarded when inside the defined stage range (same as GrowthPointsCalculator)
+            int fertilizer = stageReq.IsFertilizerInRange(pot.FertilizerLevel) ? 1 : 0;
+
+            return new EstimatedDailyPoints(water, light, fertilizer);
         }
 
         private void PrintStartCommands()
@@ -2359,10 +3272,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             Line("");
             Line("§WARN§▸ SYSTEM CONTROLS§END§");
             Line(CmdLine("§CMD§PROTOCOL§END§", "§TITLE§View Biological Protocol DOME_02§END§"));
+            Line(CmdLine("§CMD§QUEUE SHOW§END§", "§TITLE§Show queued actions (console)§END§"));
             Line(CmdLine("§CMD§START§END§", "§TITLE§Display this command reference§END§"));
             Line(CmdLine("§CMD§CLEAR§END§", "§TITLE§Clear action queue§END§"));
             Line(CmdLine("§CMD§CLOSE§END§", "§TITLE§Close detailed POT analysis§END§"));
-            Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Close terminal & confirm sequence§END§"));
+            Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Close terminal (asks Y/N if queue exists)§END§"));
             Line("");
             AppendRawLine(Bottom());
             AppendRawLine("");
@@ -2372,7 +3286,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             var pots = FindPots();
             AppendRawLine("╔═ POT STATUS OVERVIEW ═════════════════════════════════════════════════════╗");
-            AppendRawLine("║ ID       │ STATUS     │ PLANT NAME          │ STAGE        │ HEALTH │ HYDR ║");
+            AppendRawLine("║ ID       │ STATUS     │ PLANT NAME          │ STAGE        │ COND   │ HYDR ║");
             AppendRawLine("╟──────────┼────────────┼─────────────────────┼──────────────┼────────┼──────╢");
 
             foreach (var pot in pots)
@@ -2383,7 +3297,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string status;
                 string plantName = "---";
                 string stage = "---";
-                string health = "---";
+                string condition = "---";
                 string hydDots = "---";
 
                 if (state == null || state.IsEmpty || !state.HasPlant)
@@ -2397,7 +3311,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     int score = state.ConditionScore;
                     bool isCritical = score < 40;
                     status = isCritical ? "§ERROR§CRITICAL§END§" : "§DATA§OCCUPIED§END§";
-                    health = isCritical ? $"§ERROR§{score}%§END§" : $"§TITLE§{score}%§END§";
+                    condition = isCritical ? $"§ERROR§{score}%§END§" : $"§TITLE§{score}%§END§";
 
                     // TODO: in step successivo, usare PlantCardCalculators per percentuale reale.
                     int percentHyd = Mathf.Clamp(state.Hydration * 10, 0, 100);
@@ -2408,7 +3322,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     hydDots = filledDots + emptyDots;
                 }
 
-                AppendRawLine($"║ {potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {health,-6} │ {hydDots,-4} ║");
+                AppendRawLine($"║ {potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {condition,-6} │ {hydDots,-4} ║");
             }
 
             AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
@@ -3063,7 +3977,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _inputState = InputState.Idle;
                 FlushConsole();
                 RefreshHeader();
-                RefreshQueueList();
                 return;
             }
             if (upper == "N" || upper == "NO")
@@ -3115,7 +4028,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void TryStartAutomationRunner()
         {
-            // MVP: se c'è un runner in scena, passiamo la coda (solo UPROOT per ora) e confermiamo spendendo AP.
+            // Se c'è un runner in scena, passiamo la coda e confermiamo spendendo AP.
             var runner = FindObjectOfType<Sporae.Dome.PotAutomation.PotAutomationRunner>();
             if (runner == null)
             {
@@ -3190,6 +4103,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     case QueuedActionType.LedBlueToggle:
                         mapped.Type = Sporae.Dome.PotAutomation.PotAutomationRunner.AutomationActionType.LedBlueToggle;
                         break;
+                    case QueuedActionType.Prune:
+                        mapped.Type = Sporae.Dome.PotAutomation.PotAutomationRunner.AutomationActionType.Prune;
+                        break;
                     case QueuedActionType.Harvest:
                         mapped.Type = Sporae.Dome.PotAutomation.PotAutomationRunner.AutomationActionType.Harvest;
                         break;
@@ -3216,7 +4132,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _queue.Clear();
             RebuildReservedItems();
             RefreshHeader();
-            RefreshQueueList();
         }
 
         private static string GetActionLabel(QueuedActionType type)
@@ -3323,10 +4238,36 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var all = FindObjectsOfType<PotSlot>();
             foreach (var p in all)
             {
-                if (p != null && string.Equals(p.PotId, potId, StringComparison.OrdinalIgnoreCase))
+                if (p == null) continue;
+
+                // Accept both PotSlot.PotId and PotStateModel.PotId (they can differ in formatting, e.g. "POT-001" vs "Pot001").
+                if (string.Equals(p.PotId, potId, StringComparison.OrdinalIgnoreCase))
+                    return p;
+
+                var statePotId = p.PotActions != null && p.PotActions.PotState != null ? p.PotActions.PotState.PotId : null;
+                if (!string.IsNullOrEmpty(statePotId) && string.Equals(statePotId, potId, StringComparison.OrdinalIgnoreCase))
+                    return p;
+
+                // Fallback: normalized compare (strip non-alphanum, uppercase) to handle "POT-001" == "Pot001".
+                string a = NormalizePotIdForCompare(p.PotId);
+                string b = NormalizePotIdForCompare(statePotId);
+                string q = NormalizePotIdForCompare(potId);
+                if (!string.IsNullOrEmpty(q) && (q == a || q == b))
                     return p;
             }
             return null;
+        }
+
+        private static string NormalizePotIdForCompare(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return string.Empty;
+            var sb = new StringBuilder(id.Length);
+            foreach (char c in id)
+            {
+                if (char.IsLetterOrDigit(c))
+                    sb.Append(char.ToUpperInvariant(c));
+            }
+            return sb.ToString();
         }
 
         private void ShowProtocolFromDocs()

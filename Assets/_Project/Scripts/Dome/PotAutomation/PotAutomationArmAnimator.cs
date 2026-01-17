@@ -337,6 +337,15 @@ namespace Sporae.Dome.PotAutomation
 
         }
 
+        /// <summary>
+        /// Returns the configured scenic duration for the given action type (seconds).
+        /// If 0, the animation is not duration-limited and will run until StopAnimation is called.
+        /// </summary>
+        public float GetConfiguredScenicDurationSeconds(PotAutomationRunner.AutomationActionType actionType)
+        {
+            return Mathf.Max(0f, GetScenicDurationSeconds(actionType));
+        }
+
         public void StopAnimation()
         {
             _isAnimating = false;
@@ -456,6 +465,7 @@ namespace Sporae.Dome.PotAutomation
                 PotAutomationRunner.AutomationActionType.LedRedToggle => ledRedScenicSpeed,
                 PotAutomationRunner.AutomationActionType.Fertilize => fertilizeScenicSpeed,
                 PotAutomationRunner.AutomationActionType.Spray => sprayScenicSpeed,
+                PotAutomationRunner.AutomationActionType.Prune => sprayScenicSpeed,
                 PotAutomationRunner.AutomationActionType.Harvest => harvestScenicSpeed,
                 PotAutomationRunner.AutomationActionType.Uproot => uprootScenicSpeed,
                 _ => defaultScenicSpeed
@@ -474,6 +484,7 @@ namespace Sporae.Dome.PotAutomation
                 PotAutomationRunner.AutomationActionType.LedRedToggle => ledRedScenicDuration,
                 PotAutomationRunner.AutomationActionType.Fertilize => fertilizeScenicDuration,
                 PotAutomationRunner.AutomationActionType.Spray => sprayScenicDuration,
+                PotAutomationRunner.AutomationActionType.Prune => sprayScenicDuration,
                 PotAutomationRunner.AutomationActionType.Harvest => harvestScenicDuration,
                 PotAutomationRunner.AutomationActionType.Uproot => uprootScenicDuration,
                 _ => defaultScenicDuration
@@ -584,6 +595,7 @@ namespace Sporae.Dome.PotAutomation
                 PotAutomationRunner.AutomationActionType.Plant => plantProfile,
                 PotAutomationRunner.AutomationActionType.Fertilize => fertilizeProfile,
                 PotAutomationRunner.AutomationActionType.Spray => sprayProfile,
+                PotAutomationRunner.AutomationActionType.Prune => sprayProfile,
                 PotAutomationRunner.AutomationActionType.HydrationToggle => waterProfile,
                 PotAutomationRunner.AutomationActionType.LedRedToggle => lightProfile,
                 PotAutomationRunner.AutomationActionType.LedBlueToggle => lightProfile,

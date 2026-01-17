@@ -158,10 +158,6 @@
     display: none;
 }
 
-.pcv3-queue-list .unity-scroll-view__vertical-scroller {
-    display: none;
-}
-
 /* Pot cards (sidebar) */
 .pcv3-potcard {
     width: 100%;
@@ -438,48 +434,6 @@
     color: #D35F5F;
 }
 
-.pcv3-queue {
-    height: 210px;
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: rgba(181, 128, 209, 0.8);
-    border-right-color: rgba(181, 128, 209, 0.8);
-    border-top-color: rgba(181, 128, 209, 0.8);
-    border-bottom-color: rgba(181, 128, 209, 0.8);
-    background-color: rgba(0, 0, 0, 0.60);
-    padding: 10px;
-    gap: 8px;
-    overflow: hidden;
-    position: relative;
-}
-
-.pcv3-queue-list {
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-
-.pcv3-queue-title {
-    font-size: 12px;
-    color: rgb(181, 128, 209);
-}
-
-.pcv3-queue-clear {
-    height: 28px;
-    background-color: rgba(0,0,0,0.0);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: rgba(181, 128, 209, 0.8);
-    border-right-color: rgba(181, 128, 209, 0.8);
-    border-top-color: rgba(181, 128, 209, 0.8);
-    border-bottom-color: rgba(181, 128, 209, 0.8);
-    color: rgb(181, 128, 209);
-    font-size: 12px;
-}
-
 .pcv3-right {
     flex-grow: 1;
     padding: 14px;
@@ -573,46 +527,6 @@
     box-shadow: 0 0 12px rgba(127, 255, 122, 0.8);
 }
 
-/* PURPLE LED (queue / diary-like) */
-.pcv3-queue-list .unity-scroll-view__vertical-scroller {
-    width: 10px;
-    background-color: #1A2325;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-top-width: 1px;
-    border-bottom-width: 1px;
-    border-left-color: #2A3436;
-    border-right-color: #2A3436;
-    border-top-color: #2A3436;
-    border-bottom-color: #2A3436;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.pcv3-queue-list .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
-    background-image: linear-gradient(#B580D1, #9060B1);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: #1A2325;
-    border-right-color: #1A2325;
-    border-top-color: #1A2325;
-    border-bottom-color: #1A2325;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    box-shadow: 0 0 8px rgba(181, 128, 209, 0.5);
-}
-
-.pcv3-queue-list .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
-    background-image: linear-gradient(#C590E1, #A070C1);
-    box-shadow: 0 0 12px rgba(181, 128, 209, 0.7);
-}
-
 /* ----------------------------- */
 /* Custom Scrollbar (UI Builder) */
 /* ----------------------------- */
@@ -675,24 +589,10 @@
     box-shadow: 0 0 12px rgba(127, 255, 122, 0.8);
 }
 
-/* Scrollbar per Queue (purple) */
-.pcv3-queue .pcv3-custom-scrollbar-thumb {
-    background-image: linear-gradient(#B580D1, #9060B1);
-    box-shadow: 0 0 8px rgba(181, 128, 209, 0.5);
-}
-
-.pcv3-queue .pcv3-custom-scrollbar-thumb:hover {
-    background-image: linear-gradient(#C590E1, #A070C1);
-    box-shadow: 0 0 12px rgba(181, 128, 209, 0.7);
-}
-
 .pcv3-console-text {
     font-size: 12px;
     color: rgb(127, 255, 122);
     white-space: pre;
-    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
-    -unity-text-outline-width: 0.6px;
-    -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
 .pcv3-detail-placeholder {
