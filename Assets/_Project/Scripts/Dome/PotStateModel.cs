@@ -135,6 +135,10 @@ public class PotStateModel
     [Tooltip("Countdown giorni rimanenti prima della morte (-1 se non attivo)")]
     public int ExtremePhDeathCountdown = -1;
     
+    [Header("Burn Stress System (FASE 3)")]
+    [Tooltip("Giorni consecutivi con Burn Stress attivo (stress = 100%)")]
+    public int DaysBurnStressConsecutive = 0;
+    
     [Header("Debug Console Manual Override (Console P)")]
     [Tooltip("Flag per indicare se Hydration è stato impostato manualmente dalla console P")]
     public bool IsHydrationManuallySet = false;
@@ -190,6 +194,7 @@ public class PotStateModel
         IsInfested = false;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
+        DaysBurnStressConsecutive = 0;
         IsHydrationManuallySet = false;
         ManualHydrationBase = -1;
         IsLightExposureManuallySet = false;
@@ -246,6 +251,7 @@ public class PotStateModel
         DaysOverwateringConsecutive = 0;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
+        DaysBurnStressConsecutive = 0;
     }
     
     /// <summary>
@@ -468,6 +474,10 @@ public class PotStateModel
         {
             // Cambiato a Off: NON resettare i contatori!
             // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
+            // #region agent log
+            var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"PotStateModel.SetLedSystemState:OFF\",\"message\":\"LED cambiato a OFF - verifica contatori\",\"data\":{{\"potId\":\"{PotId}\",\"oldState\":\"{oldState}\",\"newState\":\"{newState}\",\"blueDays\":{DaysLedBlueConsecutive},\"redDays\":{DaysLedRedConsecutive}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
+            // #endregion
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio a Off, mantengo contatori (Blue: {DaysLedBlueConsecutive}, Red: {DaysLedRedConsecutive})");
         }
         else if ((newState == LedSystemState.Blue || newState == LedSystemState.Red) && oldState == LedSystemState.Off)
@@ -486,13 +496,24 @@ public class PotStateModel
     /// </summary>
     public int GetConsecutiveLedDays()
     {
+        int result;
         if (LedSystemState == LedSystemState.Blue)
-            return DaysLedBlueConsecutive;
-        if (LedSystemState == LedSystemState.Red)
-            return DaysLedRedConsecutive;
-        // LED spento: ritorna il massimo tra Blue e Red per mostrare stress residuo
-        // Questo permette la decrescita graduale dello stress anche quando LED è spento
-        return Mathf.Max(DaysLedBlueConsecutive, DaysLedRedConsecutive);
+            result = DaysLedBlueConsecutive;
+        else if (LedSystemState == LedSystemState.Red)
+            result = DaysLedRedConsecutive;
+        else
+        {
+            // LED spento: ritorna il massimo tra Blue e Red per mostrare stress residuo
+            // Questo permette la decrescita graduale dello stress anche quando LED è spento
+            result = Mathf.Max(DaysLedBlueConsecutive, DaysLedRedConsecutive);
+        }
+        
+        // #region agent log
+        var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"C\",\"location\":\"PotStateModel.GetConsecutiveLedDays\",\"message\":\"Calcolo giorni consecutivi LED\",\"data\":{{\"potId\":\"{PotId}\",\"ledState\":\"{LedSystemState}\",\"blueDays\":{DaysLedBlueConsecutive},\"redDays\":{DaysLedRedConsecutive},\"result\":{result}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
+        // #endregion
+        
+        return result;
     }
     
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.UI.UIToolkit.SeedInventory;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -384,7 +385,8 @@ namespace _Project
         /// </summary>
         private string GetSeedButtonText(string seedTypeId, int quantity, PlantData plantData)
         {
-            string baseText = seedTypeId.Replace("seed-", "Seme ").ToUpper();
+            // Usa il nome leggibile del seed invece del codice
+            string seedDisplayName = SeedInventoryMenu.GetSeedDisplayName(seedTypeId);
             
             if (plantData != null)
             {
@@ -396,10 +398,10 @@ namespace _Project
                     _ => "Unknown"
                 };
                 
-                return $"{baseText}\n{familyName} (x{quantity})\npH: {plantData.DailyPhDrift:+#;-#;0}/giorno";
+                return $"{seedDisplayName}\n{familyName} (x{quantity})\npH: {plantData.DailyPhDrift:+#;-#;0}/giorno";
             }
             
-            return $"{baseText}\n(x{quantity})";
+            return $"{seedDisplayName}\n(x{quantity})";
         }
         
         /// <summary>

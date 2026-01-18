@@ -154,11 +154,33 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             if (string.IsNullOrEmpty(seedTypeId))
                 return seedTypeId;
 
+            // Prova prima dalle entries (più veloce se già caricate)
             var entry = _entries.FirstOrDefault(e => e.SeedTypeId == seedTypeId);
             if (entry?.PlantData != null && !string.IsNullOrEmpty(entry.PlantData.PlantCode))
                 return GetPlantDisplayName(entry.PlantData);
 
-            // fallback: typeId
+            // Fallback: usa PlantDatabase direttamente
+            var plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+            if (plantData != null)
+                return GetPlantDisplayName(plantData);
+
+            // Ultimo fallback: typeId
+            return seedTypeId;
+        }
+        
+        /// <summary>
+        /// Funzione statica helper per convertire seedTypeId in nome leggibile.
+        /// Può essere usata da altri script senza istanza di SeedInventoryMenu.
+        /// </summary>
+        public static string GetSeedDisplayName(string seedTypeId)
+        {
+            if (string.IsNullOrEmpty(seedTypeId))
+                return seedTypeId;
+
+            var plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+            if (plantData != null)
+                return GetPlantDisplayName(plantData);
+
             return seedTypeId;
         }
 
@@ -353,13 +375,15 @@ namespace Sporae.UI.UIToolkit.SeedInventory
                 return "Unknown";
 
             // Copia light della mappatura usata in PlantCardV2DataBinder, per avere nomi leggibili.
-            return plantData.PlantCode switch
+            string baseName = plantData.PlantCode switch
             {
                 "PLT-STD-001" => "Ferric Fern",
                 "PLT-PURE-001" => "Arctic Hask",
                 "PLT-EVIL-001" => "Glasscap Fungus",
                 _ => plantData.name.Replace("PLT-", "").Replace("-", " ")
             };
+            
+            return $"{baseName} Seed";
         }
     }
 }

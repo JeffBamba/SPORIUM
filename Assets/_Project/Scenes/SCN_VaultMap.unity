@@ -40749,7 +40749,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mode: 1
+  mode: 0
   baseIntensity: 0.9
   minIntensity: -0.4
   maxIntensity: 5
@@ -56367,6 +56367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _useCameraBackgroundAndDisableUI: 0
+  _enableBackgroundGradient: 0
   _mainColor: {r: 0.101960786, g: 0.13725491, b: 0.15686275, a: 1}
   _gradientStartEnd: {r: 0.05882353, g: 0.078431375, b: 0.09803922, a: 1}
   _vignetteColor: {r: 0.039215688, g: 0.05882353, b: 0.07058824, a: 1}

@@ -569,6 +569,61 @@ public class DayCycleController : MonoBehaviour
             SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Punti giornalieri - Water: {pointsResult.WaterPoint}, Light: {pointsResult.LightPoint}, Fertilizer: {pointsResult.FertilizerPoint}, Total: {pointsResult.TotalPoints}, DaysOptimal: {pot.DaysConsecutiveOptimal}");
         }
         
+        // FASE 1.2: Applica modificatore crescita basato sulla condizione
+        // Il moltiplicatore viene applicato ai punti accumulati per accelerare la crescita
+        PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
+        float conditionGrowthMultiplier = ConditionGrowthModifier.GetGrowthSpeedMultiplier(currentCondition);
+        
+        // FASE 2.2: Applica modificatore crescita basato su pH
+        float phGrowthMultiplier = 1.0f;
+        if (_phSystem != null && plantData != null)
+        {
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            phGrowthMultiplier = PhGrowthModifier.GetGrowthMultiplier(phBand, plantData.Family);
+        }
+        
+        // Moltiplicatori cumulativi (moltiplicativi, non additivi)
+        float totalGrowthMultiplier = conditionGrowthMultiplier * phGrowthMultiplier;
+        
+        if (totalGrowthMultiplier != 1.0f && pointsResult.TotalPoints > 0)
+        {
+            // Calcola punti aggiuntivi basati sul moltiplicatore totale
+            // Esempio: se abbiamo 3 punti e moltiplicatore 1.2, otteniamo 3.6 → 4 punti (arrotondato)
+            float totalPointsFloat = pointsResult.TotalPoints * totalGrowthMultiplier;
+            int additionalPoints = Mathf.RoundToInt(totalPointsFloat) - pointsResult.TotalPoints;
+            
+            if (additionalPoints > 0)
+            {
+                // Distribuisci i punti aggiuntivi proporzionalmente tra Water, Light, Fertilizer
+                // Basato sui punti già guadagnati
+                if (pointsResult.WaterPoint > 0)
+                {
+                    int waterBonus = Mathf.RoundToInt((float)additionalPoints * (pointsResult.WaterPoint / (float)pointsResult.TotalPoints));
+                    pot.GrowthPointsWater += waterBonus;
+                }
+                if (pointsResult.LightPoint > 0)
+                {
+                    int lightBonus = Mathf.RoundToInt((float)additionalPoints * (pointsResult.LightPoint / (float)pointsResult.TotalPoints));
+                    pot.GrowthPointsLight += lightBonus;
+                }
+                if (pointsResult.FertilizerPoint > 0)
+                {
+                    int fertilizerBonus = additionalPoints - 
+                        (pointsResult.WaterPoint > 0 ? Mathf.RoundToInt((float)additionalPoints * (pointsResult.WaterPoint / (float)pointsResult.TotalPoints)) : 0) -
+                        (pointsResult.LightPoint > 0 ? Mathf.RoundToInt((float)additionalPoints * (pointsResult.LightPoint / (float)pointsResult.TotalPoints)) : 0);
+                    pot.GrowthPointsFertilizer += fertilizerBonus;
+                }
+                
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2}. Punti aggiuntivi: {additionalPoints} (totale: {pointsResult.TotalPoints} → {pointsResult.TotalPoints + additionalPoints})");
+            }
+            else if (additionalPoints < 0)
+            {
+                // Se il moltiplicatore è < 1.0, riduci i punti (ma non rimuovere punti già accumulati)
+                // Per semplicità, non riduciamo i punti già accumulati, solo non aggiungiamo bonus
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2} (riduzione crescita, nessun bonus punti)");
+            }
+        }
+        
         // Gestione produzione frutti in HarvestReady
         if (pot.Stage == (int)PlantStage.HarvestReady)
         {
@@ -736,7 +791,7 @@ public class DayCycleController : MonoBehaviour
         StageRequirements currentStageReq = plantData.GetStageRequirements(currentStage);
         
         // BLK-03.01-T2: Ottieni condizione corrente e verifica se blocca avanzamento
-        PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
+        // Nota: currentCondition è già definito sopra alla riga 574, riutilizziamo quella variabile
         if (ConditionGrowthModifier.BlocksAdvancement(currentCondition))
         {
             if (enableDebugLogs)
@@ -1386,6 +1441,11 @@ public class DayCycleController : MonoBehaviour
             bool hadBlueDays = pot.DaysLedBlueConsecutive > 0;
             bool hadRedDays = pot.DaysLedRedConsecutive > 0;
             
+            // #region agent log
+            int blueBefore = pot.DaysLedBlueConsecutive;
+            int redBefore = pot.DaysLedRedConsecutive;
+            // #endregion
+            
             // DEBUG_SAFE_FIX: Non azzerare completamente i contatori quando LED è OFF
             // Mantieni almeno 1 giorno per evitare che lo stress si azzeri completamente
             // Questo evita drop insensati di condizione quando i parametri sono comunque in range
@@ -1398,6 +1458,10 @@ public class DayCycleController : MonoBehaviour
                 pot.DaysLedRedConsecutive = Mathf.Max(1, pot.DaysLedRedConsecutive - 1); // Mantieni almeno 1
             }
             
+            // #region agent log
+            var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"DayCycleController.ProcessLedSystemEffects:LED_OFF\",\"message\":\"LED OFF - Decremento contatori\",\"data\":{{\"potId\":\"{pot.PotId}\",\"currentDay\":{currentDay},\"blueBefore\":{blueBefore},\"blueAfter\":{pot.DaysLedBlueConsecutive},\"redBefore\":{redBefore},\"redAfter\":{pot.DaysLedRedConsecutive},\"blueDecrement\":{blueBefore - pot.DaysLedBlueConsecutive},\"redDecrement\":{redBefore - pot.DaysLedRedConsecutive}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
+            // #endregion
             
             if (enableDebugLogs && (hadBlueDays || hadRedDays))
             {
@@ -1544,9 +1608,54 @@ public class DayCycleController : MonoBehaviour
             }
         }
         
-        // TODO BLK-02.08: Applicare malus (Burn Stress, Mold Risk) quando sistemi saranno implementati
-        // Per ora solo log
+        // FASE 3.1: Applicazione completa Burn Stress
         int maxDaysForFullStress = GetMaxDaysForFullStress();
+        
+        // Verifica se Burn Stress è attivo (stress = 100%)
+        bool isBurnStressActive = consecutiveDays >= maxDaysForFullStress;
+        
+        if (isBurnStressActive)
+        {
+            // Incrementa contatore giorni Burn Stress consecutivi
+            pot.DaysBurnStressConsecutive++;
+            
+            if (enableDebugLogs)
+                SporiumLogger.LogWarning(LogCategory.Pot, $"[BURN_STRESS] {pot.PotId}: Burn Stress attivo - {consecutiveDays} giorni consecutivi (max: {maxDaysForFullStress}), DaysBurnStress: {pot.DaysBurnStressConsecutive}");
+            
+            // FASE 3.2: Effetti estremi dopo 3 giorni consecutivi
+            if (pot.DaysBurnStressConsecutive >= 3)
+            {
+                PlantStage currentStage = (PlantStage)pot.Stage;
+                
+                // Regressione stage (torna allo stadio precedente)
+                if (currentStage > PlantStage.Seed)
+                {
+                    PlantStage previousStage = currentStage - 1;
+                    pot.Stage = (int)previousStage;
+                    pot.DaysInCurrentStage = 0; // Reset giorni nello stadio
+                    
+                    if (enableDebugLogs)
+                        SporiumLogger.LogWarning(LogCategory.Pot, $"[BURN_STRESS_EXTREME] {pot.PotId}: Regressione stage da {currentStage} a {previousStage} (Burn Stress {pot.DaysBurnStressConsecutive} giorni)");
+                }
+                
+                // Riduzione livello (-1 livello, minimo 1)
+                if (pot.PlantLevel > 1)
+                {
+                    int oldLevel = pot.PlantLevel;
+                    pot.PlantLevel--;
+                    if (enableDebugLogs)
+                        SporiumLogger.LogWarning(LogCategory.Pot, $"[BURN_STRESS_EXTREME] {pot.PotId}: Riduzione livello da {oldLevel} a {pot.PlantLevel} (Burn Stress {pot.DaysBurnStressConsecutive} giorni)");
+                }
+                
+                // Reset contatore dopo aver applicato effetti estremi (per evitare applicazione multipla)
+                pot.DaysBurnStressConsecutive = 0;
+            }
+        }
+        else
+        {
+            // Reset contatore se Burn Stress non è più attivo
+            pot.DaysBurnStressConsecutive = 0;
+        }
         if (consecutiveDays >= maxDaysForFullStress && enableDebugLogs)
         {
             SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: LED {state} attivo {consecutiveDays} giorni - Zona rossa! (Malus mult: {malusMultiplier:F1})");

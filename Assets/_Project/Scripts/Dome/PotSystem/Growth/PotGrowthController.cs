@@ -70,7 +70,9 @@ namespace Sporae.Dome.PotSystem.Growth
                 }
                 
                 if (plantRenderer == null)
+                {
                     plantRenderer = GetComponentInChildren<SpriteRenderer>();
+                }
                 
                 if (plantRenderer == null)
                 {

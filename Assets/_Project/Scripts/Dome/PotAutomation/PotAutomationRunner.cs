@@ -258,7 +258,16 @@ namespace Sporae.Dome.PotAutomation
                             ok = pot.PotActions.DoPruning(useSpray: false);
                             break;
                         case AutomationActionType.Harvest:
+                            // #region agent log
+                            var potStateBefore = pot.PotActions?.PotState;
+                            var logDataBeforeHarvest = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotAutomationRunner.ExecuteAction:Harvest:BEFORE\",\"message\":\"Stato prima di DoHarvest\",\"data\":{{\"potId\":\"{action.PotId}\",\"stage\":{potStateBefore?.Stage ?? -1},\"amountFruits\":{potStateBefore?.AmountFruits ?? 0f},\"hasPlant\":{potStateBefore?.HasPlant},\"isHarvestReady\":{potStateBefore?.Stage == (int)Sporae.Dome.PotSystem.Growth.PlantStage.HarvestReady}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataBeforeHarvest);
+                            // #endregion
                             ok = pot.PotActions.DoHarvest();
+                            // #region agent log
+                            var logDataAfterHarvest = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotAutomationRunner.ExecuteAction:Harvest:AFTER\",\"message\":\"Risultato DoHarvest\",\"data\":{{\"potId\":\"{action.PotId}\",\"success\":{ok}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataAfterHarvest);
+                            // #endregion
                             break;
                         case AutomationActionType.Uproot:
                             ok = pot.PotActions.DoUproot();

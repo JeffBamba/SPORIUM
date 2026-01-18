@@ -8,6 +8,7 @@ using _Project.Sporae.Core;
 using _Project;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.HUD.Components;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -342,9 +343,73 @@ namespace Sporae.UI.UIToolkit.HUD
             string bandName = _phSystem.GetBandName();
             Color bandColor = _phSystem.GetBandColor();
             
-            string tooltipContent = $"<b>pH DRIFT</b>\n<b>Banda: {bandName}</b>\n\n{breakdown}";
+            // FASE 2.1: Aggiungi informazioni sui modificatori crescita e resa per ogni famiglia
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"<b>pH DRIFT</b>");
+            sb.AppendLine($"<b>Banda: {bandName}</b>");
+            sb.AppendLine();
+            sb.AppendLine(breakdown);
+            sb.AppendLine();
+            sb.AppendLine("<b>Effetti per Famiglia:</b>");
+            sb.AppendLine();
             
-            _phTooltipText.text = tooltipContent;
+            // Pure
+            float pureGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Pure);
+            float pureYield = PhGrowthModifier.GetYieldMultiplier(phBand, PlantFamily.Pure);
+            bool pureSterile = PhGrowthModifier.IsSterile(phBand, PlantFamily.Pure);
+            sb.AppendLine($"<b>Pure:</b>");
+            if (pureGrowth != 1.0f)
+            {
+                float growthPercent = (pureGrowth - 1.0f) * 100f;
+                string growthSign = growthPercent > 0 ? "+" : "";
+                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
+            }
+            if (pureYield != 1.0f)
+            {
+                float yieldPercent = (pureYield - 1.0f) * 100f;
+                string yieldSign = yieldPercent > 0 ? "+" : "";
+                sb.AppendLine($"  Resa: {yieldSign}{yieldPercent:F0}%");
+            }
+            if (pureSterile)
+            {
+                sb.AppendLine($"  <color=#FF0000>STERILE (3 giorni)</color>");
+            }
+            sb.AppendLine();
+            
+            // Evil
+            float evilGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Evil);
+            float evilYield = PhGrowthModifier.GetYieldMultiplier(phBand, PlantFamily.Evil);
+            sb.AppendLine($"<b>Evil:</b>");
+            if (evilGrowth != 1.0f)
+            {
+                float growthPercent = (evilGrowth - 1.0f) * 100f;
+                string growthSign = growthPercent > 0 ? "+" : "";
+                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
+            }
+            if (evilYield != 1.0f)
+            {
+                float yieldPercent = (evilYield - 1.0f) * 100f;
+                string yieldSign = yieldPercent > 0 ? "+" : "";
+                sb.AppendLine($"  Resa: {yieldSign}{yieldPercent:F0}%");
+            }
+            sb.AppendLine();
+            
+            // Standard
+            float standardGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Standard);
+            sb.AppendLine($"<b>Standard:</b>");
+            if (standardGrowth != 1.0f)
+            {
+                float growthPercent = (standardGrowth - 1.0f) * 100f;
+                string growthSign = growthPercent > 0 ? "+" : "";
+                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
+            }
+            else
+            {
+                sb.AppendLine($"  Nessun effetto");
+            }
+            
+            _phTooltipText.text = sb.ToString();
         }
         
         private void InitializeUI()

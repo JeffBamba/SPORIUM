@@ -1192,6 +1192,17 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         int lightStressPercent = Mathf.RoundToInt(stressPercentage);
         bool lightOk = stressPercentage > 0f && stressPercentage < 100f;
         
+        // FASE 4.2: Aggiungi informazioni giorni consecutivi LED nel tooltip
+        string ledInfo = "";
+        if (state.LedSystemState != LedSystemState.Off)
+        {
+            ledInfo = $"LED: {state.LedSystemState} ({consecutiveDays} giorni, Stress: {lightStressPercent}%)";
+        }
+        else
+        {
+            ledInfo = $"LED: OFF";
+        }
+        
         bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
         
         // BUG FIX: Mostra la CONDIZIONE invece dello stato di crescita
@@ -1242,6 +1253,12 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         // Light
         string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
         sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
+        
+        // FASE 4.2: Aggiungi informazioni giorni consecutivi LED
+        if (!string.IsNullOrEmpty(ledInfo))
+        {
+            sb.AppendLine($"  {ledInfo}");
+        }
         sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
         if (!lightOk)
         {

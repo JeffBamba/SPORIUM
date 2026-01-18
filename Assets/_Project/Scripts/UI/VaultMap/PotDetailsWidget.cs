@@ -1417,6 +1417,11 @@ namespace _Project
                 int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
                 stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
                 
+                // #region agent log
+                var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"C\",\"location\":\"PotDetailsWidget.UpdateLightStress:STRESS_CALC\",\"message\":\"Calcolo stress percentage\",\"data\":{{\"potId\":\"{state.PotId}\",\"ledState\":\"{state.LedSystemState}\",\"blueDays\":{state.DaysLedBlueConsecutive},\"redDays\":{state.DaysLedRedConsecutive},\"consecutiveDays\":{consecutiveDays},\"maxDaysForFullStress\":{maxDaysForFullStress},\"stressPercentage\":{stressPercentage}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
+                // #endregion
+                
                 // Nota: Quando LED è spento, i giorni consecutivi decrescono gradualmente (20% al giorno)
                 // seguendo la stessa logica della crescita ma al contrario
                 

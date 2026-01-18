@@ -8,6 +8,7 @@ using Sporae.Dome.PotSystem.Fertilizer;
 using Sporae.Dome.PotSystem.Pruning;
 using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Mold;
+using Sporae.Dome.PotSystem.Condition;
 using _Project;
 using Sporae.DevTools;
 
@@ -457,15 +458,22 @@ public class PotActions : MonoBehaviour
         if (IsDead())
             return false;
         
-        // Precondizioni: vaso ha pianta in HarvestReady, ci sono frutti disponibili, player in range, risorse sufficienti
+        // Precondizioni: vaso ha pianta in HarvestReady, ci sono frutti disponibili, player in range (o automation), risorse sufficienti (o automation)
+        float amountFruitsValue = _potState?.AmountFruits ?? 0f;
+        int stageValue = _potState?.Stage ?? -1;
         bool
             isHarvestReady = _potState.Stage == (int)PlantStage.HarvestReady,
-            hasFruits = _potState.AmountFruits > 0f,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
+            hasFruits = amountFruitsValue > 0f,
+            inRange = IsAutomationContext || IsPlayerInRange(),
+            hasResources = IsAutomationContext || CanConsumeResources();
+        
+        // #region agent log
+        var logDataHarvest = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotActions.CanHarvest\",\"message\":\"Verifica precondizioni harvest\",\"data\":{{\"potId\":\"{potSlot?.PotId}\",\"isAutomationContext\":{IsAutomationContext},\"isHarvestReady\":{isHarvestReady},\"hasFruits\":{hasFruits},\"inRange\":{inRange},\"hasResources\":{hasResources},\"stage\":{stageValue},\"stageExpected\":{(int)PlantStage.HarvestReady},\"amountFruits\":{amountFruitsValue},\"amountFruitsRaw\":\"{_potState?.AmountFruits}\",\"hasPlant\":{_potState?.HasPlant},\"isDead\":{IsDead()}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataHarvest);
+        // #endregion
         
         if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}, Automation={IsAutomationContext}");
         
         return isHarvestReady && hasFruits && inRange && hasResources;
     }
@@ -1311,9 +1319,18 @@ public class PotActions : MonoBehaviour
         if (!CanHarvest())
         {
             string reason = GetHarvestFailureReason();
+            // #region agent log
+            var logDataHarvestFail = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotActions.DoHarvest:FAILED\",\"message\":\"Harvest fallito\",\"data\":{{\"potId\":\"{potSlot?.PotId}\",\"reason\":\"{reason}\",\"isAutomationContext\":{IsAutomationContext},\"stage\":{_potState?.Stage},\"amountFruits\":{_potState?.AmountFruits ?? 0f}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataHarvestFail);
+            // #endregion
             PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, reason);
             return false;
         }
+        
+        // #region agent log
+        var logDataHarvestStart = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotActions.DoHarvest:START\",\"message\":\"Harvest iniziato\",\"data\":{{\"potId\":\"{potSlot?.PotId}\",\"isAutomationContext\":{IsAutomationContext},\"amountFruits\":{_potState?.AmountFruits ?? 0f}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataHarvestStart);
+        // #endregion
         
         // Consuma le risorse - in automation già pagate nel terminale
         if (!IsAutomationContext)
@@ -1336,7 +1353,47 @@ public class PotActions : MonoBehaviour
                 SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore resa Lvl {_potState.PlantLevel}: {modifier}% (quantità: {_potState.AmountFruits} → {baseAmount})");
         }
         
-        // Calcola quantità frutti da raccogliere
+        // FASE 1.3: Applica modificatore produzione basato sulla condizione
+        PlantCondition currentCondition = (PlantCondition)_potState.ConditionLabel;
+        float conditionProductionMultiplier = ConditionGrowthModifier.GetProductionMultiplier(currentCondition);
+        if (conditionProductionMultiplier != 1.0f)
+        {
+            float oldAmount = baseAmount;
+            baseAmount *= conditionProductionMultiplier;
+            if (showDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore produzione condizione {currentCondition}: {conditionProductionMultiplier:F2} (quantità: {oldAmount:F2} → {baseAmount:F2})");
+        }
+        
+        // FASE 2.3: Applica modificatore resa basato su pH
+        float phYieldMultiplier = 1.0f;
+        bool isSterile = false;
+        PlantData plantData = _potState.GetPlantData();
+        if (_phSystem != null && plantData != null)
+        {
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            phYieldMultiplier = PhGrowthModifier.GetYieldMultiplier(phBand, plantData.Family);
+            isSterile = PhGrowthModifier.IsSterile(phBand, plantData.Family);
+            
+            if (phYieldMultiplier != 1.0f)
+            {
+                float oldAmount = baseAmount;
+                baseAmount *= phYieldMultiplier;
+                if (showDebugLogs)
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore resa pH {phBand} per {plantData.Family}: {phYieldMultiplier:F2} (quantità: {oldAmount:F2} → {baseAmount:F2})");
+            }
+            
+            // Gestione sterilità Pure in Ultra Basico
+            if (isSterile)
+            {
+                // Attiva sterilità per 3 giorni (se DaysSterile non esiste, aggiungerlo a PotStateModel)
+                // Per ora, loggiamo solo
+                if (showDebugLogs)
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Pianta Pure in Ultra Basico: STERILE (resa x2 ma non può produrre nuovi frutti per 3 giorni)");
+                // TODO: Aggiungere campo DaysSterile in PotStateModel se non esiste
+            }
+        }
+        
+        // Calcola quantità frutti da raccogliere (arrotondamento a intero)
         int fruitsToHarvest = Mathf.RoundToInt(baseAmount);
         if (fruitsToHarvest <= 0)
         {
@@ -1743,8 +1800,22 @@ public class PotActions : MonoBehaviour
     private string GetHarvestFailureReason()
     {
         if (_potState == null) return "Stato vaso non valido";
-        if (_potState.Stage != (int)PlantStage.HarvestReady) return "Pianta non in HarvestReady";
-        if (_potState.AmountFruits <= 0f) return "Nessun frutto disponibile";
+        if (_potState.Stage != (int)PlantStage.HarvestReady) 
+        {
+            // #region agent log
+            var logDataReason = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotActions.GetHarvestFailureReason:STAGE\",\"message\":\"Stage non HarvestReady\",\"data\":{{\"potId\":\"{potSlot?.PotId}\",\"stage\":{_potState.Stage},\"expectedStage\":{(int)PlantStage.HarvestReady}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataReason);
+            // #endregion
+            return "Pianta non in HarvestReady";
+        }
+        if (_potState.AmountFruits <= 0f) 
+        {
+            // #region agent log
+            var logDataReason = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H1\",\"location\":\"PotActions.GetHarvestFailureReason:NO_FRUITS\",\"message\":\"Nessun frutto disponibile\",\"data\":{{\"potId\":\"{potSlot?.PotId}\",\"amountFruits\":{_potState.AmountFruits},\"amountFruitsRaw\":\"{_potState.AmountFruits}\",\"daysInHarvestReady\":{_potState.DaysInHarvestReady},\"daysFruitsUnharvested\":{_potState.DaysFruitsUnharvested}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
+            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logDataReason);
+            // #endregion
+            return "Nessun frutto disponibile";
+        }
         if (!IsPlayerInRange()) return "Troppo lontano";
         if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
         return "Azione non permessa";

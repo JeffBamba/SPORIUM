@@ -36,6 +36,44 @@ namespace Sporae.Dome.PotSystem.Growth
                    condition == PlantCondition.Appassita ||
                    condition == PlantCondition.Morta;
         }
+        
+        /// <summary>
+        /// Calcola moltiplicatore velocità crescita basato sulla condizione
+        /// </summary>
+        /// <param name="condition">Condizione corrente della pianta</param>
+        /// <returns>Moltiplicatore crescita (es. 1.2f = +20%)</returns>
+        public static float GetGrowthSpeedMultiplier(PlantCondition condition)
+        {
+            return condition switch
+            {
+                PlantCondition.Rigogliosa => 1.2f,  // +20% crescita
+                PlantCondition.Sana => 1.0f,         // 0% (normale)
+                PlantCondition.Stressata => 0.9f,     // -10% crescita
+                PlantCondition.Appassita => 0.7f,     // -30% crescita
+                PlantCondition.Critica => 1.0f,      // 0% (ma blocca avanzamento)
+                PlantCondition.Morta => 0f,          // 0% (pianta morta)
+                _ => 1.0f
+            };
+        }
+        
+        /// <summary>
+        /// Calcola moltiplicatore produzione frutti basato sulla condizione
+        /// </summary>
+        /// <param name="condition">Condizione corrente della pianta</param>
+        /// <returns>Moltiplicatore produzione (es. 1.15f = +15%)</returns>
+        public static float GetProductionMultiplier(PlantCondition condition)
+        {
+            return condition switch
+            {
+                PlantCondition.Rigogliosa => 1.15f,  // +15% produzione
+                PlantCondition.Sana => 1.0f,          // 0% (normale)
+                PlantCondition.Stressata => 0.85f,     // -15% produzione
+                PlantCondition.Appassita => 1.0f,     // 0% (ma blocca avanzamento)
+                PlantCondition.Critica => 1.0f,      // 0% (ma blocca avanzamento)
+                PlantCondition.Morta => 0f,          // 0% (pianta morta)
+                _ => 1.0f
+            };
+        }
     }
 }
 

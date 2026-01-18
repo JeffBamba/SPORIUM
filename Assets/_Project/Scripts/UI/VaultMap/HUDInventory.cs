@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.UI.UIToolkit.SeedInventory;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -394,8 +395,10 @@ namespace _Project
                 {
                     if (index < maxCapacity)
                     {
-                        _hudItemContainer.SetItemData(index++, slot.TypeId, slot.Quantity);
-                        SporiumLogger.LogDebug(LogCategory.UI, $"Item stackabile aggiunto all'indice {index-1}: {slot.TypeId} x{slot.Quantity}");
+                        // Converti TypeId in nome leggibile se è un seed
+                        string displayName = SeedInventoryMenu.GetSeedDisplayName(slot.TypeId);
+                        _hudItemContainer.SetItemData(index++, displayName, slot.Quantity);
+                        SporiumLogger.LogDebug(LogCategory.UI, $"Item stackabile aggiunto all'indice {index-1}: {displayName} x{slot.Quantity}");
                     }
                     else
                     {
@@ -409,8 +412,10 @@ namespace _Project
                     {
                         if (index < maxCapacity)
                         {
-                            _hudItemContainer.SetItemData(index++, item.TypeId, -1);
-                            SporiumLogger.LogDebug(LogCategory.UI, $"Item non-stackabile aggiunto all'indice {index-1}: {item.TypeId}");
+                            // Converti TypeId in nome leggibile se è un seed
+                            string displayName = SeedInventoryMenu.GetSeedDisplayName(item.TypeId);
+                            _hudItemContainer.SetItemData(index++, displayName, -1);
+                            SporiumLogger.LogDebug(LogCategory.UI, $"Item non-stackabile aggiunto all'indice {index-1}: {displayName}");
                         }
                         else
                         {

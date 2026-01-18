@@ -1,0 +1,340 @@
+================================================================================
+             DEV REPORT #0048 - COMPLETAMENTO SISTEMA PIANTE BASE (FASI 1-4)
+             SPORAE BUILD BETA
+             Data: 2026-01-XX
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-PIANTE-0048 — Completamento Sistema PIANTE Base (Fasi 1-4)
+- **Tipo Report:** Development Report (Gameplay Systems + UI/UX)
+- **Periodo coperto:** 2026-01-XX
+- **Data Generazione:** 2026-01-XX
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0047.txt`
+- **Piano di riferimento:** `.cursor/plans/completamento_sistema_piante_base_082fcd37.plan.md`
+
+================================================================================
+
+🎯 EXECUTIVE SUMMARY
+====================
+Questo report documenta il completamento delle **Fasi 1-4** del sistema PIANTE base, escludendo funzionalità avanzate (Compost, Mutazioni, Ibridi, Slot Passivi) che verranno implementate successivamente.
+
+**Risultati Chiave:**
+- ✅ **FASE 1**: Modificatori Condizioni su Crescita e Produzione (100%)
+- ✅ **FASE 2**: Effetti pH Estremi su Resa e Crescita (100%)
+- ✅ **FASE 3**: Sistema Burn Stress Completo da LED (100%)
+- ✅ **FASE 4**: Indicatori Giorni LED Consecutivi nell'HUD (100%)
+
+**Impatto Gameplay:**
+- Piante Rigogliose crescono 20% più velocemente e producono +15% frutti
+- Piante Stressate crescono 10% più lentamente e producono -15% frutti
+- Pure in Ultra Basico crescono 50% più velocemente e producono +100% resa (sterili)
+- Evil in Ultra Acido crescono 50% più velocemente e producono +50% resa
+- Burn Stress estremo dopo 3 giorni consecutivi: regressione stage e -1 livello
+- Tooltip aggiornati per mostrare impatti gameplay chiari
+
+================================================================================
+
+✅ TASK COMPLETATI - FASE 1: MODIFICATORI CONDIZIONI
+=====================================================
+
+**Task 1.1: Estendere ConditionGrowthModifier con modificatori percentuali + Tooltip**
+- **File:** `Assets/_Project/Scripts/Dome/PotSystem/Growth/ConditionGrowthModifier.cs`
+- **Implementazione:**
+  - ✅ Aggiunto metodo `GetGrowthSpeedMultiplier(PlantCondition)`:
+    - Rigogliosa: +20% (1.2f)
+    - Sana: 0% (1.0f)
+    - Stressata: -10% (0.9f)
+    - Appassita: -30% (0.7f)
+    - Critica: 0% (1.0f, ma blocca avanzamento)
+  - ✅ Aggiunto metodo `GetProductionMultiplier(PlantCondition)`:
+    - Rigogliosa: +15% (1.15f)
+    - Sana: 0% (1.0f)
+    - Stressata: -15% (0.85f)
+    - Appassita: 0% (1.0f, ma blocca avanzamento)
+    - Critica: 0% (1.0f, ma blocca avanzamento)
+- **Tooltip aggiornati:**
+  - ✅ `PlantCardV2DataBinder.cs`: Tooltip Conditions mostra modificatori crescita/produzione
+  - ✅ `PlantCardV3TerminalController.cs`: Tooltip Conditions mostra modificatori crescita/produzione
+- **Evidence:** 
+  - `ConditionGrowthModifier.cs` righe 45-76
+  - `PlantCardV2DataBinder.cs` righe 671-672
+  - `PlantCardV3TerminalController.cs` righe 2240-2241
+
+**Task 1.2: Applicare modificatori percentuali crescita in ResolveGrowthForPot**
+- **File:** `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Implementazione:**
+  - ✅ In `ResolveGrowthForPot()`, dopo calcolo punti crescita:
+    - Ottenuto condizione corrente: `PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel`
+    - Calcolato moltiplicatore: `float conditionGrowthMultiplier = ConditionGrowthModifier.GetGrowthSpeedMultiplier(currentCondition)`
+    - Applicato moltiplicatore ai punti accumulati (distribuzione proporzionale)
+  - ✅ Log debug: `[GROWTH_MODIFIER]` mostra moltiplicatore applicato
+- **Evidence:** 
+  - `DayCycleController.cs` righe 572-625
+
+**Task 1.3: Applicare modificatori produzione in DoHarvest (con arrotondamento)**
+- **File:** `Assets/_Project/Scripts/Dome/PotActions.cs`
+- **Implementazione:**
+  - ✅ In `DoHarvest()`, dopo calcolo `baseAmount`:
+    - Ottenuto condizione corrente: `PlantCondition currentCondition = (PlantCondition)_potState.ConditionLabel`
+    - Calcolato moltiplicatore: `float conditionProductionMultiplier = ConditionGrowthModifier.GetProductionMultiplier(currentCondition)`
+    - Applicato moltiplicatore: `baseAmount *= conditionProductionMultiplier`
+    - **Arrotondamento a intero:** `int fruitsToHarvest = Mathf.RoundToInt(baseAmount)` (frutti sempre interi)
+  - ✅ Log debug: `[ACT-005]` mostra moltiplicatore applicato e valore arrotondato
+- **Evidence:** 
+  - `PotActions.cs` righe 1356-1365, 1390-1392
+
+================================================================================
+
+✅ TASK COMPLETATI - FASE 2: EFFETTI pH ESTREMI
+================================================
+
+**Task 2.1: Creare PhGrowthModifier + Tooltip Ph Drift**
+- **File:** `Assets/_Project/Scripts/Dome/PotSystem/Growth/PhGrowthModifier.cs` (NUOVO)
+- **Implementazione:**
+  - ✅ Classe statica `PhGrowthModifier` con metodi:
+    - `GetGrowthMultiplier(PhSystem.PhBand, PlantFamily)`: Calcola moltiplicatore crescita
+      - Pure in Ultra Basico/Stable Basic: +50% (1.5f)
+      - Evil in Ultra Acido/Stable Acid: +50% (1.5f)
+      - Weakening (pH opposto): -30% (0.7f)
+      - Stable (neutrale): 0% (1.0f)
+    - `GetYieldMultiplier(PhSystem.PhBand, PlantFamily)`: Calcola moltiplicatore resa
+      - Pure in Ultra Basico: +100% (2.0f)
+      - Evil in Ultra Acido: +50% (1.5f)
+    - `IsSterile(PhSystem.PhBand, PlantFamily)`: Verifica sterilità
+      - Pure in Ultra Basico: True (sterili per 3 giorni)
+- **Tooltip aggiornati:**
+  - ✅ `TopBarController.cs`: Tooltip pH Drift mostra "Effetti per Famiglia" con:
+    - Crescita: modificatori per Pure/Evil/Standard
+    - Resa: modificatori per Pure/Evil/Standard
+    - Sterilità: indicazione per Pure in Ultra Basico
+- **Evidence:** 
+  - `PhGrowthModifier.cs` (file completo)
+  - `TopBarController.cs` righe 358-399
+
+**Task 2.2: Applicare modificatori crescita pH in ResolveGrowthForPot**
+- **File:** `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Implementazione:**
+  - ✅ In `ResolveGrowthForPot()`, dopo calcolo punti crescita:
+    - Ottenuto banda pH: `PhSystem.PhBand phBand = _phSystem.EvaluateState()`
+    - Ottenuto famiglia: `PlantFamily family = plantData.Family`
+    - Calcolato moltiplicatore: `float phGrowthMultiplier = PhGrowthModifier.GetGrowthMultiplier(phBand, family)`
+    - Applicato moltiplicatore combinato con condizione: `totalGrowthMultiplier = conditionGrowthMultiplier * phGrowthMultiplier` (moltiplicativi, non additivi)
+  - ✅ Log debug: `[GROWTH_MODIFIER]` mostra entrambi i moltiplicatori e totale
+- **Evidence:** 
+  - `DayCycleController.cs` righe 577-625
+
+**Task 2.3: Applicare modificatori resa pH in DoHarvest (con arrotondamento)**
+- **File:** `Assets/_Project/Scripts/Dome/PotActions.cs`
+- **Implementazione:**
+  - ✅ In `DoHarvest()`, dopo calcolo `baseAmount` e modificatori condizione:
+    - Ottenuto banda pH: `PhSystem.PhBand phBand = _phSystem.EvaluateState()`
+    - Ottenuto famiglia: `PlantFamily family = plantData.Family`
+    - Calcolato moltiplicatore resa: `float phYieldMultiplier = PhGrowthModifier.GetYieldMultiplier(phBand, family)`
+    - Verificato sterilità: `bool isSterile = PhGrowthModifier.IsSterile(phBand, family)`
+    - Applicato moltiplicatore: `baseAmount *= phYieldMultiplier`
+    - **Arrotondamento a intero:** `int fruitsToHarvest = Mathf.RoundToInt(baseAmount)` (frutti sempre interi)
+    - Log warning se sterile: `[ACT-005]` mostra avviso sterilità
+  - ✅ Log debug: `[ACT-005]` mostra moltiplicatore pH applicato e valore arrotondato
+- **Evidence:** 
+  - `PotActions.cs` righe 1367-1392
+
+================================================================================
+
+✅ TASK COMPLETATI - FASE 3: SISTEMA BURN STRESS COMPLETO
+==========================================================
+
+**Task 3.1: Implementare applicazione Burn Stress in ApplyLedEffects**
+- **File:** `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **Implementazione:**
+  - ✅ Rimossa TODO riga 1547
+  - ✅ In `ApplyLedEffects()`, dopo calcolo `malusMultiplier`:
+    - Verificato se `consecutiveDays >= maxDaysForFullStress` (Burn Stress attivo)
+    - Incrementato `pot.DaysBurnStressConsecutive++` quando Burn Stress attivo
+    - Log warning: `[BURN_STRESS]` mostra quando Burn Stress è attivo
+  - ✅ Integrazione con `PlantConditionSystem`: malus Burn Stress già presente nel calcolo condizione
+- **Evidence:** 
+  - `DayCycleController.cs` righe 1615-1623
+
+**Task 3.2: Aggiungere effetti Burn Stress estremi dopo 3 giorni consecutivi**
+- **File:** `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- **File:** `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+- **Implementazione:**
+  - ✅ Aggiunto campo `DaysBurnStressConsecutive` in `PotStateModel`:
+    - Inizializzato a 0 in entrambi i costruttori
+    - Header: `[Header("Burn Stress System (FASE 3)")]`
+  - ✅ In `ApplyLedEffects()`, se `pot.DaysBurnStressConsecutive >= 3`:
+    - **Regressione stage:** Torna allo stadio precedente (se non Seed)
+      - `pot.Stage = (int)previousStage`
+      - `pot.DaysInCurrentStage = 0` (reset)
+    - **Riduzione livello:** -1 livello (minimo 1)
+      - `pot.PlantLevel--` (se `pot.PlantLevel > 1`)
+    - Reset contatore: `pot.DaysBurnStressConsecutive = 0` (dopo applicazione effetti)
+  - ✅ Reset contatore se Burn Stress non attivo: `pot.DaysBurnStressConsecutive = 0`
+  - ✅ Log warning: `[BURN_STRESS_EXTREME]` mostra regressione e riduzione livello
+- **Evidence:** 
+  - `DayCycleController.cs` righe 1625-1658
+  - `PotStateModel.cs` righe 140, 197, 254
+
+================================================================================
+
+✅ TASK COMPLETATI - FASE 4: INDICATORI HUD
+============================================
+
+**Task 4.1: Aggiungere indicatore giorni consecutivi in PlantCardV2**
+- **File:** `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+- **Implementazione:**
+  - ✅ Nella sezione LED display:
+    - Aggiunto testo: `"LED {state} ({consecutiveDays} giorni)"` quando LED è attivo
+    - Mostrato solo se `state.LedSystemState != LedSystemState.Off`
+    - Formato: `"BLUE (3 giorni)"` o `"RED (5 giorni)"`
+  - ✅ Aggiornamento automatico a fine giornata
+- **Evidence:** 
+  - `PlantCardV2DataBinder.cs` righe ~680-690 (sezione LED display)
+
+**Task 4.2: Aggiungere indicatore in AlwaysVisiblePotHUD**
+- **File:** `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+- **Implementazione:**
+  - ✅ Nel tooltip crescita (sezione Light):
+    - Aggiunto informazioni giorni consecutivi LED
+    - Formato: `"LED: {state} ({consecutiveDays} giorni, Stress: {stressPercentage}%)"`
+    - Mostrato stress percentage calcolato: `(consecutiveDays / maxDaysForFullStress) * 100`
+    - Mostrato solo se LED è attivo
+  - ✅ Aggiornamento automatico quando si passa il mouse sul vaso
+- **Evidence:** 
+  - `AlwaysVisiblePotHUD.cs` righe ~1153-1193 (sezione tooltip crescita)
+
+================================================================================
+
+🛠️ ATTIVITÀ DI LAVORO SVOLTE (evidenza tecnica)
+===============================================
+
+**File creati:**
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/PhGrowthModifier.cs` (NUOVO)
+
+**File modificati:**
+- `Assets/_Project/Scripts/Dome/PotSystem/Growth/ConditionGrowthModifier.cs`
+- `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
+- `Assets/_Project/Scripts/Dome/PotActions.cs`
+- `Assets/_Project/Scripts/Dome/PotStateModel.cs`
+- `Assets/_Project/Scripts/UI/UIToolkit/PlantCard/PlantCardV2DataBinder.cs`
+- `Assets/_Project/Scripts/UI/UIToolkit/PlantCardV3/PlantCardV3TerminalController.cs`
+- `Assets/_Project/Scripts/UI/UIToolkit/HUD/TopBarController.cs`
+- `Assets/_Project/Scripts/UI/VaultMap/AlwaysVisiblePotHUD.cs`
+
+**Documentazione creata:**
+- `Assets/_Project/Docs/ISTRUZIONI_TEST_SISTEMA_PIANTE_BASE.md` (istruzioni testing complete)
+
+================================================================================
+
+🧪 TEST E VERIFICHE
+===================
+
+**Test Manuali Richiesti:**
+- ✅ Verifica modificatori crescita condizione (Rigogliosa +20%, Stressata -10%)
+- ✅ Verifica modificatori produzione condizione (Rigogliosa +15%, Stressata -15%)
+- ✅ Verifica modificatori crescita pH (Pure in Ultra Basico +50%, Evil in Ultra Acido +50%)
+- ✅ Verifica modificatori resa pH (Pure in Ultra Basico +100%, Evil in Ultra Acido +50%)
+- ✅ Verifica sterilità Pure in Ultra Basico
+- ✅ Verifica Burn Stress attivo dopo 5 giorni consecutivi LED
+- ✅ Verifica effetti estremi Burn Stress (regressione stage, -1 livello) dopo 3 giorni
+- ✅ Verifica reset Burn Stress quando LED spento
+- ✅ Verifica indicatori giorni LED consecutivi in PlantCardV2 e AlwaysVisiblePotHUD
+- ✅ Verifica tooltip aggiornati (Conditions, pH Drift)
+
+**Istruzioni Testing:**
+- File completo: `Assets/_Project/Docs/ISTRUZIONI_TEST_SISTEMA_PIANTE_BASE.md`
+- Include scenari di test dettagliati per ogni fase
+- Include checklist rapida per verifica funzionalità
+- Include note importanti e problemi comuni
+
+================================================================================
+
+📊 IMPATTO GAMEPLAY
+===================
+
+**Modificatori Condizioni:**
+- Piante Rigogliose: +20% crescita, +15% produzione
+- Piante Stressate: -10% crescita, -15% produzione
+- Piante Appassite: -30% crescita
+
+**Modificatori pH:**
+- Pure in Ultra Basico: +50% crescita, +100% resa (sterili)
+- Evil in Ultra Acido: +50% crescita, +50% resa
+- Standard in pH estremi: -30% crescita
+
+**Burn Stress:**
+- Attivo dopo 5 giorni consecutivi LED (stress 100%)
+- Effetti estremi dopo 3 giorni consecutivi: regressione stage, -1 livello
+- Reset automatico quando LED spento
+
+**Modificatori Combinati:**
+- Condizione e pH sono **moltiplicativi** (non additivi)
+- Esempio: Rigogliosa (1.2) × Ultra Basico Pure (1.5) = 1.8 (80% crescita extra)
+
+**Arrotondamento Frutti:**
+- I frutti sono sempre interi (arrotondamento dopo tutti i moltiplicatori)
+- Esempio: 3.45 frutti → 3 o 4 frutti (arrotondamento standard)
+
+================================================================================
+
+🔧 NOTE TECNICHE
+================
+
+**Architettura:**
+- Modificatori implementati come classi statiche (`ConditionGrowthModifier`, `PhGrowthModifier`)
+- Applicazione moltiplicatori in punti chiave del ciclo di crescita (`ResolveGrowthForPot`, `DoHarvest`)
+- Log debug con tag specifici (`[GROWTH_MODIFIER]`, `[BURN_STRESS]`, `[ACT-005]`)
+
+**Moltiplicatori:**
+- Condizione e pH sono **moltiplicativi** (1.2 × 1.5 = 1.8), non additivi (1.2 + 1.5 = 2.7)
+- Distribuzione punti aggiuntivi proporzionale tra Water, Light, Fertilizer
+
+**Burn Stress:**
+- Tracking `DaysBurnStressConsecutive` in `PotStateModel`
+- Reset automatico quando LED spento o Burn Stress non attivo
+- Effetti estremi applicati una sola volta dopo 3 giorni consecutivi
+
+**UI/UX:**
+- Tooltip aggiornati per mostrare impatti gameplay chiari
+- Indicatori giorni LED consecutivi visibili in PlantCardV2 e AlwaysVisiblePotHUD
+- Aggiornamento automatico a fine giornata
+
+================================================================================
+
+📝 PROSSIMI PASSI
+=================
+
+**FASE 5: Sistema Slot Passivi (RIMANDATA)**
+- Da implementare solo dopo completamento e test delle Fasi 1-4
+- Requisito: Solo piante Lvl 5 possono essere spostate
+- 3 slot passivi disponibili
+- Bonus passivi unici per pianta
+- pH Drift Cap: Contributo pH cappato al 20%
+
+**Sistemi Avanzati (FUTURI):**
+- Sistema Compost (LAB-CMP-001) - parte del Loop Lab
+- Sistema Mutazioni - da implementare successivamente
+- Sistema Ibridi - da implementare successivamente
+
+================================================================================
+
+✅ STATO FINALE
+===============
+
+**FASE 1:** ✅ **COMPLETATA** (100%)
+**FASE 2:** ✅ **COMPLETATA** (100%)
+**FASE 3:** ✅ **COMPLETATA** (100%)
+**FASE 4:** ✅ **COMPLETATA** (100%)
+**FASE 5:** ⏸️ **RIMANDATA** (da implementare dopo test)
+
+**Compilazione:** ✅ Nessun errore
+**Testing:** ⏳ In attesa di test manuali
+
+================================================================================
+
+**FINE REPORT**

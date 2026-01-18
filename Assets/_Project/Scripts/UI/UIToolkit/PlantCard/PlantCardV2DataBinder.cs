@@ -663,8 +663,42 @@ namespace Sporae.UI.UIToolkit.PlantCard
             
             // Usa metodo centrale per calcolare condizione (stesso di PotDetailsWidget.UpdateConditionUI)
             var (_, conditionName) = CalculateConditionForUI(state, plantData);
+            PlantCondition currentCondition = (PlantCondition)state.ConditionLabel;
             
             sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
+            
+            // FASE 1.1: Aggiungi informazioni sui modificatori crescita e produzione
+            float growthMultiplier = ConditionGrowthModifier.GetGrowthSpeedMultiplier(currentCondition);
+            float productionMultiplier = ConditionGrowthModifier.GetProductionMultiplier(currentCondition);
+            
+            if (growthMultiplier != 1.0f || productionMultiplier != 1.0f)
+            {
+                sb.AppendLine();
+                sb.AppendLine("<b>Effetti sulla Pianta:</b>");
+                
+                if (growthMultiplier > 1.0f)
+                {
+                    float growthBonus = (growthMultiplier - 1.0f) * 100f;
+                    sb.AppendLine($"  <color=#00FF00>+{growthBonus:F0}% velocità crescita</color>");
+                }
+                else if (growthMultiplier < 1.0f)
+                {
+                    float growthMalus = (1.0f - growthMultiplier) * 100f;
+                    sb.AppendLine($"  <color=#FF0000>-{growthMalus:F0}% velocità crescita</color>");
+                }
+                
+                if (productionMultiplier > 1.0f)
+                {
+                    float productionBonus = (productionMultiplier - 1.0f) * 100f;
+                    sb.AppendLine($"  <color=#00FF00>+{productionBonus:F0}% produzione frutti</color>");
+                }
+                else if (productionMultiplier < 1.0f)
+                {
+                    float productionMalus = (1.0f - productionMultiplier) * 100f;
+                    sb.AppendLine($"  <color=#FF0000>-{productionMalus:F0}% produzione frutti</color>");
+                }
+            }
+            
             sb.AppendLine();
             
             // Spiegazione semplice per il player
@@ -1227,10 +1261,19 @@ namespace Sporae.UI.UIToolkit.PlantCard
             }
             
             // BLK-02.08: LED Compatibile (mostra LED compatibili per famiglia)
+            // FASE 4.1: Aggiungi indicatore giorni consecutivi LED
             if (_ledCompatibleLabel != null && plantData != null)
             {
                 LedCompatibility compatible = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
                 string displayText = LedCompatibilityHelper.GetCompatibleLedDisplay(compatible);
+                
+                // Aggiungi informazioni giorni consecutivi LED se LED è attivo
+                if (state.LedSystemState != LedSystemState.Off)
+                {
+                    int consecutiveDays = state.GetConsecutiveLedDays();
+                    displayText += $" ({consecutiveDays} giorni)";
+                }
+                
                 _ledCompatibleLabel.text = displayText;
             }
             

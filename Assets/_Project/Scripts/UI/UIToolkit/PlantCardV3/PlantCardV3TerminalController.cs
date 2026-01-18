@@ -18,6 +18,7 @@ using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.SeedInventory;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -2232,7 +2233,41 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
 
             string conditionName = ConditionNameForUi(MapScoreToConditionForUi(state.ConditionScore));
+            PlantCondition currentCondition = (PlantCondition)state.ConditionLabel;
             sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
+            
+            // FASE 1.1: Aggiungi informazioni sui modificatori crescita e produzione
+            float growthMultiplier = ConditionGrowthModifier.GetGrowthSpeedMultiplier(currentCondition);
+            float productionMultiplier = ConditionGrowthModifier.GetProductionMultiplier(currentCondition);
+            
+            if (growthMultiplier != 1.0f || productionMultiplier != 1.0f)
+            {
+                sb.AppendLine();
+                sb.AppendLine("<b>Effetti sulla Pianta:</b>");
+                
+                if (growthMultiplier > 1.0f)
+                {
+                    float growthBonus = (growthMultiplier - 1.0f) * 100f;
+                    sb.AppendLine($"  <color=#00FF00>+{growthBonus:F0}% velocità crescita</color>");
+                }
+                else if (growthMultiplier < 1.0f)
+                {
+                    float growthMalus = (1.0f - growthMultiplier) * 100f;
+                    sb.AppendLine($"  <color=#FF0000>-{growthMalus:F0}% velocità crescita</color>");
+                }
+                
+                if (productionMultiplier > 1.0f)
+                {
+                    float productionBonus = (productionMultiplier - 1.0f) * 100f;
+                    sb.AppendLine($"  <color=#00FF00>+{productionBonus:F0}% produzione frutti</color>");
+                }
+                else if (productionMultiplier < 1.0f)
+                {
+                    float productionMalus = (1.0f - productionMultiplier) * 100f;
+                    sb.AppendLine($"  <color=#FF0000>-{productionMalus:F0}% produzione frutti</color>");
+                }
+            }
+            
             sb.AppendLine();
             sb.AppendLine("La pianta cresce quando si trova nel <color=#00FF00>range giusto</color> di:");
             sb.AppendLine();
@@ -2706,8 +2741,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string idx = (i + 1).ToString().PadLeft(2);
                 string pot = (a.PotId ?? "POT-???").PadRight(7).Substring(0, 7);
                 string action = GetActionLabel(a.Type).PadRight(13).Substring(0, 13);
-                string item = (string.IsNullOrEmpty(a.ItemTypeId) ? "-" : a.ItemTypeId).PadRight(19);
+                
+                // Converti ItemTypeId in nome leggibile se è un seed
+                string itemDisplayName = string.IsNullOrEmpty(a.ItemTypeId) 
+                    ? "-" 
+                    : GetItemDisplayName(a.ItemTypeId);
+                string item = itemDisplayName.PadRight(19);
                 if (item.Length > 19) item = item.Substring(0, 19);
+                
                 string ap = $"{a.ApCost} AP".PadRight(21);
                 if (ap.Length > 21) ap = ap.Substring(0, 21);
 
@@ -2899,9 +2940,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} Fertilizer     {pot.FertilizerLevel}% | Required: {fertReq}";
             AppendRawLine(f.FertilizerOk ? fertLine : $"§ERROR§{fertLine}§END§");
 
-            // Light stress percent (UI metric)
-            int maxLight = _potSystemConfig != null ? _potSystemConfig.MaxLightExposure : 10;
-            int lightStressPercent = maxLight > 0 ? Mathf.RoundToInt((float)pot.LightExposure / maxLight * 100f) : 0;
+            // Light stress percent (UI metric) - BUG FIX: Usa GetConsecutiveLedDays invece di LightExposure
+            int lightStressPercent = 0;
+            if (_potSystemConfig != null)
+            {
+                int consecutiveDays = pot.GetConsecutiveLedDays();
+                int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+                lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
+            }
             string lightReq = f.StageReq != null ? $"{f.StageReq.lightMin}-{f.StageReq.lightMax}%" : "—";
             string lightLine = $"{(f.LedOk ? "✓" : "✗")} Light Stress   {lightStressPercent}% | Required: {lightReq}";
             AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
@@ -3827,7 +3873,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 string typeId = options[i];
                 int qty = GetAvailableQuantity(typeId);
-                AppendRawLine($"║  §CMD§{i + 1}.§END§ §DATA§{typeId}§END§   Quantity: {qty}                                     ║");
+                string displayName = GetItemDisplayName(typeId);
+                AppendRawLine($"║  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantity: {qty}                                     ║");
             }
             AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine("§INFO§Type item number or §CMD§N§INFO§ to cancel§END§");
@@ -3871,12 +3918,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
 
             string chosen = _selection.OptionsTypeIds[idx];
+            // Converti in nome leggibile per la visualizzazione
+            string chosenDisplayName = GetItemDisplayName(chosen);
 
             _pendingConfirmAction = new QueuedAction
             {
                 Type = _selection.Type,
                 PotId = _selection.PotId,
-                TargetLabel = chosen,
+                TargetLabel = chosenDisplayName,
                 ApCost = 1,
                 ItemTypeId = chosen
             };
@@ -3884,12 +3933,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _selection = null;
             _inputState = InputState.ConfirmingActionToQueue;
 
-            AppendRawLine($"§TITLE§✓ SELECTED: {chosen}§END§");
+            AppendRawLine($"§TITLE§✓ SELECTED: {chosenDisplayName}§END§");
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
             AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
             AppendRawLine($"║ Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§                                                   ║");
             AppendRawLine($"║ Target:  §DATA§{_pendingConfirmAction.PotId}§END§                                                      ║");
-            AppendRawLine($"║ Item:    §DATA§{chosen}§END§                                                     ║");
+            AppendRawLine($"║ Item:    §DATA§{chosenDisplayName}§END§                                                     ║");
             AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
             AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
@@ -4179,6 +4228,25 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (string.IsNullOrEmpty(plantCode)) return "---";
             return plantCode.Replace("PLT-", "").Replace("-", " ");
+        }
+
+        /// <summary>
+        /// Converte ItemTypeId in nome leggibile. Se è un seed, usa il nome della pianta.
+        /// </summary>
+        private static string GetItemDisplayName(string itemTypeId)
+        {
+            if (string.IsNullOrEmpty(itemTypeId))
+                return itemTypeId;
+
+            // Prova a convertire in nome seed leggibile
+            string seedDisplayName = SeedInventoryMenu.GetSeedDisplayName(itemTypeId);
+            
+            // Se è diverso dal typeId originale, significa che è stato convertito (è un seed)
+            if (seedDisplayName != itemTypeId)
+                return seedDisplayName;
+
+            // Altrimenti è un item normale, mostra il typeId
+            return itemTypeId;
         }
 
         private static string FormatPlantFamilyBadge(string plantCode)
