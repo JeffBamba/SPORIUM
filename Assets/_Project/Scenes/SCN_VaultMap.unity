@@ -56334,7 +56334,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2142998825
 RectTransform:
   m_ObjectHideFlags: 0
@@ -56373,6 +56373,9 @@ MonoBehaviour:
   _vignetteOpacity: 0.3
   _gradientTexture: {fileID: 0}
   _vignetteTexture: {fileID: 0}
+  _enableOverlay: 1
+  _overlayTexture: {fileID: 2800000, guid: a35e315d8bb3324478a8ff5fe5d20e41, type: 3}
+  _overlayOpacity: 0.5
 --- !u!114 &2142998827
 MonoBehaviour:
   m_ObjectHideFlags: 0

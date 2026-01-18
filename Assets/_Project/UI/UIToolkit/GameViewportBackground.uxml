@@ -2,6 +2,6 @@
     <Style src="project://database/Assets/_Project/UI/UIToolkit/GameViewportBackground.uss?fileID=7433441132597879392&amp;guid=2fdfbd0bc0e69cb41ac521f26ed05328&amp;type=3#GameViewportBackground" />
     <ui:VisualElement name="game-viewport-background" focusable="false" class="game-viewport">
         <ui:VisualElement name="viewport-gradient" class="viewport-gradient" style="background-image: none; -unity-background-scale-mode: stretch-to-fill; opacity: 0.92;" />
-        <ui:VisualElement name="viewport-vignette" class="viewport-vignette" />
+        <ui:VisualElement name="overlay" class="overlay" focusable="false" />
     </ui:VisualElement>
 </ui:UXML>
