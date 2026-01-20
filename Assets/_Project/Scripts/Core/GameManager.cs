@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using _Project;
 using _Project.Scripts.Core;
 using _Project.Sporae.Core;
@@ -167,8 +168,8 @@ public class GameManager : MonoBehaviour
         _economySystem.Spend(_dailyPowerCost);
         _actionSystem.ResetActions(_actionsPerDay);
         
-        _condensationSystem.DayChanged();
-        OnCondensationChanged?.Invoke(_condensationSystem.CondensationAmount);
+        // FASE 3: Condensazione ora gestita da DayCycleController.ApplyCondensationSystem()
+        // (chiamato dopo che tutte le piante sono state processate)
         
 #if UNITY_EDITOR
         if (_showDebugLogs)
@@ -217,19 +218,47 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    public float CollectCondensation()
+    /// <summary>
+    /// FASE 4: Raccoglie condensazione e restituisce reward scalato basato su percentuale.
+    /// - 0-49%: 5-10 WAT-RAW
+    /// - 50-79%: 15-25 WAT-RAW
+    /// - 80-100%: 30-40 WAT-RAW
+    /// </summary>
+    public int CollectCondensation()
     {
-        var amount = _condensationSystem.CondensationAmount;
+        float percentage = _condensationSystem.CurrentAccumulation;
+        int reward = CalculateScaledReward(percentage);
         
         _condensationSystem.Reset();
-        OnCondensationChanged?.Invoke(_condensationSystem.CondensationAmount);
+        OnCondensationChanged?.Invoke(_condensationSystem.CurrentAccumulation);
         
-        return amount;
+        return reward;
+    }
+    
+    /// <summary>
+    /// FASE 4: Calcola reward scalato basato su percentuale condensazione.
+    /// </summary>
+    private int CalculateScaledReward(float percentage)
+    {
+        if (percentage < 50f)
+            return UnityEngine.Random.Range(5, 11);      // 5-10 WAT-RAW
+        if (percentage < 80f)
+            return UnityEngine.Random.Range(15, 26);     // 15-25 WAT-RAW
+        return UnityEngine.Random.Range(30, 41);         // 30-40 WAT-RAW
     }
 
     public float GetMaxCondensation()
     {
-        return _condensationSystem.GetMax();
+        // FASE 1: Sempre 100% nel nuovo sistema
+        return _condensationSystem.GetMax(); // Restituisce 100
+    }
+    
+    /// <summary>
+    /// FASE 3: Notifica cambio condensazione (chiamato da DayCycleController dopo calcolo).
+    /// </summary>
+    public void NotifyCondensationChanged()
+    {
+        OnCondensationChanged?.Invoke(_condensationSystem.CurrentAccumulation);
     }
     
     /// <summary>

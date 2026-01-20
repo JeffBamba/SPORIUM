@@ -51,6 +51,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private VisualElement _phNeutralZone;
         private VisualElement _phSlider;
         private Label _condensationValueLabel;
+        private VisualElement _condensationDisplay; // FASE 10: Per tooltip futuro
         private Label _mutationValueLabel;
         private Label _cryValueLabel;
         private Label _grateValueLabel;
@@ -63,6 +64,11 @@ namespace Sporae.UI.UIToolkit.HUD
         // Tooltip
         private VisualElement _phTooltip;
         private Label _phTooltipText;
+        
+        // FASE 8: Tooltip Condensation
+        private VisualElement _condensationTooltip;
+        private Label _condensationTooltipText;
+        private Button _condensationCollectButton;
         
         // pH Gradient Texture (creata runtime)
         private Texture2D _phGradientTexture;
@@ -87,6 +93,9 @@ namespace Sporae.UI.UIToolkit.HUD
         // Animation coroutines
         private Coroutine _condensationIdleCoroutine;
         private Coroutine _phPulseCoroutine;
+        
+        // Condensation threshold tracking
+        private float _previousCondensation = -1f; // -1 indica valore iniziale non ancora impostato
         
         // Colors
         private readonly Color _greenStable = new Color(0.498f, 1f, 0.478f, 1f); // #7FFF7A
@@ -154,6 +163,23 @@ namespace Sporae.UI.UIToolkit.HUD
                     if (_enableDebugLogs)
                     {
                         SporiumLogger.LogInfo(LogCategory.UI, $"TopBarController: EconomySystem collegato - CRY: {_cryBalance}");
+                    }
+                }
+                
+                // FASE 10: Collega CondensationSystem
+                if (_gameManager.CondensationSystem != null)
+                {
+                    // Sottoscrivi agli eventi
+                    _gameManager.OnCondensationChanged += OnCondensationChanged;
+                    
+                    // Aggiorna valore iniziale (imposta anche previous per evitare toast al primo caricamento)
+                    _condensation = _gameManager.CondensationSystem.CurrentAccumulation;
+                    _previousCondensation = _condensation; // Imposta come previous per evitare toast iniziale
+                    UpdateCondensation(_condensation);
+                    
+                    if (_enableDebugLogs)
+                    {
+                        SporiumLogger.LogInfo(LogCategory.UI, $"TopBarController: CondensationSystem collegato - Condensation: {_condensation}%");
                     }
                 }
                 
@@ -233,6 +259,83 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 _phLevel = newPh;
                 UpdatePh(_phLevel);
+            }
+        }
+        
+        /// <summary>
+        /// FASE 10: Handler per cambio condensazione (riceve percentuale 0-100%).
+        /// </summary>
+        private void OnCondensationChanged(float percentage)
+        {
+            float previousValue = _previousCondensation;
+            _condensation = percentage;
+            
+            // Rileva attraversamento soglie (solo se non è il primo valore)
+            if (previousValue >= 0f)
+            {
+                CheckCondensationThresholds(previousValue, percentage);
+            }
+            
+            _previousCondensation = percentage;
+            UpdateCondensation(_condensation);
+            
+            // FASE 8: Aggiorna tooltip se visibile
+            if (_condensationTooltip != null && _condensationTooltip.style.display == DisplayStyle.Flex)
+            {
+                UpdateCondensationTooltipContent();
+            }
+        }
+        
+        /// <summary>
+        /// Verifica se la condensazione ha attraversato le soglie critiche (50%, 80%, 100%)
+        /// ed emette toast notifications appropriate.
+        /// </summary>
+        private void CheckCondensationThresholds(float previousValue, float currentValue)
+        {
+            // Soglia 50%: Tank mezzo pieno (warning giallo)
+            if (previousValue < 50f && currentValue >= 50f)
+            {
+                EmitCondensationToast("COND-005");
+            }
+            
+            // Soglia 80%: Umidità impatta muffe (warning)
+            if (previousValue < 80f && currentValue >= 80f)
+            {
+                EmitCondensationToast("COND-006");
+            }
+            
+            // Soglia 100%: Tank pieno, umidità alta (danger)
+            if (previousValue < 100f && currentValue >= 100f)
+            {
+                EmitCondensationToast("COND-008");
+            }
+        }
+        
+        /// <summary>
+        /// Emette una toast notification per la condensazione.
+        /// </summary>
+        private void EmitCondensationToast(string toastCode)
+        {
+            var foundation = Sporae.UI.UIToolkit.NotificationsFoundation.FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.PostToast(toastCode, new Sporae.UI.UIToolkit.NotificationsFoundation.NotificationPayload());
+            }
+            else
+            {
+                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                if (toastManager != null)
+                {
+                    // Fallback con messaggi hardcoded se foundation non disponibile
+                    string message = toastCode switch
+                    {
+                        "COND-005" => "⚠️ Tank mezzo pieno",
+                        "COND-006" => "⚠️ Umidità impatta muffe",
+                        "COND-008" => "🚨 Tank pieno, umidità alta",
+                        _ => $"Condensation threshold: {toastCode}"
+                    };
+                    toastManager.ShowToast(ToastNotificationType.Warning, message, toastCode);
+                }
             }
         }
         
@@ -442,12 +545,16 @@ namespace Sporae.UI.UIToolkit.HUD
             _phNeutralZone = _root.Q<VisualElement>("ph-neutral-zone");
             
             _condensationValueLabel = _root.Q<Label>("condensation-value");
+            _condensationDisplay = _root.Q<VisualElement>("condensation-display"); // FASE 10: Query per tooltip futuro
             _mutationValueLabel = _root.Q<Label>("mutation-value");
             _cryValueLabel = _root.Q<Label>("cry-value");
             _grateValueLabel = _root.Q<Label>("grate-value");
             
             // Setup tooltip per pH
             SetupPhTooltip();
+            
+            // FASE 8: Setup tooltip per condensazione
+            SetupCondensationTooltip();
             
             // Crea texture gradiente pH (0-14 scale)
             CreatePhGradientTexture();
@@ -933,21 +1040,25 @@ namespace Sporae.UI.UIToolkit.HUD
             _condensationIdleCoroutine = StartCoroutine(CondensationIdleAnimation());
         }
         
+        /// <summary>
+        /// FASE 9: Animazione fittizia continua per condensazione (variazione fluida ±0.5-1.5% come pH drift).
+        /// </summary>
         private IEnumerator CondensationIdleAnimation()
         {
             while (true)
             {
-                float delay = UnityEngine.Random.Range(0.9f, 1.5f);
-                yield return new WaitForSeconds(delay);
-                
-                // Variazione ±1%
-                float variation = UnityEngine.Random.Range(-1f, 1f);
-                float displayValue = Mathf.Clamp(_condensation + variation, 0f, 100f);
+                float baseValue = _condensation; // Valore reale
+                float time = Time.time;
+                // Oscilla ±1% con frequenza 0.5 (variazione fluida continua)
+                float variation = Mathf.Sin(time * 0.5f) * 1.0f;
+                float displayValue = Mathf.Clamp(baseValue + variation, 0f, 100f);
                 
                 if (_condensationValueLabel != null)
                 {
                     _condensationValueLabel.text = $"{Mathf.RoundToInt(displayValue)}%";
                 }
+                
+                yield return null; // Aggiorna ogni frame per movimento fluido
             }
         }
         
@@ -1029,6 +1140,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged -= OnCRYChanged;
             }
             
+            // FASE 10: Unsubscribe da CondensationSystem
+            if (_gameManager != null)
+            {
+                _gameManager.OnCondensationChanged -= OnCondensationChanged;
+            }
+            
             // Unsubscribe from ServiceContainer event
             if (ServiceContainer.Instance != null)
             {
@@ -1046,6 +1163,27 @@ namespace Sporae.UI.UIToolkit.HUD
                 _phDisplay.UnregisterCallback<MouseEnterEvent>(OnPhHoverEnter);
                 _phDisplay.UnregisterCallback<MouseLeaveEvent>(OnPhHoverExit);
                 _phDisplay.UnregisterCallback<MouseMoveEvent>(OnPhHoverMove);
+            }
+            
+            // FASE 8: Unregister condensation hover events
+            if (_condensationDisplay != null)
+            {
+                _condensationDisplay.UnregisterCallback<MouseEnterEvent>(OnCondensationHoverEnter);
+                _condensationDisplay.UnregisterCallback<MouseLeaveEvent>(OnCondensationHoverExit);
+                _condensationDisplay.UnregisterCallback<MouseMoveEvent>(OnCondensationHoverMove);
+            }
+            
+            // FASE 8: Unregister tooltip hover events
+            if (_condensationTooltip != null)
+            {
+                _condensationTooltip.UnregisterCallback<MouseEnterEvent>(OnCondensationTooltipHoverEnter);
+                _condensationTooltip.UnregisterCallback<MouseLeaveEvent>(OnCondensationTooltipHoverExit);
+            }
+            
+            // FASE 8: Unregister collect button
+            if (_condensationCollectButton != null)
+            {
+                _condensationCollectButton.clicked -= OnCondensationCollectClicked;
             }
             
             // Unregister geometry changed callback
@@ -1081,6 +1219,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged += OnCRYChanged;
             }
             
+            // FASE 10: Re-subscribe a CondensationSystem
+            if (_gameManager != null)
+            {
+                _gameManager.OnCondensationChanged += OnCondensationChanged;
+            }
+            
             // Re-subscribe to ServiceContainer event
             if (ServiceContainer.Instance != null)
             {
@@ -1095,6 +1239,325 @@ namespace Sporae.UI.UIToolkit.HUD
             else
             {
                 _phSystem.OnPhChanged += OnPhChanged;
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Calcola giorni virtuali da condensazione (helper per tooltip).
+        /// </summary>
+        private float GetVirtualDaysFromCondensation(float percentage)
+        {
+            if (percentage < 50f)
+                return 0f;
+            if (percentage < 60f)
+                return 0.5f;
+            if (percentage < 80f)
+                return 1.0f;
+            return 1.5f; // 80-100%
+        }
+        
+        /// <summary>
+        /// FASE 8: Setup tooltip per condensazione (simile a SetupPhTooltip).
+        /// </summary>
+        private void SetupCondensationTooltip()
+        {
+            if (_condensationDisplay == null)
+                return;
+            
+            // Crea tooltip container
+            _condensationTooltip = new VisualElement();
+            _condensationTooltip.name = "condensation-tooltip";
+            _condensationTooltip.style.position = Position.Absolute;
+            _condensationTooltip.style.display = DisplayStyle.None;
+            _condensationTooltip.style.backgroundColor = new Color(0f, 0f, 0f, 0.9f);
+            _condensationTooltip.style.borderTopWidth = 2f;
+            _condensationTooltip.style.borderRightWidth = 2f;
+            _condensationTooltip.style.borderBottomWidth = 2f;
+            _condensationTooltip.style.borderLeftWidth = 2f;
+            _condensationTooltip.style.borderTopColor = new Color(0.365f, 0.714f, 0.890f, 1f); // #5DB6E3
+            _condensationTooltip.style.borderRightColor = new Color(0.365f, 0.714f, 0.890f, 1f);
+            _condensationTooltip.style.borderBottomColor = new Color(0.365f, 0.714f, 0.890f, 1f);
+            _condensationTooltip.style.borderLeftColor = new Color(0.365f, 0.714f, 0.890f, 1f);
+            _condensationTooltip.style.paddingTop = 8f;
+            _condensationTooltip.style.paddingRight = 8f;
+            _condensationTooltip.style.paddingBottom = 8f;
+            _condensationTooltip.style.paddingLeft = 8f;
+            _condensationTooltip.style.width = 320f;
+            _condensationTooltip.style.maxWidth = 320f;
+            _condensationTooltip.style.minHeight = 100f;
+            _condensationTooltip.pickingMode = PickingMode.Position; // Permette click sul button
+            
+            // Crea testo tooltip
+            _condensationTooltipText = new Label();
+            _condensationTooltipText.name = "condensation-tooltip-text";
+            _condensationTooltipText.style.whiteSpace = WhiteSpace.Normal;
+            _condensationTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
+            _condensationTooltipText.style.fontSize = 16f;
+            _condensationTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
+            _condensationTooltipText.enableRichText = true;
+            _condensationTooltip.Add(_condensationTooltipText);
+            
+            // FASE 8: Crea button Collect
+            _condensationCollectButton = new Button();
+            _condensationCollectButton.name = "condensation-collect-button";
+            _condensationCollectButton.text = "Collect";
+            _condensationCollectButton.style.marginTop = 8f;
+            _condensationCollectButton.style.width = Length.Percent(100f);
+            _condensationCollectButton.style.height = 32f;
+            _condensationCollectButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f); // Grigio scuro
+            _condensationCollectButton.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
+            _condensationCollectButton.style.fontSize = 14f;
+            _condensationCollectButton.style.unityTextAlign = TextAnchor.MiddleCenter;
+            
+            // Hover effect
+            _condensationCollectButton.RegisterCallback<MouseEnterEvent>(evt =>
+            {
+                _condensationCollectButton.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            });
+            _condensationCollectButton.RegisterCallback<MouseLeaveEvent>(evt =>
+            {
+                _condensationCollectButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+            });
+            
+            // Click handler
+            _condensationCollectButton.clicked += OnCondensationCollectClicked;
+            
+            _condensationTooltip.Add(_condensationCollectButton);
+            
+            // Aggiungi tooltip al root
+            _root.Add(_condensationTooltip);
+            
+            // Setup hover events sul display
+            _condensationDisplay.RegisterCallback<MouseEnterEvent>(OnCondensationHoverEnter);
+            _condensationDisplay.RegisterCallback<MouseLeaveEvent>(OnCondensationHoverExit);
+            _condensationDisplay.RegisterCallback<MouseMoveEvent>(OnCondensationHoverMove);
+            
+            // Setup hover events sul tooltip (per mantenerlo aperto quando mouse è sopra)
+            _condensationTooltip.RegisterCallback<MouseEnterEvent>(OnCondensationTooltipHoverEnter);
+            _condensationTooltip.RegisterCallback<MouseLeaveEvent>(OnCondensationTooltipHoverExit);
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler hover enter per condensazione display.
+        /// </summary>
+        private void OnCondensationHoverEnter(MouseEnterEvent evt)
+        {
+            if (_gameManager != null && _condensationTooltip != null)
+            {
+                UpdateCondensationTooltipContent();
+                _condensationTooltip.style.display = DisplayStyle.Flex;
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler hover exit per condensazione display.
+        /// Non chiude il tooltip se il mouse è ancora sopra il tooltip stesso.
+        /// </summary>
+        private void OnCondensationHoverExit(MouseLeaveEvent evt)
+        {
+            // Non chiudere immediatamente - il tooltip gestirà la chiusura quando il mouse esce anche da lì
+            // Questo permette di spostare il mouse dal display al tooltip senza chiuderlo
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler hover enter per tooltip condensazione.
+        /// Mantiene il tooltip aperto quando il mouse entra nel tooltip.
+        /// </summary>
+        private void OnCondensationTooltipHoverEnter(MouseEnterEvent evt)
+        {
+            if (_condensationTooltip != null)
+            {
+                _condensationTooltip.style.display = DisplayStyle.Flex;
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler hover exit per tooltip condensazione.
+        /// Chiude il tooltip solo quando il mouse esce anche dal tooltip.
+        /// </summary>
+        private void OnCondensationTooltipHoverExit(MouseLeaveEvent evt)
+        {
+            if (_condensationTooltip != null)
+            {
+                _condensationTooltip.style.display = DisplayStyle.None;
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler hover move per condensazione (posizionamento tooltip).
+        /// </summary>
+        private void OnCondensationHoverMove(MouseMoveEvent evt)
+        {
+            if (_condensationTooltip != null && _condensationTooltip.style.display == DisplayStyle.Flex && _condensationDisplay != null)
+            {
+                var displayBounds = _condensationDisplay.worldBound;
+                var rootBounds = _root.worldBound;
+                
+                float tooltipX = displayBounds.xMax + 10f;
+                float tooltipY = displayBounds.yMax - 20f;
+                
+                float tooltipWidth = 320f;
+                float tooltipHeight = _condensationTooltip.resolvedStyle.height;
+                
+                if (tooltipX + tooltipWidth > rootBounds.width)
+                {
+                    tooltipX = displayBounds.xMin - tooltipWidth - 10f;
+                }
+                
+                if (tooltipY + tooltipHeight > rootBounds.height)
+                {
+                    tooltipY = displayBounds.yMin - tooltipHeight - 10f;
+                }
+                
+                _condensationTooltip.style.left = tooltipX;
+                _condensationTooltip.style.top = tooltipY;
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Aggiorna contenuto tooltip condensazione con informazioni complete.
+        /// </summary>
+        private void UpdateCondensationTooltipContent()
+        {
+            if (_gameManager == null || _condensationTooltipText == null || _gameManager.CondensationSystem == null)
+                return;
+            
+            var condensationSystem = _gameManager.CondensationSystem;
+            float currentPercentage = condensationSystem.CurrentAccumulation;
+            float dailyProduction = condensationSystem.DailyProduction;
+            bool hasLed = false;
+            
+            // Verifica LED attivi (se DayCycleController disponibile)
+            var dayCycleController = UnityEngine.Object.FindObjectOfType<DayCycleController>();
+            if (dayCycleController != null)
+            {
+                // Usa reflection o metodo pubblico se disponibile (per ora semplificato
+                hasLed = false; // TODO: Aggiungere metodo pubblico HasAnyActiveLed() in DayCycleController
+            }
+            
+            // Calcola giorni virtuali
+            float virtualDays = GetVirtualDaysFromCondensation(currentPercentage);
+            
+            // Calcola previsione produzione domani (stima basata su produzione odierna)
+            float tomorrowProduction = dailyProduction; // Stima conservativa
+            
+            // Calcola reward stimato
+            int estimatedRewardMin = 0, estimatedRewardMax = 0;
+            if (currentPercentage < 50f)
+            {
+                estimatedRewardMin = 5;
+                estimatedRewardMax = 10;
+            }
+            else if (currentPercentage < 80f)
+            {
+                estimatedRewardMin = 15;
+                estimatedRewardMax = 25;
+            }
+            else
+            {
+                estimatedRewardMin = 30;
+                estimatedRewardMax = 40;
+            }
+            
+            var sb = new System.Text.StringBuilder();
+            
+            // Titolo
+            sb.AppendLine($"💧 <color=#5DB6E3><b>CONDENSATION</b></color>");
+            sb.AppendLine();
+            
+            // Current Level
+            sb.AppendLine($"<b>CURRENT LEVEL</b> <color=#5DB6E3>{Mathf.RoundToInt(currentPercentage)}%</color>");
+            sb.AppendLine();
+            
+            // Definizione
+            sb.AppendLine($"<color=#5DB6E3>Condensation</color> is raw water (WAT-RAW) collected from plant transpiration (0-100%).");
+            sb.AppendLine();
+            
+            // Effetto alto
+            if (currentPercentage >= 50f)
+            {
+                sb.AppendLine($"Above 50%, ambient humidity adds <color=#FF0000>virtual days</color> to the <color=#FF0000>Mold Risk</color> of all plants (up to +1.5d/day).");
+                if (virtualDays > 0f)
+                {
+                    sb.AppendLine($"<color=#FF0000>Currently adding +{virtualDays:F1} virtual days/day</color>");
+                }
+                sb.AppendLine();
+            }
+            else
+            {
+                sb.AppendLine($"Above 50%, ambient humidity adds <color=#FF0000>virtual days</color> to the <color=#FF0000>Mold Risk</color> of all plants (up to +1.5d/day).");
+                sb.AppendLine();
+            }
+            
+            // Raccolta
+            sb.AppendLine($"Collecting resets the %, removes virtual days, and produces raw water: <color=#FFA500>the longer you wait, the higher the reward but the greater the mold risk</color>.");
+            sb.AppendLine();
+            
+            // Reward stimato
+            sb.AppendLine($"<b>Estimated Reward:</b> {estimatedRewardMin}-{estimatedRewardMax} WAT-RAW");
+            sb.AppendLine();
+            
+            // Produzione
+            sb.AppendLine($"<b>Today's Production:</b> {dailyProduction:F1}%");
+            if (tomorrowProduction > 0f)
+            {
+                sb.AppendLine($"<b>Tomorrow's Estimate:</b> ~{tomorrowProduction:F1}%");
+            }
+            sb.AppendLine();
+            
+            // LED Bonus
+            if (hasLed)
+            {
+                sb.AppendLine($"✨ <color=#00FF00>LED boost active: +2 WAT-RAW</color>");
+                sb.AppendLine();
+            }
+            
+            // TIP
+            sb.AppendLine($"💡 <color=#00FF00>TIP: Optimal range is 70-85%. Monitor daily to prevent issues.</color>");
+            
+            _condensationTooltipText.text = sb.ToString();
+            
+            // FASE 8: Aggiorna stato button Collect (visibile solo se c'è condensazione disponibile)
+            if (_condensationCollectButton != null)
+            {
+                _condensationCollectButton.style.display = currentPercentage > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+                _condensationCollectButton.SetEnabled(currentPercentage > 0f);
+            }
+        }
+        
+        /// <summary>
+        /// FASE 8: Handler click button Collect nel tooltip condensazione.
+        /// </summary>
+        private void OnCondensationCollectClicked()
+        {
+            if (_gameManager == null)
+                return;
+            
+            // Raccoglie condensazione
+            int reward = _gameManager.CollectCondensation();
+            
+            if (reward > 0)
+            {
+                // Aggiunge WAT-RAW all'inventario
+                _gameManager.PlayerInventory.Add(Items.Water, reward);
+                
+                // Mostra notifica toast
+                var foundation = Sporae.UI.UIToolkit.NotificationsFoundation.FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (foundation != null && foundation.Enabled)
+                {
+                    foundation.PostToast("WATER-001", new Sporae.UI.UIToolkit.NotificationsFoundation.NotificationPayload().With("amount", reward.ToString()));
+                }
+                else
+                {
+                    var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+                    if (toastManager != null)
+                    {
+                        toastManager.ShowToast(ToastNotificationType.ResourceGained, $"You collected Rainwater: {reward}!", "WATER-001");
+                    }
+                }
+                
+                // Aggiorna tooltip dopo raccolta
+                UpdateCondensationTooltipContent();
             }
         }
         

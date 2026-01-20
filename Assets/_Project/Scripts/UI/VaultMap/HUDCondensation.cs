@@ -1,4 +1,4 @@
-﻿using _Project.Sporae.Core;
+using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,7 +46,8 @@ namespace _Project
                 if (_gameManager != null)
                 {
                     _gameManager.OnCondensationChanged += HandleChangeCondensation;
-                    HandleChangeCondensation(_gameManager.CondensationSystem?.CondensationAmount ?? 0f);
+                    // FASE 7: Usa CurrentAccumulation (percentuale 0-100%)
+                    HandleChangeCondensation(_gameManager.CondensationSystem?.CurrentAccumulation ?? 0f);
                 }
                 
                 if (ServiceContainer.Instance != null)
@@ -67,16 +68,20 @@ namespace _Project
             if (_gameManager != null)
             {
                 _gameManager.OnCondensationChanged += HandleChangeCondensation;
-                HandleChangeCondensation(_gameManager.CondensationSystem?.CondensationAmount ?? 0f);
+                // FASE 7: Usa CurrentAccumulation (percentuale 0-100%)
+                HandleChangeCondensation(_gameManager.CondensationSystem?.CurrentAccumulation ?? 0f);
             }
             else
             {
                 SporiumLogger.LogWarning(LogCategory.UI, "GameManager non disponibile in Start(). Verrà sottoscritto quando disponibile.");
             }
             
+            // DISABILITATO: Button Collect ora disponibile nel tooltip TopBar
+            // Il button nella vecchia HUD è disabilitato per evitare doppia raccolta
             if (_collectButton != null)
             {
-                _collectButton.onClick.AddListener(HandleCollect);
+                _collectButton.interactable = false; // Disabilita button vecchia HUD
+                // _collectButton.onClick.AddListener(HandleCollect); // Rimosso - usa tooltip TopBar
             }
         }
 
@@ -92,12 +97,17 @@ namespace _Project
             }
         }
 
+        /// <summary>
+        /// FASE 7: Aggiorna progress bar con percentuale condensazione (0-100%).
+        /// Il valore ricevuto è già una percentuale, quindi dividiamo per 100.
+        /// </summary>
         private void HandleChangeCondensation(float value)
         {
             if (_gameManager == null || _progressBar == null)
                 return;
                 
-            _progressBar.Value = value / _gameManager.GetMaxCondensation();
+            // FASE 7: Il valore è già percentuale (0-100%), dividiamo per 100 per normalizzare a 0-1
+            _progressBar.Value = value / 100f;
         }
 
         private void HandleCollect()
@@ -114,7 +124,7 @@ namespace _Project
                 return;
             }
             
-            int amountToCollect = (int)_gameManager.CollectCondensation();
+            int amountToCollect = _gameManager.CollectCondensation();
             if (amountToCollect != 0)
             {
                 if (_uiNotification != null)

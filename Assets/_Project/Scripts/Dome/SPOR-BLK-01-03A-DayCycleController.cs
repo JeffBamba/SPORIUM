@@ -432,6 +432,9 @@ public class DayCycleController : MonoBehaviour
         // 6. CalculatePlantConditions(D) - Calcola score condizione per tutte le piante (all'alba)
         CalculatePlantConditions(dayIndex);
         
+        // 7. FASE 3: Calcola condensazione basata su piante attive e LED
+        ApplyCondensationSystem(dayIndex);
+        
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
         if (enableDebugLogs)
@@ -2213,10 +2216,11 @@ public class DayCycleController : MonoBehaviour
             pot.ConditionLabel = (int)result.Condition;
             pot.ForecastDirection = (int)result.Forecast;
             
-            // Trigger Morta: score resta sotto soglia Critica per >2 giorni (3 consecutivi).
-            int criticalThreshold = Sporae.DevTools.DifficultyCalibrationConfig.ConditionThresholdAppassita;
-            bool isScoreCritical = pot.ConditionScore < criticalThreshold;
-            if (isScoreCritical)
+            // Trigger Morta: condizione resta in Critica per >2 giorni (3 consecutivi).
+            // BUG FIX: Verifica la condizione effettiva (result.Condition) invece di solo lo score,
+            // per garantire che DaysCritical venga incrementato solo quando la condizione è realmente Critica.
+            bool isConditionCritical = result.Condition == PlantCondition.Critica;
+            if (isConditionCritical)
                 pot.DaysCritical++;
             else
                 pot.DaysCritical = 0;
@@ -2230,7 +2234,8 @@ public class DayCycleController : MonoBehaviour
                 pot.LedSystemState = LedSystemState.Off;
                 
                 // Notifica morte
-                string reason = $"Condizione Critica per {pot.DaysCritical} giorni (score<{criticalThreshold})";
+                int criticalThreshold = Sporae.DevTools.DifficultyCalibrationConfig.ConditionThresholdAppassita;
+                string reason = $"Condizione Critica per {pot.DaysCritical} giorni (score={pot.ConditionScore}<{criticalThreshold})";
                 PotEvents.EmitPlantDied(pot.PotId, reason);
                 
                 // Aggiorna visual/UI
@@ -2327,6 +2332,30 @@ public class DayCycleController : MonoBehaviour
                     pot.DaysOverwateringConsecutive = 0;
                 }
                 
+                // FASE 5: Ottieni percentuale condensazione (usata per giorni virtuali e infestazione)
+                float condensationPercentage = 0f;
+                if (_gameManager != null && _gameManager.CondensationSystem != null)
+                {
+                    condensationPercentage = _gameManager.CondensationSystem.CurrentAccumulation;
+                }
+                
+                // FASE 5: Aggiungi giorni virtuali da condensazione (se >50%)
+                // Nota: DaysOverwateringConsecutive è int, quindi arrotondiamo i giorni virtuali
+                float virtualDays = GetVirtualDaysFromCondensation(condensationPercentage);
+                if (virtualDays > 0f)
+                {
+                    // Converti giorni virtuali a int (arrotondamento per compatibilità)
+                    // Per mantenere precisione frazionaria, arrotondiamo: 0.5 → 1, 1.0 → 1, 1.5 → 2
+                    int virtualDaysInt = Mathf.RoundToInt(virtualDays);
+                    pot.DaysOverwateringConsecutive += virtualDaysInt;
+                    
+                    if (enableDebugLogs)
+                    {
+                        SporiumLogger.LogDebug(LogCategory.Pot, 
+                            $"{pot.PotId}: Aggiunti {virtualDays:F1} giorni virtuali da condensazione ({condensationPercentage:F1}%) → +{virtualDaysInt} giorni");
+                    }
+                }
+                
                 // Incrementa giorni senza potatura
                 pot.DaysWithoutPruning++;
                 
@@ -2344,8 +2373,40 @@ public class DayCycleController : MonoBehaviour
                     pot.DaysAtMoldRiskLevel3 = 0; // Reset se non è più a livello 3
                 }
                 
-                // BUG FIX 2: Infestazione solo dopo 2 giorni consecutivi a livello 3
-                bool shouldInfest = MoldSystem.CheckInfestation(pot.MoldRiskLevel, pot.DaysAtMoldRiskLevel3);
+                // FASE 5: Modifica logica infestazione se condensazione = 100%
+                
+                // Calcola giorni richiesti per infestazione (ridotti se condensazione = 100%)
+                int requiredDaysAtLevel3 = 2; // Default: 2 giorni
+                bool immediateInfestation = false;
+                
+                if (condensationPercentage >= 100f)
+                {
+                    // Se condensazione = 100%: riduce giorni richiesti (2 → 1 → 0)
+                    // Se già a livello 3 da almeno 1 giorno: infestazione immediata
+                    if (pot.MoldRiskLevel == 3 && pot.DaysAtMoldRiskLevel3 >= 1)
+                    {
+                        immediateInfestation = true;
+                        if (enableDebugLogs)
+                        {
+                            SporiumLogger.LogWarning(LogCategory.Pot, 
+                                $"{pot.PotId}: Infestazione immediata per condensazione 100% (DaysAtLevel3={pot.DaysAtMoldRiskLevel3})");
+                        }
+                    }
+                    else
+                    {
+                        // Riduce giorni richiesti da 2 a 1
+                        requiredDaysAtLevel3 = 1;
+                        if (enableDebugLogs)
+                        {
+                            SporiumLogger.LogDebug(LogCategory.Pot, 
+                                $"{pot.PotId}: Condensazione 100% - giorni richiesti ridotti da 2 a {requiredDaysAtLevel3}");
+                        }
+                    }
+                }
+                
+                // BUG FIX 2: Infestazione solo dopo giorni consecutivi a livello 3 (modificato per condensazione 100%)
+                bool shouldInfest = immediateInfestation || 
+                    (pot.MoldRiskLevel == 3 && pot.DaysAtMoldRiskLevel3 >= requiredDaysAtLevel3);
                 if (shouldInfest && !pot.IsInfested)
                 {
                     // Prima infestazione: applica effetti e mostra toast
@@ -2491,6 +2552,74 @@ public class DayCycleController : MonoBehaviour
                     new Color(1f, 0.5f, 0f)); // Arancione per allerta
             }
         }
+    }
+    
+    /// <summary>
+    /// FASE 3: Applica sistema condensazione basato su piante attive e LED.
+    /// Calcola produzione giornaliera e aggiorna accumulo.
+    /// </summary>
+    private void ApplyCondensationSystem(int dayIndex)
+    {
+        if (_gameManager == null || _gameManager.CondensationSystem == null)
+        {
+            if (enableDebugLogs)
+                SporiumLogger.LogWarning(LogCategory.Core, "GameManager o CondensationSystem non disponibili per calcolo condensazione");
+            return;
+        }
+        
+        // Verifica se almeno un LED è attivo (Blue o Red)
+        bool hasActiveLed = HasAnyActiveLed();
+        
+        // Passa lista pot attivi e stato LED al sistema condensazione
+        _gameManager.CondensationSystem.DayChanged(_registeredPots, hasActiveLed);
+        
+        // Notifica cambio condensazione tramite GameManager
+        _gameManager.NotifyCondensationChanged();
+        
+        if (enableDebugLogs)
+        {
+            float production = _gameManager.CondensationSystem.DailyProduction;
+            float accumulation = _gameManager.CondensationSystem.CurrentAccumulation;
+            SporiumLogger.LogDebug(LogCategory.Core, 
+                $"Condensazione Day {dayIndex}: Produzione={production:F1}%, Accumulo={accumulation:F1}%, LED attivo={hasActiveLed}");
+        }
+    }
+    
+    /// <summary>
+    /// FASE 3: Verifica se almeno un pot ha LED attivo (Blue o Red).
+    /// </summary>
+    private bool HasAnyActiveLed()
+    {
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant) continue;
+            
+            // LED attivo se Blue o Red (non Off)
+            if (pot.LedSystemState != LedSystemState.Off)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// FASE 5: Calcola giorni virtuali da aggiungere a DaysOverwateringConsecutive basato su percentuale condensazione.
+    /// - 0-49%: 0 giorni
+    /// - 50-59%: 0.5 giorni
+    /// - 60-79%: 1.0 giorni
+    /// - 80-100%: 1.5 giorni
+    /// </summary>
+    private float GetVirtualDaysFromCondensation(float percentage)
+    {
+        if (percentage < 50f)
+            return 0f;
+        if (percentage < 60f)
+            return 0.5f;
+        if (percentage < 80f)
+            return 1.0f;
+        return 1.5f; // 80-100%
     }
     
 }

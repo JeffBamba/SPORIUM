@@ -60,25 +60,25 @@ namespace _Project.World.Lighting
         [Tooltip("Higher = snappier. Lower = smoother.")]
         [SerializeField] private float response = 25f;
 
-        [Header("Pot Gentle Mode (subtle life)")]
-        [Tooltip("Very subtle noise speed for pot lights.")]
-        [SerializeField] private float potNoiseSpeed = 1.2f;
-        [Tooltip("Very small intensity variance for pot lights.")]
-        [SerializeField] private float potNoiseAmount = 0.08f;
-        [Tooltip("Rare micro dips (per second).")]
-        [SerializeField] private float potMicroDipChancePerSecond = 0.08f;
+        [Header("Pot Gentle Mode (visible life)")]
+        [Tooltip("Noise speed for pot lights (faster = more movement).")]
+        [SerializeField] private float potNoiseSpeed = 3.0f;
+        [Tooltip("Intensity variance for pot lights (larger = more visible variation).")]
+        [SerializeField] private float potNoiseAmount = 0.20f;
+        [Tooltip("Micro dips frequency (per second).")]
+        [SerializeField] private float potMicroDipChancePerSecond = 0.25f;
         [Tooltip("Duration of micro dips (seconds).")]
-        [SerializeField] private Vector2 potMicroDipDuration = new Vector2(0.08f, 0.18f);
-        [Tooltip("Intensity multiplier during dip (e.g. 0.92 = -8%).")]
+        [SerializeField] private Vector2 potMicroDipDuration = new Vector2(0.10f, 0.25f);
+        [Tooltip("Intensity multiplier during dip (e.g. 0.85 = -15%).")]
         [Range(0.8f, 1f)]
-        [SerializeField] private float potMicroDipMultiplier = 0.92f;
-        [Tooltip("Rare micro boosts (per second).")]
-        [SerializeField] private float potMicroBoostChancePerSecond = 0.06f;
+        [SerializeField] private float potMicroDipMultiplier = 0.85f;
+        [Tooltip("Micro boosts frequency (per second).")]
+        [SerializeField] private float potMicroBoostChancePerSecond = 0.20f;
         [Tooltip("Duration of micro boosts (seconds).")]
-        [SerializeField] private Vector2 potMicroBoostDuration = new Vector2(0.08f, 0.16f);
-        [Tooltip("Intensity multiplier during boost (e.g. 1.05 = +5%).")]
+        [SerializeField] private Vector2 potMicroBoostDuration = new Vector2(0.10f, 0.22f);
+        [Tooltip("Intensity multiplier during boost (e.g. 1.12 = +12%).")]
         [Range(1f, 1.2f)]
-        [SerializeField] private float potMicroBoostMultiplier = 1.05f;
+        [SerializeField] private float potMicroBoostMultiplier = 1.12f;
 
         [Header("Startup Sequence (lab tube)")]
         [Tooltip("Initial fast flicker duration (seconds).")]
@@ -418,7 +418,7 @@ namespace _Project.World.Lighting
 
         private void TickPotGentle(float dt)
         {
-            // Very subtle continuous shimmer
+            // Visible continuous shimmer - makes light feel alive
             float n = Mathf.PerlinNoise(_t * potNoiseSpeed, noiseSeed + 9.13f) * 2f - 1f;
             float target = baseIntensity + n * potNoiseAmount;
 

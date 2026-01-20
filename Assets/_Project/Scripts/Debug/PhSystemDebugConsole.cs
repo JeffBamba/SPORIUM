@@ -42,6 +42,9 @@ namespace Sporae.DevTools
         private string _actionsInputValue = "4";
         private string _dayInputValue = "1";
         private string _condensationInputValue = "0";
+        private string _condensationDailyProductionInput = "0";
+        private string _condensationCapInput = "8";
+        private bool _condensationExtendedBasin = false;
         private Vector2 _scrollPosition;
         private Vector2 _mainScrollPosition; // Scroll per l'intera console
         private List<string> _debugLog = new List<string>();
@@ -108,6 +111,11 @@ namespace Sporae.DevTools
                     if (_condensationSystem != null)
                     {
                         AddLog("CondensationSystem trovato");
+                        // Inizializza valori input con valori correnti
+                        _condensationInputValue = _condensationSystem.CurrentAccumulation.ToString("F1");
+                        _condensationDailyProductionInput = _condensationSystem.DailyProduction.ToString("F1");
+                        _condensationCapInput = _condensationSystem.GetCollectionCap().ToString();
+                        _condensationExtendedBasin = _condensationSystem.HasExtendedBasin;
                     }
                 }
             }
@@ -464,22 +472,133 @@ namespace Sporae.DevTools
             GUILayout.Label("=== Condensation System ===", labelStyle);
             if (_condensationSystem != null)
             {
-                float currentCondensation = _condensationSystem.CondensationAmount;
-                float maxCondensation = _condensationSystem.GetMax();
+                float currentCondensation = _condensationSystem.CurrentAccumulation;
+                float dailyProduction = _condensationSystem.DailyProduction;
+                int collectionCap = _condensationSystem.GetCollectionCap();
+                bool hasExtendedBasin = _condensationSystem.HasExtendedBasin;
+                var configValues = _condensationSystem.GetConfigValues();
                 
+                // Accumulo corrente (0-100%)
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"Condensazione: {currentCondensation:F1}/{maxCondensation:F1}", labelStyle, GUILayout.Width(260));
-                _condensationInputValue = GUILayout.TextField(_condensationInputValue, GUILayout.Width(100));
-                if (GUILayout.Button("Set Cond.", buttonStyle, GUILayout.Width(104)))
+                GUILayout.Label($"Accumulo: {currentCondensation:F1}%", labelStyle, GUILayout.Width(200));
+                _condensationInputValue = GUILayout.TextField(_condensationInputValue, GUILayout.Width(80));
+                if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(60)))
                 {
-                    if (float.TryParse(_condensationInputValue, out float newCondensation))
+                    if (float.TryParse(_condensationInputValue, out float newValue))
                     {
-                        // Nota: CondensationSystem potrebbe non avere un metodo Set pubblico
-                        // In questo caso, loggiamo solo
-                        AddLog($"⚠️ Set Condensation non implementato direttamente (Corrente: {currentCondensation:F1})");
+                        _condensationSystem.SetCurrentAccumulation(newValue);
+                        if (_gameManager != null)
+                        {
+                            _gameManager.NotifyCondensationChanged();
+                        }
+                        AddLog($"✓ Accumulo condensazione impostato a {newValue:F1}%");
+                    }
+                    else
+                    {
+                        AddLog("✗ Valore non valido per accumulo");
+                    }
+                }
+                if (GUILayout.Button("Reset", buttonStyle, GUILayout.Width(60)))
+                {
+                    _condensationSystem.Reset();
+                    if (_gameManager != null)
+                    {
+                        _gameManager.NotifyCondensationChanged();
+                    }
+                    AddLog("✓ Condensazione resettata a 0%");
+                }
+                GUILayout.EndHorizontal();
+                
+                // Produzione giornaliera
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Produzione/giorno: {dailyProduction:F1}", labelStyle, GUILayout.Width(200));
+                _condensationDailyProductionInput = GUILayout.TextField(_condensationDailyProductionInput, GUILayout.Width(80));
+                if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(60)))
+                {
+                    if (float.TryParse(_condensationDailyProductionInput, out float newValue))
+                    {
+                        _condensationSystem.SetDailyProduction(newValue);
+                        AddLog($"✓ Produzione giornaliera impostata a {newValue:F1}");
+                    }
+                    else
+                    {
+                        AddLog("✗ Valore non valido per produzione");
                     }
                 }
                 GUILayout.EndHorizontal();
+                
+                // Cap di raccolta
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Cap raccolta: {collectionCap} (Base: {configValues.baseCap}, Extended: {configValues.extendedCap})", labelStyle, GUILayout.Width(300));
+                _condensationCapInput = GUILayout.TextField(_condensationCapInput, GUILayout.Width(80));
+                if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(60)))
+                {
+                    if (int.TryParse(_condensationCapInput, out int newValue))
+                    {
+                        _condensationSystem.SetCollectionCap(newValue);
+                        AddLog($"✓ Cap raccolta impostato a {newValue}");
+                    }
+                    else
+                    {
+                        AddLog("✗ Valore non valido per cap");
+                    }
+                }
+                GUILayout.EndHorizontal();
+                
+                // Upgrade Bacino Esteso
+                GUILayout.BeginHorizontal();
+                bool newExtendedBasin = GUILayout.Toggle(hasExtendedBasin, "Bacino Esteso (Cap 12)", GUILayout.Width(200));
+                if (newExtendedBasin != hasExtendedBasin)
+                {
+                    _condensationSystem.SetExtendedBasin(newExtendedBasin);
+                    AddLog($"✓ Bacino esteso: {(newExtendedBasin ? "ATTIVO" : "DISATTIVO")}");
+                }
+                GUILayout.EndHorizontal();
+                
+                // Valori Config (solo visualizzazione)
+                GUILayout.BeginVertical("box");
+                GUILayout.Label("Config Values (read-only):", labelStyle);
+                GUILayout.Label($"  Base Sana: {configValues.baseSana:F1}", labelStyle);
+                GUILayout.Label($"  Base Stressata: {configValues.baseStressata:F1}", labelStyle);
+                GUILayout.Label($"  LED Bonus: {configValues.ledBonus:F1}", labelStyle);
+                GUILayout.EndVertical();
+                
+                // Aggiorna valori input quando cambiano (solo se non sono in editing)
+                if (float.TryParse(_condensationInputValue, out float parsedCondensation))
+                {
+                    if (Mathf.Abs(parsedCondensation - currentCondensation) > 0.1f)
+                    {
+                        _condensationInputValue = currentCondensation.ToString("F1");
+                    }
+                }
+                else if (_condensationInputValue == "")
+                {
+                    _condensationInputValue = currentCondensation.ToString("F1");
+                }
+                
+                if (float.TryParse(_condensationDailyProductionInput, out float parsedProduction))
+                {
+                    if (Mathf.Abs(parsedProduction - dailyProduction) > 0.1f)
+                    {
+                        _condensationDailyProductionInput = dailyProduction.ToString("F1");
+                    }
+                }
+                else if (_condensationDailyProductionInput == "")
+                {
+                    _condensationDailyProductionInput = dailyProduction.ToString("F1");
+                }
+                
+                if (int.TryParse(_condensationCapInput, out int parsedCap))
+                {
+                    if (parsedCap != collectionCap)
+                    {
+                        _condensationCapInput = collectionCap.ToString();
+                    }
+                }
+                else if (_condensationCapInput == "")
+                {
+                    _condensationCapInput = collectionCap.ToString();
+                }
             }
             else
             {
