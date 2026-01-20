@@ -92,7 +92,9 @@ namespace Sporae.UI.UIToolkit.HUD
             // Aggiorna label valore
             if (_valueLabel != null)
             {
-                _valueLabel.text = $"INDEX {_mutationIndex:F2}";
+                // Mostra come percentuale (come gli altri valori della top bar)
+                int percentage = Mathf.RoundToInt(_mutationIndex * 100f);
+                _valueLabel.text = $"{percentage}%";
                 _valueLabel.style.color = new StyleColor(_currentColor);
             }
         }

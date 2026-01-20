@@ -1,56 +1,64 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/TopBar.uss?fileID=7433441132597879392&amp;guid=b96806e35b5e7084e80a6d7636562790&amp;type=3#TopBar" />
-    <ui:VisualElement name="top-bar" class="top-bar" style="border-bottom-width: 6px;">
+    <ui:VisualElement name="top-bar" class="top-bar" style="border-bottom-width: 4px; height: 80px;">
         <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
         <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
         <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
         <ui:VisualElement name="scan-line-top" class="scan-line-bottom" style="background-color: rgba(30, 40, 42, 0.1);" />
-        <ui:VisualElement name="content" class="top-bar-content" style="justify-content: space-around;">
-            <ui:VisualElement name="actions-display" class="metric-box" style="align-items: center;">
-                <ui:VisualElement name="icon-actions" class="icon-placeholder" />
-                <ui:Label text="AZIONI" class="metric-label" />
-                <ui:VisualElement name="actions-bar" class="segmented-bar" style="align-items: flex-start; justify-content: flex-end; left: 1px;">
-                    <ui:VisualElement name="segment-0" class="bar-segment" />
-                    <ui:VisualElement name="segment-1" class="bar-segment" />
-                    <ui:VisualElement name="segment-2" class="bar-segment" />
-                    <ui:VisualElement name="segment-3" class="bar-segment" />
+        <ui:VisualElement name="content" class="top-bar-content">
+            <ui:VisualElement name="actions-display" class="metric-module" style="margin-right: 88px;">
+                <ui:VisualElement name="icon-actions" class="metric-icon" />
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label text="ACTIONS" class="metric-label" style="position: absolute; top: -7px; height: 7px; left: 0;" />
+                    <ui:VisualElement name="actions-bar" class="segmented-bar" style="bottom: -8px; height: 16px;">
+                        <ui:VisualElement name="segment-0" class="bar-segment" />
+                        <ui:VisualElement name="segment-1" class="bar-segment" />
+                        <ui:VisualElement name="segment-2" class="bar-segment" />
+                        <ui:VisualElement name="segment-3" class="bar-segment" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="mutation-display" class="metric-box">
-                <ui:VisualElement name="mutation-orbit" class="mutation-orbit">
-                    <ui:VisualElement name="icon-mutation" class="icon-placeholder-center" />
-                    <ui:VisualElement name="orbit-dot-1" class="orbit-dot" />
-                    <ui:VisualElement name="orbit-dot-2" class="orbit-dot" />
-                    <ui:VisualElement name="orbit-dot-3" class="orbit-dot" />
-                </ui:VisualElement>
-                <ui:Label text="MUTATION" class="metric-label" />
-            </ui:VisualElement>
-            <ui:VisualElement name="ph-display" class="metric-box-ph">
-                <ui:Label name="ph-drift-label" text="pH DRIFT: 0.0" class="metric-label-ph" />
-                <ui:Label name="ph-band" text="Banda: --" class="ph-band" />
-                <ui:VisualElement name="ph-slider" class="ph-slider">
-                    <ui:VisualElement name="ph-gradient" class="ph-gradient" />
-                    <ui:VisualElement name="ph-neutral-zone" class="ph-neutral-zone" />
-                    <ui:VisualElement name="ph-marker" class="ph-marker" />
+            <ui:VisualElement name="mutation-display" class="metric-module" style="margin-right: 88px;">
+                <ui:VisualElement name="icon-mutation" class="metric-icon" />
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label text="MUTATION" class="metric-label" style="top: 9px;" />
+                    <ui:Label name="mutation-value" text="45%" class="metric-value-large" style="top: -4px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="condensation-display" class="metric-box">
-                <ui:VisualElement name="icon-condensation" class="icon-placeholder" />
-                <ui:Label text="CONDENSATION" class="metric-label" />
-                <ui:Label name="condensation-value" text="78%" class="metric-value-large" />
+            <ui:VisualElement name="ph-display" class="metric-module metric-module-ph" style="margin-right: 88px;">
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label name="ph-drift-label" text="PH DRIFT" class="metric-label" style="top: 1px;" />
+                    <ui:VisualElement name="ph-slider" class="ph-slider" style="top: 0;">
+                        <ui:VisualElement name="ph-gradient" class="ph-gradient" />
+                        <ui:VisualElement name="ph-neutral-zone" class="ph-neutral-zone" />
+                        <ui:VisualElement name="ph-marker" class="ph-marker" />
+                    </ui:VisualElement>
+                    <ui:Label name="ph-band" text="7.8" class="metric-value-ph" style="position: absolute; right: 0; top: -2px; font-size: 10px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="grate-display" class="metric-box">
-                <ui:VisualElement name="icon-grate" class="icon-placeholder" />
-                <ui:Label text="GRATE" class="metric-label" />
-                <ui:Label name="grate-value" text="+12" class="metric-value" />
+            <ui:VisualElement name="condensation-display" class="metric-module" style="margin-right: 88px;">
+                <ui:VisualElement name="icon-condensation" class="metric-icon" />
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label text="CONDENSATION" class="metric-label" style="bottom: -7px;" />
+                    <ui:Label name="condensation-value" text="82%" class="metric-value-large" style="bottom: auto; font-size: 14px; text-overflow: ellipsis; top: -4px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="cry-display" class="metric-box">
-                <ui:VisualElement name="icon-cry" class="icon-placeholder" />
-                <ui:Label text="CRY BALANCE" class="metric-label" />
-                <ui:Label name="cry-value" text="1,245" class="metric-value-large" />
+            <ui:VisualElement name="grate-display" class="metric-module" style="margin-right: 88px;">
+                <ui:VisualElement name="icon-grate" class="metric-icon" />
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label text="G-RATE" class="metric-label" style="bottom: -7px;" />
+                    <ui:Label name="grate-value" text="144" class="metric-value-large" style="top: -4px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="cry-display" class="metric-module" style="margin-right: 88px;">
+                <ui:VisualElement name="icon-cry" class="metric-icon" />
+                <ui:VisualElement name="metric-stack" class="metric-stack">
+                    <ui:Label text="CRY BALANCE" class="metric-label" style="bottom: -7px;" />
+                    <ui:Label name="cry-value" text="2350" class="metric-value-large" style="top: -4px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="glow-frame" class="glow-frame glow-frame-bottom" />
+        <ui:VisualElement name="glow-frame" class="glow-frame glow-frame-bottom" style="height: 8px; right: 4px; left: -1px; bottom: -7px;" />
     </ui:VisualElement>
 </ui:UXML>

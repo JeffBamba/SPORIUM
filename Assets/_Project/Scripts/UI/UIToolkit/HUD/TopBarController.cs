@@ -507,8 +507,8 @@ namespace Sporae.UI.UIToolkit.HUD
             mat.SetFloat("_GradStrength", 0.0f);
             mat.SetColor("_BorderColor", border);
             mat.SetColor("_GlowColor", glow);
-            mat.SetFloat("_BorderThickness", 4.0f);
-            mat.SetFloat("_BorderSoftness", 1.0f);
+            mat.SetFloat("_BorderThickness", 1.5f); // Ridotto per border più sottile, mantenendo glow
+            mat.SetFloat("_BorderSoftness", 0.5f); // Più netto per border più visibile come sottile
             mat.SetFloat("_GlowSize", 14.0f);
             mat.SetFloat("_GlowIntensity", 1.0f);
             mat.SetFloat("_GlowFalloff", 1.25f);
@@ -521,7 +521,11 @@ namespace Sporae.UI.UIToolkit.HUD
                 if (_glowFrameMaterialRuntime != null && _glowFrameMaterial != null)
                     _glowFrameMaterialRuntime.CopyPropertiesFromMaterial(_glowFrameMaterial);
                 if (_glowFrameMaterialRuntime != null)
+                {
                     _glowFrameMaterialRuntime.SetFloat("_EdgeMode", 2.0f); // bottom edge only
+                    _glowFrameMaterialRuntime.SetFloat("_BorderThickness", 1.5f); // Border più sottile
+                    _glowFrameMaterialRuntime.SetFloat("_BorderSoftness", 0.5f); // Più netto
+                }
                 _glowFrameGenerator.Render();
             }
         }
@@ -674,30 +678,38 @@ namespace Sporae.UI.UIToolkit.HUD
             // NON convertire in scala 0-14 - il vecchio sistema mostrava currentPh direttamente
             float phDisplayValue = value;
             
-            // Colore base per "pH DRIFT:" (stesso colore per label e banda)
+            // Colore base per "PH DRIFT" label
             Color phDriftColor = new Color(0.392f, 0.565f, 0.933f, 0.85f); // rgba(83, 144, 255, 0.85)
             
-            // Aggiorna label "pH DRIFT: X.X" sulla stessa riga (mostra valore diretto -100/+100)
+            // Aggiorna label "PH DRIFT" (solo label, senza valore)
             if (_phDriftLabel != null)
             {
-                _phDriftLabel.text = $"pH DRIFT: {phDisplayValue:F1}";
+                _phDriftLabel.text = "PH DRIFT";
                 _phDriftLabel.style.color = new StyleColor(phDriftColor);
             }
             
-            // Aggiorna label banda pH con stesso colore di "pH DRIFT" ma cambia in base alla banda
-            if (_phBandLabel != null && _phSystem != null)
+            // Aggiorna valore numerico pH (mostra valore diretto -100/+100, convertito in scala 0-14 per display)
+            if (_phBandLabel != null)
             {
-                string bandName = _phSystem.GetBandName();
-                Color bandColor = _phSystem.GetBandColor();
+                // Converti da range PhSystem (-100/+100) a scala visualizzazione (0-14) per display
+                // Mapping: -100 → 0, 0 → 7, +100 → 14
+                float phVisualScale = ((value + 100f) / 200f) * 14f;
+                phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
                 
-                // Usa il colore della banda invece del colore fisso
-                _phBandLabel.text = $"Banda: {bandName}";
-                _phBandLabel.style.color = new StyleColor(bandColor);
-            }
-            else if (_phBandLabel != null)
-            {
-                // Fallback: usa colore default se PhSystem non disponibile
-                _phBandLabel.style.color = new StyleColor(phDriftColor);
+                // Mostra valore in scala 0-14 (come nell'immagine di riferimento: 7.8)
+                _phBandLabel.text = $"{phVisualScale:F1}";
+                
+                // Colore basato sulla banda se PhSystem disponibile
+                if (_phSystem != null)
+                {
+                    Color bandColor = _phSystem.GetBandColor();
+                    _phBandLabel.style.color = new StyleColor(bandColor);
+                }
+                else
+                {
+                    // Fallback: usa colore default se PhSystem non disponibile
+                    _phBandLabel.style.color = new StyleColor(phDriftColor);
+                }
             }
             
             if (_phMarker != null && _phGradient != null)
@@ -948,7 +960,9 @@ namespace Sporae.UI.UIToolkit.HUD
             
             if (_mutationValueLabel != null)
             {
-                _mutationValueLabel.text = $"INDEX {_mutationIndex:F2}";
+                // Mostra come percentuale (come nell'immagine di riferimento: 45%)
+                int percentage = Mathf.RoundToInt(_mutationIndex * 100f);
+                _mutationValueLabel.text = $"{percentage}%";
                 
                 // Colore dinamico
                 Color color;
