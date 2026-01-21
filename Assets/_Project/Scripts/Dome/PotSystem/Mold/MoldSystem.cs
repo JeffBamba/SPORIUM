@@ -144,37 +144,70 @@ namespace Sporae.Dome.PotSystem.Mold
         
         /// <summary>
         /// Applica effetti infestazione
+        /// MOLD SYNERGY: Considera famiglia pianta per riduzione livello (EVIL: -1, PURE: -5, Standard: -3)
         /// </summary>
         public static void ApplyInfestation(PotStateModel potState, int moldRiskLevel, MoldConfig config, PlantLevelConfig levelConfig)
         {
             if (potState == null || config == null || moldRiskLevel < 1)
                 return;
             
+            // Ottieni famiglia pianta per applicare riduzione livello differenziata
+            PlantData plantData = potState.GetPlantData();
+            PlantFamily family = plantData != null ? plantData.Family : PlantFamily.Standard;
+            
+            int levelReduction;
+            
             if (moldRiskLevel == 1) // Mild
             {
-                // Riduce livello di 1
-                if (levelConfig != null)
+                // Mild: riduzione basata su famiglia
+                switch (family)
                 {
-                    PlantLevelSystem.ReduceLevel(potState, config.mildLevelReduction);
+                    case PlantFamily.Evil:
+                        levelReduction = 0; // EVIL: NO riduzione livello (o minima)
+                        break;
+                    case PlantFamily.Pure:
+                        levelReduction = 2; // PURE: riduzione maggiore anche per Mild
+                        break;
+                    default:
+                        levelReduction = config.mildLevelReduction; // Standard: -1
+                        break;
+                }
+                
+                if (levelConfig != null && levelReduction > 0)
+                {
+                    PlantLevelSystem.ReduceLevel(potState, levelReduction);
                 }
                 
                 // Riduce score di 10
                 potState.ConditionScore = Mathf.Max(0, potState.ConditionScore - config.mildScorePenalty);
                 
-                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Mild applicata (-{config.mildLevelReduction} livello, -{config.mildScorePenalty} score)");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Mild applicata (Famiglia: {family}, -{levelReduction} livello, -{config.mildScorePenalty} score)");
             }
             else if (moldRiskLevel >= 2) // Severe o Critical
             {
-                // Riduce livello di 3
+                // Severe/Critical: riduzione basata su famiglia
+                switch (family)
+                {
+                    case PlantFamily.Evil:
+                        levelReduction = 1; // EVIL: riduzione minore (-1 invece di -3)
+                        break;
+                    case PlantFamily.Pure:
+                        levelReduction = 5; // PURE: riduzione maggiore (-5 invece di -3)
+                        break;
+                    default:
+                        levelReduction = config.severeLevelReduction; // Standard: -3
+                        break;
+                }
+                
                 if (levelConfig != null)
                 {
-                    PlantLevelSystem.ReduceLevel(potState, config.severeLevelReduction);
+                    PlantLevelSystem.ReduceLevel(potState, levelReduction);
                 }
                 
                 // Riduce score di 30
                 potState.ConditionScore = Mathf.Max(0, potState.ConditionScore - config.severeScorePenalty);
                 
-                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Severe applicata (-{config.severeLevelReduction} livelli, -{config.severeScorePenalty} score, crescita bloccata)");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"{potState.PotId}: Infestazione Severe applicata (Famiglia: {family}, -{levelReduction} livelli, -{config.severeScorePenalty} score, crescita bloccata)");
             }
         }
         
@@ -191,6 +224,52 @@ namespace Sporae.Dome.PotSystem.Mold
             potState.DaysWithoutPruning = 0;
 
             SporiumLogger.LogInfo(LogCategory.Pot, $"{potState.PotId}: RemoveInfestation eseguito (riduzione rischio / reset daysWithoutPruning)");
+        }
+        
+        /// <summary>
+        /// MOLD SYNERGY: Calcola bonus mutazioni basato su Mold Risk + Famiglia + pH
+        /// EVIL prospera con muffe (bonus), PURE soffre doppiamente (penalità)
+        /// </summary>
+        /// <param name="moldRiskLevel">Livello rischio muffe (0-3)</param>
+        /// <param name="family">Famiglia della pianta</param>
+        /// <param name="phBand">Banda pH corrente</param>
+        /// <returns>Bonus probabilità mutazioni (es. 0.15f = +15%)</returns>
+        public static float GetMoldMutationBonus(int moldRiskLevel, PlantFamily family, PhSystem.PhBand phBand)
+        {
+            if (moldRiskLevel <= 0)
+                return 0f; // Nessun bonus se non c'è Mold Risk
+            
+            switch (family)
+            {
+                case PlantFamily.Evil:
+                    // EVIL con Mold Risk: bonus mutazioni
+                    float baseBonus = moldRiskLevel == 3 ? 0.3f : 0.15f; // Level 3: +30%, Level 1-2: +15%
+                    
+                    // Bonus extra se anche in pH Basico (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraBasic || phBand == PhSystem.PhBand.StableBasic)
+                    {
+                        baseBonus += 0.1f; // +10% aggiuntivo
+                    }
+                    
+                    return baseBonus;
+                    
+                case PlantFamily.Pure:
+                    // PURE con Mold Risk: penalità mutazioni
+                    float basePenalty = moldRiskLevel == 3 ? 0.2f : 0.1f; // Level 3: -20%, Level 1-2: -10%
+                    
+                    // Penalità extra se anche in pH Acido (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid)
+                    {
+                        basePenalty += 0.1f; // -10% aggiuntivo
+                    }
+                    
+                    return -basePenalty;
+                    
+                case PlantFamily.Standard:
+                default:
+                    // Standard: nessun bonus/penalità
+                    return 0f;
+            }
         }
     }
 }

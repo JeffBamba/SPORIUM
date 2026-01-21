@@ -1367,10 +1367,11 @@ public class PotActions : MonoBehaviour
         // FASE 2.3: Applica modificatore resa basato su pH
         float phYieldMultiplier = 1.0f;
         bool isSterile = false;
+        PhSystem.PhBand phBand = PhSystem.PhBand.Neutral;
         PlantData plantData = _potState.GetPlantData();
         if (_phSystem != null && plantData != null)
         {
-            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            phBand = _phSystem.EvaluateState();
             phYieldMultiplier = PhGrowthModifier.GetYieldMultiplier(phBand, plantData.Family);
             isSterile = PhGrowthModifier.IsSterile(phBand, plantData.Family);
             
@@ -1390,6 +1391,20 @@ public class PotActions : MonoBehaviour
                 if (showDebugLogs)
                     SporiumLogger.LogWarning(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Pianta Pure in Ultra Basico: STERILE (resa x2 ma non può produrre nuovi frutti per 3 giorni)");
                 // TODO: Aggiungere campo DaysSterile in PotStateModel se non esiste
+            }
+        }
+        
+        // MOLD SYNERGY: Applica modificatore resa basato su Mold Risk + Famiglia + pH
+        float moldYieldMultiplier = 1.0f;
+        if (plantData != null)
+        {
+            moldYieldMultiplier = PhGrowthModifier.GetMoldYieldModifier(_potState.MoldRiskLevel, _potState.IsInfested, plantData.Family, phBand);
+            if (moldYieldMultiplier != 1.0f)
+            {
+                float oldAmount = baseAmount;
+                baseAmount *= moldYieldMultiplier;
+                if (showDebugLogs)
+                    SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore resa Mold Risk Lvl {_potState.MoldRiskLevel} (Infestata: {_potState.IsInfested}) per {plantData.Family}: {moldYieldMultiplier:F2} (quantità: {oldAmount:F2} → {baseAmount:F2})");
             }
         }
         

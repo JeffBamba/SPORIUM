@@ -1,10 +1,12 @@
 using _Project;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Mold;
 
 namespace Sporae.Dome.PotSystem.Growth
 {
     /// <summary>
     /// FASE 2: Modificatori crescita e resa basati su pH e famiglia pianta
+    /// FASE MOLD SYNERGY: Modificatori crescita e resa basati su Mold Risk + Famiglia + pH
     /// </summary>
     public static class PhGrowthModifier
     {
@@ -130,6 +132,99 @@ namespace Sporae.Dome.PotSystem.Growth
         {
             // Pure in Ultra Basico sono sterili (non possono produrre nuovi frutti per 3 giorni)
             return family == PlantFamily.Pure && phBand == PhSystem.PhBand.UltraBasic;
+        }
+        
+        /// <summary>
+        /// MOLD SYNERGY: Calcola modificatore crescita basato su Mold Risk + Famiglia + pH
+        /// EVIL prospera con muffe (bonus), PURE soffre doppiamente (penalità)
+        /// </summary>
+        /// <param name="moldRiskLevel">Livello rischio muffe (0-3)</param>
+        /// <param name="family">Famiglia della pianta</param>
+        /// <param name="phBand">Banda pH corrente</param>
+        /// <returns>Moltiplicatore crescita (es. 1.2f = +20%)</returns>
+        public static float GetMoldGrowthModifier(int moldRiskLevel, PlantFamily family, PhSystem.PhBand phBand)
+        {
+            if (moldRiskLevel <= 0)
+                return 1.0f; // Nessun modificatore se non c'è Mold Risk
+            
+            switch (family)
+            {
+                case PlantFamily.Evil:
+                    // EVIL con Mold Risk: bonus crescita
+                    float baseBonus = moldRiskLevel == 3 ? 0.3f : 0.2f; // Level 3: +30%, Level 1-2: +20%
+                    
+                    // Bonus extra se anche in pH Basico (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraBasic || phBand == PhSystem.PhBand.StableBasic)
+                    {
+                        baseBonus += 0.1f; // +10% aggiuntivo
+                    }
+                    
+                    return 1.0f + baseBonus;
+                    
+                case PlantFamily.Pure:
+                    // PURE con Mold Risk: penalità crescita
+                    float basePenalty = moldRiskLevel == 3 ? 0.3f : 0.2f; // Level 3: -30%, Level 1-2: -20%
+                    
+                    // Penalità extra se anche in pH Acido (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid)
+                    {
+                        basePenalty += 0.1f; // -10% aggiuntivo
+                    }
+                    
+                    return 1.0f - basePenalty;
+                    
+                case PlantFamily.Standard:
+                default:
+                    // Standard: nessun modificatore (sistema attuale)
+                    return 1.0f;
+            }
+        }
+        
+        /// <summary>
+        /// MOLD SYNERGY: Calcola modificatore resa basato su Mold Risk + Famiglia + pH
+        /// EVIL prospera con muffe (bonus), PURE soffre doppiamente (penalità)
+        /// </summary>
+        /// <param name="moldRiskLevel">Livello rischio muffe (0-3)</param>
+        /// <param name="isInfested">True se la pianta è infestata</param>
+        /// <param name="family">Famiglia della pianta</param>
+        /// <param name="phBand">Banda pH corrente</param>
+        /// <returns>Moltiplicatore resa (es. 1.5f = +50%)</returns>
+        public static float GetMoldYieldModifier(int moldRiskLevel, bool isInfested, PlantFamily family, PhSystem.PhBand phBand)
+        {
+            if (moldRiskLevel <= 0)
+                return 1.0f; // Nessun modificatore se non c'è Mold Risk
+            
+            switch (family)
+            {
+                case PlantFamily.Evil:
+                    // EVIL con Mold Risk: bonus resa
+                    float baseBonus = isInfested ? 0.5f : 0.2f; // Infestata: +50%, Level 1-2: +20%
+                    
+                    // Bonus extra se anche in pH Basico (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraBasic || phBand == PhSystem.PhBand.StableBasic)
+                    {
+                        baseBonus += 0.15f; // +15% aggiuntivo
+                    }
+                    
+                    return 1.0f + baseBonus;
+                    
+                case PlantFamily.Pure:
+                    // PURE con Mold Risk: penalità resa
+                    float basePenalty = moldRiskLevel == 3 ? 0.5f : 0.2f; // Level 3: -50%, Level 1-2: -20%
+                    
+                    // Penalità extra se anche in pH Acido (sinergia doppia)
+                    if (phBand == PhSystem.PhBand.UltraAcid || phBand == PhSystem.PhBand.StableAcid)
+                    {
+                        basePenalty += 0.15f; // -15% aggiuntivo
+                    }
+                    
+                    return 1.0f - basePenalty;
+                    
+                case PlantFamily.Standard:
+                default:
+                    // Standard: nessun modificatore (sistema attuale)
+                    return 1.0f;
+            }
         }
     }
 }

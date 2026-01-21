@@ -579,14 +579,22 @@ public class DayCycleController : MonoBehaviour
         
         // FASE 2.2: Applica modificatore crescita basato su pH
         float phGrowthMultiplier = 1.0f;
+        PhSystem.PhBand phBand = PhSystem.PhBand.Neutral;
         if (_phSystem != null && plantData != null)
         {
-            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            phBand = _phSystem.EvaluateState();
             phGrowthMultiplier = PhGrowthModifier.GetGrowthMultiplier(phBand, plantData.Family);
         }
         
+        // MOLD SYNERGY: Applica modificatore crescita basato su Mold Risk + Famiglia + pH
+        float moldGrowthMultiplier = 1.0f;
+        if (plantData != null)
+        {
+            moldGrowthMultiplier = PhGrowthModifier.GetMoldGrowthModifier(pot.MoldRiskLevel, plantData.Family, phBand);
+        }
+        
         // Moltiplicatori cumulativi (moltiplicativi, non additivi)
-        float totalGrowthMultiplier = conditionGrowthMultiplier * phGrowthMultiplier;
+        float totalGrowthMultiplier = conditionGrowthMultiplier * phGrowthMultiplier * moldGrowthMultiplier;
         
         if (totalGrowthMultiplier != 1.0f && pointsResult.TotalPoints > 0)
         {
@@ -617,13 +625,13 @@ public class DayCycleController : MonoBehaviour
                     pot.GrowthPointsFertilizer += fertilizerBonus;
                 }
                 
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2}. Punti aggiuntivi: {additionalPoints} (totale: {pointsResult.TotalPoints} → {pointsResult.TotalPoints + additionalPoints})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) + Mold Risk (x{moldGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2}. Punti aggiuntivi: {additionalPoints} (totale: {pointsResult.TotalPoints} → {pointsResult.TotalPoints + additionalPoints})");
             }
             else if (additionalPoints < 0)
             {
                 // Se il moltiplicatore è < 1.0, riduci i punti (ma non rimuovere punti già accumulati)
                 // Per semplicità, non riduciamo i punti già accumulati, solo non aggiungiamo bonus
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2} (riduzione crescita, nessun bonus punti)");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[GROWTH_MODIFIER] {pot.PotId}: Condizione {currentCondition} (x{conditionGrowthMultiplier:F2}) + pH (x{phGrowthMultiplier:F2}) + Mold Risk (x{moldGrowthMultiplier:F2}) = Totale x{totalGrowthMultiplier:F2} (riduzione crescita, nessun bonus punti)");
             }
         }
         
@@ -748,10 +756,13 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Verifica pH estremo (≥+80 o ≤-80) opposto alla famiglia pianta
+        // phBand è già dichiarato e valutato sopra alla riga 582-585, riutilizziamo quello
         if (_phSystem != null && plantData != null)
         {
             float currentPh = _phSystem.CurrentPh;
-            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            // phBand è già stato valutato sopra (riga 585), riutilizziamo quello
+            // Se il blocco sopra non è stato eseguito, phBand è Neutral (default), ma questo blocco
+            // ha la stessa condizione, quindi se siamo qui phBand è già stato valutato correttamente
             bool isExtremePh = (phBand == PhSystem.PhBand.UltraAcid || 
                                 phBand == PhSystem.PhBand.UltraBasic);
             
@@ -802,11 +813,40 @@ public class DayCycleController : MonoBehaviour
             // Non può avanzare, ma continua con il resto della logica (produzione frutti, etc.)
         }
         
-        // BLK-07.01: Verifica blocco crescita per infestazione Severe
-        if (pot.MoldRiskLevel >= 2) // Severe o Critical
+        // MOLD SYNERGY: Verifica blocco crescita per Mold Risk (considera famiglia)
+        // EVIL: NON viene bloccata da Mold Risk (solo da altre condizioni)
+        // PURE: bloccata a Mold Risk Level ≥1 (più sensibile)
+        // Standard: bloccata a Mold Risk Level ≥2 (sistema attuale)
+        bool isBlockedByMoldRisk = false;
+        if (plantData != null)
+        {
+            switch (plantData.Family)
+            {
+                case PlantFamily.Evil:
+                    // EVIL: NON bloccata da Mold Risk
+                    isBlockedByMoldRisk = false;
+                    break;
+                case PlantFamily.Pure:
+                    // PURE: bloccata a Mold Risk Level ≥1 (più sensibile)
+                    isBlockedByMoldRisk = pot.MoldRiskLevel >= 1;
+                    break;
+                case PlantFamily.Standard:
+                default:
+                    // Standard: bloccata a Mold Risk Level ≥2 (sistema attuale)
+                    isBlockedByMoldRisk = pot.MoldRiskLevel >= 2;
+                    break;
+            }
+        }
+        else
+        {
+            // Fallback: usa sistema attuale se PlantData non disponibile
+            isBlockedByMoldRisk = pot.MoldRiskLevel >= 2;
+        }
+        
+        if (isBlockedByMoldRisk)
         {
             if (enableDebugLogs)
-                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Avanzamento bloccato - Infestazione Severe (Mold Risk Level: {pot.MoldRiskLevel})");
+                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Avanzamento bloccato - Mold Risk Level: {pot.MoldRiskLevel} (Famiglia: {plantData?.Family ?? PlantFamily.Standard})");
             // Non può avanzare, ma continua con il resto della logica
         }
         
@@ -887,23 +927,22 @@ public class DayCycleController : MonoBehaviour
             bool pointsOk = totalPoints >= requiredPoints;
             
             // BLK-03.01-T2: Avanzamento richiede tutti i requisiti E non deve essere bloccato dalla condizione
-            // BLK-07.01: Blocca anche se infestazione Severe
+            // MOLD SYNERGY: Blocco Mold Risk considerato sopra (isBlockedByMoldRisk già calcolato)
             bool isBlockedByCondition = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
-            bool isBlockedByMold = pot.MoldRiskLevel >= 2; // Severe o Critical
-            requirementsMet = !isBlockedByCondition && !isBlockedByMold &&
+            requirementsMet = !isBlockedByCondition && !isBlockedByMoldRisk &&
                              hydrationOk && ledOk && durationOk && optimalDaysOk && fertilizerOk && pointsOk;
             
             // DEBUG: Log requisiti avanzamento (per capire perché non avanza)
             int optimalDaysRequired = (currentStage == PlantStage.Seed) ? 1 : currentStageReq.durationDays;
             bool blocksAdvancement = ConditionGrowthModifier.BlocksAdvancement(currentCondition);
-            // isBlockedByMold è già definita sopra alla riga 829
+            // isBlockedByMoldRisk è già definita sopra alla riga 817
             
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT] {pot.PotId} Day={dayIndex} Stage={currentStage}: Hydration={hydrationOk} ({hydrationPercent}%), LED={ledOk} ({pot.LedSystemState}), Duration={durationOk} ({pot.DaysInCurrentStage}/{effectiveRequiredDays}), OptimalDays={optimalDaysOk} ({pot.DaysConsecutiveOptimal}/{optimalDaysRequired}), Fertilizer={fertilizerOk} ({pot.FertilizerLevel}%, range={currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}), Points={pointsOk} ({totalPoints}/{requiredPoints}), Condition={currentCondition} (blocks={blocksAdvancement}), MoldBlock={isBlockedByMold}, RequirementsMet={requirementsMet}");
+            SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_ADVANCEMENT] {pot.PotId} Day={dayIndex} Stage={currentStage}: Hydration={hydrationOk} ({hydrationPercent}%), LED={ledOk} ({pot.LedSystemState}), Duration={durationOk} ({pot.DaysInCurrentStage}/{effectiveRequiredDays}), OptimalDays={optimalDaysOk} ({pot.DaysConsecutiveOptimal}/{optimalDaysRequired}), Fertilizer={fertilizerOk} ({pot.FertilizerLevel}%, range={currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}), Points={pointsOk} ({totalPoints}/{requiredPoints}), Condition={currentCondition} (blocks={blocksAdvancement}), MoldBlock={isBlockedByMoldRisk} (Level={pot.MoldRiskLevel}, Family={plantData?.Family ?? PlantFamily.Standard}), RequirementsMet={requirementsMet}");
             
             // DEBUG: Log quando l'avanzamento è bloccato
             if (!requirementsMet)
             {
-                SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_ADVANCEMENT_FAILED] {pot.PotId} Day={dayIndex} Stage={currentStage}: AVANZAMENTO BLOCCATO - Hydration={hydrationOk}, LED={ledOk}, Duration={durationOk}, OptimalDays={optimalDaysOk}, Fertilizer={fertilizerOk}, Points={pointsOk}, BlockedByCondition={isBlockedByCondition}, BlockedByMold={isBlockedByMold}");
+                SporiumLogger.LogWarning(LogCategory.Pot, $"[DEBUG_ADVANCEMENT_FAILED] {pot.PotId} Day={dayIndex} Stage={currentStage}: AVANZAMENTO BLOCCATO - Hydration={hydrationOk}, LED={ledOk}, Duration={durationOk}, OptimalDays={optimalDaysOk}, Fertilizer={fertilizerOk}, Points={pointsOk}, BlockedByCondition={isBlockedByCondition}, BlockedByMoldRisk={isBlockedByMoldRisk} (Level={pot.MoldRiskLevel}, Family={plantData?.Family ?? PlantFamily.Standard})");
             }
             
             // Log critico: Verifica requisiti avanzamento stadio

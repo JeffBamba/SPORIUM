@@ -34,6 +34,15 @@ todos:
 
 Implementare meccaniche che rendono il Mold Risk strategico per EVIL e penalizzante per PURE, creando differenziazione tra famiglie e strategie di gioco alternative.
 
+**NOTA IMPORTANTE - Integrazione Condensazione:**
+Il sistema di condensazione (implementato in `sistema_condensazione_completo_notion_935809cc.plan.md`) interagisce con Mold Risk:
+- **Giorni Virtuali**: Condensazione >50% aggiunge giorni virtuali a `DaysOverwateringConsecutive`, accelerando l'accumulo di Mold Risk
+  - 50-59%: +0.5 giorni/giorno
+  - 60-79%: +1.0 giorni/giorno
+  - 80-100%: +1.5 giorni/giorno
+- **Accelerazione Infestazione**: Condensazione 100% riduce giorni richiesti per infestazione (2→1→0 giorni)
+- Questo significa che **EVIL beneficia indirettamente dalla condensazione alta** (accelera Mold Risk che dà bonus), mentre **PURE soffre doppiamente** (condensazione accelera Mold Risk che dà penalità)
+
 ## Meccaniche da Implementare
 
 ### 1. Modificatori Crescita basati su Mold Risk + Famiglia + pH
@@ -51,6 +60,11 @@ Aggiungere metodo `GetMoldGrowthModifier()` che calcola modificatore crescita co
 - Mold Risk Level 3: -30% crescita
 - Penalità extra se anche in pH Acido: -10% aggiuntivo
 - **Standard**: nessun modificatore (sistema attuale)
+
+**NOTA Condensazione:**
+La condensazione accelera l'accumulo di Mold Risk attraverso giorni virtuali, quindi:
+- **EVIL**: Condensazione alta → Mold Risk si accumula più velocemente → Bonus crescita attivi prima
+- **PURE**: Condensazione alta → Mold Risk si accumula più velocemente → Penalità crescita attive prima
 
 Modificare `GetGrowthMultiplier()` per includere anche il modificatore muffe.
 
@@ -108,6 +122,11 @@ Modificare `ApplyInfestation()` per considerare famiglia:
 - **PURE infestata**: riduzione livello maggiore: -5 invece di -3
 - **Standard**: sistema attuale (-3)
 
+**NOTA Condensazione:**
+La condensazione al 100% accelera l'infestazione (riduce giorni richiesti da 2 a 1, o immediata se già a livello 3 da 1 giorno). Questo significa:
+- **EVIL**: Infestazione più veloce → Bonus resa +50% attivi prima (strategia high risk, high reward)
+- **PURE**: Infestazione più veloce → Penalità resa -50% e riduzione livello -5 attive prima (doppia penalità)
+
 ### 6. Integrazione Modificatori in DayCycleController
 
 **File**: `Assets/_Project/Scripts/Dome/SPOR-BLK-01-03A-DayCycleController.cs`
@@ -144,6 +163,7 @@ Aggiungere tooltip/indicatori che mostrano:
 
 - "EVIL: Mold Risk aumenta resa e mutazioni"
 - "PURE: Mold Risk riduce crescita e resa"
+- **OPZIONALE**: "Condensazione alta accelera Mold Risk" (per EVIL/PURE quando condensazione >50%)
 
 ## Struttura Implementazione
 
@@ -177,3 +197,29 @@ Aggiungere tooltip/indicatori che mostrano:
 - EVIL non bloccata da Mold Risk crea strategia "high risk, high reward"
 - PURE più sensibile crea necessità di gestione attenta
 - Bonus/penalità extra per pH non ottimale crea sinergia doppia
+
+## Integrazione con Sistema Condensazione
+
+**Sistema Condensazione già implementato** (`sistema_condensazione_completo_notion_935809cc.plan.md`):
+
+1. **Giorni Virtuali da Condensazione:**
+   - Condensazione >50% aggiunge giorni virtuali a `DaysOverwateringConsecutive`
+   - Questo accelera l'accumulo di Mold Risk (più giorni = più veloce raggiungimento livelli 1-3)
+   - **Impatto su EVIL**: Condensazione alta → Mold Risk si accumula più velocemente → Bonus crescita/resa attivi prima
+   - **Impatto su PURE**: Condensazione alta → Mold Risk si accumula più velocemente → Penalità crescita/resa attive prima
+
+2. **Accelerazione Infestazione:**
+   - Condensazione 100% riduce giorni richiesti per infestazione (2→1→0 giorni)
+   - **Impatto su EVIL**: Infestazione più veloce → Bonus resa +50% attivi prima (strategia high risk, high reward)
+   - **Impatto su PURE**: Infestazione più veloce → Penalità resa -50% e riduzione livello -5 attive prima (doppia penalità)
+
+3. **Strategia di Gioco:**
+   - **EVIL + Condensazione Alta**: Strategia "high risk, high reward" - lasciare condensazione alta accelera Mold Risk e infestazione, attivando bonus crescita/resa prima
+   - **PURE + Condensazione Alta**: Strategia "high risk, high penalty" - condensazione alta è pericolosa, accelera penalità e infestazione
+   - **Standard**: Condensazione alta accelera Mold Risk ma senza bonus/penalità extra (solo blocco crescita a livello ≥2)
+
+**Considerazioni per Implementazione:**
+- I modificatori Mold Risk + Famiglia + pH sono già sufficienti per creare differenziazione
+- La condensazione agisce come "acceleratore" del sistema Mold Risk esistente
+- Non è necessario aggiungere modificatori diretti basati su condensazione (la sinergia è indiretta attraverso accelerazione Mold Risk)
+- **OPZIONALE**: Potrebbe essere interessante aggiungere tooltip che mostrano "Condensazione alta accelera Mold Risk" per EVIL/PURE
