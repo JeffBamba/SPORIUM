@@ -35,7 +35,7 @@ namespace _Project
         
         public CondensationSystem()
         {
-            _config = Resources.Load<CondensationConfig>("Configs/CondensationConfig");
+            _config = Resources.Load<CondensationConfig>("Configs/Condensation Config");
             if (_config == null)
             {
                 SporiumLogger.LogError(LogCategory.Core, "CondensationConfig non trovato! Usando valori default.");

@@ -162,7 +162,7 @@ namespace _Project.Sporae.Core
             LoadAsset<PlantGrowthConfig>("Configs/PlantGrowthConfig");
             LoadAsset<PlantGrowthConfig>("Configs/PlantGrowthConfig_Default");
             LoadAsset<PotSystemConfig>("Configs/PotSystemConfig");
-            LoadAsset<CondensationConfig>("Configs/CondensationConfig");
+            LoadAsset<CondensationConfig>("Configs/Condensation Config");
         }
     }
 }

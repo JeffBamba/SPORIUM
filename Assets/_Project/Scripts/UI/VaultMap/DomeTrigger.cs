@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace _Project
@@ -10,6 +10,8 @@ namespace _Project
 
         private void Update()
         {
+            if (_collectWaterButton == null || _playerTransform == null)
+                return;
             _collectWaterButton.interactable =
                 _playerTransform.position is { x: < 3, y: 0 };
         }
