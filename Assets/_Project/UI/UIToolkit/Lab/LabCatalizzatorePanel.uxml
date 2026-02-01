@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="LabCatalizzatorePanel.uss" />
+    <ui:VisualElement name="lab-cat-overlay" class="lab-cat-overlay">
+        <ui:VisualElement name="lab-cat-panel" class="lab-cat-panel">
+            <ui:VisualElement name="lab-cat-header" class="lab-cat-header">
+                <ui:Label name="lab-cat-title" text="CATALIZZATORE" class="lab-cat-title" />
+                <ui:Button name="btn-close" class="lab-cat-close">
+                    <ui:Label text="×" class="lab-cat-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="lab-cat-body" class="lab-cat-body">
+                <ui:Label name="lab-cat-status" text="—" class="lab-cat-status" />
+                <ui:Label name="lab-cat-operation-label" text="Operazione in corso" class="lab-cat-operation-label" />
+                <ui:VisualElement name="lab-cat-input-row" class="lab-cat-row">
+                    <ui:Label text="Input (spora Raw)" class="lab-cat-label" />
+                    <ui:VisualElement name="lab-cat-input-slot" class="lab-cat-slot">
+                        <ui:Label name="lab-cat-input-text" text="—" class="lab-cat-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-select-input" text="Seleziona" class="lab-cat-btn" />
+                </ui:VisualElement>
+                <ui:Button name="btn-avvia" text="AVVIA MATURAZIONE" class="lab-cat-btn-avvia" />
+                <ui:VisualElement name="lab-cat-output-row" class="lab-cat-row">
+                    <ui:Label text="Output (spora maturata)" class="lab-cat-label" />
+                    <ui:VisualElement name="lab-cat-output-slot" class="lab-cat-slot">
+                        <ui:Label name="lab-cat-output-text" text="—" class="lab-cat-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-ritira" text="Ritira" class="lab-cat-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

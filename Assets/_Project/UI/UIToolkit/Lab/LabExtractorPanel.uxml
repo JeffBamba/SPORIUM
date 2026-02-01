@@ -1,0 +1,31 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="LabExtractorPanel.uss" />
+    <ui:VisualElement name="lab-ext-overlay" class="lab-ext-overlay">
+        <ui:VisualElement name="lab-ext-panel" class="lab-ext-panel">
+            <ui:VisualElement name="lab-ext-header" class="lab-ext-header">
+                <ui:Label name="lab-ext-title" text="EXTRACTOR" class="lab-ext-title" />
+                <ui:Button name="btn-close" class="lab-ext-close">
+                    <ui:Label text="×" class="lab-ext-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="lab-ext-body" class="lab-ext-body">
+                <ui:VisualElement name="lab-ext-input-row" class="lab-ext-row">
+                    <ui:Label text="Input (frutto)" class="lab-ext-label" />
+                    <ui:VisualElement name="lab-ext-input-slot" class="lab-ext-slot">
+                        <ui:Label name="lab-ext-input-text" text="—" class="lab-ext-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-select-input" text="Seleziona" class="lab-ext-btn" />
+                </ui:VisualElement>
+                <ui:Label name="lab-ext-progress-text" text="" class="lab-ext-progress" />
+                <ui:Button name="btn-avvia" text="AVVIA ESTRAZIONE" class="lab-ext-btn-avvia" />
+                <ui:VisualElement name="lab-ext-output-row" class="lab-ext-row">
+                    <ui:Label text="Output" class="lab-ext-label" />
+                    <ui:VisualElement name="lab-ext-output-slot" class="lab-ext-slot">
+                        <ui:Label name="lab-ext-output-text" text="—" class="lab-ext-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-ritira" text="Ritira" class="lab-ext-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

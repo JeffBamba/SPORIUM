@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using Sporae.UI.UIToolkit;
+using Sporae.UI.UIToolkit.PlayerInventory;
 using Sporae.DevTools;
 using System.Linq;
 using _Project;
@@ -29,7 +30,10 @@ namespace Sporae.UI.UIToolkit
         [SerializeField] private bool _enableDebugLogs = false;
         
         [Header("External References")]
-        [SerializeField] private HUDInventory _hudInventory; // Riferimento opzionale all'inventario (se non assegnato, verrà cercato automaticamente)
+        [Tooltip("Componente unico inventario (INV). Se assegnato, il tasto Inventario apre questo pannello.")]
+        [SerializeField] private PlayerInventoryPanelController _playerInventoryPanel;
+        [Tooltip("Fallback se PlayerInventoryPanel non assegnato (legacy).")]
+        [SerializeField] private HUDInventory _hudInventory;
         
         // UI Elements
         private VisualElement _root;
@@ -259,24 +263,25 @@ namespace Sporae.UI.UIToolkit
         
         private void OnInventoryClick()
         {
-            // Trova HUDInventory se non ancora assegnato
-            if (_hudInventory == null)
+            if (_playerInventoryPanel == null)
+                _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
+            if (_playerInventoryPanel != null)
             {
-                _hudInventory = FindObjectOfType<HUDInventory>();
+                _playerInventoryPanel.Toggle();
+                if (_enableDebugLogs)
+                    SporiumLogger.LogInfo(LogCategory.UI, "Inventory button clicked - PlayerInventoryPanel.Toggle() chiamato");
+                return;
             }
-            
+            if (_hudInventory == null)
+                _hudInventory = FindObjectOfType<HUDInventory>();
             if (_hudInventory != null)
             {
-                // Chiama Toggle() per aprire/chiudere l'inventario (come il pulsante esistente)
                 _hudInventory.Toggle();
-                
                 if (_enableDebugLogs)
-                    SporiumLogger.LogInfo(LogCategory.UI, "Inventory button clicked - HUDInventory.Toggle() chiamato");
+                    SporiumLogger.LogInfo(LogCategory.UI, "Inventory button clicked - HUDInventory.Toggle() (fallback)");
             }
             else
-            {
-                SporiumLogger.LogWarning(LogCategory.UI, "HUDInventory non trovato! Assicurati che ci sia un GameObject con componente HUDInventory nella scena.");
-            }
+                SporiumLogger.LogWarning(LogCategory.UI, "PlayerInventoryPanel e HUDInventory non trovati! Assegna PlayerInventoryPanel per l'inventario definitivo.");
         }
         
         private void OnReputationClick()

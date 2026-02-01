@@ -427,6 +427,19 @@ namespace Sporae.DevTools
             GUILayout.EndVertical();
         }
         
+        private static readonly string[] KnownItemTypeIds = new[]
+        {
+            Items.Fruits, Items.Water, Items.WholePlant, Items.OrganicScrap001, Items.SporeGeneric,
+            Items.Seed001, Items.Seed002, Items.Seed003,
+            Items.FertilizerStandard, Items.FertilizerPure, Items.FertilizerProhibited,
+            Items.SprayAntifungal, Items.AdditiveBasic, Items.AdditiveAcid,
+            Items.StemCellVegetable, Items.StemCellFungus, Items.StemCellAnimal,
+            Items.ProteinResidue, Items.ReagentX, Items.ReagentY
+        };
+
+        private int _addItemTypeIndex;
+        private string _addItemTypeIdCustom = "";
+
         private void DrawInventorySection(GUIStyle labelStyle, GUIStyle buttonStyle, GUIStyle headerStyle)
         {
             bool expanded = GetSectionExpanded("Inventory");
@@ -472,6 +485,25 @@ namespace Sporae.DevTools
                         GUILayout.EndHorizontal();
                     }
                 }
+
+                GUILayout.Space(8);
+                GUILayout.Label("Aggiungi item (typeId):", labelStyle);
+                GUILayout.BeginHorizontal();
+                _addItemTypeIndex = Mathf.Clamp(_addItemTypeIndex, 0, KnownItemTypeIds.Length - 1);
+                _addItemTypeIndex = Mathf.Clamp(GUILayout.SelectionGrid(_addItemTypeIndex, KnownItemTypeIds, 4, buttonStyle, GUILayout.MaxWidth(400)), 0, KnownItemTypeIds.Length - 1);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                _addItemTypeIdCustom = GUILayout.TextField(_addItemTypeIdCustom, 32, GUILayout.Width(180));
+                if (GUILayout.Button("Aggiungi 1", buttonStyle, GUILayout.Width(90)))
+                {
+                    string typeId = string.IsNullOrWhiteSpace(_addItemTypeIdCustom) ? KnownItemTypeIds[_addItemTypeIndex] : _addItemTypeIdCustom.Trim();
+                    if (!string.IsNullOrEmpty(typeId))
+                    {
+                        inventory.Add(typeId, 1);
+                        SporiumLogger.LogInfo(LogCategory.UI, $"Debug: aggiunto 1x {typeId}");
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
             
             GUILayout.EndVertical();

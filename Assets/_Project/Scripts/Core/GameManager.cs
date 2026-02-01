@@ -40,6 +40,12 @@ public class GameManager : MonoBehaviour
     public ActionSystem ActionSystem => _actionSystem;
     public CondensationSystem CondensationSystem => _condensationSystem;
     public Inventory PlayerInventory => _playerInventory;
+
+    /// <summary>Modulo Cellule Staminali (Extractor) sbloccato acquistandolo dal Black Market.</summary>
+    private bool _stemCellModuleUnlocked;
+    public bool IsStemCellModuleUnlocked => _stemCellModuleUnlocked;
+    public void UnlockStemCellModule() => _stemCellModuleUnlocked = true;
+    public void SetStemCellModuleUnlocked(bool value) => _stemCellModuleUnlocked = value;
     
     private void Awake()
     {
@@ -138,23 +144,10 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        // Inventario iniziale
-        _playerInventory.Add(Items.Seed001, 2);  // Standard
-        _playerInventory.Add(Items.Seed002, 2);  // Pure
-        _playerInventory.Add(Items.Seed003, 2);  // Evil
-        _playerInventory.Add(Items.SporeGeneric, 2);
-        _playerInventory.Add(Items.Water, 2);
-        _playerInventory.Add(Items.Fruits, 5);
-        
-        // BLK-03.01-T1: Fertilizzanti iniziali (2x ogni tipo)
-        _playerInventory.Add(Items.FertilizerStandard, 2);
-        _playerInventory.Add(Items.FertilizerPure, 2);
-        _playerInventory.Add(Items.FertilizerProhibited, 2);
-        
-        // Additivi pH iniziali (sostituiscono lo spray come consumabile principale)
-        // Nota: lo Spray legacy (STR-004) resta supportato per retrocompatibilità e potatura, ma non viene più seedato di default.
-        _playerInventory.Add(Items.AdditiveBasic, 2);
-        _playerInventory.Add(Items.AdditiveAcid, 1);
+        // Inventario iniziale: 10 unità di ogni item esistente in game
+        const int starterQuantity = 10;
+        foreach (string typeId in Items.AllTypeIds)
+            _playerInventory.Add(typeId, starterQuantity);
         
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR

@@ -1,0 +1,263 @@
+================================================================================
+             DEV REPORT #0050 - LABORATORIO (LAB) — IMPLEMENTAZIONE COMPLETA
+             SPORAE BUILD BETA
+             Data: 2026-02-01
+             Status: ✅ IMPLEMENTATO (Extractor verificato; altri macchinari da testare)
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-DEV-0050 — Laboratorio: tutti i macchinari, modulo Cellule Staminali, inventario, toast
+- **Tipo Report:** Feature / Documentazione implementazione Lab (GDD 42 + Dimenticanze)
+- **Periodo coperto:** 2026-02-01 (e sessioni precedenti di integrazione Lab)
+- **Data Generazione:** 2026-02-01
+- **Versione Report:** 1.0
+- **Status:** ✅ IMPLEMENTATO — Extractor testato; Catalizzatore, Fusione, Incubatore da verificare
+- **Piani di riferimento:** `.cursor/plans/lab_gdd42_dimenticanze_28a2a216.plan.md`, `food_room_player_hydration_inventory_consumption.plan.md`
+- **Guida operativa:** `Assets/_Project/Docs/GUIDA_LAB_MACCHINARIO_PER_MACCHINARIO.md`
+
+================================================================================
+
+🎯 EXECUTIVE SUMMARY
+====================
+Questo report descrive **cosa è stato implementato** per il **Laboratorio (Lab)** secondo il piano GDD 42 e le “dimenticanze” Lab: i **quattro macchinari** (Extractor, Catalizzatore, Fusione/Pipette, Incubatore), il **modulo Cellule Staminali** (acquistabile dal Black Market), l’**inventario iniziale** e il **pannello inventario unico** (PlayerInventoryPanel) usato da tutti i macchinari, le **toast** di progresso e successo per l’Extractor, e gli **item** (CELL-001/002/003, RES-PROT-001, Reagenti X/Y). Lo scopo è dare a chi legge un quadro chiaro di **come funziona ogni macchinario** e **dove è implementato** in codice/risorse.
+
+**Risultati chiave:**
+- ✅ **4 macchinari Lab** con pannelli UIToolkit e flusso input/output documentato
+- ✅ **PlayerInventoryPanel** integrato in tutti e 4 (pulsante “Seleziona” → picker)
+- ✅ **Inventario iniziale**: 10 unità di ogni item (Items.AllTypeIds) a inizio partita
+- ✅ **Modulo Cellule Staminali**: sbloccabile da LabUpgradesConfig o acquisto Black Market; save/load
+- ✅ **Extractor**: processo ~60 s, toast “Estrazione in Corso.. xx%” (giallo) e “Estrazione completata” (verde); spore con metadata (Raw/Stabile)
+- ✅ **Item e ItemConfig**: CELL-001, CELL-002, CELL-003, RES-PROT-001, REAG-X, REAG-Y; tool Editor per creare asset
+
+================================================================================
+
+📦 ITEM E INVENTARIO
+====================
+
+**Items.cs** (`Assets/_Project/Scripts/Core/ItemsSystem/Items.cs`)
+- Costanti usate dal Lab (e da Food Room / altri sistemi):
+  - **Fruits** (fruits-001), **WholePlant**, **OrganicScrap001** (org-scr-001), **SporeGeneric** (spore-generic)
+  - **StemCellVegetable** (CELL-001), **StemCellFungus** (CELL-002), **StemCellAnimal** (CELL-003)
+  - **ProteinResidue** (RES-PROT-001), **ReagentX** (REAG-X), **ReagentY** (REAG-Y)
+  - Semi (Seed001/002/003), fertilizzanti, spray/additivi pH, ecc.
+- **AllTypeIds**: array statico con tutti i typeId esistenti; usato per inventario iniziale e per popolare dropdown/lista in console debug.
+
+**Inventario iniziale (starter inventory)**
+- **GameManager.InitializeSystems()**: alla nuova partita, per ogni `typeId` in `Items.AllTypeIds` aggiunge **10 unità** all’inventario del giocatore (`_playerInventory.Add(typeId, 10)`).
+- Se viene caricato un save, l’inventario viene ripristinato da **SaveManager** (DeserializeInventory); l’inventario iniziale non viene riapplicato.
+
+**ItemConfig (Resources/Items/)**
+- Per ogni codice usato dal Lab devono esistere asset ItemConfig in `Resources/Items/` (es. CELL-001.asset, RES-PROT-001.asset, REAG-X.asset, REAG-Y.asset).
+- **Tools → Sporae → Create Lab ItemConfig Assets (CELL, RES-PROT, REAG)** crea gli asset mancanti (script Editor: `CreateLabItemConfigs.cs`).
+
+**Console debug inventario**
+- **GlobalStateInspector** (tasto F1): sezione Inventory con possibilità di **aggiungere item per typeId** anche quando non sono ancora in inventario (per testare reagenti, cellule, RES-PROT-001, ecc.).
+
+================================================================================
+
+🔬 1. EXTRACTOR (Step 1 — Estrazione)
+=====================================
+
+**Ruolo:** Primo step del pipeline Lab: da **frutto** si ottengono **spore** (e, con modulo Cellule Staminali, anche **CELL-002**). Con il modulo si possono usare anche **pianta/residui organici** → CELL-001, e **RES-PROT-001** → CELL-003.
+
+**Script:** `Assets/_Project/Scripts/Interactables/Extractor.cs`  
+**Pannello:** `LabExtractorPanelController` + `LabExtractorPanel.uxml` (sotto Canvas: **UI_LabExtractorPanel**)
+
+**Input accettati (dall’inventario del macchinario, riempito tramite “Seleziona” dal PlayerInventoryPanel):**
+| Input            | Output (senza modulo) | Output (con modulo Cellule Staminali) |
+|------------------|----------------------|--------------------------------------|
+| 1 Frutto         | 1 Spora + 1 CELL-002 | 1 Spora + 1 CELL-002 (stesso)        |
+| 1 Pianta intera  | —                    | 1 CELL-001                           |
+| 1 Organic Scrap  | —                    | 1 CELL-001                           |
+| 1 RES-PROT-001   | —                    | 1 CELL-003                           |
+
+**Nota:** Il frutto produce **sempre** 1 Spora + 1 CELL-002 (indipendentemente dal modulo). Il modulo abilita gli altri input (pianta, residui, RES-PROT-001).
+
+**Flusso:**
+1. Giocatore mette input nello slot (tramite “Seleziona” che apre PlayerInventoryPanel in modalità picker per item compatibili).
+2. **AVVIA ESTRAZIONE**: consuma 1 azione (GameManager.ActionSystem) e l’input; avvia una **coroutine** che dura **~60 secondi** (configurabile `_extractionDurationSeconds`).
+3. Durante l’estrazione: stato `InProgress`, `_extractionProgress` 0→1; label nel pannello e opzionale TMP sopra il macchinario mostrano “Estrazione in Corso.. xx%”.
+4. **Toast Foundation:** “Estrazione in Corso.. xx%” (giallo, Warning) aggiornato a ogni frame tramite **UpsertToast**; a fine processo **RemoveToast** + **PostToastImmediate** “Estrazione completata…” (verde, Success).
+5. A fine tempo: stato `Completed`; output (spore + eventuali cellule) in “pending”; il giocatore clicca **Ritira** per spostare l’output nell’inventario del giocatore.
+6. Le spore prodotte sono **Raw + Stabile** (metadata) e in inventario mostrano sottotitolo (es. “Raw, Stabile”) tramite `PlayerInventoryPanelController.GetSporeInfoText` e `Inventory.AddSporeRaw`.
+
+**Modulo Cellule Staminali:**
+- **HasStemCellModule** = `LabUpgradesConfig.HasStemCellModule` **oppure** `GameManager.IsStemCellModuleUnlocked`.
+- Se sbloccato (config o acquisto Black Market), gli input pianta / org-scr-001 / RES-PROT-001 sono abilitati e producono CELL-001 / CELL-003 come in tabella.
+
+**Riferimenti in scena:** ROOM_Dome → **Extractor** (componenti Extractor, Interactable). Canvas → **UI_LabExtractorPanel** (UIDocument + Lab Extractor Panel Controller). Il controller ha riferimento a Extractor e a PlayerInventoryPanel.
+
+================================================================================
+
+🔬 2. CATALIZZATORE (Step 2 — Maturazione)
+==========================================
+
+**Ruolo:** Secondo step: **spora Raw** → **spora maturata** (stesso typeId spore-generic, ma con metadata “maturata” per uso in Fusione).
+
+**Script:** `Assets/_Project/Scripts/Interactables/Catalizzatore.cs`  
+**Pannello:** `LabCatalizzatorePanelController` + `LabCatalizzatorePanel.uxml` (Canvas: **UI_LabCatalizzatorePanel**)
+
+**Input:** 1 spora Raw (spore-generic con stage Raw).  
+**Output:** 1 spora maturata (dopo 2 giorni di “maturazione”).
+
+**Flusso:**
+1. Giocatore inserisce 1 spora nello slot Input (“Seleziona” → PlayerInventoryPanel in picker per spore Raw).
+2. **AVVIA MATURAZIONE**: consuma 1 azione e 1 spora; inizia la “maturazione” (stato interno, es. giorno 1 → giorno 2).
+3. Il controller è iscritto a **DayCycleSystem.OnDayChanged**: ogni giorno avanza lo stato; dopo 2 giorni l’output è pronto.
+4. **Ritira**: sposta la spora maturata nell’inventario del giocatore; toast (es. INV-SPR).
+
+**Nota:** Il GameObject in scena può chiamarsi **Catallizatore** (doppia “l”). Il componente è **Catalizzatore**.
+
+================================================================================
+
+🔬 3. FUSIONE / PIPETTE (Step 3 — Fusione)
+=========================================
+
+**Ruolo:** Terzo step: **2 spore mature** → **1 Pre-Seed** (item usato dall’Incubatore).
+
+**Script:** `Assets/_Project/Scripts/Interactables/Pipette.cs`  
+**Pannello:** `LabFusionPanelController` + `LabFusionPanel.uxml` (Canvas: **UI_LabFusionPanel**)
+
+**Input:** 2 spore (mature).  
+**Output:** 1 Pre-Seed (es. spore-generic come “pre-seed” o item dedicato; il controller può usare SporeGeneric come codice output).
+
+**Flusso:**
+1. Giocatore seleziona spore tramite “Seleziona” (picker da PlayerInventoryPanel); devono essere 2.
+2. **CONFERMA FUSIONE**: consuma 2 spore e 1 azione; produce 1 Pre-Seed nello slot Output.
+3. **Ritira**: Pre-Seed nell’inventario; toast (es. LAB-GRF-OK).
+
+================================================================================
+
+🔬 4. INCUBATORE (Step 4 — Incubazione)
+======================================
+
+**Ruolo:** Quarto step: **1 Pre-Seed** + **reagente** (Nessuno / X / Y) → dopo **1 giorno** produce **1 seme** (es. seed-001).
+
+**Script:** `Assets/_Project/Scripts/Interactables/Incubator.cs`  
+**Pannello:** `LabIncubatorPanelController` + `LabIncubatorPanel.uxml` (Canvas: **UI_LabIncubatorPanel**)
+
+**Input:** 1 Pre-Seed (dall’inventario del giocatore; l’Incubatore non ha Storage interno, usa direttamente il conteggio in inventario). Reagente: **Nessuno**, **X** (REAG-X), **Y** (REAG-Y).
+
+**Output:** 1 seme (es. seed-001) dopo 1 giorno.
+
+**Flusso:**
+1. Giocatore conferma Pre-Seed (può usare “Seleziona” per vedere/confermare l’item in inventario).
+2. Scelta reagente: pulsanti Nessuno / X / Y.
+3. **AVVIA INCUBAZIONE**: consuma 1 Pre-Seed e 1 azione; lo stato “incubazione avviata” viene gestito dal controller; è iscritto a **OnDayChanged**.
+4. Dopo 1 giorno: output pronto; **Ritira** aggiunge il seme all’inventario; toast (es. LAB-INC-OK).
+
+**Nota:** In SceneHierarchy potrebbe non esserci un GameObject “Incubator”; va creato sotto ROOM_Dome con componente **Incubator** e **Interactable**.
+
+================================================================================
+
+🛒 MODULO CELLULE STAMINALI (Extractor)
+=======================================
+
+**Config:** `LabUpgradesConfig` (ScriptableObject in Resources). Campo **HasStemCellModule**: se true, l’Extractor considera il modulo attivo (per sviluppo/test senza acquisto).
+
+**Sblocco in game:** Acquisto dal **Black Market**.
+- **UIBlackMarketBuy.cs**: costante `LabUpgradeStemCellTypeId = "lab-upgrade-stem-cell"`.
+- Se il giocatore acquista l’item con questo TypeId, viene chiamato `GameManager.UnlockStemCellModule()`; l’item scompare dal catalogo mostrato.
+- L’asset ItemConfig **lab-upgrade-stem-cell** deve esistere in `Resources/Items/` (es. prezzo 500 CRY).
+
+**GameManager:** `_stemCellModuleUnlocked`, `IsStemCellModuleUnlocked`, `UnlockStemCellModule()`, `SetStemCellModuleUnlocked(bool)` per save/load.
+
+**SaveManager:** In **GameSaveData** è presente il campo `stemCellModuleUnlocked`; in **CollectSaveData** viene impostato da `GameManager.IsStemCellModuleUnlocked`; in **Load** viene ripristinato con `GameManager.SetStemCellModuleUnlocked(saveData.stemCellModuleUnlocked)`.
+
+**Extractor / LabExtractorPanelController:** La proprietà “HasStemCellModule” è true se `LabUpgradesConfig.HasStemCellModule` **oppure** `GameManager.IsStemCellModuleUnlocked`. Così il modulo può essere attivo sia da config (debug) sia da acquisto.
+
+================================================================================
+
+📢 TOAST E FOUNDATION NOTIFICATION (Extractor)
+==============================================
+
+**FoundationNotificationService** (Notifications Foundation):
+- **UpsertToast(dedupKey, code, payload, severityOverride)**: aggiorna o inserisce un toast con chiave dedup; usato per “Estrazione in Corso.. xx%” (aggiornamento ogni frame); non applica cooldown.
+- **RemoveToast(dedupKey)**: rimuove il toast con quella chiave; usato prima del toast di successo.
+- **PostToastImmediate(code, payload, severityOverride)**: mostra un toast subito senza coda (per “Estrazione completata” subito dopo la rimozione del progresso).
+
+**Spec toast (NotificationTypeSpecDefaults.cs):**
+- **LAB-EXT-START**: “Estrazione in Corso.. {percent}%” — severity **Warning** (giallo in NotificationsPanel.uss).
+- **LAB-EXT-DONE**: “Estrazione completata. Ritira l'output dall'Extractor.” — severity **Success** (verde).
+
+**Flusso in Extractor.RunExtraction:** All’avvio UpsertToast("extractor-progress", "LAB-EXT-START", percent "0"). Durante il loop UpsertToast con percentuale aggiornata. A fine RemoveToast("extractor-progress") + PostToastImmediate("LAB-EXT-DONE").
+
+================================================================================
+
+👤 PLAYER INVENTORY PANEL (pannello unico)
+==========================================
+
+**Componente:** `PlayerInventoryPanelController` + UXML/USS in `Assets/_Project/UI/UIToolkit/PlayerInventory/`.  
+**GameObject in scena:** **UI_PlayerInventoryPanel** (sotto Canvas), con UIDocument e controller.
+
+**Uso nei macchinari:** In ogni pannello Lab (Extractor, Catalizzatore, Fusione, Incubatore) è presente un pulsante **“Seleziona”** (o equivalente) che apre il **PlayerInventoryPanel** in **modalità picker** (`ShowAsPicker`), filtrando gli item selezionabili in base al macchinario:
+- Extractor: frutti, pianta, org-scr-001, RES-PROT-001 (e altri compatibili).
+- Catalizzatore: spore Raw.
+- Fusione: spore (mature).
+- Incubatore: Pre-Seed / spore per conferma.
+
+Alla selezione, l’item viene **consumato** dall’inventario del giocatore e **aggiunto** allo storage del macchinario (tranne l’Incubatore che può usare direttamente l’inventario per il Pre-Seed).
+
+**Inventario spore in lista:** Per le righe di tipo `SporeGeneric` il pannello mostra un sottotitolo con stato (es. “Raw, Stabile”, “Maturata, Instabile”) tramite `GetSporeInfoText(slot)` e metadata delle spore.
+
+================================================================================
+
+📁 FILE E RISORSE PRINCIPALI
+=============================
+
+| Area                 | File / Risorsa |
+|----------------------|----------------|
+| Item costanti        | `Assets/_Project/Scripts/Core/ItemsSystem/Items.cs` |
+| Inventario iniziale  | `Assets/_Project/Scripts/Core/GameManager.cs` (InitializeSystems, AllTypeIds) |
+| Save/Load inventario + StemCell | `Assets/_Project/Scripts/Core/SaveManager.cs` |
+| Extractor            | `Assets/_Project/Scripts/Interactables/Extractor.cs` |
+| Catalizzatore        | `Assets/_Project/Scripts/Interactables/Catalizzatore.cs` |
+| Pipette (Fusione)    | `Assets/_Project/Scripts/Interactables/Pipette.cs` |
+| Incubatore           | `Assets/_Project/Scripts/Interactables/Incubator.cs` |
+| Pannelli Lab         | `Assets/_Project/Scripts/UI/UIToolkit/Lab/LabExtractorPanelController.cs`, LabCatalizzatorePanelController, LabFusionPanelController, LabIncubatorPanelController |
+| Config upgrade Lab   | `Assets/_Project/Scripts/UI/UIToolkit/Lab/LabUpgradesConfig.cs` |
+| Black Market Stem    | `Assets/_Project/Scripts/UI/VaultMap/BlackMarket/UIBlackMarketBuy.cs` |
+| Toast / Foundation   | `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationService.cs`, NotificationTypeSpecDefaults.cs |
+| PlayerInventoryPanel | `Assets/_Project/Scripts/UI/UIToolkit/PlayerInventory/PlayerInventoryPanelController.cs` |
+| UXML Lab             | `Assets/_Project/UI/UIToolkit/Lab/LabExtractorPanel.uxml`, LabCatalizzatorePanel.uxml, LabFusionPanel.uxml, LabIncubatorPanel.uxml |
+| ItemConfig Lab       | `Assets/_Project/Resources/Items/` (CELL-001, CELL-002, CELL-003, RES-PROT-001, REAG-X, REAG-Y, lab-upgrade-stem-cell) |
+| Creazione ItemConfig | `Assets/_Project/Editor/CreateLabItemConfigs.cs` |
+| Guida setup/test     | `Assets/_Project/Docs/GUIDA_LAB_MACCHINARIO_PER_MACCHINARIO.md` |
+
+================================================================================
+
+✅ TESTING E VERIFICA
+=====================
+
+- **Extractor:** Verificato: toast progresso (giallo) 0%→100%, rimozione e toast successo (verde); Ritira spore + eventuali cellule; modulo Cellule Staminali (config o Black Market).
+- **Catalizzatore, Fusione, Incubatore:** Implementazione completa secondo guida; da testare nei prossimi giorni (setup Unity come in GUIDA_LAB_MACCHINARIO_PER_MACCHINARIO.md).
+
+**Checklist rapida (da GUIDA_LAB):**
+- Creare ItemConfig (Tools → Sporae → Create Lab ItemConfig Assets).
+- Creare LabUpgradesConfig in Resources.
+- Creare UI_PlayerInventoryPanel e assegnarlo ai pannelli Lab e al Player Status Panel.
+- Per ogni macchinario: creare UI_Lab*Panel sotto Canvas, UIDocument + controller, collegare macchinario → pannello e controller → macchinario + PlayerInventoryPanel.
+- Verificare che BTN_EndDay sia disponibile per testare Catalizzatore e Incubatore (avanzamento giorno).
+
+================================================================================
+
+📝 NOTE TECNICHE
+================
+
+- **Extractor:** La spora prodotta viene aggiunta con `Inventory.AddSporeRaw()` (metadata Raw + Stabile); `ItemFabric.CreateSporeWithFallbackMetadata` usato per coerenza.
+- **Versioning save / fallback spore:** Il piano “dimenticanze” prevede anche un campo di versione formato save (es. inventoryVersion) e fallback per spore senza metadata (Raw + STABLE). Se implementato, sarà in SaveManager (DeserializeInventory / GameSaveData).
+- **Reagenti:** REAG-X e REAG-Y sono placeholder acquistabili (mercato nero / fazioni); il modulo “Reagenti Sintetici” per Compost è citato in design ma non implementato in questo report.
+
+================================================================================
+
+✅ CONCLUSIONE
+===============
+
+L’implementazione del Laboratorio copre i **quattro macchinari** (Extractor, Catalizzatore, Fusione, Incubatore), l’**inventario iniziale** e il **pannello inventario unico**, il **modulo Cellule Staminali** (config + Black Market + save), e le **toast** di progresso/successo per l’Extractor. La **guida per macchinario** (GUIDA_LAB_MACCHINARIO_PER_MACCHINARIO.md) descrive setup Unity e test passo passo. L’Extractor è stato verificato; gli altri tre macchinari sono pronti per i test nei prossimi giorni.
+
+**Status finale:** ✅ IMPLEMENTATO — Documentazione completa; Extractor verificato; altri macchinari da testare.
+
+================================================================================
+END OF REPORT
+================================================================================

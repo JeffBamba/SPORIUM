@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="PlayerInventoryPanel.uss" />
+    <ui:VisualElement name="inv-overlay" class="inv-overlay">
+        <ui:VisualElement name="inv-panel" class="inv-panel">
+            <ui:VisualElement name="inv-header" class="inv-header">
+                <ui:VisualElement name="inv-header-left" class="inv-header-left">
+                    <ui:Label name="inv-title" text="INVENTARIO" class="inv-title" />
+                    <ui:Label name="inv-subtitle" text="Oggetti nel tuo inventario" class="inv-subtitle" />
+                </ui:VisualElement>
+                <ui:Button name="btn-close" class="inv-close-button">
+                    <ui:Label text="×" class="inv-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:ScrollView name="inv-list" class="inv-list" />
+            <ui:Button name="btn-cancel" class="inv-cancel">
+                <ui:Label text="ANNULLA" class="inv-cancel-text" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,129 @@
+/* Lab Extractor Panel — Foundation-style panel (UIToolkit) */
+
+.lab-ext-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.lab-ext-panel {
+    width: 420px;
+    background-color: rgba(10, 18, 22, 0.96);
+    border-width: 2px;
+    border-color: rgb(127, 255, 122);
+    padding: 18px;
+    flex-direction: column;
+    position: relative;
+}
+
+.lab-ext-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lab-ext-title {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgb(127, 255, 122);
+    text-shadow: 0 0 8px rgb(127, 255, 122);
+    -unity-font-style: bold;
+}
+
+.lab-ext-close {
+    width: 28px;
+    height: 24px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.lab-ext-close:hover {
+    background-color: rgba(93, 182, 227, 0.15);
+}
+
+.lab-ext-close-x {
+    -unity-text-align: middle-center;
+    font-size: 16px;
+    color: rgba(231, 244, 255, 0.9);
+}
+
+.lab-ext-body {
+    flex-direction: column;
+    gap: 14px;
+}
+
+.lab-ext-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.lab-ext-label {
+    width: 90px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(192, 200, 197, 0.8);
+}
+
+.lab-ext-slot {
+    flex-grow: 1;
+    height: 36px;
+    padding: 6px 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgb(18, 28, 33);
+    align-items: center;
+}
+
+.lab-ext-slot-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.lab-ext-btn {
+    min-width: 80px;
+    height: 32px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.6);
+    background-color: rgba(93, 182, 227, 0.15);
+    color: rgb(93, 182, 227);
+}
+
+.lab-ext-btn:hover {
+    background-color: rgba(93, 182, 227, 0.25);
+}
+
+.lab-ext-btn-avvia {
+    height: 44px;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    -unity-font-style: bold;
+    border-width: 2px;
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.12);
+    color: rgb(127, 255, 122);
+}
+
+.lab-ext-btn-avvia:hover {
+    background-color: rgba(127, 255, 122, 0.22);
+}
+
+.lab-ext-btn-avvia:disabled {
+    opacity: 0.4;
+}
+
+.lab-ext-progress {
+    font-size: 12px;
+    color: rgba(127, 255, 122, 0.9);
+    margin-bottom: 8px;
+    -unity-text-align: middle-center;
+}

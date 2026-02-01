@@ -1,4 +1,5 @@
-﻿using _Project.Sporae.Core;
+using _Project.Sporae.Core;
+using Sporae.UI.UIToolkit.Lab;
 using UnityEngine;
 
 namespace _Project
@@ -6,6 +7,8 @@ namespace _Project
     [RequireComponent(typeof(Interactable))]
     public class Pipette : Storage
     {
+        [Header("Lab UI — prefer Foundation UIToolkit")]
+        [SerializeField] private LabFusionPanelController _labFusionPanel;
         [SerializeField] private LabPipette _labMinigame;
         
         private readonly Inventory _inventory = new();
@@ -24,7 +27,10 @@ namespace _Project
         
         private void HandleInteract()
         {
-            _labMinigame.Show();
+            if (_labFusionPanel != null)
+                _labFusionPanel.Show();
+            else if (_labMinigame != null)
+                _labMinigame.Show();
         }
         
         public override Inventory GetInventory()

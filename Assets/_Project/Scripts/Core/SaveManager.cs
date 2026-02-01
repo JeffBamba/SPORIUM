@@ -244,9 +244,13 @@ namespace Sporae.Core
             {
                 saveData.missions = SerializeMissions(missionManager);
             }
+
+            if (gameManager != null)
+                saveData.stemCellModuleUnlocked = gameManager.IsStemCellModuleUnlocked;
             
             saveData.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             saveData.gameVersion = Application.version;
+            saveData.inventoryVersion = INVENTORY_VERSION_WITH_METADATA;
             
             return saveData;
         }
@@ -287,7 +291,8 @@ namespace Sporae.Core
             // Inventario
             if (gameManager != null && gameManager.PlayerInventory != null && saveData.inventory != null)
             {
-                DeserializeInventory(gameManager.PlayerInventory, saveData.inventory);
+                int invVersion = saveData.inventoryVersion;
+                DeserializeInventory(gameManager.PlayerInventory, saveData.inventory, invVersion);
             }
             
             // Vasi
@@ -295,6 +300,9 @@ namespace Sporae.Core
             {
                 ApplyPotStates(saveData.pots);
             }
+
+            if (gameManager != null && saveData.gameState != null)
+                gameManager.SetStemCellModuleUnlocked(saveData.stemCellModuleUnlocked);
             
             // Statistiche e missioni vengono ripristinate quando i sistemi vengono caricati
         }
@@ -340,7 +348,8 @@ namespace Sporae.Core
                         // GDD AZ-11: Nuovi campi per sistema irrigazione toggle
                         wateringSystemOn = potState.WateringSystemOn,
                         daysWateringSystemOn = potState.DaysWateringSystemOn,
-                        wateringRawWaterAccumulator = potState.WateringRawWaterAccumulator
+                        wateringRawWaterAccumulator = potState.WateringRawWaterAccumulator,
+                        plantGeneticType = (int)potState.PlantGeneticType
                     });
                 }
             }
@@ -411,7 +420,8 @@ namespace Sporae.Core
                         potState.WateringSystemOn = potStateData.wateringSystemOn;
                         potState.DaysWateringSystemOn = potStateData.daysWateringSystemOn;
                         potState.WateringRawWaterAccumulator = potStateData.wateringRawWaterAccumulator;
-                        
+                        if (potStateData.plantGeneticType >= 0 && potStateData.plantGeneticType <= 2)
+                            potState.PlantGeneticType = (_Project.Sporae.Core.GeneticType)potStateData.plantGeneticType;
                         break;
                     }
                 }
@@ -440,14 +450,34 @@ namespace Sporae.Core
         
         /// <summary>
         /// Deserializza l'inventario dal formato salvato.
+        /// Save vecchi (inventoryVersion &lt; 1): spore senza metadata vengono caricate come Raw + STABLE.
         /// </summary>
-        private void DeserializeInventory(Inventory inventory, InventoryData inventoryData)
+        private void DeserializeInventory(Inventory inventory, InventoryData inventoryData, int inventoryVersion)
         {
             inventory.Clear();
-            
+            if (inventoryData?.items == null) return;
+
+            bool useFallbackSpore = (inventoryVersion < INVENTORY_VERSION_WITH_METADATA);
+
             foreach (var itemData in inventoryData.items)
             {
-                inventory.Add(itemData.typeId, itemData.quantity);
+                if (string.IsNullOrEmpty(itemData.typeId) || itemData.quantity <= 0) continue;
+
+                if (useFallbackSpore && itemData.typeId == _Project.Sporae.Core.Items.SporeGeneric)
+                {
+                    for (int q = 0; q < itemData.quantity; q++)
+                    {
+                        var item = _Project.Sporae.Core.ItemFabric.CreateSporeWithFallbackMetadata();
+                        if (item != null)
+                            inventory.Add(item);
+                        else
+                            inventory.Add(itemData.typeId);
+                    }
+                }
+                else
+                {
+                    inventory.Add(itemData.typeId, itemData.quantity);
+                }
             }
         }
         
@@ -485,6 +515,9 @@ namespace Sporae.Core
         
         // Strutture dati per serializzazione
         
+        /// <summary>Versione formato inventario; &lt; 1 = save vecchi (fallback spore Raw+STABLE).</summary>
+        private const int INVENTORY_VERSION_WITH_METADATA = 1;
+
         [Serializable]
         private class GameSaveData
         {
@@ -493,8 +526,10 @@ namespace Sporae.Core
             public List<PotStateData> pots;
             public DiaryStatisticsData diaryStatistics;
             public MissionsData missions;
+            public bool stemCellModuleUnlocked;
             public string saveTimestamp;
             public string gameVersion;
+            public int inventoryVersion;
         }
         
         [Serializable]
@@ -550,6 +585,9 @@ namespace Sporae.Core
             public bool wateringSystemOn = false;  // Default per migration salvataggi vecchi
             public int daysWateringSystemOn = 0;
             public float wateringRawWaterAccumulator = 0f;
+
+            // GDD 42: tipo genetico pianta (0=Fixed, 1=Stable, 2=Unstable)
+            public int plantGeneticType = 1;
         }
         
         [Serializable]

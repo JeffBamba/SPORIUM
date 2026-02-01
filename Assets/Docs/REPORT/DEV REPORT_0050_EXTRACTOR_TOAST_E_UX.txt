@@ -1,0 +1,189 @@
+================================================================================
+             DEV REPORT #0050 - EXTRACTOR: TOAST PROGRESS + SUCCESS UX
+             SPORAE BUILD BETA
+             Data: 2026-02-01
+             Status: ✅ COMPLETATO (solo Extractor verificato)
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-DEV-0050 — Extractor: Toast "Estrazione in Corso" con percentuale e toast Successo
+- **Tipo Report:** Feature / UX (Lab Extractor + Notifications Foundation)
+- **Periodo coperto:** 2026-02-01
+- **Data Generazione:** 2026-02-01
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO (macchinario Extractor testato; altri lab da verificare nei prossimi giorni)
+- **Sviluppatore:** AI Assistant
+- **Report precedente:** `Assets/Docs/REPORT/DEV REPORT_0049.txt`
+
+================================================================================
+
+🎯 EXECUTIVE SUMMARY
+====================
+Questo report documenta le modifiche implementate per il **macchinario Extractor** (Lab): toast di progresso "Estrazione in Corso.. xx%" visibile per tutta la durata dell'estrazione con percentuale aggiornata in tempo reale, sostituito al termine dal toast di successo "Estrazione completata. Ritira l'output dall'Extractor.", e uso del colore giallo per il progresso e verde solo per il successo.
+
+**Risultati Chiave:**
+- ✅ Toast "Estrazione in Corso" visibile per tutta l'estrazione con percentuale 0% → 100%
+- ✅ Al termine: toast di progresso rimosso e sostituito dal toast di successo (emissione immediata)
+- ✅ Colore: progresso = giallo (Warning), successo = verde (Success)
+- ✅ Foundation Notification Service: aggiunti UpsertToast, RemoveToast, PostToastImmediate
+
+**Impatto Gameplay:**
+- Il giocatore vede chiaramente che l'estrazione è in corso e a che percentuale si trova
+- Al 100% il messaggio di progresso scompare e compare subito il messaggio di completamento
+- Distinzione visiva: giallo = in corso, verde = completato con successo
+
+**Nota:** In questa sessione sono state seguite istruzioni solo per l'Extractor; il macchinario è stato verificato funzionante. Gli altri macchinari lab (Catalizzatore, Fusione, Incubatore) saranno controllati nei prossimi giorni.
+
+================================================================================
+
+✅ FEATURE: TOAST PROGRESS CON PERCENTUALE (EXTRACTOR)
+======================================================
+
+**Obiettivo:**
+Mostrare un toast "Estrazione in Corso.. xx%" per tutta la durata dell'estrazione, con la percentuale che si aggiorna da 0% a 100%, e sostituirlo al termine con il toast di successo.
+
+**Implementazione:**
+
+**1. FoundationNotificationService — Nuovi metodi**
+
+- **File:** `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationService.cs`
+
+- **UpsertToast(dedupKey, code, payload, severityOverride)**  
+  Aggiorna o inserisce un toast con chiave dedup: se esiste già un toast con quel `dedupKey`, ne aggiorna messaggio e scadenza; altrimenti ne aggiunge uno nuovo. Non applica cooldown né rate limit. Usato per aggiornare il testo "Estrazione in Corso.. xx%" a ogni frame.
+
+- **RemoveToast(dedupKey)**  
+  Rimuove il toast con la chiave dedup indicata. Usato prima di mostrare il toast di successo, così il progresso non resta visibile insieme al completamento.
+
+- **PostToastImmediate(code, payload, severityOverride)**  
+  Mostra un toast subito senza passare dalla coda (nessun cooldown/rate limit). Usato per il toast "Estrazione completata" così appare nella stessa frame in cui viene rimosso il progresso (evitando che la coda ritardi l’emissione).
+
+**2. Template LAB-EXT-START con placeholder {percent}**
+
+- **File:** `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+- **Modifica:** Template da "Estrazione in Corso.. 0%" a "Estrazione in Corso.. {percent}%" (IT/EN).
+- Il payload passa `percent` (stringa) e NotificationLocalization.Format sostituisce {percent} nel messaggio.
+
+**3. Extractor — Flusso toast**
+
+- **File:** `Assets/_Project/Scripts/Interactables/Extractor.cs`
+
+- **Avvio estrazione (TryStartExtraction):**  
+  Dopo aver avviato la coroutine, chiamata  
+  `UpsertToast("extractor-progress", "LAB-EXT-START", new NotificationPayload().With("percent", "0"))`  
+  per mostrare subito "Estrazione in Corso.. 0%".
+
+- **Durante RunExtraction (coroutine):**  
+  A ogni frame: calcolo `pct = RoundToInt(_extractionProgress * 100f)` e  
+  `UpsertToast("extractor-progress", "LAB-EXT-START", new NotificationPayload().With("percent", pct.ToString()))`  
+  così il toast resta visibile e il testo si aggiorna (0% → 100%).
+
+- **Fine estrazione:**  
+  `RemoveToast("extractor-progress")`  
+  poi  
+  `PostToastImmediate("LAB-EXT-DONE")`  
+  così il toast di completamento appare subito al posto del progresso.
+
+**Costante:** `ExtractorProgressToastKey = "extractor-progress"` usata sia in Extractor sia come argomento per UpsertToast/RemoveToast.
+
+**Evidence:**
+- `FoundationNotificationService.cs`: UpsertToast (righe ~148-183), RemoveToast (~187-202), PostToastImmediate (~187-207)
+- `NotificationTypeSpecDefaults.cs`: Spec LAB-EXT-START con template "{percent}%"
+- `Extractor.cs`: TryStartExtraction (UpsertToast iniziale), RunExtraction (loop UpsertToast, poi RemoveToast + PostToastImmediate)
+
+================================================================================
+
+✅ FIX: TOAST SUCCESSO NON APPARIVA
+====================================
+
+**Problema:**
+Dopo il 100% il toast "Estrazione in Corso" scompariva correttamente, ma il toast "Estrazione completata" non appariva.
+
+**Causa:**
+Il toast di successo veniva inviato con `PostToast("LAB-EXT-DONE")`, quindi finiva in coda e veniva applicato solo al prossimo Tick del servizio. A seconda dell’ordine di esecuzione (Update / coroutine), poteva non essere processato in tempo e il toast non risultare visibile.
+
+**Soluzione:**
+- Aggiunto **PostToastImmediate** nel FoundationNotificationService: inserisce il toast direttamente in `_activeToasts` senza coda, cooldown o rate limit.
+- In Extractor, dopo `RemoveToast(ExtractorProgressToastKey)` viene chiamato **PostToastImmediate("LAB-EXT-DONE")** al posto di `PostToast("LAB-EXT-DONE")`.
+
+**Risultato:** Il toast di completamento appare nella stessa frame in cui viene rimosso quello di progresso.
+
+================================================================================
+
+✅ UX: COLORE TOAST — GIALLO PROGRESSO, VERDE SOLO SUCCESSO
+=============================================================
+
+**Obiettivo:**
+Toast di progresso "Estrazione in Corso" in giallo; verde riservato ai toast di successo.
+
+**Implementazione:**
+- **File:** `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs`
+- **Modifica:** LAB-EXT-START da `NotificationSeverity.Info` a **`NotificationSeverity.Warning`**.
+
+**Mapping nel pannello (NotificationsPanel.uss):**
+- `nf-sev-warning` → giallo (`--sp-color-yellow-standard`, sfondo ambra)
+- `nf-sev-success` → verde (`--sp-color-green-led`) — usato per LAB-EXT-DONE e altri successi
+
+**Risultato:** Il toast "Estrazione in Corso.. xx%" è giallo; "Estrazione completata. Ritira l'output dall'Extractor." resta verde.
+
+================================================================================
+
+📊 FILE MODIFICATI
+==================
+
+1. **Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationService.cs**
+   - Aggiunto UpsertToast(dedupKey, code, payload, severityOverride)
+   - Aggiunto RemoveToast(dedupKey)
+   - Aggiunto PostToastImmediate(code, payload, severityOverride)
+
+2. **Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationTypeSpecDefaults.cs**
+   - LAB-EXT-START: template "Estrazione in Corso.. {percent}%" (IT/EN)
+   - LAB-EXT-START: DefaultSeverity da Info a Warning (giallo)
+
+3. **Assets/_Project/Scripts/Interactables/Extractor.cs**
+   - TryStartExtraction: UpsertToast("extractor-progress", "LAB-EXT-START", payload percent "0")
+   - Costante ExtractorProgressToastKey = "extractor-progress"
+   - RunExtraction: in loop UpsertToast con percentuale aggiornata; a fine RemoveToast + PostToastImmediate("LAB-EXT-DONE")
+
+================================================================================
+
+✅ TESTING E VALIDAZIONE (EXTRACTOR)
+=====================================
+
+**Verificato dall’utente:**
+- ✅ Toast "Estrazione in Corso" visibile per tutta l’estrazione con percentuale che sale (0% → 100%)
+- ✅ Al 100% il toast di progresso scompare
+- ✅ Dopo fix: toast "Estrazione completata" appare correttamente al termine
+- ✅ Colore: progresso giallo, successo verde
+
+**Altri macchinari lab:** non testati in questa sessione; da verificare nei prossimi giorni (Catalizzatore, Fusione, Incubatore).
+
+================================================================================
+
+📝 NOTE TECNICHE
+================
+
+- **UpsertToast:** Ogni aggiornamento ricalcola anche la scadenza (now + ToastDurationSeconds), così il toast di progresso non scade durante l’estrazione anche se dura a lungo (es. 60 s).
+- **PostToastImmediate:** Bypassa la coda e cooldown/rate limit; da usare solo quando serve emissione immediata (es. sostituzione progresso → successo).
+- **DedupKey:** "extractor-progress" identifica univocamente il toast di progresso estrazione; RemoveToast lo rimuove prima di mostrare LAB-EXT-DONE.
+
+================================================================================
+
+🚀 PROSSIMI PASSI
+=================
+
+- Verifica negli altri macchinari lab (Catalizzatore, Fusione, Incubatore) secondo le rispettive istruzioni.
+- Nessuna modifica aggiuntiva prevista per l’Extractor in questo report.
+
+================================================================================
+
+✅ CONCLUSIONE
+===============
+
+Le modifiche per l’Extractor sono state implementate e verificate: toast di progresso con percentuale aggiornata (giallo), sostituito al termine dal toast di successo (verde) con emissione immediata. Il Foundation Notification Service dispone ora di UpsertToast, RemoveToast e PostToastImmediate per supportare questo flusso e casi simili.
+
+**Status Finale:** ✅ COMPLETATO (solo Extractor verificato; altri lab da controllare)
+
+================================================================================
+END OF REPORT
+================================================================================

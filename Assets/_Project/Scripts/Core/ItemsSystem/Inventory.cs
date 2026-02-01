@@ -18,6 +18,16 @@ namespace _Project.Sporae.Core
             for (var i = 0; i < amount; i++)
                 Add(typeId);
         }
+
+        /// <summary>Aggiunge spore con metadata Raw + Stabile (es. output Extractor).</summary>
+        public void AddSporeRaw(int count)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var item = ItemFabric.CreateSporeWithFallbackMetadata();
+                if (item != null) Add(item);
+            }
+        }
         
         public void Add(string typeId)
         {

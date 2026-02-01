@@ -49,12 +49,17 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("Set visual per specie (Adult/Flowering/FruitOverlay). Seed/Sprout/Empty/Morta sono gestiti da config shared.")]
         [SerializeField] private PlantVisualSet visualSet;
         
+        [Header("GDD 42 - Genetic type default")]
+        [Tooltip("Tipo genetico di default per questa pianta (usato a PlantSeed; metadata frutto a harvest)")]
+        [SerializeField] private GeneticType defaultGeneticType = GeneticType.Stable;
+
         [Header("Futuro (placeholder per feature avanzate)")]
         [Tooltip("Fazione preferita (per vendita/baratto)")]
         [SerializeField] private string preferredFaction = "";
         
         // Proprietà pubbliche
         public string PlantCode => plantCode;
+        public GeneticType DefaultGeneticType => defaultGeneticType;
         public ItemConfig SeedItemConfig => seedItemConfig;
         public PlantFamily Family => family;
         public PlantRarity Rarity => rarity;

@@ -1,0 +1,127 @@
+/* Lab Fusion Panel — Foundation-style (UIToolkit) */
+
+.lab-fus-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.lab-fus-panel {
+    width: 420px;
+    background-color: rgba(10, 18, 22, 0.96);
+    border-width: 2px;
+    border-color: rgb(181, 128, 209);
+    padding: 18px;
+    flex-direction: column;
+    position: relative;
+}
+
+.lab-fus-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lab-fus-title {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgb(181, 128, 209);
+    text-shadow: 0 0 8px rgb(181, 128, 209);
+    -unity-font-style: bold;
+}
+
+.lab-fus-close {
+    width: 28px;
+    height: 24px;
+    border-width: 1px;
+    border-color: rgba(181, 128, 209, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.lab-fus-close:hover {
+    background-color: rgba(181, 128, 209, 0.15);
+}
+
+.lab-fus-close-x {
+    -unity-text-align: middle-center;
+    font-size: 16px;
+    color: rgba(231, 244, 255, 0.9);
+}
+
+.lab-fus-body {
+    flex-direction: column;
+    gap: 14px;
+}
+
+.lab-fus-hint {
+    font-size: 11px;
+    color: rgba(192, 200, 197, 0.8);
+}
+
+.lab-fus-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.lab-fus-label {
+    width: 120px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(192, 200, 197, 0.8);
+}
+
+.lab-fus-slot {
+    flex-grow: 1;
+    height: 36px;
+    padding: 6px 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgb(18, 28, 33);
+    align-items: center;
+}
+
+.lab-fus-slot-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.lab-fus-btn {
+    min-width: 70px;
+    height: 32px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    border-width: 1px;
+    border-color: rgba(181, 128, 209, 0.6);
+    background-color: rgba(181, 128, 209, 0.15);
+    color: rgb(181, 128, 209);
+}
+
+.lab-fus-btn:hover {
+    background-color: rgba(181, 128, 209, 0.25);
+}
+
+.lab-fus-btn-fusion {
+    height: 44px;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    -unity-font-style: bold;
+    border-width: 2px;
+    border-color: rgb(181, 128, 209);
+    background-color: rgba(181, 128, 209, 0.12);
+    color: rgb(181, 128, 209);
+}
+
+.lab-fus-btn-fusion:hover {
+    background-color: rgba(181, 128, 209, 0.22);
+}
+
+.lab-fus-btn-fusion:disabled {
+    opacity: 0.4;
+}

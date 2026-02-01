@@ -1,11 +1,12 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace _Project
 {
     public class Interactable : MonoBehaviour
     {
-        [SerializeField] private float _interactDistance;
+        [Tooltip("Distanza massima per interagire (click o E). Se 0, non si può mai interagire.")]
+        [SerializeField] private float _interactDistance = 2f;
 
         [SerializeField] private Color _normalColor;
         [SerializeField] private Color _highlightColor;
@@ -18,8 +19,10 @@ namespace _Project
 
         private bool _interacted = false;
 
+        private float EffectiveInteractDistance => _interactDistance > 0f ? _interactDistance : 2f;
+        
         public bool PlayerInRange =>
-            Vector2.Distance(_playerTransform.position, transform.position) <= _interactDistance;
+            _playerTransform != null && Vector2.Distance(_playerTransform.position, transform.position) <= EffectiveInteractDistance;
         
         private void Awake()
         {
@@ -54,11 +57,17 @@ namespace _Project
             
             if (isOverUI)
             {
+#if UNITY_EDITOR
+                Debug.Log($"[Interactable] {gameObject.name}: click ignorato — puntatore sopra UI (avvicinati e premi E, oppure clicca senza sovrapporre HUD)");
+#endif
                 return;
             }
 
             if (!PlayerInRange)
             {
+#if UNITY_EDITOR
+                Debug.Log($"[Interactable] {gameObject.name}: click ignorato — giocatore fuori portata (distanza max: {EffectiveInteractDistance}). Avvicinati o premi E quando sei a distanza.");
+#endif
                 return;
             }
             

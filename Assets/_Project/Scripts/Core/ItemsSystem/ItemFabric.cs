@@ -47,5 +47,42 @@ namespace _Project.Sporae.Core
             item.Quality = quality;
             return item;
         }
+
+        /// <summary>
+        /// Crea un Item (es. frutto) con metadata da harvest (GDD 42 Fase 0).
+        /// </summary>
+        public static Item CreateItemWithMetadata(string typeId, float quality,
+            GeneticType? geneticType, string family, string sourcePlantCode)
+        {
+            var config = Resources.Load<ItemConfig>("Items/" + typeId);
+            if (!config)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config by id: {typeId}");
+                return null;
+            }
+            var item = new Item(config, _uniqueId++);
+            item.Quality = quality;
+            item.GeneticTypeValue = geneticType;
+            item.FamilyMetadata = family;
+            item.SourcePlantCodeMetadata = sourcePlantCode;
+            return item;
+        }
+
+        /// <summary>
+        /// Crea una spora con metadata fallback per save vecchi (Raw + STABLE).
+        /// </summary>
+        public static Item CreateSporeWithFallbackMetadata()
+        {
+            var config = Resources.Load<ItemConfig>("Items/" + Items.SporeGeneric);
+            if (!config)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config for {Items.SporeGeneric}");
+                return null;
+            }
+            var item = new Item(config, _uniqueId++);
+            item.GeneticTypeValue = GeneticType.Stable;
+            item.SporeStageValue = SporeStage.Raw;
+            return item;
+        }
     }
 }

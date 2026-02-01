@@ -141,6 +141,91 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         }
 
         /// <summary>
+        /// Aggiorna o inserisce un toast con chiave dedup: se esiste già un toast con questo dedupKey,
+        /// ne aggiorna messaggio e scadenza; altrimenti ne aggiunge uno nuovo. Non applica cooldown.
+        /// Utile per progressi (es. "Estrazione in Corso.. xx%").
+        /// </summary>
+        public void UpsertToast(string dedupKey, string code, NotificationPayload payload = null, NotificationSeverity? severityOverride = null)
+        {
+            if (!Enabled) return;
+            if (string.IsNullOrWhiteSpace(dedupKey)) return;
+
+            if (!NotificationTypeSpecResolver.TryGet(code, out var spec))
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, $"FoundationNotificationService: spec non trovato per code={code}");
+                return;
+            }
+
+            var effectiveSeverity = severityOverride ?? spec.DefaultSeverity;
+            var msg = BuildMessage(spec, payload);
+            var now = Time.realtimeSinceStartup;
+            var expires = now + ToastDurationSeconds;
+
+            for (int i = 0; i < _activeToasts.Count; i++)
+            {
+                if (_activeToasts[i].DedupKey != dedupKey) continue;
+
+                var existing = _activeToasts[i];
+                var updated = new NotificationEntry(existing.Id, code, dedupKey, spec, effectiveSeverity, msg, existing.CreatedAtUtc, expires);
+                _activeToasts[i] = updated;
+                _lastGameplayRealtime = now;
+                OnChanged?.Invoke();
+                return;
+            }
+
+            var id = _nextId++;
+            var createdAt = DateTime.UtcNow;
+            _activeToasts.Add(new NotificationEntry(id, code, dedupKey, spec, effectiveSeverity, msg, createdAt, expires));
+            _lastGameplayRealtime = now;
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Mostra un toast subito senza passare dalla coda (nessun cooldown/rate limit).
+        /// Utile dopo RemoveToast per mostrare il toast di completamento nella stessa frame.
+        /// </summary>
+        public void PostToastImmediate(string code, NotificationPayload payload = null, NotificationSeverity? severityOverride = null)
+        {
+            if (!Enabled) return;
+
+            if (!NotificationTypeSpecResolver.TryGet(code, out var spec))
+            {
+                SporiumLogger.LogWarning(LogCategory.UI, $"FoundationNotificationService: spec non trovato per code={code}");
+                return;
+            }
+
+            var effectiveSeverity = severityOverride ?? spec.DefaultSeverity;
+            var msg = BuildMessage(spec, payload);
+            var now = Time.realtimeSinceStartup;
+            var expires = now + ToastDurationSeconds;
+            var id = _nextId++;
+            var createdAt = DateTime.UtcNow;
+            var entry = new NotificationEntry(id, code, null, spec, effectiveSeverity, msg, createdAt, expires);
+            _activeToasts.Add(entry);
+            _lastGameplayRealtime = now;
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Rimuove il toast con la chiave dedup indicata (es. prima di mostrare il toast di successo).
+        /// </summary>
+        public void RemoveToast(string dedupKey)
+        {
+            if (!Enabled) return;
+            if (string.IsNullOrWhiteSpace(dedupKey)) return;
+
+            for (int i = _activeToasts.Count - 1; i >= 0; i--)
+            {
+                if (_activeToasts[i].DedupKey == dedupKey)
+                {
+                    _activeToasts.RemoveAt(i);
+                    OnChanged?.Invoke();
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
         /// Toast item layout (tipo ITEM-GET). Sempre temporaneo.
         /// </summary>
         public void PostItem(string code, NotificationPayload payload, NotificationSeverity? severityOverride = null, string dedupKey = null)

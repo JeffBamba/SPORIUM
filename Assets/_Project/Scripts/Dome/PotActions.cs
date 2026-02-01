@@ -1438,28 +1438,19 @@ public class PotActions : MonoBehaviour
             }
         }
         
-        // Aggiungi frutti all'inventario con qualità personalizzata
+        // GDD 42 Fase 0: metadata frutto (GeneticType, Family, SourcePlantCode) valorizzati da PotStateModel
+        string familyStr = plantData != null ? plantData.Family.ToString() : null;
+        GeneticType? geneticType = _potState != null ? (GeneticType?)_potState.PlantGeneticType : null;
+        string sourcePlantCode = _potState?.PlantCode;
+
+        // Aggiungi frutti all'inventario con qualità e metadata (GDD 42 Fase 0)
         for (int i = 0; i < fruitsToHarvest; i++)
         {
-            if (fruitConfig != null && levelConfig != null && _potState.PlantLevel >= 3)
-            {
-                // Crea item con qualità personalizzata
-                Item fruitItem = ItemFabric.CreateItemWithQuality(Items.Fruits, finalQuality);
-                if (fruitItem != null)
-                {
-                    _playerInventory.Add(fruitItem);
-                }
-                else
-                {
-                    // Fallback se CreateItemWithQuality fallisce
-                    _playerInventory.Add(Items.Fruits);
-                }
-            }
+            Item fruitItem = ItemFabric.CreateItemWithMetadata(Items.Fruits, finalQuality, geneticType, familyStr, sourcePlantCode);
+            if (fruitItem != null)
+                _playerInventory.Add(fruitItem);
             else
-            {
-                // Livelli 1-2: usa qualità base
                 _playerInventory.Add(Items.Fruits);
-            }
         }
         
         // Reset frutti nel vaso

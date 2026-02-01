@@ -1,0 +1,31 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="LabFusionPanel.uss" />
+    <ui:VisualElement name="lab-fus-overlay" class="lab-fus-overlay">
+        <ui:VisualElement name="lab-fus-panel" class="lab-fus-panel">
+            <ui:VisualElement name="lab-fus-header" class="lab-fus-header">
+                <ui:Label name="lab-fus-title" text="FUSIONE" class="lab-fus-title" />
+                <ui:Button name="btn-close" class="lab-fus-close">
+                    <ui:Label text="×" class="lab-fus-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="lab-fus-body" class="lab-fus-body">
+                <ui:Label text="Seleziona 2 spore mature" class="lab-fus-hint" />
+                <ui:VisualElement name="lab-fus-input-row" class="lab-fus-row">
+                    <ui:Label text="Spore (2 richieste)" class="lab-fus-label" />
+                    <ui:VisualElement name="lab-fus-slot" class="lab-fus-slot">
+                        <ui:Label name="lab-fus-input-text" text="—" class="lab-fus-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-select-input" text="Seleziona" class="lab-fus-btn" />
+                </ui:VisualElement>
+                <ui:Button name="btn-fusion" text="CONFERMA FUSIONE" class="lab-fus-btn-fusion" />
+                <ui:VisualElement name="lab-fus-output-row" class="lab-fus-row">
+                    <ui:Label text="Output (Pre-Seed)" class="lab-fus-label" />
+                    <ui:VisualElement name="lab-fus-output-slot" class="lab-fus-slot">
+                        <ui:Label name="lab-fus-output-text" text="—" class="lab-fus-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-ritira" text="Ritira" class="lab-fus-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

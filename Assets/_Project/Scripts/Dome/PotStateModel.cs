@@ -3,6 +3,7 @@ using Sporae.Dome.PotSystem.Growth;
 using UnityEngine;
 using System.IO;
 using Sporae.DevTools;
+using _Project.Sporae.Core;
 
 /// <summary>
 /// Modello dati per lo stato di un vaso.
@@ -111,6 +112,10 @@ public class PotStateModel
     
     [Tooltip("Cicli completati (per progressione livello)")]
     public int CompletedCycles = 0;
+
+    [Header("GDD 42 - Genetic / Harvest Metadata")]
+    [Tooltip("Tipo genetico della pianta (FIXED/STABLE/UNSTABLE); usato per metadata frutto a harvest")]
+    public GeneticType PlantGeneticType = GeneticType.Stable;
     
     [Header("Mold System (BLK-07.01)")]
     [Tooltip("Livello rischio muffe (0=None, 1=Mild, 2=Severe, 3=Critical)")]
@@ -323,6 +328,8 @@ public class PotStateModel
         DaysLedBlueConsecutive = 0;
         DaysLedRedConsecutive = 0;
         PlantCode = plantCode;
+        var pd = GetPlantData();
+        PlantGeneticType = pd != null ? pd.DefaultGeneticType : GeneticType.Stable;
         WateringSystemOn = false;  // Nuova pianta = sistema OFF
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;

@@ -1,4 +1,5 @@
-﻿using _Project.Sporae.Core;
+using _Project.Sporae.Core;
+using Sporae.UI.UIToolkit.Lab;
 using UnityEngine;
 
 namespace _Project
@@ -6,6 +7,8 @@ namespace _Project
     [RequireComponent(typeof(Interactable))]
     public class Catalizzatore : Storage
     {
+        [Header("Lab UI — prefer Foundation UIToolkit")]
+        [SerializeField] private LabCatalizzatorePanelController _labCatalizzatorePanel;
         [SerializeField] private LabCatalizzatore _labMiniGame;
         
         private readonly Inventory _inventory = new();
@@ -24,7 +27,10 @@ namespace _Project
         
         private void HandleInteract()
         {
-            _labMiniGame.Show();
+            if (_labCatalizzatorePanel != null)
+                _labCatalizzatorePanel.Show();
+            else if (_labMiniGame != null)
+                _labMiniGame.Show();
         }
         
         public override Inventory GetInventory()

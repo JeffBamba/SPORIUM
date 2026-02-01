@@ -103,6 +103,14 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "notif.lab_pip",
                     "Pipetta caricata con {sporeCode}",
                     "Pipette loaded with {sporeCode}"),
+                Spec("LAB-EXT-START", NotificationCategory.Lab, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 3f,
+                    "notif.lab_ext_start",
+                    "Estrazione in Corso.. {percent}%",
+                    "Spore extraction in progress.. {percent}%"),
+                Spec("LAB-EXT-DONE", NotificationCategory.Lab, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.lab_ext_done",
+                    "Estrazione completata. Ritira l'output dall'Extractor.",
+                    "Extraction complete. Collect output from Extractor."),
 
                 // ===== POT / PLANT ACTIONS =====
                 Spec("POT-PLANT-OK", NotificationCategory.Pot, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,

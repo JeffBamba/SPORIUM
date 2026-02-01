@@ -1,4 +1,4 @@
-﻿namespace _Project.Sporae.Core
+namespace _Project.Sporae.Core
 {
     public static class Items
     {
@@ -22,5 +22,24 @@
         // BLK-??: Additivi pH (sostituiscono Spray Antifungino come consumabile selezionabile)
         public const string AdditiveBasic = "STR-004-Basic";               // Additivo Basico (pH +5, riduce muffe)
         public const string AdditiveAcid = "STR-004-Acid";                 // Additivo Acido (pH -5, aumenta muffe)
+
+        // Lab GDD42 / Dimenticanze: Cellule staminali, residui proteici, reagenti
+        public const string StemCellVegetable = "CELL-001";   // Cellula staminale vegetale
+        public const string StemCellFungus = "CELL-002";      // Cellula staminale fungina
+        public const string StemCellAnimal = "CELL-003";      // Cellula staminale animale
+        public const string ProteinResidue = "RES-PROT-001";   // Residui proteici
+        public const string ReagentX = "REAG-X";               // Reagente X (Incubatore)
+        public const string ReagentY = "REAG-Y";              // Reagente Y (Incubatore)
+
+        /// <summary> Tutti i typeId degli item esistenti in game (per inventario iniziale / debug ). </summary>
+        public static readonly string[] AllTypeIds =
+        {
+            Fruits, Water, WholePlant, OrganicScrap001, SporeGeneric,
+            Seed001, Seed002, Seed003,
+            FertilizerStandard, FertilizerPure, FertilizerProhibited,
+            SprayAntifungal, AdditiveBasic, AdditiveAcid,
+            StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,
+            ReagentX, ReagentY
+        };
     }
 }

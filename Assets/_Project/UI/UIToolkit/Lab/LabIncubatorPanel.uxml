@@ -1,0 +1,38 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="LabIncubatorPanel.uss" />
+    <ui:VisualElement name="lab-inc-overlay" class="lab-inc-overlay">
+        <ui:VisualElement name="lab-inc-panel" class="lab-inc-panel">
+            <ui:VisualElement name="lab-inc-header" class="lab-inc-header">
+                <ui:Label name="lab-inc-title" text="INCUBATORE" class="lab-inc-title" />
+                <ui:Button name="btn-close" class="lab-inc-close">
+                    <ui:Label text="×" class="lab-inc-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="lab-inc-body" class="lab-inc-body">
+                <ui:VisualElement name="lab-inc-preseed-row" class="lab-inc-row">
+                    <ui:Label text="Pre-Seed" class="lab-inc-label" />
+                    <ui:VisualElement name="lab-inc-preseed-slot" class="lab-inc-slot">
+                        <ui:Label name="lab-inc-preseed-text" text="—" class="lab-inc-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-select-preseed" text="Seleziona" class="lab-inc-btn" />
+                </ui:VisualElement>
+                <ui:VisualElement name="lab-inc-reagent-row" class="lab-inc-row">
+                    <ui:Label text="Reagente" class="lab-inc-label" />
+                    <ui:VisualElement name="lab-inc-reagent-buttons" class="lab-inc-reagent-buttons">
+                        <ui:Button name="btn-reagent-none" text="Nessuno" class="lab-inc-reagent-btn" />
+                        <ui:Button name="btn-reagent-x" text="X" class="lab-inc-reagent-btn" />
+                        <ui:Button name="btn-reagent-y" text="Y" class="lab-inc-reagent-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="btn-avvia" text="AVVIA INCUBAZIONE" class="lab-inc-btn-avvia" />
+                <ui:VisualElement name="lab-inc-output-row" class="lab-inc-row">
+                    <ui:Label text="Output (seme)" class="lab-inc-label" />
+                    <ui:VisualElement name="lab-inc-output-slot" class="lab-inc-slot">
+                        <ui:Label name="lab-inc-output-text" text="—" class="lab-inc-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-ritira" text="Ritira" class="lab-inc-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
