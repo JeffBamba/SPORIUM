@@ -457,13 +457,12 @@ namespace Sporae.Core
             inventory.Clear();
             if (inventoryData?.items == null) return;
 
-            bool useFallbackSpore = (inventoryVersion < INVENTORY_VERSION_WITH_METADATA);
-
             foreach (var itemData in inventoryData.items)
             {
                 if (string.IsNullOrEmpty(itemData.typeId) || itemData.quantity <= 0) continue;
 
-                if (useFallbackSpore && itemData.typeId == _Project.Sporae.Core.Items.SporeGeneric)
+                // Spore hanno sempre uno status: caricate sempre con metadata (Raw + Stabile) se non salvato con stage/genetic
+                if (itemData.typeId == _Project.Sporae.Core.Items.SporeGeneric)
                 {
                     for (int q = 0; q < itemData.quantity; q++)
                     {
@@ -471,13 +470,11 @@ namespace Sporae.Core
                         if (item != null)
                             inventory.Add(item);
                         else
-                            inventory.Add(itemData.typeId);
+                            inventory.AddSporeRaw(1);
                     }
+                    continue;
                 }
-                else
-                {
-                    inventory.Add(itemData.typeId, itemData.quantity);
-                }
+                inventory.Add(itemData.typeId, itemData.quantity);
             }
         }
         

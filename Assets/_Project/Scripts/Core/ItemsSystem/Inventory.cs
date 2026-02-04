@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Sporae.DevTools;
 
@@ -25,6 +26,16 @@ namespace _Project.Sporae.Core
             for (var i = 0; i < count; i++)
             {
                 var item = ItemFabric.CreateSporeWithFallbackMetadata();
+                if (item != null) Add(item);
+            }
+        }
+
+        /// <summary>Aggiunge spore con metadata Maturata + Stabile (es. output Catalizzatore).</summary>
+        public void AddSporeMatured(int count)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var item = ItemFabric.CreateSporeMatured();
                 if (item != null) Add(item);
             }
         }
@@ -74,6 +85,29 @@ namespace _Project.Sporae.Core
             
             OnInventoryChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>Rimuove fino a count spore con lo stadio indicato (es. Matured per Fusione). Restituisce quante sono state rimosse.</summary>
+        public int ConsumeSporeByStage(SporeStage stage, int count)
+        {
+            string sporeTypeId = _Project.Sporae.Core.Items.SporeGeneric;
+            if (!_slots.TryGetValue(sporeTypeId, out var slot) || count <= 0)
+                return 0;
+            var list = slot.Items.ToList();
+            int removed = 0;
+            for (int i = list.Count - 1; i >= 0 && removed < count; i--)
+            {
+                if (list[i].SporeStageValue == stage)
+                {
+                    slot.RemoveItem(list[i]);
+                    removed++;
+                }
+            }
+            if (slot.IsEmpty)
+                _slots.Remove(sporeTypeId);
+            if (removed > 0)
+                OnInventoryChanged?.Invoke();
+            return removed;
         }
         
         public bool IsEmpty => _slots.Count == 0;

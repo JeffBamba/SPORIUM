@@ -111,6 +111,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "notif.lab_ext_done",
                     "Estrazione completata. Ritira l'output dall'Extractor.",
                     "Extraction complete. Collect output from Extractor."),
+                Spec("LAB-CAT-PROGRESS", NotificationCategory.Lab, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 3f,
+                    "notif.lab_cat_progress",
+                    "Maturazione in corso.. giorno {day}",
+                    "Spore maturation in progress.. day {day}"),
+                Spec("LAB-CAT-DONE", NotificationCategory.Lab, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.lab_cat_done",
+                    "Spora maturata pronta. Ritira dal Catalizzatore.",
+                    "Mature spore ready. Collect from Catalyser."),
+                Spec("LAB-CAT-RITIRA", NotificationCategory.Lab, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.lab_cat_ritira",
+                    "Raccolta Spore Maturata x{amount}",
+                    "Collected Mature Spore x{amount}"),
 
                 // ===== POT / PLANT ACTIONS =====
                 Spec("POT-PLANT-OK", NotificationCategory.Pot, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
@@ -143,7 +155,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "{plantName} {actionName} — {details}"),
 
                 // ===== POT AUTOMATION (Terminal V3) =====
-                Spec("POT-AUTO-INPROGRESS", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 1f,
+                Spec("POT-AUTO-INPROGRESS", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 1f,
                     "notif.pot_auto_inprogress",
                     "{message}",
                     "{message}"),
@@ -157,7 +169,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "{message}"),
 
                 // ===== COMPAT: codici già usati in-game oggi (migrazione graduale, non rompe nulla) =====
-                Spec("STAGE-UP-001", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 0f,
+                Spec("STAGE-UP-001", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 0f,
                     "notif.stage_up",
                     "Stage up: {potId} → {stage}",
                     "Stage up: {potId} → {stage}"),

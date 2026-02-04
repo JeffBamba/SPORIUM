@@ -25,6 +25,7 @@ namespace _Project
         private readonly Inventory _inventory = new();
         private Interactable _interactable;
         private LabUpgradesConfig _labUpgradesConfig;
+        private DayCycleSystem _dayCycleSystem;
 
         private ExtractorProcessState _state = ExtractorProcessState.Idle;
         private float _extractionProgress;
@@ -33,6 +34,10 @@ namespace _Project
         private int _pendingCell002;
         private int _pendingCell003;
         private Coroutine _extractionCoroutine;
+        private int _plannedSporeOut;
+        private int _plannedCell001Out;
+        private int _plannedCell002Out;
+        private int _plannedCell003Out;
 
         public ExtractorProcessState State => _state;
         public float ExtractionProgress => _extractionProgress;
@@ -52,14 +57,50 @@ namespace _Project
         {
             if (_labUpgradesConfig == null)
                 _labUpgradesConfig = Resources.Load<LabUpgradesConfig>("LabUpgradesConfig");
+            _dayCycleSystem = Sporae.Core.ServiceContainer.Instance?.Get<DayCycleSystem>();
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged += HandleDayChanged;
             UpdateWorldStatusLabel();
         }
 
         private void OnDestroy()
         {
             _interactable.OnInteract -= HandleInteract;
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged -= HandleDayChanged;
             if (_extractionCoroutine != null)
                 StopCoroutine(_extractionCoroutine);
+        }
+
+        private void HandleDayChanged(int day)
+        {
+            if (_state != ExtractorProcessState.InProgress) return;
+            if (_extractionCoroutine != null)
+            {
+                StopCoroutine(_extractionCoroutine);
+                _extractionCoroutine = null;
+            }
+            _pendingSporeCount = _plannedSporeOut;
+            _pendingCell001 = _plannedCell001Out;
+            _pendingCell002 = _plannedCell002Out;
+            _pendingCell003 = _plannedCell003Out;
+            _state = ExtractorProcessState.Completed;
+            _extractionProgress = 1f;
+            UpdateWorldStatusLabel();
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.RemoveToast(ExtractorProgressToastKey);
+                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
+            }
+        }
+
+        private void Update()
+        {
+            if (_state != ExtractorProcessState.Completed) return;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
         }
         
         private void HandleInteract()
@@ -96,28 +137,38 @@ namespace _Project
 
             var gm = Sporae.Core.ServiceContainer.Instance?.Get<GameManager>();
             if (gm == null) gm = FindObjectOfType<GameManager>();
-            if (gm == null || gm.ActionSystem == null || gm.ActionSystem.ActionsLeft < 1) return false;
+            if (gm == null || gm.ActionSystem == null || gm.ActionSystem.ActionsLeft < 1)
+            {
+                var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (foundation != null && foundation.Enabled)
+                    foundation.PostToastImmediate("ACT-050");
+                return false;
+            }
             if (!gm.TrySpendAction(1)) return false;
 
             bool hasStem = HasStemCellModule;
             if (_inventory.Has(Items.Fruits))
             {
                 _inventory.Consume(Items.Fruits, 1);
+                _plannedSporeOut = 1; _plannedCell001Out = 0; _plannedCell002Out = 1; _plannedCell003Out = 0;
                 _extractionCoroutine = StartCoroutine(RunExtraction(1, 0, 1, 0));
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
                 _inventory.Consume(Items.WholePlant, 1);
+                _plannedSporeOut = 0; _plannedCell001Out = 1; _plannedCell002Out = 0; _plannedCell003Out = 0;
                 _extractionCoroutine = StartCoroutine(RunExtraction(0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.OrganicScrap001))
             {
                 _inventory.Consume(Items.OrganicScrap001, 1);
+                _plannedSporeOut = 0; _plannedCell001Out = 1; _plannedCell002Out = 0; _plannedCell003Out = 0;
                 _extractionCoroutine = StartCoroutine(RunExtraction(0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.ProteinResidue))
             {
                 _inventory.Consume(Items.ProteinResidue, 1);
+                _plannedSporeOut = 0; _plannedCell001Out = 0; _plannedCell002Out = 0; _plannedCell003Out = 1;
                 _extractionCoroutine = StartCoroutine(RunExtraction(0, 0, 0, 1));
             }
             else
@@ -160,9 +211,11 @@ namespace _Project
             if (foundation != null && foundation.Enabled)
             {
                 foundation.RemoveToast(ExtractorProgressToastKey);
-                foundation.PostToastImmediate("LAB-EXT-DONE");
+                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
             }
         }
+
+        public const string ExtractorDoneToastKey = "extractor-done";
 
         public void CollectOutput(Inventory playerInventory)
         {
@@ -174,6 +227,9 @@ namespace _Project
             _state = ExtractorProcessState.Idle;
             _extractionProgress = 0f;
             UpdateWorldStatusLabel();
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+                foundation.RemoveToast(ExtractorDoneToastKey);
         }
 
         private void UpdateWorldStatusLabel()

@@ -219,6 +219,13 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             {
                 if (slot.Items.Count == 0) continue;
                 string typeId = slot.TypeId;
+
+                if (typeId == Items.SporeGeneric)
+                {
+                    AddSporeRowsByStage(slot, isPicker);
+                    continue;
+                }
+
                 int qty = slot.Quantity;
                 string displayName = GetItemDisplayName(typeId);
                 bool selectable = !isPicker || _pickerAllowedTypes.Contains(typeId);
@@ -267,6 +274,86 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 row.Add(right);
                 _list.Add(row);
             }
+        }
+
+        /// <summary>Per spore-generic: una riga per variante (Raw / Maturata) così si vede "Spora Maturata" distinta.</summary>
+        private void AddSporeRowsByStage(InventorySlot slot, bool isPicker)
+        {
+            var byStage = new Dictionary<(SporeStage?, GeneticType?), int>();
+            foreach (var item in slot.Items)
+            {
+                var key = (item.SporeStageValue, item.GeneticTypeValue);
+                if (!byStage.ContainsKey(key))
+                    byStage[key] = 0;
+                byStage[key]++;
+            }
+            foreach (var kv in byStage)
+            {
+                var key = kv.Key;
+                int qty = kv.Value;
+                string displayName = key.Item1 == SporeStage.Matured ? "Spora Maturata" : "Spora Raw";
+                string subText = GetSporeSubText(key.Item1, key.Item2);
+                bool selectable = !isPicker || _pickerAllowedTypes.Contains(Items.SporeGeneric);
+
+                var row = new VisualElement();
+                row.AddToClassList("inv-row");
+                if (!selectable && isPicker)
+                    row.AddToClassList("inv-row-disabled");
+
+                var left = new VisualElement();
+                left.style.flexDirection = FlexDirection.Column;
+                left.style.alignItems = Align.FlexStart;
+                var nameRow = new VisualElement();
+                nameRow.style.flexDirection = FlexDirection.Row;
+                nameRow.style.alignItems = Align.Center;
+                var nameLabel = new Label(displayName);
+                nameLabel.AddToClassList("inv-row-name");
+                var qtyLabel = new Label($"x{qty}");
+                qtyLabel.AddToClassList("inv-row-qty");
+                nameRow.Add(nameLabel);
+                nameRow.Add(qtyLabel);
+                left.Add(nameRow);
+                if (!string.IsNullOrEmpty(subText))
+                {
+                    var subLabel = new Label(subText);
+                    subLabel.AddToClassList("inv-row-sub");
+                    left.Add(subLabel);
+                }
+
+                var right = new VisualElement();
+                right.AddToClassList("inv-row-right");
+                if (isPicker && selectable)
+                {
+                    var selectBtn = new Button(() =>
+                    {
+                        _onSelected?.Invoke(Items.SporeGeneric);
+                        Hide();
+                    }) { text = "Seleziona" };
+                    selectBtn.AddToClassList("inv-select");
+                    right.Add(selectBtn);
+                }
+                row.Add(left);
+                row.Add(right);
+                _list.Add(row);
+            }
+        }
+
+        private static string GetSporeSubText(SporeStage? stage, GeneticType? genetic)
+        {
+            var parts = new List<string>();
+            if (stage.HasValue)
+                parts.Add(stage.Value == SporeStage.Raw ? "Raw" : "Maturata");
+            if (genetic.HasValue)
+            {
+                parts.Add(genetic.Value switch
+                {
+                    GeneticType.Fixed => "Fissa",
+                    GeneticType.Stable => "Stabile",
+                    GeneticType.Unstable => "Instabile",
+                    _ => genetic.Value.ToString()
+                });
+            }
+            return parts.Count > 0 ? string.Join(", ", parts) : "";
         }
 
         /// <summary>Nome leggibile per un typeId (semi da PlantData, altri da typeId o ItemConfig).</summary>

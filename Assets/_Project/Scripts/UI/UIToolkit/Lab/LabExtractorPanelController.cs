@@ -218,6 +218,9 @@ namespace Sporae.UI.UIToolkit.Lab
                 bool enableAvvia = !inProgress && canAvvia && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
                 _btnAvvia.SetEnabled(enableAvvia);
             }
+
+            if (_btnSelectInput != null)
+                _btnSelectInput.SetEnabled(!inProgress);
         }
 
         private void OnSelectInputClicked()

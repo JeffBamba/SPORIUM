@@ -554,28 +554,6 @@
               [Component] Image
   - HUD
     [Component] RectTransform
-    - Condensation 
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] HUDCondensation
-      - ProgressBar
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] ProgressBar
-        - Image
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] Image
-      - Button
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
     - Missions
       [Component] RectTransform
       [Component] UIMission
@@ -2377,6 +2355,14 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] PlantCardV3TerminalController
+  - UI_LabExtractorPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] LabExtractorPanelController
+  - UI_PlayerInventoryPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] PlayerInventoryPanelController
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2734,21 +2720,6 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
-  - Microscope
-    [Component] Transform
-    [Component] SpriteRenderer
-    [Component] BoxCollider2D
-    [Component] Interactable
-    [Component] Microscope
-    - Canvas
-      [Component] RectTransform
-      [Component] Canvas
-      [Component] CanvasScaler
-      [Component] GraphicRaycaster
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
   - Catallizatore
     [Component] Transform
     [Component] SpriteRenderer
@@ -2835,7 +2806,20 @@
     - Light Monitor
       [Component] Transform
       [Component] Light2D
+    - Light Monitor (2)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (3)
+      [Component] Transform
+      [Component] Light2D
+    - Light POT
+      [Component] Transform
+      [Component] Light2D
   - Light_dome_Main
+    [Component] Transform
+    [Component] Light2D
+    [Component] Light2DFlicker
+  - Light_dome_Main (1)
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
@@ -3055,6 +3039,10 @@
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
+  - Light_BedRoom_Main (1)
+    [Component] Transform
+    [Component] Light2D
+    [Component] Light2DFlicker
   - Light_BedRoom_side
     [Component] Transform
     [Component] Light2D
@@ -3124,13 +3112,19 @@
 - railing_left (1)
   [Component] Transform
   [Component] SpriteRenderer
+- railing_left (3)
+  [Component] Transform
+  [Component] SpriteRenderer
+- railing_left (4)
+  [Component] Transform
+  [Component] SpriteRenderer
+- railing_left (5)
+  [Component] Transform
+  [Component] SpriteRenderer
 - railing_left (2)
   [Component] Transform
   [Component] SpriteRenderer
 - railing_right
-  [Component] Transform
-  [Component] SpriteRenderer
-- railing_right (1)
   [Component] Transform
   [Component] SpriteRenderer
 - railing_right (2)
@@ -3142,3 +3136,6 @@
 - opsMenu
   [Component] Transform
   [Component] SpriteRenderer
+- CorridoioLights
+  [Component] Transform
+  [Component] Light2D

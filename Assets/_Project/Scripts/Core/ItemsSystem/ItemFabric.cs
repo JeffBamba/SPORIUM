@@ -8,15 +8,15 @@ namespace _Project.Sporae.Core
         private static int _uniqueId = 0;
         
         /// <summary>
-        /// Crea un Item dal typeId specificato.
+        /// Crea un Item dal typeId. Per SporeGeneric restituisce sempre una spora con status (Raw + Stabile):
+        /// la spora senza status non esiste come item.
         /// </summary>
-        /// <param name="typeId">ID dell'item da creare</param>
-        /// <returns>Item creato, o null se il config non esiste</returns>
-        /// <remarks>
-        /// BUG FIX: Documentato che può restituire null. I chiamanti devono controllare null.
-        /// </remarks>
+        /// <returns>Item creato, o null se il config non esiste (eccetto SporeGeneric che usa fallback).</returns>
         public static Item CreateItemByType(string typeId)
         {
+            if (typeId == Items.SporeGeneric)
+                return CreateSporeWithFallbackMetadata();
+
             var config = Resources.Load<ItemConfig>("Items/" + typeId);
             if (!config)
             {
@@ -82,6 +82,23 @@ namespace _Project.Sporae.Core
             var item = new Item(config, _uniqueId++);
             item.GeneticTypeValue = GeneticType.Stable;
             item.SporeStageValue = SporeStage.Raw;
+            return item;
+        }
+
+        /// <summary>
+        /// Crea una spora maturata (output Catalizzatore). Metadata: Matured + Stable.
+        /// </summary>
+        public static Item CreateSporeMatured()
+        {
+            var config = Resources.Load<ItemConfig>("Items/" + Items.SporeGeneric);
+            if (!config)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config for {Items.SporeGeneric}");
+                return null;
+            }
+            var item = new Item(config, _uniqueId++);
+            item.GeneticTypeValue = GeneticType.Stable;
+            item.SporeStageValue = SporeStage.Matured;
             return item;
         }
     }

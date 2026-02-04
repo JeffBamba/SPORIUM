@@ -38,7 +38,11 @@ namespace Sporae.UI.UIToolkit.Lab
         private DayCycleSystem _dayCycleSystem;
         private Inventory _storage;
         private int _outputMaturedCount;
-        private int _maturationState; // 0 Idle, 1 Day1, 2 Day2, 3 Ready
+        private int _maturationState; // 0 Idle, 1 Day1, 2 Day2 → Ready (ciclo 2 giorni)
+        private bool _uiBound;
+
+        private const string CatalyserProgressToastKey = "catalizzatore-progress";
+        private const string CatalyserDoneToastKey = "catalizzatore-done";
 
         private void Awake()
         {
@@ -48,11 +52,26 @@ namespace Sporae.UI.UIToolkit.Lab
                 _uiDocument.sortingOrder = 400;
 
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
-            if (_root == null)
+            if (_root != null)
+                TryBindUI();
+        }
+
+        /// <summary>Binding ritardato: UIDocument.rootVisualElement può essere null in Awake; viene eseguito in Show() al primo utilizzo. Se il GameObject è stato disattivato (Hide), l'albero viene ricreato e i riferimenti vanno aggiornati.</summary>
+        private void TryBindUI()
+        {
+            if (_uiDocument != null)
             {
-                Debug.LogError("LabCatalizzatorePanelController: rootVisualElement non trovato!");
-                return;
+                var currentRoot = _uiDocument.rootVisualElement;
+                if (currentRoot != null && currentRoot != _root)
+                {
+                    _root = currentRoot;
+                    _uiBound = false;
+                }
             }
+            if (_uiBound) return;
+            if (_root == null && _uiDocument != null)
+                _root = _uiDocument.rootVisualElement;
+            if (_root == null) return;
 
             _overlay = _root.Q<VisualElement>("lab-cat-overlay");
             _statusLabel = _root.Q<Label>("lab-cat-status");
@@ -65,14 +84,23 @@ namespace Sporae.UI.UIToolkit.Lab
             _btnAvvia = _root.Q<Button>("btn-avvia");
             _btnRitira = _root.Q<Button>("btn-ritira");
             _btnClose = _root.Q<Button>("btn-close");
-
             if (_playerInventoryPanel == null)
                 _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
-            if (_btnClose != null) _btnClose.clicked += Hide;
+
+            if (_btnClose != null)
+            {
+                foreach (var child in _btnClose.Children())
+                    child.pickingMode = PickingMode.Ignore;
+                _btnClose.clicked += OnCloseClicked;
+                _btnClose.RegisterCallback<ClickEvent>(evt => { OnCloseClicked(); evt.StopPropagation(); }, TrickleDown.TrickleDown);
+            }
             if (_btnAvvia != null) _btnAvvia.clicked += OnAvviaClicked;
             if (_btnRitira != null) _btnRitira.clicked += OnRitiraClicked;
             if (_btnSelectInput != null) _btnSelectInput.clicked += OnSelectInputClicked;
+            _uiBound = true;
         }
+
+        private void OnCloseClicked() => Hide();
 
         private void Start()
         {
@@ -95,8 +123,21 @@ namespace Sporae.UI.UIToolkit.Lab
                 _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
 
+        private void Update()
+        {
+            if (!gameObject.activeInHierarchy) return;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation == null || !foundation.Enabled) return;
+            if (_maturationState == 1 || _maturationState == 2)
+                foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", _maturationState.ToString()));
+            else if (_outputMaturedCount > 0)
+                foundation.UpsertToast(CatalyserDoneToastKey, "LAB-CAT-DONE");
+        }
+
         public void Show()
         {
+            gameObject.SetActive(true);
+            TryBindUI();
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.Flex;
@@ -104,7 +145,6 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (_root != null)
                 _root.pickingMode = PickingMode.Position;
-            gameObject.SetActive(true);
             RefreshDisplay();
         }
 
@@ -117,17 +157,29 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (_root != null)
                 _root.pickingMode = PickingMode.Ignore;
-            gameObject.SetActive(false);
+            // Tieni il GameObject attivo durante la maturazione o quando c'è output da ritirare (così Update rinnova i toast)
+            if (_maturationState == 0 && _outputMaturedCount == 0)
+                gameObject.SetActive(false);
         }
 
         private void HandleDayChanged(int day)
         {
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (_maturationState == 1)
+            {
                 _maturationState = 2;
+                if (foundation != null && foundation.Enabled)
+                    foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "2"));
+            }
             else if (_maturationState == 2)
             {
                 _maturationState = 0;
                 _outputMaturedCount += 1;
+                if (foundation != null && foundation.Enabled)
+                {
+                    foundation.RemoveToast(CatalyserProgressToastKey);
+                    foundation.UpsertToast(CatalyserDoneToastKey, "LAB-CAT-DONE");
+                }
             }
             RefreshDisplay();
         }
@@ -173,6 +225,9 @@ namespace Sporae.UI.UIToolkit.Lab
                     && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
                 _btnAvvia.SetEnabled(canAvvia);
             }
+
+            if (_btnSelectInput != null)
+                _btnSelectInput.SetEnabled(_maturationState == 0);
         }
 
         private void OnSelectInputClicked()
@@ -208,8 +263,13 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             if (_storage == null || !_storage.Has(Items.SporeGeneric))
                 return;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (_gameManager == null || _gameManager.ActionSystem == null || _gameManager.ActionSystem.ActionsLeft < _costAction)
+            {
+                if (foundation != null && foundation.Enabled)
+                    foundation.PostToastImmediate("ACT-050");
                 return;
+            }
             if (_maturationState != 0)
                 return;
 
@@ -218,6 +278,8 @@ namespace Sporae.UI.UIToolkit.Lab
 
             _storage.Consume(Items.SporeGeneric, 1);
             _maturationState = 1;
+            if (foundation != null && foundation.Enabled)
+                foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "1"));
             RefreshDisplay();
         }
 
@@ -226,13 +288,17 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_outputMaturedCount <= 0 || _gameManager?.PlayerInventory == null)
                 return;
 
-            _gameManager.PlayerInventory.Add(Items.SporeGeneric, _outputMaturedCount);
+            int amount = _outputMaturedCount;
+            _gameManager.PlayerInventory.AddSporeMatured(amount);
             _outputMaturedCount = 0;
             RefreshDisplay();
 
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToast("INV-SPR", new NotificationPayload().With("amount", "1"));
+            {
+                foundation.RemoveToast(CatalyserDoneToastKey);
+                foundation.PostToast("LAB-CAT-RITIRA", new NotificationPayload().With("amount", amount.ToString()));
+            }
         }
     }
 }

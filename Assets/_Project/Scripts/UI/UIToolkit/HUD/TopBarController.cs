@@ -1300,7 +1300,7 @@ namespace Sporae.UI.UIToolkit.HUD
             // FASE 8: Crea button Collect
             _condensationCollectButton = new Button();
             _condensationCollectButton.name = "condensation-collect-button";
-            _condensationCollectButton.text = "Collect";
+            _condensationCollectButton.text = "Raccogli";
             _condensationCollectButton.style.marginTop = 8f;
             _condensationCollectButton.style.width = Length.Percent(100f);
             _condensationCollectButton.style.height = 32f;
@@ -1462,58 +1462,58 @@ namespace Sporae.UI.UIToolkit.HUD
             var sb = new System.Text.StringBuilder();
             
             // Titolo
-            sb.AppendLine($"💧 <color=#5DB6E3><b>CONDENSATION</b></color>");
+            sb.AppendLine($"💧 <color=#5DB6E3><b>CONDENSAZIONE</b></color>");
             sb.AppendLine();
             
-            // Current Level
-            sb.AppendLine($"<b>CURRENT LEVEL</b> <color=#5DB6E3>{Mathf.RoundToInt(currentPercentage)}%</color>");
+            // Livello attuale
+            sb.AppendLine($"<b>LIVELLO ATTUALE</b> <color=#5DB6E3>{Mathf.RoundToInt(currentPercentage)}%</color>");
             sb.AppendLine();
             
             // Definizione
-            sb.AppendLine($"<color=#5DB6E3>Condensation</color> is raw water (WAT-RAW) collected from plant transpiration (0-100%).");
+            sb.AppendLine($"La <color=#5DB6E3>condensazione</color> è acqua grezza (WAT-RAW) raccolta dalla traspirazione delle piante (0-100%).");
             sb.AppendLine();
             
             // Effetto alto
             if (currentPercentage >= 50f)
             {
-                sb.AppendLine($"Above 50%, ambient humidity adds <color=#FF0000>virtual days</color> to the <color=#FF0000>Mold Risk</color> of all plants (up to +1.5d/day).");
+                sb.AppendLine($"Oltre il 50%, l'umidità ambientale aggiunge <color=#FF0000>giorni virtuali</color> al <color=#FF0000>Rischio Muffa</color> di tutte le piante (fino a +1,5g/giorno).");
                 if (virtualDays > 0f)
                 {
-                    sb.AppendLine($"<color=#FF0000>Currently adding +{virtualDays:F1} virtual days/day</color>");
+                    sb.AppendLine($"<color=#FF0000>Attualmente aggiunge +{virtualDays:F1} giorni virtuali/giorno</color>");
                 }
                 sb.AppendLine();
             }
             else
             {
-                sb.AppendLine($"Above 50%, ambient humidity adds <color=#FF0000>virtual days</color> to the <color=#FF0000>Mold Risk</color> of all plants (up to +1.5d/day).");
+                sb.AppendLine($"Oltre il 50%, l'umidità ambientale aggiunge <color=#FF0000>giorni virtuali</color> al <color=#FF0000>Rischio Muffa</color> di tutte le piante (fino a +1,5g/giorno).");
                 sb.AppendLine();
             }
             
             // Raccolta
-            sb.AppendLine($"Collecting resets the %, removes virtual days, and produces raw water: <color=#FFA500>the longer you wait, the higher the reward but the greater the mold risk</color>.");
+            sb.AppendLine($"Raccogliere azzera la %, rimuove i giorni virtuali e produce acqua grezza: <color=#FFA500>più aspetti, maggiore è la ricompensa ma anche il rischio muffa</color>.");
             sb.AppendLine();
             
-            // Reward stimato
-            sb.AppendLine($"<b>Estimated Reward:</b> {estimatedRewardMin}-{estimatedRewardMax} WAT-RAW");
+            // Ricompensa stimata
+            sb.AppendLine($"<b>Ricompensa stimata:</b> {estimatedRewardMin}-{estimatedRewardMax} WAT-RAW");
             sb.AppendLine();
             
             // Produzione
-            sb.AppendLine($"<b>Today's Production:</b> {dailyProduction:F1}%");
+            sb.AppendLine($"<b>Produzione di oggi:</b> {dailyProduction:F1}%");
             if (tomorrowProduction > 0f)
             {
-                sb.AppendLine($"<b>Tomorrow's Estimate:</b> ~{tomorrowProduction:F1}%");
+                sb.AppendLine($"<b>Stima di domani:</b> ~{tomorrowProduction:F1}%");
             }
             sb.AppendLine();
             
             // LED Bonus
             if (hasLed)
             {
-                sb.AppendLine($"✨ <color=#00FF00>LED boost active: +2 WAT-RAW</color>");
+                sb.AppendLine($"✨ <color=#00FF00>Bonus LED attivo: +2 WAT-RAW</color>");
                 sb.AppendLine();
             }
             
-            // TIP
-            sb.AppendLine($"💡 <color=#00FF00>TIP: Optimal range is 70-85%. Monitor daily to prevent issues.</color>");
+            // Suggerimento
+            sb.AppendLine($"💡 <color=#00FF00>SUGGERIMENTO: L'intervallo ottimale è 70-85%. Monitora ogni giorno per evitare problemi.</color>");
             
             _condensationTooltipText.text = sb.ToString();
             
