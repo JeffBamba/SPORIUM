@@ -30,10 +30,14 @@ namespace Sporae.UI.UIToolkit.Lab
         private Label _inputText;
         private Label _progressText;
         private Label _outputText;
+        private VisualElement _outputSlotRow;
         private Button _btnSelectInput;
         private Button _btnAvvia;
         private Button _btnRitira;
         private Button _btnClose;
+
+        private VisualElement _outputTooltip;
+        private Label _outputTooltipText;
 
         private GameManager _gameManager;
         private Inventory _storage;
@@ -75,6 +79,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 if (currentRoot != null && currentRoot != _root)
                 {
                     _root = currentRoot;
+                    _outputTooltip = null;
+                    _outputTooltipText = null;
                     _uiBound = false;
                 }
             }
@@ -87,12 +93,15 @@ namespace Sporae.UI.UIToolkit.Lab
             _inputText = _root.Q<Label>("lab-ext-input-text");
             _progressText = _root.Q<Label>("lab-ext-progress-text");
             _outputText = _root.Q<Label>("lab-ext-output-text");
+            _outputSlotRow = _root.Q<VisualElement>("lab-ext-output-row");
             _btnSelectInput = _root.Q<Button>("btn-select-input");
             _btnAvvia = _root.Q<Button>("btn-avvia");
             _btnRitira = _root.Q<Button>("btn-ritira");
             _btnClose = _root.Q<Button>("btn-close");
             if (_playerInventoryPanel == null)
                 _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
+
+            EnsureOutputTooltip();
 
             if (_btnClose != null)
             {
@@ -109,6 +118,76 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_btnRitira != null) _btnRitira.clicked += OnRitiraClicked;
             if (_btnSelectInput != null) _btnSelectInput.clicked += OnSelectInputClicked;
             _uiBound = true;
+        }
+
+        private void EnsureOutputTooltip()
+        {
+            if (_outputTooltip != null || _root == null) return;
+            _outputTooltip = new VisualElement();
+            _outputTooltip.name = "lab-ext-output-tooltip";
+            _outputTooltip.style.position = Position.Absolute;
+            _outputTooltip.style.display = DisplayStyle.None;
+            _outputTooltip.style.backgroundColor = new UnityEngine.Color(0.05f, 0.07f, 0.09f, 0.96f);
+            _outputTooltip.style.borderTopWidth = _outputTooltip.style.borderRightWidth = _outputTooltip.style.borderBottomWidth = _outputTooltip.style.borderLeftWidth = 2f;
+            _outputTooltip.style.borderTopColor = _outputTooltip.style.borderRightColor = _outputTooltip.style.borderBottomColor = _outputTooltip.style.borderLeftColor = new UnityEngine.Color(0.5f, 0.8f, 0.5f, 0.9f);
+            _outputTooltip.style.paddingTop = _outputTooltip.style.paddingRight = _outputTooltip.style.paddingBottom = _outputTooltip.style.paddingLeft = 10f;
+            _outputTooltip.style.minWidth = 280f;
+            _outputTooltip.style.maxWidth = 320f;
+            _outputTooltip.pickingMode = PickingMode.Ignore;
+            _outputTooltipText = new Label();
+            _outputTooltipText.enableRichText = true;
+            _outputTooltipText.style.whiteSpace = WhiteSpace.Normal;
+            _outputTooltipText.style.color = new UnityEngine.Color(0.95f, 0.96f, 0.98f, 1f);
+            _outputTooltipText.style.fontSize = 12f;
+            _outputTooltip.Add(_outputTooltipText);
+            _root.Add(_outputTooltip);
+
+            if (_outputSlotRow != null)
+            {
+                _outputSlotRow.RegisterCallback<MouseEnterEvent>(OnOutputSlotHoverEnter);
+                _outputSlotRow.RegisterCallback<MouseLeaveEvent>(OnOutputSlotHoverExit);
+                _outputSlotRow.RegisterCallback<MouseMoveEvent>(OnOutputSlotHoverMove);
+            }
+        }
+
+        private void OnOutputSlotHoverEnter(MouseEnterEvent evt)
+        {
+            if (_extractor == null || _extractor.CompletedCount() <= 0 || _outputTooltip == null || _outputTooltipText == null) return;
+            var snap = _extractor.GetFirstCompletedResultSnapshot();
+            string content = ExtractorTooltipTexts.BuildOutputTooltipFromSnapshot(snap);
+            _outputTooltipText.text = content;
+            _outputTooltip.style.display = DisplayStyle.Flex;
+            _outputTooltip.BringToFront();
+            PositionOutputTooltipAtMouse(evt.mousePosition);
+        }
+
+        private void OnOutputSlotHoverExit(MouseLeaveEvent evt)
+        {
+            if (_outputTooltip != null)
+                _outputTooltip.style.display = DisplayStyle.None;
+        }
+
+        private void OnOutputSlotHoverMove(MouseMoveEvent evt)
+        {
+            if (_outputTooltip == null || _outputTooltip.style.display != DisplayStyle.Flex) return;
+            PositionOutputTooltipAtMouse(evt.mousePosition);
+        }
+
+        /// <summary>Posiziona il tooltip output vicino al mouse (coordinate pannello = spazio locale _root).</summary>
+        private void PositionOutputTooltipAtMouse(UnityEngine.Vector2 mousePosPanel)
+        {
+            if (_outputTooltip == null || _root == null) return;
+            float x = mousePosPanel.x + 16f;
+            float y = mousePosPanel.y + 12f;
+            const float tw = 300f;
+            float th = _outputTooltip.resolvedStyle.height;
+            var bounds = _root.contentRect;
+            if (x + tw > bounds.width) x = mousePosPanel.x - tw - 8f;
+            if (y + th > bounds.height) y = mousePosPanel.y - th - 8f;
+            if (y < 0f) y = 8f;
+            if (x < 0f) x = 8f;
+            _outputTooltip.style.left = x;
+            _outputTooltip.style.top = y;
         }
 
         private void OnCloseClicked() => Hide();
@@ -173,7 +252,8 @@ namespace Sporae.UI.UIToolkit.Lab
             bool canAvvia = false;
             if (_storage != null)
             {
-                if (_storage.Has(Items.Fruits)) { inputDesc = $"{Items.Fruits} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.Fruits)?.Quantity ?? 0}"; canAvvia = true; }
+                var fruitSlot = _storage.Items.FirstOrDefault(s => s.TypeId == Items.Fruits || s.TypeId == Items.FruitsKnown);
+                if (fruitSlot != null && fruitSlot.Quantity > 0) { inputDesc = $"{fruitSlot.TypeId} x{fruitSlot.Quantity}"; canAvvia = true; }
                 else if (HasStemCellModule && _storage.Has(Items.WholePlant)) { inputDesc = $"{Items.WholePlant} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.WholePlant)?.Quantity ?? 0}"; canAvvia = true; }
                 else if (HasStemCellModule && _storage.Has(Items.OrganicScrap001)) { inputDesc = $"{Items.OrganicScrap001} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicScrap001)?.Quantity ?? 0}"; canAvvia = true; }
                 else if (HasStemCellModule && _storage.Has(Items.ProteinResidue)) { inputDesc = $"{Items.ProteinResidue} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.ProteinResidue)?.Quantity ?? 0}"; canAvvia = true; }
@@ -238,19 +318,20 @@ namespace Sporae.UI.UIToolkit.Lab
                 typeId =>
                 {
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
-                    if (_gameManager.PlayerInventory.Consume(typeId, 1))
+                    if (_gameManager.PlayerInventory.TryRemoveFirst(typeId, out var selectedItem))
                     {
-                        _storage.Add(typeId);
+                        _storage.Add(selectedItem);
                         RefreshDisplay();
                     }
                 },
-                () => { }
+                () => { },
+                "extractor"
             );
         }
 
         private HashSet<string> ExtractorAllowedTypes()
         {
-            var set = new HashSet<string> { Items.Fruits };
+            var set = new HashSet<string> { Items.Fruits, Items.FruitsKnown };
             if (HasStemCellModule)
             {
                 set.Add(Items.WholePlant);
@@ -264,7 +345,10 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             if (_extractor == null) return;
             if (_extractor.TryStartExtraction())
+            {
+                Hide();
                 RefreshDisplay();
+            }
         }
 
         private void OnRitiraClicked()

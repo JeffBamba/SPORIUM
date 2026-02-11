@@ -34,5 +34,17 @@ namespace _Project.Sporae.Core
         public SporeStage? SporeStageValue { get; set; }
         public string FamilyMetadata { get; set; }
         public string SourcePlantCodeMetadata { get; set; }
+        public int PlantLevelMetadata { get; set; }
+
+        // Lab genetics pipeline metadata (Pre-Seed/Seed, Step 3-4)
+        public string ParentFamilyA { get; set; }
+        public string ParentFamilyB { get; set; }
+        public string CandidateTraitsCsv { get; set; }
+        public string SelectedTraitsCsv { get; set; }
+        public int TraitPowerPercent { get; set; } = 100;
+        public string ReagentUsedMetadata { get; set; }
+
+        /// <summary>Nome scelto dal giocatore per il seme (Incubatore con Reagente X). Se valorizzato, display "Seme di Pianta {CustomPlantName}".</summary>
+        public string CustomPlantName { get; set; }
     }
 }

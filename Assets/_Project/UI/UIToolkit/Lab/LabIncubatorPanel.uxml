@@ -1,13 +1,14 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
-    <Style src="LabIncubatorPanel.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Lab/LabIncubatorPanel.uss?fileID=7433441132597879392&amp;guid=20474e8f13099e0469d48d4aa8ab2b41&amp;type=3#LabIncubatorPanel" />
     <ui:VisualElement name="lab-inc-overlay" class="lab-inc-overlay">
         <ui:VisualElement name="lab-inc-panel" class="lab-inc-panel">
             <ui:VisualElement name="lab-inc-header" class="lab-inc-header">
                 <ui:Label name="lab-inc-title" text="INCUBATORE" class="lab-inc-title" />
                 <ui:Button name="btn-close" class="lab-inc-close">
-                    <ui:Label text="×" class="lab-inc-close-x" />
+                    <ui:Label text="×" class="lab-inc-close-x" style="margin-top: -4px; right: 1px;" />
                 </ui:Button>
             </ui:VisualElement>
+            <ui:Label name="lab-inc-desc" text="Trasforma un Pre-Seed in Seme con un ciclo di 2 giorni. Il reagente (X, Y o nessuno) determina come si rivelano i tratti genetici del seme: controllo totale, selezione automatica o incubazione grezza." class="lab-inc-desc" />
             <ui:VisualElement name="lab-inc-body" class="lab-inc-body">
                 <ui:VisualElement name="lab-inc-preseed-row" class="lab-inc-row">
                     <ui:Label text="Pre-Seed" class="lab-inc-label" />
@@ -16,12 +17,32 @@
                     </ui:VisualElement>
                     <ui:Button name="btn-select-preseed" text="Seleziona" class="lab-inc-btn" />
                 </ui:VisualElement>
-                <ui:VisualElement name="lab-inc-reagent-row" class="lab-inc-row">
-                    <ui:Label text="Reagente" class="lab-inc-label" />
-                    <ui:VisualElement name="lab-inc-reagent-buttons" class="lab-inc-reagent-buttons">
-                        <ui:Button name="btn-reagent-none" text="Nessuno" class="lab-inc-reagent-btn" />
-                        <ui:Button name="btn-reagent-x" text="X" class="lab-inc-reagent-btn" />
-                        <ui:Button name="btn-reagent-y" text="Y" class="lab-inc-reagent-btn" />
+                <ui:VisualElement name="lab-inc-reagent-row" class="lab-inc-reagent-row">
+                    <ui:VisualElement name="lab-inc-reagent-slot-row" class="lab-inc-row">
+                        <ui:Label text="Reagente" class="lab-inc-label" />
+                        <ui:VisualElement name="lab-inc-reagent-slot" class="lab-inc-slot">
+                            <ui:Label name="lab-inc-reagent-text" text="—" class="lab-inc-slot-text" />
+                        </ui:VisualElement>
+                        <ui:Button name="btn-select-reagent" text="Seleziona" class="lab-inc-btn" />
+                        <ui:Button name="btn-clear-reagent" text="Rimuovi" class="lab-inc-btn lab-inc-btn-clear" />
+                    </ui:VisualElement>
+                    <ui:Label name="lab-inc-reagent-desc" text="Reagente X (Selettore Genetico): tutti i tratti compatibili, scegli manualmente 2 tratti da fissare — massimo controllo. Reagente Y (Dominanza Naturale): il sistema seleziona 1 tratto principale — più naturale e affidabile. Nessuno (Incubazione Grezza): emerge 1 tratto a -50% potenza — economico, per sperimentazione." class="lab-inc-reagent-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement name="lab-inc-x-config-row" class="lab-inc-x-config-row">
+                    <ui:Label text="Config Reagente X" class="lab-inc-label lab-inc-x-title" />
+                    <ui:VisualElement class="lab-inc-x-grid">
+                        <ui:Label text="Famiglia finale" class="lab-inc-x-label" />
+                        <ui:DropdownField name="lab-inc-x-family" class="lab-inc-x-dropdown" />
+                        <ui:Label text="Tratto 1" class="lab-inc-x-label" />
+                        <ui:DropdownField name="lab-inc-x-trait1" class="lab-inc-x-dropdown" />
+                        <ui:Label text="Tratto 2" class="lab-inc-x-label" />
+                        <ui:DropdownField name="lab-inc-x-trait2" class="lab-inc-x-dropdown" />
+                        <ui:Label text="Nome pianta" class="lab-inc-x-label" />
+                        <ui:DropdownField name="lab-inc-x-name" class="lab-inc-x-dropdown" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="lab-inc-x-name-custom-row" class="lab-inc-x-grid" style="display: none;">
+                        <ui:Label text="Nome personalizzato" class="lab-inc-x-label" />
+                        <ui:TextField name="lab-inc-x-name-custom" class="lab-inc-x-dropdown" max-length="64" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:Button name="btn-avvia" text="AVVIA INCUBAZIONE" class="lab-inc-btn-avvia" />

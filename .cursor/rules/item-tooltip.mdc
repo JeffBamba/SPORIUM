@@ -1,0 +1,42 @@
+---
+description: Regola per creazione/adattamento tooltip item inventario — allineamento a Frutto e Spora
+globs: 
+  - "**/PlayerInventory/**"
+  - "**/ItemsSystem/**"
+  - "**/Lab/ExtractorTooltipTexts*"
+  - "**/Lab/**Panel*.cs"
+---
+
+# Regola: Item Tooltip (predisposizione info)
+
+## Trigger
+Quando l'utente chiede di **creare** o **adattare** il tooltip (o le info in inventario) per un item (es. "Crea tooltip per X", "Aggiungi tooltip item Y"), applica questa regola.
+
+## Riferimento: item con predisposizione
+In questo progetto gli item che hanno già la **predisposizione a mostrare info** sono:
+- **Frutto** (`Items.Fruits`): titolo "Frutto", sottotitolo "Sconosciuto" o nome pianta; tooltip strutturato (Input, Livello, Famiglia, Stato, Estrazione stimata / Specimen + warning).
+- **Spora** (`Items.SporeGeneric`): titolo "Spora", sottotitolo "Raw/Maturata, Stabile/Fissa/Instabile"; tooltip con nome + attributi + quantità.
+
+## Comportamento obbligatorio
+Quando crei o adatti il tooltip per un item:
+
+1. **In lista inventario (riga)**
+   - **Titolo** = nome proprio dell'item (es. "Acqua", "Fertilizzante"), mai typeId grezzo come unico testo.
+   - **Sottotitolo** = attributi/stato rilevanti (tipo, variante, effetto breve), come per Frutto/Spora — sempre sotto il titolo, mai fusi nel titolo (es. non "Frutto Sconosciuto" come titolo, ma "Frutto" + sottotitolo "Sconosciuto").
+
+2. **Tooltip (hover)**
+   - Usa una **struttura coerente** con Frutto/Spora: blocchi ordinati (tipo/origine, effetti, costo/uso), non solo le 3 righe generiche (nome, tipo, quantità).
+   - Inserisci **info caratteristiche** utili al giocatore (cosa fa, dove si usa, percentuali/valori se rilevanti).
+
+3. **Implementazione**
+   - Riusa il sistema esistente: `RegisterRowTooltip`, `EnsureInvTooltip`, posizionamento a mouse, stesso stile tooltip.
+   - Per item con metadata (es. primo `Item` dello slot): usa dati reali; dove mancano usa "—" o placeholder espliciti.
+   - Estendi `ExtractorTooltipTexts` o crea builder dedicati (es. per semi, fertilizzanti) seguendo lo stesso pattern di `BuildFruitPreviewTooltip` / `BuildSporeRowTooltip`.
+
+## Dove intervenire
+- **Display nome/sottotitolo:** `PlayerInventoryPanelController.Rebuild()` — branch per `typeId` con `displayName` e `subText`.
+- **Testo tooltip:** builder in `ExtractorTooltipTexts.cs` o modulo analogo; chiamata in `Rebuild()` quando si costruisce `tooltipContent` per quella riga.
+- **Dati item:** `Item`, `ItemConfig`, `InventorySlot.Items`; per dati pianta/seme: `PlantDatabase`, `SeedInventoryMenu` se già usati.
+
+## Riepilogo
+**"Crea ITEM Tooltip"** = adatta quell'item al modello Frutto/Spora: titolo + sottotitolo in lista e tooltip strutturato con info caratteristiche, integrando nel flusso esistente senza duplicare la logica di visualizzazione.

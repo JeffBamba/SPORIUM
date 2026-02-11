@@ -1,5 +1,5 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
-    <Style src="PlayerInventoryPanel.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/PlayerInventory/PlayerInventoryPanel.uss?fileID=7433441132597879392&amp;guid=418ea00968294ab44afe85d568b65094&amp;type=3#PlayerInventoryPanel" />
     <ui:VisualElement name="inv-overlay" class="inv-overlay">
         <ui:VisualElement name="inv-panel" class="inv-panel">
             <ui:VisualElement name="inv-header" class="inv-header">
@@ -8,7 +8,7 @@
                     <ui:Label name="inv-subtitle" text="Oggetti nel tuo inventario" class="inv-subtitle" />
                 </ui:VisualElement>
                 <ui:Button name="btn-close" class="inv-close-button">
-                    <ui:Label text="×" class="inv-close-x" />
+                    <ui:Label text="×" class="inv-close-x" style="margin-top: -4px; right: 2px; top: 1px;" />
                 </ui:Button>
             </ui:VisualElement>
             <ui:ScrollView name="inv-list" class="inv-list" />

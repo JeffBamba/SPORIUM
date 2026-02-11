@@ -54,6 +54,14 @@
     color: rgba(231, 244, 255, 0.9);
 }
 
+.lab-fus-desc {
+    font-size: 11px;
+    color: rgba(192, 200, 197, 0.85);
+    margin-bottom: 12px;
+    white-space: normal;
+    max-width: 100%;
+}
+
 .lab-fus-body {
     flex-direction: column;
     gap: 14px;

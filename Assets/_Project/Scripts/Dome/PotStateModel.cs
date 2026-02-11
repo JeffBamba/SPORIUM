@@ -114,7 +114,7 @@ public class PotStateModel
     public int CompletedCycles = 0;
 
     [Header("GDD 42 - Genetic / Harvest Metadata")]
-    [Tooltip("Tipo genetico della pianta (FIXED/STABLE/UNSTABLE); usato per metadata frutto a harvest")]
+    [Tooltip("Tratti genetica pianta: Fissi (0% mutare), Stabili (25%), Instabili (50%); usato per metadata frutto a harvest")]
     public GeneticType PlantGeneticType = GeneticType.Stable;
     
     [Header("Mold System (BLK-07.01)")]

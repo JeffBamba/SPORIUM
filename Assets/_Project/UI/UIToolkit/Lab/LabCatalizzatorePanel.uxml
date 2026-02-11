@@ -1,13 +1,14 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
-    <Style src="LabCatalizzatorePanel.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Lab/LabCatalizzatorePanel.uss?fileID=7433441132597879392&amp;guid=f0a4cf6f45e77c442b95dca5e164eb78&amp;type=3#LabCatalizzatorePanel" />
     <ui:VisualElement name="lab-cat-overlay" class="lab-cat-overlay">
         <ui:VisualElement name="lab-cat-panel" class="lab-cat-panel">
             <ui:VisualElement name="lab-cat-header" class="lab-cat-header">
                 <ui:Label name="lab-cat-title" text="CATALIZZATORE" class="lab-cat-title" />
                 <ui:Button name="btn-close" class="lab-cat-close">
-                    <ui:Label text="×" class="lab-cat-close-x" />
+                    <ui:Label text="×" class="lab-cat-close-x" style="margin-top: -4px; right: 1px;" />
                 </ui:Button>
             </ui:VisualElement>
+            <ui:Label name="lab-cat-desc" text="Macchinario di maturazione temporale che processa spore grezze in 2 giorni per renderle combinabili nella fusione genetica." class="lab-cat-desc" />
             <ui:VisualElement name="lab-cat-body" class="lab-cat-body">
                 <ui:Label name="lab-cat-status" text="—" class="lab-cat-status" />
                 <ui:Label name="lab-cat-operation-label" text="Operazione in corso" class="lab-cat-operation-label" />

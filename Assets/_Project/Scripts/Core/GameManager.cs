@@ -144,10 +144,11 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        // Inventario iniziale: 10 unità di ogni item esistente in game
+        // Inventario iniziale: 5 frutti (sconosciuti e conosciuti), 10 per gli altri item
         const int starterQuantity = 10;
+        const int starterFruitQuantity = 5;
         foreach (string typeId in Items.AllTypeIds)
-            _playerInventory.Add(typeId, starterQuantity);
+            _playerInventory.Add(typeId, typeId == Items.Fruits || typeId == Items.FruitsKnown ? starterFruitQuantity : starterQuantity);
         
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR

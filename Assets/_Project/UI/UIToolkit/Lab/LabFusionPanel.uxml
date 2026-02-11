@@ -1,13 +1,14 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
-    <Style src="LabFusionPanel.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Lab/LabFusionPanel.uss?fileID=7433441132597879392&amp;guid=9f61a3fb36e44dc4aa526e3da044b0b2&amp;type=3#LabFusionPanel" />
     <ui:VisualElement name="lab-fus-overlay" class="lab-fus-overlay">
         <ui:VisualElement name="lab-fus-panel" class="lab-fus-panel">
             <ui:VisualElement name="lab-fus-header" class="lab-fus-header">
                 <ui:Label name="lab-fus-title" text="FUSIONE" class="lab-fus-title" />
                 <ui:Button name="btn-close" class="lab-fus-close">
-                    <ui:Label text="×" class="lab-fus-close-x" />
+                    <ui:Label text="×" class="lab-fus-close-x" style="margin-top: -4px; right: 2px;" />
                 </ui:Button>
             </ui:VisualElement>
+            <ui:Label name="lab-fus-desc" text="Banco di lavoro che combina 2 spore maturate in un pre-seme opaco, determinando in modo prevedibile il rischio mutazionale (FIXED/STABLE/UNSTABLE) della linea genetica." class="lab-fus-desc" />
             <ui:VisualElement name="lab-fus-body" class="lab-fus-body">
                 <ui:Label text="Inserisci 2 spore mature (obbligatorie)" class="lab-fus-hint" />
                 <ui:VisualElement name="lab-fus-slot1-row" class="lab-fus-row">
@@ -24,7 +25,7 @@
                     </ui:VisualElement>
                     <ui:Button name="btn-select-slot2" text="Seleziona" class="lab-fus-btn" />
                 </ui:VisualElement>
-                <ui:Label name="lab-fus-progress-text" text="" class="lab-fus-slot-text" style=" -unity-text-align: middle-center;" />
+                <ui:Label name="lab-fus-progress-text" class="lab-fus-slot-text" style="-unity-text-align: middle-center;" />
                 <ui:Button name="btn-fusion" text="AVVIA FUSIONE" class="lab-fus-btn-fusion" />
                 <ui:VisualElement name="lab-fus-output-row" class="lab-fus-row">
                     <ui:Label text="Output (Pre-Seed)" class="lab-fus-label" />

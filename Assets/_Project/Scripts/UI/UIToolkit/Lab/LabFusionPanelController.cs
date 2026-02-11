@@ -30,19 +30,23 @@ namespace Sporae.UI.UIToolkit.Lab
         private Label _slot2Text;
         private Label _progressText;
         private Label _outputText;
+        private VisualElement _outputSlotRow;
         private Button _btnSelectSlot1;
         private Button _btnSelectSlot2;
         private Button _btnFusion;
         private Button _btnRitira;
         private Button _btnClose;
+        private VisualElement _outputTooltip;
+        private Label _outputTooltipText;
 
         private GameManager _gameManager;
         private Inventory _storage;
-        private int _outputPreSeedCount;
+        private readonly List<Item> _outputPreSeeds = new();
         private bool _uiBound;
         private bool _fusionInProgress;
         private float _fusionProgress;
         private Coroutine _fusionCoroutine;
+        private Item _pendingFusionResult;
 
         private const string FusionProgressToastKey = "pipette-fusion-progress";
         private const string FusionDoneToastKey = "pipette-fusion-done";
@@ -81,6 +85,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 if (currentRoot != null && currentRoot != _root)
                 {
                     _root = currentRoot;
+                    _outputTooltip = null;
+                    _outputTooltipText = null;
                     _uiBound = false;
                 }
             }
@@ -94,6 +100,7 @@ namespace Sporae.UI.UIToolkit.Lab
             _slot2Text = _root.Q<Label>("lab-fus-slot2-text");
             _progressText = _root.Q<Label>("lab-fus-progress-text");
             _outputText = _root.Q<Label>("lab-fus-output-text");
+            _outputSlotRow = _root.Q<VisualElement>("lab-fus-output-row");
             _btnSelectSlot1 = _root.Q<Button>("btn-select-slot1");
             _btnSelectSlot2 = _root.Q<Button>("btn-select-slot2");
             _btnFusion = _root.Q<Button>("btn-fusion");
@@ -101,6 +108,8 @@ namespace Sporae.UI.UIToolkit.Lab
             _btnClose = _root.Q<Button>("btn-close");
             if (_playerInventoryPanel == null)
                 _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
+
+            EnsureOutputTooltip();
 
             if (_btnClose != null)
             {
@@ -117,6 +126,91 @@ namespace Sporae.UI.UIToolkit.Lab
         }
 
         private void OnCloseClicked() => Hide();
+
+        private void EnsureOutputTooltip()
+        {
+            if (_outputTooltip != null || _root == null) return;
+            _outputTooltip = new VisualElement();
+            _outputTooltip.name = "lab-fus-output-tooltip";
+            _outputTooltip.style.position = Position.Absolute;
+            _outputTooltip.style.display = DisplayStyle.None;
+            _outputTooltip.style.backgroundColor = new Color(0.05f, 0.07f, 0.09f, 0.96f);
+            _outputTooltip.style.borderTopWidth = _outputTooltip.style.borderRightWidth = _outputTooltip.style.borderBottomWidth = _outputTooltip.style.borderLeftWidth = 2f;
+            _outputTooltip.style.borderTopColor = _outputTooltip.style.borderRightColor = _outputTooltip.style.borderBottomColor = _outputTooltip.style.borderLeftColor = new Color(0.5f, 0.8f, 0.5f, 0.9f);
+            _outputTooltip.style.paddingTop = _outputTooltip.style.paddingRight = _outputTooltip.style.paddingBottom = _outputTooltip.style.paddingLeft = 10f;
+            _outputTooltip.style.minWidth = 260f;
+            _outputTooltip.style.maxWidth = 340f;
+            _outputTooltip.pickingMode = PickingMode.Ignore;
+            _outputTooltipText = new Label();
+            _outputTooltipText.enableRichText = true;
+            _outputTooltipText.style.whiteSpace = WhiteSpace.Normal;
+            _outputTooltipText.style.color = new Color(0.95f, 0.96f, 0.98f, 1f);
+            _outputTooltipText.style.fontSize = 12f;
+            _outputTooltip.Add(_outputTooltipText);
+            _root.Add(_outputTooltip);
+
+            if (_outputSlotRow != null)
+            {
+                _outputSlotRow.RegisterCallback<MouseEnterEvent>(OnOutputSlotHoverEnter);
+                _outputSlotRow.RegisterCallback<MouseLeaveEvent>(OnOutputSlotHoverExit);
+                _outputSlotRow.RegisterCallback<MouseMoveEvent>(OnOutputSlotHoverMove);
+            }
+        }
+
+        private void OnOutputSlotHoverEnter(MouseEnterEvent evt)
+        {
+            if (_outputTooltip == null || _outputTooltipText == null || _outputPreSeeds.Count <= 0) return;
+            _outputTooltipText.text = BuildOutputTooltipText();
+            _outputTooltip.style.display = DisplayStyle.Flex;
+            _outputTooltip.BringToFront();
+            PositionOutputTooltipAtMouse(evt.mousePosition);
+        }
+
+        private void OnOutputSlotHoverExit(MouseLeaveEvent evt)
+        {
+            if (_outputTooltip != null)
+                _outputTooltip.style.display = DisplayStyle.None;
+        }
+
+        private void OnOutputSlotHoverMove(MouseMoveEvent evt)
+        {
+            if (_outputTooltip == null || _outputTooltip.style.display != DisplayStyle.Flex) return;
+            PositionOutputTooltipAtMouse(evt.mousePosition);
+        }
+
+        private void PositionOutputTooltipAtMouse(Vector2 mousePosPanel)
+        {
+            if (_outputTooltip == null || _root == null) return;
+            float x = mousePosPanel.x + 16f;
+            float y = mousePosPanel.y + 12f;
+            const float tw = 320f;
+            float th = _outputTooltip.resolvedStyle.height;
+            var bounds = _root.contentRect;
+            if (x + tw > bounds.width) x = mousePosPanel.x - tw - 8f;
+            if (y + th > bounds.height) y = mousePosPanel.y - th - 8f;
+            if (y < 0f) y = 8f;
+            if (x < 0f) x = 8f;
+            _outputTooltip.style.left = x;
+            _outputTooltip.style.top = y;
+        }
+
+        private string BuildOutputTooltipText()
+        {
+            var first = _outputPreSeeds[0];
+            string tratti = ExtractorTooltipTexts.GeneticTypeToTrattiLabel(first.GeneticTypeValue);
+            if (string.IsNullOrEmpty(tratti) || tratti == "—") tratti = "Stabili";
+            string fa = string.IsNullOrWhiteSpace(first.ParentFamilyA) ? "STANDARD" : first.ParentFamilyA;
+            string fb = string.IsNullOrWhiteSpace(first.ParentFamilyB) ? "STANDARD" : first.ParentFamilyB;
+            var lines = new List<string>
+            {
+                $"Pre-Seed x{ExtractorTooltipTexts.WrapValue(_outputPreSeeds.Count.ToString())}",
+                $"Tratti (fissati Step 3): {ExtractorTooltipTexts.WrapValue(tratti)}",
+                $"Famiglie sorgente: {ExtractorTooltipTexts.WrapValue(fa)} + {ExtractorTooltipTexts.WrapValue(fb)}"
+            };
+            if (!string.IsNullOrWhiteSpace(first.CandidateTraitsCsv))
+                lines.Add($"Tratti compatibili: {ExtractorTooltipTexts.WrapValue(first.CandidateTraitsCsv)}");
+            return string.Join("\n", lines);
+        }
 
         private void Start()
         {
@@ -140,11 +234,11 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             if (gameObject.activeInHierarchy && _fusionInProgress)
                 RefreshDisplay();
-            if (gameObject.activeInHierarchy && _outputPreSeedCount > 0)
+            if (gameObject.activeInHierarchy && _outputPreSeeds.Count > 0)
             {
                 var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 if (foundation != null && foundation.Enabled)
-                    foundation.UpsertToast(FusionDoneToastKey, "LAB-FUS-DONE", new NotificationPayload().With("count", _outputPreSeedCount.ToString()));
+                    foundation.UpsertToast(FusionDoneToastKey, "LAB-FUS-DONE", new NotificationPayload().With("count", _outputPreSeeds.Count.ToString()));
             }
         }
 
@@ -171,7 +265,7 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (_root != null)
                 _root.pickingMode = PickingMode.Ignore;
-            if (!_fusionInProgress && _outputPreSeedCount == 0)
+            if (!_fusionInProgress && _outputPreSeeds.Count == 0)
                 gameObject.SetActive(false);
         }
 
@@ -206,10 +300,10 @@ namespace Sporae.UI.UIToolkit.Lab
             }
 
             if (_outputText != null)
-                _outputText.text = _outputPreSeedCount > 0 ? $"Pre-Seed x{_outputPreSeedCount}" : "—";
+                _outputText.text = _outputPreSeeds.Count > 0 ? $"Pre-Seed x{_outputPreSeeds.Count}" : "—";
 
             if (_btnRitira != null)
-                _btnRitira.SetEnabled(_outputPreSeedCount > 0);
+                _btnRitira.SetEnabled(_outputPreSeeds.Count > 0);
 
             if (_btnSelectSlot1 != null)
                 _btnSelectSlot1.SetEnabled(!_fusionInProgress && count < 1);
@@ -243,10 +337,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 {
                     if (typeId != Items.SporeGeneric || stage != SporeStage.Matured) return;
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
-                    if (_gameManager.PlayerInventory.ConsumeSporeByStage(SporeStage.Matured, 1) <= 0) return;
-                    var item = ItemFabric.CreateSporeMatured();
-                    if (item != null)
-                        _storage.Add(item);
+                    if (!_gameManager.PlayerInventory.TryRemoveFirstSporeByStage(SporeStage.Matured, out var pickedSpore)) return;
+                    _storage.Add(pickedSpore);
                     RefreshDisplay();
                 },
                 () => { },
@@ -267,14 +359,27 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
-            if (_storage.ConsumeSporeByStage(SporeStage.Matured, 2) < 2)
+            if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeA))
                 return;
+            if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeB))
+            {
+                _storage.Add(sporeA);
+                return;
+            }
+            _pendingFusionResult = ItemFabric.CreatePreSeedFromSpores(sporeA, sporeB);
+            if (_pendingFusionResult == null)
+            {
+                _storage.Add(sporeA);
+                _storage.Add(sporeB);
+                return;
+            }
 
             _fusionInProgress = true;
             if (foundation != null && foundation.Enabled)
                 foundation.UpsertToast(FusionProgressToastKey, "LAB-FUS-PROGRESS", new NotificationPayload().With("percent", "0"));
             _fusionCoroutine = StartCoroutine(RunFusion());
             RefreshDisplay();
+            // Non chiudiamo il pannello qui: la coroutine RunFusion gira su questo GameObject e si interromperebbe se lo disattiviamo.
         }
 
         private IEnumerator RunFusion()
@@ -295,23 +400,26 @@ namespace Sporae.UI.UIToolkit.Lab
             _fusionProgress = 1f;
             _fusionInProgress = false;
             _fusionCoroutine = null;
-            _outputPreSeedCount += 1;
+            if (_pendingFusionResult != null)
+                _outputPreSeeds.Add(_pendingFusionResult);
+            _pendingFusionResult = null;
             if (foundation != null && foundation.Enabled)
             {
                 foundation.RemoveToast(FusionProgressToastKey);
-                foundation.UpsertToast(FusionDoneToastKey, "LAB-FUS-DONE", new NotificationPayload().With("count", _outputPreSeedCount.ToString()));
+                foundation.UpsertToast(FusionDoneToastKey, "LAB-FUS-DONE", new NotificationPayload().With("count", _outputPreSeeds.Count.ToString()));
             }
             RefreshDisplay();
         }
 
         private void OnRitiraClicked()
         {
-            if (_outputPreSeedCount <= 0 || _gameManager?.PlayerInventory == null)
+            if (_outputPreSeeds.Count <= 0 || _gameManager?.PlayerInventory == null)
                 return;
 
-            int amount = _outputPreSeedCount;
-            _gameManager.PlayerInventory.Add(Items.PreSeed, amount);
-            _outputPreSeedCount = 0;
+            int amount = _outputPreSeeds.Count;
+            foreach (var preSeed in _outputPreSeeds)
+                _gameManager.PlayerInventory.Add(preSeed);
+            _outputPreSeeds.Clear();
             RefreshDisplay();
 
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);

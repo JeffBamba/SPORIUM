@@ -34,7 +34,15 @@ namespace _Project
         private readonly int[] _slotCell001 = new int[3];
         private readonly int[] _slotCell002 = new int[3];
         private readonly int[] _slotCell003 = new int[3];
+        private readonly int[] _slotPlannedSpore = new int[3];
+        private readonly int[] _slotPlannedCell001 = new int[3];
+        private readonly int[] _slotPlannedCell002 = new int[3];
+        private readonly int[] _slotPlannedCell003 = new int[3];
         private readonly Coroutine[] _slotCoroutines = new Coroutine[3];
+        /// <summary>Snapshot del frutto consumato per ogni slot (per tooltip output).</summary>
+        private readonly ExtractionResultSnapshot[] _slotResultSnapshot = new ExtractionResultSnapshot[3];
+        /// <summary>Frutto realmente consumato per ogni slot (per propagare metadata genetici all'output spora).</summary>
+        private readonly Item[] _slotInputFruit = new Item[3];
 
         private static string ExtractorProgressToastKey(int slot) => $"extractor-progress-{slot}";
 
@@ -77,6 +85,15 @@ namespace _Project
             for (int i = 0; i < 3; i++)
                 if (_slotStates[i] == 0) return i;
             return -1;
+        }
+
+        /// <summary>Restituisce lo snapshot del primo slot completato (per tooltip output). Null se nessuno completato.</summary>
+        public ExtractionResultSnapshot GetFirstCompletedResultSnapshot()
+        {
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 2 && _slotResultSnapshot[i] != null)
+                    return _slotResultSnapshot[i];
+            return null;
         }
 
         private void Awake()
@@ -183,24 +200,42 @@ namespace _Project
             if (!gm.TrySpendAction(1)) return false;
 
             bool hasStem = HasStemCellModule;
-            if (_inventory.Has(Items.Fruits))
+            if (_inventory.Has(Items.Fruits) && _inventory.TryRemoveFirst(Items.Fruits, out var fruit))
             {
-                _inventory.Consume(Items.Fruits, 1);
+                _slotInputFruit[idx] = fruit;
+                _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
+                SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 1, 0));
+            }
+            else if (_inventory.Has(Items.FruitsKnown) && _inventory.TryRemoveFirst(Items.FruitsKnown, out fruit))
+            {
+                _slotInputFruit[idx] = fruit;
+                _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
+                SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 1, 0));
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
+                _slotResultSnapshot[idx] = null;
+                _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.WholePlant, 1);
+                SetSlotPlannedOutputs(idx, 0, 1, 0, 0);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.OrganicScrap001))
             {
+                _slotResultSnapshot[idx] = null;
+                _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.OrganicScrap001, 1);
+                SetSlotPlannedOutputs(idx, 0, 1, 0, 0);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.ProteinResidue))
             {
+                _slotResultSnapshot[idx] = null;
+                _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.ProteinResidue, 1);
+                SetSlotPlannedOutputs(idx, 0, 0, 0, 1);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 0, 0, 1));
             }
             else
@@ -217,8 +252,20 @@ namespace _Project
 
         private void CompleteSlot(int slotIndex)
         {
+            _slotSpore[slotIndex] = _slotPlannedSpore[slotIndex];
+            _slotCell001[slotIndex] = _slotPlannedCell001[slotIndex];
+            _slotCell002[slotIndex] = _slotPlannedCell002[slotIndex];
+            _slotCell003[slotIndex] = _slotPlannedCell003[slotIndex];
             _slotStates[slotIndex] = 2;
             _slotProgress[slotIndex] = 1f;
+        }
+
+        private void SetSlotPlannedOutputs(int slotIndex, int sporeOut, int cell001Out, int cell002Out, int cell003Out)
+        {
+            _slotPlannedSpore[slotIndex] = sporeOut;
+            _slotPlannedCell001[slotIndex] = cell001Out;
+            _slotPlannedCell002[slotIndex] = cell002Out;
+            _slotPlannedCell003[slotIndex] = cell003Out;
         }
 
         private IEnumerator RunExtraction(int slotIndex, int sporeOut, int cell001Out, int cell002Out, int cell003Out)
@@ -258,11 +305,24 @@ namespace _Project
         public void CollectOutput(Inventory playerInventory)
         {
             if (playerInventory == null) return;
-            int totalSpore = PendingSporeCount;
             int totalC1 = PendingCell001;
             int totalC2 = PendingCell002;
             int totalC3 = PendingCell003;
-            if (totalSpore > 0) playerInventory.AddSporeRaw(totalSpore);
+
+            // Spore: crea item per-slot preservando metadata del frutto madre.
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotStates[i] != 2 || _slotSpore[i] <= 0) continue;
+                for (int n = 0; n < _slotSpore[i]; n++)
+                {
+                    var spore = ItemFabric.CreateSporeRawFromFruit(_slotInputFruit[i]);
+                    if (spore != null)
+                        playerInventory.Add(spore);
+                    else
+                        playerInventory.AddSporeRaw(1);
+                }
+            }
+
             if (totalC1 > 0) playerInventory.Add(Items.StemCellVegetable, totalC1);
             if (totalC2 > 0) playerInventory.Add(Items.StemCellFungus, totalC2);
             if (totalC3 > 0) playerInventory.Add(Items.StemCellAnimal, totalC3);
@@ -272,6 +332,9 @@ namespace _Project
                 {
                     _slotStates[i] = 0;
                     _slotSpore[i] = _slotCell001[i] = _slotCell002[i] = _slotCell003[i] = 0;
+                    _slotPlannedSpore[i] = _slotPlannedCell001[i] = _slotPlannedCell002[i] = _slotPlannedCell003[i] = 0;
+                    _slotResultSnapshot[i] = null;
+                    _slotInputFruit[i] = null;
                 }
             }
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);

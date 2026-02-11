@@ -438,11 +438,29 @@ namespace Sporae.Core
             
             foreach (var slot in inventory.Items)
             {
-                inventoryData.items.Add(new InventoryItemData
+                foreach (var item in slot.Items)
                 {
-                    typeId = slot.TypeId,
-                    quantity = slot.Quantity
-                });
+                    inventoryData.items.Add(new InventoryItemData
+                    {
+                        typeId = slot.TypeId,
+                        quantity = 1,
+                        quality = item.Quality,
+                        hasGeneticType = item.GeneticTypeValue.HasValue,
+                        geneticType = item.GeneticTypeValue.HasValue ? (int)item.GeneticTypeValue.Value : 0,
+                        hasSporeStage = item.SporeStageValue.HasValue,
+                        sporeStage = item.SporeStageValue.HasValue ? (int)item.SporeStageValue.Value : 0,
+                        familyMetadata = item.FamilyMetadata,
+                        sourcePlantCodeMetadata = item.SourcePlantCodeMetadata,
+                        parentFamilyA = item.ParentFamilyA,
+                        parentFamilyB = item.ParentFamilyB,
+                        plantLevelMetadata = item.PlantLevelMetadata,
+                        candidateTraitsCsv = item.CandidateTraitsCsv,
+                        selectedTraitsCsv = item.SelectedTraitsCsv,
+                        traitPowerPercent = item.TraitPowerPercent,
+                        reagentUsedMetadata = item.ReagentUsedMetadata,
+                        customPlantName = item.CustomPlantName
+                    });
+                }
             }
             
             return inventoryData;
@@ -460,21 +478,41 @@ namespace Sporae.Core
             foreach (var itemData in inventoryData.items)
             {
                 if (string.IsNullOrEmpty(itemData.typeId) || itemData.quantity <= 0) continue;
-
-                // Spore hanno sempre uno status: caricate sempre con metadata (Raw + Stabile) se non salvato con stage/genetic
-                if (itemData.typeId == _Project.Sporae.Core.Items.SporeGeneric)
+                for (int q = 0; q < itemData.quantity; q++)
                 {
-                    for (int q = 0; q < itemData.quantity; q++)
+                    var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(itemData.typeId);
+                    if (item == null)
+                        continue;
+
+                    if (inventoryVersion < INVENTORY_VERSION_WITH_METADATA)
                     {
-                        var item = _Project.Sporae.Core.ItemFabric.CreateSporeWithFallbackMetadata();
-                        if (item != null)
-                            inventory.Add(item);
-                        else
-                            inventory.AddSporeRaw(1);
+                        // Legacy fallback: spore vecchie restano Raw + Stable.
+                        if (item.TypeId == _Project.Sporae.Core.Items.SporeGeneric)
+                        {
+                            item.SporeStageValue = _Project.Sporae.Core.SporeStage.Raw;
+                            item.GeneticTypeValue = _Project.Sporae.Core.GeneticType.Stable;
+                        }
                     }
-                    continue;
+                    else
+                    {
+                        item.Quality = itemData.quality > 0f ? itemData.quality : item.Quality;
+                        if (itemData.hasGeneticType)
+                            item.GeneticTypeValue = (_Project.Sporae.Core.GeneticType)itemData.geneticType;
+                        if (itemData.hasSporeStage)
+                            item.SporeStageValue = (_Project.Sporae.Core.SporeStage)itemData.sporeStage;
+                        item.FamilyMetadata = itemData.familyMetadata;
+                        item.SourcePlantCodeMetadata = itemData.sourcePlantCodeMetadata;
+                        item.ParentFamilyA = itemData.parentFamilyA;
+                        item.ParentFamilyB = itemData.parentFamilyB;
+                        item.PlantLevelMetadata = itemData.plantLevelMetadata;
+                        item.CandidateTraitsCsv = itemData.candidateTraitsCsv;
+                        item.SelectedTraitsCsv = itemData.selectedTraitsCsv;
+                        item.TraitPowerPercent = itemData.traitPowerPercent > 0 ? itemData.traitPowerPercent : 100;
+                        item.ReagentUsedMetadata = itemData.reagentUsedMetadata;
+                        item.CustomPlantName = itemData.customPlantName;
+                    }
+                    inventory.Add(item);
                 }
-                inventory.Add(itemData.typeId, itemData.quantity);
             }
         }
         
@@ -512,8 +550,8 @@ namespace Sporae.Core
         
         // Strutture dati per serializzazione
         
-        /// <summary>Versione formato inventario; &lt; 1 = save vecchi (fallback spore Raw+STABLE).</summary>
-        private const int INVENTORY_VERSION_WITH_METADATA = 1;
+        /// <summary>Versione formato inventario con metadata per item (genetica/famiglia/tratti).</summary>
+        private const int INVENTORY_VERSION_WITH_METADATA = 2;
 
         [Serializable]
         private class GameSaveData
@@ -549,6 +587,21 @@ namespace Sporae.Core
         {
             public string typeId;
             public int quantity;
+            public float quality;
+            public bool hasGeneticType;
+            public int geneticType;
+            public bool hasSporeStage;
+            public int sporeStage;
+            public string familyMetadata;
+            public string sourcePlantCodeMetadata;
+            public string parentFamilyA;
+            public string parentFamilyB;
+            public int plantLevelMetadata;
+            public string candidateTraitsCsv;
+            public string selectedTraitsCsv;
+            public int traitPowerPercent;
+            public string reagentUsedMetadata;
+            public string customPlantName;
         }
         
         [Serializable]

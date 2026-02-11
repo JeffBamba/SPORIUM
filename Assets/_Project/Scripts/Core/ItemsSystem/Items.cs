@@ -3,6 +3,7 @@ namespace _Project.Sporae.Core
     public static class Items
     {
         public const string Fruits = "fruits-001";
+        public const string FruitsKnown = "fruits-known-001";
         public const string Water = "wat-raw";
         public const string WholePlant = "whole-plant";
         public const string OrganicScrap001 = "org-scr-001";
@@ -36,7 +37,7 @@ namespace _Project.Sporae.Core
         /// <summary> Tutti i typeId degli item esistenti in game (per inventario iniziale / debug ). </summary>
         public static readonly string[] AllTypeIds =
         {
-            Fruits, Water, WholePlant, OrganicScrap001, SporeGeneric,
+            Fruits, FruitsKnown, Water, WholePlant, OrganicScrap001, SporeGeneric, PreSeed,
             Seed001, Seed002, Seed003,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
             SprayAntifungal, AdditiveBasic, AdditiveAcid,

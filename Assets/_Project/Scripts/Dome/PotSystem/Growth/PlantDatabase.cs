@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System;
+using System.Linq;
 using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
@@ -23,8 +25,11 @@ namespace Sporae.Dome.PotSystem.Growth
         
         // Mappa per lookup veloce: PlantCode -> PlantData
         private readonly Dictionary<string, PlantData> _plantDataByCode = new Dictionary<string, PlantData>();
+        private readonly HashSet<string> _discoveredPlantCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private const string DiscoveryPrefsKey = "Sporae_DiscoveredPlantCodes";
         
         private bool _isInitialized = false;
+        public event Action<string> OnPlantDiscovered;
         
         public static PlantDatabase Instance
         {
@@ -77,6 +82,7 @@ namespace Sporae.Dome.PotSystem.Growth
                 }
                 
                 InitializeDatabase();
+                LoadDiscoveryState();
             }
             else if (_instance != this)
             {
@@ -137,6 +143,28 @@ namespace Sporae.Dome.PotSystem.Growth
             
             _isInitialized = true;
             SporiumLogger.LogInfo(LogCategory.Pot, $"Inizializzato: {_plantDataBySeedTypeId.Count} piante registrate");
+        }
+
+        private void LoadDiscoveryState()
+        {
+            _discoveredPlantCodes.Clear();
+            var raw = PlayerPrefs.GetString(DiscoveryPrefsKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(raw))
+                return;
+            var parts = raw.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var p in parts)
+            {
+                var code = p.Trim();
+                if (!string.IsNullOrEmpty(code))
+                    _discoveredPlantCodes.Add(code);
+            }
+        }
+
+        private void SaveDiscoveryState()
+        {
+            var raw = string.Join(";", _discoveredPlantCodes.OrderBy(x => x));
+            PlayerPrefs.SetString(DiscoveryPrefsKey, raw);
+            PlayerPrefs.Save();
         }
         
         /// <summary>
@@ -228,6 +256,44 @@ namespace Sporae.Dome.PotSystem.Growth
                 }
             }
             return result;
+        }
+
+        public bool IsPlantCodeDiscovered(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return false;
+            return _discoveredPlantCodes.Contains(plantCode.Trim());
+        }
+
+        public bool MarkPlantCodeDiscovered(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return false;
+            string code = plantCode.Trim();
+            if (!_plantDataByCode.ContainsKey(code))
+                return false;
+            if (_discoveredPlantCodes.Add(code))
+            {
+                SaveDiscoveryState();
+                OnPlantDiscovered?.Invoke(code);
+                return true;
+            }
+            return false;
+        }
+
+        public int MarkPlantCodesDiscoveredFromMetadata(string sourcePlantCodesMetadata)
+        {
+            if (string.IsNullOrWhiteSpace(sourcePlantCodesMetadata))
+                return 0;
+
+            int unlocked = 0;
+            var tokens = sourcePlantCodesMetadata.Split(new[] { '|', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                if (MarkPlantCodeDiscovered(token))
+                    unlocked++;
+            }
+            return unlocked;
         }
         
         /// <summary>

@@ -1442,11 +1442,12 @@ public class PotActions : MonoBehaviour
         string familyStr = plantData != null ? plantData.Family.ToString() : null;
         GeneticType? geneticType = _potState != null ? (GeneticType?)_potState.PlantGeneticType : null;
         string sourcePlantCode = _potState?.PlantCode;
+        int sourcePlantLevel = _potState != null ? Mathf.Max(1, _potState.PlantLevel) : 0;
 
         // Aggiungi frutti all'inventario con qualità e metadata (GDD 42 Fase 0)
         for (int i = 0; i < fruitsToHarvest; i++)
         {
-            Item fruitItem = ItemFabric.CreateItemWithMetadata(Items.Fruits, finalQuality, geneticType, familyStr, sourcePlantCode);
+            Item fruitItem = ItemFabric.CreateItemWithMetadata(Items.Fruits, finalQuality, geneticType, familyStr, sourcePlantCode, sourcePlantLevel);
             if (fruitItem != null)
                 _playerInventory.Add(fruitItem);
             else
