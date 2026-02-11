@@ -32,7 +32,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private Inventory _playerInventory;
         private HashSet<string> _pickerAllowedTypes;
-        private Action<string> _onSelected;
+        private Action<string, SporeStage?> _onSelectedWithStage;
+        private SporeStage? _pickerFilterSporeStage;
         private Action _onCancel;
         private bool _uiBound;
 
@@ -131,7 +132,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         public void Show()
         {
             _pickerAllowedTypes = null;
-            _onSelected = null;
+            _onSelectedWithStage = null;
+            _pickerFilterSporeStage = null;
             _onCancel = null;
             ShowInternal();
             if (_invSubtitle != null)
@@ -155,8 +157,17 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         /// </summary>
         public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string> onSelected, Action onCancel)
         {
+            ShowAsPicker(allowedTypeIds, subtitle, (id, _) => onSelected(id), onCancel, null);
+        }
+
+        /// <summary>
+        /// Picker con callback (typeId, sporeStage) e filtro opzionale per spore: solo le righe con lo stage indicato sono mostrate/selezionabili.
+        /// </summary>
+        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?> onSelectedWithStage, Action onCancel, SporeStage? filterSporeStage = null)
+        {
             _pickerAllowedTypes = allowedTypeIds != null ? new HashSet<string>(allowedTypeIds) : new HashSet<string>();
-            _onSelected = onSelected;
+            _onSelectedWithStage = onSelectedWithStage;
+            _pickerFilterSporeStage = filterSporeStage;
             _onCancel = onCancel;
             ShowInternal();
             if (_invSubtitle != null)
@@ -222,7 +233,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
                 if (typeId == Items.SporeGeneric)
                 {
-                    AddSporeRowsByStage(slot, isPicker);
+                    AddSporeRowsByStage(slot, isPicker, _pickerFilterSporeStage);
                     continue;
                 }
 
@@ -263,7 +274,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 {
                     var selectBtn = new Button(() =>
                     {
-                        _onSelected?.Invoke(typeId);
+                        _onSelectedWithStage?.Invoke(typeId, null);
                         Hide();
                     }) { text = "Seleziona" };
                     selectBtn.AddToClassList("inv-select");
@@ -276,8 +287,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
         }
 
-        /// <summary>Per spore-generic: una riga per variante (Raw / Maturata) così si vede "Spora Maturata" distinta.</summary>
-        private void AddSporeRowsByStage(InventorySlot slot, bool isPicker)
+        /// <summary>Per spore-generic: una riga per variante (Raw / Maturata). Se filterStage è valorizzato, mostra solo le righe con quello stage.</summary>
+        private void AddSporeRowsByStage(InventorySlot slot, bool isPicker, SporeStage? filterStage = null)
         {
             var byStage = new Dictionary<(SporeStage?, GeneticType?), int>();
             foreach (var item in slot.Items)
@@ -290,6 +301,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             foreach (var kv in byStage)
             {
                 var key = kv.Key;
+                if (filterStage.HasValue && key.Item1 != filterStage)
+                    continue;
                 int qty = kv.Value;
                 string displayName = key.Item1 == SporeStage.Matured ? "Spora Maturata" : "Spora Raw";
                 string subText = GetSporeSubText(key.Item1, key.Item2);
@@ -324,9 +337,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 right.AddToClassList("inv-row-right");
                 if (isPicker && selectable)
                 {
+                    var stage = key.Item1;
                     var selectBtn = new Button(() =>
                     {
-                        _onSelected?.Invoke(Items.SporeGeneric);
+                        _onSelectedWithStage?.Invoke(Items.SporeGeneric, stage);
                         Hide();
                     }) { text = "Seleziona" };
                     selectBtn.AddToClassList("inv-select");
@@ -356,10 +370,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             return parts.Count > 0 ? string.Join(", ", parts) : "";
         }
 
-        /// <summary>Nome leggibile per un typeId (semi da PlantData, altri da typeId o ItemConfig).</summary>
+        /// <summary>Nome leggibile per un typeId (semi da PlantData, Pre-Seed, altri da typeId).</summary>
         public static string GetItemDisplayName(string typeId)
         {
             if (string.IsNullOrEmpty(typeId)) return typeId;
+            if (typeId == Items.PreSeed) return "Pre-Seed";
             if (PlantDatabase.Instance != null)
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataBySeedTypeId(typeId);

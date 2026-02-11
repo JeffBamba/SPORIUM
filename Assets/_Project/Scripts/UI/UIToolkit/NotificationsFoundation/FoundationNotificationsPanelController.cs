@@ -33,7 +33,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private Label _chevron;
         private VisualElement _list;
 
-        private RowUI[] _rows = new RowUI[3];
+        private RowUI[] _rows = new RowUI[5];
         private bool _expanded;
 
         private void Awake()
@@ -92,6 +92,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             _rows[0] = RowUI.Bind(_root, 0);
             _rows[1] = RowUI.Bind(_root, 1);
             _rows[2] = RowUI.Bind(_root, 2);
+            _rows[3] = RowUI.Bind(_root, 3);
+            _rows[4] = RowUI.Bind(_root, 4);
 
             if (_headerButton != null)
             {
@@ -131,7 +133,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             // Header severity
             ApplySeverityClass(_headerButton, _service.GetHeaderSeverity());
 
-            // Visible rows (max 3, danger pinned)
+            // Visible rows (max 5, danger pinned)
             var rows = _service.GetVisibleRows();
             for (int i = 0; i < _rows.Length; i++)
             {

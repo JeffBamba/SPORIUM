@@ -9,15 +9,23 @@
                 </ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="lab-fus-body" class="lab-fus-body">
-                <ui:Label text="Seleziona 2 spore mature" class="lab-fus-hint" />
-                <ui:VisualElement name="lab-fus-input-row" class="lab-fus-row">
-                    <ui:Label text="Spore (2 richieste)" class="lab-fus-label" />
-                    <ui:VisualElement name="lab-fus-slot" class="lab-fus-slot">
-                        <ui:Label name="lab-fus-input-text" text="—" class="lab-fus-slot-text" />
+                <ui:Label text="Inserisci 2 spore mature (obbligatorie)" class="lab-fus-hint" />
+                <ui:VisualElement name="lab-fus-slot1-row" class="lab-fus-row">
+                    <ui:Label text="Slot 1 — Spora Maturata" class="lab-fus-label" />
+                    <ui:VisualElement name="lab-fus-slot1" class="lab-fus-slot">
+                        <ui:Label name="lab-fus-slot1-text" text="—" class="lab-fus-slot-text" />
                     </ui:VisualElement>
-                    <ui:Button name="btn-select-input" text="Seleziona" class="lab-fus-btn" />
+                    <ui:Button name="btn-select-slot1" text="Seleziona" class="lab-fus-btn" />
                 </ui:VisualElement>
-                <ui:Button name="btn-fusion" text="CONFERMA FUSIONE" class="lab-fus-btn-fusion" />
+                <ui:VisualElement name="lab-fus-slot2-row" class="lab-fus-row">
+                    <ui:Label text="Slot 2 — Spora Maturata" class="lab-fus-label" />
+                    <ui:VisualElement name="lab-fus-slot2" class="lab-fus-slot">
+                        <ui:Label name="lab-fus-slot2-text" text="—" class="lab-fus-slot-text" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-select-slot2" text="Seleziona" class="lab-fus-btn" />
+                </ui:VisualElement>
+                <ui:Label name="lab-fus-progress-text" text="" class="lab-fus-slot-text" style=" -unity-text-align: middle-center;" />
+                <ui:Button name="btn-fusion" text="AVVIA FUSIONE" class="lab-fus-btn-fusion" />
                 <ui:VisualElement name="lab-fus-output-row" class="lab-fus-row">
                     <ui:Label text="Output (Pre-Seed)" class="lab-fus-label" />
                     <ui:VisualElement name="lab-fus-output-slot" class="lab-fus-slot">

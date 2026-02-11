@@ -27,24 +27,57 @@ namespace _Project
         private LabUpgradesConfig _labUpgradesConfig;
         private DayCycleSystem _dayCycleSystem;
 
-        private ExtractorProcessState _state = ExtractorProcessState.Idle;
-        private float _extractionProgress;
-        private int _pendingSporeCount;
-        private int _pendingCell001;
-        private int _pendingCell002;
-        private int _pendingCell003;
-        private Coroutine _extractionCoroutine;
-        private int _plannedSporeOut;
-        private int _plannedCell001Out;
-        private int _plannedCell002Out;
-        private int _plannedCell003Out;
+        /// <summary>Per ogni slot: 0=vuoto, 1=in corso, 2=completato. Fino a 3 processi in parallelo.</summary>
+        private readonly int[] _slotStates = new int[3];
+        private readonly float[] _slotProgress = new float[3];
+        private readonly int[] _slotSpore = new int[3];
+        private readonly int[] _slotCell001 = new int[3];
+        private readonly int[] _slotCell002 = new int[3];
+        private readonly int[] _slotCell003 = new int[3];
+        private readonly Coroutine[] _slotCoroutines = new Coroutine[3];
 
-        public ExtractorProcessState State => _state;
-        public float ExtractionProgress => _extractionProgress;
-        public int PendingSporeCount => _pendingSporeCount;
-        public int PendingCell001 => _pendingCell001;
-        public int PendingCell002 => _pendingCell002;
-        public int PendingCell003 => _pendingCell003;
+        private static string ExtractorProgressToastKey(int slot) => $"extractor-progress-{slot}";
+
+        public ExtractorProcessState State =>
+            AnySlotInProgress() ? ExtractorProcessState.InProgress :
+            CompletedCount() > 0 ? ExtractorProcessState.Completed : ExtractorProcessState.Idle;
+
+        public float ExtractionProgress
+        {
+            get
+            {
+                for (int i = 0; i < 3; i++)
+                    if (_slotStates[i] == 1) return _slotProgress[i];
+                return CompletedCount() > 0 ? 1f : 0f;
+            }
+        }
+
+        public int PendingSporeCount => _slotSpore[0] + _slotSpore[1] + _slotSpore[2];
+        public int PendingCell001 => _slotCell001[0] + _slotCell001[1] + _slotCell001[2];
+        public int PendingCell002 => _slotCell002[0] + _slotCell002[1] + _slotCell002[2];
+        public int PendingCell003 => _slotCell003[0] + _slotCell003[1] + _slotCell003[2];
+
+        public int CompletedCount()
+        {
+            int n = 0;
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 2) n++;
+            return n;
+        }
+
+        public bool AnySlotInProgress()
+        {
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 1) return true;
+            return false;
+        }
+
+        public int FreeSlotIndex()
+        {
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 0) return i;
+            return -1;
+        }
 
         private void Awake()
         {
@@ -68,41 +101,45 @@ namespace _Project
             _interactable.OnInteract -= HandleInteract;
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= HandleDayChanged;
-            if (_extractionCoroutine != null)
-                StopCoroutine(_extractionCoroutine);
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotCoroutines[i] != null)
+                    StopCoroutine(_slotCoroutines[i]);
+            }
         }
 
         private void HandleDayChanged(int day)
         {
-            if (_state != ExtractorProcessState.InProgress) return;
-            if (_extractionCoroutine != null)
-            {
-                StopCoroutine(_extractionCoroutine);
-                _extractionCoroutine = null;
-            }
-            _pendingSporeCount = _plannedSporeOut;
-            _pendingCell001 = _plannedCell001Out;
-            _pendingCell002 = _plannedCell002Out;
-            _pendingCell003 = _plannedCell003Out;
-            _state = ExtractorProcessState.Completed;
-            _extractionProgress = 1f;
-            UpdateWorldStatusLabel();
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotStates[i] != 1) continue;
+                if (_slotCoroutines[i] != null)
+                {
+                    StopCoroutine(_slotCoroutines[i]);
+                    _slotCoroutines[i] = null;
+                }
+                CompleteSlot(i);
+                if (foundation != null && foundation.Enabled)
+                    foundation.RemoveToast(ExtractorProgressToastKey(i));
+            }
+            UpdateWorldStatusLabel();
             if (foundation != null && foundation.Enabled)
             {
-                foundation.RemoveToast(ExtractorProgressToastKey);
-                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
+                int ready = CompletedCount();
+                if (ready > 0)
+                    foundation.UpsertToast("extractor-done", "LAB-EXT-DONE", new NotificationPayload().With("count", ready.ToString()));
             }
         }
 
         private void Update()
         {
-            if (_state != ExtractorProcessState.Completed) return;
+            if (State != ExtractorProcessState.Completed) return;
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
+                foundation.UpsertToast("extractor-done", "LAB-EXT-DONE", new NotificationPayload().With("count", CompletedCount().ToString()));
         }
-        
+
         private void HandleInteract()
         {
             if (_labExtractorPanel != null)
@@ -113,12 +150,10 @@ namespace _Project
 #endif
             }
             else if (_labMiniGame != null)
-            {
                 _labMiniGame.Show();
-            }
 #if UNITY_EDITOR
             else
-                Debug.LogWarning("[Extractor] Nessun pannello assegnato: su Extractor (Inspector) assegna 'Lab Extractor Panel' al GameObject che ha LabExtractorPanelController (es. UI_LabExtractorPanel).");
+                Debug.LogWarning("[Extractor] Nessun pannello assegnato.");
 #endif
         }
 
@@ -133,7 +168,8 @@ namespace _Project
 
         public bool TryStartExtraction()
         {
-            if (_state != ExtractorProcessState.Idle) return false;
+            int idx = FreeSlotIndex();
+            if (idx < 0) return false;
 
             var gm = Sporae.Core.ServiceContainer.Instance?.Get<GameManager>();
             if (gm == null) gm = FindObjectOfType<GameManager>();
@@ -150,68 +186,70 @@ namespace _Project
             if (_inventory.Has(Items.Fruits))
             {
                 _inventory.Consume(Items.Fruits, 1);
-                _plannedSporeOut = 1; _plannedCell001Out = 0; _plannedCell002Out = 1; _plannedCell003Out = 0;
-                _extractionCoroutine = StartCoroutine(RunExtraction(1, 0, 1, 0));
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 1, 0));
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
                 _inventory.Consume(Items.WholePlant, 1);
-                _plannedSporeOut = 0; _plannedCell001Out = 1; _plannedCell002Out = 0; _plannedCell003Out = 0;
-                _extractionCoroutine = StartCoroutine(RunExtraction(0, 1, 0, 0));
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.OrganicScrap001))
             {
                 _inventory.Consume(Items.OrganicScrap001, 1);
-                _plannedSporeOut = 0; _plannedCell001Out = 1; _plannedCell002Out = 0; _plannedCell003Out = 0;
-                _extractionCoroutine = StartCoroutine(RunExtraction(0, 1, 0, 0));
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.ProteinResidue))
             {
                 _inventory.Consume(Items.ProteinResidue, 1);
-                _plannedSporeOut = 0; _plannedCell001Out = 0; _plannedCell002Out = 0; _plannedCell003Out = 1;
-                _extractionCoroutine = StartCoroutine(RunExtraction(0, 0, 0, 1));
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 0, 0, 1));
             }
             else
                 return false;
 
-            _state = ExtractorProcessState.InProgress;
+            _slotStates[idx] = 1;
+            _slotProgress[idx] = 0f;
             UpdateWorldStatusLabel();
             var foundationStart = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundationStart != null && foundationStart.Enabled)
-                foundationStart.UpsertToast("extractor-progress", "LAB-EXT-START", new NotificationPayload().With("percent", "0"));
+                foundationStart.UpsertToast(ExtractorProgressToastKey(idx), "LAB-EXT-START", new NotificationPayload().With("percent", "0"));
             return true;
         }
 
-        private const string ExtractorProgressToastKey = "extractor-progress";
+        private void CompleteSlot(int slotIndex)
+        {
+            _slotStates[slotIndex] = 2;
+            _slotProgress[slotIndex] = 1f;
+        }
 
-        private IEnumerator RunExtraction(int sporeOut, int cell001Out, int cell002Out, int cell003Out)
+        private IEnumerator RunExtraction(int slotIndex, int sporeOut, int cell001Out, int cell002Out, int cell003Out)
         {
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             float elapsed = 0f;
             while (elapsed < _extractionDurationSeconds)
             {
                 elapsed += Time.deltaTime;
-                _extractionProgress = Mathf.Clamp01(elapsed / _extractionDurationSeconds);
+                _slotProgress[slotIndex] = Mathf.Clamp01(elapsed / _extractionDurationSeconds);
                 UpdateWorldStatusLabel();
                 if (foundation != null && foundation.Enabled)
                 {
-                    int pct = Mathf.RoundToInt(_extractionProgress * 100f);
-                    foundation.UpsertToast(ExtractorProgressToastKey, "LAB-EXT-START", new NotificationPayload().With("percent", pct.ToString()));
+                    int pct = Mathf.RoundToInt(_slotProgress[slotIndex] * 100f);
+                    foundation.UpsertToast(ExtractorProgressToastKey(slotIndex), "LAB-EXT-START", new NotificationPayload().With("percent", pct.ToString()));
                 }
                 yield return null;
             }
-            _pendingSporeCount = sporeOut;
-            _pendingCell001 = cell001Out;
-            _pendingCell002 = cell002Out;
-            _pendingCell003 = cell003Out;
-            _state = ExtractorProcessState.Completed;
-            _extractionProgress = 1f;
-            _extractionCoroutine = null;
+            _slotSpore[slotIndex] = sporeOut;
+            _slotCell001[slotIndex] = cell001Out;
+            _slotCell002[slotIndex] = cell002Out;
+            _slotCell003[slotIndex] = cell003Out;
+            _slotStates[slotIndex] = 2;
+            _slotProgress[slotIndex] = 1f;
+            _slotCoroutines[slotIndex] = null;
             UpdateWorldStatusLabel();
             if (foundation != null && foundation.Enabled)
             {
-                foundation.RemoveToast(ExtractorProgressToastKey);
-                foundation.UpsertToast(ExtractorDoneToastKey, "LAB-EXT-DONE");
+                foundation.RemoveToast(ExtractorProgressToastKey(slotIndex));
+                int ready = CompletedCount();
+                foundation.UpsertToast("extractor-done", "LAB-EXT-DONE", new NotificationPayload().With("count", ready.ToString()));
             }
         }
 
@@ -220,27 +258,39 @@ namespace _Project
         public void CollectOutput(Inventory playerInventory)
         {
             if (playerInventory == null) return;
-            if (_pendingSporeCount > 0) { playerInventory.AddSporeRaw(_pendingSporeCount); _pendingSporeCount = 0; }
-            if (_pendingCell001 > 0) { playerInventory.Add(Items.StemCellVegetable, _pendingCell001); _pendingCell001 = 0; }
-            if (_pendingCell002 > 0) { playerInventory.Add(Items.StemCellFungus, _pendingCell002); _pendingCell002 = 0; }
-            if (_pendingCell003 > 0) { playerInventory.Add(Items.StemCellAnimal, _pendingCell003); _pendingCell003 = 0; }
-            _state = ExtractorProcessState.Idle;
-            _extractionProgress = 0f;
-            UpdateWorldStatusLabel();
+            int totalSpore = PendingSporeCount;
+            int totalC1 = PendingCell001;
+            int totalC2 = PendingCell002;
+            int totalC3 = PendingCell003;
+            if (totalSpore > 0) playerInventory.AddSporeRaw(totalSpore);
+            if (totalC1 > 0) playerInventory.Add(Items.StemCellVegetable, totalC1);
+            if (totalC2 > 0) playerInventory.Add(Items.StemCellFungus, totalC2);
+            if (totalC3 > 0) playerInventory.Add(Items.StemCellAnimal, totalC3);
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotStates[i] == 2)
+                {
+                    _slotStates[i] = 0;
+                    _slotSpore[i] = _slotCell001[i] = _slotCell002[i] = _slotCell003[i] = 0;
+                }
+            }
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.RemoveToast(ExtractorDoneToastKey);
+                foundation.RemoveToast("extractor-done");
+            UpdateWorldStatusLabel();
         }
 
         private void UpdateWorldStatusLabel()
         {
             if (_worldStatusLabel == null) return;
-            if (_state == ExtractorProcessState.InProgress)
+            if (AnySlotInProgress())
             {
-                int pct = Mathf.RoundToInt(_extractionProgress * 100f);
+                int pct = 0;
+                for (int i = 0; i < 3; i++)
+                    if (_slotStates[i] == 1) { pct = Mathf.RoundToInt(_slotProgress[i] * 100f); break; }
                 _worldStatusLabel.text = $"Estrazione in Corso.. {pct}%";
             }
-            else if (_state == ExtractorProcessState.Completed)
+            else if (CompletedCount() > 0)
                 _worldStatusLabel.text = "Estrazione completata";
             else
                 _worldStatusLabel.text = "";

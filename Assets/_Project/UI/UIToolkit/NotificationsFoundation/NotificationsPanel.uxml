@@ -45,6 +45,24 @@
                     <ui:Label name="nf-row-2-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:VisualElement name="nf-row-3" class="nf-row" style="height: 55px;">
+                <ui:VisualElement name="nf-row-3-iconbox" class="nf-iconbox nf-row-iconbox">
+                    <ui:Label name="nf-row-3-icon" text="!" class="nf-row-icon" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nf-row-3-text" class="nf-row-text">
+                    <ui:Label name="nf-row-3-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
+                    <ui:Label name="nf-row-3-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="nf-row-4" class="nf-row" style="height: 55px;">
+                <ui:VisualElement name="nf-row-4-iconbox" class="nf-iconbox nf-row-iconbox">
+                    <ui:Label name="nf-row-4-icon" text="!" class="nf-row-icon" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nf-row-4-text" class="nf-row-text">
+                    <ui:Label name="nf-row-4-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
+                    <ui:Label name="nf-row-4-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

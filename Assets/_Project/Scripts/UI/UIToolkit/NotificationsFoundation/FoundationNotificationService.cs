@@ -16,7 +16,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         // Runtime config (session-only) — modificabile da debug console
         public bool Enabled = true;
         public float ToastDurationSeconds = 8f;
-        public int MaxVisibleRows = 3;
+        public int MaxVisibleRows = 5;
         public bool EnableStagger = true;
         public float StaggerSeconds = 0.1f;
 
@@ -314,7 +314,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         }
 
         /// <summary>
-        /// Snapshot della lista visibile (max 3): DANGER pinnati sopra, poi toast temporanei.
+        /// Snapshot della lista visibile (max 5): DANGER pinnati sopra, poi toast temporanei.
         /// </summary>
         public IReadOnlyList<NotificationEntry> GetVisibleRows()
         {

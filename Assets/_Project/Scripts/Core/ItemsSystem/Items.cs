@@ -7,6 +7,8 @@ namespace _Project.Sporae.Core
         public const string WholePlant = "whole-plant";
         public const string OrganicScrap001 = "org-scr-001";
         public const string SporeGeneric = "spore-generic";
+        /// <summary>Output della Pipette (Fusione); usato come input nell'Incubatore.</summary>
+        public const string PreSeed = "pre-seed";
         public const string Seed001 = "seed-001";  // Standard
         public const string Seed002 = "seed-002";  // Pure
         public const string Seed003 = "seed-003";  // Evil

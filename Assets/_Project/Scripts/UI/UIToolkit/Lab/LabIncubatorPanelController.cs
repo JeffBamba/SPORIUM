@@ -127,7 +127,7 @@ namespace Sporae.UI.UIToolkit.Lab
             var allowed = IncubatorAllowedTypes();
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
-                "Seleziona Pre-Seed (spora) per l'Incubatore",
+                "Seleziona Pre-Seed per l'Incubatore",
                 typeId =>
                 {
                     // L'Incubatore usa direttamente l'inventario del giocatore; la selezione serve solo a confermare/disporre il picker
@@ -139,7 +139,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private static HashSet<string> IncubatorAllowedTypes()
         {
-            return new HashSet<string> { Items.SporeGeneric };
+            return new HashSet<string> { Items.PreSeed };
         }
 
         private void SetReagent(ReagentChoice choice)
@@ -160,7 +160,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private void RefreshDisplay()
         {
-            bool hasPreseed = _gameManager?.PlayerInventory != null && _gameManager.PlayerInventory.Has(Items.SporeGeneric);
+            bool hasPreseed = _gameManager?.PlayerInventory != null && _gameManager.PlayerInventory.Has(Items.PreSeed);
             if (_preseedText != null)
                 _preseedText.text = hasPreseed ? "Pre-Seed (1)" : "—";
 
@@ -189,7 +189,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private void OnAvviaClicked()
         {
-            if (_gameManager?.PlayerInventory == null || !_gameManager.PlayerInventory.Has(Items.SporeGeneric))
+            if (_gameManager?.PlayerInventory == null || !_gameManager.PlayerInventory.Has(Items.PreSeed))
                 return;
             if (_gameManager.ActionSystem == null || _gameManager.ActionSystem.ActionsLeft < _costAction)
                 return;
@@ -199,7 +199,7 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
 
-            _gameManager.PlayerInventory.Consume(Items.SporeGeneric, 1);
+            _gameManager.PlayerInventory.Consume(Items.PreSeed, 1);
             _incubationLaunched = true;
             RefreshDisplay();
         }
@@ -209,13 +209,14 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_outputSeedCount <= 0 || _gameManager?.PlayerInventory == null)
                 return;
 
-            _gameManager.PlayerInventory.Add(_outputSeedTypeId, _outputSeedCount);
+            int count = _outputSeedCount;
+            _gameManager.PlayerInventory.Add(_outputSeedTypeId, count);
             _outputSeedCount = 0;
             RefreshDisplay();
 
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToast("LAB-INC-OK");
+                foundation.PostToast("LAB-INC-OK", new NotificationPayload().With("count", count.ToString()));
         }
     }
 }

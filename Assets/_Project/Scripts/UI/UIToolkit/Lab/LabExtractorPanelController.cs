@@ -180,8 +180,8 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (_inputText != null) _inputText.text = inputDesc;
 
-            bool inProgress = _extractor != null && _extractor.State == ExtractorProcessState.InProgress;
-            bool completed = _extractor != null && _extractor.State == ExtractorProcessState.Completed;
+            bool inProgress = _extractor != null && _extractor.AnySlotInProgress();
+            bool completed = _extractor != null && _extractor.CompletedCount() > 0;
             if (_progressText != null)
             {
                 if (inProgress)
@@ -204,7 +204,7 @@ namespace Sporae.UI.UIToolkit.Lab
             int outC2 = _extractor != null ? _extractor.PendingCell002 : 0;
             int outC3 = _extractor != null ? _extractor.PendingCell003 : 0;
             var outParts = new System.Collections.Generic.List<string>();
-            if (outSpore > 0) outParts.Add($"{Items.SporeGeneric} x{outSpore}");
+            if (outSpore > 0) outParts.Add($"Spora Raw x{outSpore}");
             if (outC1 > 0) outParts.Add($"{Items.StemCellVegetable} x{outC1}");
             if (outC2 > 0) outParts.Add($"{Items.StemCellFungus} x{outC2}");
             if (outC3 > 0) outParts.Add($"{Items.StemCellAnimal} x{outC3}");
@@ -213,14 +213,15 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_btnRitira != null)
                 _btnRitira.SetEnabled(completed && (outSpore > 0 || outC1 > 0 || outC2 > 0 || outC3 > 0));
 
+            bool hasFreeSlot = _extractor != null && _extractor.FreeSlotIndex() >= 0;
             if (_btnAvvia != null)
             {
-                bool enableAvvia = !inProgress && canAvvia && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
+                bool enableAvvia = hasFreeSlot && canAvvia && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
                 _btnAvvia.SetEnabled(enableAvvia);
             }
 
             if (_btnSelectInput != null)
-                _btnSelectInput.SetEnabled(!inProgress);
+                _btnSelectInput.SetEnabled(true);
         }
 
         private void OnSelectInputClicked()
@@ -269,12 +270,13 @@ namespace Sporae.UI.UIToolkit.Lab
         private void OnRitiraClicked()
         {
             if (_gameManager?.PlayerInventory == null || _extractor == null) return;
+            int count = _extractor.CompletedCount();
             _extractor.CollectOutput(_gameManager.PlayerInventory);
             RefreshDisplay();
 
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToast("SPORE-001");
+                foundation.PostToast("LAB-EXT-RITIRA", new NotificationPayload().With("count", count.ToString()));
         }
     }
 }

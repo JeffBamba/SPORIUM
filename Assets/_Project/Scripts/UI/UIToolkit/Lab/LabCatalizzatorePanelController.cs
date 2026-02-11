@@ -37,12 +37,12 @@ namespace Sporae.UI.UIToolkit.Lab
         private GameManager _gameManager;
         private DayCycleSystem _dayCycleSystem;
         private Inventory _storage;
-        private int _outputMaturedCount;
-        private int _maturationState; // 0 Idle, 1 Day1, 2 Day2 → Ready (ciclo 2 giorni)
+        /// <summary>Per ogni slot: 0=vuoto, 1=giorno1, 2=giorno2, 3=pronto da ritirare. Fino a 3 processi in parallelo.</summary>
+        private readonly int[] _slotStates = new int[3];
         private bool _uiBound;
 
-        private const string CatalyserProgressToastKey = "catalizzatore-progress";
-        private const string CatalyserDoneToastKey = "catalizzatore-done";
+        private static string CatalyserProgressToastKey(int slot) => $"catalizzatore-progress-{slot}";
+        private static string CatalyserDoneToastKey(int slot) => $"catalizzatore-done-{slot}";
 
         private void Awake()
         {
@@ -128,10 +128,14 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!gameObject.activeInHierarchy) return;
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation == null || !foundation.Enabled) return;
-            if (_maturationState == 1 || _maturationState == 2)
-                foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", _maturationState.ToString()));
-            else if (_outputMaturedCount > 0)
-                foundation.UpsertToast(CatalyserDoneToastKey, "LAB-CAT-DONE");
+            int ready = ReadyCount();
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotStates[i] == 1 || _slotStates[i] == 2)
+                    foundation.UpsertToast(CatalyserProgressToastKey(i), "LAB-CAT-PROGRESS", new NotificationPayload().With("day", _slotStates[i].ToString()));
+                else if (_slotStates[i] == 3)
+                    foundation.UpsertToast(CatalyserDoneToastKey(i), "LAB-CAT-DONE", new NotificationPayload().With("count", ready.ToString()));
+            }
         }
 
         public void Show()
@@ -157,49 +161,78 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (_root != null)
                 _root.pickingMode = PickingMode.Ignore;
-            // Tieni il GameObject attivo durante la maturazione o quando c'è output da ritirare (così Update rinnova i toast)
-            if (_maturationState == 0 && _outputMaturedCount == 0)
+            bool anyInProgress = _slotStates[0] == 1 || _slotStates[0] == 2 || _slotStates[1] == 1 || _slotStates[1] == 2 || _slotStates[2] == 1 || _slotStates[2] == 2;
+            bool anyReady = _slotStates[0] == 3 || _slotStates[1] == 3 || _slotStates[2] == 3;
+            if (!anyInProgress && !anyReady)
                 gameObject.SetActive(false);
         }
 
         private void HandleDayChanged(int day)
         {
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-            if (_maturationState == 1)
+            for (int i = 0; i < 3; i++)
             {
-                _maturationState = 2;
-                if (foundation != null && foundation.Enabled)
-                    foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "2"));
-            }
-            else if (_maturationState == 2)
-            {
-                _maturationState = 0;
-                _outputMaturedCount += 1;
-                if (foundation != null && foundation.Enabled)
+                if (_slotStates[i] == 1)
                 {
-                    foundation.RemoveToast(CatalyserProgressToastKey);
-                    foundation.UpsertToast(CatalyserDoneToastKey, "LAB-CAT-DONE");
+                    _slotStates[i] = 2;
+                    if (foundation != null && foundation.Enabled)
+                        foundation.UpsertToast(CatalyserProgressToastKey(i), "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "2"));
+                }
+                else if (_slotStates[i] == 2)
+                {
+                    _slotStates[i] = 3;
+                    if (foundation != null && foundation.Enabled)
+                    {
+                        foundation.RemoveToast(CatalyserProgressToastKey(i));
+                        foundation.UpsertToast(CatalyserDoneToastKey(i), "LAB-CAT-DONE", new NotificationPayload().With("count", ReadyCount().ToString()));
+                    }
                 }
             }
             RefreshDisplay();
         }
 
+        private int ReadyCount()
+        {
+            int n = 0;
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 3) n++;
+            return n;
+        }
+
+        private bool AnySlotInProgress()
+        {
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 1 || _slotStates[i] == 2) return true;
+            return false;
+        }
+
+        private int FreeSlotIndex()
+        {
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 0) return i;
+            return -1;
+        }
+
         private void RefreshDisplay()
         {
+            int ready = ReadyCount();
+            bool inProgress = AnySlotInProgress();
+            int inProgressCount = 0;
+            for (int i = 0; i < 3; i++)
+                if (_slotStates[i] == 1 || _slotStates[i] == 2) inProgressCount++;
+
             if (_statusLabel != null)
             {
-                if (_maturationState == 1)
-                    _statusLabel.text = "Stato: Maturazione in corso (giorno 1)";
-                else if (_maturationState == 2)
-                    _statusLabel.text = "Stato: Maturazione in corso (giorno 2)";
-                else if (_outputMaturedCount > 0)
-                    _statusLabel.text = "Stato: Pronto — ritira spora maturata";
+                if (inProgressCount > 0)
+                    _statusLabel.text = $"Stato: {inProgressCount} maturazione/i in corso (fino a 3)";
+                else if (ready > 0)
+                    _statusLabel.text = "Stato: Pronto — ritira spora/e maturata/e";
                 else
-                    _statusLabel.text = "Stato: In attesa di input (spora Raw)";
+                    _statusLabel.text = "Stato: In attesa di input (spora Raw). Fino a 3 in parallelo.";
             }
 
             if (_operationLabel != null)
-                _operationLabel.style.display = (_maturationState == 1 || _maturationState == 2) ? DisplayStyle.Flex : DisplayStyle.None;
+                _operationLabel.style.display = inProgress ? DisplayStyle.Flex : DisplayStyle.None;
 
             if (_inputText != null)
             {
@@ -214,20 +247,21 @@ namespace Sporae.UI.UIToolkit.Lab
             }
 
             if (_outputText != null)
-                _outputText.text = _outputMaturedCount > 0 ? $"{Items.SporeGeneric} (maturata) x{_outputMaturedCount}" : "—";
+                _outputText.text = ready > 0 ? $"Spora maturata x{ready}" : "—";
 
             if (_btnRitira != null)
-                _btnRitira.SetEnabled(_outputMaturedCount > 0);
+                _btnRitira.SetEnabled(ready > 0);
 
+            bool hasFreeSlot = FreeSlotIndex() >= 0;
             if (_btnAvvia != null)
             {
-                bool canAvvia = _maturationState == 0 && _storage != null && _storage.Has(Items.SporeGeneric)
+                bool canAvvia = hasFreeSlot && _storage != null && _storage.Has(Items.SporeGeneric)
                     && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
                 _btnAvvia.SetEnabled(canAvvia);
             }
 
             if (_btnSelectInput != null)
-                _btnSelectInput.SetEnabled(_maturationState == 0);
+                _btnSelectInput.SetEnabled(true);
         }
 
         private void OnSelectInputClicked()
@@ -270,35 +304,42 @@ namespace Sporae.UI.UIToolkit.Lab
                     foundation.PostToastImmediate("ACT-050");
                 return;
             }
-            if (_maturationState != 0)
+            int idx = FreeSlotIndex();
+            if (idx < 0)
                 return;
 
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
 
             _storage.Consume(Items.SporeGeneric, 1);
-            _maturationState = 1;
+            _slotStates[idx] = 1;
             if (foundation != null && foundation.Enabled)
-                foundation.UpsertToast(CatalyserProgressToastKey, "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "1"));
+                foundation.UpsertToast(CatalyserProgressToastKey(idx), "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "1"));
             RefreshDisplay();
         }
 
         private void OnRitiraClicked()
         {
-            if (_outputMaturedCount <= 0 || _gameManager?.PlayerInventory == null)
+            int ready = ReadyCount();
+            if (ready <= 0 || _gameManager?.PlayerInventory == null)
                 return;
 
-            int amount = _outputMaturedCount;
-            _gameManager.PlayerInventory.AddSporeMatured(amount);
-            _outputMaturedCount = 0;
+            _gameManager.PlayerInventory.AddSporeMatured(ready);
+            for (int i = 0; i < 3; i++)
+            {
+                if (_slotStates[i] == 3)
+                {
+                    _slotStates[i] = 0;
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                        foundation.RemoveToast(CatalyserDoneToastKey(i));
+                }
+            }
             RefreshDisplay();
 
-            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-            if (foundation != null && foundation.Enabled)
-            {
-                foundation.RemoveToast(CatalyserDoneToastKey);
-                foundation.PostToast("LAB-CAT-RITIRA", new NotificationPayload().With("amount", amount.ToString()));
-            }
+            var foundationRitira = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundationRitira != null && foundationRitira.Enabled)
+                foundationRitira.PostToast("LAB-CAT-RITIRA", new NotificationPayload().With("amount", ready.ToString()));
         }
     }
 }
