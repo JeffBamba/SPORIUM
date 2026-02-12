@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.PlantCard.Components;
 
 namespace Sporae.Core
 {
@@ -91,7 +93,20 @@ namespace Sporae.Core
                 
                 // Salva anche in PlayerPrefs come backup/metadata
                 PlayerPrefs.SetString($"{SAVE_KEY_PREFIX}{slotName}", json);
-                PlayerPrefs.SetString($"{SAVE_KEY_PREFIX}{slotName}_timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                string timestampStr = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                PlayerPrefs.SetString($"{SAVE_KEY_PREFIX}{slotName}_timestamp", timestampStr);
+
+                // Riepilogo per UI (Giorno, CRY, Piante in Dome)
+                int plantsInDome = saveData.pots != null ? saveData.pots.Count(p => p.hasPlant) : 0;
+                var summary = new SaveSlotSummary
+                {
+                    day = saveData.gameState?.currentDay ?? 1,
+                    cry = saveData.gameState?.currentCRY ?? 0,
+                    plantsInDome = plantsInDome,
+                    timestamp = timestampStr
+                };
+                PlayerPrefs.SetString($"{SAVE_KEY_PREFIX}{slotName}_summary", JsonUtility.ToJson(summary));
+
                 PlayerPrefs.Save();
                 
 #if UNITY_EDITOR
@@ -134,6 +149,18 @@ namespace Sporae.Core
                 }
                 
                 var saveData = JsonUtility.FromJson<GameSaveData>(json);
+                if (saveData == null)
+                {
+                    SporiumLogger.LogError(LogCategory.Save, "Salvataggio corrotto: deserializzazione restituita null");
+                    return false;
+                }
+                if (saveData.gameState == null)
+                {
+                    SporiumLogger.LogWarning(LogCategory.Save, "Salvataggio senza gameState: formato vecchio o corrotto. Ripristino parziale.");
+                    saveData.gameState = new GameStateData { currentDay = 1, currentCRY = 250, actionsLeft = 4, condensationAmount = 0f };
+                }
+                if (saveData.inventoryVersion <= 0)
+                    saveData.inventoryVersion = 1;
                 ApplySaveData(saveData);
                 
 #if UNITY_EDITOR
@@ -165,6 +192,7 @@ namespace Sporae.Core
                 // Elimina PlayerPrefs
                 PlayerPrefs.DeleteKey($"{SAVE_KEY_PREFIX}{slotName}");
                 PlayerPrefs.DeleteKey($"{SAVE_KEY_PREFIX}{slotName}_timestamp");
+                PlayerPrefs.DeleteKey($"{SAVE_KEY_PREFIX}{slotName}_summary");
                 PlayerPrefs.Save();
                 
 #if UNITY_EDITOR
@@ -198,6 +226,76 @@ namespace Sporae.Core
                 return PlayerPrefs.GetString($"{SAVE_KEY_PREFIX}{slotName}_timestamp");
             }
             return "N/A";
+        }
+
+        /// <summary>
+        /// Nomi slot disponibili per salvare/caricare.
+        /// </summary>
+        public static readonly string[] SlotNames = { "default", "slot2", "slot3" };
+
+        /// <summary>
+        /// Nome visualizzato per uno slot (es. "Slot 1", "Slot 2").
+        /// </summary>
+        public static string GetSlotDisplayName(string slotName)
+        {
+            for (int i = 0; i < SlotNames.Length; i++)
+                if (SlotNames[i] == slotName)
+                    return $"Slot {i + 1}";
+            return slotName;
+        }
+
+        /// <summary>
+        /// Riepilogo partita salvata (per UI Load/Save).
+        /// </summary>
+        [Serializable]
+        public struct SaveSlotSummary
+        {
+            public int day;
+            public int cry;
+            public int plantsInDome;
+            public string timestamp;
+        }
+
+        /// <summary>
+        /// Ottiene il riepilogo di una partita salvata senza caricarla (Giorno, CRY, Piante in Dome).
+        /// </summary>
+        public SaveSlotSummary? GetSaveSummary(string slotName)
+        {
+            if (!SaveExists(slotName)) return null;
+
+            string summaryKey = $"{SAVE_KEY_PREFIX}{slotName}_summary";
+            if (PlayerPrefs.HasKey(summaryKey))
+            {
+                try
+                {
+                    var s = JsonUtility.FromJson<SaveSlotSummary>(PlayerPrefs.GetString(summaryKey));
+                    return s;
+                }
+                catch { /* ignore */ }
+            }
+
+            // Salvataggio vecchio senza summary: leggi da file
+            try
+            {
+                string json = null;
+                string savePath = GetSaveFilePath(slotName);
+                if (File.Exists(savePath)) json = File.ReadAllText(savePath);
+                else if (PlayerPrefs.HasKey($"{SAVE_KEY_PREFIX}{slotName}")) json = PlayerPrefs.GetString($"{SAVE_KEY_PREFIX}{slotName}");
+                if (string.IsNullOrEmpty(json)) return null;
+
+                var data = JsonUtility.FromJson<GameSaveData>(json);
+                if (data?.gameState == null) return null;
+                int plants = data.pots != null ? data.pots.Count(p => p.hasPlant) : 0;
+                var summary = new SaveSlotSummary
+                {
+                    day = data.gameState.currentDay,
+                    cry = data.gameState.currentCRY,
+                    plantsInDome = plants,
+                    timestamp = GetSaveTimestamp(slotName)
+                };
+                return summary;
+            }
+            catch { return null; }
         }
         
         /// <summary>
@@ -245,6 +343,17 @@ namespace Sporae.Core
                 saveData.missions = SerializeMissions(missionManager);
             }
 
+            // Note diario piante
+            saveData.diaryNotes = new List<DiaryNoteEntry>();
+            var diaryManager = PlantDiaryManager.Instance;
+            if (diaryManager != null)
+            {
+                diaryManager.CollectNotesForSave((potId, day, text, timestamp) =>
+                {
+                    saveData.diaryNotes.Add(new DiaryNoteEntry { potId = potId, day = day, text = text, timestamp = timestamp });
+                });
+            }
+
             if (gameManager != null)
                 saveData.stemCellModuleUnlocked = gameManager.IsStemCellModuleUnlocked;
             
@@ -265,10 +374,9 @@ namespace Sporae.Core
             var gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
             var dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
             
-            if (dayCycleSystem != null && saveData.gameState.currentDay > 0)
+            if (dayCycleSystem != null && saveData.gameState != null && saveData.gameState.currentDay > 0)
             {
-                // Nota: CurrentDay è privato, potrebbe essere necessario aggiungere un setter
-                // Per ora, il sistema di giorni si aggiornerà naturalmente
+                dayCycleSystem.SetCurrentDay(saveData.gameState.currentDay);
             }
             
             if (gameManager != null && saveData.gameState != null)
@@ -285,6 +393,11 @@ namespace Sporae.Core
                     // Usa maxActions dal sistema attuale se non salvato
                     int maxActions = gameManager.ActionSystem.MaxActions;
                     gameManager.ActionSystem.RestoreState(saveData.gameState.actionsLeft, maxActions);
+                }
+
+                if (gameManager.CondensationSystem != null)
+                {
+                    gameManager.CondensationSystem.SetCurrentAccumulation(saveData.gameState.condensationAmount);
                 }
             }
             
@@ -303,8 +416,38 @@ namespace Sporae.Core
 
             if (gameManager != null && saveData.gameState != null)
                 gameManager.SetStemCellModuleUnlocked(saveData.stemCellModuleUnlocked);
-            
-            // Statistiche e missioni vengono ripristinate quando i sistemi vengono caricati
+
+            // Note diario piante
+            if (saveData.diaryNotes != null && saveData.diaryNotes.Count > 0)
+            {
+                var diaryManager = PlantDiaryManager.Instance;
+                if (diaryManager != null)
+                {
+                    var notes = new List<(string potId, int day, string text, string timestampIso)>();
+                    foreach (var e in saveData.diaryNotes)
+                    {
+                        if (string.IsNullOrEmpty(e.potId)) continue;
+                        notes.Add((e.potId, e.day, e.text ?? "", e.timestamp ?? ""));
+                    }
+                    diaryManager.ApplyNotesFromSave(notes);
+                }
+            }
+
+            // Missioni
+            if (saveData.missions?.entries != null && saveData.missions.entries.Count > 0)
+            {
+                var missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+                if (missionManager != null)
+                {
+                    var entries = new List<(string configName, bool isCompleted)>();
+                    foreach (var e in saveData.missions.entries)
+                    {
+                        if (string.IsNullOrEmpty(e.configName)) continue;
+                        entries.Add((e.configName, e.isCompleted));
+                    }
+                    missionManager.RestoreFromSave(entries);
+                }
+            }
         }
         
         /// <summary>
@@ -530,8 +673,15 @@ namespace Sporae.Core
         /// </summary>
         private MissionsData SerializeMissions(MissionManager missionManager)
         {
-            // Implementa serializzazione quando MissionManager ha dati serializzabili
-            return new MissionsData();
+            var data = new MissionsData();
+            data.entries = new List<MissionEntryData>();
+            if (missionManager?.CurrentMissions == null) return data;
+            foreach (var m in missionManager.CurrentMissions)
+            {
+                if (m?.Config == null) continue;
+                data.entries.Add(new MissionEntryData { configName = m.Config.name, isCompleted = m.IsCompleted });
+            }
+            return data;
         }
         
         /// <summary>
@@ -561,6 +711,7 @@ namespace Sporae.Core
             public List<PotStateData> pots;
             public DiaryStatisticsData diaryStatistics;
             public MissionsData missions;
+            public List<DiaryNoteEntry> diaryNotes;
             public bool stemCellModuleUnlocked;
             public string saveTimestamp;
             public string gameVersion;
@@ -641,15 +792,31 @@ namespace Sporae.Core
         }
         
         [Serializable]
+        private class DiaryNoteEntry
+        {
+            public string potId;
+            public int day;
+            public string text;
+            public string timestamp;
+        }
+
+        [Serializable]
         private class DiaryStatisticsData
         {
             // Aggiungi campi quando DiaryStatistics è implementato
         }
         
         [Serializable]
+        private class MissionEntryData
+        {
+            public string configName;
+            public bool isCompleted;
+        }
+
+        [Serializable]
         private class MissionsData
         {
-            // Aggiungi campi quando MissionManager ha dati serializzabili
+            public List<MissionEntryData> entries;
         }
     }
 }

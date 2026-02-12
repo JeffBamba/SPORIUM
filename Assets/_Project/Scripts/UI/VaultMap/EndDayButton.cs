@@ -1,6 +1,7 @@
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 using UnityEngine;
 using UnityEngine.UI;
 using Sporae.DevTools;
@@ -138,6 +139,12 @@ public class EndDayButton : MonoBehaviour
                         SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito con successo");
                     else
                         SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico");
+                }
+                if (saveSuccess)
+                {
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                        foundation.PostToast("SYS-003", new NotificationPayload());
                 }
             }
             

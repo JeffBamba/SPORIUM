@@ -28,6 +28,17 @@ namespace _Project.Sporae.Core
             OnDayChanged?.Invoke(CurrentDay);
         }
 
+        /// <summary>
+        /// Imposta il giorno corrente (usato dal SaveManager al caricamento).
+        /// Notifica la UI tramite OnDayChanged.
+        /// </summary>
+        public void SetCurrentDay(int day)
+        {
+            if (day < 1) return;
+            CurrentDay = day;
+            OnDayChanged?.Invoke(CurrentDay);
+        }
+
         public bool CanEndDay()
         {
             // BUG FIX: Controllo null per evitare crash

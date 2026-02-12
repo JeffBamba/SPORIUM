@@ -10,13 +10,28 @@ namespace _Project
         [SerializeField] private GameObject _page;
         
         private GameObject _activePopup = null;
-        
+        private SaveSlotsPopupController _slotsController;
+
         public bool IsOptionsOpen => _optionsPopup.activeSelf;
         public bool IsSlotsOpen => _slotsPopup.activeSelf;
 
         public void ShowOptionsPopup() => ShowPopup(_optionsPopup);
-        public void ShowSlotsPopup() => ShowPopup(_slotsPopup);
-        
+        /// <param name="forSave">true = scegli slot e salva, false = scegli slot e carica</param>
+        public void ShowSlotsPopup(bool forSave = false)
+        {
+            EnsureSlotsController();
+            _slotsController?.SetSaveMode(forSave);
+            ShowPopup(_slotsPopup);
+        }
+
+        private void EnsureSlotsController()
+        {
+            if (_slotsController != null) return;
+            _slotsController = _slotsPopup.GetComponent<SaveSlotsPopupController>();
+            if (_slotsController == null && _slotsPopup != null)
+                _slotsController = _slotsPopup.AddComponent<SaveSlotsPopupController>();
+        }
+
         public void HideActivePopup()
         {
             _activePopup?.SetActive(false);
@@ -26,7 +41,9 @@ namespace _Project
         {
             _activePopup?.SetActive(false);
             _activePopup = popup;
-            _activePopup.SetActive(true);   
+            _activePopup.SetActive(true);
+            if (popup == _slotsPopup)
+                _slotsController?.RefreshSlots();
         }
 
         private void Show()

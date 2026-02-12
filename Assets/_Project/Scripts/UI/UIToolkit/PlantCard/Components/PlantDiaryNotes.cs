@@ -21,12 +21,21 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
             public int Day;
             public string Text;
             public DateTime Timestamp;
-            
+
             public DiaryNote(int day, string text)
             {
                 Day = day;
                 Text = text;
                 Timestamp = DateTime.Now;
+            }
+
+            /// <summary>Per ripristino da save (timestamp da stringa).</summary>
+            public static DiaryNote FromSave(int day, string text, string timestampIso)
+            {
+                return new DiaryNote(day, text)
+                {
+                    Timestamp = DateTime.TryParse(timestampIso, out var t) ? t : DateTime.Now
+                };
             }
         }
         

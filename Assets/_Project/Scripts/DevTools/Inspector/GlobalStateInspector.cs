@@ -560,20 +560,33 @@ namespace Sporae.DevTools
             
             GUILayout.BeginVertical(GUI.skin.box);
             
-            // Nota: SaveManager potrebbe non esporre metodi pubblici per lista save slots
-            // Per ora solo visualizzazione base
             GUILayout.Label("Save System disponibile", labelStyle);
+            if (_saveManager.SaveExists("default"))
+                GUILayout.Label($"Ultimo salvataggio: {_saveManager.GetSaveTimestamp("default")}", labelStyle);
             
             if (GUILayout.Button("Save", buttonStyle, GUILayout.Width(150)))
             {
-                // Nota: Implementare save se SaveManager lo permette
-                SporiumLogger.LogInfo(LogCategory.Save, "Save button premuto (funzionalità da implementare)");
+                bool ok = _saveManager.SaveGame("default");
+                if (ok)
+                    SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio completato (slot default)");
+                else
+                    SporiumLogger.LogWarning(LogCategory.Save, "Salvataggio fallito");
             }
             
             if (GUILayout.Button("Load", buttonStyle, GUILayout.Width(150)))
             {
-                // Nota: Implementare load se SaveManager lo permette
-                SporiumLogger.LogInfo(LogCategory.Save, "Load button premuto (funzionalità da implementare)");
+                if (!_saveManager.SaveExists("default"))
+                {
+                    SporiumLogger.LogWarning(LogCategory.Save, "Nessun salvataggio da caricare");
+                }
+                else
+                {
+                    bool ok = _saveManager.LoadGame("default");
+                    if (ok)
+                        SporiumLogger.LogInfo(LogCategory.Save, "Caricamento completato (slot default)");
+                    else
+                        SporiumLogger.LogWarning(LogCategory.Save, "Caricamento fallito");
+                }
             }
             
             GUILayout.EndVertical();

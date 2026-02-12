@@ -1,10 +1,11 @@
+using System;
+using System.Collections;
 using _Project.Pot;
 using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
-using System;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -98,44 +99,66 @@ namespace _Project.Sporae.Core.Installers
                 assetManager.PreloadCriticalAssets();
             }
             
-            // Registra SaveManager e carica salvataggio se esiste
-            // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo
+            // Registra SaveManager; il caricamento viene posticipato dopo che GameManager è pronto
+            // (LoadGame in Awake fallirebbe perché GameManager ha DefaultExecutionOrder -50 e non è ancora registrato)
             var saveManager = SaveManager.Instance;
             if (saveManager != null)
             {
-                // Registra solo se non è già registrato (evita doppia registrazione)
                 if (!ServiceContainer.Instance.Contains(typeof(SaveManager)))
                 {
                     ServiceContainer.Instance.Register(saveManager);
                 }
-                
-                // Carica salvataggio automatico se esiste
-                if (saveManager.SaveExists("default"))
-                {
-                    bool loadSuccess = saveManager.LoadGame("default");
-#if UNITY_EDITOR
-                    if (loadSuccess)
-                    {
-                        SporiumLogger.LogInfo(LogCategory.Core, "✅ Salvataggio caricato automaticamente");
-                    }
-                    else
-                    {
-                        SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
-                    }
-#else
-                    if (!loadSuccess)
-                    {
-                        SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
-                    }
-#endif
-                }
-#if UNITY_EDITOR
-                else
-                {
-                    SporiumLogger.LogInfo(LogCategory.Core, "Nessun salvataggio trovato, partita nuova");
-                }
-#endif
+                StartCoroutine(LoadSaveWhenGameManagerReady(saveManager));
             }
+        }
+
+        /// <summary>
+        /// Se true, la prossima volta che la scena di gioco viene caricata non verrà eseguito l'auto-load del save.
+        /// Impostare a true da "New Game" nel menu prima di LoadScene.
+        /// </summary>
+        public static bool SkipAutoLoad { get; set; }
+
+        /// <summary>
+        /// Carica il salvataggio "default" solo dopo che GameManager è registrato e inizializzato,
+        /// così ApplySaveData può ripristinare CRY, azioni, inventario e condensazione correttamente.
+        /// </summary>
+        private IEnumerator LoadSaveWhenGameManagerReady(SaveManager saveManager)
+        {
+            if (SkipAutoLoad)
+            {
+                SkipAutoLoad = false;
+                yield break;
+            }
+
+            const int maxFrames = 30;
+            int frame = 0;
+            while (frame < maxFrames)
+            {
+                yield return null;
+                frame++;
+                var gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+                if (gameManager != null)
+                    break;
+            }
+
+            if (!saveManager.SaveExists("default"))
+            {
+#if UNITY_EDITOR
+                SporiumLogger.LogInfo(LogCategory.Core, "Nessun salvataggio trovato, partita nuova");
+#endif
+                yield break;
+            }
+
+            bool loadSuccess = saveManager.LoadGame("default");
+#if UNITY_EDITOR
+            if (loadSuccess)
+                SporiumLogger.LogInfo(LogCategory.Core, "✅ Salvataggio caricato automaticamente");
+            else
+                SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
+#else
+            if (!loadSuccess)
+                SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
+#endif
         }
 
         private void Update()

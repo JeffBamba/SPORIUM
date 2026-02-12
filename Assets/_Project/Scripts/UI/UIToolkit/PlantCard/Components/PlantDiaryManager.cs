@@ -82,19 +82,50 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
         }
         
         /// <summary>
-        /// Salva note (per integrazione futura con SaveManager)
+        /// Raccolta note per SaveManager: per ogni nota invoca addNote(potId, day, text, timestampIso).
+        /// </summary>
+        public void CollectNotesForSave(Action<string, int, string, string> addNote)
+        {
+            if (addNote == null) return;
+            foreach (var kv in _notesByPotId)
+            {
+                foreach (var n in kv.Value)
+                {
+                    addNote(kv.Key, n.Day, n.Text, n.Timestamp.ToString("o"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ripristina note da salvataggio (potId, day, text, timestampIso).
+        /// </summary>
+        public void ApplyNotesFromSave(IEnumerable<(string potId, int day, string text, string timestampIso)> notes)
+        {
+            if (notes == null) return;
+            _notesByPotId.Clear();
+            foreach (var n in notes)
+            {
+                if (string.IsNullOrEmpty(n.potId)) continue;
+                if (!_notesByPotId.ContainsKey(n.potId))
+                    _notesByPotId[n.potId] = new List<PlantDiaryNotes.DiaryNote>();
+                _notesByPotId[n.potId].Add(PlantDiaryNotes.DiaryNote.FromSave(n.day, n.text, n.timestampIso));
+            }
+        }
+
+        /// <summary>
+        /// Salva note (delegato a SaveManager al salvataggio globale).
         /// </summary>
         public void SaveNotes()
         {
-            // TODO: Integrazione con SaveManager se necessario
+            // Integrato in SaveManager.CollectSaveData
         }
-        
+
         /// <summary>
-        /// Carica note (per integrazione futura con SaveManager)
+        /// Carica note (delegato a SaveManager al caricamento globale).
         /// </summary>
         public void LoadNotes()
         {
-            // TODO: Integrazione con SaveManager se necessario
+            // Integrato in SaveManager.ApplySaveData
         }
     }
 }

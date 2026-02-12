@@ -580,10 +580,14 @@ namespace Sporae.UI.UIToolkit.Lab
             string nameB = GetPlantBaseName(codeB);
             if (string.IsNullOrEmpty(nameA)) nameA = codeA ?? "—";
             if (string.IsNullOrEmpty(nameB)) nameB = codeB ?? "—";
+            if (string.IsNullOrWhiteSpace(nameA)) nameA = "Seme";
+            if (string.IsNullOrWhiteSpace(nameB)) nameB = "Seme";
             bool samePlant = string.Equals(codeA, codeB, System.StringComparison.OrdinalIgnoreCase) || string.Equals(nameA, nameB, System.StringComparison.OrdinalIgnoreCase);
             if (samePlant || string.IsNullOrEmpty(codeB))
             {
                 list.Add(nameA);
+                if (list.Count == 1)
+                    list.Add(CustomNameOption);
                 return list;
             }
             var wordsA = nameA.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();

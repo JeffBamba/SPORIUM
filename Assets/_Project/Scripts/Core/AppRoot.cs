@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace Sporae.Core
 {
@@ -310,6 +311,12 @@ namespace Sporae.Core
                         else
                             SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico (focus)");
                     }
+                    if (saveSuccess)
+                    {
+                        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                        if (foundation != null && foundation.Enabled)
+                            foundation.PostToast("SYS-003", new NotificationPayload());
+                    }
                 }
             }
             
@@ -332,6 +339,12 @@ namespace Sporae.Core
                         SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito (chiusura applicazione)");
                     else
                         SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico (quit)");
+                }
+                if (saveSuccess)
+                {
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                        foundation.PostToast("SYS-003", new NotificationPayload());
                 }
             }
         }
