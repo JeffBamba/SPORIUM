@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using _Project;
 using _Project.Pot;
 using UnityEngine;
 using _Project.Sporae.Core;
@@ -47,6 +48,9 @@ namespace _Project.Sporae.Core.Installers
             
             ServiceContainer.Instance.Register(new GoalCheckers());
             ServiceContainer.Instance.Register(new DiaryStatistics());
+            ServiceContainer.Instance.Register(new DayActivityLog());
+            ServiceContainer.Instance.Register(new WikiUnlockService());
+            ServiceContainer.Instance.Register(new NightEventsGenerator());
             ServiceContainer.Instance.Register(new PotNotifications());
 
             // Registra ToastNotificationManager se presente nella scena

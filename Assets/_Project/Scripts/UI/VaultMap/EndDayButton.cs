@@ -21,6 +21,8 @@ public class EndDayButton : MonoBehaviour
     [SerializeField] private bool validateOnStart = true;
     [SerializeField] private bool showDebugLogs = true;
 
+    [Header("End of Day — prefer EoD sequence (UIToolkit)")]
+    [SerializeField] private EndOfDaySequenceController _eodController;
     [SerializeField] private DiaryUI _diaryUI;
     
     private DayCycleSystem _dayCycleSystem;
@@ -128,27 +130,34 @@ public class EndDayButton : MonoBehaviour
         
         if (_dayCycleSystem.CanEndDay())
         {
-            // Salvataggio automatico prima di finire il giorno
-            var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
-            if (saveManager != null)
+            if (_eodController != null)
             {
-                bool saveSuccess = saveManager.SaveGame("default");
-                if (showDebugLogs)
-                {
-                    if (saveSuccess)
-                        SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito con successo");
-                    else
-                        SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico");
-                }
-                if (saveSuccess)
-                {
-                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-                    if (foundation != null && foundation.Enabled)
-                        foundation.PostToast("SYS-003", new NotificationPayload());
-                }
+                _eodController.StartSequence();
+                OnEndDaySuccess();
+                return;
             }
-            
-            _diaryUI.Show();
+            if (_diaryUI != null)
+            {
+                var saveManager = ServiceContainer.Instance?.Get<SaveManager>();
+                if (saveManager != null)
+                {
+                    bool saveSuccess = saveManager.SaveGame("default");
+                    if (showDebugLogs)
+                    {
+                        if (saveSuccess)
+                            SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito con successo");
+                        else
+                            SporiumLogger.LogWarning(LogCategory.Save, "Errore durante il salvataggio automatico");
+                    }
+                    if (saveSuccess)
+                    {
+                        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                        if (foundation != null && foundation.Enabled)
+                            foundation.PostToast("SYS-003", new NotificationPayload());
+                    }
+                }
+                _diaryUI.Show();
+            }
         }
         else 
             OnEndDayFailed("CRY insufficienti");

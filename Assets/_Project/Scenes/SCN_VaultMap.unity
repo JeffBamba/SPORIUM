@@ -34807,6 +34807,69 @@ RectTransform:
   m_AnchoredPosition: {x: -265, y: 15}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1287834955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1287834958}
+  - component: {fileID: 1287834957}
+  - component: {fileID: 1287834956}
+  m_Layer: 0
+  m_Name: EndOfDaySequence
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1287834956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287834955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb57399328818fc4785961439a1129b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiDocument: {fileID: 0}
+  _nightResearchTransitionDelay: 1
+--- !u!114 &1287834957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287834955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: 042ecd5ecc4509a4e969c8d7297902d6, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: c0ca03f94c7c075418a26df786155b44, type: 3}
+  m_SortingOrder: 0
+--- !u!4 &1287834958
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287834955}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -41.936813, y: 4.09801, z: 0.017648757}
+  m_LocalScale: {x: 3.3333335, y: 3.3333335, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1664086550}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1292335358
 GameObject:
   m_ObjectHideFlags: 0
@@ -44523,6 +44586,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1328089575}
+  - {fileID: 1287834958}
   m_Father: {fileID: 348340776}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1664086552
@@ -44649,6 +44713,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e3c72ca0d5547508d295c1204e22c18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _eodController: {fileID: 1287834956}
   _diaryUI: {fileID: 1165262140}
 --- !u!1 &1665991021
 GameObject:
@@ -53208,6 +53273,7 @@ MonoBehaviour:
   buttonText: {fileID: 0}
   validateOnStart: 1
   showDebugLogs: 1
+  _eodController: {fileID: 0}
   _diaryUI: {fileID: 1165262140}
 --- !u!114 &2033427972
 MonoBehaviour:

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
@@ -127,6 +127,9 @@ namespace _Project
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
                 return;
 
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction(new DayActivityLog.LabActivityEntry { LabType = "Extractor", InputDescription = "frutto", SporeOut = 1, Cell001Out = 0, Cell002Out = 1, Cell003Out = 0 });
             _dragDropUI.ConfirmOperation();
             _storage.Consume(Items.Fruits);
 

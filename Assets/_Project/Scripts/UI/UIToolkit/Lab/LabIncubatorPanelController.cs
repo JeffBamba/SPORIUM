@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
@@ -455,6 +456,9 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
 
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction("Incubator");
             if (!_gameManager.PlayerInventory.TryRemoveFirst(Items.PreSeed, out _incubatingPreSeed))
                 return;
             if (!string.IsNullOrEmpty(_reagentTypeId))

@@ -200,8 +200,11 @@ namespace _Project
             if (!gm.TrySpendAction(1)) return false;
 
             bool hasStem = HasStemCellModule;
+            string inputDesc = "";
+            int sporeOut = 0, cell001Out = 0, cell002Out = 0, cell003Out = 0;
             if (_inventory.Has(Items.Fruits) && _inventory.TryRemoveFirst(Items.Fruits, out var fruit))
             {
+                inputDesc = "frutto"; sporeOut = 1; cell002Out = 1;
                 _slotInputFruit[idx] = fruit;
                 _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
                 SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
@@ -209,6 +212,7 @@ namespace _Project
             }
             else if (_inventory.Has(Items.FruitsKnown) && _inventory.TryRemoveFirst(Items.FruitsKnown, out fruit))
             {
+                inputDesc = "frutto"; sporeOut = 1; cell002Out = 1;
                 _slotInputFruit[idx] = fruit;
                 _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
                 SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
@@ -216,6 +220,7 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
+                inputDesc = "pianta intera"; cell001Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.WholePlant, 1);
@@ -224,6 +229,7 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.OrganicScrap001))
             {
+                inputDesc = "scrap organico"; cell001Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.OrganicScrap001, 1);
@@ -232,6 +238,7 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.ProteinResidue))
             {
+                inputDesc = "residuo proteico"; cell003Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.ProteinResidue, 1);
@@ -244,6 +251,9 @@ namespace _Project
             _slotStates[idx] = 1;
             _slotProgress[idx] = 0f;
             UpdateWorldStatusLabel();
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction(new DayActivityLog.LabActivityEntry { LabType = "Extractor", InputDescription = inputDesc, SporeOut = sporeOut, Cell001Out = cell001Out, Cell002Out = cell002Out, Cell003Out = cell003Out });
             var foundationStart = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundationStart != null && foundationStart.Enabled)
                 foundationStart.UpsertToast(ExtractorProgressToastKey(idx), "LAB-EXT-START", new NotificationPayload().With("percent", "0"));

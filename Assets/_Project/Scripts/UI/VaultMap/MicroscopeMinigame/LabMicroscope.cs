@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using _Project.Sporae.Core;
 using Sporae.Core;
@@ -111,7 +111,10 @@ namespace _Project
         {
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
-            
+
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction("Microscope");
             _dragDropUI.ConfirmOperation();
             _hudView.ShowTutorial();
         }

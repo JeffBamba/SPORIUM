@@ -356,7 +356,9 @@ namespace _Project
         private void OpenSeedSelector(PotSlot targetPot)
         {
             SporiumLogger.LogDebug(LogCategory.UI, $"OpenSeedSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null && targetPot != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Assicurati che il selettore sia inizializzato
             if (_seedSelector == null)
             {
@@ -420,7 +422,9 @@ namespace _Project
         private void OpenFertilizerSelector(PotSlot targetPot)
         {
             SporiumLogger.LogDebug(LogCategory.UI, $"OpenFertilizerSelector chiamato per vaso {targetPot?.PotId ?? "NULL"}");
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null && targetPot != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Assicurati che il selettore sia inizializzato
             if (_fertilizerSelector == null)
             {
@@ -455,7 +459,9 @@ namespace _Project
         private void OpenPruningDialog(PotSlot targetPot)
         {
             SporiumLogger.LogDebug(LogCategory.UI, $"OpenPruningDialog chiamato per vaso {targetPot?.PotId ?? "NULL"}");
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null && targetPot != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Crea istanza dialog se non esiste
             if (_pruningDialogInstance == null)
             {

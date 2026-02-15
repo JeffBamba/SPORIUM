@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -102,7 +102,10 @@ namespace _Project
 
             if (!_storage.Consume(Items.SporeGeneric))
                 return;
-            
+
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction("Pipette");
             _dragDropUI.ConfirmOperation();
             _view.ShowTutorial();
         }

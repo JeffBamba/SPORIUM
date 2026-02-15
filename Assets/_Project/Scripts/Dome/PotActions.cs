@@ -628,7 +628,9 @@ public class PotActions : MonoBehaviour
         }
         
         _isPlantingInProgress = true;
-        
+        var dayActivityLogPlant = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogPlant != null)
+            dayActivityLogPlant.RecordDomeActionStarted(potSlot.PotId);
         try
         {
             if (!CanPlant())
@@ -769,14 +771,15 @@ public class PotActions : MonoBehaviour
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Plant, potSlot);
             PotEvents.EmitChanged(potSlot);
-            
+            var dayActivityLogPlantDone = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLogPlantDone != null)
+                dayActivityLogPlantDone.RecordDomeAction(new DayActivityLog.DomeActivityEntry { PotId = potSlot.PotId, ActionKind = "Plant", PlantCode = plantCode ?? "", PlantDisplayName = plantData != null ? (plantData.name ?? plantData.PlantCode) : (plantCode ?? "?") });
             if (showDebugLogs)
             {
                 string plantInfo = plantData != null ? $", PlantData: {plantData.PlantCode} ({plantData.Family})" : "";
                 string irrigateInfo = irrigate ? ", irrigated=true" : "";
                 SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-001][{potSlot.PotId}] Plant OK: seed planted{irrigateInfo}, state={_potState}{plantInfo}");
             }
-            
             return true;
         }
         finally
@@ -849,7 +852,9 @@ public class PotActions : MonoBehaviour
         }
         
         _isWateringInProgress = true;
-        
+        var dayActivityLogWater = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogWater != null)
+            dayActivityLogWater.RecordDomeActionStarted(potSlot.PotId);
         try
         {
             // BUG1 FIX: Determina se stiamo accendendo o spegnendo PRIMA di qualsiasi controllo
@@ -893,6 +898,13 @@ public class PotActions : MonoBehaviour
                 _potState.DaysWateringSystemOn = 0;
                 _potState.WateringRawWaterAccumulator = 0f;
             }
+
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordWateringToggle(potSlot.PotId, _potState.WateringSystemOn);
+            var diaryStats = ServiceContainer.Instance.Get<DiaryStatistics>(suppressWarning: true);
+            if (diaryStats != null && _potState.WateringSystemOn)
+                diaryStats.PlantsWatered++;
                 
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
@@ -964,7 +976,9 @@ public class PotActions : MonoBehaviour
         }
         
         _isLightingInProgress = true;
-        
+        var dayActivityLogLight = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogLight != null)
+            dayActivityLogLight.RecordDomeActionStarted(potSlot.PotId);
         try
         {
             if (!CanLight())
@@ -1047,13 +1061,14 @@ public class PotActions : MonoBehaviour
             // Notifica il cambio stato
             PotEvents.EmitAction(PotEvents.PotActionType.Light, potSlot);
             PotEvents.EmitChanged(potSlot);
-            
+            var dayActivityLogLightDone = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLogLightDone != null)
+                dayActivityLogLightDone.RecordDomeAction(new DayActivityLog.DomeActivityEntry { PotId = potSlot.PotId, ActionKind = "Light", PlantCode = null, PlantDisplayName = null });
             if (showDebugLogs)
             {
                 string stateMsg = _potState.LedSystemState.ToString();
                 SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-003][{potSlot.PotId}] LED System Toggle: {stateMsg} (effetti a fine giornata)");
             }
-            
             return true;
         }
         finally
@@ -1224,6 +1239,9 @@ public class PotActions : MonoBehaviour
     /// <param name="useSpray">Se true, usa Spray Antifungino (STR-004) per bonus e reroll</param>
     public bool DoPruning(bool useSpray = false)
     {
+        var dayActivityLogPrune = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogPrune != null)
+            dayActivityLogPrune.RecordDomeActionStarted(potSlot.PotId);
         if (!CanPruning())
         {
             string reason = GetPruningFailureReason();
@@ -1306,7 +1324,12 @@ public class PotActions : MonoBehaviour
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Pruning, potSlot);
         PotEvents.EmitChanged(potSlot);
-        
+        if (result.Success)
+        {
+            var dayActivityLogPruneDone = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLogPruneDone != null)
+                dayActivityLogPruneDone.RecordDomeAction(new DayActivityLog.DomeActivityEntry { PotId = potSlot.PotId, ActionKind = "Pruning", PlantCode = null, PlantDisplayName = null });
+        }
         return result.Success;
     }
     
@@ -1468,6 +1491,10 @@ public class PotActions : MonoBehaviour
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Harvest, potSlot);
         PotEvents.EmitChanged(potSlot);
+
+        var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLog != null)
+            dayActivityLog.RecordHarvest(potSlot.PotId, _potState.PlantCode, _potState?.PlantLevel ?? 0, fruitsToHarvest);
         
         // Notifica il cambio di stadio (HarvestReady → Resting)
         if (potGrowthController != null)
@@ -1491,6 +1518,9 @@ public class PotActions : MonoBehaviour
     /// <param name="fertilizerItemCode">ItemCode del fertilizzante da applicare (es. "fertilizer-standard")</param>
     public bool DoFertilize(string fertilizerItemCode)
     {
+        var dayActivityLogFert = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogFert != null)
+            dayActivityLogFert.RecordDomeActionStarted(potSlot.PotId);
         if (!CanFertilize())
         {
             string reason = GetFertilizeFailureReason();
@@ -1619,12 +1649,13 @@ public class PotActions : MonoBehaviour
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Fertilize, potSlot);
         PotEvents.EmitChanged(potSlot);
-        
+        var dayActivityLogFertDone = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+        if (dayActivityLogFertDone != null)
+            dayActivityLogFertDone.RecordDomeAction(new DayActivityLog.DomeActivityEntry { PotId = potSlot.PotId, ActionKind = "Fertilize", PlantCode = null, PlantDisplayName = null });
         if (showDebugLogs)
         {
             SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Fertilize OK: {fertilizerType} applicato (+{fertilizerAmount}%), livello totale: {_potState.FertilizerLevel}%");
         }
-        
         return true;
     }
     

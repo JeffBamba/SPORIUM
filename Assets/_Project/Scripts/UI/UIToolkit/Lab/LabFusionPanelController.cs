@@ -359,6 +359,9 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction("Fusion");
             if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeA))
                 return;
             if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeB))

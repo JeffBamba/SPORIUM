@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using _Project;
 
 namespace Sporae.UI.UIToolkit.PotActionsMenu
 {
@@ -183,7 +184,9 @@ namespace Sporae.UI.UIToolkit.PotActionsMenu
         {
             if (_currentPot == null)
                 return;
-
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null && _currentPot.PotActions != null)
+                dayActivityLog.RecordDomeActionStarted(_currentPot.PotId);
             if (_seedInventoryMenu == null)
             {
                 Debug.LogWarning("PotActionsMenu: SeedInventoryMenu non assegnato!");

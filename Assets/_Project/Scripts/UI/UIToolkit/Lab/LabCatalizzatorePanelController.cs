@@ -417,6 +417,9 @@ namespace Sporae.UI.UIToolkit.Lab
 
             _slotInputRawSpores[idx] = rawSpore;
             _slotStates[idx] = 1;
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordLabAction("Catalizzatore");
             if (foundation != null && foundation.Enabled)
                 foundation.UpsertToast(CatalyserProgressToastKey(idx), "LAB-CAT-PROGRESS", new NotificationPayload().With("day", "1"));
             RefreshDisplay();

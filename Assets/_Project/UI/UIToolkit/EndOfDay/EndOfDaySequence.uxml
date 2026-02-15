@@ -1,0 +1,72 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
+    <Style src="../Foundation/SP-Foundation.uss" />
+    <Style src="../Foundation/SP-Panel-Base.uss" />
+    <Style src="EndOfDaySequence.uss" />
+    <ui:VisualElement name="eod-root" class="eod-root">
+        <ui:VisualElement name="eod-overlay" class="eod-overlay">
+            <!-- Step 1: Conferma -->
+            <ui:VisualElement name="eod-step1" class="eod-modal eod-step1">
+                <ui:Label name="eod-title" text="END DAY?" class="eod-title" />
+                <ui:Label name="eod-desc1" text="Close systems and enter hibernation mode." class="eod-desc" />
+                <ui:Label name="eod-desc2" text="The Vault rests, but life keeps breathing underground." class="eod-desc" />
+                <ui:VisualElement name="eod-buttons" class="eod-buttons">
+                    <ui:Button name="btn-eod-yes" text="YES" class="eod-btn eod-btn--yes" />
+                    <ui:Button name="btn-eod-no" text="NO" class="eod-btn eod-btn--no" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <!-- Step 2: Snapshot -->
+            <ui:VisualElement name="eod-step2" class="eod-panel eod-step2 eod-panel--green" style="display: none;">
+                <ui:ScrollView name="eod-snapshot-scroll" class="eod-scroll">
+                    <ui:Label name="eod-snapshot-title" text="SPORAE — Day N" class="eod-panel-title" />
+                    <ui:Label name="eod-snapshot-date" text="System Date: —" class="eod-line" />
+                    <ui:Label name="eod-snapshot-vault" text="Vault Status: Operational" class="eod-line" />
+                    <ui:Label name="eod-snapshot-ph" text="Dome pH: —" class="eod-line" />
+                    <ui:Label name="eod-activity-summary" text="Activity Summary: …" class="eod-block" />
+                    <ui:Label name="eod-drift" text="Drift &amp; Consequences: —" class="eod-block" />
+                    <ui:Label name="eod-notes" text="[NOTES &amp; TAGS] —" class="eod-block" />
+                    <ui:Label name="eod-snapshot-footer" text="■ S.P.O.R.A.E FRAGMENT" class="eod-footer" />
+                </ui:ScrollView>
+                <ui:Button name="btn-eod-snapshot-confirm" text="Confirm → Diario" class="eod-btn eod-btn--yes eod-cta" />
+            </ui:VisualElement>
+            <!-- Step 3: Diario -->
+            <ui:VisualElement name="eod-step3" class="eod-panel eod-step3 eod-panel--green" style="display: none;">
+                <ui:ScrollView name="eod-diario-scroll" class="eod-scroll">
+                    <ui:Label name="eod-diario-title" text="S.P.O.R.A.E FRAGMENT" class="eod-panel-title" />
+                    <ui:Label name="eod-diario-text" text="Recording completed. Memory integrity: 100%." class="eod-block" />
+                    <ui:Label name="eod-diario-close" text="Good night, Biologist." class="eod-footer" />
+                </ui:ScrollView>
+                <ui:Button name="btn-eod-diario-continue" text="Continue → Night Research / Forecast" class="eod-btn eod-btn--yes eod-cta" />
+            </ui:VisualElement>
+            <!-- Step 4: Night Research -->
+            <ui:VisualElement name="eod-step4" class="eod-panel eod-step4" style="display: none;">
+                <ui:Label name="eod-research-title" text="NIGHT RESEARCH SELECTION" class="eod-panel-title" />
+                <ui:Label name="eod-research-subtitle" text="Select one research branch to investigate overnight." class="eod-desc" />
+                <ui:Button name="btn-eod-research-historical" text="Historical Archive — Unlocks lore entries" class="eod-btn eod-btn--research" />
+                <ui:Button name="btn-eod-research-botanical" text="Botanical Database — Unlocks plant info" class="eod-btn eod-btn--research" />
+                <ui:Button name="btn-eod-research-vault" text="Vault Protocols — Unlocks secret logs" class="eod-btn eod-btn--research" />
+                <ui:Button name="btn-eod-research-skip" text="Skip Research" class="eod-btn eod-btn--no" />
+            </ui:VisualElement>
+            <!-- Step 5: Forecast -->
+            <ui:VisualElement name="eod-step5" class="eod-panel eod-step5 eod-panel--cyan" style="display: none;">
+                <ui:ScrollView name="eod-forecast-scroll" class="eod-scroll">
+                    <ui:Label name="eod-forecast-title" text="NIGHT SUMMARY - FORECAST SYSTEM" class="eod-panel-title" />
+                    <ui:Label name="eod-forecast-today" text="[TODAY] …" class="eod-block" />
+                    <ui:Label name="eod-forecast-tomorrow" text="[TOMORROW FORECAST] …" class="eod-block" />
+                    <ui:Label name="eod-forecast-research" text="" class="eod-block" />
+                    <ui:Label name="eod-forecast-footer" text="Close the day and let the Vault dream." class="eod-footer" />
+                </ui:ScrollView>
+                <ui:Button name="btn-eod-sleep" text="Sleep → Next Day" class="eod-btn eod-btn--yes eod-cta" />
+            </ui:VisualElement>
+            <!-- Step 6: Dawn -->
+            <ui:VisualElement name="eod-step6" class="eod-panel eod-step6 eod-panel--cyan" style="display: none;">
+                <ui:Label name="eod-dawn-title" text="DAWN SUMMARY" class="eod-panel-title" />
+                <ui:Label name="eod-dawn-subtitle" text="DAY N – OVERNIGHT CHANGES" class="eod-desc" />
+                <ui:Label name="eod-dawn-intro1" text="The Vault awakens from standby mode." class="eod-line" />
+                <ui:ScrollView name="eod-dawn-events-scroll" class="eod-scroll eod-dawn-events">
+                    <ui:Label name="eod-dawn-events-text" text="—" class="eod-block" />
+                </ui:ScrollView>
+                <ui:Button name="btn-eod-dawn-continue" text="Continue" class="eod-btn eod-btn--yes eod-cta" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

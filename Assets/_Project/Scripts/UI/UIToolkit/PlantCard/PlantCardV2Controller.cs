@@ -634,7 +634,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private void OpenPruningDialog(PotSlot targetPot)
         {
             if (targetPot == null) return;
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Cerca PruningDialog nella scena o crea istanza
             var pruningDialog = FindObjectOfType<Sporae.Dome.UI.PruningDialog>();
             
@@ -699,7 +701,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private void OpenFertilizerSelector(PotSlot targetPot)
         {
             if (targetPot == null) return;
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Cerca UIFertilizerSelector nella scena
             var fertilizerSelector = FindObjectOfType<_Project.UIFertilizerSelector>();
             if (fertilizerSelector == null)
@@ -755,7 +759,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
         private void OpenSeedSelector(PotSlot targetPot)
         {
             if (targetPot == null) return;
-            
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+                dayActivityLog.RecordDomeActionStarted(targetPot.PotId);
             // Cerca UISeedSelector nella scena
             var seedSelector = FindObjectOfType<_Project.UISeedSelector>();
             if (seedSelector == null)
@@ -834,7 +840,9 @@ namespace Sporae.UI.UIToolkit.PlantCard
             {
                 return;
             }
-            
+            var dayActivityLogWater = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLogWater != null)
+                dayActivityLogWater.RecordDomeActionStarted(_currentPotSlot.PotId);
             // DEBUG_SAFE_FIX: Verifica lo stato corrente PRIMA di chiamare DoWater()
             bool currentState = _potActions.IsWateringSystemOn();
             
