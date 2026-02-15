@@ -7,6 +7,7 @@ using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.Dome;
 using Sporae.Dome.UI;
 using _Project;
+using _Project.Sporae.Core;
 using _Project.UI.HUDNotifications2_0;
 
 namespace Sporae.UI.UIToolkit.PlantCard

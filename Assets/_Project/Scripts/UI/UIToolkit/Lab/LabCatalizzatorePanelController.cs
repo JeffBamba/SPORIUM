@@ -453,7 +453,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
             var foundationRitira = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundationRitira != null && foundationRitira.Enabled)
-                foundationRitira.PostToast("LAB-CAT-RITIRA", new NotificationPayload().With("amount", ready.ToString()));
+                foundationRitira.PostToastImmediate("LAB-CAT-RITIRA", new NotificationPayload().With("amount", ready.ToString()));
 
             Hide();
         }

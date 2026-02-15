@@ -23,7 +23,7 @@ namespace Sporae.UI.UIToolkit.HUD
         [Header("Game Metrics")]
         [SerializeField] private int _actionsLeft = 3;
         [SerializeField] private int _maxActions = 4;
-        [SerializeField] private float _phLevel = 7.2f;
+        [SerializeField] private float _phLevel = 0f;
         [SerializeField] private float _condensation = 78f;
         [SerializeField] private float _mutationIndex = 0.42f;
         [SerializeField] private int _cryBalance = 1245;
@@ -795,16 +795,14 @@ namespace Sporae.UI.UIToolkit.HUD
                 _phDriftLabel.style.color = new StyleColor(phDriftColor);
             }
             
-            // Aggiorna valore numerico pH (mostra valore diretto -100/+100, convertito in scala 0-14 per display)
+            // Aggiorna valore numerico pH (mostra drift -100/+100; default 0 con oscillazione estetica)
             if (_phBandLabel != null)
             {
-                // Converti da range PhSystem (-100/+100) a scala visualizzazione (0-14) per display
-                // Mapping: -100 → 0, 0 → 7, +100 → 14
+                // Mostra valore drift diretto (-100/+100), inizio partita = 0
+                _phBandLabel.text = $"{value:F1}";
+                // Per marker/gradient usiamo scala 0-14 (mapping: -100→0, 0→7, +100→14)
                 float phVisualScale = ((value + 100f) / 200f) * 14f;
                 phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-                
-                // Mostra valore in scala 0-14 (come nell'immagine di riferimento: 7.8)
-                _phBandLabel.text = $"{phVisualScale:F1}";
                 
                 // Colore basato sulla banda se PhSystem disponibile
                 if (_phSystem != null)
@@ -1126,6 +1124,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 _grateValueLabel.text = $"+{value}";
             }
         }
+
+        /// <summary>Usato da EndOfDay Dawn Summary per mostrare l'indice di mutazione corrente.</summary>
+        public float GetMutationIndex() => _mutationIndex;
+
+        /// <summary>Usato da EndOfDay Dawn Summary per mostrare il G-rate corrente.</summary>
+        public int GetGrateValue() => _grateValue;
         
         private void OnDestroy()
         {

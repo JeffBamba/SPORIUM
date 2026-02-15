@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -163,6 +164,7 @@ namespace Sporae.Dome.PotAutomation
                 var action = queue.Dequeue();
                 if (action == null) continue;
                 _currentActions[potId] = action;
+                RecordDomeActionForDiary(action);
                 PotSlot pot = null;
                 PotAutomationArmAnimator armAnimator = null;
                 if (useArmAnimation)
@@ -218,6 +220,54 @@ namespace Sporae.Dome.PotAutomation
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Registra l'azione nel diario non appena è "in progress" (toast visibile),
+        /// così il Report EoD la include anche se il giocatore va a letto prima della fine.
+        /// </summary>
+        private void RecordDomeActionForDiary(AutomationAction action)
+        {
+            if (action == null || string.IsNullOrEmpty(action.PotId)) return;
+            var dayActivityLog = ServiceContainer.Instance?.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog == null) return;
+
+            string actionKind = MapAutomationTypeToActionKind(action.Type);
+            string plantCode = null;
+            string plantDisplayName = null;
+            if (action.Type == AutomationActionType.Plant && !string.IsNullOrEmpty(action.ItemTypeId))
+            {
+                var plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(action.ItemTypeId);
+                if (plantData != null)
+                {
+                    plantCode = plantData.PlantCode ?? "";
+                    plantDisplayName = plantData.name ?? plantData.PlantCode ?? plantCode;
+                }
+                else
+                    plantCode = action.ItemTypeId;
+            }
+
+            dayActivityLog.RecordDomeAction(new DayActivityLog.DomeActivityEntry
+            {
+                PotId = action.PotId,
+                ActionKind = actionKind,
+                PlantCode = plantCode,
+                PlantDisplayName = plantDisplayName
+            });
+        }
+
+        private static string MapAutomationTypeToActionKind(AutomationActionType type)
+        {
+            switch (type)
+            {
+                case AutomationActionType.Plant: return "Plant";
+                case AutomationActionType.HydrationToggle: return "Water";
+                case AutomationActionType.LedRedToggle:
+                case AutomationActionType.LedBlueToggle: return "Light";
+                case AutomationActionType.Fertilize: return "Fertilize";
+                case AutomationActionType.Prune: return "Pruning";
+                default: return "Started";
+            }
         }
 
         private void ExecuteAction(AutomationAction action)

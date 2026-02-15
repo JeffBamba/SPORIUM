@@ -430,13 +430,18 @@ namespace Sporae.DevTools
                 GUI.enabled = canEndDay;
                 if (GUILayout.Button($"End of Day (Giorno {currentDay})", buttonStyle, GUILayout.Width(260)))
                 {
-                    if (_dayCycleSystem.EndDay())
+                    var eodController = UnityEngine.Object.FindObjectOfType<EndOfDaySequenceController>();
+                    if (eodController != null)
                     {
-                        AddLog($"✅ End of Day attivato! Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+                        eodController.StartSequence();
+                        AddLog($"✅ Sequenza End of Day avviata (conferma dalla UI).");
                     }
                     else
                     {
-                        AddLog("❌ End of Day fallito - CRY insufficienti");
+                        if (_dayCycleSystem.EndDay())
+                            AddLog($"✅ End of Day attivato (fallback). Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+                        else
+                            AddLog("❌ End of Day fallito - CRY insufficienti");
                     }
                 }
                 GUI.enabled = true;

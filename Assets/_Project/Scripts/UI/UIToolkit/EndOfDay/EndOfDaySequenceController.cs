@@ -7,6 +7,8 @@ using UnityEngine.UIElements;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.DevTools;
+using Sporae.Dome.PotSystem.Growth;
+using Sporae.UI.UIToolkit.HUD;
 
 namespace _Project
 {
@@ -18,11 +20,16 @@ namespace _Project
     {
         [SerializeField] private UIDocument _uiDocument;
         [SerializeField] private float _nightResearchTransitionDelay = 1f;
+        [Tooltip("Caratteri al secondo per l'effetto typewriter su Diario e Forecast.")]
+        [SerializeField] private float _typewriterCharsPerSecond = 35f;
 
         private VisualElement _root;
-        private VisualElement _step1, _step2, _step3, _step4, _step5, _step6;
+        private VisualElement _step1, _step2, _step3, _step4, _step5, _step6, _step7, _step8;
         private Label _snapshotTitle, _snapshotDate, _snapshotVault, _snapshotPh, _activitySummary, _drift, _notes;
-        private Label _diarioText, _forecastToday, _forecastTomorrow, _forecastResearch, _dawnEventsText;
+        private Label _diarioText, _forecastToday, _forecastTomorrow, _forecastResearch;
+        private Label _eodHibernationLine1, _eodHibernationLine2, _eodDayFrom, _eodDayTo;
+        private VisualElement _dawnParamsList, _dawnTooltip;
+        private Label _dawnTooltipTitle, _dawnTooltipDesc, _dawnTooltipTip;
         private Button _btnYes, _btnNo, _btnSnapshotConfirm, _btnDiarioContinue, _btnResearchHistorical, _btnResearchBotanical, _btnResearchVault, _btnResearchSkip, _btnSleep, _btnDawnContinue;
 
         private DayCycleSystem _dayCycleSystem;
@@ -33,10 +40,14 @@ namespace _Project
         private GameManager _gameManager;
         private NightEventsGenerator _nightEventsGenerator;
         private WikiUnlockService _wikiUnlockService;
+        private DayCycleController _dayCycleController;
 
         private bool _bound;
         private bool _awaitingDawn;
         private bool _nightResearchChosen;
+        private int _dayBeforeTransition;
+        private Dictionary<string, (string title, string desc, string tip)> _dawnTooltipData;
+        private bool _dawnTooltipsRegistered;
 
         private void Awake()
         {
@@ -64,6 +75,7 @@ namespace _Project
             _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
             _nightEventsGenerator = ServiceContainer.Instance?.Get<NightEventsGenerator>(suppressWarning: true);
             _wikiUnlockService = ServiceContainer.Instance?.Get<WikiUnlockService>(suppressWarning: true);
+            _dayCycleController = FindObjectOfType<DayCycleController>();
         }
 
         private void OnEnable()
@@ -83,7 +95,7 @@ namespace _Project
             if (!_awaitingDawn) return;
             _awaitingDawn = false;
             PopulateDawn(newDay);
-            ShowStep(6);
+            ShowStep(8);
         }
 
         private void TryBind()
@@ -100,6 +112,19 @@ namespace _Project
             _step4 = _root.Q<VisualElement>("eod-step4");
             _step5 = _root.Q<VisualElement>("eod-step5");
             _step6 = _root.Q<VisualElement>("eod-step6");
+            _step7 = _root.Q<VisualElement>("eod-step7");
+            _step8 = _root.Q<VisualElement>("eod-step8");
+
+            _eodHibernationLine1 = _root.Q<Label>("eod-hibernation-line1");
+            _eodHibernationLine2 = _root.Q<Label>("eod-hibernation-line2");
+            _eodDayFrom = _root.Q<Label>("eod-day-from");
+            _eodDayTo = _root.Q<Label>("eod-day-to");
+
+            _dawnParamsList = _root.Q<VisualElement>("eod-dawn-params-list");
+            _dawnTooltip = _root.Q<VisualElement>("eod-dawn-tooltip");
+            _dawnTooltipTitle = _root.Q<Label>("eod-dawn-tooltip-title");
+            _dawnTooltipDesc = _root.Q<Label>("eod-dawn-tooltip-desc");
+            _dawnTooltipTip = _root.Q<Label>("eod-dawn-tooltip-tip");
 
             _snapshotTitle = _root.Q<Label>("eod-snapshot-title");
             _snapshotDate = _root.Q<Label>("eod-snapshot-date");
@@ -113,7 +138,6 @@ namespace _Project
             _forecastToday = _root.Q<Label>("eod-forecast-today");
             _forecastTomorrow = _root.Q<Label>("eod-forecast-tomorrow");
             _forecastResearch = _root.Q<Label>("eod-forecast-research");
-            _dawnEventsText = _root.Q<Label>("eod-dawn-events-text");
 
             _btnYes = _root.Q<Button>("btn-eod-yes");
             _btnNo = _root.Q<Button>("btn-eod-no");
@@ -179,16 +203,26 @@ namespace _Project
             SetStepVisible(_step4, step == 4);
             SetStepVisible(_step5, step == 5);
             SetStepVisible(_step6, step == 6);
+            SetStepVisible(_step7, step == 7);
+            SetStepVisible(_step8, step == 8);
             if (step == 2) PopulateSnapshot();
             if (step == 3) PopulateDiario();
             if (step == 4) { /* optional: disable if no actions */ }
             if (step == 5) PopulateForecast();
+            if (step == 7)
+            {
+                if (_eodDayFrom != null) _eodDayFrom.text = $"DAY {_dayBeforeTransition:D2}";
+                if (_eodDayTo != null) _eodDayTo.text = $"→ DAY {_dayBeforeTransition + 1:D2}";
+            }
         }
 
         private static void SetStepVisible(VisualElement el, bool visible)
         {
             if (el != null) el.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
+
+        private const string PlaceholderOpen = "<color=#FFA500>";
+        private const string PlaceholderClose = "</color>";
 
         private void PopulateSnapshot()
         {
@@ -216,16 +250,44 @@ namespace _Project
                 var harvests = _dayActivityLog.HarvestsThisDay;
                 var domeEntries = _dayActivityLog.DomeEntriesThisDay;
                 var labEntries = _dayActivityLog.LabEntriesThisDay;
-                foreach (var h in harvests)
+
+                if (harvests.Count > 0)
                 {
-                    string potNum = FormatPotNumber(h.PotId);
-                    sb.AppendLine($"Hai raccolto {h.Amount} frutti di {h.PlantCode} (L{h.Level}) dal POT {potNum}.");
+                    var byPlant = new Dictionary<string, (int total, int level)>();
+                    foreach (var h in harvests)
+                    {
+                        string key = $"{h.PlantCode}|{h.Level}";
+                        if (!byPlant.TryGetValue(key, out var t))
+                            t = (0, h.Level);
+                        byPlant[key] = (t.total + h.Amount, h.Level);
+                    }
+                    var harvestParts = new List<string>();
+                    foreach (var kv in byPlant.OrderBy(x => x.Key))
+                    {
+                        string plantCode = kv.Key.Split('|')[0];
+                        int level = kv.Value.level;
+                        int amount = kv.Value.total;
+                        string displayName = PlantDatabase.Instance?.GetPlantDataByCode(plantCode)?.name ?? plantCode;
+                        harvestParts.Add($"{amount} {displayName} (L{level})");
+                    }
+                    sb.AppendLine("Harvested: " + string.Join(", ", harvestParts) + ".");
                 }
+
+                var waterPots = new List<string>();
+                foreach (var e in domeEntries)
+                {
+                    if (e.ActionKind == "Water" && !string.IsNullOrEmpty(e.PotId))
+                        waterPots.Add("Pot " + FormatPotNumber(e.PotId));
+                }
+                if (waterPots.Count > 0)
+                    sb.AppendLine("Watered " + string.Join(", ", waterPots.Distinct()) + ".");
+
                 var bestPerPot = new Dictionary<string, DayActivityLog.DomeActivityEntry>();
                 int actionPriority(string k) => k == "Plant" ? 5 : k == "Water" ? 4 : k == "Light" ? 3 : k == "Fertilize" ? 2 : k == "Pruning" ? 1 : 0;
                 foreach (var e in domeEntries)
                 {
                     if (string.IsNullOrEmpty(e.PotId)) continue;
+                    if (e.ActionKind == "Water") continue;
                     if (!bestPerPot.TryGetValue(e.PotId, out var existing) || actionPriority(e.ActionKind) > actionPriority(existing.ActionKind))
                         bestPerPot[e.PotId] = e;
                 }
@@ -234,16 +296,17 @@ namespace _Project
                     string potNum = FormatPotNumber(e.PotId);
                     string line = e.ActionKind == "Plant"
                         ? $"Hai piantato un seme di {(!string.IsNullOrEmpty(e.PlantDisplayName) ? e.PlantDisplayName : e.PlantCode ?? "?")} nel POT {potNum}."
-                        : e.ActionKind == "Water"
-                        ? $"Hai attivato l'irrigazione nel POT {potNum}."
                         : e.ActionKind == "Light"
                         ? $"Hai modificato le luci LED nel POT {potNum}."
                         : e.ActionKind == "Fertilize"
                         ? $"Hai applicato fertilizzante nel POT {potNum}."
                         : e.ActionKind == "Pruning"
                         ? $"Hai potato la pianta nel POT {potNum}."
-                        : $"Azione avviata sul POT {potNum}.";
-                    sb.AppendLine(line);
+                        : e.ActionKind == "Started"
+                        ? $"Azione avviata sul POT {potNum}."
+                        : null;
+                    if (line != null)
+                        sb.AppendLine(line);
                 }
                 foreach (var e in labEntries)
                 {
@@ -257,13 +320,142 @@ namespace _Project
                         string extracted = parts.Count > 0 ? string.Join(", ", parts) : "estrazione";
                         sb.AppendLine($"Hai estratto {extracted} da {e.InputDescription}.");
                     }
+                    else if (e.LabType == "Fusion")
+                    {
+                        string sporeDesc = !string.IsNullOrEmpty(e.InputDescription) ? e.InputDescription : "due Spore";
+                        sb.AppendLine($"Hai completato la fusione di due Spore ({sporeDesc}) nella Stazione di Fusione.");
+                    }
                     else
                         sb.AppendLine($"Hai usato il {e.LabType}.");
                 }
             }
-            if (_activitySummary != null) _activitySummary.text = sb.Length > 0 ? sb.ToString().TrimEnd() : "No activity recorded.";
-            if (_drift != null) _drift.text = "Drift & Consequences: The Dome breathes. (Reputation: —)";
-            if (_notes != null) _notes.text = "[NOTES & TAGS] Seed Storage … OK. Research … ON HOLD.";
+
+            sb.AppendLine();
+            if (_dayCycleController != null)
+            {
+                var conditions = _dayCycleController.GetActiveConditionsForReport();
+                if (conditions.Count > 0)
+                {
+                    sb.AppendLine("Active conditions:");
+                    foreach (var c in conditions)
+                    {
+                        string severity = c.IsInfested ? "Infestation" : (c.MoldRiskLevel >= 2 ? "Severe Mold Risk" : "Light Mold Risk");
+                        sb.AppendLine($"  Pot {FormatPotNumber(c.PotId)}: {severity} (mold risk if untreated tomorrow).");
+                    }
+                }
+            }
+
+            string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : "No activity recorded.";
+            if (_activitySummary != null)
+            {
+                _activitySummary.enableRichText = true;
+                _activitySummary.text = "";
+                StartCoroutine(Typewriter(_activitySummary, activityStr));
+            }
+
+            float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
+            string phDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
+            string phTrendLine = _phSystem != null
+                ? $"pH trend: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()}), drift {phDriftStr}"
+                : "pH trend: —";
+
+            var driftSb = new StringBuilder();
+            driftSb.AppendLine("Drift & Consequences:");
+            driftSb.AppendLine(phTrendLine);
+            driftSb.AppendLine("The Dome breathes.");
+            driftSb.AppendLine(PlaceholderOpen + "Consequence: pH stabilized / environmental note [placeholder: collegare a eventi]" + PlaceholderClose);
+            if (_drift != null)
+            {
+                _drift.enableRichText = true;
+                _drift.text = driftSb.ToString().TrimEnd();
+            }
+
+            var notesSb = new StringBuilder();
+            notesSb.AppendLine("[NOTES & TAGS]");
+            notesSb.AppendLine("Inventory ......... " + BuildInventorySummary());
+            notesSb.AppendLine("Seed Storage ...... " + BuildSeedStorageSummary());
+            notesSb.AppendLine("Research .......... ON HOLD");
+            notesSb.AppendLine();
+            notesSb.AppendLine(PlaceholderOpen + "Kitchen Food — Cibo in produzione: — [placeholder: collegare a dati Kitchen Food]" + PlaceholderClose);
+            notesSb.AppendLine(PlaceholderOpen + "Kitchen Food — Potabilizzazione Raw Water: in corso / completata — [placeholder: collegare a processo potabilizzazione]" + PlaceholderClose);
+            notesSb.AppendLine();
+            notesSb.Append("Warning ............ ");
+            if (_dayCycleController != null)
+            {
+                var moldPots = _dayCycleController.GetActiveConditionsForReport().Select(c => FormatPotNumber(c.PotId)).Distinct().ToList();
+                if (moldPots.Count > 0)
+                    notesSb.Append($"Mold risk in Pot {string.Join(", ", moldPots)}.");
+                else
+                    notesSb.Append("—");
+            }
+            else
+                notesSb.Append("—");
+            if (_notes != null)
+            {
+                _notes.enableRichText = true;
+                _notes.text = notesSb.ToString();
+            }
+        }
+
+        private string BuildInventorySummary()
+        {
+            var inv = _gameManager?.PlayerInventory;
+            if (inv == null) return "—";
+            int pure = 0, evil = 0, standard = 0, spores = 0, seeds = 0, reagents = 0;
+            foreach (var slot in inv.Items)
+            {
+                if (slot == null) continue;
+                foreach (var item in slot.Items)
+                {
+                    if (slot.TypeId == Items.SporeGeneric)
+                    {
+                        spores++;
+                        var fam = (item?.FamilyMetadata ?? "").ToUpperInvariant();
+                        if (fam.Contains("PURE")) pure++;
+                        else if (fam.Contains("EVIL")) evil++;
+                        else standard++;
+                    }
+                    else if (slot.TypeId == Items.Seed001 || slot.TypeId == Items.Seed002 || slot.TypeId == Items.Seed003 || slot.TypeId == Items.PreSeed)
+                        seeds++;
+                    else if (slot.TypeId == Items.ReagentX || slot.TypeId == Items.ReagentY)
+                        reagents++;
+                }
+            }
+            var parts = new List<string>();
+            if (spores > 0)
+            {
+                if (pure > 0 || evil > 0 || standard > 0)
+                    parts.Add($"{spores} spores (Pure: {pure}, Evil: {evil}, Standard: {standard})");
+                else
+                    parts.Add($"{spores} spores");
+            }
+            if (seeds > 0) parts.Add($"{seeds} seeds");
+            if (reagents > 0) parts.Add($"{reagents} reagents");
+            return parts.Count > 0 ? string.Join(", ", parts) + "." : "—";
+        }
+
+        private string BuildSeedStorageSummary()
+        {
+            var inv = _gameManager?.PlayerInventory;
+            if (inv == null) return "—";
+            var seedParts = new List<string>();
+            int preSeed = 0, seed001 = 0, seed002 = 0, seed003 = 0;
+            foreach (var slot in inv.Items)
+            {
+                if (slot == null) continue;
+                foreach (var item in slot.Items)
+                {
+                    if (slot.TypeId == Items.PreSeed) preSeed++;
+                    else if (slot.TypeId == Items.Seed001) seed001++;
+                    else if (slot.TypeId == Items.Seed002) seed002++;
+                    else if (slot.TypeId == Items.Seed003) seed003++;
+                }
+            }
+            if (preSeed > 0) seedParts.Add($"{preSeed} Pre-Seed");
+            if (seed001 > 0) seedParts.Add($"{seed001} Seed001");
+            if (seed002 > 0) seedParts.Add($"{seed002} Seed002");
+            if (seed003 > 0) seedParts.Add($"{seed003} Seed003");
+            return seedParts.Count > 0 ? string.Join(", ", seedParts) + "." : "—";
         }
 
         private static string FormatPotNumber(string potId)
@@ -287,7 +479,12 @@ namespace _Project
             sb.AppendLine("SPORAE System: Recording completed.");
             sb.AppendLine("Memory integrity: 100%. Next wake in: —");
             sb.Append("Good night, Biologist. Or whoever you are.");
-            if (_diarioText != null) _diarioText.text = sb.ToString();
+            string full = sb.ToString();
+            if (_diarioText != null)
+            {
+                _diarioText.text = "";
+                StartCoroutine(Typewriter(_diarioText, full));
+            }
         }
 
         private void PopulateForecast()
@@ -302,17 +499,52 @@ namespace _Project
             if (_phSystem != null)
                 sbToday.AppendLine($"pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})");
             sbToday.Append("Reputations: —");
-            if (_forecastToday != null) _forecastToday.text = sbToday.ToString();
+            string textToday = sbToday.ToString();
+
+            float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
+            string predictedPhDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
 
             var sbTomorrow = new StringBuilder("[TOMORROW FORECAST]\n");
             sbTomorrow.AppendLine("Actions Available: 4");
-            sbTomorrow.AppendLine("Predicted pH Drift: —");
+            sbTomorrow.AppendLine($"Predicted pH Drift: {predictedPhDriftStr}");
             sbTomorrow.AppendLine("Environmental Risks: —");
             sbTomorrow.Append("Missions Active: —");
-            if (_forecastTomorrow != null) _forecastTomorrow.text = sbTomorrow.ToString();
+            string textTomorrow = sbTomorrow.ToString();
 
-            if (_forecastResearch != null)
-                _forecastResearch.text = _nightResearchChosen ? "Research Complete: → New lore fragment unlocked." : "";
+            string textResearch = _nightResearchChosen ? "Research Complete: → New lore fragment unlocked." : "";
+            StartCoroutine(RunForecastTypewriter(textToday, textTomorrow, textResearch));
+        }
+
+        private IEnumerator Typewriter(Label label, string fullText)
+        {
+            if (label == null || string.IsNullOrEmpty(fullText))
+                yield break;
+            label.text = "";
+            float delay = 1f / Mathf.Max(1f, _typewriterCharsPerSecond);
+            for (int i = 0; i < fullText.Length; i++)
+            {
+                label.text = fullText.Substring(0, i + 1);
+                yield return new WaitForSeconds(delay);
+            }
+        }
+
+        private IEnumerator RunForecastTypewriter(string textToday, string textTomorrow, string textResearch)
+        {
+            if (_forecastToday != null)
+            {
+                _forecastToday.text = "";
+                yield return Typewriter(_forecastToday, textToday);
+            }
+            if (_forecastTomorrow != null)
+            {
+                _forecastTomorrow.text = "";
+                yield return Typewriter(_forecastTomorrow, textTomorrow);
+            }
+            if (_forecastResearch != null && !string.IsNullOrEmpty(textResearch))
+            {
+                _forecastResearch.text = "";
+                yield return Typewriter(_forecastResearch, textResearch);
+            }
         }
 
         private void PopulateDawn(int newDay)
@@ -322,9 +554,97 @@ namespace _Project
             var sub = _root.Q<Label>("eod-dawn-subtitle");
             if (sub != null) sub.text = $"DAY {newDay} – OVERNIGHT CHANGES";
 
-            var events = _nightEventsGenerator != null ? _nightEventsGenerator.Generate(newDay) : new List<string> { "Night passed." };
-            if (_dawnEventsText != null)
-                _dawnEventsText.text = events.Count > 0 ? string.Join("\n", events) : "Night passed.";
+            int dailyCost = 20;
+            var endDayBtn = FindObjectOfType<EndDayButton>();
+            if (endDayBtn != null) dailyCost = endDayBtn.GetDailyPowerCost();
+
+            float ph = _phSystem != null ? _phSystem.CurrentPh : float.NaN;
+            float phDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
+            float condensation = _gameManager?.CondensationSystem != null ? _gameManager.CondensationSystem.CurrentAccumulation : float.NaN;
+            int cry = _gameManager != null ? _gameManager.CurrentCRY : 0;
+            int cryForecast = cry - dailyCost;
+
+            var topBar = FindObjectOfType<TopBarController>();
+            float mutation = topBar != null ? topBar.GetMutationIndex() : float.NaN;
+            int grate = topBar != null ? topBar.GetGrateValue() : 0;
+
+            string phDriftStr = float.IsNaN(phDrift) ? "—" : phDrift.ToString("+#0.00;-#0.00;0", System.Globalization.CultureInfo.InvariantCulture);
+            string phTrend = float.IsNaN(phDrift) ? "" : (phDrift < 0 ? " (acidic trend)" : " (alkaline trend)");
+
+            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation) ? "Indice di Mutazione: —" : $"Indice di Mutazione: {mutation:P0}");
+            SetDawnRow("eod-dawn-text-ph", $"pH Drift: {phDriftStr}{phTrend}");
+            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation) ? "Condensation: —" : $"Condensation: {condensation:F0}%");
+            SetDawnRow("eod-dawn-text-grate", $"G-rate: +{grate}");
+            SetDawnRow("eod-dawn-text-cry", $"CRY Balance (forecast fine giorno): {cryForecast} (costi fissi only)");
+
+            var tooltips = new Dictionary<string, (string title, string desc, string tip)>
+            {
+                ["mutation"] = ("[MUTATION INDEX]", "The mutation index reflects genetic drift in the Dome. Overnight conditions can shift mutation probability.", "TIP: Monitor high mutation zones and use stabilizers in the Lab if needed."),
+                ["ph"] = ("[PH DRIFT DETECTED]", float.IsNaN(phDrift) ? "pH trend is monitored overnight. Drift affects plant growth and mutation probability." : "The Dome environment has shifted toward " + (phDrift < 0 ? "acidity" : "alkalinity") + ". This affects plant growth patterns and mutation probability.", "TIP: Use alkaline substrates or activate pH stabilizers in the Lab to counteract drift."),
+                ["condensation"] = ("[CONDENSATION LEVEL CHANGE]", "Condensation has accumulated overnight. Excess humidity can encourage mold growth but benefits water-dependent species.", "TIP: Monitor plants for mold signs. Consider harvesting condensation-sensitive species soon."),
+                ["grate"] = ("[G-RATE UPDATE]", "Daily growth rate contribution from systems. Affects resource accumulation and plant development.", "TIP: Maximize G-rate through balanced Dome and Lab activities."),
+                ["cry"] = ("[CRY BALANCE FORECAST]", "Projected CRY at end of day considering fixed costs only (e.g. power). Does not include variable actions.", "TIP: Ensure sufficient CRY before night to cover fixed costs.")
+            };
+
+            _dawnTooltipData = tooltips;
+            RegisterDawnTooltipsOnce();
+        }
+
+        private void SetDawnRow(string labelName, string text)
+        {
+            var label = _root.Q<Label>(labelName);
+            if (label != null) label.text = text;
+        }
+
+        private void RegisterDawnTooltipsOnce()
+        {
+            if (_dawnTooltip == null || _dawnTooltipsRegistered) return;
+            _dawnTooltipsRegistered = true;
+            string[] paramIds = { "mutation", "ph", "condensation", "grate", "cry" };
+            foreach (var paramId in paramIds)
+            {
+                var row = _root.Q<VisualElement>($"eod-dawn-row-{paramId}");
+                if (row == null) continue;
+                var paramIdCopy = paramId;
+                row.RegisterCallback<MouseEnterEvent>(evt =>
+                {
+                    if (_dawnTooltipData == null || !_dawnTooltipData.TryGetValue(paramIdCopy, out var t)) return;
+                    if (_dawnTooltipTitle != null) _dawnTooltipTitle.text = t.title;
+                    if (_dawnTooltipDesc != null) _dawnTooltipDesc.text = t.desc;
+                    if (_dawnTooltipTip != null) _dawnTooltipTip.text = t.tip.StartsWith("TIP:", System.StringComparison.OrdinalIgnoreCase) ? t.tip : "TIP: " + t.tip;
+                    _dawnTooltip.style.display = DisplayStyle.Flex;
+                    _dawnTooltip.BringToFront();
+                    PositionDawnTooltipAtMouse(evt.mousePosition, row);
+                });
+                row.RegisterCallback<MouseLeaveEvent>(evt =>
+                {
+                    _dawnTooltip.style.display = DisplayStyle.None;
+                });
+                row.RegisterCallback<MouseMoveEvent>(evt =>
+                {
+                    PositionDawnTooltipAtMouse(evt.mousePosition, row);
+                });
+            }
+        }
+
+        /// <summary>Posiziona il tooltip Dawn vicino al mouse. Coordinate panel → spazio locale del parent del tooltip (come Lab inventory tooltip).</summary>
+        private void PositionDawnTooltipAtMouse(Vector2 mousePosPanel, VisualElement sourceRow)
+        {
+            if (_dawnTooltip == null || _dawnTooltip.parent == null) return;
+            var parent = _dawnTooltip.parent;
+            var local = parent.WorldToLocal(mousePosPanel);
+            float x = local.x + 16f;
+            float y = local.y + 12f;
+            const float tw = 320f;
+            float th = _dawnTooltip.resolvedStyle.height;
+            if (th <= 0f) th = 120f;
+            var bounds = parent.contentRect;
+            if (x + tw > bounds.width) x = local.x - tw - 8f;
+            if (y + th > bounds.height) y = local.y - th - 8f;
+            if (y < 0f) y = 8f;
+            if (x < 0f) x = 8f;
+            _dawnTooltip.style.left = x;
+            _dawnTooltip.style.top = y;
         }
 
         private void OnYesClicked()
@@ -372,7 +692,21 @@ namespace _Project
         {
             if (_dayCycleSystem == null || !_dayCycleSystem.CanEndDay()) return;
             _awaitingDawn = true;
-            _dayCycleSystem.EndDay();
+            _dayBeforeTransition = _dayCycleSystem.CurrentDay;
+            StartCoroutine(TransitionHibernationThenEndDay());
+        }
+
+        [SerializeField] private float _hibernationScreenDuration = 2.5f;
+        [SerializeField] private float _dayTransitionScreenDuration = 2.5f;
+
+        private IEnumerator TransitionHibernationThenEndDay()
+        {
+            ShowStep(6);
+            yield return new WaitForSeconds(_hibernationScreenDuration);
+            ShowStep(7);
+            yield return new WaitForSeconds(_dayTransitionScreenDuration);
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.EndDay();
         }
 
         private void OnDawnContinueClicked() => Hide();

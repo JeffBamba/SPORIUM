@@ -490,7 +490,7 @@ namespace Sporae.UI.UIToolkit.Lab
             RefreshDisplay();
 
             if (foundation != null && foundation.Enabled)
-                foundation.PostToast("LAB-INC-OK", new NotificationPayload().With("count", count.ToString()));
+                foundation.PostToastImmediate("LAB-INC-OK", new NotificationPayload().With("count", count.ToString()));
         }
 
         private bool RequiresReagentXSetup()

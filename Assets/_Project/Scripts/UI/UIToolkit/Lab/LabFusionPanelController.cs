@@ -359,9 +359,6 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
-            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
-            if (dayActivityLog != null)
-                dayActivityLog.RecordLabAction("Fusion");
             if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeA))
                 return;
             if (!_storage.TryRemoveFirstSporeByStage(SporeStage.Matured, out var sporeB))
@@ -375,6 +372,19 @@ namespace Sporae.UI.UIToolkit.Lab
                 _storage.Add(sporeA);
                 _storage.Add(sporeB);
                 return;
+            }
+
+            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
+            if (dayActivityLog != null)
+            {
+                string nameA = SporeDisplayName(sporeA);
+                string nameB = SporeDisplayName(sporeB);
+                dayActivityLog.RecordLabAction(new DayActivityLog.LabActivityEntry
+                {
+                    LabType = "Fusion",
+                    InputDescription = $"{nameA} e {nameB}",
+                    SporeOut = 0, Cell001Out = 0, Cell002Out = 0, Cell003Out = 0
+                });
             }
 
             _fusionInProgress = true;
@@ -414,6 +424,12 @@ namespace Sporae.UI.UIToolkit.Lab
             RefreshDisplay();
         }
 
+        private static string SporeDisplayName(Item spore)
+        {
+            if (spore == null) return "?";
+            return !string.IsNullOrEmpty(spore.FamilyMetadata) ? $"Spore Matura ({spore.FamilyMetadata})" : "Spore Matura";
+        }
+
         private void OnRitiraClicked()
         {
             if (_outputPreSeeds.Count <= 0 || _gameManager?.PlayerInventory == null)
@@ -429,7 +445,7 @@ namespace Sporae.UI.UIToolkit.Lab
             if (foundation != null && foundation.Enabled)
             {
                 foundation.RemoveToast(FusionDoneToastKey);
-                foundation.PostToast("LAB-FUS-RITIRA", new NotificationPayload().With("count", amount.ToString()));
+                foundation.PostToastImmediate("LAB-FUS-RITIRA", new NotificationPayload().With("count", amount.ToString()));
             }
         }
     }

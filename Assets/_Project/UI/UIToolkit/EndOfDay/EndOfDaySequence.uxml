@@ -57,14 +57,55 @@
                 </ui:ScrollView>
                 <ui:Button name="btn-eod-sleep" text="Sleep → Next Day" class="eod-btn eod-btn--yes eod-cta" />
             </ui:VisualElement>
-            <!-- Step 6: Dawn -->
-            <ui:VisualElement name="eod-step6" class="eod-panel eod-step6 eod-panel--cyan" style="display: none;">
+            <!-- Step 6: Hibernation (full screen) -->
+            <ui:VisualElement name="eod-step6" class="eod-fullscreen eod-step6" style="display: none;">
+                <ui:Label name="eod-hibernation-line1" text="SYSTEMS IN HIBERNATION MODE..." class="eod-hibernation-main" />
+                <ui:Label name="eod-hibernation-line2" text="darkness feeds" class="eod-hibernation-sub" />
+            </ui:VisualElement>
+            <!-- Step 7: Day transition (full screen) -->
+            <ui:VisualElement name="eod-step7" class="eod-fullscreen eod-step7" style="display: none;">
+                <ui:Label name="eod-day-from" text="DAY 01" class="eod-day-from" />
+                <ui:Label name="eod-day-to" text="→ DAY 02" class="eod-day-to" />
+            </ui:VisualElement>
+            <!-- Step 8: Dawn Summary -->
+            <ui:VisualElement name="eod-step8" class="eod-panel eod-step8 eod-panel--cyan" style="display: none;">
                 <ui:Label name="eod-dawn-title" text="DAWN SUMMARY" class="eod-panel-title" />
                 <ui:Label name="eod-dawn-subtitle" text="DAY N – OVERNIGHT CHANGES" class="eod-desc" />
-                <ui:Label name="eod-dawn-intro1" text="The Vault awakens from standby mode." class="eod-line" />
-                <ui:ScrollView name="eod-dawn-events-scroll" class="eod-scroll eod-dawn-events">
-                    <ui:Label name="eod-dawn-events-text" text="—" class="eod-block" />
-                </ui:ScrollView>
+                <ui:Label name="eod-dawn-intro1" text="The Vault awakens from standby mode. Environmental sensors report overnight variations." class="eod-line" />
+                <ui:Label name="eod-dawn-intro2" text="Life has shifted in the darkness. Systems recalibrate." class="eod-line" />
+                <ui:VisualElement name="eod-dawn-params-list" class="eod-dawn-params-list">
+                    <ui:VisualElement name="eod-dawn-row-mutation" class="eod-dawn-row" data-param="mutation">
+                        <ui:Label name="eod-dawn-icon-mutation" text="◊" class="eod-dawn-icon" />
+                        <ui:Label name="eod-dawn-text-mutation" text="Indice di Mutazione: —" class="eod-dawn-param-text" />
+                        <ui:Label name="eod-dawn-qmark-mutation" text="?" class="eod-dawn-qmark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="eod-dawn-row-ph" class="eod-dawn-row" data-param="ph">
+                        <ui:Label name="eod-dawn-icon-ph" text="◊" class="eod-dawn-icon" />
+                        <ui:Label name="eod-dawn-text-ph" text="pH Drift: —" class="eod-dawn-param-text" />
+                        <ui:Label name="eod-dawn-qmark-ph" text="?" class="eod-dawn-qmark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="eod-dawn-row-condensation" class="eod-dawn-row" data-param="condensation">
+                        <ui:Label name="eod-dawn-icon-condensation" text="≈" class="eod-dawn-icon" />
+                        <ui:Label name="eod-dawn-text-condensation" text="Condensation: —" class="eod-dawn-param-text" />
+                        <ui:Label name="eod-dawn-qmark-condensation" text="?" class="eod-dawn-qmark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="eod-dawn-row-grate" class="eod-dawn-row" data-param="grate">
+                        <ui:Label name="eod-dawn-icon-grate" text="❖" class="eod-dawn-icon" />
+                        <ui:Label name="eod-dawn-text-grate" text="G-rate: —" class="eod-dawn-param-text" />
+                        <ui:Label name="eod-dawn-qmark-grate" text="?" class="eod-dawn-qmark" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="eod-dawn-row-cry" class="eod-dawn-row" data-param="cry">
+                        <ui:Label name="eod-dawn-icon-cry" text="●" class="eod-dawn-icon" />
+                        <ui:Label name="eod-dawn-text-cry" text="CRY Balance (forecast fine giorno): —" class="eod-dawn-param-text" />
+                        <ui:Label name="eod-dawn-qmark-cry" text="?" class="eod-dawn-qmark" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="eod-dawn-tooltip" class="eod-dawn-tooltip" style="display: none;">
+                    <ui:Label name="eod-dawn-tooltip-title" text="[TITLE]" class="eod-dawn-tooltip-title" />
+                    <ui:Label name="eod-dawn-tooltip-desc" text="Description..." class="eod-dawn-tooltip-desc" />
+                    <ui:Label name="eod-dawn-tooltip-tip" text="TIP: ..." class="eod-dawn-tooltip-tip" />
+                </ui:VisualElement>
+                <ui:Label name="eod-dawn-press-key" text="Press any key to continue" class="eod-dawn-press-key" />
                 <ui:Button name="btn-eod-dawn-continue" text="Continue" class="eod-btn eod-btn--yes eod-cta" />
             </ui:VisualElement>
         </ui:VisualElement>

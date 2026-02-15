@@ -1968,6 +1968,40 @@ public class DayCycleController : MonoBehaviour
     }
 
     /// <summary>
+    /// Restituisce le condizioni attive (muffa/infestazione) per il report EoD.
+    /// Ogni elemento: (potId, moldRiskLevel, isInfested).
+    /// </summary>
+    public System.Collections.Generic.List<(string PotId, int MoldRiskLevel, bool IsInfested)> GetActiveConditionsForReport()
+    {
+        var list = new System.Collections.Generic.List<(string, int, bool)>();
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant || pot.Stage == (int)PlantStage.Empty) continue;
+            if (pot.MoldRiskLevel >= 1 || pot.IsInfested)
+                list.Add((pot.PotId, pot.MoldRiskLevel, pot.IsInfested));
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// Restituisce il drift pH previsto per il prossimo giorno in base alle piante attualmente nei vasi registrati.
+    /// Usato dal Forecast EoD per mostrare "Predicted pH Drift" senza registrare nulla.
+    /// </summary>
+    public float GetPredictedPhDriftForNextDay()
+    {
+        float total = 0f;
+        foreach (var pot in _registeredPots)
+        {
+            if (pot == null || !pot.HasPlant || pot.Stage == (int)PlantStage.Empty || string.IsNullOrEmpty(pot.PlantCode))
+                continue;
+            var plantData = pot.GetPlantData();
+            if (plantData == null) continue;
+            total += plantData.GetDailyPhDrift();
+        }
+        return total;
+    }
+
+    /// <summary>
     /// Calcola il drift pH totale da tutte le piante e lo registra nel PhSystem
     /// IMPORTANTE: Solo le piante nei POT hanno impatto sul pH, non quelle in Inventory o Seed Storage
     /// </summary>

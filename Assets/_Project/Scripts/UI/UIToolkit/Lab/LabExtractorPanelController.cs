@@ -360,7 +360,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToast("LAB-EXT-RITIRA", new NotificationPayload().With("count", count.ToString()));
+                foundation.PostToastImmediate("LAB-EXT-RITIRA", new NotificationPayload().With("count", count.ToString()));
         }
     }
 }

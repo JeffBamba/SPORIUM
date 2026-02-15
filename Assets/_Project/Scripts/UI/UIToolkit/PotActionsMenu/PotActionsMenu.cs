@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project;
+using _Project.Sporae.Core;
 
 namespace Sporae.UI.UIToolkit.PotActionsMenu
 {
