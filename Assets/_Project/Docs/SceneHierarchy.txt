@@ -2363,6 +2363,18 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] PlayerInventoryPanelController
+  - UI_LabCatalizzatorePanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] LabCatalizzatorePanelController
+  - UI_LabFusionPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] LabFusionPanelController
+  - UI_LabIncubatorPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] LabIncubatorPanelController
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2398,6 +2410,15 @@
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
       - Load
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] Image
+        [Component] Button
+        - Text (TMP)
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] TextMeshProUGUI
+      - Save
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2735,12 +2756,25 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
-  - Pipette
+  - StazioneFusione
     [Component] Transform
     [Component] SpriteRenderer
     [Component] BoxCollider2D
     [Component] Interactable
     [Component] Pipette
+    - Canvas
+      [Component] RectTransform
+      [Component] Canvas
+      [Component] CanvasScaler
+      [Component] GraphicRaycaster
+      - Text (TMP)
+        [Component] RectTransform
+        [Component] CanvasRenderer
+        [Component] TextMeshProUGUI
+  - Incubator
+    [Component] Transform
+    [Component] Interactable
+    [Component] Incubator
     - Canvas
       [Component] RectTransform
       [Component] Canvas
@@ -2776,22 +2810,7 @@
     [Component] RoomLight2DZone
   - WalkColliders (1)
     [Component] Transform
-    - WALL_Left
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_profondo
-      [Component] Transform
-      [Component] EdgeCollider2D
     - WALL_railing_esterno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Left Interno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right Interno
       [Component] Transform
       [Component] EdgeCollider2D
   - Mask_KitchenRoom_Floor (1)
@@ -2809,7 +2828,25 @@
     - Light Monitor (2)
       [Component] Transform
       [Component] Light2D
+    - Light Monitor (7)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (8)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (9)
+      [Component] Transform
+      [Component] Light2D
     - Light Monitor (3)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (4)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (5)
+      [Component] Transform
+      [Component] Light2D
+    - Light Monitor (6)
       [Component] Transform
       [Component] Light2D
     - Light POT
@@ -2856,6 +2893,10 @@
       [Component] Transform
       [Component] Light2D
       [Component] Light2DFlicker
+    - Light_VisitorRoom_main (1)
+      [Component] Transform
+      [Component] Light2D
+      [Component] Light2DFlicker
     - Light_VisitorRoom
       [Component] Transform
       [Component] Light2D
@@ -2863,7 +2904,6 @@
     - Light_VisitorRoom (1)
       [Component] Transform
       [Component] Light2D
-      [Component] Light2DFlicker
   - RoomZone_Visitor (1)
     [Component] Transform
     [Component] BoxCollider2D
@@ -2964,9 +3004,6 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] RoomLight2DZone
-  - Light_KitchenRoom_Left
-    [Component] Transform
-    [Component] Light2D
   - Light_KitchenRoom_Right
     [Component] Transform
     [Component] Light2D
@@ -2978,19 +3015,10 @@
     [Component] SpriteMask
   - WalkColliders
     [Component] Transform
-    - WALL_Left
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_profondo
-      [Component] Transform
-      [Component] EdgeCollider2D
     - WALL_railing_esterno
       [Component] Transform
       [Component] EdgeCollider2D
     - WALL_Left Interno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right
       [Component] Transform
       [Component] EdgeCollider2D
     - WALL_Right Interno
@@ -2999,6 +3027,14 @@
     - BLK_Bed
       [Component] Transform
       [Component] PolygonCollider2D
+  - FoodRoomPanel
+    [Component] Transform
+    [Component] UIDocument
+    [Component] FoodRoomPanelController
+  - FoodSynthMachine
+    [Component] Transform
+    [Component] Interactable
+    [Component] FoodSynthMachine
 - ROOM_Bed
   [Component] Transform
   - BlackMarket
@@ -3031,6 +3067,10 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+    - EndOfDaySequence
+      [Component] Transform
+      [Component] UIDocument
+      [Component] EndOfDaySequenceController
   - RoomZone_Bed
     [Component] Transform
     [Component] BoxCollider2D
@@ -3039,10 +3079,13 @@
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
-  - Light_BedRoom_Main (1)
+  - Light_BedRoom_Main (2)
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
+  - Light_BedRoom_Main (1)
+    [Component] Transform
+    [Component] Light2D
   - Light_BedRoom_side
     [Component] Transform
     [Component] Light2D
@@ -3136,6 +3179,3 @@
 - opsMenu
   [Component] Transform
   [Component] SpriteRenderer
-- CorridoioLights
-  [Component] Transform
-  [Component] Light2D

@@ -17,7 +17,7 @@ La sequenza End of Day (tutte e 6 le schermate) va implementata con **UI Toolkit
 
 - **UXML** per ogni schermata (Conferma, Snapshot, Diario, Night Research, Forecast, Dawn), con layout e struttura come da spec.
 - **USS:** import in ordine [README_FOUNDATION.md](Assets/_Project/UI/UIToolkit/Foundation/README_FOUNDATION.md): `SP-Foundation.uss` → `SP-Panel-Base.uss` → `Foundation/Components/` (SP-Button, SP-Header, ecc.) → eventuale USS locale per stile terminale/neon.
-- **Stile:** design tokens `--sp-*`, classi `sp-panel`, `sp-button`, ecc. per coerenza con TopBar, Lab panels, PlayerStatusPanel. Per bordi neon e tema “terminal” si possono aggiungere varianti o USS specifici EoD senza uscire dalla Foundation come base.
+- **Stile:** design tokens `--sp-`*, classi `sp-panel`, `sp-button`, ecc. per coerenza con TopBar, Lab panels, PlayerStatusPanel. Per bordi neon e tema “terminal” si possono aggiungere varianti o USS specifici EoD senza uscire dalla Foundation come base.
 - **UIDocument + Panel Settings:** stesso pattern dei pannelli Lab (es. [README_LAB_PANELS.md](Assets/_Project/UI/UIToolkit/Lab/README_LAB_PANELS.md)): un UIDocument per pannello o un UIDocument con root che mostra/nasconde le varie schermate in sequenza.
 
 In sintesi: **sì, la UI della sequenza EoD si crea con UI Toolkit e Foundation** (non Canvas/UGUI legacy).

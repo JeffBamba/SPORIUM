@@ -336,6 +336,17 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     selectBtn.AddToClassList("inv-select");
                     right.Add(selectBtn);
                 }
+                else if (!isPicker && ItemConsumptionHandler.IsConsumable(typeId))
+                {
+                    string useLabel = GetConsumeButtonLabel(typeId);
+                    var useBtn = new Button(() =>
+                    {
+                        if (_playerInventory != null && _playerInventory.ConsumeItem(typeId, 1))
+                            Rebuild();
+                    }) { text = useLabel };
+                    useBtn.AddToClassList("inv-select");
+                    right.Add(useBtn);
+                }
 
                 string tooltipContent = typeId == Items.PreSeed
                     ? BuildPreSeedItemTooltip(slot.Items.FirstOrDefault())
@@ -416,12 +427,30 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     selectBtn.AddToClassList("inv-select");
                     right.Add(selectBtn);
                 }
+                else if (!isPicker && ItemConsumptionHandler.IsConsumable(typeId))
+                {
+                    var useBtn = new Button(() =>
+                    {
+                        if (_playerInventory != null && _playerInventory.ConsumeItem(typeId, 1))
+                            Rebuild();
+                    }) { text = "Mangia" };
+                    useBtn.AddToClassList("inv-select");
+                    right.Add(useBtn);
+                }
 
                 RegisterRowTooltip(row, tooltipContent);
                 row.Add(left);
                 row.Add(right);
                 _list.Add(row);
             }
+        }
+
+        private static string GetConsumeButtonLabel(string typeId)
+        {
+            if (typeId == Items.WaterPotable || typeId == Items.Water) return "Bevi";
+            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat) return "Mangia";
+            if (typeId == Items.Fruits || typeId == Items.FruitsKnown) return "Mangia";
+            return "Usa";
         }
 
         private void RegisterRowTooltip(VisualElement row, string tooltipContent)

@@ -54,7 +54,7 @@ namespace _Project
         public void OnMouseDown()
         {
             bool isOverUI = UIBlocker.IsPointerOverUI();
-            
+
             if (isOverUI)
             {
 #if UNITY_EDITOR

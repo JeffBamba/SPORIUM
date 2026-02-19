@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 849050a1529e6d640afed94f2efcea6c, type: 3}
+  m_Name: FoodRoomConfig
+  m_EditorClassIdentifier: 
+  _maxSlots: 1
+  _vegetableDays: 1
+  _vegetableOutputQuantity: 3
+  _vegetableCryPerDay: 1
+  _vegetableActionBonus: 1
+  _fungusDays: 2
+  _fungusOutputQuantity: 2
+  _fungusCryPerDay: 1
+  _fungusActionBonus: 2
+  _meatDays: 3
+  _meatOutputQuantity: 1
+  _meatCryPerDay: 2
+  _meatActionBonus: 3

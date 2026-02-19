@@ -5,6 +5,7 @@ using Sporae.UI.UIToolkit.PlayerInventory;
 using Sporae.DevTools;
 using System.Linq;
 using _Project;
+using _Project.Sporae.Core;
 
 namespace Sporae.UI.UIToolkit
 {
@@ -44,10 +45,11 @@ namespace Sporae.UI.UIToolkit
         private Button _reputationButton;
         private Button _diaryButton;
         
-        // Mock data update (per test)
+        // Mock data update (per test) - disattivato quando collegato a PlayerHydrationSystem
         private float _mockUpdateTimer = 0f;
         private const float MOCK_UPDATE_INTERVAL = 2f;
-        
+        private bool _hydrationConnectedToRealSystem;
+
         private void Awake()
         {
             // Crea UIDocument se non presente
@@ -71,21 +73,85 @@ namespace Sporae.UI.UIToolkit
         {
             InitializeUI();
             InitializeBars();
+            TryConnectHydrationSystem();
             UpdateAllBars();
+        }
+
+        private void TryConnectHydrationSystem()
+        {
+            if (_hydrationConnectedToRealSystem) return;
+            var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            var hydration = gm?.PlayerHydrationSystem;
+            if (hydration != null)
+            {
+                hydration.OnHydrationChanged += OnHydrationChanged;
+                _hydrationConnectedToRealSystem = true;
+                UpdateHydrationFromSystem(hydration);
+                if (_enableDebugLogs)
+                    SporiumLogger.LogInfo(LogCategory.UI, "PlayerStatusPanel: collegato a PlayerHydrationSystem");
+            }
+        }
+
+        private void UpdateHydrationFromSystem(PlayerHydrationSystem hydration)
+        {
+            UpdateHydration(hydration.HydrationPercent, 100f);
+            int mod = hydration.GetActionModifier();
+            if (_warningLabel != null)
+            {
+                _warningLabel.text = mod switch
+                {
+                    -2 => "Disidratato: -2 azioni domani",
+                    -1 => "Bassa idratazione: -1 azione domani",
+                    0 => "",
+                    2 => "Ben idratato: +2 azioni domani",
+                    _ => ""
+                };
+                _warningLabel.style.display = string.IsNullOrEmpty(_warningLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+        }
+
+        private void OnHydrationChanged(float current, float max)
+        {
+            UpdateHydration(current, max);
+            var hydration = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true)?.PlayerHydrationSystem;
+            if (hydration != null)
+                UpdateWarningTextFromModifier(hydration.GetActionModifier());
+        }
+
+        private void UpdateWarningTextFromModifier(int modifier)
+        {
+            if (_warningLabel == null) return;
+            _warningLabel.text = modifier switch
+            {
+                -2 => "Disidratato: -2 azioni domani",
+                -1 => "Bassa idratazione: -1 azione domani",
+                0 => "",
+                2 => "Ben idratato: +2 azioni domani",
+                _ => ""
+            };
+            _warningLabel.style.display = string.IsNullOrEmpty(_warningLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_warningLabel.style.display == DisplayStyle.Flex)
+            {
+                _warningLabel.style.height = StyleKeyword.Auto;
+                _warningLabel.style.overflow = Overflow.Visible;
+            }
+            else
+            {
+                _warningLabel.style.height = 0f;
+                _warningLabel.style.overflow = Overflow.Hidden;
+            }
         }
         
         private void Update()
         {
-            // Mock data update per test (rimuovere quando integrato con sistemi reali)
+            if (_hydrationConnectedToRealSystem) return;
             _mockUpdateTimer += Time.deltaTime;
             if (_mockUpdateTimer >= MOCK_UPDATE_INTERVAL)
             {
                 _mockUpdateTimer = 0f;
-                // Simula piccole variazioni per testare animazioni
                 _mockHealth = Mathf.Clamp(_mockHealth + Random.Range(-2f, 2f), 0f, _mockMaxHealth);
                 _mockEnergy = Mathf.Clamp(_mockEnergy + Random.Range(-3f, 3f), 0f, _mockMaxEnergy);
                 _mockHydration = Mathf.Clamp(_mockHydration + Random.Range(-5f, 5f), 0f, _mockMaxHydration);
-                
                 UpdateAllBars();
             }
         }
@@ -126,11 +192,8 @@ namespace Sporae.UI.UIToolkit
             _reputationButton = _root.Q<Button>("reputation-btn");
             _diaryButton = _root.Q<Button>("diary-btn");
             
-            // Imposta testo warning (evita problemi XML con carattere <)
-            if (_warningLabel != null)
-            {
+            if (_warningLabel != null && !_hydrationConnectedToRealSystem)
                 _warningLabel.text = "▲ -1 Action se <40%";
-            }
             
             // Setup buttons
             if (_inventoryButton != null)
@@ -302,43 +365,19 @@ namespace Sporae.UI.UIToolkit
         // Event Handlers (per integrazione futura)
         // ============================================
         
-        /// <summary>
-        /// Handler per evento HydrationChanged (da implementare quando PlayerHydrationSystem sarà disponibile).
-        /// </summary>
-        private void OnHydrationChanged(float current, float max)
-        {
-            UpdateHydration(current, max);
-        }
-        
-        // ============================================
-        // Setup Event Subscriptions (da chiamare quando sistemi saranno disponibili)
-        // ============================================
-        
-        /// <summary>
-        /// Iscrive il panel agli eventi dei sistemi player.
-        /// Chiamare questo metodo quando i sistemi Health/Energy/Hydration saranno implementati.
-        /// </summary>
         public void SubscribeToPlayerEvents()
         {
-            // Esempio di integrazione futura:
-            /*
-            var eventSystem = Sporae.Core.EventSystem.Instance;
-            if (eventSystem != null)
-            {
-                eventSystem.Subscribe<PlayerHealthChangedEvent>(OnHealthChanged);
-                eventSystem.Subscribe<PlayerEnergyChangedEvent>(OnEnergyChanged);
-                eventSystem.Subscribe<PlayerHydrationChangedEvent>(OnHydrationChanged);
-            }
-            */
-            
-            if (_enableDebugLogs)
-                SporiumLogger.LogInfo(LogCategory.UI, "Player Status Panel pronto per integrazione eventi (sistemi non ancora disponibili)");
+            TryConnectHydrationSystem();
         }
-        
+
         private void OnDestroy()
         {
-            // Unsubscribe da eventi se necessario
-            // (da implementare quando eventi saranno disponibili)
+            if (_hydrationConnectedToRealSystem)
+            {
+                var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+                if (gm?.PlayerHydrationSystem != null)
+                    gm.PlayerHydrationSystem.OnHydrationChanged -= OnHydrationChanged;
+            }
         }
     }
 }

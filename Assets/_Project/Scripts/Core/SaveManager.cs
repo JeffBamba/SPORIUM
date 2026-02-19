@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
+using _Project.Systems.FoodRoom;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Components;
@@ -316,9 +317,13 @@ namespace Sporae.Core
                     currentDay = dayCycleSystem?.CurrentDay ?? 1,
                     currentCRY = gameManager.CurrentCRY,
                     actionsLeft = gameManager.ActionsLeft,
-                    condensationAmount = gameManager.CondensationSystem?.CondensationAmount ?? 0f
+                    condensationAmount = gameManager.CondensationSystem?.CondensationAmount ?? 0f,
+                    hydrationPercent = gameManager.PlayerHydrationSystem?.HydrationPercent ?? 100f
                 };
             }
+
+            if (gameManager?.FoodRoomSystem != null)
+                saveData.foodRoomData = SerializeFoodRoom(gameManager.FoodRoomSystem);
             
             // Inventario del giocatore
             if (gameManager != null && gameManager.PlayerInventory != null)
@@ -399,7 +404,14 @@ namespace Sporae.Core
                 {
                     gameManager.CondensationSystem.SetCurrentAccumulation(saveData.gameState.condensationAmount);
                 }
+                if (gameManager.PlayerHydrationSystem != null && saveData.gameState.hydrationPercent >= 0)
+                {
+                    gameManager.PlayerHydrationSystem.SetHydrationPercent(saveData.gameState.hydrationPercent);
+                }
             }
+
+            if (gameManager?.FoodRoomSystem != null && saveData.foodRoomData != null)
+                DeserializeFoodRoom(gameManager.FoodRoomSystem, saveData.foodRoomData);
             
             // Inventario
             if (gameManager != null && gameManager.PlayerInventory != null && saveData.inventory != null)
@@ -450,6 +462,45 @@ namespace Sporae.Core
             }
         }
         
+        private FoodRoomSaveData SerializeFoodRoom(FoodRoomSystem foodRoom)
+        {
+            if (foodRoom == null) return null;
+            var data = new FoodRoomSaveData
+            {
+                slots = new List<FoodRoomSlotSaveData>(),
+                waterRawInput = foodRoom.WaterSlot.RawWaterInput,
+                waterPotableOutput = foodRoom.WaterSlot.PotableWaterOutput,
+                waterIsActive = foodRoom.WaterSlot.IsActive
+            };
+            foreach (var slot in foodRoom.ProductionSlots)
+            {
+                data.slots.Add(new FoodRoomSlotSaveData
+                {
+                    type = (int)slot.Type,
+                    daysRemaining = slot.DaysRemaining,
+                    startDay = slot.StartDay,
+                    hasStemCell = slot.HasStemCell,
+                    stemCellTypeId = slot.StemCellTypeId ?? "",
+                    state = (int)slot.State
+                });
+            }
+            return data;
+        }
+
+        private void DeserializeFoodRoom(FoodRoomSystem foodRoom, FoodRoomSaveData data)
+        {
+            if (foodRoom == null || data == null) return;
+            var slots = new List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)>();
+            if (data.slots != null)
+            {
+                foreach (var s in data.slots)
+                {
+                    slots.Add((s.type, s.daysRemaining, s.startDay, s.hasStemCell, s.stemCellTypeId ?? "", s.state));
+                }
+            }
+            foodRoom.RestoreState(slots, data.waterRawInput, data.waterPotableOutput, data.waterIsActive);
+        }
+
         /// <summary>
         /// Raccoglie lo stato di tutti i vasi nella scena.
         /// </summary>
@@ -716,6 +767,7 @@ namespace Sporae.Core
             public string saveTimestamp;
             public string gameVersion;
             public int inventoryVersion;
+            public FoodRoomSaveData foodRoomData;
         }
         
         [Serializable]
@@ -725,6 +777,27 @@ namespace Sporae.Core
             public int currentCRY;
             public int actionsLeft;
             public float condensationAmount;
+            public float hydrationPercent = 100f;
+        }
+
+        [Serializable]
+        private class FoodRoomSaveData
+        {
+            public List<FoodRoomSlotSaveData> slots;
+            public int waterRawInput;
+            public int waterPotableOutput;
+            public bool waterIsActive;
+        }
+
+        [Serializable]
+        private class FoodRoomSlotSaveData
+        {
+            public int type;
+            public int daysRemaining;
+            public int startDay;
+            public bool hasStemCell;
+            public string stemCellTypeId;
+            public int state;
         }
         
         [Serializable]

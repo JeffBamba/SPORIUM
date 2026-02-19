@@ -1,0 +1,441 @@
+/*
+ * Food Room Panel — FoodSynthMachine
+ * Dipendenze: SP-Foundation, SP-Panel-Base, SP-Header, SP-Button (importati nell'UXML).
+ * Usa var(--sp-*) come stile guida; solo layout e varianti specifiche qui.
+ */
+
+/* ----- Root & overlay ----- */
+.food-room-root {
+    flex-grow: 1;
+    flex-direction: column;
+    min-width: 760px;
+    min-height: 560px;
+    width: 760px;
+    height: 560px;
+    background-color: var(--sp-bg-panel-darker);
+}
+
+.food-room-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-grow: 1;
+    flex-shrink: 0;
+    min-height: 520px;
+    background-color: var(--sp-bg-panel-dark);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.food-room-panel {
+    flex-direction: column;
+    flex-shrink: 0;
+    min-width: 720px;
+    max-width: 900px;
+    width: 720px;
+    min-height: 480px;
+    height: 520px;
+    border-top-left-radius: var(--sp-radius-md);
+    border-top-right-radius: var(--sp-radius-md);
+    border-bottom-left-radius: var(--sp-radius-md);
+    border-bottom-right-radius: var(--sp-radius-md);
+}
+
+/* ----- Header (Foundation + override layout) ----- */
+.food-room-header .header-left {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.food-room-header .header-status {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-green-led);
+    margin-bottom: var(--sp-space-xs);
+}
+
+.food-room-header .title-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.food-room-header .header-icon {
+    font-size: var(--sp-font-size-16);
+    color: var(--sp-color-green-led);
+    margin-right: var(--sp-space-sm);
+}
+
+.food-room-header .header-title {
+    font-size: var(--sp-font-size-14);
+    color: var(--sp-color-green-led);
+}
+
+.food-room-header .header-subtitle {
+    margin-top: var(--sp-space-xs);
+    margin-left: 0;
+    white-space: normal;
+}
+
+.btn-close-red {
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+/* ----- Main content (3 columns) ----- */
+.main-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: row;
+    min-height: 280px;
+    overflow: hidden;
+    margin-top: var(--sp-space-sm);
+}
+
+.left-column {
+    width: 240px;
+    min-width: 220px;
+    flex-shrink: 0;
+    flex-direction: column;
+    margin-right: var(--sp-space-md);
+}
+
+.center-column {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 200px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: var(--sp-space-md);
+}
+
+.right-column {
+    width: 200px;
+    min-width: 180px;
+    flex-shrink: 0;
+    flex-direction: column;
+}
+
+/* ----- Section titles (Food Room accent colors) ----- */
+.section-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--sp-space-sm);
+}
+
+.section-title-row .section-icon {
+    font-size: var(--sp-font-size-12);
+    margin-right: var(--sp-space-sm);
+}
+
+.section-title-row.purple .section-icon,
+.section-title-row.purple .section-title {
+    color: var(--sp-color-violet-growth);
+}
+
+.section-title-row.green .section-icon,
+.section-title-row.green .section-title {
+    color: var(--sp-color-green-led);
+}
+
+.section-title-row.teal .section-icon,
+.section-title-row.teal .section-title {
+    color: var(--sp-color-blue-info);
+}
+
+/* ----- Stem cell slot ----- */
+.section-stem-cell {
+    margin-bottom: var(--sp-space-md);
+}
+
+.stem-cell-slot {
+    border-width: var(--sp-border-2);
+    border-color: var(--sp-color-green-led);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-md);
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    background-color: var(--sp-bg-panel-darker);
+}
+
+.stem-cell-slot:hover {
+    background-color: var(--sp-bg-metal-dark);
+}
+
+.stem-cell-placeholder-icon {
+    font-size: var(--sp-font-size-24);
+    color: var(--sp-color-green-led);
+    margin-bottom: var(--sp-space-xs);
+}
+
+.stem-cell-label {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-text);
+  -unity-font-style: bold;
+}
+
+.stem-cell-hint {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-dim);
+    margin-top: var(--sp-space-xs);
+}
+
+/* ----- Growth chambers ----- */
+.section-growth-chambers {
+    margin-bottom: var(--sp-space-md);
+}
+
+.chambers-list {
+    flex-direction: column;
+}
+
+.chamber-card {
+    flex-direction: row;
+    align-items: center;
+    border-width: var(--sp-border-1);
+    border-color: var(--sp-line);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-sm) var(--sp-space-md);
+    margin-bottom: var(--sp-space-sm);
+    background-color: var(--sp-bg-panel-dark);
+}
+
+.chamber-card:hover {
+    border-color: var(--sp-line-strong);
+    background-color: var(--sp-bg-metal-dark);
+}
+
+.chamber-card.selected {
+    border-width: var(--sp-border-2);
+    border-color: var(--sp-color-blue-info);
+}
+
+.chamber-icon {
+    font-size: var(--sp-font-size-20);
+    margin-right: var(--sp-space-sm);
+}
+
+.chamber-body {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.chamber-name {
+    font-size: var(--sp-font-size-10);
+  -unity-font-style: bold;
+  color: var(--sp-color-text);
+}
+
+.chamber-details {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-dim);
+    margin-top: var(--sp-space-xs);
+}
+
+.chamber-desc {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-muted);
+    margin-top: var(--sp-space-xs);
+}
+
+.chamber-name {
+    color: var(--sp-color-green-led);
+}
+
+.chamber-cost {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-green-led);
+    margin-left: var(--sp-space-sm);
+}
+
+/* ----- Hydration line ----- */
+.section-hydration {
+    margin-bottom: var(--sp-space-sm);
+}
+
+.hydration-line-box {
+    flex-direction: row;
+    align-items: center;
+    border-width: var(--sp-border-1);
+    border-color: var(--sp-color-green-led);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-md);
+    background-color: var(--sp-bg-panel-dark);
+}
+
+.hydration-drop-icon {
+    font-size: var(--sp-font-size-24);
+    margin-right: var(--sp-space-md);
+    color: var(--sp-color-blue-info);
+}
+
+.hydration-text-block {
+    flex-direction: column;
+}
+
+.hydration-label {
+    font-size: var(--sp-font-size-10);
+  -unity-font-style: bold;
+  color: var(--sp-color-green-led);
+}
+
+.hydration-flavor {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-dim);
+    margin-top: var(--sp-space-xs);
+  -unity-font-style: italic;
+}
+
+.hydration-status-row {
+    min-height: 0;
+    margin-top: var(--sp-space-xs);
+}
+
+/* ----- Center: tank display ----- */
+.tank-display {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-space-lg);
+}
+
+.tank-circle {
+    width: 140px;
+    height: 140px;
+    border-width: var(--sp-border-2);
+    border-color: var(--sp-color-green-led);
+    border-radius: 70px;
+    background-color: var(--sp-bg-panel-dark);
+    margin-bottom: var(--sp-space-md);
+}
+
+.tank-status {
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-green-led);
+  -unity-font-style: bold;
+    margin-bottom: var(--sp-space-xs);
+}
+
+.tank-message {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-text-dim);
+    white-space: normal;
+    max-width: 280px;
+  -unity-text-align: middle-center;
+}
+
+/* ----- Center: LIFE SUPPORT INDICATORS ----- */
+.life-support-indicators {
+    flex-shrink: 0;
+    margin-top: var(--sp-space-md);
+    padding: var(--sp-space-sm);
+    border-width: var(--sp-border-1);
+    border-color: var(--sp-color-green-led);
+    border-radius: var(--sp-radius-sm);
+    background-color: var(--sp-bg-panel-darker);
+}
+
+.life-support-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: var(--sp-space-xs);
+}
+
+.life-support-label,
+.life-support-value {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-green-led);
+    width: 50%;
+    margin-bottom: var(--sp-space-xs);
+}
+
+.life-support-value {
+  -unity-text-align: middle-right;
+}
+
+/* ----- Right: production info ----- */
+.production-info {
+    flex-direction: column;
+    margin-bottom: var(--sp-space-sm);
+    padding: var(--sp-space-sm);
+    border-width: var(--sp-border-1);
+    border-color: var(--sp-color-green-led);
+    border-radius: var(--sp-radius-sm);
+    background-color: var(--sp-bg-panel-darker);
+}
+
+.prod-row {
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-green-led);
+    margin-bottom: var(--sp-space-xs);
+}
+
+.system-comment {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: var(--sp-space-sm);
+    margin-bottom: var(--sp-space-sm);
+    border-width: var(--sp-border-2);
+    border-color: rgb(255, 180, 80);
+    border-radius: var(--sp-radius-sm);
+    background-color: var(--sp-bg-panel-darker);
+}
+
+.comment-icon {
+    font-size: var(--sp-font-size-14);
+    margin-right: var(--sp-space-sm);
+    color: rgb(255, 180, 80);
+}
+
+.comment-text {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-dim);
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.btn-advance-debug {
+    font-size: var(--sp-font-size-8);
+    color: var(--sp-color-text-dim);
+}
+
+/* ----- Bottom bar ----- */
+.bottom-bar {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--sp-space-md);
+    padding-top: var(--sp-space-sm);
+    padding-bottom: var(--sp-space-xs);
+    border-top-width: 1px;
+    border-top-color: var(--sp-line);
+    justify-content: space-between;
+}
+
+.bottom-hint {
+    flex-shrink: 0;
+    margin-right: var(--sp-space-md);
+}
+
+.bottom-bar-center {
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.bottom-buttons {
+    flex-direction: row;
+    flex-shrink: 0;
+    justify-content: flex-end;
+}
+
+.btn-action {
+    margin-left: var(--sp-space-sm);
+    margin-right: var(--sp-space-sm);
+}

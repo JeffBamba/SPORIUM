@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using _Project;
 using _Project.Scripts.Core;
 using _Project.Sporae.Core;
+using _Project.Systems.FoodRoom;
 using UnityEngine;
 using Sporae.Core;
 using Sporae.DevTools;
@@ -35,11 +36,16 @@ public class GameManager : MonoBehaviour
     private CondensationSystem _condensationSystem;
     private DeteriorationSystem _deteriorationSystem;
     private DayCycleSystem _dayCycleSystem;
-    
+    private PlayerHydrationSystem _playerHydrationSystem;
+    private FoodRoomSystem _foodRoomSystem;
+    private ItemConsumptionHandler _itemConsumptionHandler;
+
     public EconomySystem EconomySystem => _economySystem;
     public ActionSystem ActionSystem => _actionSystem;
     public CondensationSystem CondensationSystem => _condensationSystem;
     public Inventory PlayerInventory => _playerInventory;
+    public PlayerHydrationSystem PlayerHydrationSystem => _playerHydrationSystem;
+    public FoodRoomSystem FoodRoomSystem => _foodRoomSystem;
 
     /// <summary>Modulo Cellule Staminali (Extractor) sbloccato acquistandolo dal Black Market.</summary>
     private bool _stemCellModuleUnlocked;
@@ -128,7 +134,18 @@ public class GameManager : MonoBehaviour
         _economySystem = new EconomySystem(_startingCRY);
         _condensationSystem = new CondensationSystem();
         _deteriorationSystem = new DeteriorationSystem(this);
+        _playerHydrationSystem = new PlayerHydrationSystem();
+        _foodRoomSystem = new FoodRoomSystem(_playerInventory, this);
+        _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, _actionSystem);
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
+
+        if (ServiceContainer.Instance != null)
+        {
+            if (!ServiceContainer.Instance.Contains(typeof(PlayerHydrationSystem)))
+                ServiceContainer.Instance.Register(_playerHydrationSystem);
+            if (!ServiceContainer.Instance.Contains(typeof(FoodRoomSystem)))
+                ServiceContainer.Instance.Register(_foodRoomSystem);
+        }
 
         if (_dayCycleSystem != null)
         {
@@ -158,13 +175,21 @@ public class GameManager : MonoBehaviour
     }
 
     private void HandleDayChanged(int day)
-    {   
+    {
         _economySystem.Spend(_dailyPowerCost);
-        _actionSystem.ResetActions(_actionsPerDay);
-        
-        // FASE 3: Condensazione ora gestita da DayCycleController.ApplyCondensationSystem()
-        // (chiamato dopo che tutte le piante sono state processate)
-        
+
+        if (_playerHydrationSystem != null)
+        {
+            _playerHydrationSystem.ProcessDailyConsumption();
+            int hydrationModifier = _playerHydrationSystem.GetActionModifier();
+            int totalActions = Mathf.Max(1, _actionsPerDay + hydrationModifier);
+            _actionSystem.ResetActions(totalActions);
+        }
+        else
+        {
+            _actionSystem.ResetActions(_actionsPerDay);
+        }
+
 #if UNITY_EDITOR
         if (_showDebugLogs)
             SporiumLogger.LogInfo(LogCategory.Core, $"EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
@@ -289,6 +314,7 @@ public class GameManager : MonoBehaviour
         {
             _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
+        _itemConsumptionHandler?.Unsubscribe();
     }
     
     /// <summary>

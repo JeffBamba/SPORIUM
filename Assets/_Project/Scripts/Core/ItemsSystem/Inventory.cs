@@ -95,6 +95,17 @@ namespace _Project.Sporae.Core
             return true;
         }
 
+        /// <summary>Consuma un item e notifica per effetti (cibo/bevande). Usare per Mangia/Bevi.</summary>
+        public bool ConsumeItem(string typeId, int quantity = 1)
+        {
+            if (!Consume(typeId, quantity))
+                return false;
+            OnItemConsumed?.Invoke(typeId, quantity);
+            return true;
+        }
+
+        public event System.Action<string, int> OnItemConsumed;
+
         /// <summary>Rimuove e restituisce il primo item dello slot indicato (preserva metadata).</summary>
         public bool TryRemoveFirst(string typeId, out Item removedItem)
         {

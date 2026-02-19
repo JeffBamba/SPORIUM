@@ -34,6 +34,13 @@ namespace _Project.Sporae.Core
         public const string ReagentX = "REAG-X";               // Reagente X (Incubatore)
         public const string ReagentY = "REAG-Y";              // Reagente Y (Incubatore)
 
+        // BLK-04.01: Food Room Items
+        public const string FoodVegetable = "FOOD-101";      // Vegetali sintetici (+1 Azione)
+        public const string FoodFungus = "FOOD-201";         // Funghi sintetici (+2 Azioni)
+        public const string FoodMeat = "FOOD-301";           // Carne sintetica (+3 Azioni)
+        public const string WaterPotable = "WAT-POT";        // Acqua Potabile
+        public const string OrganicResidue = "ORG-RES-001";  // Residui Proteici da carne (Food Room)
+
         /// <summary> Tutti i typeId degli item esistenti in game (per inventario iniziale / debug ). </summary>
         public static readonly string[] AllTypeIds =
         {
@@ -42,7 +49,8 @@ namespace _Project.Sporae.Core
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
             SprayAntifungal, AdditiveBasic, AdditiveAcid,
             StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,
-            ReagentX, ReagentY
+            ReagentX, ReagentY,
+            FoodVegetable, FoodFungus, FoodMeat, WaterPotable, OrganicResidue
         };
     }
 }

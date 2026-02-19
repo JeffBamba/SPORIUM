@@ -434,6 +434,14 @@ public class DayCycleController : MonoBehaviour
         
         // 7. FASE 3: Calcola condensazione basata su piante attive e LED
         ApplyCondensationSystem(dayIndex);
+
+        // 8. Processa Food Room (produzione, costi, harvest disponibili)
+        var foodRoom = _gameManager?.FoodRoomSystem;
+        if (foodRoom != null)
+        {
+            foodRoom.ProcessDailyProduction(dayIndex);
+            foodRoom.ProcessDailyCosts();
+        }
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
