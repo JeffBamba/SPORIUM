@@ -130,7 +130,7 @@ namespace _Project.Systems.FoodRoom
             string foodTypeName = GetFoodTypeDisplayName(slot.Type);
             _inventory.Add(typeId, qty);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToastImmediate("KTCH-FOOD-RITIRA", new NotificationPayload().With("foodType", foodTypeName).With("count", qty.ToString()));
+                foundation.PostAddedToInventory(typeId, foodTypeName, qty, RoomNames.Kitchen);
             /* Prodotti aggiuntivi dall'harvest (es. Res Protein dalla carne): aggiungi a inventario e toast separato per ognuno */
             AddHarvestBonusItemsAndToasts(slot.Type, foundation);
             slot.State = SlotState.Free;
@@ -150,7 +150,7 @@ namespace _Project.Systems.FoodRoom
                 case FoodProductionType.Meat:
                     int resProtQty = 1;
                     _inventory.Add(Items.ProteinResidue, resProtQty);
-                    foundation.PostToastImmediate("KTCH-FOOD-RITIRA", new NotificationPayload().With("foodType", "Res Protein").With("count", resProtQty.ToString()));
+                    foundation.PostAddedToInventory(Items.ProteinResidue, "Res Protein", resProtQty, RoomNames.Kitchen);
                     break;
                 default:
                     break;
@@ -167,7 +167,7 @@ namespace _Project.Systems.FoodRoom
             _waterSlot.IsActive = false;
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostToastImmediate("KTCH-WAT-RITIRA", new NotificationPayload().With("count", amount.ToString()));
+                foundation.PostAddedToInventory(Items.WaterPotable, "Potable Water", amount, RoomNames.Kitchen);
             RefreshWaterToasts();
             return true;
         }

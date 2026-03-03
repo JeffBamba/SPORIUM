@@ -50,6 +50,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 return args.TryGetValue(key, out var value) ? value : m.Value;
             });
         }
+
+        /// <summary>Titolo per il toast "Added To Inventory" (layout item). Maiuscolo e grassetto in UI.</summary>
+        public static string GetAddedToInventoryTitle()
+        {
+            return GetLanguage() == NotificationLanguage.It ? "AGGIUNTO ALL'INVENTARIO" : "ADDED TO INVENTORY";
+        }
     }
 }
 

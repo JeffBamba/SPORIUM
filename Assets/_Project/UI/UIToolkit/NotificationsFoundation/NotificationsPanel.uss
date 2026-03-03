@@ -1,20 +1,17 @@
-/* Notifications Foundation — layout/override only.
-   IMPORTANT: questo USS va usato insieme a:
-   - Assets/_Project/UI/UIToolkit/Foundation/SP-Foundation.uss
-   - Assets/_Project/UI/UIToolkit/Foundation/SP-Panel-Base.uss
-*/
-
 .nf-root {
     position: absolute;
     right: 24px;
-    /* Spostato più in basso rispetto alla TopBar (fix overlap) */
     top: 136px;
     width: 306px;
     flex-direction: column;
     align-items: stretch;
 }
 
-.nf-header,
+.nf-header {
+    width: 100%;
+    align-self: stretch;
+}
+
 .nf-row {
     width: 100%;
     align-self: stretch;
@@ -29,8 +26,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-
-    background-color: rgba(30, 40, 42, 0.90);
+    background-color: rgba(30, 40, 42, 0.9);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -52,8 +48,7 @@
     margin-right: 8px;
     justify-content: center;
     align-items: center;
-
-    background-color: rgba(10, 18, 22, 0.80);
+    background-color: rgba(10, 18, 22, 0.8);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -116,29 +111,27 @@
 }
 
 .nf-list {
-    margin-top: 6px;
+    margin-top: 10px;
     flex-direction: column;
-    gap: 6px;
     width: 100%;
 }
 
 .nf-row {
-    /* Base state for animations */
+    height: 55px;
+    min-height: 55px;
+    margin-bottom: 10px;
     opacity: 1;
-    translate: 0px 0px;
+    translate: 0 0;
     scale: 1 1;
-
     transition-property: opacity, translate, scale;
     transition-duration: 0.3s;
     transition-timing-function: ease-out;
-
     padding-left: 8px;
     padding-right: 8px;
     padding-top: 8px;
     padding-bottom: 8px;
     flex-direction: row;
     align-items: flex-start;
-    /* Default (override via severity vars below) */
     background-color: rgba(10, 18, 22, 0.92);
     border-left-width: 2px;
     border-right-width: 2px;
@@ -150,16 +143,15 @@
     border-bottom-color: var(--sp-color-blue-info);
 }
 
-/* Entry/Exit animation states (applied/removed by controller) */
 .nf-row.nf-anim-enter {
     opacity: 0;
-    translate: 100px 0px;
+    translate: 100px 0;
     scale: 0.8 0.8;
 }
 
 .nf-row.nf-anim-exit {
     opacity: 0;
-    translate: 100px 0px;
+    translate: 100px 0;
     scale: 0.8 0.8;
 }
 
@@ -173,6 +165,8 @@
 .nf-row-text {
     flex-direction: column;
     flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .nf-row-code {
@@ -184,44 +178,94 @@
 .nf-row-msg {
     font-size: 13px;
     color: var(--sp-color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .nf-collapsed .nf-list {
     display: none;
 }
 
-/* Severity mapping via classes applied from controller */
 .nf-sev-info {
     --nf-color: var(--sp-color-green-led);
     --nf-bg: rgba(18, 40, 28, 0.94);
 }
+
 .nf-sev-success {
     --nf-color: var(--sp-color-green-led);
     --nf-bg: rgba(18, 40, 28, 0.94);
 }
+
 .nf-sev-warning {
     --nf-color: var(--sp-color-yellow-standard);
     --nf-bg: rgba(44, 38, 18, 0.94);
 }
+
 .nf-sev-danger {
     --nf-color: var(--sp-color-red-warning);
     --nf-bg: rgba(46, 22, 22, 0.94);
 }
 
-/* Special-case: visitor/mission notification should be violet (mission-like). */
-.nf-row.nf-code-vis,
+.nf-row.nf-code-vis {
+    --nf-color: rgb(181, 128, 209);
+    --nf-bg: rgba(44, 18, 46, 0.94);
+}
+
 .nf-header.nf-code-vis {
     --nf-color: rgb(181, 128, 209);
     --nf-bg: rgba(44, 18, 46, 0.94);
 }
 
-.nf-header.nf-sev-info,
-.nf-header.nf-sev-success,
-.nf-header.nf-sev-warning,
-.nf-header.nf-sev-danger,
-.nf-row.nf-sev-info,
-.nf-row.nf-sev-success,
-.nf-row.nf-sev-warning,
+.nf-header.nf-sev-info {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-info {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-success {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-warning {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-row.nf-sev-danger {
     border-left-color: var(--nf-color);
     border-right-color: var(--nf-color);
@@ -229,18 +273,62 @@
     border-bottom-color: var(--nf-color);
 }
 
-.nf-row.nf-sev-info,
-.nf-row.nf-sev-success,
-.nf-row.nf-sev-warning,
+.nf-row.nf-sev-info {
+    background-color: var(--nf-bg);
+}
+
+.nf-row.nf-sev-success {
+    background-color: var(--nf-bg);
+}
+
+.nf-row.nf-sev-warning {
+    background-color: var(--nf-bg);
+}
+
 .nf-row.nf-sev-danger {
     background-color: var(--nf-bg);
 }
 
-.nf-header.nf-sev-info .nf-header-icon,
-.nf-header.nf-sev-info .nf-header-title,
-.nf-header.nf-sev-info .nf-chevron,
-.nf-header.nf-sev-info .nf-badge-text,
-.nf-header.nf-sev-info .nf-badge,
+.nf-header.nf-sev-info .nf-header-icon {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-info .nf-header-title {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-info .nf-chevron {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-info .nf-badge-text {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-info .nf-badge {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-header.nf-sev-info .nf-iconbox {
     color: var(--nf-color);
     border-left-color: var(--nf-color);
@@ -249,11 +337,46 @@
     border-bottom-color: var(--nf-color);
 }
 
-.nf-header.nf-sev-success .nf-header-icon,
-.nf-header.nf-sev-success .nf-header-title,
-.nf-header.nf-sev-success .nf-chevron,
-.nf-header.nf-sev-success .nf-badge-text,
-.nf-header.nf-sev-success .nf-badge,
+.nf-header.nf-sev-success .nf-header-icon {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success .nf-header-title {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success .nf-chevron {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success .nf-badge-text {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-success .nf-badge {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-header.nf-sev-success .nf-iconbox {
     color: var(--nf-color);
     border-left-color: var(--nf-color);
@@ -262,11 +385,46 @@
     border-bottom-color: var(--nf-color);
 }
 
-.nf-header.nf-sev-warning .nf-header-icon,
-.nf-header.nf-sev-warning .nf-header-title,
-.nf-header.nf-sev-warning .nf-chevron,
-.nf-header.nf-sev-warning .nf-badge-text,
-.nf-header.nf-sev-warning .nf-badge,
+.nf-header.nf-sev-warning .nf-header-icon {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning .nf-header-title {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning .nf-chevron {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning .nf-badge-text {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-warning .nf-badge {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-header.nf-sev-warning .nf-iconbox {
     color: var(--nf-color);
     border-left-color: var(--nf-color);
@@ -275,11 +433,46 @@
     border-bottom-color: var(--nf-color);
 }
 
-.nf-header.nf-sev-danger .nf-header-icon,
-.nf-header.nf-sev-danger .nf-header-title,
-.nf-header.nf-sev-danger .nf-chevron,
-.nf-header.nf-sev-danger .nf-badge-text,
-.nf-header.nf-sev-danger .nf-badge,
+.nf-header.nf-sev-danger .nf-header-icon {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger .nf-header-title {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger .nf-chevron {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger .nf-badge-text {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-header.nf-sev-danger .nf-badge {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-header.nf-sev-danger .nf-iconbox {
     color: var(--nf-color);
     border-left-color: var(--nf-color);
@@ -288,10 +481,27 @@
     border-bottom-color: var(--nf-color);
 }
 
-/* Row icon box colored by row severity */
-.nf-row.nf-sev-info .nf-iconbox,
-.nf-row.nf-sev-success .nf-iconbox,
-.nf-row.nf-sev-warning .nf-iconbox,
+.nf-row.nf-sev-info .nf-iconbox {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-success .nf-iconbox {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-warning .nf-iconbox {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
 .nf-row.nf-sev-danger .nf-iconbox {
     border-left-color: var(--nf-color);
     border-right-color: var(--nf-color);
@@ -299,21 +509,147 @@
     border-bottom-color: var(--nf-color);
 }
 
-.nf-row.nf-sev-info .nf-row-icon,
+.nf-row.nf-sev-info .nf-row-icon {
+    color: var(--nf-color);
+}
+
 .nf-row.nf-sev-info .nf-row-code {
     color: var(--nf-color);
 }
-.nf-row.nf-sev-success .nf-row-icon,
+
+.nf-row.nf-sev-success .nf-row-icon {
+    color: var(--nf-color);
+}
+
 .nf-row.nf-sev-success .nf-row-code {
     color: var(--nf-color);
 }
-.nf-row.nf-sev-warning .nf-row-icon,
+
+.nf-row.nf-sev-warning .nf-row-icon {
+    color: var(--nf-color);
+}
+
 .nf-row.nf-sev-warning .nf-row-code {
     color: var(--nf-color);
 }
-.nf-row.nf-sev-danger .nf-row-icon,
+
+.nf-row.nf-sev-danger .nf-row-icon {
+    color: var(--nf-color);
+}
+
 .nf-row.nf-sev-danger .nf-row-code {
     color: var(--nf-color);
 }
 
+.nf-row.nf-row--item-layout {
+    height: 72px;
+    min-height: 72px;
+}
 
+.nf-row-item-layout {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+.nf-row-item-icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin-right: 10px;
+    align-self: flex-start;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: var(--sp-color-green-led);
+    border-right-color: var(--sp-color-green-led);
+    border-top-color: var(--sp-color-green-led);
+    border-bottom-color: var(--sp-color-green-led);
+    background-color: rgba(18, 40, 28, 0.6);
+}
+
+.nf-row-item-icon {
+    width: 100%;
+    height: 100%;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.nf-row-item-body {
+    flex-grow: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.nf-row-item-title {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--sp-color-green-led);
+    unity-font-style: bold;
+    margin-bottom: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nf-row-qty-name-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 1px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.nf-row-qty {
+    font-size: 13px;
+    color: var(--sp-color-text-muted);
+    -unity-text-transform: uppercase;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.nf-row-item-name {
+    font-size: 13px;
+    color: var(--sp-color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nf-row-room-row {
+    flex-direction: row;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.nf-row-room-icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    margin-right: 6px;
+    background-color: rgba(93, 182, 227, 0.25);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: var(--sp-color-green-led);
+    border-right-color: var(--sp-color-green-led);
+    border-top-color: var(--sp-color-green-led);
+    border-bottom-color: var(--sp-color-green-led);
+}
+
+.nf-row-room {
+    font-size: 11px;
+    color: var(--sp-color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

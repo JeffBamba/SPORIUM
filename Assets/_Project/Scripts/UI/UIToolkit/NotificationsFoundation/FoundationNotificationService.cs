@@ -166,7 +166,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 if (_activeToasts[i].DedupKey != dedupKey) continue;
 
                 var existing = _activeToasts[i];
-                var updated = new NotificationEntry(existing.Id, code, dedupKey, spec, effectiveSeverity, msg, existing.CreatedAtUtc, expires);
+                var updated = new NotificationEntry(existing.Id, code, dedupKey, spec, effectiveSeverity, msg, existing.CreatedAtUtc, expires, existing.Payload);
                 _activeToasts[i] = updated;
                 _lastGameplayRealtime = now;
                 OnChanged?.Invoke();
@@ -175,7 +175,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             var id = _nextId++;
             var createdAt = DateTime.UtcNow;
-            _activeToasts.Add(new NotificationEntry(id, code, dedupKey, spec, effectiveSeverity, msg, createdAt, expires));
+            _activeToasts.Add(new NotificationEntry(id, code, dedupKey, spec, effectiveSeverity, msg, createdAt, expires, payload));
             _lastGameplayRealtime = now;
             OnChanged?.Invoke();
         }
@@ -200,7 +200,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             var expires = now + ToastDurationSeconds;
             var id = _nextId++;
             var createdAt = DateTime.UtcNow;
-            var entry = new NotificationEntry(id, code, null, spec, effectiveSeverity, msg, createdAt, expires);
+            var entry = new NotificationEntry(id, code, null, spec, effectiveSeverity, msg, createdAt, expires, payload);
             _activeToasts.Add(entry);
             _lastGameplayRealtime = now;
             OnChanged?.Invoke();
@@ -223,6 +223,27 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Mostra subito un toast "Added To Inventory" con dati item reali (titolo, icona, quantità, nome, room).
+        /// Bypassa coda e rate limit. Usare per ogni raccolta/harvest/collection.
+        /// </summary>
+        public void PostAddedToInventory(string itemTypeId, string itemDisplayName, int quantity, string roomDisplayName)
+        {
+            if (!Enabled) return;
+            if (string.IsNullOrEmpty(itemTypeId)) return;
+            if (string.IsNullOrEmpty(itemDisplayName)) itemDisplayName = itemTypeId;
+            if (string.IsNullOrEmpty(roomDisplayName)) roomDisplayName = "—";
+
+            var payload = new NotificationPayload
+            {
+                ItemTypeId = itemTypeId,
+                ItemName = itemDisplayName,
+                ItemQuantity = quantity,
+                ItemLocation = roomDisplayName
+            };
+            PostToastImmediate("ADDED-TO-INVENTORY", payload, NotificationSeverity.Success);
         }
 
         /// <summary>
@@ -292,12 +313,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (_activeDangersByKey.TryGetValue(key, out var existing))
             {
                 // Update in-place: preserva ID per stabilità UI
-                var updated = new NotificationEntry(existing.Id, code, key, spec, effectiveSeverity, msg, existing.CreatedAtUtc, null);
+                var updated = new NotificationEntry(existing.Id, code, key, spec, effectiveSeverity, msg, existing.CreatedAtUtc, null, existing.Payload);
                 _activeDangersByKey[key] = updated;
             }
             else
             {
-                _activeDangersByKey[key] = new NotificationEntry(id, code, key, spec, effectiveSeverity, msg, createdAt, null);
+                _activeDangersByKey[key] = new NotificationEntry(id, code, key, spec, effectiveSeverity, msg, createdAt, null, null);
             }
 
             MarkEmit(cooldownKey, spec);
@@ -411,7 +432,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (emission.Kind == EmissionKind.Toast || emission.Kind == EmissionKind.Item)
                 expires = realtimeSinceStartup + ToastDurationSeconds;
 
-            var entry = new NotificationEntry(id, emission.Code, emission.DedupKey, emission.Spec, emission.Severity, emission.Message, createdAt, expires);
+            var entry = new NotificationEntry(id, emission.Code, emission.DedupKey, emission.Spec, emission.Severity, emission.Message, createdAt, expires, emission.Payload);
 
             _activeToasts.Add(entry);
             OnChanged?.Invoke();

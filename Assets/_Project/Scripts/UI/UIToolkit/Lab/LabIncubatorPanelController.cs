@@ -478,6 +478,10 @@ namespace Sporae.UI.UIToolkit.Lab
                 return;
 
             int count = _outputSeeds.Count;
+            var firstSeed = _outputSeeds[0];
+            string seedTypeId = firstSeed.TypeId;
+            string seedDisplayName = PlayerInventoryPanelController.GetItemDisplayName(seedTypeId, firstSeed);
+
             foreach (var seed in _outputSeeds)
             {
                 _gameManager.PlayerInventory.Add(seed);
@@ -490,7 +494,7 @@ namespace Sporae.UI.UIToolkit.Lab
             RefreshDisplay();
 
             if (foundation != null && foundation.Enabled)
-                foundation.PostToastImmediate("LAB-INC-OK", new NotificationPayload().With("count", count.ToString()));
+                foundation.PostAddedToInventory(seedTypeId, seedDisplayName, count, RoomNames.Laboratory);
         }
 
         private bool RequiresReagentXSetup()

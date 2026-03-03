@@ -23,6 +23,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         [Header("Behavior")]
         [SerializeField] private bool _startExpanded = true;
         [SerializeField] private bool _enableDebugLogs = false;
+        [Tooltip("Sprite mostrato nel box icona quando l'item non ha icona (es. Icona_placeholder).")]
+        [SerializeField] private Sprite _itemIconPlaceholder;
 
         private FoundationNotificationService _service;
 
@@ -139,7 +141,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             {
                 if (i < rows.Count)
                 {
-                    _rows[i].Show(rows[i]);
+                    _rows[i].Show(rows[i], _itemIconPlaceholder);
                 }
                 else
                 {
@@ -160,9 +162,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private sealed class RowUI
         {
             public VisualElement Root;
+            public VisualElement Iconbox;
             public Label Icon;
             public Label Code;
             public Label Msg;
+            public VisualElement ItemLayout;
+            public VisualElement ItemIconBox;
+            public VisualElement ItemIcon;
+            public Label ItemTitle;
+            public Label Qty;
+            public Label ItemName;
+            public VisualElement RoomIcon;
+            public Label Room;
             public int CurrentEntryId;
             public bool HasCurrent;
 
@@ -173,9 +184,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 return new RowUI
                 {
                     Root = row,
+                    Iconbox = row?.Q<VisualElement>($"nf-row-{idx}-iconbox"),
                     Icon = row?.Q<Label>($"nf-row-{idx}-icon"),
                     Code = row?.Q<Label>($"nf-row-{idx}-code"),
-                    Msg = row?.Q<Label>($"nf-row-{idx}-msg")
+                    Msg = row?.Q<Label>($"nf-row-{idx}-msg"),
+                    ItemLayout = row?.Q<VisualElement>($"nf-row-{idx}-item-layout"),
+                    ItemIconBox = row?.Q<VisualElement>($"nf-row-{idx}-item-icon-box"),
+                    ItemIcon = row?.Q<VisualElement>($"nf-row-{idx}-item-icon"),
+                    ItemTitle = row?.Q<Label>($"nf-row-{idx}-title"),
+                    Qty = row?.Q<Label>($"nf-row-{idx}-qty"),
+                    ItemName = row?.Q<Label>($"nf-row-{idx}-item-name"),
+                    RoomIcon = row?.Q<VisualElement>($"nf-row-{idx}-room-icon"),
+                    Room = row?.Q<Label>($"nf-row-{idx}-room")
                 };
             }
 
@@ -185,6 +205,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 if (Root.style.display == DisplayStyle.None) return;
 
                 Root.RemoveFromClassList("nf-anim-enter");
+                Root.RemoveFromClassList("nf-row--item-layout");
                 Root.AddToClassList("nf-anim-exit");
 
                 var exitingId = HasCurrent ? CurrentEntryId : -1;
@@ -193,7 +214,6 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 EventCallback<TransitionEndEvent> onEnd = null;
                 onEnd = (e) =>
                 {
-                    // Quando finisce la transition, nascondi e pulisci.
                     Root.style.display = DisplayStyle.None;
                     Root.RemoveFromClassList("nf-anim-exit");
                     HasCurrent = false;
@@ -203,17 +223,67 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 Root.RegisterCallback(onEnd);
             }
 
-            public void Show(NotificationEntry entry)
+            public void Show(NotificationEntry entry, Sprite placeholderSprite = null)
             {
                 if (Root == null) return;
                 Root.style.display = DisplayStyle.Flex;
 
-                ApplySeverityClass(Root, entry.Severity);
-                ApplyCodeClass(Root, entry.Code);
+                var isItemLayout = entry.Spec != null && entry.Spec.IsItemLayout && entry.Payload != null;
 
-                if (Code != null) Code.text = entry.Code ?? "N/A";
-                if (Msg != null) Msg.text = entry.Message ?? string.Empty;
-                if (Icon != null) Icon.text = IconFor(entry.Severity);
+                if (isItemLayout)
+                {
+                    Root.AddToClassList("nf-row--item-layout");
+                    if (Iconbox != null) Iconbox.style.display = DisplayStyle.None;
+                    if (Code != null && Code.parent != null) Code.parent.style.display = DisplayStyle.None;
+                    if (ItemLayout != null) ItemLayout.style.display = DisplayStyle.Flex;
+
+                    var p = entry.Payload;
+                    if (ItemTitle != null) ItemTitle.text = NotificationLocalization.GetAddedToInventoryTitle();
+                    if (Qty != null) Qty.text = ("+" + p.ItemQuantity).ToUpperInvariant();
+                    if (ItemName != null) ItemName.text = p.ItemName ?? "";
+                    if (Room != null) Room.text = p.ItemLocation ?? "";
+
+                    if (ItemIcon != null)
+                    {
+                        Sprite sprite = null;
+                        if (p.ItemIcon != null)
+                            sprite = p.ItemIcon;
+                        else if (placeholderSprite == null)
+                            sprite = NotificationItemIconResolver.GetIcon(p.ItemTypeId);
+                        Texture2D tex = null;
+                        if (sprite != null && sprite.texture != null)
+                            tex = sprite.texture;
+                        else if (placeholderSprite != null && placeholderSprite.texture != null)
+                            tex = placeholderSprite.texture;
+                        if (tex != null)
+                        {
+                            ItemIcon.style.backgroundImage = new Background(tex);
+                        }
+                        else
+                        {
+                            var fallbackSprite = Resources.Load<Sprite>("icona_Placeholder") ?? Resources.Load<Sprite>("Icons/Items/placeholder");
+                            var fallbackTex = fallbackSprite != null ? fallbackSprite.texture : Resources.Load<Texture2D>("icona_Placeholder");
+                            if (fallbackTex != null)
+                                ItemIcon.style.backgroundImage = new Background(fallbackTex);
+                            else
+                                ItemIcon.style.backgroundImage = new StyleBackground(StyleKeyword.Initial);
+                        }
+                    }
+                }
+                else
+                {
+                    Root.RemoveFromClassList("nf-row--item-layout");
+                    if (Iconbox != null) Iconbox.style.display = DisplayStyle.Flex;
+                    if (Code != null && Code.parent != null) Code.parent.style.display = DisplayStyle.Flex;
+                    if (ItemLayout != null) ItemLayout.style.display = DisplayStyle.None;
+
+                    ApplySeverityClass(Root, entry.Severity);
+                    ApplyCodeClass(Root, entry.Code);
+
+                    if (Code != null) Code.text = entry.Code ?? "N/A";
+                    if (Msg != null) Msg.text = entry.Message ?? string.Empty;
+                    if (Icon != null) Icon.text = IconFor(entry.Severity);
+                }
 
                 var isNew = !HasCurrent || CurrentEntryId != entry.Id;
                 HasCurrent = true;
@@ -224,8 +294,6 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     Root.RemoveFromClassList("nf-anim-exit");
                     Root.AddToClassList("nf-anim-enter");
 
-                    // DEBUG_SAFE_FIX: GeometryChangedEvent non scatta sempre quando lo slot è già in layout.
-                    // Usiamo lo scheduler UI Toolkit per rimuovere la classe al prossimo tick UI e garantire l'entry.
                     Root.schedule.Execute(() =>
                     {
                         Root.RemoveFromClassList("nf-anim-enter");

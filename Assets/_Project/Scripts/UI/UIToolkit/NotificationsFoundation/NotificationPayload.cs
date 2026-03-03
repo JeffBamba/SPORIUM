@@ -8,6 +8,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         public readonly Dictionary<string, string> Args = new Dictionary<string, string>();
 
         // Item layout extras (opzionali)
+        public string ItemTypeId;
         public string ItemName;
         public int ItemQuantity;
         public string ItemLocation;

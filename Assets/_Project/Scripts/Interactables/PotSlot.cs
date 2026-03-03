@@ -7,6 +7,7 @@ using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.UI.UIToolkit.PlayerInventory;
 
 using TMPro;
 
@@ -191,7 +192,8 @@ public class PotSlot : MonoBehaviour
         var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
         if (foundation != null && foundation.Enabled)
         {
-            foundation.PostToast("INV-FRUIT-001", new NotificationPayload().With("amount", amount.ToString()));
+            string displayName = PlayerInventoryPanelController.GetItemDisplayName(Items.Fruits);
+            foundation.PostAddedToInventory(Items.Fruits, displayName, amount, RoomNames.Dome);
         }
         else
         {

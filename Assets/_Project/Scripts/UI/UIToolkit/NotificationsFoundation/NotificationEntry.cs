@@ -12,6 +12,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         public string Message { get; }
         public DateTime CreatedAtUtc { get; }
         public float? ExpiresAtRealtime { get; }
+        public NotificationPayload Payload { get; }
 
         public bool IsDangerPersistent => Spec != null && Spec.IsDangerPersistent;
 
@@ -23,7 +24,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             NotificationSeverity severity,
             string message,
             DateTime createdAtUtc,
-            float? expiresAtRealtime)
+            float? expiresAtRealtime,
+            NotificationPayload payload = null)
         {
             Id = id;
             Code = code;
@@ -33,6 +35,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             Message = message;
             CreatedAtUtc = createdAtUtc;
             ExpiresAtRealtime = expiresAtRealtime;
+            Payload = payload;
         }
     }
 }

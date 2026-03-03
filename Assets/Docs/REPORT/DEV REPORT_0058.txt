@@ -1,0 +1,135 @@
+================================================================================
+             DEV REPORT #0058 - TOAST ADDED TO INVENTORY, FOOD PANEL, PULSANTI
+             SPORAE BUILD BETA
+             Data: 2026-03-03
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-0058 — Toast "Added to Inventory", barra acqua completa, pulsanti Food Panel
+- **Tipo Report:** Development Report (UI/UX — Notifications Foundation, Food Room)
+- **Periodo coperto:** 2026-03-03
+- **Data Generazione:** 2026-03-03
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+
+================================================================================
+
+🎯 EXECUTIVE SUMMARY
+====================
+Questo report documenta gli interventi su: (1) allineamento del toast "Added to Inventory" al reference (titolo/quantità/nome, layout compatto, rimozione riga Room, overflow testo e icona placeholder); (2) barra progresso purificazione acqua visibile come COMPLETA all’apertura del Food Panel per premere Collect; (3) rinomina pulsanti Food Panel (Start Growth → Food Process, Purify → Purify Water).
+
+**Risultati chiave:**
+- Toast "Aggiunto all’inventario" conforme al reference: titolo maiuscolo/grassetto, quantità maiuscolo, nome item in title case, layout compatto, nessuna riga Room, testo contenuto nel box.
+- Icona placeholder visibile in Play: campo opzionale in Inspector + fallback da Resources (Sprite/Texture2D); copia di icona_Placeholder in Assets/_Project/Resources/.
+- Barra acqua mostrata al 100% con label "Ready for collection" quando l’acqua è pronta (come la barra Food "Ready for harvest").
+- Pulsanti: "▶ FOOD PROCESS" e "💧 PURIFY WATER" (e "💧 COLLECT" invariato quando acqua pronta).
+
+================================================================================
+
+✅ 1. TOAST "ADDED TO INVENTORY" — ALLINEAMENTO AL REFERENCE
+============================================================
+
+**1.1 Titolo**
+- **File:** `NotificationLocalization.cs`
+- Titolo italiano: "AGGIUNTO ALL'INVENTARIO" (maiuscolo); inglese: "ADDED TO INVENTORY".
+- **File:** `NotificationsPanel.uss` — `.nf-row-item-title` con `unity-font-style: bold`.
+
+**1.2 Quantità e nome item**
+- **UXML:** seconda riga split in due label: `nf-row-X-qty` e `nf-row-X-item-name` (contenitore `nf-row-X-qty-name-row`).
+- **USS:** `.nf-row-qty` con `-unity-text-transform: uppercase`; `.nf-row-item-name` senza grassetto.
+- **Controller:** `Qty.text = ("+" + p.ItemQuantity).ToUpperInvariant()`; `ItemName.text = p.ItemName ?? ""` (call-site passano già title case).
+
+**1.3 Rimozione riga Room**
+- **UXML:** rimosso da tutte e 5 le righe il blocco `nf-row-X-room-row` (room-icon + room label). Il toast mostra solo titolo e riga quantità+nome.
+- **Controller:** `Room` e `RoomIcon` restano nel bind; se elementi assenti, `if (Room != null)` non imposta nulla.
+
+**1.4 Layout compatto e overflow**
+- **USS:** `.nf-row.nf-row--item-layout` altezza 56px (poi 72px per visibilità, poi 56px dopo rimozione Room); margini titolo/seconda riga ridotti (margin-bottom: 0).
+- **Allineamento box icona:** `.nf-row-item-icon-box` con `align-self: flex-start`; `.nf-row-item-body` con `justify-content: flex-start` così il box icona è allineato in alto al titolo.
+- **Overflow testo:** `.nf-row-item-layout`, `.nf-row-item-body`, `.nf-row-qty-name-row`, `.nf-row-room-row` con `min-width: 0` e `overflow: hidden`; label (title, item-name, room) con `overflow: hidden`, `text-overflow: ellipsis`, `white-space: nowrap`. Stesso criterio per toast standard (`.nf-row-text`, `.nf-row-msg`).
+
+================================================================================
+
+✅ 2. ICONA PLACEHOLDER NEL TOAST — VISIBILE IN PLAY
+====================================================
+
+**2.1 Problema**
+- In Play l’icona placeholder (impostata in UI Builder sull’elemento item-icon) non si vedeva: il controller sovrascrive sempre `ItemIcon.style.backgroundImage`; quando non c’era sprite usava `StyleKeyword.Initial`, che in runtime non ripristinava l’immagine da UXML. Inoltre `NotificationItemIconResolver.GetIcon(itemTypeId)` restituisce sempre uno sprite (o default), quindi il ramo "placeholder" non veniva usato.
+
+**2.2 Soluzione**
+- **Controller:** campo opzionale `[SerializeField] private Sprite _itemIconPlaceholder` (Tooltip: sprite quando l’item non ha icona).
+- **Priorità icona:** (1) icona da payload `p.ItemIcon`; (2) se assente, placeholder da Inspector `_itemIconPlaceholder`; (3) altrimenti `GetIcon(p.ItemTypeId)`; (4) se ancora null, fallback da Resources: `Resources.Load<Sprite>("icona_Placeholder")` oppure `Resources.Load<Sprite>("Icons/Items/placeholder")`, poi `Resources.Load<Texture2D>("icona_Placeholder")`; (5) altrimenti `StyleKeyword.Initial`.
+- **Risorse:** copia di `Assets/_Project/Art/icona_Placeholder.png` in `Assets/_Project/Resources/icona_Placeholder.png` così il fallback da Resources funziona a runtime (Sprite o Texture2D a seconda dell’import).
+- **File modificati:** `FoundationNotificationsPanelController.cs` (parametro `placeholderSprite` in `RowUI.Show(entry, placeholderSprite)`; logica sprite/placeholder/fallback/Initial).
+
+================================================================================
+
+✅ 3. BARRA PROGRESSO ACQUA — VISIBILE COME COMPLETA PER COLLECT
+===============================================================
+
+**3.1 Problema**
+- La barra della purificazione acqua era visibile solo quando il processo era attivo (`IsActive && RawWaterInput > 0`). All’apertura del Food Panel per premere Collect (acqua pronta, processo finito) la barra non compariva, a differenza della barra Food che resta visibile al 100% con "Ready for harvest".
+
+**3.2 Soluzione**
+- **File:** `FoodRoomPanelController.cs`
+- `waterInProgress = WaterSlot.IsActive && WaterSlot.RawWaterInput > 0`
+- `waterReadyToCollectForBar = WaterSlot.PotableWaterOutput > 0`
+- `showWaterProgressBlock = waterInProgress || waterReadyToCollectForBar`
+- Quando `showWaterProgressBlock` e acqua pronta ma non in corso: `totalProgress = 1f`; label "Ready for collection". Altrimenti: progress come prima, label "Water purification in progress".
+- In `Update()` lo shine resta legato a `waterActive`; quando è "ready" la barra resta piena e senza shine (come la barra Food).
+
+================================================================================
+
+✅ 4. MODIFICHE TESTUALI PULSANTI FOOD PANEL
+===========================================
+
+**4.1 Pulsante avvio coltivazione**
+- **File:** `FoodRoomPanel.uxml` — `btn-start-growth`: testo da "▶ START GROWTH" a **"▶ FOOD PROCESS"**.
+
+**4.2 Pulsante purifica / collect**
+- **File:** `FoodRoomPanel.uxml` — `btn-purify-bottom`: testo predefinito da "💧 PURIFY" a **"💧 PURIFY WATER"**.
+- **File:** `FoodRoomPanelController.cs` — quando si mostra il pulsante per avviare la purificazione (non Collect): `_btnPurify.text = "💧 PURIFY WATER"`. Il testo "💧 COLLECT" quando l’acqua è pronta resta invariato.
+
+================================================================================
+
+📁 FILE MODIFICATI / CREATI
+============================
+
+**Modificati:**
+- `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/NotificationLocalization.cs` — titolo IT maiuscolo
+- `Assets/_Project/Scripts/UI/UIToolkit/NotificationsFoundation/FoundationNotificationsPanelController.cs` — RowUI (Qty, ItemName, RoomIcon, Show con placeholderSprite), logica icona (sprite/placeholder/fallback Texture2D)
+- `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uxml` — split qty/item-name, rimozione room-row da tutte le righe
+- `Assets/_Project/UI/UIToolkit/NotificationsFoundation/NotificationsPanel.uss` — stili item-layout, qty, item-name, allineamento, overflow, altezza
+- `Assets/_Project/Scripts/UI/UIToolkit/FoodRoom/FoodRoomPanelController.cs` — barra acqua completa (showWaterProgressBlock, Ready for collection), pulsante Purify Water
+- `Assets/_Project/UI/UIToolkit/FoodRoom/FoodRoomPanel.uxml` — testi pulsanti "FOOD PROCESS" e "PURIFY WATER"
+
+**Aggiunto (copia asset):**
+- `Assets/_Project/Resources/icona_Placeholder.png` — copia da Art per fallback runtime
+
+================================================================================
+
+📌 NOTA: ICONE PER OGNI ITEM COLLEZIONABILE
+============================================
+
+Il sistema è **già predisposto** per un’icona diversa per ogni tipo di item:
+- **NotificationItemIconResolver:** carica da `Resources/Icons/Items/{itemTypeId}`; se non trovato usa `Icons/Items/default`.
+- **Payload:** `ItemTypeId` passato da ogni call-site (`PostAddedToInventory(itemTypeId, ...)`); opzionale `ItemIcon` (Sprite).
+- **Controller:** usa `p.ItemIcon` se valorizzato, altrimenti `GetIcon(p.ItemTypeId)`.
+
+Per avere icone diverse nei toast è sufficiente aggiungere sprite in una cartella **Resources** sotto il path **Icons/Items/** con **nome file (senza estensione) uguale all’itemTypeId** usato (es. WAT-POT, FOOD-301, SporeGeneric, PreSeed, Fruits, ecc.). Se manca l’icona per un typeId, viene usato il default o il placeholder (Inspector o Resources/icona_Placeholder).
+
+================================================================================
+
+✅ STATO FINALE
+===============
+
+- Toast "Added to Inventory": ✅ allineato al reference; placeholder visibile in Play.
+- Barra acqua: ✅ visibile come completa ("Ready for collection") all’apertura per Collect.
+- Pulsanti Food Panel: ✅ "FOOD PROCESS" e "PURIFY WATER".
+
+================================================================================
+
+**FINE REPORT**

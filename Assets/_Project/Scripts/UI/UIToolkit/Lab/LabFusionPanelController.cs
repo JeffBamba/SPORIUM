@@ -445,7 +445,7 @@ namespace Sporae.UI.UIToolkit.Lab
             if (foundation != null && foundation.Enabled)
             {
                 foundation.RemoveToast(FusionDoneToastKey);
-                foundation.PostToastImmediate("LAB-FUS-RITIRA", new NotificationPayload().With("count", amount.ToString()));
+                foundation.PostAddedToInventory(Items.PreSeed, "Pre-Seed", amount, RoomNames.Laboratory);
             }
         }
     }

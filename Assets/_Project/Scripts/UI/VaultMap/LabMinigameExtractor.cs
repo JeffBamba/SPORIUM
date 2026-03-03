@@ -202,7 +202,7 @@ namespace _Project
                 var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 if (foundation != null && foundation.Enabled)
                 {
-                    foundation.PostToast("SPORE-001");
+                    foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", 1, RoomNames.Laboratory);
                 }
                 else
                 {

@@ -383,7 +383,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 }
                 else
                 {
-                    _btnPurify.text = "💧 PURIFY";
+                    _btnPurify.text = "💧 PURIFY WATER";
                     _btnPurify.SetEnabled(canPurify);
                     if (canPurify) _btnPurify.AddToClassList("btn-purify--enabled");
                     else _btnPurify.RemoveFromClassList("btn-purify--enabled");
@@ -403,7 +403,9 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
             /* Bottom: hint normale o barra "Cultivation in Progress" (mostrata quando c'è un processo in corso O ready per harvest) o barra acqua */
             bool showProgressBlock = anyGrowing || anyReady;
-            bool showWaterProgressBlock = _foodRoom.WaterSlot.IsActive && _foodRoom.WaterSlot.RawWaterInput > 0;
+            bool waterInProgress = _foodRoom.WaterSlot.IsActive && _foodRoom.WaterSlot.RawWaterInput > 0;
+            bool waterReadyToCollectForBar = _foodRoom.WaterSlot.PotableWaterOutput > 0;
+            bool showWaterProgressBlock = waterInProgress || waterReadyToCollectForBar;
             if (_bottomHint != null)
             {
                 _bottomHint.style.display = (showProgressBlock || showWaterProgressBlock) ? DisplayStyle.None : DisplayStyle.Flex;
@@ -432,17 +434,21 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 }
             }
 
-            /* Water progress bar: overall % (PotableWaterOutput + CurrentUnitProgress) / RawWaterInput */
+            /* Water progress bar: overall % (PotableWaterOutput + CurrentUnitProgress) / RawWaterInput. When ready to collect, show 100% and "Ready for collection" like Food bar. */
             if (_waterProgressBlock != null)
                 _waterProgressBlock.style.display = showWaterProgressBlock ? DisplayStyle.Flex : DisplayStyle.None;
             if (showWaterProgressBlock && _waterProgressFill != null)
             {
                 var ws = _foodRoom.WaterSlot;
-                float totalProgress = ws.RawWaterInput > 0 ? (ws.PotableWaterOutput + ws.CurrentUnitProgress) / (float)ws.RawWaterInput : 0f;
+                float totalProgress;
+                if (waterReadyToCollectForBar && !waterInProgress)
+                    totalProgress = 1f;
+                else
+                    totalProgress = ws.RawWaterInput > 0 ? (ws.PotableWaterOutput + ws.CurrentUnitProgress) / (float)ws.RawWaterInput : 0f;
                 _waterProgressFill.style.width = new Length(Mathf.Clamp01(totalProgress) * 100f, LengthUnit.Percent);
                 var wLabel = _waterProgressBlock?.Q<Label>("water-progress-label");
                 if (wLabel != null)
-                    wLabel.text = "Water purification in progress";
+                    wLabel.text = (waterReadyToCollectForBar && !waterInProgress) ? "Ready for collection" : "Water purification in progress";
             }
 
             /* KitchenHome: active chamber card (usa displaySlot per evidenziare quale camera è attiva/ready) */

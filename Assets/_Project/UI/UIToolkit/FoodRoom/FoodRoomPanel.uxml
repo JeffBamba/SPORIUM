@@ -162,8 +162,8 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement name="bottom-buttons" class="bottom-buttons">
-                        <ui:Button name="btn-start-growth" text="▶ START GROWTH" class="sp-button sp-button--primary btn-action btn-start" />
-                        <ui:Button name="btn-purify-bottom" text="💧 PURIFY" class="sp-button sp-button--secondary btn-action btn-purify" />
+                        <ui:Button name="btn-start-growth" text="▶ FOOD PROCESS" class="sp-button sp-button--primary btn-action btn-start" />
+                        <ui:Button name="btn-purify-bottom" text="💧 PURIFY WATER" class="sp-button sp-button--secondary btn-action btn-purify" />
                         <ui:Button name="btn-harvest" text="✓ HARVEST" class="sp-button sp-button--primary btn-action btn-harvest" />
                     </ui:VisualElement>
                 </ui:VisualElement>
