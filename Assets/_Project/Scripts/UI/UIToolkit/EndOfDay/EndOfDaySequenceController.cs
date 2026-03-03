@@ -10,6 +10,7 @@ using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.HUD;
+using Sporae.UI.UIToolkit.FoodRoom;
 
 namespace _Project
 {
@@ -165,8 +166,8 @@ namespace _Project
             _bound = true;
         }
 
-        /// <summary>Sorting order sopra PlantCard (600) e altri pannelli Lab (400) così EoD resta sempre in primo piano.</summary>
-        private const int EodSortingOrder = 1000;
+        /// <summary>Sorting order sopra tutti i pannelli (Food 1000, PlantCard 600, Lab 400) così EoD resta sempre in primo piano e non compete con Kitchen/Food.</summary>
+        private const int EodSortingOrder = 2000;
 
         public void StartSequence()
         {
@@ -182,6 +183,17 @@ namespace _Project
                     _uiDocument.rootVisualElement.SetEnabled(true);
                 }
             }
+            // Chiudi il pannello Food/Kitchen se aperto, così non intercetta i click (stesso sorting order 1000 → conflitto)
+            var foodPanel = FindObjectOfType<FoodRoomPanelController>();
+            if (foodPanel != null && foodPanel.IsVisible)
+                foodPanel.Hide();
+            // Binding e ShowStep al frame successivo: rootVisualElement può non essere pronto nello stesso frame dopo SetActive(true)
+            StartCoroutine(DeferredStartStep1());
+        }
+
+        private IEnumerator DeferredStartStep1()
+        {
+            yield return null;
             TryBind();
             ShowStep(1);
         }

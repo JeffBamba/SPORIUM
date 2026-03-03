@@ -1,0 +1,97 @@
+================================================================================
+             DEV REPORT #0059 - PhSystem IN INSTALLER, FIX EoD BLOCCATO (YES/NO)
+             SPORAE BUILD BETA
+             Data: 2026-03-03
+             Status: ✅ COMPLETATO
+================================================================================
+
+📋 METADATA HEADER
+------------------
+- **Titolo:** BLK-0059 — PhSystem in GamePlayInstaller; fix sequenza End of Day bloccata su YES/NO
+- **Tipo Report:** Development Report (Core / UI — Bootstrap, End of Day)
+- **Periodo coperto:** 2026-03-03
+- **Data Generazione:** 2026-03-03
+- **Versione Report:** 1.0
+- **Status:** ✅ COMPLETATO
+- **Sviluppatore:** AI Assistant
+
+================================================================================
+
+🎯 EXECUTIVE SUMMARY
+====================
+Questo report documenta due interventi: (1) registrazione di **PhSystem** nel **GamePlayInstaller** così il sistema pH della Dome è sempre disponibile in ogni scena/build, senza dipendere da PhSystemDebugConsole; (2) fix del bug per cui la sequenza **End of Day** a volte restava bloccata e non permetteva di premere YES o NO sulla domanda "END DAY?" quando si arrivava dal letto dopo aver avviato un processo FOOD in Kitchen.
+
+**Risultati chiave:**
+- PhSystem creato e registrato in GamePlayInstaller (stesso pattern di DayCycleSystem, DiaryStatistics); PhSystemDebugConsole usa l’istanza già registrata se presente, altrimenti crea e registra (retrocompatibilità scene senza installer).
+- EoD: sorting order portato a 2000 (sopra Food 1000); all’avvio della sequenza il pannello Food/Kitchen viene chiuso se aperto; binding e ShowStep(1) posticipati al frame successivo così rootVisualElement è pronto e i pulsanti YES/NO rispondono sempre.
+
+================================================================================
+
+✅ 1. PhSystem REGISTRATO IN GAMEPLAYINSTALLER
+==============================================
+
+**1.1 Problema**
+- PhSystem (pH globale Dome) era creato e registrato solo da **PhSystemDebugConsole** (o da scena con PhSystemAutoSetup). In scene/build senza quel componente, ServiceContainer.Get<PhSystem>() restituiva null e tutti i consumer (TopBar, EoD, DayCycleController, PotDetailsWidget, PlantCard, ecc.) lavoravano senza pH (valori mancanti o placeholder).
+
+**1.2 Soluzione**
+- **File:** `Assets/_Project/Scripts/Core/Installers/GamePlayInstaller.cs`
+- In Awake(), dopo la registrazione di PotNotifications, aggiunta registrazione condizionale di PhSystem:
+  - `if (!ServiceContainer.Instance.Contains(typeof(PhSystem))) ServiceContainer.Instance.Register(new PhSystem(0f));`
+- Nessun nuovo using: PhSystem è in namespace _Project già in uso.
+
+**1.3 Adattamento PhSystemDebugConsole**
+- **File:** `Assets/_Project/Scripts/Debug/PhSystemDebugConsole.cs`
+- **Awake:** se ServiceContainer ha già PhSystem (installer), si usa Get<PhSystem>() e si sottoscrive OnPhChanged; non si crea una seconda istanza e non si chiama Reset() per non azzerare lo stato di gioco. Altrimenti si crea new PhSystem(0f), Reset(), e si sottoscrive (comportamento precedente per scene senza installer).
+- **TryRegisterPhSystem (Start):** se PhSystem è già registrato, si fa solo _phSystem = Get<PhSystem>() senza una seconda sottoscrizione a OnPhChanged (evita doppia sottoscrizione).
+
+**1.4 Impatto**
+- HUDPhDisplay, PhSystemIdleOscillation, DayCycleController, PotActions, TopBar, EoD, ecc. continuano a usare Get<PhSystem>(suppressWarning: true); trovano sempre l’istanza quando la scena usa GamePlayInstaller. Nessuna modifica richiesta ai consumer.
+
+================================================================================
+
+✅ 2. FIX SEQUENZA END OF DAY BLOCCATA SU YES/NO
+=================================================
+
+**2.1 Problema**
+- Con processo FOOD avviato in Kitchen e pannello Food aperto (o lasciato aperto), andando in Bedroom e premendo sul letto per End of Day la sequenza EoD partiva ma a volte i pulsanti YES e NO non rispondevano (sequenza “bloccata”).
+
+**2.2 Cause identificate**
+- **Conflitto sorting order:** FoodRoomPanelController.Show() imposta sortingOrder = 1000; EndOfDaySequenceController usava EodSortingOrder = 1000. Due pannelli allo stesso ordine: chi riceve i click dipende dall’ordine di rendering → comportamento intermittente.
+- **Pannello Food non chiuso al cambio stanza:** nessun codice nasconde il pannello Kitchen quando si esce dalla stanza; restava visibile (overlay display Flex) e a 1000 anche in Bedroom.
+- **Binding al primo frame:** dopo SetActive(true) su EoD, TryBind() e ShowStep(1) venivano chiamati subito; rootVisualElement poteva essere ancora null (UIDocument non sempre pronto nello stesso frame) → _bound restava false, _btnYes/_btnNo null, click non registrati.
+
+**2.3 Soluzione**
+- **File:** `Assets/_Project/Scripts/UI/UIToolkit/EndOfDay/EndOfDaySequenceController.cs`
+- **Sorting order EoD:** EodSortingOrder da 1000 a **2000** (sopra Food 1000, PlantCard 600, Lab 400). Commento aggiornato.
+- **Chiusura Food all’avvio EoD:** in StartSequence(), prima del binding, FindObjectOfType<FoodRoomPanelController>(); se non null e IsVisible, Hide(). Aggiunto using Sporae.UI.UIToolkit.FoodRoom.
+- **Binding e step 1 al frame successivo:** dopo SetActive(true) e chiusura Food non si chiamano più TryBind() e ShowStep(1) in linea; avviata coroutine DeferredStartStep1() che fa yield return null poi TryBind() e ShowStep(1), così rootVisualElement è garantito pronto.
+
+================================================================================
+
+📁 FILE MODIFICATI
+==================
+
+**GamePlayInstaller.cs**
+- Registrazione PhSystem (new PhSystem(0f)) se non già contenuto, dopo PotNotifications.
+
+**PhSystemDebugConsole.cs**
+- Awake: uso Get da ServiceContainer se PhSystem già registrato, altrimenti crea e Reset; sottoscrizione OnPhChanged in entrambi i rami.
+- TryRegisterPhSystem: ramo “già registrato” solo assegnazione _phSystem = Get(), rimossa seconda sottoscrizione OnPhChanged.
+
+**EndOfDaySequenceController.cs**
+- Aggiunto using Sporae.UI.UIToolkit.FoodRoom.
+- EodSortingOrder: 1000 → 2000.
+- StartSequence: chiusura FoodRoomPanelController se visibile; avvio coroutine DeferredStartStep1() al posto di TryBind() + ShowStep(1) immediati.
+- Nuova coroutine DeferredStartStep1(): yield return null; TryBind(); ShowStep(1).
+
+================================================================================
+
+✅ STATO FINALE
+===============
+
+- PhSystem: ✅ registrato in GamePlayInstaller; disponibile in ogni scena che usa l’installer; console debug compatibile.
+- End of Day: ✅ sorting 2000, Food chiuso all’avvio, binding e step 1 al frame successivo; YES/NO sempre cliccabili anche dopo aver avviato FOOD in Kitchen e aperto EoD dal letto.
+
+================================================================================
+
+**FINE REPORT**

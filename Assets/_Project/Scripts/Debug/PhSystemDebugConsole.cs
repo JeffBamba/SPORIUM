@@ -62,11 +62,21 @@ namespace Sporae.DevTools
 
         private void Awake()
         {
-            // Crea sistema pH se non esiste - sempre inizializzato a 0.0
-            _phSystem = new PhSystem(0f);
-            // Reset esplicito per assicurarsi che tutto sia a 0.0 (pH base, oscillazione, contributi)
-            _phSystem.Reset();
-            _phSystem.OnPhChanged += OnPhChanged;
+            // Usa PhSystem già registrato (es. da GamePlayInstaller) oppure crea e registra in Start
+            var serviceContainer = ServiceContainer.Instance;
+            if (serviceContainer != null && serviceContainer.Contains(typeof(PhSystem)))
+            {
+                _phSystem = serviceContainer.Get<PhSystem>();
+                _phSystem.OnPhChanged += OnPhChanged;
+                SporiumLogger.LogDebug(LogCategory.Ph, "PhSystemDebugConsole: uso istanza da ServiceContainer");
+            }
+            else
+            {
+                _phSystem = new PhSystem(0f);
+                _phSystem.Reset();
+                _phSystem.OnPhChanged += OnPhChanged;
+                SporiumLogger.LogInfo(LogCategory.Ph, "pH inizializzato a 0.0 (Reset completo)");
+            }
 
             _isConsoleOpen = showOnStart;
             
@@ -75,7 +85,6 @@ namespace Sporae.DevTools
             #endif
             
             SporiumLogger.LogDebug(LogCategory.Ph, $"Awake - enableDebugConsole: {enableDebugConsole}, toggleKey: {toggleKey}, showOnStart: {showOnStart}");
-            SporiumLogger.LogInfo(LogCategory.Ph, "pH inizializzato a 0.0 (Reset completo)");
         }
 
         private void Start()
@@ -174,16 +183,14 @@ namespace Sporae.DevTools
                 }
                 else
                 {
-                    // Se già registrato, recuperalo
+                    // Già registrato (es. da GamePlayInstaller): usa quell'istanza; sottoscrizione già fatta in Awake
                     try
                     {
                         _phSystem = serviceContainer.Get<PhSystem>();
-                        _phSystem.OnPhChanged += OnPhChanged;
                         AddLog("Sistema pH recuperato dal ServiceContainer");
                     }
                     catch (System.Exception)
                     {
-                        // Se fallisce il recupero, usa quello locale
                         AddLog("Sistema pH già registrato, uso istanza locale");
                     }
                 }

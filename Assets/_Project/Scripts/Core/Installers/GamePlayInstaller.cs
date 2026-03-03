@@ -53,6 +53,12 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new NightEventsGenerator());
             ServiceContainer.Instance.Register(new PotNotifications());
 
+            // PhSystem (pH globale Dome): core gameplay; TopBar, EoD, DayCycleController, PotActions, piante, ecc. lo usano via ServiceContainer.
+            if (!ServiceContainer.Instance.Contains(typeof(PhSystem)))
+            {
+                ServiceContainer.Instance.Register(new PhSystem(0f));
+            }
+
             // Registra ToastNotificationManager se presente nella scena
             var toastManager = FindObjectOfType<ToastNotificationManager>();
             if (toastManager != null)
