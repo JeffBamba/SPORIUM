@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Sporae.DevTools;
+using _Project.Systems.FoodRoom;
 
 namespace _Project.Sporae.Core
 {
@@ -25,6 +26,9 @@ namespace _Project.Sporae.Core
         private void HandleFaded()
         {
             CurrentDay++;
+            /* Al mattino dopo End of Day la potabilizzazione deve essere completata (tempo reale passato = notte). */
+            if (_gameManager?.FoodRoomSystem != null)
+                _gameManager.FoodRoomSystem.AdvanceWaterProductionByRealSeconds(8 * 3600f);
             OnDayChanged?.Invoke(CurrentDay);
         }
 

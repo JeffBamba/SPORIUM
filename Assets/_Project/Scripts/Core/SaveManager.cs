@@ -470,6 +470,7 @@ namespace Sporae.Core
                 slots = new List<FoodRoomSlotSaveData>(),
                 waterRawInput = foodRoom.WaterSlot.RawWaterInput,
                 waterPotableOutput = foodRoom.WaterSlot.PotableWaterOutput,
+                waterCurrentProgress = foodRoom.WaterSlot.CurrentUnitProgress,
                 waterIsActive = foodRoom.WaterSlot.IsActive
             };
             foreach (var slot in foodRoom.ProductionSlots)
@@ -498,7 +499,7 @@ namespace Sporae.Core
                     slots.Add((s.type, s.daysRemaining, s.startDay, s.hasStemCell, s.stemCellTypeId ?? "", s.state));
                 }
             }
-            foodRoom.RestoreState(slots, data.waterRawInput, data.waterPotableOutput, data.waterIsActive);
+            foodRoom.RestoreState(slots, data.waterRawInput, data.waterPotableOutput, data.waterCurrentProgress, data.waterIsActive);
         }
 
         /// <summary>
@@ -786,6 +787,7 @@ namespace Sporae.Core
             public List<FoodRoomSlotSaveData> slots;
             public int waterRawInput;
             public int waterPotableOutput;
+            public float waterCurrentProgress;
             public bool waterIsActive;
         }
 

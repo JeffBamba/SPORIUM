@@ -28,6 +28,8 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         private VisualElement _chamberMeat;
         private FoodProductionType _selectedChamberType = FoodProductionType.None;
 
+        private VisualElement _residualProteinPanel;
+
         private VisualElement _tankDisplay;
         private Label _tankStatus;
         private Label _tankMessage;
@@ -44,8 +46,26 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         private Button _btnStartGrowth;
         private Button _btnPurify;
         private Button _btnHarvest;
-        private Button _btnAbort;
         private Label _bottomHint;
+        private VisualElement _cultivationProgressBlock;
+        private VisualElement _cultivationProgressFill;
+        private VisualElement _cultivationProgressTrack;
+        private VisualElement _cultivationProgressShine;
+        private float _progressShinePhase;
+        private VisualElement _waterProgressBlock;
+        private VisualElement _waterProgressFill;
+        private VisualElement _waterProgressTrack;
+        private VisualElement _waterProgressShine;
+        private float _waterShinePhase;
+        private Button _btnPurifyMinus;
+        private Button _btnPurifyPlus;
+        private Label _hydrationUnitsValue;
+        private int _purifyAmount = 0;
+        private const int PurifyAmountMax = 99;
+
+        private VisualElement _tankCircleSpinner;
+        private float _toastRefreshAccumulator;
+        private float _tankRotationAngle;
 
         private GameManager _gameManager;
         private FoodRoomSystem _foodRoom;
@@ -65,7 +85,14 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             _root = _uiDocument?.rootVisualElement;
             if (_root != null)
                 BindAndSubscribe();
+            if (_gameManager?.PlayerInventory != null)
+                _gameManager.PlayerInventory.OnInventoryChanged += OnPlayerInventoryChanged;
             Hide();
+        }
+
+        private void OnPlayerInventoryChanged()
+        {
+            Refresh();
         }
 
         private void BindAndSubscribe()
@@ -87,6 +114,8 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_chamberFungal != null) _chamberFungal.RegisterCallback<ClickEvent>(_ => SelectChamber(FoodProductionType.Fungus));
             if (_chamberMeat != null) _chamberMeat.RegisterCallback<ClickEvent>(_ => SelectChamber(FoodProductionType.Meat));
 
+            _residualProteinPanel = _root.Q<VisualElement>("residual-protein-panel");
+
             _tankDisplay = _root.Q<VisualElement>("tank-display");
             _tankStatus = _root.Q<Label>("tank-status");
             _tankMessage = _root.Q<Label>("tank-message");
@@ -101,16 +130,28 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             _prodQuality = _root.Q<Label>("prod-quality");
             _btnAdvanceDay = _root.Q<Button>("btn-advance-day");
             _btnStartGrowth = _root.Q<Button>("btn-start-growth");
-            _btnPurify = _root.Q<Button>("btn-purify");
+            _btnPurify = _root.Q<Button>("btn-purify-bottom");
             _btnHarvest = _root.Q<Button>("btn-harvest");
-            _btnAbort = _root.Q<Button>("btn-abort");
+            _btnPurifyMinus = _root.Q<Button>("btn-purify-minus");
+            _btnPurifyPlus = _root.Q<Button>("btn-purify-plus");
+            _hydrationUnitsValue = _root.Q<Label>("hydration-units-value");
             _bottomHint = _root.Q<Label>("bottom-hint");
+            _tankCircleSpinner = _root.Q<VisualElement>("tank-circle-spinner");
+            _cultivationProgressBlock = _root.Q<VisualElement>("cultivation-progress-block");
+            _cultivationProgressFill = _root.Q<VisualElement>("cultivation-progress-fill");
+            _cultivationProgressTrack = _root.Q<VisualElement>("cultivation-progress-track");
+            _cultivationProgressShine = _root.Q<VisualElement>("cultivation-progress-shine");
+            _waterProgressBlock = _root.Q<VisualElement>("water-progress-block");
+            _waterProgressFill = _root.Q<VisualElement>("water-progress-fill");
+            _waterProgressTrack = _root.Q<VisualElement>("water-progress-track");
+            _waterProgressShine = _root.Q<VisualElement>("water-progress-shine");
 
             if (_btnAdvanceDay != null) _btnAdvanceDay.clicked += OnAdvanceDayDebug;
             if (_btnStartGrowth != null) _btnStartGrowth.clicked += OnStartGrowth;
             if (_btnPurify != null) _btnPurify.clicked += OnPurify;
+            if (_btnPurifyMinus != null) _btnPurifyMinus.clicked += OnPurifyAmountDecrease;
+            if (_btnPurifyPlus != null) _btnPurifyPlus.clicked += OnPurifyAmountIncrease;
             if (_btnHarvest != null) _btnHarvest.clicked += OnHarvest;
-            if (_btnAbort != null) _btnAbort.clicked += OnAbort;
         }
 
         private void OnStemCellSlotClick()
@@ -168,12 +209,43 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         private void OnPurify()
         {
             if (_foodRoom == null) return;
-            const int amount = 1;
+            if (_foodRoom.WaterSlot.PotableWaterOutput > 0)
+            {
+                _foodRoom.HarvestWater();
+                Refresh();
+                return;
+            }
+            int amount = Mathf.Clamp(_purifyAmount, 1, GetMaxRawWater());
+            if (amount < 1) return;
             if (_gameManager?.PlayerInventory != null && _gameManager.PlayerInventory.Has(Items.Water, amount))
             {
                 _foodRoom.StartWaterProduction(amount);
                 Refresh();
             }
+        }
+
+        private void OnPurifyAmountDecrease()
+        {
+            if (_purifyAmount > 0) { _purifyAmount--; UpdatePurifyAmountDisplay(); Refresh(); }
+        }
+
+        private void OnPurifyAmountIncrease()
+        {
+            if (_purifyAmount < PurifyAmountMax) { _purifyAmount++; UpdatePurifyAmountDisplay(); Refresh(); }
+        }
+
+        private int GetMaxRawWater()
+        {
+            if (_gameManager?.PlayerInventory == null) return 0;
+            int count = 0;
+            foreach (var slot in _gameManager.PlayerInventory.Items)
+                if (slot.TypeId == Items.Water) { count = slot.Quantity; break; }
+            return count;
+        }
+
+        private void UpdatePurifyAmountDisplay()
+        {
+            if (_hydrationUnitsValue != null) _hydrationUnitsValue.text = _purifyAmount.ToString();
         }
 
         private void OnHarvest()
@@ -188,16 +260,6 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                     return;
                 }
             }
-            if (_foodRoom.WaterSlot.IsActive && _foodRoom.WaterSlot.PotableWaterOutput > 0)
-            {
-                _foodRoom.HarvestWater();
-                Refresh();
-            }
-        }
-
-        private void OnAbort()
-        {
-            Hide();
         }
 
         private void OnAdvanceDayDebug()
@@ -212,11 +274,15 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         {
             if (_root == null) _root = _uiDocument?.rootVisualElement;
             if (_root != null && _overlay == null) BindAndSubscribe();
+            EnsureGameManagerAndFoodRoom();
             if (_uiDocument != null) _uiDocument.sortingOrder = 1000;
             if (_overlay != null) _overlay.style.display = DisplayStyle.Flex;
             _selectedChamberType = FoodProductionType.None;
             _selectedStemCellTypeId = null;
             if (_stemCellLabel != null) _stemCellLabel.text = "INSERT STEM CELL";
+            /* Counter unità acqua a 0 all'apertura (così al ritorno dopo una purificazione completata si vede 0) */
+            if (_foodRoom != null && !_foodRoom.WaterSlot.IsActive)
+                _purifyAmount = 0;
             UpdateChamberSelectionVisual();
             Refresh();
         }
@@ -229,27 +295,45 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
         public bool IsVisible => _overlay != null && _overlay.style.display == DisplayStyle.Flex;
 
+        private void EnsureGameManagerAndFoodRoom()
+        {
+            if (_gameManager != null && _foodRoom != null) return;
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            _foodRoom = _gameManager?.FoodRoomSystem;
+            if (_gameManager?.PlayerInventory != null)
+            {
+                _gameManager.PlayerInventory.OnInventoryChanged -= OnPlayerInventoryChanged;
+                _gameManager.PlayerInventory.OnInventoryChanged += OnPlayerInventoryChanged;
+            }
+        }
+
         private void Refresh()
         {
+            EnsureGameManagerAndFoodRoom();
             if (_foodRoom == null) return;
 
             bool anyGrowing = false;
+            bool anyReady = false;
             FoodProductionSlot activeSlot = null;
-            int activeIndex = -1;
+            FoodProductionSlot readySlot = null;
             for (int i = 0; i < _foodRoom.ProductionSlots.Count; i++)
             {
                 var slot = _foodRoom.ProductionSlots[i];
-                if (slot.State == SlotState.Growing) { anyGrowing = true; activeSlot = slot; activeIndex = i; }
+                if (slot.State == SlotState.Growing) { anyGrowing = true; activeSlot = slot; }
+                if (slot.State == SlotState.Ready) { anyReady = true; if (readySlot == null) readySlot = slot; }
             }
 
-            if (activeSlot != null)
+            /* Tank status / production info: prefer growing slot, else ready, else idle */
+            FoodProductionSlot displaySlot = activeSlot ?? readySlot;
+            if (displaySlot != null && _config != null)
             {
-                int totalDays = _config != null ? _config.GetDaysFor(activeSlot.Type) : 1;
-                if (_tankStatus != null) _tankStatus.text = "CULTIVATION IN PROGRESS";
-                if (_tankMessage != null) _tankMessage.text = "Cellular proliferation in progress...";
-                if (_prodTimer != null) _prodTimer.text = $"GROWTH TIMER: {totalDays - activeSlot.DaysRemaining} / {totalDays} days";
-                int cryPerDay = _config != null ? _config.GetCryPerDayFor(activeSlot.Type) : 1;
-                if (_prodEnergy != null) _prodEnergy.text = $"ENERGY COST: +{cryPerDay} CRY/day";
+                int totalDays = _config.GetDaysFor(displaySlot.Type);
+                int elapsed = displaySlot.State == SlotState.Ready ? totalDays : (totalDays - displaySlot.DaysRemaining);
+                if (_tankStatus != null) _tankStatus.text = displaySlot.State == SlotState.Ready ? "READY FOR HARVEST" : "CULTIVATION IN PROGRESS";
+                if (_tankMessage != null) _tankMessage.text = displaySlot.State == SlotState.Ready ? "Collect biomass from the panel." : "Cellular proliferation in progress...";
+                if (_prodTimer != null) _prodTimer.text = $"GROWTH TIMER: {elapsed} / {totalDays} days";
+                int cryPerDay = _config.GetCryPerDayFor(displaySlot.Type);
+                if (_prodEnergy != null) _prodEnergy.text = displaySlot.State == SlotState.Growing ? $"ENERGY COST: +{cryPerDay} CRY/day" : "ENERGY COST: 0 CRY";
                 if (_prodQuality != null) _prodQuality.text = "BIOMASS QUALITY: Common";
             }
             else
@@ -270,10 +354,212 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             foreach (var s in _foodRoom.ProductionSlots)
                 if (s.State == SlotState.Free) { hasFreeSlot = true; break; }
             bool canStart = hasFreeSlot && _selectedChamberType != FoodProductionType.None && !anyGrowing;
-            if (_btnStartGrowth != null) _btnStartGrowth.SetEnabled(canStart);
+            if (_btnStartGrowth != null)
+            {
+                _btnStartGrowth.SetEnabled(canStart);
+                _btnStartGrowth.tooltip = (!canStart && anyGrowing) ? "Un processo è già attivo" : null;
+            }
+
+            bool hasWater = _gameManager != null && _gameManager.PlayerInventory != null && _gameManager.PlayerInventory.Has(Items.Water, 1);
+            bool waterProcessActive = _foodRoom.WaterSlot.IsActive && _foodRoom.WaterSlot.RawWaterInput > 0;
+            bool waterReadyToCollect = _foodRoom.WaterSlot.PotableWaterOutput > 0;
+            bool showCollectButton = waterProcessActive || waterReadyToCollect;
+            bool canPurify = !showCollectButton && hasWater && _purifyAmount >= 1;
+            if (_btnPurify != null)
+            {
+                if (showCollectButton)
+                {
+                    _btnPurify.text = "💧 COLLECT";
+                    if (waterReadyToCollect)
+                    {
+                        _btnPurify.SetEnabled(true);
+                        _btnPurify.AddToClassList("btn-purify--enabled");
+                    }
+                    else
+                    {
+                        _btnPurify.SetEnabled(false);
+                        _btnPurify.RemoveFromClassList("btn-purify--enabled");
+                    }
+                }
+                else
+                {
+                    _btnPurify.text = "💧 PURIFY";
+                    _btnPurify.SetEnabled(canPurify);
+                    if (canPurify) _btnPurify.AddToClassList("btn-purify--enabled");
+                    else _btnPurify.RemoveFromClassList("btn-purify--enabled");
+                }
+            }
+            _purifyAmount = Mathf.Clamp(_purifyAmount, 0, PurifyAmountMax);
+            if (_purifyAmount > GetMaxRawWater()) _purifyAmount = GetMaxRawWater();
+            UpdatePurifyAmountDisplay();
+            bool allowPurifyControls = !showCollectButton;
+            if (_btnPurifyMinus != null) _btnPurifyMinus.SetEnabled(allowPurifyControls && _purifyAmount > 0);
+            if (_btnPurifyPlus != null) _btnPurifyPlus.SetEnabled(allowPurifyControls && _purifyAmount < PurifyAmountMax);
+
+            bool canHarvest = false;
+            foreach (var s in _foodRoom.ProductionSlots)
+                if (s.State == SlotState.Ready) { canHarvest = true; break; }
+            if (_btnHarvest != null) _btnHarvest.SetEnabled(canHarvest);
+
+            /* Bottom: hint normale o barra "Cultivation in Progress" (mostrata quando c'è un processo in corso O ready per harvest) o barra acqua */
+            bool showProgressBlock = anyGrowing || anyReady;
+            bool showWaterProgressBlock = _foodRoom.WaterSlot.IsActive && _foodRoom.WaterSlot.RawWaterInput > 0;
             if (_bottomHint != null)
-                _bottomHint.text = anyGrowing ? "Cultivation in progress" : "Select a growth chamber to begin cultivation";
+            {
+                _bottomHint.style.display = (showProgressBlock || showWaterProgressBlock) ? DisplayStyle.None : DisplayStyle.Flex;
+                _bottomHint.text = "Select a growth chamber to begin cultivation";
+            }
+
+            if (_cultivationProgressBlock != null)
+                _cultivationProgressBlock.style.display = showProgressBlock ? DisplayStyle.Flex : DisplayStyle.None;
+
+            /* Progress bar: valore reale da slot (giorni avanzati = più piena). Quando Ready = 100% piena. */
+            if (showProgressBlock && _cultivationProgressFill != null && _config != null)
+            {
+                FoodProductionSlot progressSlot = activeSlot ?? readySlot;
+                if (progressSlot != null)
+                {
+                    int totalDays = _config.GetDaysFor(progressSlot.Type);
+                    int remaining = progressSlot.State == SlotState.Ready ? 0 : progressSlot.DaysRemaining;
+                    float progress = totalDays > 0 ? (totalDays - remaining) / (float)totalDays : 0f;
+                    _cultivationProgressFill.style.width = new Length(Mathf.Clamp01(progress) * 100f, LengthUnit.Percent);
+                }
+                if (_cultivationProgressBlock != null)
+                {
+                    var label = _cultivationProgressBlock.Q<Label>("cultivation-progress-label");
+                    if (label != null)
+                        label.text = anyReady && !anyGrowing ? "Ready for harvest" : "Cultivation in Progress";
+                }
+            }
+
+            /* Water progress bar: overall % (PotableWaterOutput + CurrentUnitProgress) / RawWaterInput */
+            if (_waterProgressBlock != null)
+                _waterProgressBlock.style.display = showWaterProgressBlock ? DisplayStyle.Flex : DisplayStyle.None;
+            if (showWaterProgressBlock && _waterProgressFill != null)
+            {
+                var ws = _foodRoom.WaterSlot;
+                float totalProgress = ws.RawWaterInput > 0 ? (ws.PotableWaterOutput + ws.CurrentUnitProgress) / (float)ws.RawWaterInput : 0f;
+                _waterProgressFill.style.width = new Length(Mathf.Clamp01(totalProgress) * 100f, LengthUnit.Percent);
+                var wLabel = _waterProgressBlock?.Q<Label>("water-progress-label");
+                if (wLabel != null)
+                    wLabel.text = "Water purification in progress";
+            }
+
+            /* KitchenHome: active chamber card (usa displaySlot per evidenziare quale camera è attiva/ready) */
+            if (_chamberVegetal != null) _chamberVegetal.RemoveFromClassList("active");
+            if (_chamberFungal != null) _chamberFungal.RemoveFromClassList("active");
+            if (_chamberMeat != null) _chamberMeat.RemoveFromClassList("active");
+            if (displaySlot != null)
+            {
+                switch (displaySlot.Type)
+                {
+                    case FoodProductionType.Vegetable: _chamberVegetal?.AddToClassList("active"); break;
+                    case FoodProductionType.Fungus: _chamberFungal?.AddToClassList("active"); break;
+                    case FoodProductionType.Meat: _chamberMeat?.AddToClassList("active"); break;
+                }
+            }
+
+            /* KitchenHome: residual protein panel — nascosto in UI (info RES-PROT data dal toast harvest) */
+            if (_residualProteinPanel != null)
+                _residualProteinPanel.style.display = DisplayStyle.None;
+
+            /* Stem cell slot filled state */
+            if (_stemCellSlot != null)
+            {
+                if (!string.IsNullOrEmpty(_selectedStemCellTypeId))
+                    _stemCellSlot.AddToClassList("stem-cell-slot--filled");
+                else
+                    _stemCellSlot.RemoveFromClassList("stem-cell-slot--filled");
+            }
+
+            /* Tank circle animation state */
+            if (_tankCircle != null)
+            {
+                if (anyGrowing)
+                    _tankCircle.AddToClassList("tank-circle--active");
+                else
+                    _tankCircle.RemoveFromClassList("tank-circle--active");
+            }
+            if (_tankCircleSpinner != null)
+                _tankCircleSpinner.style.display = anyGrowing ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
+        private void Update()
+        {
+            if (_foodRoom == null) return;
+
+            _foodRoom.TickWaterProduction(Time.deltaTime);
+
+            bool anyGrowing = false;
+            foreach (var s in _foodRoom.ProductionSlots)
+                if (s.State == SlotState.Growing) { anyGrowing = true; break; }
+            bool waterActive = _foodRoom.WaterSlot.IsActive;
+
+            /* Keep progress toast visible and updated even when panel is closed */
+            if (anyGrowing || waterActive)
+            {
+                _toastRefreshAccumulator += Time.deltaTime;
+                if (_toastRefreshAccumulator >= 1.5f)
+                {
+                    _toastRefreshAccumulator = 0f;
+                    _foodRoom.RefreshToasts();
+                }
+            }
+            else
+            {
+                _toastRefreshAccumulator = 0f;
+            }
+
+            /* Tank spinner only when panel is visible */
+            if (!IsVisible) return;
+            if (anyGrowing && _tankCircleSpinner != null)
+            {
+                _tankRotationAngle += 180f * Time.deltaTime;
+                if (_tankRotationAngle >= 360f) _tankRotationAngle -= 360f;
+                _tankCircleSpinner.style.rotate = new Rotate(_tankRotationAngle);
+            }
+
+            /* Progress bar shine: move left-to-right when cultivation in progress */
+            bool showProgressBar = _cultivationProgressBlock != null && _cultivationProgressBlock.resolvedStyle.display == DisplayStyle.Flex;
+            if (showProgressBar && anyGrowing && _cultivationProgressTrack != null && _cultivationProgressShine != null)
+            {
+                _progressShinePhase += Time.deltaTime * 0.6f;
+                if (_progressShinePhase > 1f) _progressShinePhase -= 1f;
+                float leftPct = _progressShinePhase * 70f;
+                _cultivationProgressShine.style.left = new Length(leftPct, LengthUnit.Percent);
+                _cultivationProgressShine.style.display = DisplayStyle.Flex;
+            }
+            else if (_cultivationProgressShine != null)
+            {
+                _cultivationProgressShine.style.display = DisplayStyle.None;
+            }
+
+            /* Water progress bar shine: same left-to-right animation when water purification in progress */
+            bool showWaterBar = _waterProgressBlock != null && _waterProgressBlock.resolvedStyle.display == DisplayStyle.Flex;
+            if (showWaterBar && waterActive && _waterProgressTrack != null && _waterProgressShine != null)
+            {
+                _waterShinePhase += Time.deltaTime * 0.6f;
+                if (_waterShinePhase > 1f) _waterShinePhase -= 1f;
+                float leftPct = _waterShinePhase * 70f;
+                _waterProgressShine.style.left = new Length(leftPct, LengthUnit.Percent);
+                _waterProgressShine.style.display = DisplayStyle.Flex;
+            }
+            else if (_waterProgressShine != null)
+            {
+                _waterProgressShine.style.display = DisplayStyle.None;
+            }
+            if (showWaterBar && waterActive && _waterProgressFill != null)
+            {
+                var ws = _foodRoom.WaterSlot;
+                float totalProgress = ws.RawWaterInput > 0 ? (ws.PotableWaterOutput + ws.CurrentUnitProgress) / (float)ws.RawWaterInput : 0f;
+                _waterProgressFill.style.width = new Length(Mathf.Clamp01(totalProgress) * 100f, LengthUnit.Percent);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_gameManager?.PlayerInventory != null)
+                _gameManager.PlayerInventory.OnInventoryChanged -= OnPlayerInventoryChanged;
+        }
     }
 }

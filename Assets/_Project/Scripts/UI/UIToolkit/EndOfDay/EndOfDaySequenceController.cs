@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Sporae.Core;
+using _Project.Systems.FoodRoom;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Growth;
@@ -376,8 +377,8 @@ namespace _Project
             notesSb.AppendLine("Seed Storage ...... " + BuildSeedStorageSummary());
             notesSb.AppendLine("Research .......... ON HOLD");
             notesSb.AppendLine();
-            notesSb.AppendLine(PlaceholderOpen + "Kitchen Food — Cibo in produzione: — [placeholder: collegare a dati Kitchen Food]" + PlaceholderClose);
-            notesSb.AppendLine(PlaceholderOpen + "Kitchen Food — Potabilizzazione Raw Water: in corso / completata — [placeholder: collegare a processo potabilizzazione]" + PlaceholderClose);
+            notesSb.AppendLine("Kitchen Food ...... " + BuildKitchenFoodSummary());
+            notesSb.AppendLine("Potable Water ..... " + BuildPotableWaterSummary());
             notesSb.AppendLine();
             notesSb.Append("Warning ............ ");
             if (_dayCycleController != null)
@@ -456,6 +457,39 @@ namespace _Project
             if (seed002 > 0) seedParts.Add($"{seed002} Seed002");
             if (seed003 > 0) seedParts.Add($"{seed003} Seed003");
             return seedParts.Count > 0 ? string.Join(", ", seedParts) + "." : "—";
+        }
+
+        private string BuildKitchenFoodSummary()
+        {
+            var foodRoom = _gameManager?.FoodRoomSystem;
+            if (foodRoom == null) return "—";
+            var parts = new List<string>();
+            foreach (var slot in foodRoom.ProductionSlots)
+            {
+                if (slot.State == SlotState.Growing)
+                {
+                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Vegetable" : slot.Type == FoodProductionType.Fungus ? "Fungal" : slot.Type == FoodProductionType.Meat ? "Meat" : "Food";
+                    parts.Add($"{typeName} in progress ({slot.DaysRemaining} day(s) left)");
+                }
+                else if (slot.State == SlotState.Ready)
+                {
+                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Vegetable" : slot.Type == FoodProductionType.Fungus ? "Fungal" : slot.Type == FoodProductionType.Meat ? "Meat" : "Food";
+                    parts.Add($"{typeName} ready for harvest");
+                }
+            }
+            return parts.Count > 0 ? string.Join("; ", parts) + "." : "No food in production.";
+        }
+
+        private string BuildPotableWaterSummary()
+        {
+            var foodRoom = _gameManager?.FoodRoomSystem;
+            if (foodRoom == null) return "—";
+            var water = foodRoom.WaterSlot;
+            if (!water.IsActive)
+                return "No purification in progress.";
+            if (water.PotableWaterOutput > 0)
+                return $"{water.PotableWaterOutput} unit(s) potable water ready for collection.";
+            return "Purification in progress.";
         }
 
         private static string FormatPotNumber(string potId)

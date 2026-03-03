@@ -576,6 +576,9 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (string.IsNullOrEmpty(typeId)) return typeId;
             if (typeId == Items.PreSeed) return "Pre-Seed";
             if (typeId == Items.FruitsKnown) return "Frutto conosciuto";
+            if (typeId == Items.FoodVegetable) return "Vegetable Synthetic";
+            if (typeId == Items.FoodFungus) return "Fungal Synthetic";
+            if (typeId == Items.FoodMeat) return "Meat Synthetic";
             if (PlantDatabase.Instance != null)
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataBySeedTypeId(typeId);

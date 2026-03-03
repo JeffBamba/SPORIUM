@@ -73,9 +73,44 @@ namespace _Project.Systems.FoodRoom
             if (!_inventory.Has(Items.Water, rawWaterAmount)) return;
             _inventory.Consume(Items.Water, rawWaterAmount);
             _waterSlot.RawWaterInput = rawWaterAmount;
-            _waterSlot.PotableWaterOutput = rawWaterAmount;
+            _waterSlot.PotableWaterOutput = 0;
+            _waterSlot.CurrentUnitProgress = 0f;
             _waterSlot.IsActive = true;
             RefreshWaterToasts();
+        }
+
+        /// <summary>Call every frame with Time.deltaTime to advance real-time purification (2 min per unit).</summary>
+        public void TickWaterProduction(float deltaTime)
+        {
+            if (!_waterSlot.IsActive || _waterSlot.RawWaterInput <= 0) return;
+            _waterSlot.CurrentUnitProgress += deltaTime / WaterProductionSlot.SecondsPerUnit;
+            while (_waterSlot.CurrentUnitProgress >= 1f && _waterSlot.PotableWaterOutput < _waterSlot.RawWaterInput)
+            {
+                _waterSlot.PotableWaterOutput++;
+                _waterSlot.CurrentUnitProgress -= 1f;
+                if (_waterSlot.PotableWaterOutput >= _waterSlot.RawWaterInput)
+                {
+                    _waterSlot.IsActive = false;
+                    _waterSlot.CurrentUnitProgress = 0f;
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                    {
+                        foundation.RemoveToast(ToastKeyWaterProgress);
+                        foundation.PostToastImmediate("KTCH-WAT-DONE", new NotificationPayload().With("count", _waterSlot.PotableWaterOutput.ToString()));
+                    }
+                    return;
+                }
+            }
+            if (_waterSlot.CurrentUnitProgress >= 1f)
+                _waterSlot.CurrentUnitProgress = 1f;
+            RefreshWaterToasts();
+        }
+
+        /// <summary>Avanza la potabilizzazione di un numero di secondi reali (es. notte dopo End of Day). Chiamare quando il giorno cambia così al mattino i processi sono completati.</summary>
+        public void AdvanceWaterProductionByRealSeconds(float seconds)
+        {
+            if (seconds <= 0) return;
+            TickWaterProduction(seconds);
         }
 
         public bool Harvest(int slotIndex)
@@ -83,25 +118,48 @@ namespace _Project.Systems.FoodRoom
             if (slotIndex < 0 || slotIndex >= _productionSlots.Count) return false;
             var slot = _productionSlots[slotIndex];
             if (slot.State != SlotState.Ready) return false;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.RemoveToast(ToastKeyFoodProgress);
+                foundation.RemoveToast(ToastKeyFoodDone);
+            }
             int qty = _config != null ? _config.GetOutputQuantityFor(slot.Type) : 1;
             string typeId = _config != null ? _config.GetOutputTypeIdFor(slot.Type) : Items.FoodVegetable;
             if (typeId == null) return false;
+            string foodTypeName = GetFoodTypeDisplayName(slot.Type);
             _inventory.Add(typeId, qty);
+            if (foundation != null && foundation.Enabled)
+                foundation.PostToastImmediate("KTCH-FOOD-RITIRA", new NotificationPayload().With("foodType", foodTypeName).With("count", qty.ToString()));
+            /* Prodotti aggiuntivi dall'harvest (es. Res Protein dalla carne): aggiungi a inventario e toast separato per ognuno */
+            AddHarvestBonusItemsAndToasts(slot.Type, foundation);
             slot.State = SlotState.Free;
             slot.Type = FoodProductionType.None;
             slot.DaysRemaining = 0;
             slot.HasStemCell = false;
             slot.StemCellTypeId = null;
-            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-            if (foundation != null && foundation.Enabled)
-                foundation.PostToastImmediate("KTCH-FOOD-RITIRA", new NotificationPayload().With("count", qty.ToString()));
             RefreshFoodToasts();
             return true;
         }
 
+        private void AddHarvestBonusItemsAndToasts(FoodProductionType type, FoundationNotificationService foundation)
+        {
+            if (foundation == null || !foundation.Enabled) return;
+            switch (type)
+            {
+                case FoodProductionType.Meat:
+                    int resProtQty = 1;
+                    _inventory.Add(Items.ProteinResidue, resProtQty);
+                    foundation.PostToastImmediate("KTCH-FOOD-RITIRA", new NotificationPayload().With("foodType", "Res Protein").With("count", resProtQty.ToString()));
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public bool HarvestWater()
         {
-            if (!_waterSlot.IsActive || _waterSlot.PotableWaterOutput <= 0) return false;
+            if (_waterSlot.PotableWaterOutput <= 0) return false;
             int amount = _waterSlot.PotableWaterOutput;
             _inventory.Add(Items.WaterPotable, amount);
             _waterSlot.PotableWaterOutput = 0;
@@ -170,10 +228,43 @@ namespace _Project.Systems.FoodRoom
                 if (s.State == SlotState.Growing) growing++;
                 if (s.State == SlotState.Ready) ready++;
             }
-            if (growing > 0)
-                foundation.UpsertToast(ToastKeyFoodProgress, "KTCH-FOOD-PROGRESS", new NotificationPayload().With("count", growing.ToString()));
             if (ready > 0)
+            {
+                foundation.RemoveToast(ToastKeyFoodProgress);
                 foundation.UpsertToast(ToastKeyFoodDone, "KTCH-FOOD-DONE", new NotificationPayload().With("count", ready.ToString()));
+            }
+            else if (growing > 0)
+            {
+                int daysRemaining = 0;
+                foreach (var s in _productionSlots)
+                {
+                    if (s.State == SlotState.Growing)
+                    {
+                        daysRemaining = s.DaysRemaining;
+                        break;
+                    }
+                }
+                foundation.UpsertToast(ToastKeyFoodProgress, "KTCH-FOOD-PROGRESS",
+                    new NotificationPayload().With("count", growing.ToString()).With("daysRemaining", daysRemaining.ToString()));
+            }
+        }
+
+        private static string GetFoodTypeDisplayName(FoodProductionType type)
+        {
+            switch (type)
+            {
+                case FoodProductionType.Vegetable: return "Vegetable Synthetic";
+                case FoodProductionType.Fungus: return "Fungal Synthetic";
+                case FoodProductionType.Meat: return "Meat Synthetic";
+                default: return "Food";
+            }
+        }
+
+        /// <summary>Chiamato periodicamente dal panel o da tick per mantenere il toast PROGRESS visibile per tutta la durata.</summary>
+        public void RefreshToasts()
+        {
+            RefreshFoodToasts();
+            RefreshWaterToasts();
         }
 
         private void RefreshWaterToasts()
@@ -181,13 +272,16 @@ namespace _Project.Systems.FoodRoom
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation == null || !foundation.Enabled) return;
             if (_waterSlot.IsActive && _waterSlot.RawWaterInput > 0)
-                foundation.UpsertToast(ToastKeyWaterProgress, "KTCH-WAT-PROGRESS", new NotificationPayload().With("count", _waterSlot.RawWaterInput.ToString()));
-            if (_waterSlot.IsActive && _waterSlot.PotableWaterOutput > 0)
-                foundation.UpsertToast(ToastKeyWaterDone, "KTCH-WAT-DONE", new NotificationPayload().With("count", _waterSlot.PotableWaterOutput.ToString()));
+            {
+                float totalProgress = (_waterSlot.PotableWaterOutput + _waterSlot.CurrentUnitProgress) / _waterSlot.RawWaterInput;
+                int percent = Mathf.Clamp(Mathf.RoundToInt(totalProgress * 100f), 0, 100);
+                foundation.UpsertToast(ToastKeyWaterProgress, "KTCH-WAT-PROGRESS",
+                    new NotificationPayload().With("percent", percent.ToString()).With("count", _waterSlot.RawWaterInput.ToString()));
+            }
         }
 
         /// <summary>Ripristina stato da save. typeInt/stateInt sono valori enum come int.</summary>
-        public void RestoreState(List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)> slots, int waterRawInput, int waterPotableOutput, bool waterActive)
+        public void RestoreState(List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)> slots, int waterRawInput, int waterPotableOutput, float waterCurrentProgress, bool waterActive)
         {
             _productionSlots.Clear();
             int max = _config != null ? _config.MaxSlots : 3;
@@ -208,6 +302,7 @@ namespace _Project.Systems.FoodRoom
             }
             _waterSlot.RawWaterInput = waterRawInput;
             _waterSlot.PotableWaterOutput = waterPotableOutput;
+            _waterSlot.CurrentUnitProgress = waterCurrentProgress;
             _waterSlot.IsActive = waterActive;
         }
     }
