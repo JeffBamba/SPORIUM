@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Sporae.Core;
+using Sporae.UI.Icons;
 using Sporae.Dome.PotSystem.Growth;
 
 namespace Sporae.UI.UIToolkit.SeedInventory
@@ -257,6 +258,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             // Placeholder icona (no emoji per evitare missing glyph)
             var iconGlyph = new VisualElement();
             iconGlyph.AddToClassList("seedinv-row-iconglyph");
+            ApplyIconToElement(iconGlyph, GlobalIconResolver.GetItemIcon(entry.SeedTypeId));
             iconBox.Add(iconGlyph);
 
             var main = new VisualElement();
@@ -317,6 +319,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
             iconBox.AddToClassList("seedinv-row-iconbox");
             var iconGlyph = new VisualElement();
             iconGlyph.AddToClassList("seedinv-row-iconglyph");
+            ApplyIconToElement(iconGlyph, GlobalIconResolver.GetItemIcon(Items.Seed001));
             iconBox.Add(iconGlyph);
 
             var main = new VisualElement();
@@ -343,6 +346,13 @@ namespace Sporae.UI.UIToolkit.SeedInventory
                 PlantFamily.Evil => 2,
                 _ => 99
             };
+        }
+
+        private static void ApplyIconToElement(VisualElement target, Sprite icon)
+        {
+            if (target == null || icon == null) return;
+            target.style.backgroundImage = new StyleBackground(icon);
+            target.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
         }
 
         private static string FamilyBadgeClass(PlantData plantData)

@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fbb8488b7144d5e8d7f84599e48f3ad, type: 3}
+  m_Name: GlobalIconCatalog
+  m_EditorClassIdentifier: 
+  _defaultItemIcon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _defaultActionIcon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _defaultPlantIcon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _typeIcons:
+  - TypeId: seed-001
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: seed-002
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: seed-003
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: pre-seed
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: WAT-RAW
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: WAT-POT
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: fertilizer-standard
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: fertilizer-pure
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - TypeId: fertilizer-prohibited
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _categoryIcons:
+  - CategoryKey: plant
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: seed
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: spore
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: fruit
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: water
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: fertilizer
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: additive
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: reagent
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: stemcell
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: protein
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: food
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: preseed
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: misc
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: action
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _actionIcons:
+  - ActionKey: overwatering
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: blueled
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: redled
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: sprayantifungal
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: water
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: light
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: fertilize
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: pruning
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: harvest
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: plant
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - ActionKey: uproot
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _plantCodeIcons: []

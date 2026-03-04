@@ -9,6 +9,7 @@ using _Project;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.UI.Icons;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -31,6 +32,10 @@ namespace Sporae.UI.UIToolkit.HUD
         
         [Header("Configuration")]
         [SerializeField] private bool _enableDebugLogs = false;
+
+        [Header("pH Tooltip Font (opzionale)")]
+        [Tooltip("Assegna qui un override font per il titolo del tooltip pH. Se vuoto, eredita il font globale del tema UI.")]
+        [SerializeField] private Font _phTooltipTitleFont;
 
         [Header("UI Glow Frame")]
         [SerializeField] private Material _glowFrameMaterial;
@@ -63,6 +68,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         // Tooltip
         private VisualElement _phTooltip;
+        private Label _phTooltipTitle;
         private Label _phTooltipValueCurrent;
         private VisualElement _phTooltipModifiersList;
         private Label _phTooltipValueTotal;
@@ -357,6 +363,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 return;
 
             _phTooltip = _root.Q<VisualElement>("ph-tooltip");
+            _phTooltipTitle = _phTooltip?.Q<Label>("ph-tooltip-title");
             _phTooltipValueCurrent = _phTooltip?.Q<Label>("ph-tooltip-value-current");
             _phTooltipModifiersList = _phTooltip?.Q<VisualElement>("ph-tooltip-modifiers-list");
             _phTooltipValueTotal = _phTooltip?.Q<Label>("ph-tooltip-value-total");
@@ -367,6 +374,8 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phTooltip != null)
                 _phTooltip.pickingMode = PickingMode.Ignore;
 
+            ApplyPhTooltipTitleFont();
+
             if (_phTooltip == null)
                 return;
 
@@ -374,11 +383,24 @@ namespace Sporae.UI.UIToolkit.HUD
             _phDisplay.RegisterCallback<MouseLeaveEvent>(OnPhHoverExit);
             _phDisplay.RegisterCallback<MouseMoveEvent>(OnPhHoverMove);
         }
-        
+
+        private void ApplyPhTooltipTitleFont()
+        {
+            if (_phTooltipTitle == null) return;
+            // Keep global theme font unless a specific override is explicitly assigned in Inspector.
+            Font font = _phTooltipTitleFont;
+            if (font != null)
+            {
+                _phTooltipTitle.style.unityFont = new StyleFont(font);
+                _phTooltipTitle.style.unityFontStyleAndWeight = FontStyle.Normal;
+            }
+        }
+
         private void OnPhHoverEnter(MouseEnterEvent evt)
         {
             if (_phSystem != null && _phTooltip != null)
             {
+                ApplyPhTooltipTitleFont();
                 UpdatePhTooltipContent();
                 _phTooltip.style.display = DisplayStyle.Flex;
                 _phTooltip.BringToFront();
@@ -472,7 +494,8 @@ namespace Sporae.UI.UIToolkit.HUD
                             string plantName = GetPlantDisplayName(p.PlantCode);
                             string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
                             Color valueColor = p.DailyDrift >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
-                            AddPhModifierRow(_phTooltipModifiersList, plantName, driftStr, valueColor);
+                            var icon = GlobalIconResolver.GetPlantIcon(p.PlantCode);
+                            AddPhModifierRow(_phTooltipModifiersList, plantName, driftStr, valueColor, icon);
                         }
                     }
                     if (actionMods != null)
@@ -481,7 +504,8 @@ namespace Sporae.UI.UIToolkit.HUD
                         {
                             string driftStr = a.Delta.ToString("+#0.0;-#0.0;0", culture);
                             Color valueColor = a.Delta >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
-                            AddPhModifierRow(_phTooltipModifiersList, a.ActionDisplayName, driftStr, valueColor);
+                            var icon = GlobalIconResolver.GetActionIcon(a.ActionDisplayName);
+                            AddPhModifierRow(_phTooltipModifiersList, a.ActionDisplayName, driftStr, valueColor, icon);
                         }
                     }
                 }
@@ -555,11 +579,16 @@ namespace Sporae.UI.UIToolkit.HUD
         /// <summary>
         /// Aggiunge una riga alla lista Active Modifiers: [icon box] [nome quasi bianco] [valore colorato].
         /// </summary>
-        private static void AddPhModifierRow(VisualElement list, string nameText, string valueText, Color valueColor)
+        private static void AddPhModifierRow(VisualElement list, string nameText, string valueText, Color valueColor, Sprite icon = null)
         {
             var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
             var iconBox = new VisualElement();
             iconBox.AddToClassList("ph-tooltip-modifier-icon");
+            if (icon != null)
+            {
+                iconBox.style.backgroundImage = new StyleBackground(icon);
+                iconBox.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+            }
             var nameLabel = new Label { text = nameText, enableRichText = false };
             nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f); // quasi bianco come da reference
             nameLabel.style.fontSize = 11;
@@ -1599,4 +1628,5 @@ namespace Sporae.UI.UIToolkit.HUD
         #pragma warning restore 0414
     }
 }
+
 

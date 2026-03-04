@@ -84,6 +84,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [SerializeField, Range(1, 4)] private int _backdropBlurIterations = 2;
 
         [Header("Console Font")]
+        [Tooltip("Optional override for terminal text. Leave empty to inherit the global UI font from the runtime theme.")]
         [SerializeField] private Font _consoleMonoFont;
 
         [Header("Outer Glow Frame")]
@@ -297,36 +298,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void ApplyConsoleFont()
         {
             Font font = _consoleMonoFont;
-            if (font == null)
-            {
-                font = FindLoadedFont("PixelOperatorMono_Bold")
-                    ?? FindLoadedFont("IBMPlexMono-Regular")
-                    ?? FindLoadedFont("IBMPlexMono-Medium")
-                    ?? FindLoadedFont("IBMPlexMono");
-            }
-
             if (font == null) return;
 
             if (_consoleText != null)
                 _consoleText.style.unityFont = font;
             if (_protocolText != null)
                 _protocolText.style.unityFont = font;
-        }
-
-        private static Font FindLoadedFont(string containsName)
-        {
-            try
-            {
-                var fonts = Resources.FindObjectsOfTypeAll<Font>();
-                foreach (var f in fonts)
-                {
-                    if (f == null) continue;
-                    if (!string.IsNullOrEmpty(f.name) && f.name.Contains(containsName))
-                        return f;
-                }
-            }
-            catch { }
-            return null;
         }
 
         private void LogLayoutSnapshot(string tag)
@@ -1838,52 +1815,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _forecastConditionTooltip = _root.Q<VisualElement>("pcv3-forecast-condition-tooltip");
             _forecastConditionTooltipText = _forecastConditionTooltip?.Q<Label>("pcv3-forecast-condition-tooltip-text");
-
-            if (_forecastConditionTooltip == null)
-            {
-                _forecastConditionTooltip = new VisualElement();
-                _forecastConditionTooltip.name = "pcv3-forecast-condition-tooltip";
-                _forecastConditionTooltip.style.position = Position.Absolute;
-                _forecastConditionTooltip.style.left = 0f;
-                _forecastConditionTooltip.style.top = 0f;
-                _forecastConditionTooltip.style.width = 450f;
-                _forecastConditionTooltip.style.maxWidth = 450f;
-                _forecastConditionTooltip.style.minHeight = 200f;
-                _forecastConditionTooltip.style.paddingTop = 8f;
-                _forecastConditionTooltip.style.paddingRight = 8f;
-                _forecastConditionTooltip.style.paddingBottom = 8f;
-                _forecastConditionTooltip.style.paddingLeft = 8f;
-
-                // Match PlantCardV2 tooltip look (colors + contrast)
-                _forecastConditionTooltip.style.backgroundColor = new Color(13f / 255f, 21f / 255f, 25f / 255f, 0.95f); // #0d1519 @ 95%
-                _forecastConditionTooltip.style.borderTopWidth = 1f;
-                _forecastConditionTooltip.style.borderRightWidth = 1f;
-                _forecastConditionTooltip.style.borderBottomWidth = 1f;
-                _forecastConditionTooltip.style.borderLeftWidth = 1f;
-                var border = new Color(0f, 0.8f, 0.4f, 1f);
-                _forecastConditionTooltip.style.borderTopColor = border;
-                _forecastConditionTooltip.style.borderRightColor = border;
-                _forecastConditionTooltip.style.borderBottomColor = border;
-                _forecastConditionTooltip.style.borderLeftColor = border;
-
-                _forecastConditionTooltip.pickingMode = PickingMode.Ignore; // avoid flicker / hover stealing
-                _forecastConditionTooltip.style.display = DisplayStyle.None;
-
-                _forecastConditionTooltipText = new Label();
-                _forecastConditionTooltipText.name = "pcv3-forecast-condition-tooltip-text";
-                _forecastConditionTooltipText.enableRichText = true;
-                _forecastConditionTooltipText.style.whiteSpace = WhiteSpace.Normal;
-                _forecastConditionTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // near-white
-                _forecastConditionTooltipText.style.fontSize = 12f;
-                _forecastConditionTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
-                _forecastConditionTooltipText.style.marginTop = 4f;
-                _forecastConditionTooltipText.style.marginRight = 4f;
-                _forecastConditionTooltipText.style.marginBottom = 4f;
-                _forecastConditionTooltipText.style.marginLeft = 4f;
-
-                _forecastConditionTooltip.Add(_forecastConditionTooltipText);
-                _root.Add(_forecastConditionTooltip);
-            }
+            if (_forecastConditionTooltip != null)
+                _forecastConditionTooltip.pickingMode = PickingMode.Ignore;
         }
 
         private void HideForecastConditionTooltip()

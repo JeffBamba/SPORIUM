@@ -13177,6 +13177,7 @@ MonoBehaviour:
   _notificationsUss: {fileID: 7433441132597879392, guid: f6e5544b0a2c1124496a59a4172e9ad6, type: 3}
   _startExpanded: 1
   _enableDebugLogs: 1
+  _itemIconPlaceholder: {fileID: 0}
 --- !u!114 &487210097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16594,6 +16595,7 @@ MonoBehaviour:
   _cryBalance: 1245
   _grateValue: 12
   _enableDebugLogs: 1
+  _phTooltipTitleFont: {fileID: 12800000, guid: ea0fa6fd95d52a040a1114dd12f304e3, type: 3}
   _glowFrameMaterial: {fileID: 2100000, guid: e170c7eca5aa4c242a5ee6334677476f, type: 2}
   _glowFrameLiveUpdate: 1
 --- !u!114 &606924781

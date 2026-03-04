@@ -130,24 +130,10 @@ namespace Sporae.UI.UIToolkit.Lab
         private void EnsureOutputTooltip()
         {
             if (_outputTooltip != null || _root == null) return;
-            _outputTooltip = new VisualElement();
-            _outputTooltip.name = "lab-fus-output-tooltip";
-            _outputTooltip.style.position = Position.Absolute;
-            _outputTooltip.style.display = DisplayStyle.None;
-            _outputTooltip.style.backgroundColor = new Color(0.05f, 0.07f, 0.09f, 0.96f);
-            _outputTooltip.style.borderTopWidth = _outputTooltip.style.borderRightWidth = _outputTooltip.style.borderBottomWidth = _outputTooltip.style.borderLeftWidth = 2f;
-            _outputTooltip.style.borderTopColor = _outputTooltip.style.borderRightColor = _outputTooltip.style.borderBottomColor = _outputTooltip.style.borderLeftColor = new Color(0.5f, 0.8f, 0.5f, 0.9f);
-            _outputTooltip.style.paddingTop = _outputTooltip.style.paddingRight = _outputTooltip.style.paddingBottom = _outputTooltip.style.paddingLeft = 10f;
-            _outputTooltip.style.minWidth = 260f;
-            _outputTooltip.style.maxWidth = 340f;
-            _outputTooltip.pickingMode = PickingMode.Ignore;
-            _outputTooltipText = new Label();
-            _outputTooltipText.enableRichText = true;
-            _outputTooltipText.style.whiteSpace = WhiteSpace.Normal;
-            _outputTooltipText.style.color = new Color(0.95f, 0.96f, 0.98f, 1f);
-            _outputTooltipText.style.fontSize = 12f;
-            _outputTooltip.Add(_outputTooltipText);
-            _root.Add(_outputTooltip);
+            _outputTooltip = _root.Q<VisualElement>("lab-fus-output-tooltip");
+            _outputTooltipText = _outputTooltip?.Q<Label>("lab-fus-output-tooltip-text");
+            if (_outputTooltip != null)
+                _outputTooltip.pickingMode = PickingMode.Ignore;
 
             if (_outputSlotRow != null)
             {

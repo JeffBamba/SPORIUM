@@ -7,6 +7,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.SeedInventory;
+using Sporae.UI.Icons;
 
 namespace Sporae.UI.UIToolkit.PlayerInventory
 {
@@ -192,24 +193,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private void EnsureInvTooltip()
         {
             if (_invTooltip != null || _root == null) return;
-            _invTooltip = new VisualElement();
-            _invTooltip.name = "inv-tooltip";
-            _invTooltip.style.position = Position.Absolute;
-            _invTooltip.style.display = DisplayStyle.None;
-            _invTooltip.style.backgroundColor = new UnityEngine.Color(0.05f, 0.07f, 0.09f, 0.96f);
-            _invTooltip.style.borderTopWidth = _invTooltip.style.borderRightWidth = _invTooltip.style.borderBottomWidth = _invTooltip.style.borderLeftWidth = 2f;
-            _invTooltip.style.borderTopColor = _invTooltip.style.borderRightColor = _invTooltip.style.borderBottomColor = _invTooltip.style.borderLeftColor = new UnityEngine.Color(0.5f, 0.8f, 0.5f, 0.9f);
-            _invTooltip.style.paddingTop = _invTooltip.style.paddingRight = _invTooltip.style.paddingBottom = _invTooltip.style.paddingLeft = 10f;
-            _invTooltip.style.minWidth = 280f;
-            _invTooltip.style.maxWidth = 320f;
-            _invTooltip.pickingMode = PickingMode.Ignore;
-            _invTooltipText = new Label();
-            _invTooltipText.enableRichText = true;
-            _invTooltipText.style.whiteSpace = WhiteSpace.Normal;
-            _invTooltipText.style.color = new UnityEngine.Color(0.95f, 0.96f, 0.98f, 1f);
-            _invTooltipText.style.fontSize = 12f;
-            _invTooltip.Add(_invTooltipText);
-            _root.Add(_invTooltip);
+            _invTooltip = _root.Q<VisualElement>("inv-tooltip");
+            _invTooltipText = _invTooltip?.Q<Label>("inv-tooltip-text");
+            if (_invTooltip != null)
+                _invTooltip.pickingMode = PickingMode.Ignore;
         }
 
         public void Hide()
@@ -302,6 +289,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 row.AddToClassList("inv-row");
                 if (!selectable && isPicker)
                     row.AddToClassList("inv-row-disabled");
+                row.Add(BuildItemIcon(typeId));
 
                 var left = new VisualElement();
                 left.style.flexDirection = FlexDirection.Column;
@@ -394,6 +382,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 row.AddToClassList("inv-row");
                 if (!selectable && isPicker)
                     row.AddToClassList("inv-row-disabled");
+                row.Add(BuildItemIcon(typeId));
 
                 var left = new VisualElement();
                 left.style.flexDirection = FlexDirection.Column;
@@ -509,6 +498,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 row.AddToClassList("inv-row");
                 if (!selectable && isPicker)
                     row.AddToClassList("inv-row-disabled");
+                row.Add(BuildItemIcon(Items.SporeGeneric));
 
                 var left = new VisualElement();
                 left.style.flexDirection = FlexDirection.Column;
@@ -561,6 +551,25 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (genetic.HasValue)
                 parts.Add(Lab.ExtractorTooltipTexts.GeneticTypeToTrattiLabel(genetic));
             return parts.Count > 0 ? string.Join(", ", parts) : "";
+        }
+
+        private static VisualElement BuildItemIcon(string typeId)
+        {
+            var iconBox = new VisualElement();
+            iconBox.AddToClassList("inv-row-iconbox");
+
+            var iconGlyph = new VisualElement();
+            iconGlyph.AddToClassList("inv-row-iconglyph");
+
+            var icon = GlobalIconResolver.GetItemIcon(typeId);
+            if (icon != null)
+            {
+                iconGlyph.style.backgroundImage = new StyleBackground(icon);
+                iconGlyph.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+            }
+
+            iconBox.Add(iconGlyph);
+            return iconBox;
         }
 
         /// <summary>Nome leggibile per un typeId (semi da PlantData, Pre-Seed, altri da typeId). Se item ha CustomPlantName (seme da Incubatore) restituisce "Seme di Pianta {nome}".</summary>

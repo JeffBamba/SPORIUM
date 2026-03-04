@@ -103,5 +103,8 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="pcv3-forecast-condition-tooltip" class="pcv3-forecast-condition-tooltip" style="position: absolute; left: 0; top: 0; width: 450px; max-width: 450px; min-height: 200px; padding: 8px; display: none; background-color: rgba(13, 21, 25, 0.95); border-width: 1px; border-color: rgb(0, 204, 102); flex-direction: column;">
+            <ui:Label name="pcv3-forecast-condition-tooltip-text" enable-rich-text="true" style="white-space: normal; color: rgb(245, 247, 250); font-size: 12px; -unity-text-align: upper-left; margin: 4px;" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -1,0 +1,24 @@
+@import url("unity-theme://default");
+
+:root {
+  -unity-font-definition: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+  -unity-font: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+}
+
+Label,
+Button,
+TextField,
+TextElement {
+  -unity-font-definition: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+  -unity-font: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+}
+
+* {
+  -unity-font-definition: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+}
+
+/* Optional explicit class for elements that must always use GNF. */
+.sp-font-gnf {
+  -unity-font-definition: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+  -unity-font: url("project://database/Assets/Nytrock/Global%20Nytrock%20Font/GNF%20TTF.ttf?fileID=12800000&guid=c7fdb296bed60874d867f76bdd87daa2&type=3#GNF");
+}
