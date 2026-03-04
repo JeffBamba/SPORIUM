@@ -46,6 +46,9 @@ namespace Sporae.UI.UIToolkit.HUD
         
         // UI Elements
         private VisualElement _root;
+        private VisualElement _iconActions;
+        private VisualElement _iconActionsGlyph;
+        private Label _actionsLabel;
         private SegmentedBarUI _actionsBar;
         private Label _actionsValueLabel;
         private VisualElement _phDisplay;
@@ -69,13 +72,18 @@ namespace Sporae.UI.UIToolkit.HUD
         // Tooltip
         private VisualElement _phTooltip;
         private Label _phTooltipTitle;
+        private VisualElement _phTooltipTitleIcon;
+        private Label _phTooltipTitleStatus;
         private Label _phTooltipValueCurrent;
         private VisualElement _phTooltipModifiersList;
         private Label _phTooltipValueTotal;
-        private Label _phTooltipValueProjection;
         private Label _phTooltipValueEffects;
         private Label _phTooltipValueTip;
-        private VisualElement _phTooltipPhBar;
+        private VisualElement[] _phTooltipCrtBars;
+        private float[] _phCrtBarTop;
+        private float[] _phCrtBarSpeed;
+        private float _phCrtNextRandomizeTime;
+        private int _phCrtVisibleCount;
         
         // FASE 8: Tooltip Condensation
         private VisualElement _condensationTooltip;
@@ -116,6 +124,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private readonly Color _yellowWarning = new Color(0.902f, 0.788f, 0.435f, 1f); // #E6C96F
         private readonly Color _redCritical = new Color(0.827f, 0.373f, 0.373f, 1f); // #D35F5F
         private readonly Color _blueInfo = new Color(0.365f, 0.714f, 0.890f, 1f); // #5DB6E3
+        private Color _actionsBaseColor = new Color(0.902f, 0.788f, 0.435f, 1f); // default giallo
+        private const float ActionsPulseSeed = 17.73f;
         
         private void Awake()
         {
@@ -364,13 +374,23 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _phTooltip = _root.Q<VisualElement>("ph-tooltip");
             _phTooltipTitle = _phTooltip?.Q<Label>("ph-tooltip-title");
+            _phTooltipTitleIcon = _phTooltip?.Q<VisualElement>("ph-tooltip-title-icon");
+            _phTooltipTitleStatus = _phTooltip?.Q<Label>("ph-tooltip-title-status");
             _phTooltipValueCurrent = _phTooltip?.Q<Label>("ph-tooltip-value-current");
             _phTooltipModifiersList = _phTooltip?.Q<VisualElement>("ph-tooltip-modifiers-list");
             _phTooltipValueTotal = _phTooltip?.Q<Label>("ph-tooltip-value-total");
-            _phTooltipValueProjection = _phTooltip?.Q<Label>("ph-tooltip-value-projection");
             _phTooltipValueEffects = _phTooltip?.Q<Label>("ph-tooltip-value-effects");
             _phTooltipValueTip = _phTooltip?.Q<Label>("ph-tooltip-value-tip");
-            _phTooltipPhBar = _phTooltip?.Q<VisualElement>("ph-tooltip-ph-bar");
+            _phTooltipCrtBars = new[]
+            {
+                _phTooltip?.Q<VisualElement>("ph-tooltip-crt-refresh"),
+                _phTooltip?.Q<VisualElement>("ph-tooltip-crt-refresh-2"),
+                _phTooltip?.Q<VisualElement>("ph-tooltip-crt-refresh-3")
+            };
+            _phCrtBarTop = new float[3];
+            _phCrtBarSpeed = new float[3];
+            _phCrtNextRandomizeTime = 0f;
+            _phCrtVisibleCount = 1;
             if (_phTooltip != null)
                 _phTooltip.pickingMode = PickingMode.Ignore;
 
@@ -461,9 +481,10 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltipValueCurrent.style.color = new StyleColor(GetPhColorFromDrift(currentPh));
 
             // ACTIVE MODIFIERS: righe con [icon box] [nome quasi bianco] [valore colorato]
-            // Total daily drift = somma di tutti i valori in Active Modifiers (piante + azioni)
+            // Total daily drift = somma di tutti i valori in Active Modifiers (piante + azioni + eventi)
             var plantMods = _phSystem.GetDailyPlantModifiersForDay(currentDay);
             var actionMods = _phSystem.GetDailyActionModifiers();
+            var eventMods = _phSystem.GetDailyEventModifiers();
             float totalFromModifiers = 0f;
             if (plantMods != null)
                 foreach (var p in plantMods)
@@ -471,16 +492,31 @@ namespace Sporae.UI.UIToolkit.HUD
             if (actionMods != null)
                 foreach (var a in actionMods)
                     totalFromModifiers += a.Delta;
+            if (eventMods != null)
+                foreach (var e in eventMods)
+                    totalFromModifiers += e.Delta;
+
+            bool hasPlantsInPots = plantMods != null && plantMods.Count > 0;
+            bool hasAnyModifiers = hasPlantsInPots || (actionMods != null && actionMods.Count > 0) || (eventMods != null && eventMods.Count > 0);
+            if (_phTooltipTitleIcon != null)
+            {
+                Color iconColor = hasAnyModifiers ? new Color(0.498f, 1f, 0.478f, 1f) : new Color(0.784f, 0.235f, 0.235f, 1f);
+                _phTooltipTitleIcon.style.backgroundColor = new StyleColor(iconColor);
+            }
+            if (_phTooltipTitleStatus != null)
+            {
+                _phTooltipTitleStatus.text = hasAnyModifiers ? "Online" : "Offline";
+                _phTooltipTitleStatus.style.color = new StyleColor(hasAnyModifiers ? new Color(0.498f, 1f, 0.478f, 1f) : new Color(0.784f, 0.235f, 0.235f, 1f));
+            }
 
             if (_phTooltipModifiersList != null)
             {
                 _phTooltipModifiersList.Clear();
-                bool hasAny = (plantMods != null && plantMods.Count > 0) || (actionMods != null && actionMods.Count > 0);
-                if (!hasAny)
+                if (!hasAnyModifiers)
                 {
                     var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                     var iconBox = new VisualElement { name = "ph-modifier-icon", style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f) } };
-                    var nameLabel = new Label { text = "Nessuna Pianta presente nei Pot", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
+                    var nameLabel = new Label { text = "Nessun modificatore attivo", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
                     row.Add(iconBox);
                     row.Add(nameLabel);
                     _phTooltipModifiersList.Add(row);
@@ -508,6 +544,16 @@ namespace Sporae.UI.UIToolkit.HUD
                             AddPhModifierRow(_phTooltipModifiersList, a.ActionDisplayName, driftStr, valueColor, icon);
                         }
                     }
+                    if (eventMods != null)
+                    {
+                        foreach (var e in eventMods)
+                        {
+                            string driftStr = e.Delta.ToString("+#0.0;-#0.0;0", culture);
+                            Color valueColor = e.Delta >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
+                            var icon = GlobalIconResolver.GetActionIcon(e.ActionDisplayName);
+                            AddPhModifierRow(_phTooltipModifiersList, e.ActionDisplayName, driftStr, valueColor, icon);
+                        }
+                    }
                 }
             }
 
@@ -518,23 +564,12 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phTooltipValueTotal != null)
                 _phTooltipValueTotal.text = $"<color=#7FFF7A>{totalStr}{stableStr}</color>";
 
-            // NEXT-DAY PROJECTION: valore + colore dalla banda del pH proiettato
-            float predictedDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
-            if (_phTooltipValueProjection != null)
-            {
-                if (!float.IsNaN(predictedDrift))
-                {
-                    string predStr = predictedDrift.ToString("+#0.0;-#0.0;0", culture);
-                    float projectedPh = Mathf.Clamp(currentPh + predictedDrift, PhSystem.MIN_PH, PhSystem.MAX_PH);
-                    _phTooltipValueProjection.text = $"{predStr} (pH {projectedPh.ToString("F1", culture)})";
-                    _phTooltipValueProjection.style.color = new StyleColor(GetPhColorFromDrift(projectedPh));
-                }
-                else
-                {
-                    _phTooltipValueProjection.text = "—";
-                    _phTooltipValueProjection.style.color = new StyleColor(Color.gray);
-                }
-            }
+            // #region agent log
+            float systemTotalDrift = _phSystem.GetTotalDailyDrift();
+            int plantCount = plantMods != null ? plantMods.Count : 0;
+            int actionCount = actionMods != null ? actionMods.Count : 0;
+            PhRunDebugLogger.Log("H4", "TopBarController.cs:UpdatePhTooltipContent", "Tooltip pH values", "{\"currentPh\":" + currentPh.ToString("R") + ",\"currentDay\":" + currentDay + ",\"totalFromModifiers\":" + totalFromModifiers.ToString("R") + ",\"getTotalDailyDrift\":" + systemTotalDrift.ToString("R") + ",\"plantModsCount\":" + plantCount + ",\"actionModsCount\":" + actionCount + "}");
+            // #endregion
 
             // POTENTIAL EFFECTS (solo valore; titolo è fisso in UXML)
             PhSystem.PhBand phBand = _phSystem.EvaluateState();
@@ -546,9 +581,14 @@ namespace Sporae.UI.UIToolkit.HUD
                     _phTooltipValueEffects.text = $"  <color=#E6C96F>Banda attuale: {bandName}</color>\n  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>";
             }
 
-            // TIP (solo valore; titolo è fisso in UXML)
+            // TIP (solo valore; titolo è fisso in UXML). Se nessuna pianta: invito a piantare dal Terminale POT.
             if (_phTooltipValueTip != null)
-                _phTooltipValueTip.text = "  " + GetPhTooltipTipForDay(currentDay);
+            {
+                string tipBase = hasPlantsInPots ? "  " + GetPhTooltipTipForDay(currentDay) : "  Piantare piante dal Terminale POT per attivare il sistema di monitoraggio del pH.";
+                if (hasAnyModifiers)
+                    tipBase += "\n  Il valore \"CURRENT VALUE\" è il pH attuale della Dome; il drift indicato viene applicato al cambio giornata.";
+                _phTooltipValueTip.text = tipBase;
+            }
         }
 
         /// <summary>Restituisce un consiglio generico rotante per il tooltip pH (basato sul giorno).</summary>
@@ -561,7 +601,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 "Overwatering e LED Rosso spostano il pH; usa le azioni con consapevolezza.",
                 "Condensazione e fertilizzanti contribuiscono al drift giornaliero.",
                 "Ogni pianta nei Pot ha un impatto giornaliero sul pH: meno vasi = drift più prevedibile.",
-                "La proiezione Next-Day usa solo le piante attualmente nei vasi registrati.",
+                "Il forecast del giorno dopo (End of Day) include tutti gli effetti: piante, LED, azioni.",
                 "Usa il Laboratorio e l'Extractor per spore e semi; il pH non influenza l'estrazione.",
             };
             int index = (day - 1) % tips.Length;
@@ -622,6 +662,9 @@ namespace Sporae.UI.UIToolkit.HUD
             SetupGlowFrame();
             
             // Query UI elements
+            _iconActions = _root.Q<VisualElement>("icon-actions");
+            _iconActionsGlyph = _root.Q<VisualElement>("icon-actions-glyph");
+            _actionsLabel = _root.Q<Label>("actions-label");
             var actionsBarContainer = _root.Q<VisualElement>("actions-bar");
             _actionsValueLabel = _root.Q<Label>("actions-value");
             _phDisplay = _root.Q<VisualElement>("ph-display");
@@ -723,6 +766,67 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
                 _glowFrameGenerator.Render();
             }
+            
+            // Pulsazione leggera randomica su icona e label ACTIONS (Perlin: da scurito ad acceso)
+            if (_iconActionsGlyph != null && _actionsLabel != null)
+            {
+                float t = Mathf.PerlinNoise(Time.time * 0.38f, ActionsPulseSeed);
+                // Curva che tiene il valore alto più a lungo (più tempo “acceso” che “scurito”)
+                float tRemap = 1f - Mathf.Pow(1f - t, 1.7f);
+                float pulse = Mathf.Lerp(0.38f, 1.22f, tRemap);
+                float r = Mathf.Clamp01(_actionsBaseColor.r * pulse);
+                float g = Mathf.Clamp01(_actionsBaseColor.g * pulse);
+                float b = Mathf.Clamp01(_actionsBaseColor.b * pulse);
+                Color pulsed = new Color(r, g, b, _actionsBaseColor.a);
+                // Al picco massimo blend verso bianco per effetto più intenso
+                float peakGlow = Mathf.Clamp01((tRemap - 0.75f) / 0.25f);
+                pulsed = Color.Lerp(pulsed, Color.white, peakGlow * 0.22f);
+                _iconActionsGlyph.style.unityBackgroundImageTintColor = new StyleColor(pulsed);
+                _actionsLabel.style.color = new StyleColor(pulsed);
+            }
+            
+            // Overlay barre refresh CRT sul ph-tooltip (1, 2 o 3 barre, velocità randomica)
+            if (_phTooltip != null && _phTooltip.style.display == DisplayStyle.Flex && _phTooltipCrtBars != null)
+            {
+                const float barHeightPx = 10f;
+                float tooltipH = _phTooltip.resolvedStyle.height;
+                if (tooltipH < 10f) tooltipH = 200f;
+                float totalRange = tooltipH + barHeightPx * 2f;
+
+                if (Time.time >= _phCrtNextRandomizeTime)
+                {
+                    _phCrtNextRandomizeTime = Time.time + 2f + UnityEngine.Random.Range(0f, 2.5f);
+                    _phCrtVisibleCount = UnityEngine.Random.Range(1, 4);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        _phCrtBarSpeed[i] = UnityEngine.Random.Range(140f, 380f);
+                        if (i >= _phCrtVisibleCount)
+                            _phCrtBarTop[i] = -barHeightPx - 10f;
+                        else if (_phCrtBarTop[i] < -barHeightPx || _phCrtBarTop[i] > tooltipH + 5f)
+                            _phCrtBarTop[i] = UnityEngine.Random.Range(-barHeightPx, tooltipH * 0.3f);
+                    }
+                }
+
+                for (int i = 0; i < 3; i++)
+                {
+                    var bar = _phTooltipCrtBars[i];
+                    if (bar == null) continue;
+                    bool visible = i < _phCrtVisibleCount;
+                    bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (!visible) continue;
+                    _phCrtBarTop[i] += _phCrtBarSpeed[i] * Time.deltaTime;
+                    if (_phCrtBarTop[i] > tooltipH + barHeightPx)
+                        _phCrtBarTop[i] = -barHeightPx;
+                    bar.style.top = _phCrtBarTop[i];
+                }
+            }
+
+            // Pulsazione icona titolo ph-tooltip (rosso/verde)
+            if (_phTooltipTitleIcon != null && _phTooltip != null && _phTooltip.style.display == DisplayStyle.Flex)
+            {
+                float pulse = 0.92f + 0.14f * (0.5f + 0.5f * Mathf.Sin(Time.time * 2.8f));
+                _phTooltipTitleIcon.style.scale = new Scale(new Vector2(pulse, pulse));
+            }
         }
 
         private void OnDisable()
@@ -761,23 +865,24 @@ namespace Sporae.UI.UIToolkit.HUD
                 _actionsValueLabel.text = $"{current}/{max}";
             }
             
+            // Determina colore basato su azioni disponibili: verde 4+, giallo 3-2, rosso 0-1
+            Color fillColor;
+            if (current >= 4)
+                fillColor = _greenStable;
+            else if (current >= 2)
+                fillColor = _yellowWarning;
+            else
+                fillColor = _redCritical;
+            
+            _actionsBaseColor = fillColor;
+            
+            if (_iconActionsGlyph != null)
+                _iconActionsGlyph.style.unityBackgroundImageTintColor = new StyleColor(fillColor);
+            if (_actionsLabel != null)
+                _actionsLabel.style.color = new StyleColor(fillColor);
+            
             if (_actionsBar != null)
             {
-                // Determina colore basato su azioni disponibili: verde 4, giallo 3-2, rosso 1
-                Color fillColor;
-                if (current >= 4)
-                {
-                    fillColor = _greenStable; // 4 actions: green
-                }
-                else if (current >= 2)
-                {
-                    fillColor = _yellowWarning; // 3-2 actions: yellow
-                }
-                else
-                {
-                    fillColor = _redCritical; // 0-1 actions: red
-                }
-                
                 _actionsBar.SetColors(fillColor, new Color(0.118f, 0.157f, 0.165f, 1f), fillColor);
                 _actionsBar.UpdateValue(current, max);
             }
@@ -814,10 +919,6 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phGradient != null)
             {
                 _phGradient.style.backgroundImage = new StyleBackground(_phGradientTexture);
-            }
-            if (_phTooltipPhBar != null)
-            {
-                _phTooltipPhBar.style.backgroundImage = new StyleBackground(_phGradientTexture);
             }
         }
         

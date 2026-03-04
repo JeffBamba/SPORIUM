@@ -30,6 +30,11 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
         public string TemplateIt;
         public string TemplateEn;
+
+        /// <summary>
+        /// Testo di contesto per il mini-tooltip al passaggio del mouse (max ~3 righe). Usare \n per andare a capo.
+        /// </summary>
+        public string TooltipIt;
     }
 }
 

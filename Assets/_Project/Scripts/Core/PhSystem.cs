@@ -40,6 +40,9 @@ namespace _Project
         // Tracking azioni individuali per tooltip dettagliato
         private System.Collections.Generic.List<ActionContribution> _actionContributions = new System.Collections.Generic.List<ActionContribution>();
         
+        // Tracking eventi per tooltip (drift applicato a cambio giorno o subito)
+        private System.Collections.Generic.List<EventContribution> _eventContributions = new System.Collections.Generic.List<EventContribution>();
+        
         // Tracking piante individuali per tooltip dettagliato
         private System.Collections.Generic.List<PlantContribution> _plantContributions = new System.Collections.Generic.List<PlantContribution>();
         
@@ -78,6 +81,21 @@ namespace _Project
             {
                 ActionName = actionName;
                 PotId = potId ?? "Unknown";
+                Delta = delta;
+            }
+        }
+        
+        /// <summary>
+        /// Struttura per tracciare contributi di eventi (notturni, ecc.)
+        /// </summary>
+        private struct EventContribution
+        {
+            public string EventName;
+            public float Delta;
+            
+            public EventContribution(string eventName, float delta)
+            {
+                EventName = eventName ?? "Evento";
                 Delta = delta;
             }
         }
@@ -140,8 +158,9 @@ namespace _Project
             var result = new System.Collections.Generic.Dictionary<string, DailyPlantModifier>(System.StringComparer.OrdinalIgnoreCase);
             foreach (var p in _plantContributions)
             {
-                if (p.Day != day || Mathf.Abs(p.DailyDrift) < 0.01f)
+                if (p.Day != day)
                     continue;
+                // Includi anche piante con drift 0 (es. STANDARD) così il tooltip le mostra come "Pianta (±0)"
                 string key = (p.PlantCode ?? "") + "|" + (p.PotId ?? "");
                 if (result.TryGetValue(key, out var existing))
                 {
@@ -181,6 +200,26 @@ namespace _Project
                     ActionDisplayName = GetActionDisplayName(a.ActionName),
                     PotId = a.PotId ?? "Unknown",
                     Delta = a.Delta
+                });
+            }
+            return list;
+        }
+        
+        /// <summary>
+        /// Restituisce i modificatori eventi per il tooltip (drift da eventi applicati o in coda).
+        /// </summary>
+        public System.Collections.Generic.List<DailyActionModifier> GetDailyEventModifiers()
+        {
+            var list = new System.Collections.Generic.List<DailyActionModifier>();
+            foreach (var e in _eventContributions)
+            {
+                if (Mathf.Abs(e.Delta) < 0.01f)
+                    continue;
+                list.Add(new DailyActionModifier
+                {
+                    ActionDisplayName = string.IsNullOrEmpty(e.EventName) ? "Evento" : e.EventName,
+                    PotId = "—",
+                    Delta = e.Delta
                 });
             }
             return list;
@@ -300,11 +339,10 @@ namespace _Project
             // anche se è lo stesso valore. La lista _plantContributions serve solo per il tooltip,
             // non per controllare l'applicazione del drift.
             
-            // Aggiorna lista contributi per tooltip (solo se plantCode è valido)
-            if (Mathf.Abs(drift) > 0.01f && !string.IsNullOrEmpty(plantCode))
+            // Aggiorna lista contributi per tooltip (anche con drift 0, per mostrare piante STANDARD in Active Modifiers)
+            if (!string.IsNullOrEmpty(plantCode))
             {
                 // BLK-02.07: Crea sempre un nuovo contributo con il giorno corrente (non aggiorna quello esistente)
-                // Questo permette di tracciare ogni giorno come voce singola nel breakdown
                 _plantContributions.Add(new PlantContribution(plantCode, potId, drift, day));
                 
                 // Limita a 50 contributi per evitare accumulo eccessivo (aumentato per tracciare più giorni)
@@ -314,13 +352,15 @@ namespace _Project
                 }
             }
             
-            // IMPORTANTE: Applica SEMPRE il drift completo, anche se è lo stesso valore del giorno precedente
-            // Il drift della pianta è un drift giornaliero che si accumula ogni giorno
+            // Accoda il drift solo se diverso da zero (per il calcolo a fine giornata)
             if (Mathf.Abs(drift) > 0.01f)
             {
                 _queuedPlantsDrift += drift;
                 SporiumLogger.LogInfo(LogCategory.Ph, $"RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}, day={day}");
             }
+            // #region agent log
+            PhRunDebugLogger.Log("H2", "PhSystem.cs:RegisterPlantDrift", "RegisterPlantDrift called", "{\"drift\":" + drift.ToString("R") + ",\"plantCode\":\"" + (plantCode ?? "") + "\",\"potId\":\"" + (potId ?? "") + "\",\"day\":" + day + ",\"queuedPlantsAfter\":" + _queuedPlantsDrift.ToString("R") + "}");
+            // #endregion
         }
         
         /// <summary>
@@ -500,7 +540,24 @@ namespace _Project
         /// </summary>
         public void RegisterEventDrift(float drift, string eventName = "")
         {
+            if (Mathf.Abs(drift) > 0.01f)
+            {
+                _eventContributions.Add(new EventContribution(eventName, drift));
+                if (_eventContributions.Count > 20)
+                    _eventContributions.RemoveAt(0);
+            }
             _queuedEventsDrift += drift;
+        }
+
+        /// <summary>
+        /// Svuota i contributi azioni ed eventi all'inizio del nuovo giorno, prima di registrare
+        /// quelli del giorno corrente. Così il tooltip mostra per tutta la giornata le azioni/eventi
+        /// applicati al cambio giorno (LED, Overwatering, eventi) e quelle immediate (Spray, additivi).
+        /// </summary>
+        public void ClearDailyModifierContributions()
+        {
+            _actionContributions.Clear();
+            _eventContributions.Clear();
         }
 
         /// <summary>
@@ -599,6 +656,7 @@ namespace _Project
             _dailyDrift = 0f;
             _idleOscillation = 0f;
             _actionContributions.Clear();
+            _eventContributions.Clear();
             _plantContributions.Clear();
             _queuedPlantsDrift = 0f;
             _queuedActionsDrift = 0f;
@@ -732,6 +790,9 @@ namespace _Project
             }
             
             float oldPh = _currentPh;
+            // #region agent log
+            PhRunDebugLogger.Log("H1", "PhSystem.cs:ApplyQueuedDrifts:before", "ApplyQueuedDrifts before apply", "{\"oldPh\":" + oldPh.ToString("R") + ",\"totalQueued\":" + totalQueued.ToString("R") + ",\"qPlants\":" + _queuedPlantsDrift.ToString("R") + ",\"qActions\":" + _queuedActionsDrift.ToString("R") + ",\"qEvents\":" + _queuedEventsDrift.ToString("R") + ",\"qDaily\":" + _queuedDailyDrift.ToString("R") + "}");
+            // #endregion
             
             // Aggiorna contributi cumulativi
             _plantsDrift += _queuedPlantsDrift;
@@ -745,15 +806,18 @@ namespace _Project
             _currentPh = Mathf.Clamp(expectedPh, MIN_PH, MAX_PH);
             float actualDelta = _currentPh - oldPh;
             
+            // #region agent log
+            PhRunDebugLogger.Log("H1", "PhSystem.cs:ApplyQueuedDrifts:after", "ApplyQueuedDrifts after apply", "{\"newPh\":" + _currentPh.ToString("R") + ",\"actualDelta\":" + actualDelta.ToString("R") + ",\"expectedPh\":" + expectedPh.ToString("R") + "}");
+            // #endregion
+            
             // Pulisci accumulatori giornalieri
             _queuedPlantsDrift = 0f;
             _queuedActionsDrift = 0f;
             _queuedEventsDrift = 0f;
             _queuedDailyDrift = 0f;
 
-            // Azzeramento contributi azioni per il tooltip: il giorno successivo mostriamo solo le nuove azioni
-            _actionContributions.Clear();
-            
+            // Non svuotare _actionContributions / _eventContributions qui: servono al tooltip
+            // per mostrare LED, Overwatering, Spray, eventi. Si svuotano all'inizio del giorno in ClearDailyModifierContributions.
             
             OnPhChanged?.Invoke(CurrentPh, actualDelta);
             
@@ -801,6 +865,10 @@ namespace _Project
                 return "Annaffiatura";
             if (actionName.Contains("light"))
                 return "Illuminazione";
+            if (actionName.Contains("additivebasic"))
+                return "Additivo Basico";
+            if (actionName.Contains("additiveacid"))
+                return "Additivo Acido";
             
             return actionName;
         }

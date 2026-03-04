@@ -70,6 +70,7 @@ namespace _Project.Systems.FoodRoom
         public void StartWaterProduction(int rawWaterAmount)
         {
             if (rawWaterAmount <= 0) return;
+            if (!_gameManager.TrySpendAction(1)) return;
             if (!_inventory.Has(Items.Water, rawWaterAmount)) return;
             _inventory.Consume(Items.Water, rawWaterAmount);
             _waterSlot.RawWaterInput = rawWaterAmount;

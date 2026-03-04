@@ -34,6 +34,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private Label _badgeText;
         private Label _chevron;
         private VisualElement _list;
+        private VisualElement _toastTooltip;
+        private Label _toastTooltipLabel;
 
         private RowUI[] _rows = new RowUI[5];
         private bool _expanded;
@@ -91,11 +93,21 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             _chevron = _root.Q<Label>("nf-chevron");
             _list = _root.Q<VisualElement>("nf-list");
 
-            _rows[0] = RowUI.Bind(_root, 0);
-            _rows[1] = RowUI.Bind(_root, 1);
-            _rows[2] = RowUI.Bind(_root, 2);
-            _rows[3] = RowUI.Bind(_root, 3);
-            _rows[4] = RowUI.Bind(_root, 4);
+            _toastTooltip = new VisualElement();
+            _toastTooltip.AddToClassList("nf-toast-tooltip");
+            _toastTooltip.style.display = DisplayStyle.None;
+            _toastTooltip.pickingMode = PickingMode.Ignore;
+            _toastTooltipLabel = new Label();
+            _toastTooltipLabel.AddToClassList("nf-toast-tooltip__text");
+            _toastTooltipLabel.style.whiteSpace = WhiteSpace.Normal;
+            _toastTooltip.Add(_toastTooltipLabel);
+            _root.Add(_toastTooltip);
+
+            _rows[0] = RowUI.Bind(_root, 0, _toastTooltip, _toastTooltipLabel);
+            _rows[1] = RowUI.Bind(_root, 1, _toastTooltip, _toastTooltipLabel);
+            _rows[2] = RowUI.Bind(_root, 2, _toastTooltip, _toastTooltipLabel);
+            _rows[3] = RowUI.Bind(_root, 3, _toastTooltip, _toastTooltipLabel);
+            _rows[4] = RowUI.Bind(_root, 4, _toastTooltip, _toastTooltipLabel);
 
             if (_headerButton != null)
             {
@@ -166,6 +178,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             public Label Icon;
             public Label Code;
             public Label Msg;
+            public VisualElement ToastTooltip;
+            public Label ToastTooltipLabel;
             public VisualElement ItemLayout;
             public VisualElement ItemIconBox;
             public VisualElement ItemIcon;
@@ -176,14 +190,17 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             public Label Room;
             public int CurrentEntryId;
             public bool HasCurrent;
+            public string TooltipText;
 
-            public static RowUI Bind(VisualElement root, int idx)
+            public static RowUI Bind(VisualElement root, int idx, VisualElement toastTooltip, Label toastTooltipLabel)
             {
                 var row = root.Q<VisualElement>($"nf-row-{idx}");
                 if (row != null) row.style.display = DisplayStyle.None;
                 return new RowUI
                 {
                     Root = row,
+                    ToastTooltip = toastTooltip,
+                    ToastTooltipLabel = toastTooltipLabel,
                     Iconbox = row?.Q<VisualElement>($"nf-row-{idx}-iconbox"),
                     Icon = row?.Q<Label>($"nf-row-{idx}-icon"),
                     Code = row?.Q<Label>($"nf-row-{idx}-code"),
@@ -204,6 +221,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 if (Root == null) return;
                 if (Root.style.display == DisplayStyle.None) return;
 
+                Root.UnregisterCallback<MouseEnterEvent>(OnRowMouseEnter);
+                Root.UnregisterCallback<MouseLeaveEvent>(OnRowMouseLeave);
                 Root.RemoveFromClassList("nf-anim-enter");
                 Root.RemoveFromClassList("nf-row--item-layout");
                 Root.AddToClassList("nf-anim-exit");
@@ -229,6 +248,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 Root.style.display = DisplayStyle.Flex;
 
                 var isItemLayout = entry.Spec != null && entry.Spec.IsItemLayout && entry.Payload != null;
+
+                TooltipText = entry.Spec?.TooltipIt;
+                if (ToastTooltip != null && Root != null)
+                {
+                    Root.UnregisterCallback<MouseEnterEvent>(OnRowMouseEnter);
+                    Root.UnregisterCallback<MouseLeaveEvent>(OnRowMouseLeave);
+                    if (!string.IsNullOrWhiteSpace(TooltipText))
+                    {
+                        Root.RegisterCallback<MouseEnterEvent>(OnRowMouseEnter);
+                        Root.RegisterCallback<MouseLeaveEvent>(OnRowMouseLeave);
+                    }
+                }
 
                 if (isItemLayout)
                 {
@@ -299,6 +330,28 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                         Root.RemoveFromClassList("nf-anim-enter");
                     });
                 }
+            }
+
+            private void OnRowMouseEnter(MouseEnterEvent evt)
+            {
+                if (ToastTooltip == null || ToastTooltipLabel == null || string.IsNullOrWhiteSpace(TooltipText)) return;
+                ToastTooltipLabel.text = TooltipText.Replace("\\n", "\n");
+                ToastTooltip.style.display = DisplayStyle.Flex;
+                var rowWorld = Root.worldBound;
+                var rootParent = ToastTooltip.parent;
+                if (rootParent != null)
+                {
+                    var localPos = rootParent.WorldToLocal(new Vector2(rowWorld.x, rowWorld.yMax + 4f));
+                    ToastTooltip.style.left = localPos.x;
+                    ToastTooltip.style.top = localPos.y;
+                    ToastTooltip.style.position = Position.Absolute;
+                }
+            }
+
+            private void OnRowMouseLeave(MouseLeaveEvent evt)
+            {
+                if (ToastTooltip != null)
+                    ToastTooltip.style.display = DisplayStyle.None;
             }
             
             private static void ApplyCodeClass(VisualElement el, string code)

@@ -404,6 +404,11 @@ public class DayCycleController : MonoBehaviour
             return;
         }
         
+        // All'inizio del nuovo giorno svuota i contributi azioni/eventi del giorno precedente,
+        // così il tooltip mostrerà solo quelli applicati in questo cambio giorno (LED, Overwatering, ecc.)
+        if (_phSystem != null)
+            _phSystem.ClearDailyModifierContributions();
+        
         // Pipeline End Day per il giorno D:
         // 1. CheckWateringSystemResources() - Warning preventivo
         CheckWateringSystemResources();
@@ -2083,11 +2088,8 @@ public class DayCycleController : MonoBehaviour
             totalPhDrift += plantDrift;
             plantCount++;
             
-            // Registra ogni pianta individualmente per tooltip dettagliato (con giorno di riferimento)
-            if (plantDrift != 0f)
-            {
-                _phSystem.RegisterPlantDrift(plantDrift, plantData.PlantCode, pot.PotId, currentDay);
-            }
+            // Registra ogni pianta individualmente per tooltip (anche con drift 0, per mostrare STANDARD in Active Modifiers)
+            _phSystem.RegisterPlantDrift(plantDrift, plantData.PlantCode, pot.PotId, currentDay);
             
             if (enableDebugLogs)
             {
@@ -2111,6 +2113,9 @@ public class DayCycleController : MonoBehaviour
                 SporiumLogger.LogWarning(LogCategory.Ph, $"Nessuna pianta valida trovata! {skippedCount} vasi saltati (vuoti o senza PlantCode)");
             }
         }
+        // #region agent log
+        PhRunDebugLogger.Log("H3", "DayCycleController.cs:CalculateAndRegisterPhDrift", "CalculateAndRegisterPhDrift done", "{\"currentDay\":" + currentDay + ",\"plantCount\":" + plantCount + ",\"totalPhDrift\":" + totalPhDrift.ToString("R") + ",\"skippedCount\":" + skippedCount + ",\"registeredPots\":" + _registeredPots.Count + "}");
+        // #endregion
     }
     
     /// <summary>
