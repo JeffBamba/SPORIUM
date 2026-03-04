@@ -111,6 +111,90 @@ namespace _Project
             };
         }
 
+        /// <summary>
+        /// Modificatore giornaliero pianta per tooltip (solo impatto del giorno, non cumulativo).
+        /// </summary>
+        public struct DailyPlantModifier
+        {
+            public string PlantCode;
+            public string PotId;
+            public float DailyDrift;
+        }
+
+        /// <summary>
+        /// Modificatore giornaliero azione/item per tooltip (solo impatto del giorno).
+        /// </summary>
+        public struct DailyActionModifier
+        {
+            public string ActionDisplayName;
+            public string PotId;
+            public float Delta;
+        }
+
+        /// <summary>
+        /// Restituisce i modificatori piante per un dato giorno (solo impatto giornaliero, aggregato per pianta/vaso).
+        /// Usato dal tooltip pH per "Active Modifiers" senza mostrare la somma dei giorni precedenti.
+        /// </summary>
+        public System.Collections.Generic.List<DailyPlantModifier> GetDailyPlantModifiersForDay(int day)
+        {
+            var result = new System.Collections.Generic.Dictionary<string, DailyPlantModifier>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (var p in _plantContributions)
+            {
+                if (p.Day != day || Mathf.Abs(p.DailyDrift) < 0.01f)
+                    continue;
+                string key = (p.PlantCode ?? "") + "|" + (p.PotId ?? "");
+                if (result.TryGetValue(key, out var existing))
+                {
+                    result[key] = new DailyPlantModifier
+                    {
+                        PlantCode = existing.PlantCode,
+                        PotId = existing.PotId,
+                        DailyDrift = existing.DailyDrift + p.DailyDrift
+                    };
+                }
+                else
+                {
+                    result[key] = new DailyPlantModifier
+                    {
+                        PlantCode = p.PlantCode ?? "Unknown",
+                        PotId = p.PotId ?? "Unknown",
+                        DailyDrift = p.DailyDrift
+                    };
+                }
+            }
+            return new System.Collections.Generic.List<DailyPlantModifier>(result.Values);
+        }
+
+        /// <summary>
+        /// Restituisce i modificatori azioni/item per il giorno corrente (drift non ancora applicato).
+        /// Vuoto dopo ApplyQueuedDrifts (azioni del giorno successivo).
+        /// </summary>
+        public System.Collections.Generic.List<DailyActionModifier> GetDailyActionModifiers()
+        {
+            var list = new System.Collections.Generic.List<DailyActionModifier>();
+            foreach (var a in _actionContributions)
+            {
+                if (Mathf.Abs(a.Delta) < 0.01f)
+                    continue;
+                list.Add(new DailyActionModifier
+                {
+                    ActionDisplayName = GetActionDisplayName(a.ActionName),
+                    PotId = a.PotId ?? "Unknown",
+                    Delta = a.Delta
+                });
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Drift totale che verrà applicato a fine giornata (piante + azioni + eventi + daily).
+        /// Usato dal tooltip per "Total daily drift".
+        /// </summary>
+        public float GetTotalDailyDrift()
+        {
+            return _queuedPlantsDrift + _queuedActionsDrift + _queuedEventsDrift + _queuedDailyDrift;
+        }
+
         public PhSystem(float initialPh = 0f)
         {
             _currentPh = Mathf.Clamp(initialPh, MIN_PH, MAX_PH);
@@ -666,6 +750,9 @@ namespace _Project
             _queuedActionsDrift = 0f;
             _queuedEventsDrift = 0f;
             _queuedDailyDrift = 0f;
+
+            // Azzeramento contributi azioni per il tooltip: il giorno successivo mostriamo solo le nuove azioni
+            _actionContributions.Clear();
             
             
             OnPhChanged?.Invoke(CurrentPh, actualDelta);

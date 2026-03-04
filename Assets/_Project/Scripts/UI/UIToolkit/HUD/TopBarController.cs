@@ -89,6 +89,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private ActionSystem _actionSystem;
         private EconomySystem _economySystem;
         private PhSystem _phSystem;
+        private DayCycleSystem _dayCycleSystem;
+        private DayCycleController _dayCycleController;
         
         // Animation coroutines
         private Coroutine _condensationIdleCoroutine;
@@ -185,6 +187,10 @@ namespace Sporae.UI.UIToolkit.HUD
                 
                 // Collega PhSystem
                 TryConnectPhSystem();
+                
+                // Day cycle per tooltip pH (giorno corrente e drift previsto)
+                _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+                _dayCycleController = FindObjectOfType<DayCycleController>();
                 
                 // Sottoscrivi all'evento OnServiceRegistered per collegarsi quando PhSystem viene registrato
                 if (ServiceContainer.Instance != null)
@@ -354,16 +360,16 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltip.style.borderRightWidth = 2f;
             _phTooltip.style.borderBottomWidth = 2f;
             _phTooltip.style.borderLeftWidth = 2f;
-            _phTooltip.style.borderTopColor = new Color(0.365f, 0.714f, 0.890f, 1f); // #5DB6E3
-            _phTooltip.style.borderRightColor = new Color(0.365f, 0.714f, 0.890f, 1f);
-            _phTooltip.style.borderBottomColor = new Color(0.365f, 0.714f, 0.890f, 1f);
-            _phTooltip.style.borderLeftColor = new Color(0.365f, 0.714f, 0.890f, 1f);
+            _phTooltip.style.borderTopColor = _greenStable;
+            _phTooltip.style.borderRightColor = _greenStable;
+            _phTooltip.style.borderBottomColor = _greenStable;
+            _phTooltip.style.borderLeftColor = _greenStable;
             _phTooltip.style.paddingTop = 8f;
             _phTooltip.style.paddingRight = 8f;
             _phTooltip.style.paddingBottom = 8f;
             _phTooltip.style.paddingLeft = 8f;
-            _phTooltip.style.width = 320f;
-            _phTooltip.style.maxWidth = 320f;
+            _phTooltip.style.width = 340f;
+            _phTooltip.style.maxWidth = 340f;
             _phTooltip.style.minHeight = 100f;
             _phTooltip.pickingMode = PickingMode.Ignore; // Non bloccare interazioni
             
@@ -371,8 +377,8 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltipText = new Label();
             _phTooltipText.name = "ph-tooltip-text";
             _phTooltipText.style.whiteSpace = WhiteSpace.Normal;
-            _phTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
-            _phTooltipText.style.fontSize = 16f; // Aumentato da 11f per leggibilità (BUG X)
+            _phTooltipText.style.color = _greenStable;
+            _phTooltipText.style.fontSize = 14f;
             _phTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
             _phTooltipText.enableRichText = true;
             _phTooltip.Add(_phTooltipText);
@@ -416,7 +422,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 float tooltipY = phDisplayBounds.yMax - 20f;
                 
                 // Assicurati che il tooltip non esca dallo schermo
-                float tooltipWidth = 320f;
+                float tooltipWidth = 340f;
                 float tooltipHeight = _phTooltip.resolvedStyle.height;
                 
                 if (tooltipX + tooltipWidth > rootBounds.width)
@@ -438,81 +444,115 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_phSystem == null || _phTooltipText == null)
                 return;
-            
-            // Ottieni breakdown del calcolo
-            string breakdown = _phSystem.GetCalculationBreakdown();
-            
-            // Aggiungi banda pH
+
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
             string bandName = _phSystem.GetBandName();
-            Color bandColor = _phSystem.GetBandColor();
-            
-            // FASE 2.1: Aggiungi informazioni sui modificatori crescita e resa per ogni famiglia
-            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            float currentPh = _phSystem.CurrentPh;
+            int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
+
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"<b>pH DRIFT</b>");
-            sb.AppendLine($"<b>Banda: {bandName}</b>");
+
+            // —— Titolo (stile Figma DOME pH STATUS)
+            sb.AppendLine("<b>DOME PH DRIFT STATUS</b>");
             sb.AppendLine();
-            sb.AppendLine(breakdown);
+
+            // —— CURRENT VALUE
+            sb.AppendLine("<b>CURRENT VALUE</b>");
+            sb.AppendLine($"pH {currentPh.ToString("F1", culture)} — {bandName}");
             sb.AppendLine();
-            sb.AppendLine("<b>Effetti per Famiglia:</b>");
-            sb.AppendLine();
-            
-            // Pure
-            float pureGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Pure);
-            float pureYield = PhGrowthModifier.GetYieldMultiplier(phBand, PlantFamily.Pure);
-            bool pureSterile = PhGrowthModifier.IsSterile(phBand, PlantFamily.Pure);
-            sb.AppendLine($"<b>Pure:</b>");
-            if (pureGrowth != 1.0f)
+
+            // —— ACTIVE MODIFIERS: solo impatto giornaliero (piante del giorno + azioni/item)
+            sb.AppendLine("<b>ACTIVE MODIFIERS</b>");
+            var plantMods = _phSystem.GetDailyPlantModifiersForDay(currentDay);
+            var actionMods = _phSystem.GetDailyActionModifiers();
+            if (plantMods != null && plantMods.Count > 0)
             {
-                float growthPercent = (pureGrowth - 1.0f) * 100f;
-                string growthSign = growthPercent > 0 ? "+" : "";
-                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
-            }
-            if (pureYield != 1.0f)
-            {
-                float yieldPercent = (pureYield - 1.0f) * 100f;
-                string yieldSign = yieldPercent > 0 ? "+" : "";
-                sb.AppendLine($"  Resa: {yieldSign}{yieldPercent:F0}%");
-            }
-            if (pureSterile)
-            {
-                sb.AppendLine($"  <color=#FF0000>STERILE (3 giorni)</color>");
-            }
-            sb.AppendLine();
-            
-            // Evil
-            float evilGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Evil);
-            float evilYield = PhGrowthModifier.GetYieldMultiplier(phBand, PlantFamily.Evil);
-            sb.AppendLine($"<b>Evil:</b>");
-            if (evilGrowth != 1.0f)
-            {
-                float growthPercent = (evilGrowth - 1.0f) * 100f;
-                string growthSign = growthPercent > 0 ? "+" : "";
-                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
-            }
-            if (evilYield != 1.0f)
-            {
-                float yieldPercent = (evilYield - 1.0f) * 100f;
-                string yieldSign = yieldPercent > 0 ? "+" : "";
-                sb.AppendLine($"  Resa: {yieldSign}{yieldPercent:F0}%");
-            }
-            sb.AppendLine();
-            
-            // Standard
-            float standardGrowth = PhGrowthModifier.GetGrowthMultiplier(phBand, PlantFamily.Standard);
-            sb.AppendLine($"<b>Standard:</b>");
-            if (standardGrowth != 1.0f)
-            {
-                float growthPercent = (standardGrowth - 1.0f) * 100f;
-                string growthSign = growthPercent > 0 ? "+" : "";
-                sb.AppendLine($"  Crescita: {growthSign}{growthPercent:F0}%");
+                foreach (var p in plantMods)
+                {
+                    string plantName = GetPlantDisplayName(p.PlantCode);
+                    string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
+                    string colorHex = p.DailyDrift >= 0 ? "#FF4444" : "#5DB6E3";
+                    sb.AppendLine($"  {plantName} <color={colorHex}>{driftStr}</color>");
+                }
             }
             else
             {
-                sb.AppendLine($"  Nessun effetto");
+                sb.AppendLine("  <color=#888888>Nessuna Pianta presente nei Pot</color>");
             }
-            
+            if (actionMods != null && actionMods.Count > 0)
+            {
+                foreach (var a in actionMods)
+                {
+                    string driftStr = a.Delta.ToString("+#0.0;-#0.0;0", culture);
+                    string colorHex = a.Delta >= 0 ? "#FF4444" : "#5DB6E3";
+                    sb.AppendLine($"  {a.ActionDisplayName} <color={colorHex}>{driftStr}</color>");
+                }
+            }
+            sb.AppendLine();
+
+            // —— Total daily drift
+            float totalDaily = _phSystem.GetTotalDailyDrift();
+            string totalStr = totalDaily.ToString("+#0.0;-#0.0;0", culture);
+            string stableStr = Mathf.Abs(totalDaily) < 0.2f ? " (Stable)" : "";
+            sb.AppendLine($"→ Total daily drift: <color=#7FFF7A>{totalStr}{stableStr}</color>");
+            sb.AppendLine();
+
+            // —— NEXT-DAY PROJECTION (stesso parametro del Forecast EoD)
+            sb.AppendLine("<b>NEXT-DAY PROJECTION</b>");
+            float predictedDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
+            if (!float.IsNaN(predictedDrift))
+            {
+                string predStr = predictedDrift.ToString("+#0.0;-#0.0;0", culture);
+                float projectedPh = currentPh + predictedDrift;
+                projectedPh = Mathf.Clamp(projectedPh, PhSystem.MIN_PH, PhSystem.MAX_PH);
+                sb.AppendLine($"Projected Drift → <color=#7FFF7A>{predStr} (pH {projectedPh.ToString("F1", culture)})</color>");
+            }
+            else
+            {
+                sb.AppendLine("Projected Drift → —");
+            }
+            sb.AppendLine();
+
+            // —— POTENTIAL EFFECTS (box: bonus/malus pH; placeholder se non in game)
+            sb.AppendLine("<b>POTENTIAL EFFECTS</b>");
+            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            if (phBand == PhSystem.PhBand.Neutral)
+                sb.AppendLine("  <color=#7FFF7A>✔ Optimal range: Normal growth conditions</color>");
+            else
+                sb.AppendLine($"  <color=#E6C96F>Banda attuale: {bandName}</color>");
+            sb.AppendLine("  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>");
+            sb.AppendLine();
+
+            // —— TIP: consiglio rotante sui sistemi di Sporium
+            sb.AppendLine("<b>TIP</b>");
+            sb.AppendLine($"  {GetPhTooltipTipForDay(currentDay)}");
+
             _phTooltipText.text = sb.ToString();
+        }
+
+        /// <summary>Restituisce un consiglio generico rotante per il tooltip pH (basato sul giorno).</summary>
+        private static string GetPhTooltipTipForDay(int day)
+        {
+            string[] tips = new[]
+            {
+                "Aggiungi piante Pure o LED Blu per stabilizzare il baseline del pH.",
+                "Il pH della Dome influenza crescita e resa: monitora la banda (Acido/Neutro/Basico).",
+                "Overwatering e LED Rosso spostano il pH; usa le azioni con consapevolezza.",
+                "Condensazione e fertilizzanti contribuiscono al drift giornaliero.",
+                "Ogni pianta nei Pot ha un impatto giornaliero sul pH: meno vasi = drift più prevedibile.",
+                "La proiezione Next-Day usa solo le piante attualmente nei vasi registrati.",
+                "Usa il Laboratorio e l'Extractor per spore e semi; il pH non influenza l'estrazione.",
+            };
+            int index = (day - 1) % tips.Length;
+            return tips[index];
+        }
+
+        private static string GetPlantDisplayName(string plantCode)
+        {
+            if (string.IsNullOrEmpty(plantCode) || plantCode == "Unknown")
+                return "Pianta";
+            var plantData = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
+            return plantData != null ? (plantData.name ?? plantCode) : plantCode;
         }
         
         private void InitializeUI()
@@ -675,15 +715,15 @@ namespace Sporae.UI.UIToolkit.HUD
             
             if (_actionsBar != null)
             {
-                // Determina colore basato su threshold
+                // Determina colore basato su azioni disponibili: verde 4, giallo 3-2, rosso 1
                 Color fillColor;
-                if (current >= 3)
+                if (current >= 4)
                 {
-                    fillColor = _greenStable; // 3-4 actions: green
+                    fillColor = _greenStable; // 4 actions: green
                 }
-                else if (current == 2)
+                else if (current >= 2)
                 {
-                    fillColor = _yellowWarning; // 2 actions: yellow
+                    fillColor = _yellowWarning; // 3-2 actions: yellow
                 }
                 else
                 {
