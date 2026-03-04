@@ -63,7 +63,13 @@ namespace Sporae.UI.UIToolkit.HUD
         
         // Tooltip
         private VisualElement _phTooltip;
-        private Label _phTooltipText;
+        private Label _phTooltipValueCurrent;
+        private VisualElement _phTooltipModifiersList;
+        private Label _phTooltipValueTotal;
+        private Label _phTooltipValueProjection;
+        private Label _phTooltipValueEffects;
+        private Label _phTooltipValueTip;
+        private VisualElement _phTooltipPhBar;
         
         // FASE 8: Tooltip Condensation
         private VisualElement _condensationTooltip;
@@ -349,44 +355,21 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_phDisplay == null)
                 return;
-            
-            // Crea tooltip container
-            _phTooltip = new VisualElement();
-            _phTooltip.name = "ph-tooltip";
-            _phTooltip.style.position = Position.Absolute;
-            _phTooltip.style.display = DisplayStyle.None;
-            _phTooltip.style.backgroundColor = new Color(0f, 0f, 0f, 0.9f);
-            _phTooltip.style.borderTopWidth = 2f;
-            _phTooltip.style.borderRightWidth = 2f;
-            _phTooltip.style.borderBottomWidth = 2f;
-            _phTooltip.style.borderLeftWidth = 2f;
-            _phTooltip.style.borderTopColor = _greenStable;
-            _phTooltip.style.borderRightColor = _greenStable;
-            _phTooltip.style.borderBottomColor = _greenStable;
-            _phTooltip.style.borderLeftColor = _greenStable;
-            _phTooltip.style.paddingTop = 8f;
-            _phTooltip.style.paddingRight = 8f;
-            _phTooltip.style.paddingBottom = 8f;
-            _phTooltip.style.paddingLeft = 8f;
-            _phTooltip.style.width = 340f;
-            _phTooltip.style.maxWidth = 340f;
-            _phTooltip.style.minHeight = 100f;
-            _phTooltip.pickingMode = PickingMode.Ignore; // Non bloccare interazioni
-            
-            // Crea testo tooltip
-            _phTooltipText = new Label();
-            _phTooltipText.name = "ph-tooltip-text";
-            _phTooltipText.style.whiteSpace = WhiteSpace.Normal;
-            _phTooltipText.style.color = _greenStable;
-            _phTooltipText.style.fontSize = 14f;
-            _phTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
-            _phTooltipText.enableRichText = true;
-            _phTooltip.Add(_phTooltipText);
-            
-            // Aggiungi tooltip al root (per posizionamento assoluto)
-            _root.Add(_phTooltip);
-            
-            // Setup hover events
+
+            _phTooltip = _root.Q<VisualElement>("ph-tooltip");
+            _phTooltipValueCurrent = _phTooltip?.Q<Label>("ph-tooltip-value-current");
+            _phTooltipModifiersList = _phTooltip?.Q<VisualElement>("ph-tooltip-modifiers-list");
+            _phTooltipValueTotal = _phTooltip?.Q<Label>("ph-tooltip-value-total");
+            _phTooltipValueProjection = _phTooltip?.Q<Label>("ph-tooltip-value-projection");
+            _phTooltipValueEffects = _phTooltip?.Q<Label>("ph-tooltip-value-effects");
+            _phTooltipValueTip = _phTooltip?.Q<Label>("ph-tooltip-value-tip");
+            _phTooltipPhBar = _phTooltip?.Q<VisualElement>("ph-tooltip-ph-bar");
+            if (_phTooltip != null)
+                _phTooltip.pickingMode = PickingMode.Ignore;
+
+            if (_phTooltip == null)
+                return;
+
             _phDisplay.RegisterCallback<MouseEnterEvent>(OnPhHoverEnter);
             _phDisplay.RegisterCallback<MouseLeaveEvent>(OnPhHoverExit);
             _phDisplay.RegisterCallback<MouseMoveEvent>(OnPhHoverMove);
@@ -398,6 +381,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 UpdatePhTooltipContent();
                 _phTooltip.style.display = DisplayStyle.Flex;
+                _phTooltip.BringToFront();
             }
         }
         
@@ -422,7 +406,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 float tooltipY = phDisplayBounds.yMax - 20f;
                 
                 // Assicurati che il tooltip non esca dallo schermo
-                float tooltipWidth = 340f;
+                float tooltipWidth = 480f;
                 float tooltipHeight = _phTooltip.resolvedStyle.height;
                 
                 if (tooltipX + tooltipWidth > rootBounds.width)
@@ -442,7 +426,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         private void UpdatePhTooltipContent()
         {
-            if (_phSystem == null || _phTooltipText == null)
+            if (_phSystem == null || _phTooltipValueCurrent == null)
                 return;
 
             var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
@@ -450,84 +434,97 @@ namespace Sporae.UI.UIToolkit.HUD
             float currentPh = _phSystem.CurrentPh;
             int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
 
-            var sb = new System.Text.StringBuilder();
+            // CURRENT VALUE: testo + colore dalla banda pH (acido→neutro→basico)
+            _phTooltipValueCurrent.text = $"pH {currentPh.ToString("F1", culture)} — {bandName}";
+            _phTooltipValueCurrent.style.color = new StyleColor(GetPhColorFromDrift(currentPh));
 
-            // —— Titolo (stile Figma DOME pH STATUS)
-            sb.AppendLine("<b>DOME PH DRIFT STATUS</b>");
-            sb.AppendLine();
-
-            // —— CURRENT VALUE
-            sb.AppendLine("<b>CURRENT VALUE</b>");
-            sb.AppendLine($"pH {currentPh.ToString("F1", culture)} — {bandName}");
-            sb.AppendLine();
-
-            // —— ACTIVE MODIFIERS: solo impatto giornaliero (piante del giorno + azioni/item)
-            sb.AppendLine("<b>ACTIVE MODIFIERS</b>");
+            // ACTIVE MODIFIERS: righe con [icon box] [nome quasi bianco] [valore colorato]
+            // Total daily drift = somma di tutti i valori in Active Modifiers (piante + azioni)
             var plantMods = _phSystem.GetDailyPlantModifiersForDay(currentDay);
             var actionMods = _phSystem.GetDailyActionModifiers();
-            if (plantMods != null && plantMods.Count > 0)
-            {
+            float totalFromModifiers = 0f;
+            if (plantMods != null)
                 foreach (var p in plantMods)
-                {
-                    string plantName = GetPlantDisplayName(p.PlantCode);
-                    string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
-                    string colorHex = p.DailyDrift >= 0 ? "#FF4444" : "#5DB6E3";
-                    sb.AppendLine($"  {plantName} <color={colorHex}>{driftStr}</color>");
-                }
-            }
-            else
-            {
-                sb.AppendLine("  <color=#888888>Nessuna Pianta presente nei Pot</color>");
-            }
-            if (actionMods != null && actionMods.Count > 0)
-            {
+                    totalFromModifiers += p.DailyDrift;
+            if (actionMods != null)
                 foreach (var a in actionMods)
+                    totalFromModifiers += a.Delta;
+
+            if (_phTooltipModifiersList != null)
+            {
+                _phTooltipModifiersList.Clear();
+                bool hasAny = (plantMods != null && plantMods.Count > 0) || (actionMods != null && actionMods.Count > 0);
+                if (!hasAny)
                 {
-                    string driftStr = a.Delta.ToString("+#0.0;-#0.0;0", culture);
-                    string colorHex = a.Delta >= 0 ? "#FF4444" : "#5DB6E3";
-                    sb.AppendLine($"  {a.ActionDisplayName} <color={colorHex}>{driftStr}</color>");
+                    var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
+                    var iconBox = new VisualElement { name = "ph-modifier-icon", style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f) } };
+                    var nameLabel = new Label { text = "Nessuna Pianta presente nei Pot", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
+                    row.Add(iconBox);
+                    row.Add(nameLabel);
+                    _phTooltipModifiersList.Add(row);
+                }
+                else
+                {
+                    if (plantMods != null)
+                    {
+                        foreach (var p in plantMods)
+                        {
+                            string plantName = GetPlantDisplayName(p.PlantCode);
+                            string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
+                            Color valueColor = p.DailyDrift >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
+                            AddPhModifierRow(_phTooltipModifiersList, plantName, driftStr, valueColor);
+                        }
+                    }
+                    if (actionMods != null)
+                    {
+                        foreach (var a in actionMods)
+                        {
+                            string driftStr = a.Delta.ToString("+#0.0;-#0.0;0", culture);
+                            Color valueColor = a.Delta >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
+                            AddPhModifierRow(_phTooltipModifiersList, a.ActionDisplayName, driftStr, valueColor);
+                        }
+                    }
                 }
             }
-            sb.AppendLine();
 
-            // —— Total daily drift
-            float totalDaily = _phSystem.GetTotalDailyDrift();
+            // Total daily drift = somma degli elementi in Active Modifiers (coerente con la lista)
+            float totalDaily = totalFromModifiers;
             string totalStr = totalDaily.ToString("+#0.0;-#0.0;0", culture);
             string stableStr = Mathf.Abs(totalDaily) < 0.2f ? " (Stable)" : "";
-            sb.AppendLine($"→ Total daily drift: <color=#7FFF7A>{totalStr}{stableStr}</color>");
-            sb.AppendLine();
+            if (_phTooltipValueTotal != null)
+                _phTooltipValueTotal.text = $"<color=#7FFF7A>{totalStr}{stableStr}</color>";
 
-            // —— NEXT-DAY PROJECTION (stesso parametro del Forecast EoD)
-            sb.AppendLine("<b>NEXT-DAY PROJECTION</b>");
+            // NEXT-DAY PROJECTION: valore + colore dalla banda del pH proiettato
             float predictedDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
-            if (!float.IsNaN(predictedDrift))
+            if (_phTooltipValueProjection != null)
             {
-                string predStr = predictedDrift.ToString("+#0.0;-#0.0;0", culture);
-                float projectedPh = currentPh + predictedDrift;
-                projectedPh = Mathf.Clamp(projectedPh, PhSystem.MIN_PH, PhSystem.MAX_PH);
-                sb.AppendLine($"Projected Drift → <color=#7FFF7A>{predStr} (pH {projectedPh.ToString("F1", culture)})</color>");
+                if (!float.IsNaN(predictedDrift))
+                {
+                    string predStr = predictedDrift.ToString("+#0.0;-#0.0;0", culture);
+                    float projectedPh = Mathf.Clamp(currentPh + predictedDrift, PhSystem.MIN_PH, PhSystem.MAX_PH);
+                    _phTooltipValueProjection.text = $"{predStr} (pH {projectedPh.ToString("F1", culture)})";
+                    _phTooltipValueProjection.style.color = new StyleColor(GetPhColorFromDrift(projectedPh));
+                }
+                else
+                {
+                    _phTooltipValueProjection.text = "—";
+                    _phTooltipValueProjection.style.color = new StyleColor(Color.gray);
+                }
             }
-            else
-            {
-                sb.AppendLine("Projected Drift → —");
-            }
-            sb.AppendLine();
 
-            // —— POTENTIAL EFFECTS (box: bonus/malus pH; placeholder se non in game)
-            sb.AppendLine("<b>POTENTIAL EFFECTS</b>");
+            // POTENTIAL EFFECTS (solo valore; titolo è fisso in UXML)
             PhSystem.PhBand phBand = _phSystem.EvaluateState();
-            if (phBand == PhSystem.PhBand.Neutral)
-                sb.AppendLine("  <color=#7FFF7A>✔ Optimal range: Normal growth conditions</color>");
-            else
-                sb.AppendLine($"  <color=#E6C96F>Banda attuale: {bandName}</color>");
-            sb.AppendLine("  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>");
-            sb.AppendLine();
+            if (_phTooltipValueEffects != null)
+            {
+                if (phBand == PhSystem.PhBand.Neutral)
+                    _phTooltipValueEffects.text = "  <color=#7FFF7A>✔ Optimal range: Normal growth conditions</color>\n  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>";
+                else
+                    _phTooltipValueEffects.text = $"  <color=#E6C96F>Banda attuale: {bandName}</color>\n  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>";
+            }
 
-            // —— TIP: consiglio rotante sui sistemi di Sporium
-            sb.AppendLine("<b>TIP</b>");
-            sb.AppendLine($"  {GetPhTooltipTipForDay(currentDay)}");
-
-            _phTooltipText.text = sb.ToString();
+            // TIP (solo valore; titolo è fisso in UXML)
+            if (_phTooltipValueTip != null)
+                _phTooltipValueTip.text = "  " + GetPhTooltipTipForDay(currentDay);
         }
 
         /// <summary>Restituisce un consiglio generico rotante per il tooltip pH (basato sul giorno).</summary>
@@ -553,6 +550,28 @@ namespace Sporae.UI.UIToolkit.HUD
                 return "Pianta";
             var plantData = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
             return plantData != null ? (plantData.name ?? plantCode) : plantCode;
+        }
+        
+        /// <summary>
+        /// Aggiunge una riga alla lista Active Modifiers: [icon box] [nome quasi bianco] [valore colorato].
+        /// </summary>
+        private static void AddPhModifierRow(VisualElement list, string nameText, string valueText, Color valueColor)
+        {
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
+            var iconBox = new VisualElement();
+            iconBox.AddToClassList("ph-tooltip-modifier-icon");
+            var nameLabel = new Label { text = nameText, enableRichText = false };
+            nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f); // quasi bianco come da reference
+            nameLabel.style.fontSize = 11;
+            nameLabel.style.marginRight = 8;
+            nameLabel.style.flexGrow = 1;
+            var valueLabel = new Label { text = valueText, enableRichText = false };
+            valueLabel.style.color = valueColor;
+            valueLabel.style.fontSize = 11;
+            row.Add(iconBox);
+            row.Add(nameLabel);
+            row.Add(valueLabel);
+            list.Add(row);
         }
         
         private void InitializeUI()
@@ -767,6 +786,10 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 _phGradient.style.backgroundImage = new StyleBackground(_phGradientTexture);
             }
+            if (_phTooltipPhBar != null)
+            {
+                _phTooltipPhBar.style.backgroundImage = new StyleBackground(_phGradientTexture);
+            }
         }
         
         /// <summary>
@@ -800,6 +823,16 @@ namespace Sporae.UI.UIToolkit.HUD
                 float t = (phValue - 10f) / 4f;
                 return Color.Lerp(PH_BLUE, PH_PURPLE, t);
             }
+        }
+        
+        /// <summary>
+        /// Mappa drift pH (-100..+100) al colore della banda (rosso → bianco → blu) per tooltip.
+        /// </summary>
+        private Color GetPhColorFromDrift(float driftPh)
+        {
+            float phVisualScale = ((driftPh + 100f) / 200f) * 14f;
+            phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
+            return GetPhColorFromScale(phVisualScale);
         }
         
         /// <summary>
@@ -1307,76 +1340,32 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_condensationDisplay == null)
                 return;
-            
-            // Crea tooltip container
-            _condensationTooltip = new VisualElement();
-            _condensationTooltip.name = "condensation-tooltip";
-            _condensationTooltip.style.position = Position.Absolute;
-            _condensationTooltip.style.display = DisplayStyle.None;
-            _condensationTooltip.style.backgroundColor = new Color(0f, 0f, 0f, 0.9f);
-            _condensationTooltip.style.borderTopWidth = 2f;
-            _condensationTooltip.style.borderRightWidth = 2f;
-            _condensationTooltip.style.borderBottomWidth = 2f;
-            _condensationTooltip.style.borderLeftWidth = 2f;
-            _condensationTooltip.style.borderTopColor = new Color(0.365f, 0.714f, 0.890f, 1f); // #5DB6E3
-            _condensationTooltip.style.borderRightColor = new Color(0.365f, 0.714f, 0.890f, 1f);
-            _condensationTooltip.style.borderBottomColor = new Color(0.365f, 0.714f, 0.890f, 1f);
-            _condensationTooltip.style.borderLeftColor = new Color(0.365f, 0.714f, 0.890f, 1f);
-            _condensationTooltip.style.paddingTop = 8f;
-            _condensationTooltip.style.paddingRight = 8f;
-            _condensationTooltip.style.paddingBottom = 8f;
-            _condensationTooltip.style.paddingLeft = 8f;
-            _condensationTooltip.style.width = 320f;
-            _condensationTooltip.style.maxWidth = 320f;
-            _condensationTooltip.style.minHeight = 100f;
-            _condensationTooltip.pickingMode = PickingMode.Position; // Permette click sul button
-            
-            // Crea testo tooltip
-            _condensationTooltipText = new Label();
-            _condensationTooltipText.name = "condensation-tooltip-text";
-            _condensationTooltipText.style.whiteSpace = WhiteSpace.Normal;
-            _condensationTooltipText.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
-            _condensationTooltipText.style.fontSize = 16f;
-            _condensationTooltipText.style.unityTextAlign = TextAnchor.UpperLeft;
-            _condensationTooltipText.enableRichText = true;
-            _condensationTooltip.Add(_condensationTooltipText);
-            
-            // FASE 8: Crea button Collect
-            _condensationCollectButton = new Button();
-            _condensationCollectButton.name = "condensation-collect-button";
-            _condensationCollectButton.text = "Raccogli";
-            _condensationCollectButton.style.marginTop = 8f;
-            _condensationCollectButton.style.width = Length.Percent(100f);
-            _condensationCollectButton.style.height = 32f;
-            _condensationCollectButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f); // Grigio scuro
-            _condensationCollectButton.style.color = new Color(0.961f, 0.969f, 0.980f, 1f); // Bianco
-            _condensationCollectButton.style.fontSize = 14f;
-            _condensationCollectButton.style.unityTextAlign = TextAnchor.MiddleCenter;
-            
-            // Hover effect
-            _condensationCollectButton.RegisterCallback<MouseEnterEvent>(evt =>
+
+            _condensationTooltip = _root.Q<VisualElement>("condensation-tooltip");
+            _condensationTooltipText = _condensationTooltip?.Q<Label>("condensation-tooltip-text");
+            _condensationCollectButton = _condensationTooltip?.Q<Button>("condensation-collect-button");
+            if (_condensationTooltip != null)
+                _condensationTooltip.pickingMode = PickingMode.Position;
+
+            if (_condensationTooltip == null)
+                return;
+
+            if (_condensationCollectButton != null)
             {
-                _condensationCollectButton.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-            });
-            _condensationCollectButton.RegisterCallback<MouseLeaveEvent>(evt =>
-            {
-                _condensationCollectButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-            });
-            
-            // Click handler
-            _condensationCollectButton.clicked += OnCondensationCollectClicked;
-            
-            _condensationTooltip.Add(_condensationCollectButton);
-            
-            // Aggiungi tooltip al root
-            _root.Add(_condensationTooltip);
-            
-            // Setup hover events sul display
+                _condensationCollectButton.clicked += OnCondensationCollectClicked;
+                _condensationCollectButton.RegisterCallback<MouseEnterEvent>(evt =>
+                {
+                    _condensationCollectButton.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                });
+                _condensationCollectButton.RegisterCallback<MouseLeaveEvent>(evt =>
+                {
+                    _condensationCollectButton.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+                });
+            }
+
             _condensationDisplay.RegisterCallback<MouseEnterEvent>(OnCondensationHoverEnter);
             _condensationDisplay.RegisterCallback<MouseLeaveEvent>(OnCondensationHoverExit);
             _condensationDisplay.RegisterCallback<MouseMoveEvent>(OnCondensationHoverMove);
-            
-            // Setup hover events sul tooltip (per mantenerlo aperto quando mouse è sopra)
             _condensationTooltip.RegisterCallback<MouseEnterEvent>(OnCondensationTooltipHoverEnter);
             _condensationTooltip.RegisterCallback<MouseLeaveEvent>(OnCondensationTooltipHoverExit);
         }
@@ -1390,6 +1379,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 UpdateCondensationTooltipContent();
                 _condensationTooltip.style.display = DisplayStyle.Flex;
+                _condensationTooltip.BringToFront();
             }
         }
         
@@ -1412,6 +1402,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_condensationTooltip != null)
             {
                 _condensationTooltip.style.display = DisplayStyle.Flex;
+                _condensationTooltip.BringToFront();
             }
         }
         

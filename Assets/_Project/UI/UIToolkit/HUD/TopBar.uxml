@@ -60,5 +60,47 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="glow-frame" class="glow-frame glow-frame-bottom" style="height: 8px; right: 4px; left: -1px; bottom: -7px;" />
+        <ui:VisualElement name="ph-tooltip" class="sp-tooltip" style="position: absolute; display: none; background-color: rgba(0, 0, 0, 0.9); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-color: rgb(226, 175, 103); border-right-color: rgb(226, 175, 103); border-bottom-color: rgb(226, 175, 103); border-left-color: rgb(226, 175, 103); padding: 8px; width: 480px; max-width: 480px; min-height: 100px; flex-direction: column; top: 144px; left: 896px; background-image: url(&quot;project://database/Assets/_Project/Art/Crt_background_tooltip.png?fileID=2800000&amp;guid=b58ac99e855e3734b9992a506121e302&amp;type=3#Crt_background_tooltip&quot;);">
+            <ui:VisualElement name="ph-tooltip-title-row" style="flex-direction: row; align-items: center; margin-bottom: 4px;">
+                <ui:VisualElement name="ph-tooltip-title-icon" class="ph-tooltip-icon-box" style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; margin-right: 8px; background-color: rgb(200, 60, 60); border-radius: 50%;" />
+                <ui:Label name="ph-tooltip-title" enable-rich-text="true" text="DOME PH DRIFT STATUS" class="ph-tooltip-section-title" style="color: rgb(226, 175, 103); font-size: 12px; -unity-font-style: bold;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-tooltip-section-current" class="ph-tooltip-section" style="flex-direction: row; align-items: center; margin-bottom: 4px; margin-left: 15px;">
+                <ui:Label name="ph-tooltip-label-current" enable-rich-text="true" text="CURRENT VALUE" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; -unity-font-style: normal; margin-right: 8px;" />
+                <ui:Label name="ph-tooltip-value-current" enable-rich-text="true" text="pH 7.0 — Neutro" class="ph-tooltip-value" style="white-space: normal; font-size: 12px; -unity-text-align: upper-left; right: -208px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-tooltip-section-modifiers-total" class="ph-tooltip-section" style="flex-direction: column; margin-bottom: 4px;">
+                <ui:Label name="ph-tooltip-label-modifiers" enable-rich-text="true" text="ACTIVE MODIFIERS" class="ph-tooltip-label" style="color: rgb(200, 203, 200); font-size: 10px; -unity-font-style: bold; margin-bottom: 2px; margin-left: 15px;" />
+                <ui:VisualElement name="ph-tooltip-modifiers-list" style="flex-direction: column; margin-left: 15px; margin-bottom: 4px;" />
+                <ui:VisualElement name="ph-tooltip-row-total" style="flex-direction: row; align-items: center;">
+                    <ui:Label name="ph-tooltip-label-total" enable-rich-text="true" text="→ Total daily drift:" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; margin-right: 8px; margin-left: 15px;" />
+                    <ui:Label name="ph-tooltip-value-total" enable-rich-text="true" text="+0.3 (Stable)" class="ph-tooltip-value" style="white-space: normal; color: rgb(127, 255, 122); font-size: 12px; -unity-text-align: upper-right; right: -211px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-tooltip-section-projection" class="ph-tooltip-section" style="flex-direction: column; margin-bottom: 4px; margin-left: 15px;">
+                <ui:Label name="ph-tooltip-label-projection" enable-rich-text="true" text="NEXT-DAY PROJECTION" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; -unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:VisualElement name="ph-tooltip-row-projection" style="flex-direction: row; align-items: center;">
+                    <ui:Label name="ph-tooltip-label-projected-drift" enable-rich-text="true" text="Projected Drift →" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; margin-right: 8px;" />
+                    <ui:Label name="ph-tooltip-value-projection" enable-rich-text="true" text="+0.3 (pH 7.0)" class="ph-tooltip-value" style="white-space: normal; font-size: 12px; -unity-text-align: upper-right; right: -213px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="ph-tooltip-ph-bar-row" style="flex-direction: row; align-items: center; margin-top: 6px;">
+                    <ui:Label name="ph-tooltip-label-acid" enable-rich-text="true" text="← Acidic" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 9px; margin-right: 6px; -unity-font-style: normal;" />
+                    <ui:VisualElement name="ph-tooltip-ph-bar" class="ph-tooltip-ph-gradient" style="flex-grow: 1; height: 10px; min-height: 10px; background-color: rgb(80, 80, 80);" />
+                    <ui:Label name="ph-tooltip-label-basic" enable-rich-text="true" text="Basic →" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 9px; margin-left: 6px; -unity-font-style: normal;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-tooltip-section-effects" class="ph-tooltip-section ph-tooltip-section-outlined" style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgb(127, 255, 122); border-right-color: rgb(127, 255, 122); border-bottom-color: rgb(127, 255, 122); border-left-color: rgb(127, 255, 122); padding: 4px;">
+                <ui:Label name="ph-tooltip-label-effects" enable-rich-text="true" text="POTENTIAL EFFECTS" class="ph-tooltip-label" style="color: rgb(127, 255, 122); font-size: 10px; -unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:Label name="ph-tooltip-value-effects" enable-rich-text="true" text="✔ Optimal range: Normal growth conditions" class="ph-tooltip-value" style="white-space: normal; color: rgb(127, 255, 122); font-size: 10px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="ph-tooltip-section-tip" class="ph-tooltip-section ph-tooltip-section-outlined" style="flex-direction: column; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgb(226, 175, 103); border-right-color: rgb(226, 175, 103); border-bottom-color: rgb(226, 175, 103); border-left-color: rgb(226, 175, 103); padding: 4px;">
+                <ui:Label name="ph-tooltip-label-tip" enable-rich-text="true" text="TIP" class="ph-tooltip-label" style="color: rgb(226, 175, 103); font-size: 10px; -unity-font-style: bold; margin-bottom: 2px;" />
+                <ui:Label name="ph-tooltip-value-tip" enable-rich-text="true" text="Add Pure plants or LED Blue to stabilize baseline." class="ph-tooltip-value" style="white-space: normal; color: rgb(226, 175, 103); font-size: 10px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="condensation-tooltip" class="sp-tooltip" style="position: absolute; display: none; background-color: rgba(0, 0, 0, 0.9); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-color: rgb(93, 182, 227); border-right-color: rgb(93, 182, 227); border-bottom-color: rgb(93, 182, 227); border-left-color: rgb(93, 182, 227); padding: 8px; width: 320px; max-width: 320px; min-height: 100px;">
+            <ui:Label name="condensation-tooltip-text" enable-rich-text="true" class="sp-tooltip-text" style="white-space: normal; color: rgb(245, 247, 250); font-size: 16px; -unity-text-align: upper-left;" />
+            <ui:Button name="condensation-collect-button" text="Raccogli" class="sp-tooltip-collect-btn" style="margin-top: 8px; width: 100%; height: 32px; background-color: rgb(51, 51, 51); color: rgb(245, 247, 250); font-size: 14px; -unity-text-align: middle-center;" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

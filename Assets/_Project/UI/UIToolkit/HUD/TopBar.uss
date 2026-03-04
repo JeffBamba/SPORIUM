@@ -289,6 +289,26 @@
     white-space: nowrap;
 }
 
+.ph-tooltip-ph-gradient {
+    min-height: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgb(80, 80, 80);
+}
+
+.ph-tooltip-modifier-icon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    margin-right: 8px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(127, 255, 122, 0.08);
+    align-items: center;
+    justify-content: center;
+}
+
 .pixel-corner {
     width: 3px;
     height: 3px;
