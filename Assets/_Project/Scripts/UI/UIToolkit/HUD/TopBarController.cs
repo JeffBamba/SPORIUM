@@ -119,6 +119,14 @@ namespace Sporae.UI.UIToolkit.HUD
         // Condensation threshold tracking
         private float _previousCondensation = -1f; // -1 indica valore iniziale non ancora impostato
         
+        // pH marker smooth animation (segue oscillazione idle)
+        private float _phMarkerLeftPercent = 50f;
+        private const float PhCursorOscillationAmplitude = 7.02f;  // +20% forbice (era 5.85)
+        private const float PhCursorStepSize = 5f;              // scatti netti: step 5 sulla scala -100..+100 (compatibile con ampiezza ±7)
+        private const float PhValueOscillationAmplitude = 0.5f;   // forbice valore numerico: max ±0,5 (oscillazione visibile ma non 3 punti)
+        private const float PhCursorOscillationSpeed = 0.25f;
+        private const float PhCursorOscillationSeed = 47.3f;
+        
         // Colors
         private readonly Color _greenStable = new Color(0.498f, 1f, 0.478f, 1f); // #7FFF7A
         private readonly Color _yellowWarning = new Color(0.902f, 0.788f, 0.435f, 1f); // #E6C96F
@@ -476,9 +484,15 @@ namespace Sporae.UI.UIToolkit.HUD
             float currentPh = _phSystem.CurrentPh;
             int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
 
-            // CURRENT VALUE: testo + colore dalla banda pH (acido→neutro→basico)
-            _phTooltipValueCurrent.text = $"pH {currentPh.ToString("F1", culture)} — {bandName}";
-            _phTooltipValueCurrent.style.color = new StyleColor(GetPhColorFromDrift(currentPh));
+            // Stesso valore oscillante (fake) della top bar — Perlin identico, forbice ridotta per il numero
+            float noise = Mathf.PerlinNoise(Time.time * PhCursorOscillationSpeed, PhCursorOscillationSeed);
+            float offsetValue = (noise * 2f - 1f) * PhValueOscillationAmplitude;
+            float valuePh = Mathf.Clamp(currentPh + offsetValue, -100f, 100f);
+            string bandNameDisplay = GetPhBandNameForDisplay(valuePh);
+
+            // CURRENT VALUE: valore con oscillazione ridotta (±0,5)
+            _phTooltipValueCurrent.text = $"pH {valuePh.ToString("F1", culture)} — {bandNameDisplay}";
+            _phTooltipValueCurrent.style.color = new StyleColor(GetPhColorFromDrift(valuePh));
 
             // ACTIVE MODIFIERS: righe con [icon box] [nome quasi bianco] [valore colorato]
             // Total daily drift = somma di tutti i valori in Active Modifiers (piante + azioni + eventi)
@@ -827,6 +841,52 @@ namespace Sporae.UI.UIToolkit.HUD
                 float pulse = 0.92f + 0.14f * (0.5f + 0.5f * Mathf.Sin(Time.time * 2.8f));
                 _phTooltipTitleIcon.style.scale = new Scale(new Vector2(pulse, pulse));
             }
+            
+            // Cursore pH: animazione idle che segue l'oscillazione (valore numerico e marker in sync)
+            if (_phSystem != null && _phMarker != null && _phSlider != null)
+            {
+                float currentPh = _phSystem.CurrentPh;
+                // Oscillazione: valore numerico con forbice ridotta (±0,5); cursore con forbice +20% e scatti netti
+                float noise = Mathf.PerlinNoise(Time.time * PhCursorOscillationSpeed, PhCursorOscillationSeed);
+                float offsetValue = (noise * 2f - 1f) * PhValueOscillationAmplitude;
+                float offsetCursor = (noise * 2f - 1f) * PhCursorOscillationAmplitude;
+                float valuePh = Mathf.Clamp(currentPh + offsetValue, -100f, 100f);
+                float cursorPh = Mathf.Clamp(currentPh + offsetCursor, -100f, 100f);
+                // Cursore a scatti netti: quantizza a step fissi
+                float cursorPhStepped = Mathf.Round(cursorPh / PhCursorStepSize) * PhCursorStepSize;
+                cursorPhStepped = Mathf.Clamp(cursorPhStepped, -100f, 100f);
+                // Valore numerico: oscillazione ridotta (max ±0,5)
+                if (_phBandLabel != null)
+                {
+                    _phBandLabel.text = $"{valuePh:F1}";
+                    _phBandLabel.style.color = new StyleColor(GetPhColorFromDrift(valuePh));
+                }
+                // Target posizione marker: forbice +20%, movimento a scatti
+                float targetLeftPercent = ((cursorPhStepped + 100f) / 200f) * 100f;
+                float sliderWidth = _phSlider.resolvedStyle.width;
+                float markerWidth = 12f;
+                if (!float.IsNaN(sliderWidth) && sliderWidth > 0f)
+                {
+                    float offsetPercent = (markerWidth / 2f / sliderWidth) * 100f;
+                    targetLeftPercent -= offsetPercent;
+                }
+                _phMarkerLeftPercent = targetLeftPercent; // scatti netti: niente lerp
+                _phMarker.style.left = new StyleLength(new Length(_phMarkerLeftPercent, LengthUnit.Percent));
+                float phVisualScale = ((cursorPhStepped + 100f) / 200f) * 14f;
+                phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
+                _phMarker.style.backgroundColor = new StyleColor(GetPhColorFromScale(phVisualScale));
+            }
+            
+            // Lampeggio cursore pH: sempre attivo quando il marker esiste, per far capire che è "staccato" e animato
+            if (_phMarker != null)
+            {
+                float blink = 0.5f + 0.5f * (0.5f + 0.5f * Mathf.Sin(Time.time * 2.5f));
+                _phMarker.style.opacity = blink;
+            }
+
+            // Tooltip pH: aggiorna Current Value ogni frame quando aperto così segue l'oscillazione come la top bar
+            if (_phTooltip != null && _phTooltip.style.display == DisplayStyle.Flex)
+                UpdatePhTooltipContent();
         }
 
         private void OnDisable()
@@ -964,6 +1024,14 @@ namespace Sporae.UI.UIToolkit.HUD
             phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
             return GetPhColorFromScale(phVisualScale);
         }
+
+        /// <summary>Restituisce una banda pH per display (scala -100..+100) per il valore oscillante nel tooltip.</summary>
+        private static string GetPhBandNameForDisplay(float ph)
+        {
+            if (ph < -25f) return "Acido";
+            if (ph > 25f) return "Basico";
+            return "Neutrale";
+        }
         
         /// <summary>
         /// Callback quando il layout del ph-slider viene calcolato
@@ -1003,21 +1071,9 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 // Mostra valore drift diretto (-100/+100), inizio partita = 0
                 _phBandLabel.text = $"{value:F1}";
-                // Per marker/gradient usiamo scala 0-14 (mapping: -100→0, 0→7, +100→14)
-                float phVisualScale = ((value + 100f) / 200f) * 14f;
-                phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-                
-                // Colore basato sulla banda se PhSystem disponibile
-                if (_phSystem != null)
-                {
-                    Color bandColor = _phSystem.GetBandColor();
-                    _phBandLabel.style.color = new StyleColor(bandColor);
-                }
-                else
-                {
-                    // Fallback: usa colore default se PhSystem non disponibile
-                    _phBandLabel.style.color = new StyleColor(phDriftColor);
-                }
+                // Colore secondo logica Acido / Neutro / Basico (come gradiente barra e tooltip)
+                Color valueColor = GetPhColorFromDrift(value);
+                _phBandLabel.style.color = new StyleColor(valueColor);
             }
             
             if (_phMarker != null && _phGradient != null)
@@ -1052,6 +1108,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 
                 // Usa left in percentuale
                 _phMarker.style.left = new StyleLength(new Length(leftPositionPercent, LengthUnit.Percent));
+                _phMarkerLeftPercent = leftPositionPercent; // sync per animazione idle
                 
                 // Reset margin-left per evitare conflitti
                 _phMarker.style.marginLeft = 0f;

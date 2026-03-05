@@ -75,9 +75,12 @@
                 <ui:Label name="ph-tooltip-title" enable-rich-text="true" text="DOME PH DRIFT STATUS" class="ph-tooltip-section-title" style="color: rgb(226, 175, 103); font-size: 12px; -unity-font-style: bold;" />
                 <ui:Label name="ph-tooltip-title-status" text="Offline" class="ph-tooltip-title-status" style="margin-left: auto; font-size: 11px; -unity-font-style: normal;" />
             </ui:VisualElement>
-            <ui:VisualElement name="ph-tooltip-section-current" class="ph-tooltip-section" style="flex-direction: row; align-items: center; margin-bottom: 4px; margin-left: 15px;">
-                <ui:Label name="ph-tooltip-label-current" enable-rich-text="true" text="CURRENT VALUE" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; -unity-font-style: normal; margin-right: 8px;" />
-                <ui:Label name="ph-tooltip-value-current" enable-rich-text="true" text="pH 7.0 — Neutro" class="ph-tooltip-value" style="white-space: normal; font-size: 12px; -unity-text-align: upper-left; right: -217px; color: rgb(204, 204, 204);" />
+            <ui:VisualElement name="ph-tooltip-section-current" class="ph-tooltip-section" style="flex-direction: column; margin-bottom: 4px; margin-left: 15px;">
+                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                    <ui:Label name="ph-tooltip-label-current" enable-rich-text="true" text="CURRENT VALUE" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 10px; -unity-font-style: normal; margin-right: 8px;" />
+                    <ui:Label name="ph-tooltip-value-current" enable-rich-text="true" text="pH 7.0 — Neutro" class="ph-tooltip-value" style="white-space: normal; font-size: 12px; -unity-text-align: upper-left; right: -217px; color: rgb(204, 204, 204);" />
+                </ui:VisualElement>
+                <ui:Label name="ph-tooltip-current-oscillate-caption" enable-rich-text="true" text="Il Valore Oscilla come la tua coscienza" class="ph-tooltip-value" style="white-space: normal; font-size: 10px; color: rgb(136, 136, 136); margin-top: 2px; margin-left: 0;" />
             </ui:VisualElement>
             <ui:VisualElement name="ph-tooltip-section-modifiers-total" class="ph-tooltip-section" style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(199, 202, 199, 0.45); border-right-color: rgba(199, 202, 199, 0.45); border-bottom-color: rgba(199, 202, 199, 0.45); border-left-color: rgba(199, 202, 199, 0.45); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; padding: 4px; background-color: rgb(30, 40, 42);">
                 <ui:Label name="ph-tooltip-label-modifiers" enable-rich-text="true" text="ACTIVE MODIFIERS" class="ph-tooltip-label" style="color: rgb(200, 203, 200); font-size: 10px; -unity-font-style: bold; margin-bottom: 2px; margin-left: 15px;" />
