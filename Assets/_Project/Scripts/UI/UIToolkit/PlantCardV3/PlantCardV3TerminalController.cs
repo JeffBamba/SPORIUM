@@ -227,6 +227,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _btnClose = _root.Q<Button>("pcv3-close-button");
             _consoleScroll = _root.Q<ScrollView>("pcv3-console-scroll");
+            if (_consoleScroll != null)
+            {
+                _consoleScroll.RegisterCallback<AttachToPanelEvent>(_ => ApplyConsoleScrollbarStyle());
+                _consoleScroll.schedule.Execute(ApplyConsoleScrollbarStyle).ExecuteLater(2);
+            }
             _consoleText = _root.Q<Label>("pcv3-console-text");
             _protocolScroll = _root.Q<ScrollView>("pcv3-protocol-scroll");
             _protocolText = _root.Q<Label>("pcv3-protocol-text");
@@ -249,6 +254,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Inizializza scrollbar custom
             InitializeCustomScrollbars();
+
+            ApplyConsoleScrollbarStyle();
+
+            RegisterConsoleMouseWheelScroll();
 
             ApplyConsoleFont();
 
@@ -726,6 +735,96 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 SetupScrollbar(_potList, _potListScrollbar, _potListScrollbarTrack, _potListScrollbarThumb);
             }
+        }
+
+        /// <summary>
+        /// Applica lo stile alla scrollbar della console (Terminal Pot):
+        /// thumb verde stondato, niente linea gialla (track nascosto), frecce verdi visibili senza background, scrollbar più stretta.
+        /// </summary>
+        private void ApplyConsoleScrollbarStyle()
+        {
+            if (_consoleScroll == null) return;
+
+            var vScroller = _consoleScroll.verticalScroller;
+            if (vScroller == null) return;
+
+            const float greenR = 127f / 255f, greenG = 255f / 255f, greenB = 122f / 255f;
+            var green = new Color(greenR, greenG, greenB, 1f);
+
+            vScroller.style.width = 8;
+
+            void ApplyToThumb(VisualElement el)
+            {
+                if (el == null) return;
+                el.style.backgroundColor = green;
+                el.style.borderTopLeftRadius = el.style.borderTopRightRadius = 8;
+                el.style.borderBottomLeftRadius = el.style.borderBottomRightRadius = 8;
+                el.style.borderLeftWidth = el.style.borderRightWidth = el.style.borderTopWidth = el.style.borderBottomWidth = 0;
+            }
+
+            var thumb = vScroller.Q<VisualElement>(className: "unity-scroller__thumb");
+            if (thumb != null) ApplyToThumb(thumb);
+            else
+            {
+                var tracker = vScroller.Q<VisualElement>(className: "unity-base-slider__tracker");
+                var dragger = vScroller.Q<VisualElement>(className: "unity-base-slider__dragger");
+                if (dragger != null)
+                {
+                    ApplyToThumb(dragger);
+                    if (tracker != null && tracker != dragger)
+                        tracker.style.display = DisplayStyle.None;
+                }
+                else if (tracker != null)
+                    ApplyToThumb(tracker);
+            }
+
+            var track = vScroller.Q<VisualElement>(className: "unity-base-slider__track");
+            if (track != null)
+                track.style.display = DisplayStyle.None;
+
+            var slider = vScroller.Q<VisualElement>(className: "unity-scroller__slider");
+            if (slider != null)
+            {
+                slider.style.backgroundColor = Color.clear;
+                slider.style.borderLeftWidth = slider.style.borderRightWidth = slider.style.borderTopWidth = slider.style.borderBottomWidth = 0;
+            }
+
+            foreach (var btn in new[] { vScroller.highButton, vScroller.lowButton })
+            {
+                if (btn == null) continue;
+                btn.style.backgroundColor = Color.clear;
+                btn.style.borderLeftWidth = btn.style.borderRightWidth = btn.style.borderTopWidth = btn.style.borderBottomWidth = 0;
+                btn.style.borderTopLeftRadius = btn.style.borderTopRightRadius = btn.style.borderBottomLeftRadius = btn.style.borderBottomRightRadius = 4;
+                btn.style.unityBackgroundImageTintColor = green;
+            }
+        }
+
+        /// <summary>
+        /// Abilita lo scroll con la rotella del mouse sulla console (e sull'area destra del terminale).
+        /// </summary>
+        private void RegisterConsoleMouseWheelScroll()
+        {
+            if (_consoleScroll == null) return;
+
+            const float wheelScrollFactor = 24f;
+
+            void OnWheel(WheelEvent evt)
+            {
+                if (!_isVisible || _consoleScroll == null) return;
+                var vs = _consoleScroll.verticalScroller;
+                if (vs == null) return;
+                float delta = evt.delta.y * wheelScrollFactor;
+                float newValue = Mathf.Clamp(vs.value + delta, vs.lowValue, vs.highValue);
+                if (newValue != vs.value)
+                {
+                    vs.value = newValue;
+                    evt.StopPropagation();
+                }
+            }
+
+            _consoleScroll.RegisterCallback<WheelEvent>(OnWheel);
+            if (_consoleView != null)
+                _consoleView.RegisterCallback<WheelEvent>(OnWheel);
         }
 
         private void SetupScrollbar(ScrollView scrollView, VisualElement scrollbar, VisualElement track, VisualElement thumb)

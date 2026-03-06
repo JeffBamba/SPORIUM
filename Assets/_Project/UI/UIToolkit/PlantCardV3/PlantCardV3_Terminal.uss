@@ -3,51 +3,72 @@
     height: 1080px;
     flex-grow: 1;
     position: absolute;
-    left: 0px;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .pcv3-backdrop {
     position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
-    background-color: rgba(0, 0, 0, 0.0);
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-scale-mode: scale-and-crop;
     picking-mode: ignore;
 }
 
 .pcv3-dim {
     position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
-    background-color: rgba(0, 0, 0, 0.95);
+    /* Lascia Top Bar (80px) e Bottom Bar (132px) scoperti così restano visibili dietro al terminale */
+    left: 0;
+    right: 0;
+    top: 80px;
+    bottom: 132px;
+    /* Opacità ridotta così la gameview in mezzo resta visibile */
+    background-color: rgba(0, 0, 0, 0.55);
     picking-mode: ignore;
 }
 
 .pcv3-window {
-    width: 1400px;
-    height: 800px;
-    background-color: rgba(0, 0, 0, 0.90);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: rgb(127, 255, 122);
-    border-right-color: rgb(127, 255, 122);
-    border-top-color: rgb(127, 255, 122);
-    border-bottom-color: rgb(127, 255, 122);
-    box-shadow: 0 0 12px rgba(127, 255, 122, 0.42);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 1600px;
+    height: 790px;
+    min-width: 1600px;
+    min-height: 790px;
+    background-color: rgba(0, 0, 0, 0);
     overflow: visible;
+}
+
+.pcv3-frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1600px;
+    height: 790px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    picking-mode: ignore;
+}
+
+.pcv3-inner {
+    position: absolute;
+    left: 70px;
+    right: 70px;
+    top: 60px;
+    bottom: 60px;
+    flex-direction: column;
+    flex-grow: 0;
+    overflow: hidden;
 }
 
 .pcv3-outer-glow {
@@ -65,19 +86,19 @@
     max-height: 56px;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start; /* allinea a sinistra come nel mock */
+    justify-content: flex-start;
     padding-left: 18px;
     padding-right: 18px;
     border-bottom-width: 2px;
     border-bottom-color: rgba(127, 255, 122, 0.6);
-    background-color: rgba(0, 0, 0, 0.60);
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
 .pcv3-title {
     font-size: 12px;
     -unity-font-style: normal;
     color: rgb(127, 255, 122);
-    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
     -unity-text-outline-width: 0.6px;
     -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
@@ -85,7 +106,7 @@
 .pcv3-header-right {
     flex-direction: row;
     align-items: center;
-    flex-grow: 1; /* occupa spazio per distanziare dal titolo */
+    flex-grow: 1;
 }
 
 .pcv3-pill {
@@ -107,7 +128,7 @@
 .pcv3-pill-text {
     font-size: 12px;
     color: rgb(127, 255, 122);
-    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
     -unity-text-outline-width: 0.6px;
     -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
@@ -115,13 +136,13 @@
 .pcv3-close {
     font-size: 12px;
     color: rgb(127, 255, 122);
-    background-color: rgba(0, 0, 0, 0.0);
-    border-left-width: 0px;
-    border-right-width: 0px;
-    border-top-width: 0px;
-    border-bottom-width: 0px;
-    margin-left: auto; /* spinge il close verso destra */
-    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: auto;
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
     -unity-text-outline-width: 0.6px;
     -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
@@ -141,7 +162,6 @@
     overflow: hidden;
 }
 
-
 .pcv3-potlist {
     flex-grow: 1;
     overflow-x: hidden;
@@ -150,26 +170,24 @@
     position: relative;
 }
 
-/* Nascondi scrollbar nativa di Unity */
 .pcv3-potlist .unity-scroll-view__vertical-scroller {
     display: none;
 }
 
-/* Pot cards (sidebar) */
 .pcv3-potcard {
     width: 100%;
     max-width: 420px;
     height: 290px;
     margin-bottom: 10px;
-    background-color: #0D1214;
+    background-color: rgb(13, 18, 20);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: #7FFF7A;
-    border-right-color: #7FFF7A;
-    border-top-color: #7FFF7A;
-    border-bottom-color: #7FFF7A;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
     box-shadow: 0 0 12px rgba(127, 255, 122, 0.4);
     position: relative;
 }
@@ -215,14 +233,14 @@
     padding-right: 12px;
     padding-top: 4px;
     padding-bottom: 4px;
-    background-color: #1A2628;
+    background-color: rgb(26, 38, 40);
     border-bottom-width: 2px;
-    border-bottom-color: #7FFF7A;
+    border-bottom-color: rgb(127, 255, 122);
 }
 
 .pcv3-potcard-title {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
@@ -237,7 +255,7 @@
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
@@ -249,8 +267,8 @@
     border-top-right-radius: 4px;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: #7FFF7A;
-    box-shadow: 0 0 8px #7FFF7A, 0 0 12px #7FFF7A;
+    background-color: rgb(127, 255, 122);
+    box-shadow: 0 0 8px rgb(127, 255, 122), 0 0 12px rgb(127, 255, 122);
     position: absolute;
     left: 8px;
     top: 8px;
@@ -267,7 +285,7 @@
 .pcv3-potcard-plantbox {
     width: 130px;
     height: 200px;
-    background-color: #000000;
+    background-color: rgb(0, 0, 0);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -309,7 +327,7 @@
 .pcv3-potcard-preview {
     width: 130px;
     height: 200px;
-    background-color: #000000;
+    background-color: rgb(0, 0, 0);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -327,7 +345,7 @@
 
 .pcv3-potcard-desc {
     font-size: 10px;
-    color: #A8D5B0;
+    color: rgb(168, 213, 176);
     -unity-font-style: italic;
     letter-spacing: 0.5px;
     line-height: 1.4;
@@ -344,12 +362,12 @@
 }
 
 .pcv3-potcard-stat-row-first {
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 .pcv3-potcard-stat-label {
     font-size: 10px;
-    color: #C0C8C5;
+    color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
     width: 100px;
 }
@@ -357,12 +375,12 @@
 .pcv3-potcard-stat-value {
     font-size: 10px;
     letter-spacing: 0.5px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
 }
 
 .pcv3-potcard-separator {
     height: 1px;
-    background-color: #7FFF7A;
+    background-color: rgb(127, 255, 122);
     opacity: 0.3;
     margin-top: 8px;
     margin-bottom: 8px;
@@ -394,12 +412,12 @@
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: #7FFF7A;
-    border-right-color: #7FFF7A;
-    border-top-color: #7FFF7A;
-    border-bottom-color: #7FFF7A;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 1.1px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.5);
 }
@@ -410,20 +428,20 @@
 }
 
 .pcv3-value-green {
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.5);
 }
 
 .pcv3-value-blue {
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
 }
 
 .pcv3-value-yellow {
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
 }
 
 .pcv3-value-red {
-    color: #D35F5F;
+    color: rgb(211, 95, 95);
 }
 
 .pcv3-right {
@@ -434,12 +452,28 @@
     max-height: 740px;
 }
 
-.pcv3-console-view,
-.pcv3-protocol-view,
-.pcv3-detail-view {
+.pcv3-console-view {
     flex-grow: 1;
     flex-shrink: 1;
-    min-height: 0px;
+    min-height: 0;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0, 0, 0, 0.55);
+    padding-left: 10px;
+    padding-right: 10px;
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.3);
+}
+
+.pcv3-protocol-view {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
     height: 668px;
     min-height: 668px;
     max-height: 668px;
@@ -451,82 +485,201 @@
     border-right-color: rgba(127, 255, 122, 0.5);
     border-top-color: rgba(127, 255, 122, 0.5);
     border-bottom-color: rgba(127, 255, 122, 0.5);
-    background-color: rgba(0,0,0,0.55);
-    padding-left: 10px;   /* distanzia il testo dal bordo sinistro del box */
-    padding-right: 10px;  /* distanzia il testo dal bordo destro del box */
-    box-shadow: 0 0 10px rgba(127, 255, 122, 0.30);
+    background-color: rgba(0, 0, 0, 0.55);
+    padding-left: 10px;
+    padding-right: 10px;
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.3);
 }
 
-.pcv3-protocol-view,
+.pcv3-detail-view {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    height: 668px;
+    min-height: 668px;
+    max-height: 668px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0, 0, 0, 0.55);
+    padding-left: 10px;
+    padding-right: 10px;
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.3);
+}
+
+.pcv3-protocol-view {
+    display: none;
+}
+
 .pcv3-detail-view {
     display: none;
 }
 
-.pcv3-console-scroll,
+.pcv3-console-scroll {
+    flex-grow: 1;
+    padding: 14px;
+    padding-bottom: 26px;
+}
+
 .pcv3-protocol-scroll {
     flex-grow: 1;
     padding: 14px;
     padding-bottom: 26px;
 }
 
-/* ----------------------------- */
-/* Retro LED Scrollbar Styles    */
-/* ----------------------------- */
-/* GREEN LED (primary) */
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller,
-.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller,
-.pcv3-potlist .unity-scroll-view__vertical-scroller {
-    width: 12px;
-    background-color: #1A2325;
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller {
+    width: 8px !important;
+    background-color: rgb(26, 35, 37);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: #2A3436;
-    border-right-color: #2A3436;
-    border-top-color: #2A3436;
-    border-bottom-color: #2A3436;
+    border-left-color: rgb(42, 52, 54);
+    border-right-color: rgb(42, 52, 54);
+    border-top-color: rgb(42, 52, 54);
+    border-bottom-color: rgb(42, 52, 54);
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+/* Rimuove la linea gialla: track nascosto (è la barra verticale al centro), slider/drag-container trasparenti */
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__track {
+    display: none !important;
+}
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__slider,
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__drag-container {
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+/* Frecce su/giù: solo freccia verde (tint), NESSUN background; NON toccare background-image altrimenti la freccia scompare */
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__high-button,
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__low-button {
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+    border-radius: 4px;
+    -unity-background-image-tint-color: rgb(127, 255, 122);
+}
+
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller {
+    width: 12px;
+    background-color: rgb(26, 35, 37);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(42, 52, 54);
+    border-right-color: rgb(42, 52, 54);
+    border-top-color: rgb(42, 52, 54);
+    border-bottom-color: rgb(42, 52, 54);
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb,
-.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb,
+.pcv3-potlist .unity-scroll-view__vertical-scroller {
+    width: 12px;
+    background-color: rgb(26, 35, 37);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(42, 52, 54);
+    border-right-color: rgb(42, 52, 54);
+    border-top-color: rgb(42, 52, 54);
+    border-bottom-color: rgb(42, 52, 54);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Scrollbar console (Terminal Pot): verde lime, angoli stondati, nessuna linea interna.
+   Usare !important per sovrascrivere il tema predefinito Unity. */
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    background-color: rgb(127, 255, 122) !important;
+    background-image: none !important;
+    border-width: 0 !important;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+/* Alternativa: thumb come dragger */
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
+    background-color: rgb(127, 255, 122) !important;
+    background-image: none !important;
+    border-width: 0 !important;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    background-color: rgb(127, 255, 122);
+    background-image: repeating-linear-gradient(180deg, rgb(127, 255, 122) 0px, rgb(127, 255, 122) 2px, rgb(95, 182, 90) 2px, rgb(95, 182, 90) 4px);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(70, 120, 75);
+    border-right-color: rgb(70, 120, 75);
+    border-top-color: rgb(70, 120, 75);
+    border-bottom-color: rgb(70, 120, 75);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
-    background-image: linear-gradient(#7FFF7A, #5FB65A);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: #1A2325;
-    border-right-color: #1A2325;
-    border-top-color: #1A2325;
-    border-bottom-color: #1A2325;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    box-shadow: 0 0 8px rgba(127, 255, 122, 0.6);
+    background-color: rgb(127, 255, 122);
+    background-image: repeating-linear-gradient(180deg, rgb(127, 255, 122) 0px, rgb(127, 255, 122) 2px, rgb(95, 182, 90) 2px, rgb(95, 182, 90) 4px);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(70, 120, 75);
+    border-right-color: rgb(70, 120, 75);
+    border-top-color: rgb(70, 120, 75);
+    border-bottom-color: rgb(70, 120, 75);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
 }
 
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover,
-.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover,
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
+    background-color: rgb(136, 255, 136);
+    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
+}
+
+.pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
+    background-color: rgb(136, 255, 136);
+    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
+}
+
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
-    background-image: linear-gradient(#88FF88, #6FC66A);
-    box-shadow: 0 0 12px rgba(127, 255, 122, 0.8);
+    background-color: rgb(136, 255, 136);
+    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
 }
 
-/* ----------------------------- */
-/* Custom Scrollbar (UI Builder) */
-/* ----------------------------- */
 .pcv3-custom-scrollbar {
     width: 12px;
     position: absolute;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
+    right: 0;
+    top: 0;
+    bottom: 0;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
@@ -538,15 +691,15 @@
 .pcv3-custom-scrollbar-track {
     width: 100%;
     flex-grow: 1;
-    background-color: #1A2325;
+    background-color: rgb(26, 35, 37);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: #2A3436;
-    border-right-color: #2A3436;
-    border-top-color: #2A3436;
-    border-bottom-color: #2A3436;
+    border-left-color: rgb(42, 52, 54);
+    border-right-color: rgb(42, 52, 54);
+    border-top-color: rgb(42, 52, 54);
+    border-bottom-color: rgb(42, 52, 54);
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-bottom-left-radius: 0;
@@ -557,26 +710,26 @@
 .pcv3-custom-scrollbar-thumb {
     width: 100%;
     min-height: 20px;
-    background-image: linear-gradient(#7FFF7A, #5FB65A);
+    background-image: linear-gradient(rgb(127, 255, 122), rgb(95, 182, 90));
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: #1A2325;
-    border-right-color: #1A2325;
-    border-top-color: #1A2325;
-    border-bottom-color: #1A2325;
+    border-left-color: rgb(26, 35, 37);
+    border-right-color: rgb(26, 35, 37);
+    border-top-color: rgb(26, 35, 37);
+    border-bottom-color: rgb(26, 35, 37);
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     box-shadow: 0 0 8px rgba(127, 255, 122, 0.6);
     position: absolute;
-    top: 0px;
+    top: 0;
 }
 
 .pcv3-custom-scrollbar-thumb:hover {
-    background-image: linear-gradient(#88FF88, #6FC66A);
+    background-image: linear-gradient(rgb(136, 255, 136), rgb(111, 198, 106));
     box-shadow: 0 0 12px rgba(127, 255, 122, 0.8);
 }
 
@@ -592,9 +745,6 @@
     color: rgb(230, 201, 111);
 }
 
-/* ----------------------------- */
-/* Detail Page Styles            */
-/* ----------------------------- */
 .pcv3-detail-page {
     flex-grow: 1;
     flex-direction: column;
@@ -603,7 +753,6 @@
     background-color: rgba(0, 0, 0, 0.85);
 }
 
-/* Top Section */
 .pcv3-detail-top {
     flex-direction: column;
     padding: 12px;
@@ -621,7 +770,7 @@
 
 .pcv3-detail-specimen-id {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     margin-bottom: 8px;
@@ -644,18 +793,18 @@
 
 .pcv3-detail-phdrift-label {
     font-size: 9px;
-    color: #A8D5B0;
+    color: rgb(168, 213, 176);
 }
 
 .pcv3-detail-phdrift-value {
     font-size: 12px;
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
 }
 
 .pcv3-detail-plant-name {
     font-size: 18px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     font-weight: bold;
     letter-spacing: 1px;
     text-shadow: 0 0 6px rgba(127, 255, 122, 0.8);
@@ -664,7 +813,7 @@
 
 .pcv3-detail-species-level {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     margin-top: 4px;
@@ -672,7 +821,7 @@
 
 .pcv3-detail-description {
     font-size: 10px;
-    color: #A8D5B0;
+    color: rgb(168, 213, 176);
     -unity-font-style: italic;
     letter-spacing: 0.5px;
     line-height: 1.4;
@@ -704,13 +853,13 @@
 
 .pcv3-detail-growth-rate {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3-detail-ph-current {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
@@ -732,7 +881,7 @@
 
 .pcv3-detail-condition-text {
     font-size: 12px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     -unity-text-align: middle-center;
 }
@@ -755,12 +904,11 @@
 
 .pcv3-detail-stage-text {
     font-size: 12px;
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
     -unity-text-align: middle-center;
 }
 
-/* Vitals Section */
 .pcv3-detail-vitals {
     flex-direction: column;
     padding: 12px;
@@ -784,7 +932,7 @@
 
 .pcv3-detail-vitals-title {
     font-size: 12px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 1px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
@@ -793,13 +941,13 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #7FFF7A;
-    box-shadow: 0 0 8px #7FFF7A, 0 0 12px #7FFF7A;
+    background-color: rgb(127, 255, 122);
+    box-shadow: 0 0 8px rgb(127, 255, 122), 0 0 12px rgb(127, 255, 122);
 }
 
 .pcv3-detail-live-label {
     font-size: 10px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
 }
 
@@ -818,13 +966,13 @@
 
 .pcv3-detail-param-label {
     font-size: 10px;
-    color: #C0C8C5;
+    color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
 }
 
 .pcv3-detail-param-range {
     font-size: 9px;
-    color: #A8D5B0;
+    color: rgb(168, 213, 176);
     letter-spacing: 0.3px;
 }
 
@@ -845,49 +993,47 @@
 
 .pcv3-detail-param-fill {
     height: 100%;
-    background-color: #7FFF7A;
+    background-color: rgb(127, 255, 122);
     box-shadow: 0 0 6px rgba(127, 255, 122, 0.6);
 }
 
-/* Colori specifici per parametri */
 .pcv3-detail-param-mold-fill {
-    background-color: #7FFF7A;
+    background-color: rgb(127, 255, 122);
     box-shadow: 0 0 6px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3-detail-param-hydration-fill {
-    background-color: #5DB6E3;
+    background-color: rgb(93, 182, 227);
     box-shadow: 0 0 6px rgba(93, 182, 227, 0.6);
 }
 
 .pcv3-detail-param-fertilizer-fill {
-    background-color: #7FFF7A;
+    background-color: rgb(127, 255, 122);
     box-shadow: 0 0 6px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3-detail-param-light-fill {
-    background-color: #E6C96F;
+    background-color: rgb(230, 201, 111);
     box-shadow: 0 0 6px rgba(230, 201, 111, 0.6);
 }
 
 .pcv3-detail-param-hydration-value {
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
 }
 
 .pcv3-detail-param-light-value {
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
     text-shadow: 0 0 4px rgba(230, 201, 111, 0.6);
 }
 
 .pcv3-detail-param-value {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     letter-spacing: 0.5px;
 }
 
-/* Bottom Section */
 .pcv3-detail-bottom {
     flex-direction: row;
     flex-grow: 1;
@@ -917,7 +1063,7 @@
 
 .pcv3-detail-env-title {
     font-size: 12px;
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
     letter-spacing: 1px;
     text-shadow: 0 0 4px rgba(230, 201, 111, 0.6);
     margin-bottom: 8px;
@@ -939,13 +1085,13 @@
 
 .pcv3-detail-env-label {
     font-size: 10px;
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
     letter-spacing: 0.5px;
 }
 
 .pcv3-detail-env-value {
     font-size: 14px;
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
     text-shadow: 0 0 4px rgba(230, 201, 111, 0.6);
     letter-spacing: 0.8px;
 }
@@ -977,7 +1123,7 @@
 
 .pcv3-detail-research-title {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     margin-bottom: 8px;
@@ -991,7 +1137,7 @@
 
 .pcv3-detail-research-text {
     font-size: 10px;
-    color: #A8D5B0;
+    color: rgb(168, 213, 176);
     letter-spacing: 0.5px;
     line-height: 1.5;
     white-space: normal;
@@ -1007,10 +1153,10 @@
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: rgba(181, 128, 209, 0.70);
-    border-right-color: rgba(181, 128, 209, 0.70);
-    border-top-color: rgba(181, 128, 209, 0.70);
-    border-bottom-color: rgba(181, 128, 209, 0.70);
+    border-left-color: rgba(181, 128, 209, 0.7);
+    border-right-color: rgba(181, 128, 209, 0.7);
+    border-top-color: rgba(181, 128, 209, 0.7);
+    border-bottom-color: rgba(181, 128, 209, 0.7);
     background-color: rgba(0, 0, 0, 0.6);
     box-shadow: 0 0 10px rgba(181, 128, 209, 0.25);
     min-width: 0;
@@ -1018,7 +1164,7 @@
 
 .pcv3-detail-diary-title {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     margin-bottom: 8px;
@@ -1071,7 +1217,7 @@
     border-right-color: rgba(181, 128, 209, 0.8);
     border-top-color: rgba(181, 128, 209, 0.8);
     border-bottom-color: rgba(181, 128, 209, 0.8);
-    color: rgba(181, 128, 209, 1);
+    color: rgb(181, 128, 209);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(181, 128, 209, 0.55);
 }
@@ -1115,28 +1261,40 @@
     line-height: 1.4;
 }
 
-/* ===================================================================== */
-/* PlantCardV3 Details (DOS) - rebuilt                                   */
-/* ===================================================================== */
 .pcv3d-page {
     flex-grow: 1;
     min-height: 0;
     padding: 16px;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0);
 }
 
-.pcv3d-card,
-.pcv3d-block {
+.pcv3d-card {
     width: 420px;
-    background-color: #000000;
+    background-color: rgb(0, 0, 0);
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: #7FFF7A;
-    border-right-color: #7FFF7A;
-    border-top-color: #7FFF7A;
-    border-bottom-color: #7FFF7A;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+    box-shadow: 0 0 20px rgba(127, 255, 122, 0.3);
+    padding: 12px;
+    flex-direction: column;
+}
+
+.pcv3d-block {
+    width: 420px;
+    background-color: rgb(0, 0, 0);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
     box-shadow: 0 0 20px rgba(127, 255, 122, 0.3);
     padding: 12px;
     flex-direction: column;
@@ -1162,17 +1320,17 @@
 
 .pcv3d-led {
     font-size: 12px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
 }
 
 .pcv3d-specimen {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
 }
 
 .pcv3d-family {
     font-size: 11px;
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
     -unity-text-align: middle-right;
 }
 
@@ -1182,26 +1340,26 @@
 
 .pcv3d-plant-name {
     font-size: 20px;
-    color: #7FFF7A;
-    letter-spacing: 1.8px; /* ~0.15em */
+    color: rgb(127, 255, 122);
+    letter-spacing: 1.8px;
     text-shadow: 0 0 12px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3d-species-level {
     font-size: 11px;
-    color: #8BA896;
+    color: rgb(139, 168, 150);
 }
 
 .pcv3d-one-liner {
     font-size: 11px;
-    color: #A8C5B0;
+    color: rgb(168, 197, 176);
     -unity-font-style: italic;
     line-height: 1.5;
     white-space: normal;
 }
 
 .pcv3d-sep {
-    height: 0px;
+    height: 0;
     border-top-width: 1px;
     border-top-color: rgba(127, 255, 122, 0.4);
     margin-top: 2px;
@@ -1219,7 +1377,7 @@
 
 .pcv3d-line {
     font-size: 11px;
-    color: #C8DED0;
+    color: rgb(200, 222, 208);
     white-space: nowrap;
 }
 
@@ -1245,7 +1403,7 @@
 .pcv3d-vital-label {
     width: 160px;
     font-size: 11px;
-    color: #C8DED0;
+    color: rgb(200, 222, 208);
     white-space: nowrap;
 }
 
@@ -1257,33 +1415,33 @@
 
 .pcv3d-bar-bracket {
     font-size: 11px;
-    color: #C8DED0;
+    color: rgb(200, 222, 208);
 }
 
 .pcv3d-bar-filled {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3d-bar-filled-blue {
-    color: #5DB6E3;
+    color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
 }
 
 .pcv3d-bar-filled-green {
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3d-bar-filled-yellow {
-    color: #E6C96F;
+    color: rgb(230, 201, 111);
     text-shadow: 0 0 4px rgba(230, 201, 111, 0.6);
 }
 
 .pcv3d-bar-empty {
     font-size: 11px;
-    color: #333333;
+    color: rgb(51, 51, 51);
 }
 
 .pcv3d-vital-value {
@@ -1295,21 +1453,21 @@
 
 .pcv3d-btn {
     margin-top: 8px;
-    background-color: rgba(0,0,0,0);
+    background-color: rgba(0, 0, 0, 0);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: #7FFF7A;
-    border-right-color: #7FFF7A;
-    border-top-color: #7FFF7A;
-    border-bottom-color: #7FFF7A;
-    color: #7FFF7A;
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+    color: rgb(127, 255, 122);
     padding-left: 12px;
     padding-right: 12px;
     padding-top: 6px;
     padding-bottom: 6px;
-    letter-spacing: 0.9px; /* ~0.08em */
+    letter-spacing: 0.9px;
 }
 
 .pcv3d-btn:hover {
@@ -1322,24 +1480,24 @@
 }
 
 .pcv3d-block-blue {
-    border-left-color: #5DB6E3;
-    border-right-color: #5DB6E3;
-    border-top-color: #5DB6E3;
-    border-bottom-color: #5DB6E3;
+    border-left-color: rgb(93, 182, 227);
+    border-right-color: rgb(93, 182, 227);
+    border-top-color: rgb(93, 182, 227);
+    border-bottom-color: rgb(93, 182, 227);
     box-shadow: 0 0 20px rgba(93, 182, 227, 0.22);
 }
 
 .pcv3d-block-purple {
-    border-left-color: #B580D1;
-    border-right-color: #B580D1;
-    border-top-color: #B580D1;
-    border-bottom-color: #B580D1;
+    border-left-color: rgb(181, 128, 209);
+    border-right-color: rgb(181, 128, 209);
+    border-top-color: rgb(181, 128, 209);
+    border-bottom-color: rgb(181, 128, 209);
     box-shadow: 0 0 20px rgba(181, 128, 209, 0.22);
 }
 
 .pcv3d-block-title {
     font-size: 11px;
-    color: #7FFF7A;
+    color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     margin-bottom: 8px;
 }
@@ -1351,7 +1509,7 @@
 
 .pcv3d-block-text {
     font-size: 11px;
-    color: #A8C5B0;
+    color: rgb(168, 197, 176);
     white-space: normal;
     line-height: 1.5;
 }
@@ -1366,16 +1524,16 @@
     flex-grow: 1;
     min-width: 0;
     height: 28px;
-    background-color: rgba(0, 0, 0, 0.0);
+    background-color: rgba(0, 0, 0, 0);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: #B580D1;
-    border-right-color: #B580D1;
-    border-top-color: #B580D1;
-    border-bottom-color: #B580D1;
-    color: #C8DED0;
+    border-left-color: rgb(181, 128, 209);
+    border-right-color: rgb(181, 128, 209);
+    border-top-color: rgb(181, 128, 209);
+    border-bottom-color: rgb(181, 128, 209);
+    color: rgb(200, 222, 208);
     padding-left: 10px;
     padding-right: 10px;
     font-size: 11px;
@@ -1384,16 +1542,16 @@
 .pcv3d-diary-log {
     width: 60px;
     height: 28px;
-    background-color: rgba(0,0,0,0);
+    background-color: rgba(0, 0, 0, 0);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-left-color: #B580D1;
-    border-right-color: #B580D1;
-    border-top-color: #B580D1;
-    border-bottom-color: #B580D1;
-    color: #B580D1;
+    border-left-color: rgb(181, 128, 209);
+    border-right-color: rgb(181, 128, 209);
+    border-top-color: rgb(181, 128, 209);
+    border-bottom-color: rgb(181, 128, 209);
+    color: rgb(181, 128, 209);
     letter-spacing: 0.9px;
 }
 
@@ -1408,20 +1566,20 @@
 .pcv3d-diary-row {
     flex-direction: row;
     padding: 8px;
-    background-color: rgba(0,0,0,0);
+    background-color: rgba(0, 0, 0, 0);
     border-left-width: 1px;
     border-left-color: rgba(181, 128, 209, 0.6);
 }
 
 .pcv3d-diary-prefix {
     width: 16px;
-    color: #B580D1;
+    color: rgb(181, 128, 209);
     font-size: 12px;
 }
 
 .pcv3d-diary-text {
     flex-grow: 1;
-    color: #C8DED0;
+    color: rgb(200, 222, 208);
     font-size: 11px;
     white-space: normal;
     line-height: 1.4;
@@ -1443,8 +1601,8 @@
     border-right-color: rgba(127, 255, 122, 0.5);
     border-top-color: rgba(127, 255, 122, 0.5);
     border-bottom-color: rgba(127, 255, 122, 0.5);
-    background-color: rgba(0,0,0,0.55);
-    box-shadow: 0 0 10px rgba(127, 255, 122, 0.30);
+    background-color: rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 10px rgba(127, 255, 122, 0.3);
 }
 
 .pcv3-prompt-prefix {
@@ -1460,48 +1618,62 @@
     height: 44px;
     min-height: 44px;
     max-height: 44px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    padding-left: 0px;
-    padding-right: 0px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
     padding-top: 10px;
     padding-bottom: 10px;
-    background-color: rgba(0,0,0,0);
-    border-left-width: 0px;
-    border-right-width: 0px;
-    border-top-width: 0px;
-    border-bottom-width: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
     color: rgb(127, 255, 122);
     font-size: 12px;
     -unity-text-align: middle-left;
     white-space: nowrap;
     overflow: hidden;
-    text-shadow: 0 0 7px rgba(127, 255, 122, 0.90);
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
     -unity-text-outline-width: 0.6px;
     -unity-text-outline-color: rgba(127, 255, 122, 0.54);
 }
 
-/* Unity TextField internal input (default is white) */
-.pcv3-input .unity-text-input,
+.pcv3-input .unity-text-input {
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(127, 255, 122);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 0;
+    padding-right: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    -unity-text-align: middle-left;
+}
+
 .pcv3-input .unity-base-text-field__input {
     background-color: rgba(0, 0, 0, 0);
     color: rgb(127, 255, 122);
-    border-left-width: 0px;
-    border-right-width: 0px;
-    border-top-width: 0px;
-    border-bottom-width: 0px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
     padding-top: 6px;
     padding-bottom: 6px;
-    padding-left: 0px;
-    padding-right: 0px;
+    padding-left: 0;
+    padding-right: 0;
     white-space: nowrap;
     overflow: hidden;
     -unity-text-align: middle-left;
 }
 
 .pcv3-input:focus {
-    border-left-width: 0px;
-    border-right-width: 0px;
-    border-top-width: 0px;
-    border-bottom-width: 0px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
 }
