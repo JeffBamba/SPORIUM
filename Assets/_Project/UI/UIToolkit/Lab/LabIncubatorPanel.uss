@@ -71,15 +71,29 @@
 
 .lab-inc-reagent-row {
     flex-direction: column;
-    gap: 4px;
+}
+
+.lab-inc-reagent-row > * {
+    margin-bottom: 2px;
+}
+
+.lab-inc-reagent-row > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-inc-x-config-row {
     flex-direction: column;
-    gap: 6px;
     padding-top: 4px;
     border-top-width: 1px;
     border-top-color: rgba(230, 201, 111, 0.22);
+}
+
+.lab-inc-x-config-row > * {
+    margin-bottom: 3px;
+}
+
+.lab-inc-x-config-row > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-inc-x-title {
@@ -89,7 +103,14 @@
 
 .lab-inc-x-grid {
     flex-direction: column;
-    gap: 4px;
+}
+
+.lab-inc-x-grid > * {
+    margin-bottom: 2px;
+}
+
+.lab-inc-x-grid > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-inc-x-label {
@@ -108,19 +129,40 @@
 .lab-inc-reagent-slot-row {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     flex-grow: 1;
+}
+
+.lab-inc-reagent-slot-row > * {
+    margin-right: 5px;
+}
+
+.lab-inc-reagent-slot-row > *:last-child {
+    margin-right: 0;
 }
 
 .lab-inc-body {
     flex-direction: column;
-    gap: 14px;
+}
+
+.lab-inc-body > * {
+    margin-bottom: 7px;
+}
+
+.lab-inc-body > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-inc-row {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.lab-inc-row > * {
+    margin-right: 5px;
+}
+
+.lab-inc-row > *:last-child {
+    margin-right: 0;
 }
 
 .lab-inc-label {
@@ -147,7 +189,14 @@
 
 .lab-inc-reagent-buttons {
     flex-direction: row;
-    gap: 8px;
+}
+
+.lab-inc-reagent-buttons > * {
+    margin-right: 4px;
+}
+
+.lab-inc-reagent-buttons > *:last-child {
+    margin-right: 0;
 }
 
 .lab-inc-reagent-btn {

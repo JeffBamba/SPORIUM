@@ -91,7 +91,14 @@
 
 .potops-list {
     flex-direction: column;
-    gap: 10px;
+}
+
+.potops-list > * {
+    margin-bottom: 5px;
+}
+
+.potops-list > *:last-child {
+    margin-bottom: 0;
 }
 
 .potops-row {

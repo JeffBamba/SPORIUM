@@ -64,7 +64,14 @@
 
 .lab-fus-body {
     flex-direction: column;
-    gap: 14px;
+}
+
+.lab-fus-body > * {
+    margin-bottom: 7px;
+}
+
+.lab-fus-body > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-fus-hint {
@@ -75,7 +82,14 @@
 .lab-fus-row {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.lab-fus-row > * {
+    margin-right: 5px;
+}
+
+.lab-fus-row > *:last-child {
+    margin-right: 0;
 }
 
 .lab-fus-label {

@@ -46,7 +46,14 @@
 .seedinv-header-left {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.seedinv-header-left > * {
+    margin-right: 5px;
+}
+
+.seedinv-header-left > *:last-child {
+    margin-right: 0;
 }
 
 .seedinv-iconbox {
@@ -92,10 +99,17 @@
 .seedinv-list {
     flex-grow: 0;
     flex-direction: column;
-    gap: 10px;
     overflow-y: auto;
     margin-bottom: 14px;
     max-height: 300px;
+}
+
+.seedinv-list > * {
+    margin-bottom: 5px;
+}
+
+.seedinv-list > *:last-child {
+    margin-bottom: 0;
 }
 
 .seedinv-row {
@@ -162,8 +176,15 @@
 .seedinv-badges {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
     margin-top: 6px;
+}
+
+.seedinv-badges > * {
+    margin-right: 4px;
+}
+
+.seedinv-badges > *:last-child {
+    margin-right: 0;
 }
 
 .seedinv-badge {
@@ -209,7 +230,14 @@
 .seedinv-right {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.seedinv-right > * {
+    margin-right: 5px;
+}
+
+.seedinv-right > *:last-child {
+    margin-right: 0;
 }
 
 .seedinv-select {

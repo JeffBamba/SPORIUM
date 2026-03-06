@@ -381,7 +381,6 @@
 
 .action-buttons-row {
     flex-direction: row;
-    gap: 12px;
 }
 
 .plant-button {
@@ -389,7 +388,6 @@
     padding: 16px;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
 }
 
 .remove-button {
@@ -397,7 +395,6 @@
     padding: 16px;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
 }
 
 .plant-button {
@@ -447,7 +444,6 @@
 
 .tab-switcher {
     flex-direction: row;
-    gap: 8px;
     margin-bottom: 16px;
 }
 
@@ -513,7 +509,6 @@
 .parameters-grid {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 12px;
     margin-bottom: 12px;
     position: relative;
 }
@@ -523,7 +518,6 @@
     border-width: 1px;
     padding: 12px;
     flex-direction: column;
-    gap: 8px;
     /* IMPORTANTE: background-color e border-color NON sono definiti qui */
     /* Devono essere impostati SOLO come stili inline nel UXML o in UI Builder */
     /* Questo garantisce che gli stili modificati in UI Builder abbiano priorità assoluta */
@@ -658,7 +652,6 @@
     border-top-width: 1px;
     border-top-color: rgba(127, 255, 122, 0.3);
     flex-direction: column;
-    gap: 8px;
     position: absolute;
     top: 421px;
     width: 843px;
@@ -667,7 +660,6 @@
 .section-header {
     flex-direction: row;
     align-items: center;
-    gap: 6px;
 }
 
 .section-icon {
@@ -685,7 +677,6 @@
     background-color: rgba(127, 255, 122, 0.05);
     padding: 12px;
     flex-direction: column;
-    gap: 6px;
 }
 
 .active-power-name {
@@ -696,7 +687,6 @@
 
 .active-power-list {
     flex-direction: column;
-    gap: 4px;
 }
 
 .active-power-item {
@@ -760,7 +750,6 @@
 .prodotti-section {
     margin-bottom: 16px;
     flex-direction: column;
-    gap: 12px;
 }
 
 .prodotti-header {
@@ -769,7 +758,6 @@
     border-bottom-color: rgba(127, 255, 122, 0.2);
     flex-direction: row;
     align-items: center;
-    gap: 6px;
 }
 
 .prodotti-icon {
@@ -788,12 +776,10 @@
     background-color: rgba(127, 255, 122, 0.05);
     padding: 12px;
     flex-direction: column;
-    gap: 10px;
 }
 
 .prodotti-item {
     flex-direction: column;
-    gap: 4px;
 }
 
 .prodotti-fruit-title {
@@ -816,7 +802,6 @@
 .prodotti-details {
     padding-left: 16px;
     flex-direction: column;
-    gap: 2px;
 }
 
 .prodotti-detail-text {
@@ -827,14 +812,12 @@
 .notes-list {
     flex: 1;
     flex-direction: column;
-    gap: 8px;
     overflow-y: auto;
 }
 
 .add-note-panel {
     margin-top: 12px;
     flex-direction: column;
-    gap: 8px;
 }
 
 .note-textarea {
@@ -853,7 +836,6 @@
 
 .note-buttons-row {
     flex-direction: row;
-    gap: 8px;
 }
 
 .save-note-button {
@@ -863,7 +845,6 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px;
 }
 
 .cancel-note-button {
@@ -873,7 +854,6 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px;
 }
 
 .save-note-button {
@@ -897,7 +877,6 @@
 .cancel-note-button {
     border-width: 2px;
     border-color: var(--red-warning);
-    gap: 6px;
 }
 
 .cancel-icon {
@@ -943,7 +922,6 @@
 
 .control-panel-row {
     flex-direction: row;
-    gap: 20px;
     position: relative;
     z-index: 0;
     flex-shrink: 0;
@@ -971,7 +949,6 @@
 .header-left {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
 }
 
 .led-bar {
@@ -994,7 +971,6 @@
 .header-right {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
 }
 
 .led-indicator {
@@ -1028,7 +1004,6 @@
 
 .actions-grid {
     flex-direction: row;
-    gap: 16px;
 }
 
 .quick-action-button {
@@ -1038,7 +1013,6 @@
     padding: 20px 16px;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     transition-duration: 0.2s;
 }
 
@@ -1103,7 +1077,6 @@
 
 .systems-grid {
     flex-direction: row;
-    gap: 20px;
 }
 
 .rotary-container {
@@ -1113,7 +1086,6 @@
     background-color: var(--bg-darker);
     padding: 16px;
     flex-direction: column;
-    gap: 12px;
 }
 
 .rotary-header {

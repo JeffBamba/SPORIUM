@@ -26,6 +26,20 @@ public static class UIBlocker
         return go == _cachedViewportBackgroundGO || go.transform.IsChildOf(_cachedViewportBackgroundGO.transform);
     }
 
+    // DEBUG: ignora pannello full-screen che copre la Game View (bloccava punta-e-clicca).
+    private static bool TryIsPassThroughPanel(GameObject go)
+    {
+        if (go == null) return false;
+        if (go.name == "BackgroundSettingsPanel") return true;
+        Transform t = go.transform.parent;
+        while (t != null)
+        {
+            if (t.name == "BackgroundSettingsPanel") return true;
+            t = t.parent;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Verifica se il puntatore è sopra un elemento UI
     /// </summary>
@@ -45,6 +59,8 @@ public static class UIBlocker
             {
                 // DEBUG_SAFE_FIX: rimuovi hit del background viewport, altrimenti risulta sempre "sopra UI"
                 _results.RemoveAll(r => TryIsViewportBackground(r.gameObject));
+                // DEBUG: rimuovi anche pannello full-screen che copre la Game View (es. BackgroundSettingsPanel)
+                _results.RemoveAll(r => TryIsPassThroughPanel(r.gameObject));
             }
 
             bool isOverUI = _results.Count > 0;

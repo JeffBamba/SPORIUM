@@ -45,7 +45,14 @@
 .irrig-header-left {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.irrig-header-left > * {
+    margin-right: 5px;
+}
+
+.irrig-header-left > *:last-child {
+    margin-right: 0;
 }
 
 .irrig-iconbox {
@@ -111,8 +118,15 @@
 
 .irrig-buttons {
     flex-direction: row;
-    gap: 14px;
     margin-top: 22px;
+}
+
+.irrig-buttons > * {
+    margin-right: 7px;
+}
+
+.irrig-buttons > *:last-child {
+    margin-right: 0;
 }
 
 .irrig-btn {
@@ -129,7 +143,14 @@
 .irrig-btn-header {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.irrig-btn-header > * {
+    margin-right: 5px;
+}
+
+.irrig-btn-header > *:last-child {
+    margin-right: 0;
 }
 
 .irrig-btn:hover {

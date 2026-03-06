@@ -71,7 +71,6 @@
     border-bottom-width: 2px;
     border-bottom-color: rgba(127, 255, 122, 0.6);
     background-color: rgba(0, 0, 0, 0.60);
-    gap: 12px;
 }
 
 .pcv3-title {
@@ -86,7 +85,6 @@
 .pcv3-header-right {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     flex-grow: 1; /* occupa spazio per distanziare dal titolo */
 }
 
@@ -140,7 +138,6 @@
     border-right-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0, 0, 0, 0.45);
     padding: 12px;
-    gap: 12px;
     overflow: hidden;
 }
 
@@ -207,7 +204,6 @@
     padding-right: 12px;
     padding-top: 12px;
     padding-bottom: 12px;
-    gap: 12px;
 }
 
 .pcv3-potcard-topbar {
@@ -266,7 +262,6 @@
     padding-right: 12px;
     padding-top: 12px;
     padding-bottom: 12px;
-    gap: 12px;
 }
 
 .pcv3-potcard-plantbox {
@@ -328,7 +323,6 @@
 .pcv3-potcard-info {
     width: 242px;
     flex-direction: column;
-    gap: 8px;
 }
 
 .pcv3-potcard-desc {
@@ -342,12 +336,10 @@
 }
 
 .pcv3-potcard-stats {
-    gap: 0px;
 }
 
 .pcv3-potcard-stat-row {
     flex-direction: row;
-    gap: 6px;
     margin-top: 6px;
 }
 
@@ -437,7 +429,6 @@
 .pcv3-right {
     flex-grow: 1;
     padding: 14px;
-    gap: 10px;
     height: 740px;
     min-height: 740px;
     max-height: 740px;
@@ -608,7 +599,6 @@
     flex-grow: 1;
     flex-direction: column;
     padding: 16px;
-    gap: 16px;
     overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.85);
 }
@@ -616,7 +606,6 @@
 /* Top Section */
 .pcv3-detail-top {
     flex-direction: column;
-    gap: 12px;
     padding: 12px;
     border-left-width: 2px;
     border-right-width: 2px;
@@ -651,7 +640,6 @@
     border-bottom-color: rgba(127, 255, 122, 0.6);
     background-color: rgba(0, 0, 0, 0.4);
     flex-direction: column;
-    gap: 4px;
 }
 
 .pcv3-detail-phdrift-label {
@@ -694,7 +682,6 @@
 
 .pcv3-detail-plant-image-container {
     flex-direction: row;
-    gap: 16px;
     margin-top: 12px;
     align-items: center;
 }
@@ -740,7 +727,6 @@
     border-bottom-color: rgba(127, 255, 122, 0.6);
     background-color: rgba(0, 0, 0, 0.4);
     flex-direction: column;
-    gap: 4px;
     margin-top: 12px;
 }
 
@@ -764,7 +750,6 @@
     border-bottom-color: rgba(93, 182, 227, 0.6);
     background-color: rgba(0, 0, 0, 0.4);
     flex-direction: column;
-    gap: 4px;
     margin-top: 12px;
 }
 
@@ -778,7 +763,6 @@
 /* Vitals Section */
 .pcv3-detail-vitals {
     flex-direction: column;
-    gap: 12px;
     padding: 12px;
     border-left-width: 2px;
     border-right-width: 2px;
@@ -795,7 +779,6 @@
 .pcv3-detail-vitals-header {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
     margin-bottom: 8px;
 }
 
@@ -824,12 +807,10 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    gap: 16px;
 }
 
 .pcv3-detail-param-block {
     flex-direction: column;
-    gap: 6px;
     min-width: 200px;
     flex-grow: 1;
     flex-basis: 0;
@@ -909,7 +890,6 @@
 /* Bottom Section */
 .pcv3-detail-bottom {
     flex-direction: row;
-    gap: 16px;
     flex-grow: 1;
     min-height: 200px;
     min-width: 0;
@@ -922,7 +902,6 @@
     flex-grow: 0;
     flex-shrink: 0;
     flex-direction: column;
-    gap: 12px;
     padding: 12px;
     border-left-width: 2px;
     border-right-width: 2px;
@@ -946,7 +925,6 @@
 
 .pcv3-detail-env-box {
     flex-direction: column;
-    gap: 4px;
     padding: 8px;
     border-left-width: 1px;
     border-right-width: 1px;
@@ -977,7 +955,6 @@
     flex-basis: 0;
     flex-shrink: 1;
     flex-direction: column;
-    gap: 12px;
     min-width: 0;
 }
 
@@ -1050,7 +1027,6 @@
 .pcv3-detail-diary-compose {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     margin-bottom: 10px;
     width: 100%;
     min-width: 0;
@@ -1113,13 +1089,11 @@
 
 .pcv3-detail-diary-list {
     flex-direction: column;
-    gap: 10px;
     min-width: 0;
 }
 
 .pcv3-detail-diary-row {
     flex-direction: row;
-    gap: 10px;
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.25);
     border-left-width: 2px;
@@ -1166,7 +1140,6 @@
     box-shadow: 0 0 20px rgba(127, 255, 122, 0.3);
     padding: 12px;
     flex-direction: column;
-    gap: 10px;
 }
 
 .pcv3d-card {
@@ -1185,7 +1158,6 @@
 .pcv3d-header-left {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
 }
 
 .pcv3d-led {
@@ -1206,7 +1178,6 @@
 
 .pcv3d-name {
     flex-direction: column;
-    gap: 4px;
 }
 
 .pcv3d-plant-name {
@@ -1239,13 +1210,11 @@
 
 .pcv3d-status {
     flex-direction: column;
-    gap: 6px;
 }
 
 .pcv3d-status-row {
     flex-direction: row;
     justify-content: space-between;
-    gap: 10px;
 }
 
 .pcv3d-line {
@@ -1266,13 +1235,11 @@
 
 .pcv3d-vitals {
     flex-direction: column;
-    gap: 8px;
 }
 
 .pcv3d-vital-row {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
 }
 
 .pcv3d-vital-label {
@@ -1285,7 +1252,6 @@
 .pcv3d-bar {
     flex-direction: row;
     align-items: center;
-    gap: 0px;
     flex-grow: 1;
 }
 
@@ -1393,7 +1359,6 @@
 .pcv3d-diary-compose {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     margin-bottom: 10px;
 }
 
@@ -1438,12 +1403,10 @@
 
 .pcv3d-diary-list {
     flex-direction: column;
-    gap: 10px;
 }
 
 .pcv3d-diary-row {
     flex-direction: row;
-    gap: 10px;
     padding: 8px;
     background-color: rgba(0,0,0,0);
     border-left-width: 1px;

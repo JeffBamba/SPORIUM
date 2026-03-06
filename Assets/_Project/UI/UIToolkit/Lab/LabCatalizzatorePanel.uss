@@ -64,7 +64,14 @@
 
 .lab-cat-body {
     flex-direction: column;
-    gap: 14px;
+}
+
+.lab-cat-body > * {
+    margin-bottom: 7px;
+}
+
+.lab-cat-body > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-cat-status {
@@ -83,7 +90,14 @@
 .lab-cat-row {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.lab-cat-row > * {
+    margin-right: 5px;
+}
+
+.lab-cat-row > *:last-child {
+    margin-right: 0;
 }
 
 .lab-cat-label {

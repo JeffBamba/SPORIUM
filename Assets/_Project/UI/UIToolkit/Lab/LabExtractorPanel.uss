@@ -64,13 +64,27 @@
 
 .lab-ext-body {
     flex-direction: column;
-    gap: 14px;
+}
+
+.lab-ext-body > * {
+    margin-bottom: 7px;
+}
+
+.lab-ext-body > *:last-child {
+    margin-bottom: 0;
 }
 
 .lab-ext-row {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.lab-ext-row > * {
+    margin-right: 5px;
+}
+
+.lab-ext-row > *:last-child {
+    margin-right: 0;
 }
 
 .lab-ext-label {

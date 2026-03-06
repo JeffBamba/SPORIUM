@@ -474,7 +474,14 @@
     align-items: center;
     flex-shrink: 0;
     margin-left: var(--sp-space-sm);
-    gap: var(--sp-space-xs);
+}
+
+.hydration-units-row > * {
+    margin-right: 2px;
+}
+
+.hydration-units-row > *:last-child {
+    margin-right: 0;
 }
 
 .hydration-units-label {

@@ -34,7 +34,14 @@
 
 .inv-header-left {
     flex-direction: column;
-    gap: 2px;
+}
+
+.inv-header-left > * {
+    margin-bottom: 1px;
+}
+
+.inv-header-left > *:last-child {
+    margin-bottom: 0;
 }
 
 .inv-title {
@@ -71,11 +78,18 @@
 .inv-list {
     flex-grow: 1;
     flex-direction: column;
-    gap: 8px;
     overflow-y: auto;
     margin-bottom: 12px;
     min-height: 120px;
     max-height: 320px;
+}
+
+.inv-list > * {
+    margin-bottom: 4px;
+}
+
+.inv-list > *:last-child {
+    margin-bottom: 0;
 }
 
 .inv-row {
@@ -147,7 +161,14 @@
 .inv-row-right {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.inv-row-right > * {
+    margin-right: 5px;
+}
+
+.inv-row-right > *:last-child {
+    margin-right: 0;
 }
 
 .inv-select {

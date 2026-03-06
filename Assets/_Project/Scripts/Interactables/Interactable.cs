@@ -8,12 +8,16 @@ namespace _Project
         [Tooltip("Distanza massima per interagire (click o E). Se 0, non si può mai interagire.")]
         [SerializeField] private float _interactDistance = 2f;
 
+        [Tooltip("Raggio (in unità mondo) entro cui un click conta come \"sul\" questo Interactable. Aumenta se il click funziona solo in un punto.")]
+        [SerializeField] private float _clickRadius = 0.35f;
+
         [SerializeField] private Color _normalColor;
         [SerializeField] private Color _highlightColor;
         
         private SpriteRenderer _spriteRenderer;
         private Transform _playerTransform;
         private PlayerInteractAdvice _playerInteractAdvice;
+        private Collider2D _collider2D;
         
         public event Action OnInteract;
 
@@ -28,6 +32,9 @@ namespace _Project
         {
             _playerInteractAdvice = FindObjectOfType<PlayerInteractAdvice>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            _collider2D = GetComponent<Collider2D>();
+            if (_collider2D == null)
+                _collider2D = GetComponentInChildren<Collider2D>();
             
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
@@ -45,6 +52,39 @@ namespace _Project
                 {
                     _interacted = true;
                     OnInteract?.Invoke();
+                    return;
+                }
+
+                // Click come alternativa a E: se il click è su questo Interactable e non sulla UI, interagisci
+                if (Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
+                {
+                    Camera cam = Camera.main != null ? Camera.main : UnityEngine.Object.FindObjectOfType<Camera>();
+                    Vector2 worldPoint = cam != null
+                        ? (Vector2)cam.ScreenToWorldPoint(Input.mousePosition)
+                        : (Vector2)transform.position;
+                    float r = _clickRadius > 0f ? _clickRadius : 0.35f;
+                    bool hit = false;
+                    if (_collider2D != null)
+                    {
+                        hit = _collider2D.OverlapPoint(worldPoint);
+                        if (!hit)
+                        {
+                            Collider2D[] near = Physics2D.OverlapCircleAll(worldPoint, r);
+                            for (int i = 0; i < near.Length; i++)
+                                if (near[i] == _collider2D) { hit = true; break; }
+                        }
+                    }
+                    // Se non c'è collider (es. Incubator, FoodSynthMachine con solo UI/sprite), usa distanza dal transform
+                    if (!hit)
+                    {
+                        float radiusNoCollider = Mathf.Max(r, 0.6f);
+                        hit = Vector2.Distance(worldPoint, transform.position) <= radiusNoCollider;
+                    }
+                    if (hit)
+                    {
+                        _interacted = true;
+                        OnInteract?.Invoke();
+                    }
                 }
             }
             else

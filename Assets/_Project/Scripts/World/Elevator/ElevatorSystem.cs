@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using _Project;
@@ -127,6 +127,21 @@ public class ElevatorSystem : MonoBehaviour
         if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetKeyDown(openMenuKey))
         {
             ShowFloorOptions(true);
+        }
+        // Click come alternativa a E per aprire il menu quando si è dentro il trigger
+        if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
+        {
+            Camera cam = Camera.main != null ? Camera.main : UnityEngine.Object.FindObjectOfType<Camera>();
+            Vector2 worldPoint = cam != null ? (Vector2)cam.ScreenToWorldPoint(Input.mousePosition) : (Vector2)transform.position;
+            Collider2D[] hits = Physics2D.OverlapCircleAll(worldPoint, 0.35f);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i].transform.IsChildOf(transform) || hits[i].transform == transform)
+                {
+                    ShowFloorOptions(true);
+                    break;
+                }
+            }
         }
 
         // DEBUG_SAFE_FIX: Up/Down (and W/S) floor selection must ONLY work when the elevator UI is open.

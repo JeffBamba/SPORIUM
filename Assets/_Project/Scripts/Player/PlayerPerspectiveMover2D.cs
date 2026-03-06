@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using _Project;
 using _Project.World.VaultMap;
 
 namespace _Project.Player
@@ -332,10 +333,30 @@ namespace _Project.Player
             if (!Input.GetMouseButtonDown(0))
                 return;
 
-            if (IsPointerOverUI())
+            Vector2 clickWorld = GetMouseWorldPosition();
+
+            if (UIBlocker.IsPointerOverUI())
                 return;
 
-            Vector2 clickWorld = GetMouseWorldPosition();
+            // Se il click è su un Interactable in range, non avviare movimento (l'Interactable gestisce il click come E)
+            const float interactableClickRadius = 0.35f;
+            Collider2D[] atPoint = Physics2D.OverlapCircleAll(clickWorld, interactableClickRadius);
+            for (int i = 0; i < atPoint.Length; i++)
+            {
+                var inter = atPoint[i].GetComponent<Interactable>();
+                if (inter == null)
+                    inter = atPoint[i].GetComponentInParent<Interactable>();
+                if (inter != null && inter.PlayerInRange)
+                    return;
+            }
+            // Interactable senza collider (es. Incubator, FoodSynthMachine): se il click è vicino al transform, non muovere
+            var allInteractables = UnityEngine.Object.FindObjectsOfType<Interactable>();
+            const float interactableNoColliderRadius = 0.6f;
+            for (int i = 0; i < allInteractables.Length; i++)
+            {
+                if (allInteractables[i].PlayerInRange && Vector2.Distance(clickWorld, allInteractables[i].transform.position) <= interactableNoColliderRadius)
+                    return;
+            }
 
             if (requireWalkableForClick)
             {
@@ -352,7 +373,8 @@ namespace _Project.Player
             if (currentWalkArea == null)
                 return;
 
-            if (!currentWalkArea.TryProjectWorldToUV(clickWorld, out Vector2 uv))
+            bool projectOk = currentWalkArea.TryProjectWorldToUV(clickWorld, out Vector2 uv);
+            if (!projectOk)
                 return;
 
             _targetUV = new Vector2(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));

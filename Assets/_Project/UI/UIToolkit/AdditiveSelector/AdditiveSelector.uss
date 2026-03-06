@@ -58,7 +58,14 @@ Target estetico: SeedInventoryMenu (POT OPS flow), ma con token Foundation.
 .addsel-header-left {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.addsel-header-left > * {
+    margin-right: 5px;
+}
+
+.addsel-header-left > *:last-child {
+    margin-right: 0;
 }
 
 .addsel-iconbox {
@@ -103,10 +110,17 @@ Target estetico: SeedInventoryMenu (POT OPS flow), ma con token Foundation.
 .addsel-list {
     flex-grow: 0;
     flex-direction: column;
-    gap: 10px;
     overflow-y: auto;
     margin-bottom: 14px;
     max-height: 300px;
+}
+
+.addsel-list > * {
+    margin-bottom: 5px;
+}
+
+.addsel-list > *:last-child {
+    margin-bottom: 0;
 }
 
 .addsel-row {
@@ -172,7 +186,14 @@ Target estetico: SeedInventoryMenu (POT OPS flow), ma con token Foundation.
 .addsel-right {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+}
+
+.addsel-right > * {
+    margin-right: 5px;
+}
+
+.addsel-right > *:last-child {
+    margin-right: 0;
 }
 
 .addsel-qty {
