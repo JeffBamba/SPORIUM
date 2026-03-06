@@ -10,6 +10,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Mold;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project;
 
 namespace Sporae.DevTools
@@ -568,7 +569,12 @@ namespace Sporae.DevTools
             {
                 bool ok = _saveManager.SaveGame("default");
                 if (ok)
+                {
                     SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio completato (slot default)");
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                        foundation.PostToast("SYS-003", new NotificationPayload());
+                }
                 else
                     SporiumLogger.LogWarning(LogCategory.Save, "Salvataggio fallito");
             }
@@ -587,6 +593,20 @@ namespace Sporae.DevTools
                     else
                         SporiumLogger.LogWarning(LogCategory.Save, "Caricamento fallito");
                 }
+            }
+            
+            if (GUILayout.Button("Delete save", buttonStyle, GUILayout.Width(150)))
+            {
+                if (_saveManager.SaveExists("default"))
+                {
+                    bool ok = _saveManager.DeleteSave("default");
+                    if (ok)
+                        SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio eliminato (slot default)");
+                    else
+                        SporiumLogger.LogWarning(LogCategory.Save, "Eliminazione fallita");
+                }
+                else
+                    SporiumLogger.LogWarning(LogCategory.Save, "Nessun salvataggio da eliminare");
             }
             
             GUILayout.EndVertical();

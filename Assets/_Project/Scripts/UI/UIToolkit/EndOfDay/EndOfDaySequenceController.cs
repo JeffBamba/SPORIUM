@@ -11,6 +11,7 @@ using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.FoodRoom;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
 {
@@ -696,7 +697,19 @@ namespace _Project
         private void OnYesClicked()
         {
             if (_saveManager != null)
-                _saveManager.SaveGame("default");
+            {
+                bool saveSuccess = _saveManager.SaveGame("default");
+#if UNITY_EDITOR
+                if (saveSuccess)
+                    SporiumLogger.LogInfo(LogCategory.Save, "Salvataggio automatico eseguito con successo");
+#endif
+                if (saveSuccess)
+                {
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                        foundation.PostToast("SYS-003", new NotificationPayload());
+                }
+            }
             ShowStep(2);
         }
 

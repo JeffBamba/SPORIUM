@@ -87,6 +87,7 @@ Guida per verificare il funzionamento del sistema di salvataggio e caricamento (
 
 1. **Da codice (solo per test)**  
    - Puoi chiamare `SaveManager.Instance.DeleteSave("default")` da uno script di debug o da un pulsante temporaneo.
+   - **In Play**: apri l’inspector con **F1** → sezione **Save System State** → pulsante **Delete save** (elimina lo slot "default").
 2. **Manualmente**  
    - Chiudi Unity (o almeno ferma il Play).  
    - Vai in `Application.persistentDataPath` (in Editor: vedi sopra).  
@@ -150,6 +151,6 @@ Il menu che si apre con **ESC** (New game, Continue, Load, Options, Quit) suppor
 | Caricamento      | Automatico all’avvio (GamePlayInstaller, dopo GameManager) |
 | Salvataggio      | End Day, AppRoot (pause/focus/quit), pulsante Save (F1), menu ESC Save |
 | Load manuale     | Sezione Save System nell’inspector (F1), pulsante Load      |
-| Eliminare save   | `SaveManager.Instance.DeleteSave("default")` o cancellare file/PlayerPrefs |
+| Eliminare save   | Sezione Save System nell'inspector (F1) pulsante **Delete save**, oppure `SaveManager.Instance.DeleteSave("default")` o cancellare file/PlayerPrefs |
 | Verifica esistenza | `SaveManager.Instance.SaveExists("default")`            |
 | Timestamp        | `SaveManager.Instance.GetSaveTimestamp("default")`         |
