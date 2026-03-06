@@ -97,16 +97,6 @@ namespace _Project
 
         public void RecordWateringToggle(string potId, bool isNowOn)
         {
-            // #region agent log
-            try
-            {
-                long ts = (long)(System.DateTime.UtcNow - new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
-                string safePotId = string.IsNullOrEmpty(potId) ? "" : potId.Replace("\\", "\\\\").Replace("\"", "\\\"");
-                string logLine = "{\"location\":\"DayActivityLog.RecordWateringToggle\",\"message\":\"Dome watering recorded\",\"data\":{\"potId\":\"" + safePotId + "\",\"isNowOn\":" + (isNowOn ? "true" : "false") + "},\"timestamp\":" + ts + ",\"hypothesisId\":\"H1\"}\n";
-                System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logLine);
-            }
-            catch { }
-            // #endregion
             if (string.IsNullOrEmpty(potId)) return;
             if (isNowOn)
             {

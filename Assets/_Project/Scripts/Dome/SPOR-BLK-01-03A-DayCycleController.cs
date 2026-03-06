@@ -1495,12 +1495,7 @@ public class DayCycleController : MonoBehaviour
             // Sistema OFF: decadimento graduale se era acceso
             bool hadBlueDays = pot.DaysLedBlueConsecutive > 0;
             bool hadRedDays = pot.DaysLedRedConsecutive > 0;
-            
-            // #region agent log
-            int blueBefore = pot.DaysLedBlueConsecutive;
-            int redBefore = pot.DaysLedRedConsecutive;
-            // #endregion
-            
+
             // DEBUG_SAFE_FIX: Non azzerare completamente i contatori quando LED è OFF
             // Mantieni almeno 1 giorno per evitare che lo stress si azzeri completamente
             // Questo evita drop insensati di condizione quando i parametri sono comunque in range
@@ -1512,12 +1507,7 @@ public class DayCycleController : MonoBehaviour
             {
                 pot.DaysLedRedConsecutive = Mathf.Max(1, pot.DaysLedRedConsecutive - 1); // Mantieni almeno 1
             }
-            
-            // #region agent log
-            var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"DayCycleController.ProcessLedSystemEffects:LED_OFF\",\"message\":\"LED OFF - Decremento contatori\",\"data\":{{\"potId\":\"{pot.PotId}\",\"currentDay\":{currentDay},\"blueBefore\":{blueBefore},\"blueAfter\":{pot.DaysLedBlueConsecutive},\"redBefore\":{redBefore},\"redAfter\":{pot.DaysLedRedConsecutive},\"blueDecrement\":{blueBefore - pot.DaysLedBlueConsecutive},\"redDecrement\":{redBefore - pot.DaysLedRedConsecutive}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
-            // #endregion
-            
+
             if (enableDebugLogs && (hadBlueDays || hadRedDays))
             {
                 SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LED System OFF - Decadimento contatori (Blue: {pot.DaysLedBlueConsecutive}, Red: {pot.DaysLedRedConsecutive})");
@@ -2113,9 +2103,6 @@ public class DayCycleController : MonoBehaviour
                 SporiumLogger.LogWarning(LogCategory.Ph, $"Nessuna pianta valida trovata! {skippedCount} vasi saltati (vuoti o senza PlantCode)");
             }
         }
-        // #region agent log
-        PhRunDebugLogger.Log("H3", "DayCycleController.cs:CalculateAndRegisterPhDrift", "CalculateAndRegisterPhDrift done", "{\"currentDay\":" + currentDay + ",\"plantCount\":" + plantCount + ",\"totalPhDrift\":" + totalPhDrift.ToString("R") + ",\"skippedCount\":" + skippedCount + ",\"registeredPots\":" + _registeredPots.Count + "}");
-        // #endregion
     }
     
     /// <summary>

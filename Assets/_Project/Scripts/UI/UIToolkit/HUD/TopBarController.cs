@@ -578,13 +578,6 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phTooltipValueTotal != null)
                 _phTooltipValueTotal.text = $"<color=#7FFF7A>{totalStr}{stableStr}</color>";
 
-            // #region agent log
-            float systemTotalDrift = _phSystem.GetTotalDailyDrift();
-            int plantCount = plantMods != null ? plantMods.Count : 0;
-            int actionCount = actionMods != null ? actionMods.Count : 0;
-            PhRunDebugLogger.Log("H4", "TopBarController.cs:UpdatePhTooltipContent", "Tooltip pH values", "{\"currentPh\":" + currentPh.ToString("R") + ",\"currentDay\":" + currentDay + ",\"totalFromModifiers\":" + totalFromModifiers.ToString("R") + ",\"getTotalDailyDrift\":" + systemTotalDrift.ToString("R") + ",\"plantModsCount\":" + plantCount + ",\"actionModsCount\":" + actionCount + "}");
-            // #endregion
-
             // POTENTIAL EFFECTS (solo valore; titolo è fisso in UXML)
             PhSystem.PhBand phBand = _phSystem.EvaluateState();
             if (_phTooltipValueEffects != null)

@@ -481,10 +481,6 @@ public class PotStateModel
         {
             // Cambiato a Off: NON resettare i contatori!
             // I contatori verranno decrementati gradualmente a fine giornata in DayCycleController
-            // #region agent log
-            var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"PotStateModel.SetLedSystemState:OFF\",\"message\":\"LED cambiato a OFF - verifica contatori\",\"data\":{{\"potId\":\"{PotId}\",\"oldState\":\"{oldState}\",\"newState\":\"{newState}\",\"blueDays\":{DaysLedBlueConsecutive},\"redDays\":{DaysLedRedConsecutive}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-            System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
-            // #endregion
             SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_LED_STATE] {PotId}: Cambio a Off, mantengo contatori (Blue: {DaysLedBlueConsecutive}, Red: {DaysLedRedConsecutive})");
         }
         else if ((newState == LedSystemState.Blue || newState == LedSystemState.Red) && oldState == LedSystemState.Off)
@@ -514,12 +510,7 @@ public class PotStateModel
             // Questo permette la decrescita graduale dello stress anche quando LED è spento
             result = Mathf.Max(DaysLedBlueConsecutive, DaysLedRedConsecutive);
         }
-        
-        // #region agent log
-        var logData = $"{{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"C\",\"location\":\"PotStateModel.GetConsecutiveLedDays\",\"message\":\"Calcolo giorni consecutivi LED\",\"data\":{{\"potId\":\"{PotId}\",\"ledState\":\"{LedSystemState}\",\"blueDays\":{DaysLedBlueConsecutive},\"redDays\":{DaysLedRedConsecutive},\"result\":{result}}},\"timestamp\":{System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}\n";
-        System.IO.File.AppendAllText(@"d:\Sporae_Build_Beta\.cursor\debug.log", logData);
-        // #endregion
-        
+
         return result;
     }
     

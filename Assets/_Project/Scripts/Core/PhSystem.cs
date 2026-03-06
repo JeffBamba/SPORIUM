@@ -358,9 +358,6 @@ namespace _Project
                 _queuedPlantsDrift += drift;
                 SporiumLogger.LogInfo(LogCategory.Ph, $"RegisterPlantDrift: drift={drift:F2} accodato, plantCode={plantCode ?? "NULL"}, potId={potId ?? "NULL"}, day={day}");
             }
-            // #region agent log
-            PhRunDebugLogger.Log("H2", "PhSystem.cs:RegisterPlantDrift", "RegisterPlantDrift called", "{\"drift\":" + drift.ToString("R") + ",\"plantCode\":\"" + (plantCode ?? "") + "\",\"potId\":\"" + (potId ?? "") + "\",\"day\":" + day + ",\"queuedPlantsAfter\":" + _queuedPlantsDrift.ToString("R") + "}");
-            // #endregion
         }
         
         /// <summary>
@@ -790,10 +787,7 @@ namespace _Project
             }
             
             float oldPh = _currentPh;
-            // #region agent log
-            PhRunDebugLogger.Log("H1", "PhSystem.cs:ApplyQueuedDrifts:before", "ApplyQueuedDrifts before apply", "{\"oldPh\":" + oldPh.ToString("R") + ",\"totalQueued\":" + totalQueued.ToString("R") + ",\"qPlants\":" + _queuedPlantsDrift.ToString("R") + ",\"qActions\":" + _queuedActionsDrift.ToString("R") + ",\"qEvents\":" + _queuedEventsDrift.ToString("R") + ",\"qDaily\":" + _queuedDailyDrift.ToString("R") + "}");
-            // #endregion
-            
+
             // Aggiorna contributi cumulativi
             _plantsDrift += _queuedPlantsDrift;
             _actionsDrift += _queuedActionsDrift;
@@ -805,11 +799,7 @@ namespace _Project
             float expectedPh = contrib.Total;
             _currentPh = Mathf.Clamp(expectedPh, MIN_PH, MAX_PH);
             float actualDelta = _currentPh - oldPh;
-            
-            // #region agent log
-            PhRunDebugLogger.Log("H1", "PhSystem.cs:ApplyQueuedDrifts:after", "ApplyQueuedDrifts after apply", "{\"newPh\":" + _currentPh.ToString("R") + ",\"actualDelta\":" + actualDelta.ToString("R") + ",\"expectedPh\":" + expectedPh.ToString("R") + "}");
-            // #endregion
-            
+
             // Pulisci accumulatori giornalieri
             _queuedPlantsDrift = 0f;
             _queuedActionsDrift = 0f;
