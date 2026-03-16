@@ -678,7 +678,7 @@ public class PotActions : MonoBehaviour
                 bool spendOk = _gameManager.TrySpendAction(totalActionsCost);
                 if (!spendOk)
                 {
-                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Insufficient resources");
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Risorse insufficienti");
                     return false;
                 }
             }
@@ -871,7 +871,7 @@ public class PotActions : MonoBehaviour
             // DEBUG_SAFE_FIX: Manteniamo i log espliciti per verificare costo ON/OFF.
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Insufficient resources");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
                 return false;
             }
             
@@ -990,7 +990,7 @@ public class PotActions : MonoBehaviour
             // Consuma solo 1 Azione per il toggle (non CRY - consumo giornaliero)
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Insufficient resources");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Risorse insufficienti");
                 return false;
             }
             
@@ -1180,7 +1180,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Insufficient resources");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Risorse insufficienti");
                 return false;
             }
         }
@@ -1268,7 +1268,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Insufficient resources");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Risorse insufficienti");
                 return false;
             }
         }
@@ -1346,7 +1346,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Insufficient resources");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Risorse insufficienti");
                 return false;
             }
         }

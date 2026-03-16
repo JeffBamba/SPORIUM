@@ -23,6 +23,8 @@ namespace _Project
 
         private void Start()
         {
+            EnsureOptionsPopupController();
+
             _newGameButton.onClick.AddListener(HandleNewGame);
             _continueButton?.onClick.AddListener(HandleHide);
             _optionsButton.onClick.AddListener(HandleOptions);
@@ -31,6 +33,13 @@ namespace _Project
                 _saveButton.onClick.AddListener(HandleSave);
             _quitButton.onClick.AddListener(HandleQuit);
             _hideButton?.onClick.AddListener(HandleHide);
+        }
+
+        private void EnsureOptionsPopupController()
+        {
+            if (_menuScreens?.OptionsPopup == null) return;
+            if (_menuScreens.OptionsPopup.GetComponent<OptionsPopupController>() == null)
+                _menuScreens.OptionsPopup.AddComponent<OptionsPopupController>();
         }
 
         private void HandleSave()

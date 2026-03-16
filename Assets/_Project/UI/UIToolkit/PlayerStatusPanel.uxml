@@ -30,7 +30,7 @@
                 <ui:VisualElement name="hydration-segment-8" class="bar-segment" />
                 <ui:VisualElement name="hydration-segment-9" class="bar-segment last-segment" />
             </ui:VisualElement>
-            <ui:Label name="low-text" text="Low" class="low-text" />
+            <ui:Label name="low-text" text="Basso" class="low-text" />
             <ui:Label name="warning-text" class="warning-text" />
         </ui:VisualElement>
         <ui:Button name="diary-btn" class="diary-button" style="white-space: nowrap; text-overflow: ellipsis; top: -18px; border-left-color: rgb(183, 148, 246); border-right-color: rgb(183, 148, 246); border-top-color: rgb(183, 148, 246); border-bottom-color: rgb(183, 148, 246);">

@@ -6,7 +6,7 @@
             <ui:VisualElement name="pcv3d-header" class="pcv3d-header">
                 <ui:VisualElement name="pcv3d-header-left" class="pcv3d-header-left">
                     <ui:Label name="pcv3d-led" text="●" class="pcv3d-led" />
-                    <ui:Label name="pcv3d-specimen" text="SPECIMEN ID: POT-001" class="pcv3d-specimen" />
+                    <ui:Label name="pcv3d-specimen" text="CAMPIONE ID: POT-001" class="pcv3d-specimen" />
                 </ui:VisualElement>
                 <ui:Label name="pcv3d-family" text="[PURE-001]" class="pcv3d-family" />
             </ui:VisualElement>
@@ -23,12 +23,12 @@
 
             <ui:VisualElement name="pcv3d-status" class="pcv3d-status">
                 <ui:VisualElement name="pcv3d-status-row-1" class="pcv3d-status-row">
-                    <ui:Label name="pcv3d-condition-line" text="CONDITION........: SANA" class="pcv3d-line pcv3d-line-left" />
-                    <ui:Label name="pcv3d-stage-line" text="STAGE............: HARVEST READY" class="pcv3d-line pcv3d-line-right" />
+                    <ui:Label name="pcv3d-condition-line" text="CONDIZIONE.......: SANA" class="pcv3d-line pcv3d-line-left" />
+                    <ui:Label name="pcv3d-stage-line" text="STADIO...........: PRONTO RACCOLTO" class="pcv3d-line pcv3d-line-right" />
                 </ui:VisualElement>
                 <ui:VisualElement name="pcv3d-status-row-2" class="pcv3d-status-row">
                     <ui:Label name="pcv3d-phdrift-line" text="pH DRIFT.........: +2/day" class="pcv3d-line pcv3d-line-left" />
-                    <ui:Label name="pcv3d-growth-line" text="GROWTH...........: +23/day" class="pcv3d-line pcv3d-line-right" />
+                    <ui:Label name="pcv3d-growth-line" text="CRESCITA.........: +23/giorno" class="pcv3d-line pcv3d-line-right" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
@@ -37,7 +37,7 @@
             <ui:VisualElement name="pcv3d-vitals" class="pcv3d-vitals">
                 <!-- HYDRATION -->
                 <ui:VisualElement name="pcv3d-hydration" class="pcv3d-vital-row">
-                    <ui:Label name="pcv3d-hydration-label" text="HYDRATION........:" class="pcv3d-vital-label" />
+                    <ui:Label name="pcv3d-hydration-label" text="IDRATAZIONE......:" class="pcv3d-vital-label" />
                     <ui:VisualElement name="pcv3d-hydration-bar" class="pcv3d-bar">
                         <ui:Label name="pcv3d-hydration-bracket-l" text="[" class="pcv3d-bar-bracket" />
                         <ui:Label name="pcv3d-hydration-filled" text="████████████" class="pcv3d-bar-filled pcv3d-bar-filled-blue" />
@@ -49,7 +49,7 @@
 
                 <!-- LIGHT STRESS -->
                 <ui:VisualElement name="pcv3d-lightstress" class="pcv3d-vital-row">
-                    <ui:Label name="pcv3d-lightstress-label" text="LIGHT STRESS.....:" class="pcv3d-vital-label" />
+                    <ui:Label name="pcv3d-lightstress-label" text="STRESS LUMINOSO..:" class="pcv3d-vital-label" />
                     <ui:VisualElement name="pcv3d-lightstress-bar" class="pcv3d-bar">
                         <ui:Label name="pcv3d-lightstress-bracket-l" text="[" class="pcv3d-bar-bracket" />
                         <ui:Label name="pcv3d-lightstress-filled" text="████" class="pcv3d-bar-filled pcv3d-bar-filled-green" />
@@ -62,12 +62,12 @@
 
             <ui:VisualElement name="pcv3d-sep-4" class="pcv3d-sep" />
 
-            <ui:Button name="pcv3d-close" text="&gt; CLOSE" class="pcv3d-btn" />
+            <ui:Button name="pcv3d-close" text="&gt; CHIUDI" class="pcv3d-btn" />
         </ui:VisualElement>
 
         <!-- RESEARCH NOTES (DOS block) -->
         <ui:VisualElement name="pcv3d-research" class="pcv3d-block pcv3d-block-blue">
-            <ui:Label name="pcv3d-research-title" text="== RESEARCH NOTES" class="pcv3d-block-title" />
+            <ui:Label name="pcv3d-research-title" text="== NOTE RICERCA" class="pcv3d-block-title" />
             <ui:ScrollView name="pcv3d-research-scroll" class="pcv3d-block-scroll">
                 <ui:Label name="pcv3d-research-text" text="" class="pcv3d-block-text" />
             </ui:ScrollView>
@@ -75,7 +75,7 @@
 
         <!-- POT DIARY (DOS block) -->
         <ui:VisualElement name="pcv3d-diary" class="pcv3d-block pcv3d-block-purple">
-            <ui:Label name="pcv3d-diary-title" text="== POT DIARY" class="pcv3d-block-title" />
+            <ui:Label name="pcv3d-diary-title" text="== DIARIO VASO" class="pcv3d-block-title" />
             <ui:VisualElement name="pcv3d-diary-compose" class="pcv3d-diary-compose">
                 <ui:TextField name="pcv3d-diary-input" class="pcv3d-diary-input" value="" />
                 <ui:Button name="pcv3d-diary-log" text="LOG" class="pcv3d-diary-log" />

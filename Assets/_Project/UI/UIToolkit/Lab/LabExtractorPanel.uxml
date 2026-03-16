@@ -3,7 +3,7 @@
     <ui:VisualElement name="lab-ext-overlay" class="lab-ext-overlay">
         <ui:VisualElement name="lab-ext-panel" class="lab-ext-panel">
             <ui:VisualElement name="lab-ext-header" class="lab-ext-header">
-                <ui:Label name="lab-ext-title" text="EXTRACTOR" class="lab-ext-title" />
+                <ui:Label name="lab-ext-title" text="ESTRATTORE" class="lab-ext-title" />
                 <ui:Button name="btn-close" class="lab-ext-close">
                     <ui:Label text="×" class="lab-ext-close-x" style="margin-top: -4px; right: 2px;" />
                 </ui:Button>

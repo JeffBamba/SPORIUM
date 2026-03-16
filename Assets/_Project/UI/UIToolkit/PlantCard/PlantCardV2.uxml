@@ -12,14 +12,14 @@
             <ui:VisualElement name="header-section" class="header-section">
                 <ui:VisualElement name="header-top-row" class="header-top-row">
                     <ui:VisualElement name="specimen-badge" class="specimen-badge">
-                        <ui:Label name="specimen-label" text="SPECIMEN" class="specimen-label" />
+                        <ui:Label name="specimen-label" text="CAMPIONE" class="specimen-label" />
                         <ui:Label name="specimen-id" text="PLT-101" class="specimen-id-text" style="font-size: 12px;" />
                     </ui:VisualElement>
                     <ui:Button name="close-button" class="close-button" />
                 </ui:VisualElement>
                 <ui:VisualElement name="plant-name-info" class="plant-name-info" style="left: 146px;">
                     <ui:Label name="plant-name" text="Arctic Hask" class="plant-name" />
-                    <ui:Label name="plant-subtitle" text="Pure · Growth Stage · Level 1" class="plant-subtitle" />
+                    <ui:Label name="plant-subtitle" text="Puro · Stadio crescita · Livello 1" class="plant-subtitle" />
                     <ui:Label name="plant-description" text="Pianta pura che eleva il pH dell&apos;ambiente, perfetta per ecosistemi alcalini." class="plant-description" />
                 </ui:VisualElement>
                 <ui:VisualElement name="condition-growth-row" class="condition-growth-row">
@@ -32,7 +32,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="condition-container" class="condition-container" />
                     <ui:VisualElement name="growth-stage-container" class="growth-stage-container">
-                        <ui:Label name="growth-stage-label" text="CONDITIONS:" class="growth-stage-label-text" />
+                        <ui:Label name="growth-stage-label" text="CONDIZIONI:" class="growth-stage-label-text" />
                         <ui:VisualElement name="conditions_bagde" focusable="true" class="growth-stage-badge" style="background-color: rgba(59, 233, 54, 0.1); border-left-color: rgb(143, 209, 128); border-right-color: rgb(143, 209, 128); border-top-color: rgb(143, 209, 128); border-bottom-color: rgb(143, 209, 128);">
                             <ui:Label name="growth-stage-text" text="SANA" class="growth-stage-text" style="-unity-text-align: upper-center; color: rgb(39, 255, 35);" />
                         </ui:VisualElement>
@@ -40,7 +40,7 @@
                     <ui:VisualElement name="growth-stage-container" class="growth-stage-container">
                         <ui:Label name="growth-stage-label" text="STADIO CRESCITA:" class="growth-stage-label-text" />
                         <ui:VisualElement name="crescita-stage-badge" class="growth-stage-badge">
-                            <ui:Label name="growth-stage-text" text="GROWTH" class="growth-stage-text" />
+                            <ui:Label name="growth-stage-text" text="CRESCITA" class="growth-stage-text" />
                             <ui:VisualElement name="growth-progress-bar" class="growth-progress-bar">
                                 <ui:VisualElement name="growth-segment-0" class="growth-segment" />
                                 <ui:VisualElement name="growth-segment-1" class="growth-segment" />
@@ -86,7 +86,7 @@
                 <ui:VisualElement name="right-column" class="right-column" style="border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); border-top-left-radius: 14px; border-top-right-radius: 14px; border-bottom-right-radius: 14px; border-bottom-left-radius: 14px;">
                     <ui:VisualElement name="tab-switcher" class="tab-switcher">
                         <ui:Button name="tab-vital-parameters" class="tab-button tab-button-active" style="border-top-width: 0.5px; border-right-width: 0.5px; border-bottom-width: 0.5px; border-left-width: 0.5px;">
-                            <ui:Label text="VITAL PARAMETERS" class="tab-label" />
+                            <ui:Label text="PARAMETRI VITALI" class="tab-label" />
                         </ui:Button>
                         <ui:Button name="tab-notes" class="tab-button" style="border-top-width: 0.5px; border-right-width: 0.5px; border-bottom-width: 0.5px; border-left-width: 0.5px; background-color: rgba(30, 35, 37, 0.05);">
                             <ui:Label text="NOTE DA DIARIO" class="tab-label" style="background-color: rgba(30, 35, 37, 0);" />
@@ -97,7 +97,7 @@
                             <ui:VisualElement name="parameters-grid" class="parameters-grid">
                                 <ui:VisualElement name="parameter-hydration" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
                                     <ui:VisualElement name="parameter-header" class="parameter-header">
-                                        <ui:Label text="HYDRATION" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:Label text="IDRATAZIONE" class="parameter-label" style="top: -3px; height: 15px;" />
                                         <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
                                     </ui:VisualElement>
                                     <ui:Label name="hydration-value" text="54%" class="vital-value-large" style="font-size: 32px; top: -1px;" />
@@ -117,7 +117,7 @@
                                 </ui:VisualElement>
                                 <ui:VisualElement name="parameter-fertilizer" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 9px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05); position: relative; flex-direction: column;">
                                     <ui:VisualElement name="parameter-header" class="parameter-header">
-                                        <ui:Label text="FERTILIZER LEVEL" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
+                                        <ui:Label text="LIVELLO FERTILIZZANTE" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
                                         <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
                                     </ui:VisualElement>
                                     <ui:Label name="fertilizer-value" text="72%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(41, 147, 129);" />
@@ -137,7 +137,7 @@
                                 </ui:VisualElement>
                                 <ui:VisualElement name="parameter-lightstress" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
                                     <ui:VisualElement name="parameter-header" class="parameter-header">
-                                        <ui:Label text="LIGHT STRESS" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:Label text="STRESS LUMINOSO" class="parameter-label" style="top: -3px; height: 15px;" />
                                         <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
                                     </ui:VisualElement>
                                     <ui:Label name="lights-value" text="46%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(224, 199, 116);" />
@@ -177,7 +177,7 @@
                                 </ui:VisualElement>
                                 <ui:VisualElement name="parameter-mold" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 1px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05);">
                                     <ui:VisualElement name="parameter-header" class="parameter-header">
-                                        <ui:Label text="MOLD RISK&#10;" class="parameter-label" style="top: -3px; height: 15px;" />
+                                        <ui:Label text="RISCHIO MUFFA&#10;" class="parameter-label" style="top: -3px; height: 15px;" />
                                         <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
                                     </ui:VisualElement>
                                     <ui:Label name="mold-value" text="5%" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(224, 199, 116);" />
@@ -197,11 +197,11 @@
                                 </ui:VisualElement>
                                 <ui:VisualElement name="parameter-affinity" class="vital-parameter-box" style="width: 413px; height: 106px; top: 0; left: 9px; border-color: rgba(93, 182, 227, 0.4); background-color: rgba(66, 91, 73, 0.05); position: relative; flex-direction: column;">
                                     <ui:VisualElement name="parameter-header" class="parameter-header">
-                                        <ui:Label text="PH AFFINITY" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
+                                        <ui:Label text="AFFINITÀ pH" class="parameter-label" style="top: -3px; -unity-text-align: upper-center; height: 18px;" />
                                         <ui:VisualElement name="parameter-icon-placeholder" class="parameter-icon-placeholder" style="top: 7px;" />
                                     </ui:VisualElement>
                                     <ui:Label name="phaffinity-value" text="50-100" class="vital-value-large" style="font-size: 32px; top: -1px; color: rgb(241, 209, 67);" />
-                                    <ui:Label name="phaffinity-range" text="Optimal PH Range" class="range-info" style="top: 11px;" />
+                                    <ui:Label name="phaffinity-range" text="Intervallo pH ottimale" class="range-info" style="top: 11px;" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
                             <ui:VisualElement name="active-power-section" class="active-power-section" style="top: 325px;">
@@ -226,16 +226,16 @@
                                 <ui:Label name="fruit-cycles-value" text="3" class="fruit-cycles-value" />
                             </ui:VisualElement>
                             <ui:VisualElement name="growth-stats-info" class="growth-stats-info" style="display: none;">
-                                <ui:Label name="growth-points-label" text="Growth Points:" class="growth-stats-label" />
+                                <ui:Label name="growth-points-label" text="Punti crescita:" class="growth-stats-label" />
                                 <ui:Label name="growth-points-value" text="W:0 L:0 F:0 (Tot: 0/3)" class="growth-stats-value" />
-                                <ui:Label name="optimal-days-label" text="Optimal Days:" class="growth-stats-label" />
+                                <ui:Label name="optimal-days-label" text="Giorni ottimali:" class="growth-stats-label" />
                                 <ui:Label name="optimal-days-value" text="0" class="growth-stats-value" />
                             </ui:VisualElement>
-                            <ui:Label name="rarity-label" text="Rarity: Common" class="rarity-label" style="display: none;" />
+                            <ui:Label name="rarity-label" text="Rarità: Comune" class="rarity-label" style="display: none;" />
                         </ui:VisualElement>
                         <ui:VisualElement name="note-diario-tab" class="tab-content">
                             <ui:VisualElement name="diary-header" class="diary-header">
-                                <ui:Label text="SPORE DIARY OBSERVATIONS" class="diary-header-label" />
+                                <ui:Label text="OSSERVAZIONI DIARIO SPORE" class="diary-header-label" />
                                 <ui:Button name="add-note-button" class="add-note-button">
                                     <ui:Label text="+" class="add-note-icon" />
                                 </ui:Button>
@@ -271,12 +271,12 @@
                                 <ui:VisualElement name="note-buttons-row" class="note-buttons-row">
                                     <ui:Button name="save-note-button" class="save-note-button">
                                         <ui:VisualElement name="led-dot-left" class="led-dot" />
-                                        <ui:Label text="SAVE NOTE" class="save-note-text" />
+                                        <ui:Label text="SALVA NOTA" class="save-note-text" />
                                         <ui:VisualElement name="led-dot-right" class="led-dot" />
                                     </ui:Button>
                                     <ui:Button name="cancel-note-button" class="cancel-note-button">
                                         <ui:Label text="✕" class="cancel-icon" />
-                                        <ui:Label text="CANCEL" class="cancel-text" />
+                                        <ui:Label text="ANNULLA" class="cancel-text" />
                                     </ui:Button>
                                 </ui:VisualElement>
                             </ui:VisualElement>
@@ -289,7 +289,7 @@
                     <ui:VisualElement name="panel-header" class="panel-header">
                         <ui:VisualElement name="header-left" class="header-left">
                             <ui:VisualElement name="led-bar" class="led-bar led-bar-yellow" />
-                            <ui:Label text="QUICK ACTIONS" class="panel-header-text" />
+                            <ui:Label text="AZIONI RAPIDE" class="panel-header-text" />
                         </ui:VisualElement>
                         <ui:VisualElement name="header-right" class="header-right">
                             <ui:VisualElement name="led-on" class="led-indicator led-on" />
@@ -301,19 +301,19 @@
                             <ui:Label text="💨" class="action-icon" />
                             <ui:VisualElement name="action-divider" class="action-divider" />
                             <ui:Label text="SPRAY" class="action-label" />
-                            <ui:Label text="Antifungal" class="action-sublabel" />
+                            <ui:Label text="Antimuffa" class="action-sublabel" />
                         </ui:Button>
                         <ui:Button name="prune-button" class="quick-action-button prune-button">
                             <ui:Label text="✂️" class="action-icon" />
                             <ui:VisualElement name="action-divider" class="action-divider" />
                             <ui:Label text="PRUNE" class="action-label" />
-                            <ui:Label text="Trim leaves" class="action-sublabel" />
+                            <ui:Label text="Potatura foglie" class="action-sublabel" />
                         </ui:Button>
                         <ui:Button name="fertilize-button" class="quick-action-button fertilize-button">
                             <ui:Label text="🧪" class="action-icon" />
                             <ui:VisualElement name="action-divider" class="action-divider" />
                             <ui:Label text="FERTILIZE" class="action-label" />
-                            <ui:Label text="Boost growth" class="action-sublabel" />
+                            <ui:Label text="Potenzia crescita" class="action-sublabel" />
                         </ui:Button>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -321,7 +321,7 @@
                     <ui:VisualElement name="panel-header" class="panel-header">
                         <ui:VisualElement name="header-left" class="header-left">
                             <ui:VisualElement name="led-bar" class="led-bar led-bar-blue" />
-                            <ui:Label text="MANUAL SYSTEMS" class="panel-header-text" />
+                            <ui:Label text="SISTEMI MANUALI" class="panel-header-text" />
                         </ui:VisualElement>
                         <ui:VisualElement name="header-right" class="header-right">
                             <ui:VisualElement name="sys-ok-badge" class="sys-ok-badge">
@@ -332,7 +332,7 @@
                     <ui:VisualElement name="systems-grid" class="systems-grid">
                         <ui:VisualElement name="irrigation-container" class="rotary-container">
                             <ui:VisualElement name="rotary-header" class="rotary-header">
-                                <ui:Label text="IRRIGATION" class="rotary-label" />
+                                <ui:Label text="IRRIGAZIONE" class="rotary-label" />
                                 <ui:Label text="💧" class="rotary-icon" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rotary-housing" class="rotary-housing">

@@ -202,7 +202,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
 
             if (_playerInventory == null)
             {
-                AddEmptyRow("NO INVENTORY", "GameManager/Inventory not available");
+                AddEmptyRow("NESSUN INVENTARIO", "GameManager/Inventario non disponibile");
                 return;
             }
 
@@ -238,7 +238,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
 
             if (_entries.Count == 0)
             {
-                AddEmptyRow("NO SEEDS", "No seed available");
+                AddEmptyRow("NESSUN SEME", "Nessun seme disponibile");
                 return;
             }
 
@@ -298,7 +298,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
                 Hide();
             });
             selectBtn.AddToClassList("seedinv-select");
-            var selectText = new Label("SELECT →");
+            var selectText = new Label("SELEZIONA →");
             selectText.AddToClassList("seedinv-select-text");
             selectBtn.Add(selectText);
 
@@ -382,7 +382,7 @@ namespace Sporae.UI.UIToolkit.SeedInventory
         private static string GetPlantDisplayName(PlantData plantData)
         {
             if (plantData == null)
-                return "Unknown";
+                return "Sconosciuto";
 
             // Copia light della mappatura usata in PlantCardV2DataBinder, per avere nomi leggibili.
             string baseName = plantData.PlantCode switch

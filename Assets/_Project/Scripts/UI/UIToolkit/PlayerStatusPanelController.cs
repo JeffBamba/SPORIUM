@@ -193,7 +193,7 @@ namespace Sporae.UI.UIToolkit
             _diaryButton = _root.Q<Button>("diary-btn");
             
             if (_warningLabel != null && !_hydrationConnectedToRealSystem)
-                _warningLabel.text = "▲ -1 Action se <40%";
+                _warningLabel.text = "▲ -1 Azione se <40%";
             
             // Setup buttons
             if (_inventoryButton != null)

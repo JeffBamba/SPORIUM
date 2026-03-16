@@ -82,7 +82,7 @@ namespace _Project.UI.HUDNotifications2_0
             
             // Popola UI item
             if (_itemHeaderText != null)
-                _itemHeaderText.text = "ADDED TO INVENTORY";
+                _itemHeaderText.text = "AGGIUNTO ALL'INVENTARIO";
             if (_itemNameText != null)
                 _itemNameText.text = $"+{quantity} {itemName}";
             if (_itemLocationText != null)

@@ -11,8 +11,8 @@
                         <ui:VisualElement name="irrig-iconglyph" class="irrig-iconglyph" />
                     </ui:VisualElement>
                     <ui:VisualElement name="irrig-header-text" class="irrig-header-text">
-                        <ui:Label name="irrig-title" text="IRRIGATION PROTOCOL" class="irrig-title" />
-                        <ui:Label name="irrig-subtitle" text="System query detected" class="irrig-subtitle" />
+                        <ui:Label name="irrig-title" text="PROTOCOLLO IRRIGAZIONE" class="irrig-title" />
+                        <ui:Label name="irrig-subtitle" text="Rilevata richiesta di sistema" class="irrig-subtitle" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -20,7 +20,7 @@
             <ui:VisualElement name="irrig-divider" class="irrig-divider" />
 
             <ui:Label name="irrig-question" text="Vuoi anche irrigare la terra mentre pianti il seme" class="irrig-question" />
-            <ui:Label name="irrig-seedname" text="SEED" class="irrig-seedname" />
+            <ui:Label name="irrig-seedname" text="SEME" class="irrig-seedname" />
             <ui:Label name="irrig-hint" text="L'irrigazione immediata aumenta la probabilità di germinazione." class="irrig-hint" />
 
             <ui:VisualElement name="irrig-buttons" class="irrig-buttons">
@@ -40,7 +40,7 @@
                         </ui:VisualElement>
                         <ui:Label text="NO, SOLO PIANTA" class="irrig-btn-title" />
                     </ui:VisualElement>
-                    <ui:Label text="Plant only" class="irrig-btn-sub" />
+                    <ui:Label text="Solo pianta" class="irrig-btn-sub" />
                 </ui:Button>
             </ui:VisualElement>
         </ui:VisualElement>

@@ -62,7 +62,7 @@ namespace _Project.UI.HUDNotifications2_0
             if (_headerText != null && _config != null)
             {
                 // Testo "NOTIFICATIONS" (non "SYSTEM NOTIFICATIONS")
-                _headerText.text = "NOTIFICATIONS";
+                _headerText.text = "NOTIFICHE";
                 _headerText.font = _config.MonospacedFont;
                 _headerText.fontSize = _config.HeaderFontSize;
                 _headerText.color = _config.ColorIdle;

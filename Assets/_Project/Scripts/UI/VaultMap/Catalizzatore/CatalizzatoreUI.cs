@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -40,7 +40,7 @@ namespace _Project
             set
             {
                 _scores = value;         
-                _scoreLabel.text = $"Score: {_scores}";
+                _scoreLabel.text = $"Punteggio: {_scores}";
             }
         }
         
@@ -121,10 +121,10 @@ namespace _Project
         {
             _empowered = _scores > _amountOfCircles * 0.8f; 
             if (_empowered)
-                _resultLabel.text = "Empowered seed, Level consistent with origin.";
+                _resultLabel.text = "Seme potenziato, livello coerente con l'origine.";
             else 
                 _resultLabel.text = _scores > _amountOfCircles * 0.5f ?
-                    "Unstable seed, Level degraded." : "Penalized seed, Level lost.";
+                    "Seme instabile, livello degradato." : "Seme penalizzato, livello perso.";
             
             _resultLabel.gameObject.SetActive(true);
             _closeButton.gameObject.SetActive(true);

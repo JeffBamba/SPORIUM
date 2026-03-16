@@ -110,7 +110,7 @@ namespace Sporae.DevTools
             
             // Popola UI Item Notification
             if (_itemHeaderText != null)
-                _itemHeaderText.text = "ADDED TO INVENTORY";
+                _itemHeaderText.text = "AGGIUNTO ALL'INVENTARIO";
             if (_itemNameText != null)
                 _itemNameText.text = $"+{quantity} {itemName}";
             if (_itemLocationText != null)

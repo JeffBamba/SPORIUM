@@ -859,13 +859,13 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     {
         switch (stage)
         {
-            case 0: return "Empty";
-            case 1: return "Seed";
-            case 2: return "Sprout";
-            case 3: return "Growth";  // BUG FIX: Era "HarvestReady", corretto a "Growth"
-            case 4: return "Flowering";
-            case 5: return "HarvestReady";
-            case 6: return "Resting";
+            case 0: return "Vuoto";
+            case 1: return "Seme";
+            case 2: return "Germoglio";
+            case 3: return "Crescita";
+            case 4: return "Fioritura";
+            case 5: return "Pronto raccolto";
+            case 6: return "Riposo";
             default: return $"Stadio {stage}";
         }
     }
@@ -1031,7 +1031,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
                 hudInstance.growthTooltipText.fontSize = 12;
                 hudInstance.growthTooltipText.richText = true;
                 hudInstance.growthTooltipText.alignment = TextAlignmentOptions.Left;
-                hudInstance.growthTooltipText.text = "Tooltip Growth";
+                hudInstance.growthTooltipText.text = "Tooltip crescita";
                 
                 RectTransform textRect = tooltipTextGO.GetComponent<RectTransform>();
                 textRect.anchorMin = Vector2.zero;

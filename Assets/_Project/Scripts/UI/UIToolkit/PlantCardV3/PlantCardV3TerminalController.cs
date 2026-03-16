@@ -1403,12 +1403,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 int left = _gameManager != null ? _gameManager.ActionsLeft : 0;
                 int max = _gameManager != null && _gameManager.ActionSystem != null ? _gameManager.ActionSystem.MaxActions : 0;
-                _apLabel.text = $"ACTION POINTS: {left}/{max}";
+                _apLabel.text = $"AZIONI: {left}/{max}";
             }
 
             if (_queuedLabel != null)
             {
-                _queuedLabel.text = $"QUEUED: {_queue.Count}";
+                _queuedLabel.text = $"IN CODA: {_queue.Count}";
             }
         }
 
@@ -1463,7 +1463,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 info.AddToClassList("pcv3-potcard-info");
                 var standby = new Label("[STANDBY]");
                 standby.AddToClassList("pcv3-potcard-standby");
-                var sub = new Label("Ready for cultivation");
+                var sub = new Label("Pronto per la coltivazione");
                 sub.AddToClassList("pcv3-potcard-subtext");
                 info.Add(standby);
                 info.Add(sub);
@@ -1646,19 +1646,19 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (clearConsole)
             {
-                AppendRawLine("§TITLE§SPORIUM INCUBATOR CONTROL TERMINAL v3.1§END§");
-                AppendRawLine("§TITLE§AUTOMATED CULTIVATION MANAGEMENT SYSTEM§END§");
+                AppendRawLine("§TITLE§TERMINALE CONTROLLO INCUBATORE SPORIUM v3.1§END§");
+                AppendRawLine("§TITLE§SISTEMA GESTIONE COLTIVAZIONE AUTOMATIZZATA§END§");
                 AppendRawLine("");
             }
-            AppendRawLine("§INFO§SPORIUM BOTANICAL INCUBATOR - Real-time cultivation monitoring, vital analysis & diary logging§END§");
+            AppendRawLine("§INFO§INCUBATORE BOTANICO SPORIUM - Monitoraggio coltivazione in tempo reale, analisi vitali e diario§END§");
             AppendRawLine("");
-            AppendRawLine("△ §TITLE§POT MONITORING TERMINAL INITIALIZED§END§");
+            AppendRawLine("△ §TITLE§TERMINALE MONITORAGGIO VASI INIZIALIZZATO§END§");
             AppendRawLine("<color=#E6C96F>──────────────────────────────────────────────────────────────────────────────</color>");
-            AppendRawLine("▶ §CMD§TYPE START FOR COMMAND LIST§END§");
+            AppendRawLine("▶ §CMD§DIGITA START PER L'ELENCO COMANDI§END§");
             AppendRawLine("<color=#E6C96F>──────────────────────────────────────────────────────────────────────────────</color>");
-            AppendRawLine("<color=#79E679>△ ALL ACTIONS QUEUED UNTIL SEQUENCE CONFIRMATION</color>");
-            AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>F</color><color=#7FFF7A>]</color> <color=#7FFF7A>QUICK ACCESS:</color> <color=#5DB6E3>FORECAST</color> <color=#7FFF7A>- Monitoring live Forecast</color>");
-            AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>+</color><color=#7FFF7A>]</color> <color=#7FFF7A>TYPE</color> <color=#5DB6E3>PROTOCOL</color> <color=#7FFF7A>TO VIEW BIOLOGICAL PROTOCOL DOME_02</color>");
+            AppendRawLine("<color=#79E679>△ TUTTE LE AZIONI IN CODA FINO A CONFERMA SEQUENZA</color>");
+            AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>F</color><color=#7FFF7A>]</color> <color=#7FFF7A>ACCESSO RAPIDO:</color> <color=#5DB6E3>FORECAST</color> <color=#7FFF7A>- Previsione live</color>");
+            AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>+</color><color=#7FFF7A>]</color> <color=#7FFF7A>DIGITA</color> <color=#5DB6E3>PROTOCOL</color> <color=#7FFF7A>PER PROTOCOLLO BIOLOGICO DOME_02</color>");
             AppendRawLine("");
 
             FlushConsole();
@@ -1699,24 +1699,24 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 "§TITLE§SPORIUM INCUBATOR CONTROL TERMINAL v3.1§END§",
                 "§TITLE§AUTOMATED CULTIVATION MANAGEMENT SYSTEM§END§",
                 "",
-                "[BOOT] Initializing system...",
-                "[OK] BIOS checksum verified",
-                "[OK] Memory test passed",
-                "[INIT] Loading cultivation modules...",
+                "[BOOT] Inizializzazione sistema...",
+                "[OK] Checksum BIOS verificato",
+                "[OK] Test memoria superato",
+                "[INIT] Caricamento moduli coltivazione...",
                 "  ▸ HVAC-CTRL............ [ONLINE]",
                 "  ▸ HYDRATION-SYS........ [ONLINE]",
                 "  ▸ LED-SPECTRUM-A....... [ONLINE]",
                 "  ▸ LED-SPECTRUM-B....... [ONLINE]",
                 "  ▸ SOIL-SENSORS......... [ONLINE]",
                 "  ▸ pH-MONITOR........... [ONLINE]",
-                "[DB] Connecting to cultivation database...",
-                "[OK] Database mounted: DOME_02_INCUBATOR",
-                "[OK] POT records synchronized (6 units)",
-                "[OK] Historical logs indexed",
-                "[NET] Establishing Vault network link...",
-                "[OK] Connected to SPORIUM-NET",
-                "[OK] Action Queue system ready",
-                "[READY] Incubator Control Terminal initialized"
+                "[DB] Connessione al database coltivazione...",
+                "[OK] Database montato: DOME_02_INCUBATOR",
+                "[OK] Record POT sincronizzati (6 unità)",
+                "[OK] Log storici indicizzati",
+                "[NET] Collegamento rete Vault...",
+                "[OK] Connesso a SPORIUM-NET",
+                "[OK] Sistema coda azioni pronto",
+                "[READY] Terminale controllo incubatore inizializzato"
             };
 
             foreach (var line in lines)
@@ -2232,7 +2232,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             for (int i = 0; i < lines.Length; i++)
             {
                 string plain = StripRichTextTags(lines[i] ?? string.Empty).TrimStart();
-                if (!plain.StartsWith("Condition:", StringComparison.OrdinalIgnoreCase))
+                if (!plain.StartsWith("Condizione:", StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 string potId = null;
@@ -2746,7 +2746,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: OPEN [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: OPEN [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2760,7 +2760,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: NOTE [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: NOTE [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2774,7 +2774,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: UPROOT [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: UPROOT [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2788,7 +2788,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: PLANT [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: PLANT [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2802,7 +2802,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: FERTILIZE [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: FERTILIZE [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2816,7 +2816,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: SPRAY [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: SPRAY [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2830,7 +2830,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: WATERING [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: WATERING [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2844,7 +2844,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed.Replace("LED RED", "LED"));
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: LED RED [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: LED RED [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2858,7 +2858,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed.Replace("LED BLUE", "LED"));
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: LED BLUE [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: LED BLUE [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2872,7 +2872,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: HARVEST [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: HARVEST [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2886,7 +2886,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string potId = ExtractPotIdArgument(trimmed);
                 if (string.IsNullOrEmpty(potId))
                 {
-                    AppendRawLine("§ERROR§⚠ ERROR: POT ID REQUIRED. USAGE: PRUNE [POT-ID]§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: PRUNE [POT-ID]§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -2900,7 +2900,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 // Contestuale: se siamo in protocol/detail, torna a console; altrimenti warning.
                 if (_protocolView != null && _protocolView.style.display != DisplayStyle.None)
                 {
-                    AppendRawLine("§INFO§⚠ CLOSING DETAILED VIEW§END§");
+                    AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
                     AppendRawLine("");
                     SwitchToConsole();
                     FlushConsole();
@@ -2908,13 +2908,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 }
                 if (_detailView != null && _detailView.style.display != DisplayStyle.None)
                 {
-                    AppendRawLine("§INFO§⚠ CLOSING DETAILED VIEW§END§");
+                    AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
                     AppendRawLine("");
                     SwitchToConsole();
                     FlushConsole();
                     return;
                 }
-                AppendRawLine("§WARN§⚠ NOTHING TO CLOSE§END§");
+                AppendRawLine("§WARN§⚠ Nulla da chiudere§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -2934,7 +2934,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     return;
                 }
 
-                AppendRawLine("§ERROR§⚠ INVALID QUEUE COMMAND. USAGE: QUEUE SHOW§END§");
+                AppendRawLine("§ERROR§⚠ COMANDO CODA NON VALIDO. USO: QUEUE SHOW§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -2944,15 +2944,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 if (_queue.Count == 0)
                 {
-                    AppendRawLine("§WARN§⚠ ACTION QUEUE IS ALREADY EMPTY§END§");
+                    AppendRawLine("§WARN§⚠ La coda azioni è già vuota§END§");
                     AppendRawLine("");
                 }
                 else
                 {
                     _queue.Clear();
                     RebuildReservedItems();
-                    AppendRawLine("§TITLE§✓ ACTION QUEUE CLEARED§END§");
-                    AppendRawLine("§INFO§All queued actions removed§END§");
+AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
+            AppendRawLine("§INFO§Tutte le azioni in coda rimosse§END§");
                     AppendRawLine("");
                 }
                 FlushConsole();
@@ -2965,23 +2965,23 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
-            AppendRawLine("§ERROR§⚠ INVALID COMMAND. TYPE START FOR HELP§END§");
+            AppendRawLine("§ERROR§⚠ COMANDO NON VALIDO. DIGITA START PER AIUTO§END§");
             AppendRawLine("");
             FlushConsole();
         }
 
         private void PrintQueue()
         {
-            AppendRawLine("§TITLE§▸ ACTION QUEUE§END§");
+            AppendRawLine("§TITLE§▸ CODA AZIONI§END§");
 
             if (_queue.Count == 0)
             {
-                AppendRawLine("§WARN§(empty)§END§");
+                AppendRawLine("§WARN§(vuota)§END§");
                 AppendRawLine("");
                 return;
             }
 
-            AppendRawLine("#  │ POT     │ ACTION        │ ITEM                │ AP");
+            AppendRawLine("#  │ VASO    │ AZIONE         │ OGGETTO              │ AP");
             AppendRawLine("───┼─────────┼───────────────┼─────────────────────┼────");
 
             for (int i = 0; i < _queue.Count; i++)
@@ -3068,13 +3068,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void PrintForecast()
         {
             var pots = FindPots();
-            AppendRawLine("§TITLE§MONITORING LIVE FORECAST§END§");
-            AppendRawLine("§INFO§Growth Stage Prediction & Requirements Analysis§END§");
+            AppendRawLine("§TITLE§PREVISIONE LIVE§END§");
+            AppendRawLine("§INFO§Previsione stadio crescita e analisi requisiti§END§");
             AppendRawLine("");
 
             if (pots == null || pots.Count == 0)
             {
-                AppendRawLine("§WARN§No pots found in scene.§END§");
+                AppendRawLine("§WARN§Nessun vaso trovato in scena.§END§");
                 AppendRawLine("");
                 return;
             }
@@ -3096,7 +3096,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (printed == 0)
             {
-                AppendRawLine("§WARN§No planted pots to forecast.§END§");
+                AppendRawLine("§WARN§Nessun vaso piantato da prevedere.§END§");
                 AppendRawLine("");
             }
         }
@@ -3115,36 +3115,36 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 ForecastDirection.Up => "▲ CRESCITA",
                 ForecastDirection.Down => "▼ CALO",
-                _ => "■ STABLE"
+                _ => "■ STABILE"
             };
 
-            AppendRawLine("CURRENT STATUS");
-            AppendRawLine($"§DATA§Stage: {stageLabel}§END§");
-            AppendRawLine($"Condition: {pot.ConditionScore}% [{conditionName}]");
+            AppendRawLine("STATO ATTUALE");
+            AppendRawLine($"§DATA§Stadio: {stageLabel}§END§");
+            AppendRawLine($"Condizione: {pot.ConditionScore}% [{conditionName}]");
             AppendRawLine($"Trend: {trendLabel}");
             AppendRawLine("");
 
             // STAGE PROGRESSION
             int requiredDays = f.EffectiveRequiredDays;
             if (requiredDays <= 0 && f.StageReq != null) requiredDays = Mathf.Max(1, f.StageReq.durationDays);
-            string daysInStage = requiredDays > 0 ? $"{pot.DaysInCurrentStage}/{requiredDays} days" : $"{pot.DaysInCurrentStage}/— days";
+            string daysInStage = requiredDays > 0 ? $"{pot.DaysInCurrentStage}/{requiredDays} giorni" : $"{pot.DaysInCurrentStage}/— giorni";
             int barWidth = 20;
             int pct = Mathf.Clamp(f.ProgressPercent, 0, 100);
             int filled = Mathf.RoundToInt((pct / 100f) * barWidth);
             filled = Mathf.Clamp(filled, 0, barWidth);
             string bar = new string('█', filled) + new string('░', barWidth - filled);
 
-            string eta = f.EstimatedDaysToAdvance.HasValue ? $"{f.EstimatedDaysToAdvance.Value} days remaining" : "—";
+            string eta = f.EstimatedDaysToAdvance.HasValue ? $"{f.EstimatedDaysToAdvance.Value} giorni rimanenti" : "—";
 
-            AppendRawLine("STAGE PROGRESSION");
-            AppendRawLine($"Days in Stage: {daysInStage}");
-            AppendRawLine($"Progress: {bar} {pct}%");
+            AppendRawLine("PROGRESSIONE STADIO");
+            AppendRawLine($"Giorni nello stadio: {daysInStage}");
+            AppendRawLine($"Progresso: {bar} {pct}%");
             AppendRawLine($"Prossima: {f.SoonInConditionName}");
-            AppendRawLine($"Estimated: {eta}");
+            AppendRawLine($"Stima: {eta}");
             AppendRawLine("");
 
             // ADVANCEMENT REQUIREMENTS (real data)
-            AppendRawLine("ADVANCEMENT REQUIREMENTS");
+            AppendRawLine("REQUISITI AVANZAMENTO");
 
             // Condition threshold for target
             int requiredScore;
@@ -3158,7 +3158,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
                     : 0;
                 conditionReqOk = pot.ConditionScore >= requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condition      {pot.ConditionScore}% | Required: >={requiredScore}%";
+                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condizione     {pot.ConditionScore}% | Richiesto: >={requiredScore}%";
             }
             else if (f.Trend == ForecastDirection.Down)
             {
@@ -3168,11 +3168,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     : f.SoonInConditionName == "Critica" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
                     : 100;
                 conditionReqOk = pot.ConditionScore < requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condition      {pot.ConditionScore}% | Required: <{requiredScore}%";
+                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condizione     {pot.ConditionScore}% | Richiesto: <{requiredScore}%";
             }
             else
             {
-                conditionReqText = $"✓ Condition      {pot.ConditionScore}% | Required: (stable)";
+                conditionReqText = $"✓ Condizione     {pot.ConditionScore}% | Richiesto: (stabile)";
             }
 
             AppendRawLine(conditionReqOk ? conditionReqText : $"§ERROR§{conditionReqText}§END§");
@@ -3181,12 +3181,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
             string hydrationReq = f.StageReq != null ? $"{f.StageReq.hydrationMin}-{f.StageReq.hydrationMax}%" : "—";
-            string hydrationLine = $"{(f.HydrationOk ? "✓" : "✗")} Hydration      {hydrationPercent}% | Required: {hydrationReq}";
+            string hydrationLine = $"{(f.HydrationOk ? "✓" : "✗")} Idratazione    {hydrationPercent}% | Richiesto: {hydrationReq}";
             AppendRawLine(f.HydrationOk ? hydrationLine : $"§ERROR§{hydrationLine}§END§");
 
             // Fertilizer
             string fertReq = f.StageReq != null ? $"{f.StageReq.fertilizerMin}-{f.StageReq.fertilizerMax}%" : "—";
-            string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} Fertilizer     {pot.FertilizerLevel}% | Required: {fertReq}";
+            string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} Fertilizzante  {pot.FertilizerLevel}% | Richiesto: {fertReq}";
             AppendRawLine(f.FertilizerOk ? fertLine : $"§ERROR§{fertLine}§END§");
 
             // Light stress percent (UI metric) - BUG FIX: Usa GetConsecutiveLedDays invece di LightExposure
@@ -3198,13 +3198,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
             }
             string lightReq = f.StageReq != null ? $"{f.StageReq.lightMin}-{f.StageReq.lightMax}%" : "—";
-            string lightLine = $"{(f.LedOk ? "✓" : "✗")} Light Stress   {lightStressPercent}% | Required: {lightReq}";
+            string lightLine = $"{(f.LedOk ? "✓" : "✗")} Stress luce    {lightStressPercent}% | Richiesto: {lightReq}";
             AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
 
             // Mold risk level (0-3). Growth is blocked at >=2.
             int mold = Mathf.Clamp(pot.MoldRiskLevel, 0, 3);
             bool moldOk = mold < 2;
-            string moldLine = $"{(moldOk ? "✓" : "✗")} Mold Risk      Level {mold} | Required: <2";
+            string moldLine = $"{(moldOk ? "✓" : "✗")} Rischio muffa  Liv. {mold} | Richiesto: <2";
             AppendRawLine(moldOk ? moldLine : $"§ERROR§{moldLine}§END§");
 
             AppendRawLine("");
@@ -3218,15 +3218,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (f.BlocksAdvancement)
             {
-                AppendRawLine("§ERROR§► STATUS: BLOCKED§END§");
+                AppendRawLine("§ERROR§► STATO: BLOCCATO§END§");
             }
             else if (f.HydrationOk && f.LedOk && f.FertilizerOk && f.DurationOk && f.OptimalDaysOk && f.PointsOk)
             {
-                AppendRawLine("§TITLE§► STATUS: READY FOR ADVANCEMENT§END§");
+                AppendRawLine("§TITLE§► STATO: PRONTO PER AVANZAMENTO§END§");
             }
             else
             {
-                AppendRawLine($"§ERROR§► STATUS: {unmet} REQUIREMENT(S) NOT MET§END§");
+                AppendRawLine($"§ERROR§► STATO: {unmet} REQUISITO/I NON SODDISFATTI§END§");
             }
 
             AppendRawLine("");
@@ -3533,32 +3533,32 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return $"  {cmd}{new string(' ', pad)}- {desc}";
             }
 
-            AppendRawLine("§TITLE§▸ AVAILABLE COMMANDS§END§");
+            AppendRawLine("§TITLE§▸ COMANDI DISPONIBILI§END§");
             Line("");
-            Line("§TITLE§▸ POT MANAGEMENT & MONITORING§END§");
-            Line(CmdLine("§CMD§STATUS§END§", "§TITLE§Display all POT status & vitals§END§"));
-            Line(CmdLine("§CMD§FORECAST§END§ or §CMD§[F]§END§", "§TITLE§Monitoring Live Forecast (stage prediction)§END§"));
-            Line(CmdLine("§CMD§OPEN [POT-ID]§END§", "§TITLE§Open detailed POT analysis screen§END§"));
-            Line(CmdLine("§CMD§NOTE [POT-ID]§END§", "§TITLE§Open POT diary notes viewer§END§"));
-            Line(CmdLine("§CMD§PLANT [POT-ID]§END§", "§TITLE§Queue planting action (1 AP)§END§"));
-            Line(CmdLine("§CMD§UPROOT [POT-ID]§END§", "§TITLE§Queue plant removal (1 AP)§END§"));
+            Line("§TITLE§▸ GESTIONE E MONITORAGGIO VASI§END§");
+            Line(CmdLine("§CMD§STATUS§END§", "§TITLE§Mostra stato e parametri di tutti i vasi§END§"));
+            Line(CmdLine("§CMD§FORECAST§END§ o §CMD§[F]§END§", "§TITLE§Previsione live (stadio)§END§"));
+            Line(CmdLine("§CMD§OPEN [POT-ID]§END§", "§TITLE§Apri schermata analisi dettagliata vaso§END§"));
+            Line(CmdLine("§CMD§NOTE [POT-ID]§END§", "§TITLE§Apri visualizzatore note diario vaso§END§"));
+            Line(CmdLine("§CMD§PLANT [POT-ID]§END§", "§TITLE§Accoda azione piantare (1 AP)§END§"));
+            Line(CmdLine("§CMD§UPROOT [POT-ID]§END§", "§TITLE§Accoda rimozione pianta (1 AP)§END§"));
             Line("");
-            Line("§PURPLE§▸ CULTIVATION OPERATIONS§END§");
-            Line(CmdLine("§CMD§WATERING [POT-ID]§END§", "§TITLE§Toggle watering system ON/OFF (1 AP)§END§"));
-            Line(CmdLine("§CMD§SPRAY [POT-ID]§END§", "§TITLE§Queue additive application (1 AP)§END§"));
-            Line(CmdLine("§CMD§FERTILIZE [POT-ID]§END§", "§TITLE§Queue nutrient boost (1 AP)§END§"));
-            Line(CmdLine("§CMD§PRUNE [POT-ID]§END§", "§TITLE§Queue pruning operation (1 AP)§END§"));
-            Line(CmdLine("§CMD§LED RED [POT-ID]§END§", "§TITLE§Toggle red light spectrum ON/OFF (1 AP)§END§"));
-            Line(CmdLine("§CMD§LED BLUE [POT-ID]§END§", "§TITLE§Toggle blue light spectrum ON/OFF (1 AP)§END§"));
-            Line(CmdLine("§CMD§HARVEST [POT-ID]§END§", "§TITLE§Queue harvest operation (1 AP)§END§"));
+            Line("§PURPLE§▸ OPERAZIONI COLTIVAZIONE§END§");
+            Line(CmdLine("§CMD§WATERING [POT-ID]§END§", "§TITLE§Attiva/disattiva irrigazione (1 AP)§END§"));
+            Line(CmdLine("§CMD§SPRAY [POT-ID]§END§", "§TITLE§Accoda applicazione additivo (1 AP)§END§"));
+            Line(CmdLine("§CMD§FERTILIZE [POT-ID]§END§", "§TITLE§Accoda boost nutrienti (1 AP)§END§"));
+            Line(CmdLine("§CMD§PRUNE [POT-ID]§END§", "§TITLE§Accoda potatura (1 AP)§END§"));
+            Line(CmdLine("§CMD§LED RED [POT-ID]§END§", "§TITLE§Attiva/disattiva luce rossa (1 AP)§END§"));
+            Line(CmdLine("§CMD§LED BLUE [POT-ID]§END§", "§TITLE§Attiva/disattiva luce blu (1 AP)§END§"));
+            Line(CmdLine("§CMD§HARVEST [POT-ID]§END§", "§TITLE§Accoda raccolta (1 AP)§END§"));
             Line("");
-            Line("§WARN§▸ SYSTEM CONTROLS§END§");
-            Line(CmdLine("§CMD§PROTOCOL§END§", "§TITLE§View Biological Protocol DOME_02§END§"));
-            Line(CmdLine("§CMD§QUEUE SHOW§END§", "§TITLE§Show queued actions (console)§END§"));
-            Line(CmdLine("§CMD§START§END§", "§TITLE§Display this command reference§END§"));
-            Line(CmdLine("§CMD§CLEAR§END§", "§TITLE§Clear action queue§END§"));
-            Line(CmdLine("§CMD§CLOSE§END§", "§TITLE§Close detailed POT analysis§END§"));
-            Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Close terminal (asks Y/N if queue exists)§END§"));
+            Line("§WARN§▸ CONTROLLI SISTEMA§END§");
+            Line(CmdLine("§CMD§PROTOCOL§END§", "§TITLE§Visualizza Protocollo Biologico DOME_02§END§"));
+            Line(CmdLine("§CMD§QUEUE SHOW§END§", "§TITLE§Mostra azioni in coda (console)§END§"));
+            Line(CmdLine("§CMD§START§END§", "§TITLE§Mostra questo elenco comandi§END§"));
+            Line(CmdLine("§CMD§CLEAR§END§", "§TITLE§Svuota coda azioni§END§"));
+            Line(CmdLine("§CMD§CLOSE§END§", "§TITLE§Chiudi analisi dettagliata vaso§END§"));
+            Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Chiudi terminale (chiede S/N se c'è coda)§END§"));
             Line("");
             AppendRawLine("");
         }
@@ -3566,8 +3566,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void PrintStatusTable()
         {
             var pots = FindPots();
-            AppendRawLine("§TITLE§▸ POT STATUS OVERVIEW§END§");
-            AppendRawLine("ID       │ STATUS     │ PLANT NAME          │ STAGE        │ COND   │ HYDR");
+            AppendRawLine("§TITLE§▸ RIEPILOGO STATO VASI§END§");
+            AppendRawLine("ID       │ STATO      │ NOME PIANTA          │ STADIO       │ COND   │ IDR");
             AppendRawLine("─────────┼────────────┼─────────────────────┼──────────────┼────────┼──────");
 
             foreach (var pot in pots)
@@ -3583,7 +3583,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
                 if (state == null || state.IsEmpty || !state.HasPlant)
                 {
-                    status = "§TITLE§EMPTY§END§";
+                    status = "§TITLE§VUOTO§END§";
                 }
                 else
                 {
@@ -3591,7 +3591,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     stage = PlantStageLabel(state.Stage);
                     int score = state.ConditionScore;
                     bool isCritical = score < 40;
-                    status = isCritical ? "§ERROR§CRITICAL§END§" : "§DATA§OCCUPIED§END§";
+                    status = isCritical ? "§ERROR§CRITICO§END§" : "§DATA§OCCUPATO§END§";
                     condition = isCritical ? $"§ERROR§{score}%§END§" : $"§TITLE§{score}%§END§";
 
                     // TODO: in step successivo, usare PlantCardCalculators per percentuale reale.
@@ -3613,7 +3613,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var pot = FindPotById(potId);
             if (pot == null)
             {
-                AppendRawLine("§ERROR§⚠ ERROR: POT ID NOT FOUND.§END§");
+                AppendRawLine("§ERROR§⚠ ERRORE: ID VASO NON TROVATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3622,7 +3622,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var state = pot.PotActions != null ? pot.PotActions.PotState : null;
             if (state == null || state.IsEmpty || !state.HasPlant)
             {
-                AppendRawLine($"§WARN§⚠ WARNING: {potId} IS EMPTY. NO DATA TO DISPLAY.§END§");
+                AppendRawLine($"§WARN§⚠ ATTENZIONE: {potId} È VUOTO. NESSUN DATO DA MOSTRARE.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3647,7 +3647,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_detailPageTemplate == null)
             {
                 Debug.LogError("PlantCardV3TerminalController: _detailPageTemplate non assegnato!");
-                AppendRawLine("§ERROR§⚠ ERROR: DETAIL PAGE TEMPLATE NOT ASSIGNED.§END§");
+                AppendRawLine("§ERROR§⚠ ERRORE: TEMPLATE PAGINA DETTAGLIO NON ASSEGNATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3661,7 +3661,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 if (detailPage == null)
                 {
                     Debug.LogError("PlantCardV3TerminalController: Template non contiene pcv3-detail-page!");
-                    AppendRawLine("§ERROR§⚠ ERROR: INVALID DETAIL PAGE TEMPLATE.§END§");
+                    AppendRawLine("§ERROR§⚠ ERRORE: TEMPLATE PAGINA DETTAGLIO NON VALIDO.§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -3675,7 +3675,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Popola dati
             PopulateDetailPage(detailPage, pot, state, diaryOnly);
 
-            AppendRawLine("§INFO§Type CLOSE to return...§END§");
+            AppendRawLine("§INFO§Digita CLOSE per tornare...§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -3937,7 +3937,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var pot = FindPotById(potId);
             if (pot == null)
             {
-                AppendRawLine("§ERROR§⚠ ERROR: POT ID NOT FOUND.§END§");
+                AppendRawLine("§ERROR§⚠ ERRORE: ID VASO NON TROVATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3945,7 +3945,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var state = pot.PotActions != null ? pot.PotActions.PotState : null;
             if (state == null || state.IsEmpty || !state.HasPlant)
             {
-                AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY. NOTHING TO UPROOT.§END§");
+                AppendRawLine($"§ERROR§⚠ ERRORE: {potId} È VUOTO. NIENTE DA ESTIRPARE.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3965,7 +3965,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine($"  Target:  §DATA§{potId}§END§");
             AppendRawLine($"  Plant:   §DATA§{_pendingConfirmAction.TargetLabel}§END§");
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -3975,7 +3975,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var pot = FindPotById(potId);
             if (pot == null)
             {
-                AppendRawLine("§ERROR§⚠ ERROR: POT ID NOT FOUND.§END§");
+                AppendRawLine("§ERROR§⚠ ERRORE: ID VASO NON TROVATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -3991,7 +3991,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
                 if (!hasPlantNow && !hasPlantQueued && !hasPlantPending)
                 {
-                    AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY. PLANT FIRST.§END§");
+                    AppendRawLine($"§ERROR§⚠ ERRORE: {potId} È VUOTO. PIANTA PRIMA.§END§");
                     AppendRawLine("");
                     FlushConsole();
                     return;
@@ -4001,14 +4001,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (type != QueuedActionType.Harvest && type != QueuedActionType.Uproot && type != QueuedActionType.HydrationToggle
                 && (state == null || state.IsEmpty || !state.HasPlant))
             {
-                AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY.§END§");
+                AppendRawLine($"§ERROR§⚠ ERRORE: {potId} È VUOTO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
             }
             if (type == QueuedActionType.Harvest && (state == null || state.IsEmpty || !state.HasPlant))
             {
-                AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY. NOTHING TO HARVEST.§END§");
+                AppendRawLine($"§ERROR§⚠ ERRORE: {potId} È VUOTO. NIENTE DA RACCOGLIERE.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -4042,7 +4042,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 AppendRawLine($"  State:   §DATA§{stateLabel}§END§");
             }
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4052,7 +4052,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var pot = FindPotById(potId);
             if (pot == null)
             {
-                AppendRawLine("§ERROR§⚠ ERROR: POT ID NOT FOUND.§END§");
+                AppendRawLine("§ERROR§⚠ ERRORE: ID VASO NON TROVATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -4070,7 +4070,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
             if ((type == QueuedActionType.Fertilize || type == QueuedActionType.Spray) && empty)
             {
-                AppendRawLine($"§ERROR§⚠ ERROR: {potId} IS EMPTY. PLANT FIRST.§END§");
+                AppendRawLine($"§ERROR§⚠ ERRORE: {potId} È VUOTO. PIANTA PRIMA.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -4096,7 +4096,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _selection = new SelectionContext { Type = type, PotId = potId, OptionsTypeIds = options };
             _inputState = InputState.SelectingItem;
 
-            AppendRawLine("§TITLE§▸ SELECT ITEM FROM INVENTORY§END§");
+            AppendRawLine("§TITLE§▸ SELEZIONA OGGETTO DALL'INVENTARIO§END§");
             AppendRawLine("§TITLE§▸ AVAILABLE ITEMS§END§");
             for (int i = 0; i < options.Count; i++)
             {
@@ -4130,7 +4130,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (!int.TryParse(upper, out int idx))
             {
-                AppendRawLine("§ERROR§⚠ INVALID SELECTION. TYPE A NUMBER OR N§END§");
+                AppendRawLine("§ERROR§⚠ SELEZIONE NON VALIDA. DIGITA UN NUMERO O N§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -4139,7 +4139,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             idx -= 1;
             if (idx < 0 || idx >= _selection.OptionsTypeIds.Count)
             {
-                AppendRawLine("§ERROR§⚠ INVALID SELECTION.§END§");
+                AppendRawLine("§ERROR§⚠ SELEZIONE NON VALIDA.§END§");
                 AppendRawLine("");
                 FlushConsole();
                 return;
@@ -4161,13 +4161,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _selection = null;
             _inputState = InputState.ConfirmingActionToQueue;
 
-            AppendRawLine($"§TITLE§✓ SELECTED: {chosenDisplayName}§END§");
+            AppendRawLine($"§TITLE§✓ SELEZIONATO: {chosenDisplayName}§END§");
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
             AppendRawLine($"  Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§");
             AppendRawLine($"  Target:  §DATA§{_pendingConfirmAction.PotId}§END§");
             AppendRawLine($"  Item:    §DATA§{chosenDisplayName}§END§");
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4435,18 +4435,18 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 var stage = (PlantStage)stageInt;
                 return stage switch
                 {
-                    PlantStage.Seed => "SEED",
-                    PlantStage.Sprout => "SPROUT",
-                    PlantStage.Growth => "GROWTH",
-                    PlantStage.Flowering => "FLOWER",
-                    PlantStage.HarvestReady => "RIPE",
-                    PlantStage.Resting => "REST",
+                    PlantStage.Seed => "SEME",
+                    PlantStage.Sprout => "GERMOGLIO",
+                    PlantStage.Growth => "CRESCITA",
+                    PlantStage.Flowering => "FIORE",
+                    PlantStage.HarvestReady => "MATURO",
+                    PlantStage.Resting => "RIPOSO",
                     _ => stage.ToString().ToUpperInvariant()
                 };
             }
             catch
             {
-                return $"STAGE {stageInt}";
+                return $"STADIO {stageInt}";
             }
         }
 
@@ -4569,7 +4569,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             SwitchToProtocol();
             
             AppendRawLine("§CMD§PROTOCOL§END§");
-            AppendRawLine("§INFO§Type CLOSE to return...§END§");
+            AppendRawLine("§INFO§Digita CLOSE per tornare...§END§");
             AppendRawLine("");
             FlushConsole();
 
@@ -4648,7 +4648,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Se siamo in una sub-view, chiudiamo quella (come comando CLOSE).
             if (_protocolView != null && _protocolView.style.display != DisplayStyle.None)
             {
-                AppendRawLine("§INFO§⚠ CLOSING DETAILED VIEW§END§");
+                AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
                 AppendRawLine("");
                 SwitchToConsole();
                 FlushConsole();
@@ -4656,7 +4656,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
             if (_detailView != null && _detailView.style.display != DisplayStyle.None)
             {
-                AppendRawLine("§INFO§⚠ CLOSING DETAILED VIEW§END§");
+                AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
                 AppendRawLine("");
                 SwitchToConsole();
                 FlushConsole();

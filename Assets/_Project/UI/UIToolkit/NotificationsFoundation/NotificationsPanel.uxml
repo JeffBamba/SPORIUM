@@ -8,7 +8,7 @@
                 <ui:VisualElement name="nf-header-iconbox" class="nf-iconbox nf-header-iconbox">
                     <ui:Label name="nf-header-icon" text="!" class="nf-header-icon" />
                 </ui:VisualElement>
-                <ui:Label name="nf-header-title" text="NOTIFICATIONS" class="nf-header-title" />
+                <ui:Label name="nf-header-title" text="NOTIFICHE" class="nf-header-title" />
             </ui:VisualElement>
             <ui:VisualElement name="nf-header-right" class="nf-header-right">
                 <ui:VisualElement name="nf-badge" class="nf-badge">
@@ -24,17 +24,17 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-0-text" class="nf-row-text" style="display: none;">
                     <ui:Label name="nf-row-0-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
-                    <ui:Label name="nf-row-0-msg" text="Message" class="nf-row-msg" style="top: -16px;" />
+                    <ui:Label name="nf-row-0-msg" text="Messaggio" class="nf-row-msg" style="top: -16px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-0-item-layout" class="nf-row-item-layout" style="display: flex; height: 40px; top: 5px;">
                     <ui:VisualElement name="nf-row-0-item-icon-box" class="nf-row-item-icon-box">
                         <ui:VisualElement name="nf-row-0-item-icon" class="nf-row-item-icon" style="background-image: url(&quot;project://database/Assets/_Project/Art/icona_Placeholder.png?fileID=21300000&amp;guid=f95caadde6480e14d8c01359df07028c&amp;type=3#icona_Placeholder&quot;);" />
                     </ui:VisualElement>
                     <ui:VisualElement name="nf-row-0-item-body" class="nf-row-item-body">
-                        <ui:Label name="nf-row-0-title" text="ADDED TO INVENTORY" class="nf-row-item-title" style="-unity-font-style: bold; top: -2px;" />
+                        <ui:Label name="nf-row-0-title" text="AGGIUNTO ALL'INVENTARIO" class="nf-row-item-title" style="-unity-font-style: bold; top: -2px;" />
                         <ui:VisualElement name="nf-row-0-qty-name-row" class="nf-row-qty-name-row" style="top: -10px;">
                             <ui:Label name="nf-row-0-qty" text="+0" class="nf-row-qty" style="color: rgb(127, 255, 122); -unity-font-style: bold;" />
-                            <ui:Label name="nf-row-0-item-name" text="Item" class="nf-row-item-name" />
+                            <ui:Label name="nf-row-0-item-name" text="Oggetto" class="nf-row-item-name" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -45,17 +45,17 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-1-text" class="nf-row-text">
                     <ui:Label name="nf-row-1-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
-                    <ui:Label name="nf-row-1-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                    <ui:Label name="nf-row-1-msg" text="Messaggio" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-1-item-layout" class="nf-row-item-layout" style="display: none;">
                     <ui:VisualElement name="nf-row-1-item-icon-box" class="nf-row-item-icon-box">
                         <ui:VisualElement name="nf-row-1-item-icon" class="nf-row-item-icon" />
                     </ui:VisualElement>
                     <ui:VisualElement name="nf-row-1-item-body" class="nf-row-item-body">
-                        <ui:Label name="nf-row-1-title" text="ADDED TO INVENTORY" class="nf-row-item-title" />
+                        <ui:Label name="nf-row-1-title" text="AGGIUNTO ALL'INVENTARIO" class="nf-row-item-title" />
                         <ui:VisualElement name="nf-row-1-qty-name-row" class="nf-row-qty-name-row">
                             <ui:Label name="nf-row-1-qty" text="+0" class="nf-row-qty" />
-                            <ui:Label name="nf-row-1-item-name" text="Item" class="nf-row-item-name" />
+                            <ui:Label name="nf-row-1-item-name" text="Oggetto" class="nf-row-item-name" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -66,17 +66,17 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-2-text" class="nf-row-text">
                     <ui:Label name="nf-row-2-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
-                    <ui:Label name="nf-row-2-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                    <ui:Label name="nf-row-2-msg" text="Messaggio" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-2-item-layout" class="nf-row-item-layout" style="display: none;">
                     <ui:VisualElement name="nf-row-2-item-icon-box" class="nf-row-item-icon-box">
                         <ui:VisualElement name="nf-row-2-item-icon" class="nf-row-item-icon" />
                     </ui:VisualElement>
                     <ui:VisualElement name="nf-row-2-item-body" class="nf-row-item-body">
-                        <ui:Label name="nf-row-2-title" text="ADDED TO INVENTORY" class="nf-row-item-title" />
+                        <ui:Label name="nf-row-2-title" text="AGGIUNTO ALL'INVENTARIO" class="nf-row-item-title" />
                         <ui:VisualElement name="nf-row-2-qty-name-row" class="nf-row-qty-name-row">
                             <ui:Label name="nf-row-2-qty" text="+0" class="nf-row-qty" />
-                            <ui:Label name="nf-row-2-item-name" text="Item" class="nf-row-item-name" />
+                            <ui:Label name="nf-row-2-item-name" text="Oggetto" class="nf-row-item-name" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -87,17 +87,17 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-3-text" class="nf-row-text">
                     <ui:Label name="nf-row-3-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
-                    <ui:Label name="nf-row-3-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                    <ui:Label name="nf-row-3-msg" text="Messaggio" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-3-item-layout" class="nf-row-item-layout" style="display: none;">
                     <ui:VisualElement name="nf-row-3-item-icon-box" class="nf-row-item-icon-box">
                         <ui:VisualElement name="nf-row-3-item-icon" class="nf-row-item-icon" />
                     </ui:VisualElement>
                     <ui:VisualElement name="nf-row-3-item-body" class="nf-row-item-body">
-                        <ui:Label name="nf-row-3-title" text="ADDED TO INVENTORY" class="nf-row-item-title" />
+                        <ui:Label name="nf-row-3-title" text="AGGIUNTO ALL'INVENTARIO" class="nf-row-item-title" />
                         <ui:VisualElement name="nf-row-3-qty-name-row" class="nf-row-qty-name-row">
                             <ui:Label name="nf-row-3-qty" text="+0" class="nf-row-qty" />
-                            <ui:Label name="nf-row-3-item-name" text="Item" class="nf-row-item-name" />
+                            <ui:Label name="nf-row-3-item-name" text="Oggetto" class="nf-row-item-name" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -108,17 +108,17 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-4-text" class="nf-row-text">
                     <ui:Label name="nf-row-4-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
-                    <ui:Label name="nf-row-4-msg" text="Message" class="nf-row-msg" style="top: -15px;" />
+                    <ui:Label name="nf-row-4-msg" text="Messaggio" class="nf-row-msg" style="top: -15px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-4-item-layout" class="nf-row-item-layout" style="display: none;">
                     <ui:VisualElement name="nf-row-4-item-icon-box" class="nf-row-item-icon-box">
                         <ui:VisualElement name="nf-row-4-item-icon" class="nf-row-item-icon" />
                     </ui:VisualElement>
                     <ui:VisualElement name="nf-row-4-item-body" class="nf-row-item-body">
-                        <ui:Label name="nf-row-4-title" text="ADDED TO INVENTORY" class="nf-row-item-title" />
+                        <ui:Label name="nf-row-4-title" text="AGGIUNTO ALL'INVENTARIO" class="nf-row-item-title" />
                         <ui:VisualElement name="nf-row-4-qty-name-row" class="nf-row-qty-name-row">
                             <ui:Label name="nf-row-4-qty" text="+0" class="nf-row-qty" />
-                            <ui:Label name="nf-row-4-item-name" text="Item" class="nf-row-item-name" />
+                            <ui:Label name="nf-row-4-item-name" text="Oggetto" class="nf-row-item-name" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>

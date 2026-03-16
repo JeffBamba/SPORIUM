@@ -1055,7 +1055,7 @@ namespace Sporae.UI.UIToolkit.HUD
             // Aggiorna label "PH DRIFT" (solo label, senza valore)
             if (_phDriftLabel != null)
             {
-                _phDriftLabel.text = "PH DRIFT";
+                _phDriftLabel.text = "DRIFT pH";
                 _phDriftLabel.style.color = new StyleColor(phDriftColor);
             }
             

@@ -54,7 +54,7 @@ namespace Sporae.DevTools
             if (_headerText != null && _config != null)
             {
                 // Testo "SYSTEM NOTIFICATIONS" uppercase, monospaced, tracking aumentato
-                _headerText.text = "SYSTEM NOTIFICATIONS";
+                _headerText.text = "NOTIFICHE DI SISTEMA";
                 _headerText.font = _config.MonospacedFont;
                 _headerText.fontSize = _config.FontSize;
                 _headerText.characterSpacing = _config.CharacterSpacing;

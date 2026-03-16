@@ -39,7 +39,7 @@
             </ui:VisualElement>
             <!-- Step 4: Night Research -->
             <ui:VisualElement name="eod-step4" class="eod-panel eod-step4" style="display: none;">
-                <ui:Label name="eod-research-title" text="NIGHT RESEARCH SELECTION" class="eod-panel-title" />
+                <ui:Label name="eod-research-title" text="SELEZIONE RICERCA NOTTURNA" class="eod-panel-title" />
                 <ui:Label name="eod-research-subtitle" text="Select one research branch to investigate overnight." class="eod-desc" />
                 <ui:Button name="btn-eod-research-historical" text="Historical Archive — Unlocks lore entries" class="eod-btn eod-btn--research" />
                 <ui:Button name="btn-eod-research-botanical" text="Botanical Database — Unlocks plant info" class="eod-btn eod-btn--research" />
@@ -106,7 +106,7 @@
                     <ui:Label name="eod-dawn-tooltip-tip" text="TIP: ..." class="eod-dawn-tooltip-tip" />
                 </ui:VisualElement>
                 <ui:Label name="eod-dawn-press-key" text="Press any key to continue" class="eod-dawn-press-key" />
-                <ui:Button name="btn-eod-dawn-continue" text="Continue" class="eod-btn eod-btn--yes eod-cta" />
+                <ui:Button name="btn-eod-dawn-continue" text="Continua" class="eod-btn eod-btn--yes eod-cta" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

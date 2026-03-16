@@ -622,7 +622,7 @@ public class PotStateModel
     {
         switch (stage)
         {
-            case 0: return "Empty";
+            case 0: return "Vuoto";
             case 1: return "Seed";
             case 2: return "Sprout";
             case 3: return "Growth";

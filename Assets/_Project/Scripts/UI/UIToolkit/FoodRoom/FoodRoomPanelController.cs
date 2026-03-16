@@ -169,7 +169,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         {
             _selectedStemCellTypeId = typeId;
             if (_stemCellLabel != null)
-                _stemCellLabel.text = "STEM CELL SELECTED";
+                _stemCellLabel.text = "CELLULA STAMINALE SELEZIONATA";
             Refresh();
         }
 

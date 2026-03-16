@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Testo
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -199,7 +199,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Delete
+  m_text: Elimina
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -314,7 +314,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 607392193634064417}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d, type: 3}
+  m_Script: {fileID: 11500000, guid: ac08b0c8f9482d74fb808e0d150e7f8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &654274103671702160
@@ -931,7 +931,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Load
+  m_text: Carica
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1803,7 +1803,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sound Volume
+  m_text: Volume suoni
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2068,7 +2068,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6561708128755261260}
-  - {fileID: 5969410679407683448}
   - {fileID: 4899373038466223905}
   - {fileID: 8500120263108928071}
   - {fileID: 4297550254841281531}
@@ -2192,7 +2191,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Music Volume
+  m_text: Volume musica
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2346,11 +2345,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 728292685067707928, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Name
-      value: Save
+      value: Salva
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: Save
+      value: Salva
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x
@@ -2455,11 +2454,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 728292685067707928, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Name
-      value: Load
+      value: Carica
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: Load
+      value: Carica
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x
@@ -2568,7 +2567,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: New game
+      value: Nuova partita
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x
@@ -2673,13 +2672,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 728292685067707928, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Name
-      value: Continue
+      value: Continua
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: 'Continue
-
-'
+      value: Continua
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x
@@ -2769,11 +2766,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!224 &5969410679407683448 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
-  m_PrefabInstance: {fileID: 4159678656749378735}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5822672724780285996
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2784,11 +2776,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 728292685067707928, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Name
-      value: Options
+      value: Opzioni
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: Options
+      value: Opzioni
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x
@@ -2893,11 +2885,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 728292685067707928, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Name
-      value: Quit
+      value: Esci
       objectReference: {fileID: 0}
     - target: {fileID: 4548925680828642351, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_text
-      value: Quit
+      value: Esci
       objectReference: {fileID: 0}
     - target: {fileID: 7741053142394387415, guid: 4a9802185b6a3d442ad94fb7596a8a96, type: 3}
       propertyPath: m_Pivot.x

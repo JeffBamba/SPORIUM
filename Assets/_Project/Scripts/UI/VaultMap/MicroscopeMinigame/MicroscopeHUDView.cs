@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using TMPro;
@@ -84,7 +84,7 @@ namespace _Project
         {
             if (_controller.CurrentLevel == 0)
             {
-                _confirmText.text = "Confirm";
+                _confirmText.text = "Conferma";
                 _actionsService.SpendAction();
             }
             
@@ -106,12 +106,12 @@ namespace _Project
 
         public void SetPrecision(float precision)
         {
-            _precisionBanner.text = $"Precision: {precision:F0}%";
+            _precisionBanner.text = $"Precisione: {precision:F0}%";
         }
 
         private void ShowGame()
         {
-            _confirmText.text = "Confirm (-1 Action)";
+            _confirmText.text = "Conferma (-1 Azione)";
             _confirmButton.interactable = _actionsService.ActionsLeft >= 1;
             
             _tutorialGroup.SetActive(false);
@@ -143,16 +143,16 @@ namespace _Project
             var hits = _controller.LevelResults.Count(levelResult => levelResult.Hit);
             var precision = _controller.LevelResults.Average(item => item.Precision);
             var result = hits == 3 ? (
-                    precision > 95 ? "Full traits + bonus quality tag" :
-                    precision > 80 ? "Full traits" :
-                    precision > 60 ? "Partial traits" :
-                    "Unknown traits"
+                    precision > 95 ? "Tratti completi + bonus qualità" :
+                    precision > 80 ? "Tratti completi" :
+                    precision > 60 ? "Tratti parziali" :
+                    "Tratti sconosciuti"
                 ) :
                 hits > 0 ? (
-                    precision > 70 ? "Partial traits" : "Unknown traits"
-                ) : "Spore becomes Corrupted";
+                    precision > 70 ? "Tratti parziali" : "Tratti sconosciuti"
+                ) : "Spora corrotta";
             
-            _resultText.text = $"hits: {hits}/{count}\naverage precision: {precision:F0}%\nresult: {result}";
+            _resultText.text = $"Colpi: {hits}/{count}\nPrecisione media: {precision:F0}%\nRisultato: {result}";
 
             if (hits == 0)
             {
@@ -160,11 +160,11 @@ namespace _Project
                 var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                 if (toastManager != null)
                 {
-                    toastManager.ShowError("Spore becomes Corrupted", "SPORE-CORRUPT-001");
+                    toastManager.ShowError("Spora corrotta", "SPORE-CORRUPT-001");
                 }
                 else if (_notification != null)
                 {
-                    _notification.ShowNotification("Spore becomes Corrupted", 2, Color.red);
+                    _notification.ShowNotification("Spora corrotta", 2, Color.red);
                 }
             }
             else
@@ -173,11 +173,11 @@ namespace _Project
                 var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                 if (toastManager != null)
                 {
-                    toastManager.ShowSuccess("You got spore with traits", "SPORE-TRAIT-001");
+                    toastManager.ShowSuccess("Hai ottenuto una spora con tratti", "SPORE-TRAIT-001");
                 }
                 else if (_notification != null)
                 {
-                    _notification.ShowNotification("You got spore with traits", 2, Color.green);
+                    _notification.ShowNotification("Hai ottenuto una spora con tratti", 2, Color.green);
                 }
             }
         }

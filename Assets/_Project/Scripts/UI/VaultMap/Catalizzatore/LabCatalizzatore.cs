@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using _Project.Sporae.Core;
 using Sporae.Core;
@@ -125,8 +125,8 @@ namespace _Project
             
             bool hasSpore = _storage.Has(Items.Seed001), 
                  hasActions = _actionSystem.ActionsLeft > 0;
-            _startButtonLabel.text = hasSpore && hasActions ? "Start" :
-                !hasActions ? "No Actions remaining" : "No sample available";
+            _startButtonLabel.text = hasSpore && hasActions ? "Avvia" :
+                !hasActions ? "Nessuna azione rimasta" : "Nessun campione disponibile";
             
             _startButton.interactable = hasSpore && hasActions;
         }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.NotificationsFoundation
 {
@@ -22,10 +23,9 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (OverrideLanguage != NotificationLanguage.Auto)
                 return OverrideLanguage;
 
-            // Fallback: usa SystemLanguage
-            return Application.systemLanguage == SystemLanguage.Italian
-                ? NotificationLanguage.It
-                : NotificationLanguage.En;
+            // Usa impostazione lingua da Opzioni (menu ESC) se disponibile
+            var effective = GameLanguageSettings.GetEffectiveLanguage();
+            return effective == GameLanguage.Italian ? NotificationLanguage.It : NotificationLanguage.En;
         }
 
         public static string ResolveTemplate(NotificationTypeSpec spec)

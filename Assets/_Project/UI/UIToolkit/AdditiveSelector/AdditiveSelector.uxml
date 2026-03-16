@@ -15,8 +15,8 @@
                 <ui:VisualElement name="addsel-header-left" class="addsel-header-left">
                     <ui:VisualElement name="addsel-iconbox" class="addsel-iconbox" />
                     <ui:VisualElement name="addsel-header-text" class="addsel-header-text">
-                        <ui:Label name="addsel-title" text="ADDITIVE SELECTOR" class="addsel-title" />
-                        <ui:Label name="addsel-subtitle" text="Select additive to apply" class="addsel-subtitle" />
+                        <ui:Label name="addsel-title" text="SELEZIONE ADDITIVO" class="addsel-title" />
+                        <ui:Label name="addsel-subtitle" text="Seleziona l'additivo da applicare" class="addsel-subtitle" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:Button name="btn-close" class="addsel-close-button">
@@ -27,7 +27,7 @@
             <ui:ScrollView name="addsel-list" class="addsel-list" />
 
             <ui:Button name="btn-cancel" class="addsel-cancel">
-                <ui:Label text="CANCEL" class="addsel-cancel-text" />
+                <ui:Label text="ANNULLA" class="addsel-cancel-text" />
             </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>

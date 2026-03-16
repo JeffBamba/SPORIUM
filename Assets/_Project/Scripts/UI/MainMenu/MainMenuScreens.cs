@@ -15,6 +15,9 @@ namespace _Project
         public bool IsOptionsOpen => _optionsPopup.activeSelf;
         public bool IsSlotsOpen => _slotsPopup.activeSelf;
 
+        /// <summary>Riferimento al popup Opzioni (per aggiungere OptionsPopupController o altro).</summary>
+        public GameObject OptionsPopup => _optionsPopup;
+
         public void ShowOptionsPopup() => ShowPopup(_optionsPopup);
         /// <param name="forSave">true = scegli slot e salva, false = scegli slot e carica</param>
         public void ShowSlotsPopup(bool forSave = false)

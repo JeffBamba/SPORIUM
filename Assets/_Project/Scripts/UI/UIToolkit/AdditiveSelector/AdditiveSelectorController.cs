@@ -140,7 +140,7 @@ namespace Sporae.UI.UIToolkit.AdditiveSelector
 
             if (_playerInventory == null)
             {
-                AddEmptyRow("NO INVENTORY", "GameManager/Inventory not available");
+                AddEmptyRow("NESSUN INVENTARIO", "GameManager/Inventario non disponibile");
                 return;
             }
 
@@ -185,7 +185,7 @@ namespace Sporae.UI.UIToolkit.AdditiveSelector
 
             if (shown == 0)
             {
-                AddEmptyRow("NO ADDITIVES", "No additive available");
+                AddEmptyRow("NESSUN ADDITIVO", "Nessun additivo disponibile");
             }
         }
 
@@ -250,7 +250,7 @@ namespace Sporae.UI.UIToolkit.AdditiveSelector
                 Hide();
             });
             selectBtn.AddToClassList("addsel-select");
-            var selectText = new Label("APPLY →");
+            var selectText = new Label("APPLICA →");
             selectText.AddToClassList("addsel-select-text");
             selectBtn.Add(selectText);
 

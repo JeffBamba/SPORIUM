@@ -9,8 +9,8 @@
                 <ui:VisualElement name="seedinv-header-left" class="seedinv-header-left">
                     <ui:VisualElement name="seedinv-iconbox" class="seedinv-iconbox" />
                     <ui:VisualElement name="seedinv-header-text" class="seedinv-header-text">
-                        <ui:Label name="seedinv-title" text="SEED INVENTORY" class="seedinv-title" />
-                        <ui:Label name="seedinv-subtitle" text="Select seed to plant" class="seedinv-subtitle" />
+                        <ui:Label name="seedinv-title" text="INVENTARIO SEMI" class="seedinv-title" />
+                        <ui:Label name="seedinv-subtitle" text="Seleziona il seme da piantare" class="seedinv-subtitle" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:Button name="btn-close" class="seedinv-close-button">
@@ -21,7 +21,7 @@
             <ui:ScrollView name="seedinv-list" class="seedinv-list" />
 
             <ui:Button name="btn-cancel" class="seedinv-cancel">
-                <ui:Label text="CANCEL" class="seedinv-cancel-text" />
+                <ui:Label text="ANNULLA" class="seedinv-cancel-text" />
             </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>

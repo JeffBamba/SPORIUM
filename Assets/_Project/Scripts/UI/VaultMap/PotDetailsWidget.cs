@@ -1001,7 +1001,7 @@ namespace _Project
                 UpdateButtonState(_pruningButton, pot.PotActions.CanPruning(), "Potatura");
             if (_fertilizeButton != null)
                 UpdateButtonState(_fertilizeButton, pot.PotActions.CanFertilize(), "Fertilizzare");  // BLK-03.01-T1
-            UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Uproot");
+            UpdateButtonState(_uprootButton, pot.PotActions.CanUproot(), "Estirpa");
         }
         
         /// <summary>
@@ -1271,7 +1271,7 @@ namespace _Project
             // BLK-07.01: Auto-trova mold risk text se non assegnato
             if (_moldRiskText == null)
             {
-                _moldRiskText = FindTextInChildren("Mold Risk");
+                _moldRiskText = FindTextInChildren("Rischio muffa");
             }
             
             // Fix: Rimuovi caratteri Unicode non supportati dal testo iniziale (es. ✅ \u2705)
@@ -1651,7 +1651,7 @@ namespace _Project
                 _moldRiskText.richText = true;
                 if (state.IsEmpty || !state.HasPlant)
                 {
-                    _moldRiskText.text = "<color=#CCCCCC>Mold Risk:</color> <color=#888888>-</color>";
+                    _moldRiskText.text = "<color=#CCCCCC>Rischio muffa:</color> <color=#888888>-</color>";
                 }
                 else if (state.MoldRiskLevel > 0)
                 {
@@ -1665,11 +1665,11 @@ namespace _Project
                     // MODIFICA 1: Logica colori: 0% o 100% = rosso, nei parametri ideali = verde, altre = arancione
                     // Per Mold Risk: Lvl 0 = verde (nessuno), Lvl 1-2 = arancione, Lvl 3 = rosso
                     string riskColor = state.MoldRiskLevel == 3 ? "#FF0000" : "#FF6600"; // Rosso solo per Critical (Lvl 3), arancione per altri
-                    _moldRiskText.text = $"<color=#CCCCCC>Mold Risk:</color> <color={riskColor}>{riskLevel} (Lvl {state.MoldRiskLevel})</color>";
+                    _moldRiskText.text = $"<color=#CCCCCC>Rischio muffa:</color> <color={riskColor}>{riskLevel} (Liv. {state.MoldRiskLevel})</color>";
                 }
                 else
                 {
-                    _moldRiskText.text = "<color=#CCCCCC>Mold Risk:</color> <color=#00FF00>Nessuno</color>";
+                    _moldRiskText.text = "<color=#CCCCCC>Rischio muffa:</color> <color=#00FF00>Nessuno</color>";
                 }
             }
             
@@ -1713,21 +1713,21 @@ namespace _Project
                         else
                         {
                             // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
-                            _phAffinityText.text = "<color=#FF0000>N/A</color>";
+                            _phAffinityText.text = "<color=#FF0000>N/D</color>";
                             SporiumLogger.LogWarning(LogCategory.UI, $"PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
                         // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
-                        _phAffinityText.text = "<color=#FF0000>N/A</color>";
+                        _phAffinityText.text = "<color=#FF0000>N/D</color>";
                         SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
                 else
                 {
                     // MODIFICA 4: Rimuovere duplicazione "pH Affinity:" - tenere solo valore numerico
-                    _phAffinityText.text = "<color=#FF0000>N/A</color>";
+                    _phAffinityText.text = "<color=#FF0000>N/D</color>";
                     SporiumLogger.LogWarning(LogCategory.UI, $"PlantCode vuoto o null per vaso {_currentSelectedPot?.PotId ?? "Unknown"}");
                 }
             }
@@ -1762,13 +1762,13 @@ namespace _Project
                         }
                         else
                         {
-                            _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
+                            _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/D</color>";
                             SporiumLogger.LogWarning(LogCategory.UI, $"PlantData non trovato per PlantCode: {state.PlantCode}");
                         }
                     }
                     else
                     {
-                        _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/A</color>";
+                        _phDriftText.text = "<color=#CCCCCC>pH Drift:</color> <color=#FF0000>N/D</color>";
                         SporiumLogger.LogWarning(LogCategory.UI, "PlantDatabase.Instance è null!");
                     }
                 }
@@ -1982,13 +1982,13 @@ namespace _Project
         {
             switch (stage)
             {
-                case 0: return "Empty";
-                case 1: return "Seed";
-                case 2: return "Sprout";
-                case 3: return "Growth";
-                case 4: return "Flowering";
-                case 5: return "HarvestReady";
-                case 6: return "Resting";
+                case 0: return "Vuoto";
+                case 1: return "Seme";
+                case 2: return "Germoglio";
+                case 3: return "Crescita";
+                case 4: return "Fioritura";
+                case 5: return "Pronto raccolto";
+                case 6: return "Riposo";
                 default: return $"Stadio {stage}";
             }
         }
