@@ -117,6 +117,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [SerializeField] private AudioClip _bootStartSfx;
         [SerializeField, Range(0.01f, 0.2f)] private float _typewriterSfxInterval = 0.035f;
 
+        [Header("Command loading UX (CRT feedback)")]
+        [Tooltip("Secondi di attesa prima della risposta per comandi validi.")]
+        [SerializeField, Range(0.5f, 3f)] private float _loadingDelaySuccess = 1.8f;
+        [Tooltip("Secondi di attesa per errore (comando non valido o argomento mancante).")]
+        [SerializeField, Range(0.2f, 1.5f)] private float _loadingDelayError = 0.65f;
+        [Tooltip("Secondi di attesa per step successivi (selezione seme, conferma Y/N, esecuzione coda).")]
+        [SerializeField, Range(0.2f, 1.5f)] private float _loadingDelayStep = 0.95f;
+
         private VisualElement _root;
         private Button _btnClose;
         private ScrollView _consoleScroll;
@@ -145,6 +153,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private VisualElement _promptRoot;
         private VisualElement _blinkCursor;
         private IVisualElementScheduledItem _blinkSchedule;
+        private VisualElement _loadingIndicator;
+        private Label _loadingSpinnerLabel;
+        private IVisualElementScheduledItem _loadingSpinnerSchedule;
+        private Coroutine _loadingCoroutine;
+        private IVisualElementScheduledItem _loadingBlinkSchedule;
+        private bool _loadingBlinkActive;
+        private bool _loadingBlinkBright;
+        private int _loadingBufferLengthBeforeBlink;
+        private string _loadingLine1Plain;
+        private string _loadingLine2Plain;
         private Label _apLabel;
         private Label _queuedLabel;
         private ScrollView _potList;
@@ -240,6 +258,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _detailView = _root.Q<VisualElement>("pcv3-detail-view");
             _promptRoot = _root.Q<VisualElement>("pcv3-prompt");
             _input = _root.Q<TextField>("pcv3-input");
+            _loadingIndicator = _root.Q<VisualElement>("pcv3-loading-indicator");
+            _loadingSpinnerLabel = _root.Q<Label>("pcv3-loading-spinner");
             _apLabel = _root.Q<Label>("pcv3-ap-label");
             _queuedLabel = _root.Q<Label>("pcv3-queued-label");
             _potList = _root.Q<ScrollView>("pcv3-potlist");
@@ -1021,6 +1041,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             _root.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
+            if (!visible)
+            {
+                StopLoadingBlink();
+                ShowLoadingSpinner(false);
+                if (_loadingCoroutine != null) { StopCoroutine(_loadingCoroutine); _loadingCoroutine = null; }
+            }
+
             // Visual requirement: when terminal is open, everything behind must be black / hidden.
             if (hideOtherUiWhileTerminalOpen)
             {
@@ -1617,10 +1644,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (clearConsole)
                 _consoleBuffer.Clear();
 
-            AppendRawLine("┌────────────────────────────────────────────────────────────────────────────┐");
-            AppendRawLine("│ §TITLE§SPORIUM BOTANICAL INCUBATOR - AUTOMATED CULTIVATION MANAGEMENT v3.1§END§ │");
-            AppendRawLine("│ Real-time cultivation monitoring, vital analysis & diary logging           │");
-            AppendRawLine("└────────────────────────────────────────────────────────────────────────────┘");
+            if (clearConsole)
+            {
+                AppendRawLine("§TITLE§SPORIUM INCUBATOR CONTROL TERMINAL v3.1§END§");
+                AppendRawLine("§TITLE§AUTOMATED CULTIVATION MANAGEMENT SYSTEM§END§");
+                AppendRawLine("");
+            }
+            AppendRawLine("§INFO§SPORIUM BOTANICAL INCUBATOR - Real-time cultivation monitoring, vital analysis & diary logging§END§");
             AppendRawLine("");
             AppendRawLine("△ §TITLE§POT MONITORING TERMINAL INITIALIZED§END§");
             AppendRawLine("<color=#E6C96F>──────────────────────────────────────────────────────────────────────────────</color>");
@@ -1666,10 +1696,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             string[] lines =
             {
-                "╔═══════════════════════════════════════════════════════════════════════════╗",
-                "║              SPORIUM INCUBATOR CONTROL TERMINAL v3.1                      ║",
-                "║              AUTOMATED CULTIVATION MANAGEMENT SYSTEM                      ║",
-                "╚═══════════════════════════════════════════════════════════════════════════╝",
+                "§TITLE§SPORIUM INCUBATOR CONTROL TERMINAL v3.1§END§",
+                "§TITLE§AUTOMATED CULTIVATION MANAGEMENT SYSTEM§END§",
+                "",
                 "[BOOT] Initializing system...",
                 "[OK] BIOS checksum verified",
                 "[OK] Memory test passed",
@@ -1880,6 +1909,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _typewriterCommandSpeedMultiplier = Mathf.Max(0.05f, speedMultiplier);
             _typewriterCommandBlockMultiplier = Mathf.Max(1, blockMultiplier);
             return new TypewriterScope(this);
+        }
+
+        /// <summary>Esegue l'azione con typewriter velocissimo a gruppi di frasi (output comandi e step).</summary>
+        private void RunWithFastTypewriter(System.Action action)
+        {
+            const float speedMultiplier = 0.12f;  // delay ~12% del normale = velocissimo
+            const int blockMultiplier = 28;       // ~28 caratteri per tick = gruppi di frasi
+            var scope = BeginTypewriterScope(speedMultiplier, blockMultiplier);
+            try { action?.Invoke(); }
+            finally { scope?.Dispose(); }
         }
 
         private sealed class TypewriterScope : System.IDisposable
@@ -2406,6 +2445,162 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _typewriterActive = false;
         }
 
+        private void EnsureLoadingIndicator()
+        {
+            if (_loadingIndicator != null && _loadingIndicator.ClassListContains("pcv3-loading-visible"))
+                return;
+            if (_loadingIndicator != null)
+                _loadingIndicator.RemoveFromClassList("pcv3-loading-visible");
+        }
+
+        private float _loadingSpinnerAngle;
+
+        private void ShowLoadingSpinner(bool show)
+        {
+            if (_loadingIndicator == null || _loadingSpinnerLabel == null) return;
+
+            if (_loadingSpinnerSchedule != null)
+            {
+                _loadingSpinnerSchedule.Pause();
+                _loadingSpinnerSchedule = null;
+            }
+
+            if (show)
+            {
+                _loadingSpinnerAngle = 0f;
+                _loadingIndicator.AddToClassList("pcv3-loading-visible");
+                _loadingSpinnerSchedule = _loadingIndicator.schedule.Execute(UpdateLoadingSpinnerRotation).Every(80).Until(() => !_loadingIndicator.ClassListContains("pcv3-loading-visible"));
+            }
+            else
+            {
+                _loadingIndicator.RemoveFromClassList("pcv3-loading-visible");
+            }
+        }
+
+        private void UpdateLoadingSpinnerRotation()
+        {
+            if (_loadingSpinnerLabel == null) return;
+            _loadingSpinnerAngle += 45f;
+            if (_loadingSpinnerAngle >= 360f) _loadingSpinnerAngle = 0f;
+            _loadingSpinnerLabel.style.rotate = new Rotate(_loadingSpinnerAngle);
+        }
+
+        /// <summary>Stile CRT/Sporium: messaggi di sistema durante il "caricamento" del comando. Avvia anche il lampeggio (pulsante).</summary>
+        private void AppendLoadingLines(string context)
+        {
+            string ctx = string.IsNullOrEmpty(context) ? "modulo" : context;
+            _loadingLine1Plain = "[SYS] Richiesta registrata nel sistema.";
+            _loadingLine2Plain = $"[SYS] Loading framework per {ctx}...";
+
+            _loadingBufferLengthBeforeBlink = _consoleBuffer.Length;
+            AppendRawLine("§INFO§" + _loadingLine1Plain + "§END§");
+            AppendRawLine("§INFO§" + _loadingLine2Plain + "§END§");
+
+            StartLoadingBlink();
+        }
+
+        private void StartLoadingBlink()
+        {
+            StopLoadingBlink();
+            _loadingBlinkActive = true;
+            _loadingBlinkBright = false;
+            if (_root != null)
+                _loadingBlinkSchedule = _root.schedule.Execute(DoLoadingBlinkTick).Every(350).Until(() => !_loadingBlinkActive);
+        }
+
+        private void StopLoadingBlink()
+        {
+            _loadingBlinkActive = false;
+            if (_loadingBlinkSchedule != null)
+            {
+                _loadingBlinkSchedule.Pause();
+                _loadingBlinkSchedule = null;
+            }
+        }
+
+        private void DoLoadingBlinkTick()
+        {
+            if (!_loadingBlinkActive || _consoleBuffer == null || _loadingLine1Plain == null || _loadingLine2Plain == null)
+                return;
+            if (_loadingBufferLengthBeforeBlink < 0 || _loadingBufferLengthBeforeBlink > _consoleBuffer.Length)
+                return;
+            string tag = _loadingBlinkBright ? "§TITLE§" : "§INFO§";
+            _consoleBuffer.Length = _loadingBufferLengthBeforeBlink;
+            AppendRawLine(tag + _loadingLine1Plain + "§END§");
+            AppendRawLine(tag + _loadingLine2Plain + "§END§");
+            FlushConsole();
+            _loadingBlinkBright = !_loadingBlinkBright;
+        }
+
+        /// <summary>Ritorna (delay in secondi, contesto per messaggio loading). Errore = delay breve.</summary>
+        private (float delaySeconds, string context) GetLoadingDelayAndContext(string trimmed, string upper)
+        {
+            string context = "";
+            bool isErrorPath = false;
+
+            if (upper == "START" || upper == "HELP") { context = "HELP"; }
+            else if (upper == "STATUS") { context = "STATUS"; }
+            else if (upper == "FORECAST" || upper == "F") { context = "FORECAST"; }
+            else if (upper == "PROTOCOL") { context = "PROTOCOL"; }
+            else if (upper.StartsWith("OPEN"))
+            {
+                string potId = ExtractPotIdArgument(trimmed);
+                if (string.IsNullOrEmpty(potId)) { isErrorPath = true; context = ""; }
+                else { context = "PlantPot"; }
+            }
+            else if (upper.StartsWith("NOTE"))
+            {
+                string potId = ExtractPotIdArgument(trimmed);
+                if (string.IsNullOrEmpty(potId)) { isErrorPath = true; context = ""; }
+                else { context = "PlantPot"; }
+            }
+            else if (upper.StartsWith("UPROOT") || upper.StartsWith("PLANT") || upper.StartsWith("FERTILIZE") || upper.StartsWith("SPRAY")
+                     || upper.StartsWith("WATERING") || upper.StartsWith("LED RED") || upper.StartsWith("LED BLUE") || upper.StartsWith("HARVEST") || upper.StartsWith("PRUNE"))
+            {
+                string potId = ExtractPotIdArgument(trimmed.Replace("LED RED", "LED").Replace("LED BLUE", "LED"));
+                if (string.IsNullOrEmpty(potId)) { isErrorPath = true; context = ""; }
+                else { context = "PlantPot"; }
+            }
+            else if (upper == "CLOSE" || upper == "CLEAR" || upper == "EXIT")
+            {
+                context = upper == "CLOSE" ? "VIEW" : "";
+            }
+            else if (upper.StartsWith("QUEUE"))
+            {
+                var parts = trimmed.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 1 || (parts.Length >= 2 && string.Equals(parts[1], "SHOW", StringComparison.OrdinalIgnoreCase)))
+                { context = "QUEUE"; }
+                else
+                { isErrorPath = true; context = ""; }
+            }
+            else
+            {
+                isErrorPath = true;
+            }
+
+            float delay = isErrorPath ? _loadingDelayError : _loadingDelaySuccess;
+            return (delay, context);
+        }
+
+        private IEnumerator LoadingThenExecute(string trimmed, string upper, float delaySeconds)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+            StopLoadingBlink();
+            ShowLoadingSpinner(false);
+            if (_loadingCoroutine != null) { _loadingCoroutine = null; }
+            RunWithFastTypewriter(() => ExecuteCommandBody(trimmed, upper));
+        }
+
+        /// <summary>Delay + spinner poi esegue l'azione (per step successivi: selezione, conferma, ecc.).</summary>
+        private IEnumerator LoadingThenExecuteStep(float delaySeconds, string loadingContext, System.Action onComplete)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+            StopLoadingBlink();
+            ShowLoadingSpinner(false);
+            if (_loadingCoroutine != null) { _loadingCoroutine = null; }
+            RunWithFastTypewriter(onComplete);
+        }
+
         private void AutoScrollConsole()
         {
             if (_consoleScroll == null) return;
@@ -2467,20 +2662,35 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Any command execution (typed or triggered by buttons) should leave the prompt type-ready.
             if (_isVisible) RequestRefocusSoon();
 
-            // State-gated input
+            // State-gated input (stesso feedback loading degli altri comandi)
             if (_inputState == InputState.SelectingItem)
             {
-                HandleSelectingItem(upper);
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Selezione");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Selezione", () => HandleSelectingItem(upper)));
                 return;
             }
             if (_inputState == InputState.ConfirmingActionToQueue)
             {
-                HandleConfirmToQueue(upper);
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Conferma");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Conferma", () => HandleConfirmToQueue(upper)));
                 return;
             }
             if (_inputState == InputState.ConfirmingExecuteOrDiscardQueue)
             {
-                HandleConfirmExecuteOrDiscard(upper);
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Esecuzione coda");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Esecuzione coda", () => HandleConfirmExecuteOrDiscard(upper)));
                 return;
             }
 
@@ -2490,6 +2700,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine($"> {trimmed}");
             FlushConsole();
 
+            var (delaySeconds, loadingContext) = GetLoadingDelayAndContext(trimmed, upper);
+            AppendLoadingLines(loadingContext);
+            FlushConsole();
+            ShowLoadingSpinner(true);
+            _loadingCoroutine = StartCoroutine(LoadingThenExecute(trimmed, upper, delaySeconds));
+        }
+
+        /// <summary>Esegue il comando dopo la fase di loading (messaggi CRT + spinner).</summary>
+        private void ExecuteCommandBody(string trimmed, string upper)
+        {
             if (upper == "START" || upper == "HELP")
             {
                 PrintStartCommands();
@@ -2752,18 +2972,17 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void PrintQueue()
         {
-            AppendRawLine("╔═ ACTION QUEUE ═════════════════════════════════════════════════════════════╗");
+            AppendRawLine("§TITLE§▸ ACTION QUEUE§END§");
 
             if (_queue.Count == 0)
             {
-                AppendRawLine("║ §WARN§(empty)§END§                                                          ║");
-                AppendRawLine("╚════════════════════════════════════════════════════════════════════════════╝");
+                AppendRawLine("§WARN§(empty)§END§");
                 AppendRawLine("");
                 return;
             }
 
-            AppendRawLine("║ #  │ POT     │ ACTION        │ ITEM                │ AP                    ║");
-            AppendRawLine("╟────┼─────────┼───────────────┼─────────────────────┼───────────────────────╢");
+            AppendRawLine("#  │ POT     │ ACTION        │ ITEM                │ AP");
+            AppendRawLine("───┼─────────┼───────────────┼─────────────────────┼────");
 
             for (int i = 0; i < _queue.Count; i++)
             {
@@ -2774,7 +2993,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string pot = (a.PotId ?? "POT-???").PadRight(7).Substring(0, 7);
                 string action = GetActionLabel(a.Type).PadRight(13).Substring(0, 13);
                 
-                // Converti ItemTypeId in nome leggibile se è un seed
                 string itemDisplayName = string.IsNullOrEmpty(a.ItemTypeId) 
                     ? "-" 
                     : GetItemDisplayName(a.ItemTypeId);
@@ -2784,13 +3002,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string ap = $"{a.ApCost} AP".PadRight(21);
                 if (ap.Length > 21) ap = ap.Substring(0, 21);
 
-                AppendRawLine($"║ {idx} │ {pot} │ {action} │ {item} │ {ap} ║");
+                AppendRawLine($"{idx} │ {pot} │ {action} │ {item} │ {ap}");
             }
 
             int totalAp = 0;
             foreach (var a in _queue) totalAp += a != null ? a.ApCost : 0;
 
-            AppendRawLine("╚════════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine($"§INFO§Total actions: {_queue.Count} | Total AP: {totalAp}§END§");
             AppendRawLine("");
         }
@@ -3290,8 +3507,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void PrintStartCommands()
         {
-            const int innerWidth = 75;
-
             string VisibleText(string s)
             {
                 return s.Replace("§TITLE§", "")
@@ -3306,20 +3521,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             int VisibleLen(string s) => VisibleText(s).Length;
 
-            string Top(string title)
-            {
-                string label = $"═ {title} ";
-                int fill = Mathf.Max(0, innerWidth - label.Length);
-                return "╔" + label + new string('═', fill) + "╗";
-            }
-
-            string Bottom() => "╚" + new string('═', innerWidth) + "╝";
-
             void Line(string content)
             {
-                int padding = Mathf.Max(0, innerWidth - 1 - VisibleLen(content));
-                string pad = new string('\u00A0', padding);
-                AppendRawLine("║ " + content + pad + "║");
+                AppendRawLine(content);
             }
 
             string CmdLine(string cmd, string desc)
@@ -3329,7 +3533,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return $"  {cmd}{new string(' ', pad)}- {desc}";
             }
 
-            AppendRawLine(Top("AVAILABLE COMMANDS"));
+            AppendRawLine("§TITLE§▸ AVAILABLE COMMANDS§END§");
             Line("");
             Line("§TITLE§▸ POT MANAGEMENT & MONITORING§END§");
             Line(CmdLine("§CMD§STATUS§END§", "§TITLE§Display all POT status & vitals§END§"));
@@ -3356,16 +3560,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             Line(CmdLine("§CMD§CLOSE§END§", "§TITLE§Close detailed POT analysis§END§"));
             Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Close terminal (asks Y/N if queue exists)§END§"));
             Line("");
-            AppendRawLine(Bottom());
             AppendRawLine("");
         }
 
         private void PrintStatusTable()
         {
             var pots = FindPots();
-            AppendRawLine("╔═ POT STATUS OVERVIEW ═════════════════════════════════════════════════════╗");
-            AppendRawLine("║ ID       │ STATUS     │ PLANT NAME          │ STAGE        │ COND   │ HYDR ║");
-            AppendRawLine("╟──────────┼────────────┼─────────────────────┼──────────────┼────────┼──────╢");
+            AppendRawLine("§TITLE§▸ POT STATUS OVERVIEW§END§");
+            AppendRawLine("ID       │ STATUS     │ PLANT NAME          │ STAGE        │ COND   │ HYDR");
+            AppendRawLine("─────────┼────────────┼─────────────────────┼──────────────┼────────┼──────");
 
             foreach (var pot in pots)
             {
@@ -3400,10 +3603,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     hydDots = filledDots + emptyDots;
                 }
 
-                AppendRawLine($"║ {potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {condition,-6} │ {hydDots,-4} ║");
+                AppendRawLine($"{potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {condition,-6} │ {hydDots,-4}");
             }
-
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine("");
         }
 
@@ -3760,12 +3961,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _inputState = InputState.ConfirmingActionToQueue;
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
-            AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
-            AppendRawLine("║ Action:  §DATA§UPROOT§END§                                                        ║");
-            AppendRawLine($"║ Target:  §DATA§{potId}§END§                                                      ║");
-            AppendRawLine($"║ Plant:   §DATA§{_pendingConfirmAction.TargetLabel}§END§                           ║");
-            AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
+            AppendRawLine($"  Action:  §DATA§UPROOT§END§");
+            AppendRawLine($"  Target:  §DATA§{potId}§END§");
+            AppendRawLine($"  Plant:   §DATA§{_pendingConfirmAction.TargetLabel}§END§");
+            AppendRawLine("  AP Cost: §VAL§1 AP§END§");
             AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();
@@ -3825,26 +4024,24 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             _inputState = InputState.ConfirmingActionToQueue;
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
-            AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
-            AppendRawLine($"║ Action:  §DATA§{GetActionLabel(type)}§END§                                                     ║");
-            AppendRawLine($"║ Target:  §DATA§{potId}§END§                                                      ║");
+            AppendRawLine($"  Action:  §DATA§{GetActionLabel(type)}§END§");
+            AppendRawLine($"  Target:  §DATA§{potId}§END§");
             if (type == QueuedActionType.HydrationToggle)
             {
                 bool isOn = pot.PotActions != null && pot.PotActions.IsWateringSystemOn();
                 string status = isOn ? "ON" : "OFF";
-                AppendRawLine($"║ System:  §DATA§{status}§END§                                                     ║");
+                AppendRawLine($"  System:  §DATA§{status}§END§");
             }
             if (type == QueuedActionType.LedRedToggle || type == QueuedActionType.LedBlueToggle)
             {
                 bool ledOn = pot.PotActions != null && pot.PotActions.IsLedSystemOn();
                 string status = ledOn ? "ON" : "OFF";
-                AppendRawLine($"║ System:  §DATA§{status}§END§                                                     ║");
+                AppendRawLine($"  System:  §DATA§{status}§END§");
                 var ledState = pot.PotActions != null ? pot.PotActions.GetLedSystemState() : LedSystemState.Off;
                 string stateLabel = ledState.ToString().ToUpperInvariant();
-                AppendRawLine($"║ State:   §DATA§{stateLabel}§END§                                                     ║");
+                AppendRawLine($"  State:   §DATA§{stateLabel}§END§");
             }
-            AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
+            AppendRawLine("  AP Cost: §VAL§1 AP§END§");
             AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();
@@ -3900,15 +4097,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _inputState = InputState.SelectingItem;
 
             AppendRawLine("§TITLE§▸ SELECT ITEM FROM INVENTORY§END§");
-            AppendRawLine("╔═ AVAILABLE ITEMS ═════════════════════════════════════════════════════════╗");
+            AppendRawLine("§TITLE§▸ AVAILABLE ITEMS§END§");
             for (int i = 0; i < options.Count; i++)
             {
                 string typeId = options[i];
                 int qty = GetAvailableQuantity(typeId);
                 string displayName = GetItemDisplayName(typeId);
-                AppendRawLine($"║  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantity: {qty}                                     ║");
+                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantity: {qty}");
             }
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
             AppendRawLine("§INFO§Type item number or §CMD§N§INFO§ to cancel§END§");
             AppendRawLine("");
             FlushConsole();
@@ -3967,12 +4163,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             AppendRawLine($"§TITLE§✓ SELECTED: {chosenDisplayName}§END§");
             AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
-            AppendRawLine("╔═══════════════════════════════════════════════════════════════════════════╗");
-            AppendRawLine($"║ Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§                                                   ║");
-            AppendRawLine($"║ Target:  §DATA§{_pendingConfirmAction.PotId}§END§                                                      ║");
-            AppendRawLine($"║ Item:    §DATA§{chosenDisplayName}§END§                                                     ║");
-            AppendRawLine("║ AP Cost: §VAL§1 AP§END§                                                            ║");
-            AppendRawLine("╚═══════════════════════════════════════════════════════════════════════════╝");
+            AppendRawLine($"  Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§");
+            AppendRawLine($"  Target:  §DATA§{_pendingConfirmAction.PotId}§END§");
+            AppendRawLine($"  Item:    §DATA§{chosenDisplayName}§END§");
+            AppendRawLine("  AP Cost: §VAL§1 AP§END§");
             AppendRawLine("§INFO§Confirm? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
             AppendRawLine("");
             FlushConsole();

@@ -68,7 +68,7 @@
     bottom: 60px;
     flex-direction: column;
     flex-grow: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .pcv3-outer-glow {
@@ -450,6 +450,7 @@
     height: 740px;
     min-height: 740px;
     max-height: 740px;
+    overflow: visible;
 }
 
 .pcv3-console-view {
@@ -458,11 +459,11 @@
     min-height: 0;
     border-left-width: 2px;
     border-right-width: 2px;
-    border-top-width: 2px;
+    border-top-width: 4px;
     border-bottom-width: 2px;
     border-left-color: rgba(127, 255, 122, 0.5);
     border-right-color: rgba(127, 255, 122, 0.5);
-    border-top-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.9);
     border-bottom-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0, 0, 0, 0.55);
     padding-left: 10px;
@@ -1676,4 +1677,26 @@
     border-right-width: 0;
     border-top-width: 0;
     border-bottom-width: 0;
+}
+
+/* Loading indicator (spinner) next to prompt — CRT/Sporium style */
+.pcv3-loading-indicator {
+    width: 20px;
+    height: 44px;
+    margin-left: 6px;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.pcv3-loading-indicator.pcv3-loading-visible {
+    display: flex;
+}
+
+.pcv3-loading-spinner {
+    font-size: 14px;
+    color: rgb(127, 255, 122);
+    text-shadow: 0 0 6px rgba(127, 255, 122, 0.9);
+    -unity-text-outline-width: 0.5px;
+    -unity-text-outline-color: rgba(127, 255, 122, 0.6);
 }

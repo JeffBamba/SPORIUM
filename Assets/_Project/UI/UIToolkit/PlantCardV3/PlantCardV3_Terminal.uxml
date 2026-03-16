@@ -7,7 +7,7 @@
         <ui:VisualElement name="pcv3-dim" class="pcv3-dim" />
         <ui:VisualElement name="pcv3-window" class="pcv3-window">
             <ui:VisualElement name="pcv3-frame" class="pcv3-frame" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/frame_terminal_v3%201.png?fileID=2800000&amp;guid=7051333020ae5c040b173f8c9920a5f2&amp;type=3#frame_terminal_v3 1&quot;);" />
-            <ui:VisualElement name="pcv3-inner" class="pcv3-inner" style="left: 723px; top: 21px; bottom: 33px; right: 137px;">
+            <ui:VisualElement name="pcv3-inner" class="pcv3-inner" style="left: 723px; top: 23px; bottom: 33px; right: 137px;">
                 <ui:VisualElement name="pcv3-outer-glow" class="pcv3-outer-glow" />
                 <ui:VisualElement name="pcv3-header" class="pcv3-header" style="display: none;">
                     <ui:Label name="pcv3-title" text="INCUBATOR CONTROL TERMINAL v3.1" class="pcv3-title" style="letter-spacing: 9px;" />
@@ -85,7 +85,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="pcv3-right" class="pcv3-right" style="min-height: 783px; height: 888px;">
                         <ui:VisualElement name="pcv3-console-view" class="pcv3-console-view" style="top: -67px; height: 713px;">
-                            <ui:ScrollView name="pcv3-console-scroll" class="pcv3-console-scroll">
+                            <ui:ScrollView name="pcv3-console-scroll" class="pcv3-console-scroll" style="top: 42px;">
                                 <ui:Label name="pcv3-console-text" class="pcv3-console-text" />
                             </ui:ScrollView>
                         </ui:VisualElement>
@@ -100,6 +100,9 @@
                         <ui:VisualElement name="pcv3-prompt" class="pcv3-prompt" style="-unity-text-align: upper-left; top: -59px;">
                             <ui:Label name="pcv3-prompt-prefix" text="&gt;" class="pcv3-prompt-prefix" />
                             <ui:TextField name="pcv3-input" class="pcv3-input" style="height: 50px; min-height: 50px; max-height: 50px;" />
+                            <ui:VisualElement name="pcv3-loading-indicator" class="pcv3-loading-indicator">
+                                <ui:Label name="pcv3-loading-spinner" text="◐" class="pcv3-loading-spinner" />
+                            </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
