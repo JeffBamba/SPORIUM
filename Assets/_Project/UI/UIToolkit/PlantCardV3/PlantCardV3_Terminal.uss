@@ -26,12 +26,10 @@
 
 .pcv3-dim {
     position: absolute;
-    /* Lascia Top Bar (80px) e Bottom Bar (132px) scoperti così restano visibili dietro al terminale */
     left: 0;
     right: 0;
     top: 80px;
     bottom: 132px;
-    /* Opacità ridotta così la gameview in mezzo resta visibile */
     background-color: rgba(0, 0, 0, 0.55);
     picking-mode: ignore;
 }
@@ -148,18 +146,267 @@
 }
 
 .pcv3-body {
+    position: relative;
     flex-grow: 1;
     flex-direction: row;
 }
 
 .pcv3-left {
-    width: 455px;
-    min-width: 455px;
+    position: absolute;
+    width: 220px;
+    min-width: 200px;
     border-right-width: 2px;
     border-right-color: rgba(127, 255, 122, 0.5);
     background-color: rgba(0, 0, 0, 0.45);
     padding: 12px;
-    overflow: hidden;
+    overflow: visible;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.pcv3-vital-stats-block {
+    flex-direction: column;
+    margin-bottom: 16px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+}
+
+.pcv3-vital-title {
+    font-size: 11px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.pcv3-center {
+    position: absolute;
+    min-width: 280px;
+    width: 320px;
+    padding: 12px;
+    border-right-width: 2px;
+    border-right-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.pcv3-hud-preview-group {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.pcv3-hud-plant-info-box {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+    flex-direction: column;
+    align-items: center;
+}
+
+.pcv3-hud-plant-preview {
+    width: 160px;
+    height: 180px;
+    min-height: 180px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.6);
+    border-right-color: rgba(127, 255, 122, 0.6);
+    border-top-color: rgba(127, 255, 122, 0.6);
+    border-bottom-color: rgba(127, 255, 122, 0.6);
+    -unity-background-scale-mode: scale-to-fit;
+    margin-bottom: 8px;
+}
+
+.pcv3-hud-plant-name {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.pcv3-hud-plant-name-standard {
+    color: rgb(230, 201, 111);
+}
+
+.pcv3-hud-plant-name-pure {
+    color: rgb(127, 255, 122);
+}
+
+.pcv3-hud-plant-name-evil {
+    color: rgb(211, 95, 95);
+}
+
+.pcv3-hud-live-pill {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.pcv3-hud-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgb(0, 255, 100);
+    margin-right: 6px;
+    transition-property: opacity;
+    transition-duration: 0.35s;
+    transition-timing-function: ease-in-out;
+}
+
+.pcv3-hud-live-dot-pulse {
+    opacity: 0.35;
+}
+
+.pcv3-hud-live-dot-offline {
+    background-color: rgb(211, 95, 95);
+}
+
+.pcv3-hud-live-label {
+    font-size: 10px;
+    color: rgb(0, 255, 100);
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+}
+
+.pcv3-hud-live-pill-offline .pcv3-hud-live-label {
+    color: rgb(211, 95, 95);
+}
+
+.pcv3-hud-plant-code-level-row {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.pcv3-hud-plant-code-level-row .pcv3-hud-plant-code {
+    font-size: 10px;
+    color: rgb(192, 200, 197);
+    letter-spacing: 0.5px;
+    margin-bottom: 0;
+    margin-right: 8px;
+}
+
+.pcv3-hud-plant-code-level-row .pcv3-hud-plant-level {
+    font-size: 10px;
+    color: rgb(230, 201, 111);
+    margin-bottom: 0;
+}
+
+.pcv3-hud-plant-code {
+    font-size: 10px;
+    color: rgb(192, 200, 197);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.pcv3-hud-plant-level {
+    font-size: 10px;
+    color: rgb(230, 201, 111);
+    margin-bottom: 6px;
+}
+
+.pcv3-hud-plant-oneliner {
+    font-size: 10px;
+    color: rgba(192, 200, 197, 0.9);
+    white-space: normal;
+    -unity-text-align: center;
+    max-width: 260px;
+    margin-bottom: 12px;
+}
+
+.pcv3-hud-pot-slots {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    height: 48px;
+}
+
+.pcv3-hud-pot-slot {
+    width: 44px;
+    height: 44px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+}
+
+.pcv3-hud-pot-slot-empty {
+    background-color: transparent;
+    border-left-color: rgba(180, 180, 180, 0.7);
+    border-right-color: rgba(180, 180, 180, 0.7);
+    border-top-color: rgba(180, 180, 180, 0.7);
+    border-bottom-color: rgba(180, 180, 180, 0.7);
+}
+
+.pcv3-hud-pot-slot:hover {
+    background-color: rgba(127, 255, 122, 0.15);
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+}
+
+.pcv3-hud-pot-slot-selected {
+    background-color: rgba(127, 255, 122, 0.25);
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+    box-shadow: 0 0 8px rgba(127, 255, 122, 0.5);
+}
+
+.pcv3-hud-pot-slot-empty:hover {
+    background-color: transparent;
+    border-left-color: rgba(200, 200, 200, 0.9);
+    border-right-color: rgba(200, 200, 200, 0.9);
+    border-top-color: rgba(200, 200, 200, 0.9);
+    border-bottom-color: rgba(200, 200, 200, 0.9);
+}
+
+.pcv3-hud-pot-slot-empty.pcv3-hud-pot-slot-selected {
+    background-color: transparent;
+    box-shadow: none;
+    border-left-color: rgba(180, 180, 180, 0.7);
+    border-right-color: rgba(180, 180, 180, 0.7);
+    border-top-color: rgba(180, 180, 180, 0.7);
+    border-bottom-color: rgba(180, 180, 180, 0.7);
+}
+
+.pcv3-zona2-draggable {
+    position: relative;
+}
+
+.pcv3-zona3-draggable {
+    position: relative;
 }
 
 .pcv3-potlist {
@@ -445,8 +692,11 @@
 }
 
 .pcv3-right {
-    flex-grow: 1;
+    position: absolute;
+    flex-grow: 0;
     padding: 14px;
+    width: 520px;
+    min-width: 400px;
     height: 740px;
     min-height: 740px;
     max-height: 740px;
@@ -534,7 +784,8 @@
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller {
-    width: 8px !important;
+    width: 8px;
+    min-width: 20px;
     background-color: rgb(26, 35, 37);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -544,28 +795,46 @@
     border-right-color: rgb(42, 52, 54);
     border-top-color: rgb(42, 52, 54);
     border-bottom-color: rgb(42, 52, 54);
-    border-top-left-radius: 8px !important;
-    border-top-right-radius: 8px !important;
-    border-bottom-left-radius: 8px !important;
-    border-bottom-right-radius: 8px !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    pointer-events: auto;
 }
 
-/* Rimuove la linea gialla: track nascosto (è la barra verticale al centro), slider/drag-container trasparenti */
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__track {
-    display: none !important;
-}
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__slider,
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__drag-container {
-    background-color: rgba(0, 0, 0, 0) !important;
-    border-width: 0 !important;
+    display: none;
 }
 
-/* Frecce su/giù: solo freccia verde (tint), NESSUN background; NON toccare background-image altrimenti la freccia scompare */
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__high-button,
-.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__low-button {
-    background-color: rgba(0, 0, 0, 0) !important;
-    border-width: 0 !important;
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__slider {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    pointer-events: auto;
+}
+
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__drag-container {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    pointer-events: auto;
+}
+
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__high-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
     border-radius: 4px;
+    min-height: 22px;
+    min-width: 20px;
+    pointer-events: auto;
+    -unity-background-image-tint-color: rgb(127, 255, 122);
+}
+
+.pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__low-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 4px;
+    min-height: 22px;
+    min-width: 20px;
+    pointer-events: auto;
     -unity-background-image-tint-color: rgb(127, 255, 122);
 }
 
@@ -603,32 +872,31 @@
     border-bottom-right-radius: 0;
 }
 
-/* Scrollbar console (Terminal Pot): verde lime, angoli stondati, nessuna linea interna.
-   Usare !important per sovrascrivere il tema predefinito Unity. */
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
-    background-color: rgb(127, 255, 122) !important;
-    background-image: none !important;
-    border-width: 0 !important;
-    border-top-left-radius: 8px !important;
-    border-top-right-radius: 8px !important;
-    border-bottom-left-radius: 8px !important;
-    border-bottom-right-radius: 8px !important;
+    background-color: rgb(127, 255, 122);
+    background-image: none;
+    border-width: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    min-height: 24px;
+    pointer-events: auto;
 }
 
-/* Alternativa: thumb come dragger */
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
-    background-color: rgb(127, 255, 122) !important;
-    background-image: none !important;
-    border-width: 0 !important;
-    border-top-left-radius: 8px !important;
-    border-top-right-radius: 8px !important;
-    border-bottom-left-radius: 8px !important;
-    border-bottom-right-radius: 8px !important;
+    background-color: rgb(127, 255, 122);
+    background-image: none;
+    border-width: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
     background-color: rgb(127, 255, 122);
-    background-image: repeating-linear-gradient(180deg, rgb(127, 255, 122) 0px, rgb(127, 255, 122) 2px, rgb(95, 182, 90) 2px, rgb(95, 182, 90) 4px);
+    background-image: ;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -645,7 +913,7 @@
 
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
     background-color: rgb(127, 255, 122);
-    background-image: repeating-linear-gradient(180deg, rgb(127, 255, 122) 0px, rgb(127, 255, 122) 2px, rgb(95, 182, 90) 2px, rgb(95, 182, 90) 4px);
+    background-image: ;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -662,17 +930,17 @@
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
+    background-image: ;
 }
 
 .pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
+    background-image: ;
 }
 
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: repeating-linear-gradient(180deg, rgb(136, 255, 136) 0px, rgb(136, 255, 136) 2px, rgb(111, 198, 106) 2px, rgb(111, 198, 106) 4px);
+    background-image: ;
 }
 
 .pcv3-custom-scrollbar {
@@ -1679,7 +1947,6 @@
     border-bottom-width: 0;
 }
 
-/* Loading indicator (spinner) next to prompt — CRT/Sporium style */
 .pcv3-loading-indicator {
     width: 20px;
     height: 44px;

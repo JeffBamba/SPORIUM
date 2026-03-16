@@ -14209,6 +14209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &523949746
@@ -15252,6 +15253,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 2
+  _clickRadius: 0.35
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &561152749
@@ -16573,7 +16575,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _uiDocument: {fileID: 606924781}
   _mutationIndex: 0.42
-  _orbitSpeed: 8
 --- !u!114 &606924780
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33724,6 +33725,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1268535597
@@ -35068,6 +35070,7 @@ MonoBehaviour:
   _uiDocument: {fileID: 0}
   _potCardTemplate: {fileID: 9197481963319205126, guid: 2929e8d961b688442ac28d166e3329b6, type: 3}
   _detailPageTemplate: {fileID: 9197481963319205126, guid: 8ae528728b3b19b4fb2ca1054ba6fee2, type: 3}
+  _terminalPotPreviewConfig: {fileID: 11400000, guid: 9604bc3b9f3b7a44a83fd62b3c0b2f7b, type: 2}
   _startVisibleInEditor: 0
   _useBlurredBackdrop: 1
   _outsideShowsGameView: 1
@@ -35096,6 +35099,9 @@ MonoBehaviour:
   _typewriterSfx: {fileID: 0}
   _bootStartSfx: {fileID: 0}
   _typewriterSfxInterval: 0.035
+  _loadingDelaySuccess: 1.8
+  _loadingDelayError: 0.65
+  _loadingDelayStep: 0.95
   suppressDebugConsolesWhileTerminalOpen: 1
   hideOtherUiWhileTerminalOpen: 1
 --- !u!114 &1299462520
@@ -35276,6 +35282,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!1 &1312077700
@@ -35779,6 +35786,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!1 &1325863094
@@ -36245,6 +36253,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1339397446
@@ -39357,6 +39366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 0.84705883, g: 0.8980392, b: 0.26666668, a: 1}
   _highlightColor: {r: 0.9267135, g: 0.9622642, b: 0.52198297, a: 1}
 --- !u!61 &1465652623
@@ -41729,6 +41739,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 2
+  _clickRadius: 0.35
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1001 &1559193203
@@ -44733,6 +44744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 1
+  _clickRadius: 0.35
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1664086553
@@ -47564,6 +47576,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interactDistance: 0.75
+  _clickRadius: 0.35
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!65 &1789348877

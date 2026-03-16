@@ -140,11 +140,11 @@ namespace _Project
                         var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                         if (toastManager != null)
                         {
-                            toastManager.ShowToast(ToastNotificationType.ResourceGained, $"You collected Rainwater: {amountToCollect}!", "WATER-001");
+                            toastManager.ShowToast(ToastNotificationType.ResourceGained, $"Acqua piovana raccolta: {amountToCollect}!", "WATER-001");
                         }
                         else if (_uiNotification != null)
                         {
-                            _uiNotification.ShowNotification($"You collected Rainwater: {amountToCollect}!", 3f, Color.green);
+                            _uiNotification.ShowNotification($"Acqua piovana raccolta: {amountToCollect}!", 3f, Color.green);
                         }
                     }
                 }

@@ -24,7 +24,6 @@
     [Component] Transform
     [Component] SpriteRenderer
     [Component] Animator
-    [Component] ShadowCaster2D
   - Canvas
     [Component] RectTransform
     [Component] Canvas
@@ -39,11 +38,6 @@
   [Component] Canvas
   [Component] CanvasScaler
   [Component] GraphicRaycaster
-  - InventoryBackgroundBlocker
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    [Component] Button
   - HUD_GameViewportBackground
     [Component] RectTransform
     [Component] UIDocument
@@ -52,23 +46,6 @@
     [Component] Transform
     [Component] EventSystem
     [Component] StandaloneInputModule
-    [Component] BaseInput
-    - BackgroundSettingsPanel
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - PlayerStatusPanelSettings
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - FoundationNotificationsPanel
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
-    - PlantCardV2Settings
-      [Component] Transform
-      [Component] PanelEventHandler
-      [Component] PanelRaycaster
   - BTN_EndDay
     [Component] RectTransform
     [Component] CanvasRenderer
@@ -768,7 +745,6 @@
             [Component] RectTransform
             [Component] CanvasRenderer
             [Component] TextMeshProUGUI
-            [Component] EventTrigger
         - Stage
           [Component] RectTransform
           [Component] CanvasRenderer
@@ -2351,18 +2327,14 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] BottomNavigationController
-  - PlantCardV2
-    [Component] Transform
-    [Component] UIDocument
-    [Component] PlantCardV2Controller
-  - PlantCardV3
-    [Component] RectTransform
-    [Component] UIDocument
-    [Component] PlantCardV3TerminalController
   - PlayerStatusPanel
     [Component] RectTransform
     [Component] PlayerStatusPanelController
     [Component] UIDocument
+  - PlantCardV2
+    [Component] Transform
+    [Component] UIDocument
+    [Component] PlantCardV2Controller
   - PotActionsMenu
     [Component] Transform
     [Component] UIDocument
@@ -2379,6 +2351,10 @@
     [Component] Transform
     [Component] UIDocument
     [Component] AdditiveSelectorController
+  - PlantCardV3
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] PlantCardV3TerminalController
   - UI_LabExtractorPanel
     [Component] RectTransform
     [Component] UIDocument
@@ -2399,186 +2375,6 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] LabIncubatorPanelController
-  - MinimalHUD_POT-001
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-002
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-003
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - MinimalHUD_POT-004
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - PlantPreviewImage
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - PlantNameAndLevelText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - ConditionText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - GrowthStateText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-      [Component] EventTrigger
-    - PhDriftText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - PotIdText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
-    - WaterCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - LedCircle
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - MinimalHUDGrowthTooltip
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      - TooltipText
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2604,7 +2400,7 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-      - Continue
+      - Carica
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2613,7 +2409,7 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-      - Load
+      - Salva
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2622,7 +2418,7 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-      - Save
+      - Opzioni
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2631,7 +2427,7 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-      - Options
+      - Esci
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2640,7 +2436,7 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-      - Quit
+      - Continua
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] Image
@@ -2717,6 +2513,7 @@
                 [Component] Image
     - SlotsPopup
       [Component] RectTransform
+      [Component] SaveSlotsPopupController
       - Panel
         [Component] RectTransform
         [Component] CanvasRenderer
@@ -2811,24 +2608,15 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
-        - SR_ConditionTintOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_InfestedOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_FruitOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
       - PotArmRig 
         [Component] Transform
         [Component] PotAutomationArmAnimator
+        - Arm_Small 
+          [Component] Transform
+          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
-          - Arm_Small 
-            [Component] Transform
-            [Component] SpriteRenderer
     - Pot_POT-002
       [Component] Transform
       [Component] SpriteRenderer
@@ -2858,24 +2646,15 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
-        - SR_ConditionTintOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_InfestedOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_FruitOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
       - PotArmRig 
         [Component] Transform
         [Component] PotAutomationArmAnimator
+        - Arm_Small 
+          [Component] Transform
+          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
-          - Arm_Small 
-            [Component] Transform
-            [Component] SpriteRenderer
     - Pot_POT-003
       [Component] Transform
       [Component] SpriteRenderer
@@ -2903,24 +2682,15 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
-        - SR_ConditionTintOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_InfestedOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_FruitOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
       - PotArmRig
         [Component] Transform
         [Component] PotAutomationArmAnimator
+        - Arm_Small 
+          [Component] Transform
+          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
-          - Arm_Small 
-            [Component] Transform
-            [Component] SpriteRenderer
     - Pot_POT-004
       [Component] Transform
       [Component] SpriteRenderer
@@ -2948,24 +2718,15 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
-        - SR_ConditionTintOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_InfestedOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
-        - SR_FruitOverlay
-          [Component] Transform
-          [Component] SpriteRenderer
       - PotArmRig
         [Component] Transform
         [Component] PotAutomationArmAnimator
+        - Arm_Small 
+          [Component] Transform
+          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
-          - Arm_Small 
-            [Component] Transform
-            [Component] SpriteRenderer
   - Extractor
     [Component] Transform
     [Component] SpriteRenderer
@@ -3419,21 +3180,3 @@
 - opsMenu
   [Component] Transform
   [Component] SpriteRenderer
-- SceneServicesContainer
-  [Component] Transform
-  [Component] ServiceContainer
-- FoundationNotificationsRuntime
-  [Component] Transform
-  [Component] FoundationNotificationsRunner
-  [Component] FoundationNotificationsWatchersRunner
-  [Component] FoundationLoreSchedulerRunner
-  [Component] FoundationNotificationsDebugConsole
-- pH_DebugConsole
-  [Component] Transform
-  [Component] PhSystemDebugConsole
-- pH_IdleOscillation
-  [Component] Transform
-  [Component] PhSystemIdleOscillation
-- UIFertilizerSelector
-  [Component] Transform
-  [Component] UIFertilizerSelector

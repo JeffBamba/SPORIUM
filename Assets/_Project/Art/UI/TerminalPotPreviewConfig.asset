@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8ab2606c60906141a7cc3d76eab3822, type: 3}
+  m_Name: TerminalPotPreviewConfig
+  m_EditorClassIdentifier: 
+  statusVuotoSprite: {fileID: 21300000, guid: 038112986700a244e9acc868f1705d04, type: 3}
+  seedSprite: {fileID: 21300000, guid: bb8e92867394ea74bb8935ea1e159732, type: 3}
+  sproutSprite: {fileID: 21300000, guid: 939e2047e05c1364585ba82b99e00c85, type: 3}
+  deadSprite: {fileID: 21300000, guid: 853dedd2958c11742bbd1f2cde48a53f, type: 3}
+  adultSprite: {fileID: 21300000, guid: e652c309ddb15674d9f725b7b69a974a, type: 3}
+  floweringSprite: {fileID: 21300000, guid: 8053a84e084383e4ea73b34858422b70, type: 3}

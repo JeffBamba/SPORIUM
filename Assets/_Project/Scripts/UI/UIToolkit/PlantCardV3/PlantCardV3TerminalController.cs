@@ -11,7 +11,7 @@ using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Condition;
-using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Growth; // LedSystemState
 using System.Collections.Generic;
 using _Project.Player;
 using Sporae.UI.UIToolkit.HUD.Components;
@@ -34,6 +34,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             Idle,
             SelectingItem,
+            ConfirmingPlantDrip,
+            ConfirmingPlantLed,
+            ConfirmingPlantLedType,
             ConfirmingActionToQueue,
             ConfirmingExecuteOrDiscardQueue
         }
@@ -71,6 +74,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [SerializeField] private UIDocument _uiDocument;
         [SerializeField] private VisualTreeAsset _potCardTemplate;
         [SerializeField] private VisualTreeAsset _detailPageTemplate;
+
+        [Header("Terminal HUD Zona 2 (preview incubator)")]
+        [Tooltip("Set di sprite per la preview pianta in Zona 2 (stile incubator). Se non assegnato, la preview usa fallback da pot o rimane vuota.")]
+        [SerializeField] private TerminalPotPreviewConfig _terminalPotPreviewConfig;
 
         [Header("Behavior")]
         [SerializeField] private bool _startVisibleInEditor = false;
@@ -149,6 +156,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private VisualElement _potListScrollbar;
         private VisualElement _potListScrollbarTrack;
         private VisualElement _potListScrollbarThumb;
+        private int _scrollArrowDirection;
+        private IVisualElementScheduledItem _scrollArrowRepeatSchedule;
         private Label _inputHintOverlay;
         private VisualElement _promptRoot;
         private VisualElement _blinkCursor;
@@ -189,6 +198,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private readonly System.Collections.Generic.List<QueuedAction> _queue = new();
         private InputState _inputState = InputState.Idle;
         private QueuedAction _pendingConfirmAction;
+        private bool _pendingPlantDrip;
+        private int _pendingPlantLed; // 0 = none, 1 = red, 2 = blue
         private readonly Dictionary<string, int> _reservedItems = new();
 
         private GameManager _gameManager;
@@ -199,6 +210,44 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private PotSystemConfig _potSystemConfig;
 
         private SelectionContext _selection;
+
+        // Zona 2 (center HUD) e Zona 3 (vital stats)
+        private VisualElement _pcv3Left;
+        private VisualElement _pcv3Center;
+        private VisualElement _pcv3Right;
+        private VisualElement _hudPlantPreview;
+        private VisualElement _hudLivePill;
+        private VisualElement _hudLiveDot;
+        private Label _hudLiveLabel;
+        private Label _hudPlantName;
+        private Label _hudPlantCode;
+        private Label _hudPlantLevel;
+        private Label _hudPlantOneliner;
+        private List<VisualElement> _hudPotSlots = new List<VisualElement>(4);
+        private VisualElement _vitalBlock1;
+        private VisualElement _vitalBlock2;
+        private int _selectedPotIndex = 0;
+        private List<PotSlot> _hudPots = new List<PotSlot>(4);
+        private bool _liveDotPulseLow;
+
+        private const string PrefsKeyZona2Left = "Sporium_TerminalPot_Zona2_Left";
+        private const string PrefsKeyZona2Top = "Sporium_TerminalPot_Zona2_Top";
+        private const string PrefsKeyZona3Block1Left = "Sporium_TerminalPot_Zona3_Block1_Left";
+        private const string PrefsKeyZona3Block1Top = "Sporium_TerminalPot_Zona3_Block1_Top";
+        private const string PrefsKeyZona3Block2Left = "Sporium_TerminalPot_Zona3_Block2_Left";
+        private const string PrefsKeyZona3Block2Top = "Sporium_TerminalPot_Zona3_Block2_Top";
+        private const string PrefsKeyBodyLeftLeft = "Sporium_TerminalPot_Body_Left_Left";
+        private const string PrefsKeyBodyLeftTop = "Sporium_TerminalPot_Body_Left_Top";
+        private const string PrefsKeyBodyCenterLeft = "Sporium_TerminalPot_Body_Center_Left";
+        private const string PrefsKeyBodyCenterTop = "Sporium_TerminalPot_Body_Center_Top";
+        private const string PrefsKeyBodyRightLeft = "Sporium_TerminalPot_Body_Right_Left";
+        private const string PrefsKeyBodyRightTop = "Sporium_TerminalPot_Body_Right_Top";
+        private VisualElement _draggingElement;
+        private Vector2 _dragStartMouse;
+        private float _dragStartLeft;
+        private float _dragStartTop;
+        private EventCallback<MouseMoveEvent> _dragMoveCallback;
+        private EventCallback<MouseUpEvent> _dragUpCallback;
 
         [Header("Safety")]
         [SerializeField] private bool suppressDebugConsolesWhileTerminalOpen = true;
@@ -267,13 +316,35 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _dimOverlay = _root.Q<VisualElement>("pcv3-dim");
             _outerGlow = _root.Q<VisualElement>("pcv3-outer-glow");
 
-            // Custom scrollbars
+            // Zona 2 (center) e Zona 3 (left)
+            _pcv3Left = _root.Q<VisualElement>("pcv3-left");
+            _pcv3Center = _root.Q<VisualElement>("pcv3-center");
+            _pcv3Right = _root.Q<VisualElement>("pcv3-right");
+            _hudPlantPreview = _root.Q<VisualElement>("pcv3-hud-plant-preview");
+            _hudLivePill = _root.Q<VisualElement>("pcv3-hud-live-pill");
+            _hudLiveDot = _root.Q<VisualElement>("pcv3-hud-live-dot");
+            _hudLiveLabel = _root.Q<Label>("pcv3-hud-live-label");
+            _hudPlantName = _root.Q<Label>("pcv3-hud-plant-name");
+            _hudPlantCode = _root.Q<Label>("pcv3-hud-plant-code");
+            _hudPlantLevel = _root.Q<Label>("pcv3-hud-plant-level");
+            _hudPlantOneliner = _root.Q<Label>("pcv3-hud-plant-oneliner");
+            _hudPotSlots.Clear();
+            for (int i = 0; i < 4; i++)
+            {
+                var slot = _root.Q<VisualElement>($"pcv3-hud-pot-slot-{i}");
+                if (slot != null) _hudPotSlots.Add(slot);
+            }
+            _vitalBlock1 = _root.Q<VisualElement>("pcv3-vital-stats-inner-1");
+            _vitalBlock2 = _root.Q<VisualElement>("pcv3-vital-stats-inner-2");
+
+            // Custom scrollbars (opzionale se potlist rimosso)
             _potListScrollbar = _root.Q<VisualElement>("pcv3-potlist-scrollbar");
             _potListScrollbarTrack = _root.Q<VisualElement>("pcv3-potlist-scrollbar-track");
             _potListScrollbarThumb = _root.Q<VisualElement>("pcv3-potlist-scrollbar-thumb");
 
             // Inizializza scrollbar custom
             InitializeCustomScrollbars();
+            SetupZona2AndZona3();
 
             ApplyConsoleScrollbarStyle();
 
@@ -286,12 +357,19 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_protocolText != null)
                 _protocolText.enableRichText = true;
             EnsureForecastConditionTooltip();
+            StartLiveDotPulse();
 
             if (_btnClose != null)
                 _btnClose.clicked += RequestClose;
 
-            // Click anywhere on terminal should re-focus command input
-            _root.RegisterCallback<MouseDownEvent>(_ => FocusInput(), TrickleDown.TrickleDown);
+            // Click anywhere on terminal should re-focus command input (except when clicking on scrollbar: allow arrow/thumb interaction)
+            _root.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                var target = evt.target as VisualElement;
+                if (target != null && IsDescendantOfConsoleScroller(target))
+                    return;
+                FocusInput();
+            }, TrickleDown.TrickleDown);
 
             if (_input != null)
             {
@@ -413,7 +491,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _input.style.minWidth = 0;
             }
         }
-        // #endregion
 
         private void InstallFocusGuard()
         {
@@ -638,7 +715,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_inputHintOverlay == null)
             {
                 // NOTE: the ">" is already rendered by pcv3-prompt-prefix in UXML. Avoid double ">".
-                _inputHintOverlay = new Label("Type START for commands...");
+                _inputHintOverlay = new Label("Digita START per l'elenco comandi...");
                 _inputHintOverlay.name = "pcv3-input-hint";
                 _inputHintOverlay.pickingMode = PickingMode.Ignore;
                 _promptRoot.Add(_inputHintOverlay);
@@ -817,6 +894,110 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 btn.style.borderTopLeftRadius = btn.style.borderTopRightRadius = btn.style.borderBottomLeftRadius = btn.style.borderBottomRightRadius = 4;
                 btn.style.unityBackgroundImageTintColor = green;
             }
+
+            RegisterConsoleScrollbarArrows(vScroller);
+        }
+
+        /// <summary>
+        /// Abilita scroll tramite click e hold sulle frecce su/giù della scrollbar della console.
+        /// </summary>
+        private void RegisterConsoleScrollbarArrows(Scroller vScroller)
+        {
+            if (vScroller == null || _consoleScroll == null) return;
+
+            float ScrollStepPx()
+            {
+                float viewportH = _consoleScroll.contentViewport?.resolvedStyle.height ?? 400f;
+                return Mathf.Max(80f, viewportH * 0.35f);
+            }
+
+            void ScrollBy(float deltaPx)
+            {
+                var vs = _consoleScroll.verticalScroller;
+                if (vs == null) return;
+                float contentH = _consoleScroll.contentContainer.layout.height;
+                float viewportH = _consoleScroll.contentViewport?.layout.height ?? 400f;
+                float range = vs.highValue - vs.lowValue;
+                if (range <= 0 || contentH <= viewportH) return;
+                float step = deltaPx * range / (contentH - viewportH);
+                vs.value = Mathf.Clamp(vs.value + step, vs.lowValue, vs.highValue);
+            }
+
+            void StartScrollRepeat(int direction, VisualElement button, PointerDownEvent evt)
+            {
+                if (_scrollArrowRepeatSchedule != null) _scrollArrowRepeatSchedule.Pause();
+                _scrollArrowDirection = direction;
+                button.CapturePointer(evt.pointerId);
+                float step = ScrollStepPx() * 0.5f;
+                _scrollArrowRepeatSchedule = button.schedule.Execute(() =>
+                {
+                    if (_scrollArrowDirection == 0) return;
+                    ScrollBy(_scrollArrowDirection * step);
+                }).Every(120).Until(() => _scrollArrowDirection == 0);
+            }
+
+            void StopScrollRepeat(VisualElement button, PointerUpEvent evt)
+            {
+                _scrollArrowDirection = 0;
+                button.ReleasePointer(evt.pointerId);
+                _scrollArrowRepeatSchedule?.Pause();
+            }
+
+            void StopScrollRepeatLeave(VisualElement button, PointerLeaveEvent evt)
+            {
+                if (button.HasPointerCapture(evt.pointerId))
+                {
+                    _scrollArrowDirection = 0;
+                    button.ReleasePointer(evt.pointerId);
+                    _scrollArrowRepeatSchedule?.Pause();
+                }
+            }
+
+            if (vScroller.highButton != null)
+            {
+                var upBtn = vScroller.highButton;
+                upBtn.RegisterCallback<ClickEvent>(_ => ScrollBy(-ScrollStepPx()));
+                upBtn.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    if (evt.button != 0) return;
+                    StartScrollRepeat(-1, upBtn, evt);
+                });
+                upBtn.RegisterCallback<PointerUpEvent>(evt => StopScrollRepeat(upBtn, evt));
+                upBtn.RegisterCallback<PointerLeaveEvent>(evt => StopScrollRepeatLeave(upBtn, evt));
+            }
+
+            if (vScroller.lowButton != null)
+            {
+                var downBtn = vScroller.lowButton;
+                downBtn.RegisterCallback<ClickEvent>(_ => ScrollBy(ScrollStepPx()));
+                downBtn.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    if (evt.button != 0) return;
+                    StartScrollRepeat(1, downBtn, evt);
+                });
+                downBtn.RegisterCallback<PointerUpEvent>(evt => StopScrollRepeat(downBtn, evt));
+                downBtn.RegisterCallback<PointerLeaveEvent>(evt => StopScrollRepeatLeave(downBtn, evt));
+            }
+        }
+
+        private bool IsDescendantOfConsoleScroller(VisualElement el)
+        {
+            if (el == null || _consoleScroll == null) return false;
+            var vScroller = _consoleScroll.verticalScroller;
+            if (vScroller == null) return false;
+            for (var p = el; p != null; p = p.parent)
+                if (p == vScroller) return true;
+            return false;
+        }
+
+        private bool IsDescendantOfPotSlots(VisualElement el)
+        {
+            if (el == null || _root == null) return false;
+            var container = _root.Q<VisualElement>("pcv3-hud-pot-slots");
+            if (container == null) return false;
+            for (var p = el; p != null; p = p.parent)
+                if (p == container) return true;
+            return false;
         }
 
         /// <summary>
@@ -826,7 +1007,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_consoleScroll == null) return;
 
-            const float wheelScrollFactor = 24f;
+            const float wheelScrollFactor = 280f;
 
             void OnWheel(WheelEvent evt)
             {
@@ -1041,11 +1222,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             _root.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
 
+            if (visible)
+                RefreshZona2AndZona3();
+
             if (!visible)
             {
                 StopLoadingBlink();
                 ShowLoadingSpinner(false);
                 if (_loadingCoroutine != null) { StopCoroutine(_loadingCoroutine); _loadingCoroutine = null; }
+                StopTypewriter();
             }
 
             // Visual requirement: when terminal is open, everything behind must be black / hidden.
@@ -1415,6 +1600,352 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void RefreshSidebar()
         {
             RefreshPotCards();
+            RefreshZona2AndZona3();
+        }
+
+        private void SetupZona2AndZona3()
+        {
+            if (_pcv3Left != null) _pcv3Left.style.display = DisplayStyle.Flex;
+            if (_pcv3Center != null) _pcv3Center.style.display = DisplayStyle.Flex;
+
+            for (int i = 0; i < _hudPotSlots.Count; i++)
+            {
+                int index = i;
+                var slot = _hudPotSlots[i];
+                slot.RegisterCallback<ClickEvent>(_ => OnHudPotSlotClicked(index));
+            }
+
+            _hudPots.Clear();
+            var pots = FindPots();
+            for (int i = 0; i < Mathf.Min(4, pots.Count); i++)
+                _hudPots.Add(pots[i]);
+
+            _selectedPotIndex = 0;
+            UpdateHudSlotVisuals();
+            RefreshHudFromSelectedPot();
+
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-hud-preview-group"), PrefsKeyZona2Left, PrefsKeyZona2Top);
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-1"), PrefsKeyZona3Block1Left, PrefsKeyZona3Block1Top);
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-2"), PrefsKeyZona3Block2Left, PrefsKeyZona3Block2Top);
+
+            SetupDraggableGroup(_pcv3Left, PrefsKeyBodyLeftLeft, PrefsKeyBodyLeftTop, 0f, 0f);
+            SetupDraggableGroup(_pcv3Center, PrefsKeyBodyCenterLeft, PrefsKeyBodyCenterTop, 230f, 0f);
+            SetupDraggableGroup(_pcv3Right, PrefsKeyBodyRightLeft, PrefsKeyBodyRightTop, 560f, 0f);
+        }
+
+        private void SetupDraggableGroup(VisualElement group, string prefsKeyLeft, string prefsKeyTop, float defaultLeft = 0f, float defaultTop = 0f)
+        {
+            if (group == null) return;
+            float savedLeft = PlayerPrefs.GetFloat(prefsKeyLeft, float.MaxValue);
+            float savedTop = PlayerPrefs.GetFloat(prefsKeyTop, float.MaxValue);
+
+            if (savedLeft != float.MaxValue && savedTop != float.MaxValue)
+            {
+                group.style.position = Position.Absolute;
+                group.style.left = savedLeft;
+                group.style.top = savedTop;
+                group.style.right = StyleKeyword.Auto;
+                group.style.bottom = StyleKeyword.Auto;
+            }
+
+            group.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                if (IsDescendantOfPotSlots(evt.target as VisualElement) && (group.name == "pcv3-center" || group.name == "pcv3-hud-preview-group"))
+                    return;
+                _draggingElement = group;
+                _dragStartMouse = evt.mousePosition;
+                float startLeft = group.resolvedStyle.left;
+                float startTop = group.resolvedStyle.top;
+                if (float.IsNaN(startLeft) || float.IsNaN(startTop))
+                {
+                    startLeft = group.layout.x;
+                    startTop = group.layout.y;
+                    group.style.position = Position.Absolute;
+                    group.style.left = startLeft;
+                    group.style.top = startTop;
+                    group.style.right = StyleKeyword.Auto;
+                    group.style.bottom = StyleKeyword.Auto;
+                }
+                _dragStartLeft = startLeft;
+                _dragStartTop = startTop;
+                group.CaptureMouse();
+                if (_dragMoveCallback == null) _dragMoveCallback = OnDragMove;
+                if (_dragUpCallback == null) _dragUpCallback = OnDragUp;
+                group.panel.visualTree.RegisterCallback(_dragMoveCallback);
+                group.panel.visualTree.RegisterCallback(_dragUpCallback);
+            });
+        }
+
+        private void OnDragMove(MouseMoveEvent evt)
+        {
+            if (_draggingElement == null) return;
+            float deltaX = evt.mousePosition.x - _dragStartMouse.x;
+            float deltaY = evt.mousePosition.y - _dragStartMouse.y;
+            _draggingElement.style.left = _dragStartLeft + deltaX;
+            _draggingElement.style.top = _dragStartTop + deltaY;
+            _draggingElement.style.right = StyleKeyword.Auto;
+            _draggingElement.style.bottom = StyleKeyword.Auto;
+        }
+
+        private void OnDragUp(MouseUpEvent evt)
+        {
+            if (_draggingElement == null || evt.button != 0) return;
+            _draggingElement.ReleaseMouse();
+            if (_draggingElement.panel != null && _draggingElement.panel.visualTree != null)
+            {
+                if (_dragMoveCallback != null) _draggingElement.panel.visualTree.UnregisterCallback(_dragMoveCallback);
+                if (_dragUpCallback != null) _draggingElement.panel.visualTree.UnregisterCallback(_dragUpCallback);
+            }
+            string keyLeft = null, keyTop = null;
+            if (_draggingElement.name == "pcv3-hud-preview-group") { keyLeft = PrefsKeyZona2Left; keyTop = PrefsKeyZona2Top; }
+            else if (_draggingElement.name == "pcv3-vital-stats-block-1") { keyLeft = PrefsKeyZona3Block1Left; keyTop = PrefsKeyZona3Block1Top; }
+            else if (_draggingElement.name == "pcv3-vital-stats-block-2") { keyLeft = PrefsKeyZona3Block2Left; keyTop = PrefsKeyZona3Block2Top; }
+            else if (_draggingElement.name == "pcv3-left") { keyLeft = PrefsKeyBodyLeftLeft; keyTop = PrefsKeyBodyLeftTop; }
+            else if (_draggingElement.name == "pcv3-center") { keyLeft = PrefsKeyBodyCenterLeft; keyTop = PrefsKeyBodyCenterTop; }
+            else if (_draggingElement.name == "pcv3-right") { keyLeft = PrefsKeyBodyRightLeft; keyTop = PrefsKeyBodyRightTop; }
+            if (keyLeft != null)
+            {
+                float l = _draggingElement.resolvedStyle.left;
+                float t = _draggingElement.resolvedStyle.top;
+                if (!float.IsNaN(l)) PlayerPrefs.SetFloat(keyLeft, l);
+                if (!float.IsNaN(t)) PlayerPrefs.SetFloat(keyTop, t);
+                PlayerPrefs.Save();
+            }
+            _draggingElement = null;
+        }
+
+        private bool IsPotSlotEmpty(int index)
+        {
+            if (index < 0 || index >= _hudPots.Count) return true;
+            var pot = _hudPots[index];
+            var state = pot?.PotActions?.PotState;
+            return state == null || state.IsEmpty || !state.HasPlant;
+        }
+
+        private void UpdateHudSlotVisuals()
+        {
+            for (int i = 0; i < _hudPotSlots.Count; i++)
+            {
+                var slot = _hudPotSlots[i];
+                bool empty = IsPotSlotEmpty(i);
+                if (empty)
+                {
+                    slot.AddToClassList("pcv3-hud-pot-slot-empty");
+                    slot.RemoveFromClassList("pcv3-hud-pot-slot-selected");
+                }
+                else
+                {
+                    slot.RemoveFromClassList("pcv3-hud-pot-slot-empty");
+                    if (i == _selectedPotIndex)
+                        slot.AddToClassList("pcv3-hud-pot-slot-selected");
+                    else
+                        slot.RemoveFromClassList("pcv3-hud-pot-slot-selected");
+                }
+            }
+        }
+
+        private void OnHudPotSlotClicked(int index)
+        {
+            if (index < 0 || index >= _hudPotSlots.Count) return;
+            if (IsPotSlotEmpty(index))
+            {
+                string msg = index < _hudPots.Count
+                    ? $"§WARN§Non c'è alcuna pianta presente in quel pot {_hudPots[index].PotId}.§END§"
+                    : "§WARN§In quello slot non è assegnato alcun vaso.§END§";
+                AppendRawLine(msg);
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+            _selectedPotIndex = index;
+            for (int i = 0; i < _hudPotSlots.Count; i++)
+            {
+                if (i == index)
+                    _hudPotSlots[i].AddToClassList("pcv3-hud-pot-slot-selected");
+                else
+                    _hudPotSlots[i].RemoveFromClassList("pcv3-hud-pot-slot-selected");
+            }
+            RefreshHudFromSelectedPot();
+        }
+
+        private void RefreshZona2AndZona3()
+        {
+            _hudPots.Clear();
+            var pots = FindPots();
+            for (int i = 0; i < Mathf.Min(4, pots.Count); i++)
+                _hudPots.Add(pots[i]);
+            if (_selectedPotIndex >= _hudPots.Count) _selectedPotIndex = Mathf.Max(0, _hudPots.Count - 1);
+            if (IsPotSlotEmpty(_selectedPotIndex))
+            {
+                for (int i = 0; i < _hudPotSlots.Count; i++)
+                {
+                    if (!IsPotSlotEmpty(i)) { _selectedPotIndex = i; break; }
+                }
+            }
+            UpdateHudSlotVisuals();
+            RefreshHudFromSelectedPot();
+        }
+
+        private void RefreshHudFromSelectedPot()
+        {
+            PotSlot pot = _selectedPotIndex < _hudPots.Count ? _hudPots[_selectedPotIndex] : null;
+            var state = pot != null && pot.PotActions != null ? pot.PotActions.PotState : null;
+            var plantData = state != null ? state.GetPlantData() : null;
+            bool empty = state == null || state.IsEmpty || !state.HasPlant;
+
+            Sprite previewSprite = null;
+            if (empty)
+                previewSprite = _terminalPotPreviewConfig != null ? _terminalPotPreviewConfig.statusVuotoSprite : null;
+            else
+                previewSprite = ResolveIncubatorSprite(state, plantData);
+
+            if (_hudPlantPreview != null)
+            {
+                if (previewSprite != null)
+                {
+                    _hudPlantPreview.style.backgroundImage = new StyleBackground(previewSprite);
+                    _hudPlantPreview.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                }
+                else
+                    _hudPlantPreview.style.backgroundImage = new StyleBackground(StyleKeyword.Null);
+            }
+
+            if (_hudPlantName != null)
+            {
+                _hudPlantName.text = empty ? "---" : GetPlantDisplayName(plantData, state.PlantCode);
+                // Colore nome per famiglia: Giallo Standard, Verde Pure, Rosso Evil
+                _hudPlantName.RemoveFromClassList("pcv3-hud-plant-name-standard");
+                _hudPlantName.RemoveFromClassList("pcv3-hud-plant-name-pure");
+                _hudPlantName.RemoveFromClassList("pcv3-hud-plant-name-evil");
+                if (!empty && plantData != null)
+                {
+                    switch (plantData.Family)
+                    {
+                        case PlantFamily.Standard: _hudPlantName.AddToClassList("pcv3-hud-plant-name-standard"); break;
+                        case PlantFamily.Pure: _hudPlantName.AddToClassList("pcv3-hud-plant-name-pure"); break;
+                        case PlantFamily.Evil: _hudPlantName.AddToClassList("pcv3-hud-plant-name-evil"); break;
+                        default: _hudPlantName.AddToClassList("pcv3-hud-plant-name-standard"); break;
+                    }
+                }
+            }
+            if (_hudPlantCode != null) _hudPlantCode.text = empty ? "---" : FormatPlantFamilyBadge(state.PlantCode);
+            if (_hudPlantLevel != null) _hudPlantLevel.text = empty ? "LEVEL ---" : $"LEVEL {state.PlantLevel}";
+            if (_hudPlantOneliner != null)
+            {
+                string desc = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
+                _hudPlantOneliner.text = desc;
+            }
+
+            if (_hudLivePill != null)
+            {
+                _hudLivePill.RemoveFromClassList("pcv3-hud-live-pill-offline");
+                if (empty) _hudLivePill.AddToClassList("pcv3-hud-live-pill-offline");
+            }
+            if (_hudLiveDot != null)
+            {
+                _hudLiveDot.RemoveFromClassList("pcv3-hud-live-dot-offline");
+                if (empty) _hudLiveDot.AddToClassList("pcv3-hud-live-dot-offline");
+            }
+            if (_hudLiveLabel != null)
+                _hudLiveLabel.text = empty ? "Offline" : "LIVE";
+
+            RefreshVitalBlocks(state, plantData);
+        }
+
+        private Sprite ResolveIncubatorSprite(PotStateModel potState, PlantData plantData)
+        {
+            if (_terminalPotPreviewConfig == null) return null;
+            if (potState == null || !potState.HasPlant) return _terminalPotPreviewConfig.statusVuotoSprite;
+
+            PlantCondition condition = (PlantCondition)potState.ConditionLabel;
+            if (condition == PlantCondition.Morta && _terminalPotPreviewConfig.deadSprite != null)
+                return _terminalPotPreviewConfig.deadSprite;
+
+            int stage = potState.Stage;
+            switch (stage)
+            {
+                case (int)PlantStage.Empty: return _terminalPotPreviewConfig.statusVuotoSprite;
+                case (int)PlantStage.Seed: return _terminalPotPreviewConfig.seedSprite;
+                case (int)PlantStage.Sprout: return _terminalPotPreviewConfig.sproutSprite;
+                case (int)PlantStage.Growth:
+                case (int)PlantStage.Resting:
+                case (int)PlantStage.HarvestReady: return _terminalPotPreviewConfig.adultSprite;
+                case (int)PlantStage.Flowering: return _terminalPotPreviewConfig.floweringSprite;
+                default: return _terminalPotPreviewConfig.statusVuotoSprite;
+            }
+        }
+
+        private void RefreshVitalBlocks(PotStateModel state, PlantData plantData)
+        {
+            bool hasCondition = TryGetCondition(state, plantData, out int conditionScore, out string conditionName);
+
+            string stageText = state != null ? PlantCardFormatters.FormatGrowthStage((PlantStage)state.Stage) : "---";
+            string levelText = state != null ? state.PlantLevel.ToString() : "---";
+            string conditionText = state != null && hasCondition ? conditionName.ToUpperInvariant() : "---";
+            string phAffinityText = plantData != null ? PlantCardFormatters.FormatPhRange(plantData.OptimalPhMin, plantData.OptimalPhMax) : "---";
+            string cicliVitaliText = state != null ? state.CompletedCycles.ToString() : "---";
+            float drift = plantData != null ? plantData.DailyPhDrift : 0f;
+            string phDriftText = plantData != null ? PlantCardFormatters.FormatPhDrift(drift) : "---";
+            string growthText = state != null ? $"W:{state.GrowthPointsWater} L:{state.GrowthPointsLight} F:{state.GrowthPointsFertilizer}" : "---";
+            string hydrationText = state != null && _potSystemConfig != null
+                ? $"{PlantCardCalculators.CalculateHydrationPercent(state.Hydration, _potSystemConfig.MaxHydration)}%"
+                : "---";
+            string lightStressText = state != null && _potSystemConfig != null
+                ? $"{PlantCardCalculators.CalculateLightStressPercent(state.LightExposure, _potSystemConfig.MaxLightExposure)}%"
+                : "---";
+
+            // Rischio Muffa (0-3): Nessuno / Lieve / Severo / Critico
+            string moldText = "---";
+            string moldClass = "pcv3-value-green";
+            if (state != null)
+            {
+                int mold = Mathf.Clamp(state.MoldRiskLevel, 0, 3);
+                moldText = mold switch { 0 => "Nessuno", 1 => "Lieve", 2 => "Severo", 3 => "Critico", _ => "---" };
+                moldClass = mold == 0 ? "pcv3-value-green" : (mold == 1 ? "pcv3-value-yellow" : "pcv3-value-red");
+            }
+
+            // Trend (stesso valore e stile del comando Forecast)
+            string trendText = "---";
+            string trendClass = "pcv3-value-yellow";
+            if (state != null)
+            {
+                var trend = (ForecastDirection)state.ForecastDirection;
+                trendText = trend switch
+                {
+                    ForecastDirection.Up => "▲ CRESCITA",
+                    ForecastDirection.Down => "▼ CALO",
+                    _ => "■ STABILE"
+                };
+                trendClass = trend == ForecastDirection.Up ? "pcv3-value-green" : (trend == ForecastDirection.Down ? "pcv3-value-red" : "pcv3-value-yellow");
+            }
+
+            void UpdateBlock(VisualElement container, string[] values, string[] valueClasses)
+            {
+                if (container == null || values == null) return;
+                var statRows = container.Query<VisualElement>(className: "pcv3-potcard-stat-row").ToList();
+                for (int i = 0; i < values.Length && i < statRows.Count; i++)
+                {
+                    var valueLabel = statRows[i].Q<Label>(className: "pcv3-potcard-stat-value");
+                    if (valueLabel != null)
+                    {
+                        valueLabel.text = values[i];
+                        valueLabel.RemoveFromClassList("pcv3-value-green");
+                        valueLabel.RemoveFromClassList("pcv3-value-blue");
+                        valueLabel.RemoveFromClassList("pcv3-value-yellow");
+                        valueLabel.RemoveFromClassList("pcv3-value-red");
+                        if (i < valueClasses.Length && !string.IsNullOrEmpty(valueClasses[i]))
+                            valueLabel.AddToClassList(valueClasses[i]);
+                    }
+                }
+            }
+
+            UpdateBlock(_vitalBlock1,
+                new[] { stageText, levelText, conditionText, phAffinityText, cicliVitaliText },
+                new[] { "pcv3-value-green", "pcv3-value-yellow", "pcv3-value-green", "pcv3-value-blue", "pcv3-value-green" });
+            UpdateBlock(_vitalBlock2,
+                new[] { hydrationText, lightStressText, phDriftText, growthText, moldText, trendText },
+                new[] { "pcv3-value-blue", "pcv3-value-yellow", drift > 0 ? "pcv3-value-red" : "pcv3-value-blue", "pcv3-value-green", moldClass, trendClass });
         }
 
         private void RefreshPotCards()
@@ -1657,11 +2188,42 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine("▶ §CMD§DIGITA START PER L'ELENCO COMANDI§END§");
             AppendRawLine("<color=#E6C96F>──────────────────────────────────────────────────────────────────────────────</color>");
             AppendRawLine("<color=#79E679>△ TUTTE LE AZIONI IN CODA FINO A CONFERMA SEQUENZA</color>");
-            AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>F</color><color=#7FFF7A>]</color> <color=#7FFF7A>ACCESSO RAPIDO:</color> <color=#5DB6E3>FORECAST</color> <color=#7FFF7A>- Previsione live</color>");
+            AppendRawLine("<color=#7FFF7A>DIGITA</color> <color=#5DB6E3>FORECAST</color> <color=#7FFF7A>- Previsione live</color>");
             AppendRawLine("<color=#7FFF7A>[</color><color=#7FFF7A>+</color><color=#7FFF7A>]</color> <color=#7FFF7A>DIGITA</color> <color=#5DB6E3>PROTOCOL</color> <color=#7FFF7A>PER PROTOCOLLO BIOLOGICO DOME_02</color>");
+            string overview = BuildIncubatorOverviewLine();
+            if (!string.IsNullOrEmpty(overview))
+                AppendRawLine(overview);
             AppendRawLine("");
 
             FlushConsole();
+        }
+
+        /// <summary>
+        /// Testo overview tra parentesi quadre: pot liberi, pot occupati con nome e codice pianta.
+        /// </summary>
+        private string BuildIncubatorOverviewLine()
+        {
+            var pots = FindPots();
+            int free = 0;
+            var occupied = new System.Collections.Generic.List<string>();
+            foreach (var pot in pots)
+            {
+                var state = pot?.PotActions?.PotState;
+                if (state == null || state.IsEmpty || !state.HasPlant)
+                {
+                    free++;
+                    continue;
+                }
+                var plantData = state.GetPlantData();
+                string name = GetPlantDisplayName(plantData, state.PlantCode);
+                string code = state.PlantCode ?? "---";
+                occupied.Add($"{name} ({code})");
+            }
+            if (pots.Count == 0)
+                return "<color=#B8B8B8>[Overview: nessun vaso rilevato]</color>";
+            string freeStr = free == 1 ? "1 pot libero" : $"{free} pot liberi";
+            string occStr = occupied.Count == 0 ? "nessun pot occupato" : (occupied.Count == 1 ? "1 pot occupato: " + occupied[0] : $"{occupied.Count} pot occupati: " + string.Join(", ", occupied));
+            return $"<color=#B8B8B8>[Overview: {freeStr}, {occStr}]</color>";
         }
 
         private void StartBootSequence()
@@ -1738,57 +2300,64 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private IEnumerator TypewriterRoutine()
         {
-            _nextTypewriterSfxTime = 0f;
-            bool longOutputMode = IsLongOutputQueued();
-            while (_typewriterQueue.Count > 0)
+            try
             {
-                string line = _typewriterQueue.Dequeue();
-                if (line == null) line = string.Empty;
-
-                float delay = GetTypewriterDelayForLine(line)
-                              * _typewriterGlobalSpeedMultiplier
-                              * (longOutputMode ? _typewriterLongOutputMultiplier : 1f)
-                              * _typewriterCommandSpeedMultiplier;
-                int blockSize = longOutputMode ? _typewriterBlockSizeLong : _typewriterBlockSizeShort;
-                blockSize = Mathf.Max(1, blockSize * _typewriterCommandBlockMultiplier);
-                blockSize = Mathf.Max(1, blockSize);
-                int i = 0;
-                while (i < line.Length)
+                _nextTypewriterSfxTime = 0f;
+                bool longOutputMode = IsLongOutputQueued();
+                while (_typewriterQueue.Count > 0)
                 {
-                    char c = line[i];
-                    if (c == '<')
-                    {
-                        int end = line.IndexOf('>', i);
-                        if (end >= 0)
-                        {
-                            _consoleBuffer.Append(line, i, end - i + 1);
-                            i = end + 1;
-                            FlushConsoleImmediate();
-                            continue;
-                        }
-                    }
+                    string line = _typewriterQueue.Dequeue();
+                    if (line == null) line = string.Empty;
 
-                    int wrote = 0;
-                    while (i < line.Length && wrote < blockSize)
+                    float delay = GetTypewriterDelayForLine(line)
+                                  * _typewriterGlobalSpeedMultiplier
+                                  * (longOutputMode ? _typewriterLongOutputMultiplier : 1f)
+                                  * _typewriterCommandSpeedMultiplier;
+                    int blockSize = longOutputMode ? _typewriterBlockSizeLong : _typewriterBlockSizeShort;
+                    blockSize = Mathf.Max(1, blockSize * _typewriterCommandBlockMultiplier);
+                    blockSize = Mathf.Max(1, blockSize);
+                    int i = 0;
+                    while (i < line.Length)
                     {
-                        c = line[i];
+                        char c = line[i];
                         if (c == '<')
-                            break;
-                        _consoleBuffer.Append(c);
-                        i++;
-                        wrote++;
+                        {
+                            int end = line.IndexOf('>', i);
+                            if (end >= 0)
+                            {
+                                _consoleBuffer.Append(line, i, end - i + 1);
+                                i = end + 1;
+                                FlushConsoleImmediate();
+                                continue;
+                            }
+                        }
+
+                        int wrote = 0;
+                        while (i < line.Length && wrote < blockSize)
+                        {
+                            c = line[i];
+                            if (c == '<')
+                                break;
+                            _consoleBuffer.Append(c);
+                            i++;
+                            wrote++;
+                        }
+                        FlushConsoleImmediate();
+                        TryPlayTypewriterSfx();
+                        if (delay > 0f)
+                            yield return new WaitForSeconds(delay);
                     }
+
+                    _consoleBuffer.AppendLine();
                     FlushConsoleImmediate();
-                    TryPlayTypewriterSfx();
-                    if (delay > 0f)
-                        yield return new WaitForSeconds(delay);
                 }
-
-                _consoleBuffer.AppendLine();
-                FlushConsoleImmediate();
             }
-
-            _typewriterRoutine = null;
+            finally
+            {
+                _typewriterRoutine = null;
+                EnsureTypewriterRunning();
+                RequestRefocusSoon();
+            }
         }
 
         private bool IsLongOutputQueued()
@@ -1957,6 +2526,21 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _forecastConditionTooltip.pickingMode = PickingMode.Ignore;
         }
 
+        private void StartLiveDotPulse()
+        {
+            if (_hudLiveDot == null) return;
+            const string pulseClass = "pcv3-hud-live-dot-pulse";
+            _hudLiveDot.schedule.Execute(() =>
+            {
+                if (_hudLiveDot == null || _hudLiveDot.panel == null) return;
+                _liveDotPulseLow = !_liveDotPulseLow;
+                if (_liveDotPulseLow)
+                    _hudLiveDot.AddToClassList(pulseClass);
+                else
+                    _hudLiveDot.RemoveFromClassList(pulseClass);
+            }).Every(600);
+        }
+
         private void HideForecastConditionTooltip()
         {
             if (_forecastConditionTooltip != null)
@@ -2031,6 +2615,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     // We explicitly set width/height from parent layout instead (see GeometryChanged callback).
                     _forecastHotspotLayer.style.display = DisplayStyle.None;
                     _forecastHotspotLayer.pickingMode = PickingMode.Position;
+                    _forecastHotspotLayer.focusable = false;
                     parent.Add(_forecastHotspotLayer);
                 }
 
@@ -2269,6 +2854,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 float yMax = yMin + hitHeight;
                 _forecastConditionHoverRows.Add(new ForecastConditionHoverRow(yMin, yMax, baseX, width, state, plantData));
             }
+
+            RequestRefocusSoon();
         }
 
         private string BuildGrowthTooltipLikePlantCardV2(PotStateModel state, PlantData plantData)
@@ -2289,6 +2876,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return sb.ToString();
             }
 
+            const string ColorLabel = "#00FF00";
+            const string ColorStatic = "#B8B8B8";
+            const string ColorOk = "#00FF00";
+            const string ColorWarn = "#FFA500";
+            const string ColorBad = "#FF0000";
+
             int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
 
@@ -2305,73 +2898,83 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             string conditionName = ConditionNameForUi(MapScoreToConditionForUi(state.ConditionScore));
             PlantCondition currentCondition = (PlantCondition)state.ConditionLabel;
-            sb.AppendLine($"<b>Condizione della Pianta: {conditionName}</b>");
-            
+            string conditionValColor = state.ConditionScore >= 70 ? ColorOk : (state.ConditionScore >= 40 ? ColorWarn : ColorBad);
+            sb.AppendLine($"<b><color={ColorLabel}>Condizione della Pianta:</color> <color={conditionValColor}>{conditionName}</color></b>");
+
             // FASE 1.1: Aggiungi informazioni sui modificatori crescita e produzione
             float growthMultiplier = ConditionGrowthModifier.GetGrowthSpeedMultiplier(currentCondition);
             float productionMultiplier = ConditionGrowthModifier.GetProductionMultiplier(currentCondition);
-            
+
             if (growthMultiplier != 1.0f || productionMultiplier != 1.0f)
             {
                 sb.AppendLine();
-                sb.AppendLine("<b>Effetti sulla Pianta:</b>");
-                
+                sb.AppendLine($"<b><color={ColorLabel}>Effetti sulla Pianta:</color></b>");
+
                 if (growthMultiplier > 1.0f)
                 {
                     float growthBonus = (growthMultiplier - 1.0f) * 100f;
-                    sb.AppendLine($"  <color=#00FF00>+{growthBonus:F0}% velocità crescita</color>");
+                    sb.AppendLine($"  <color={ColorLabel}>velocità crescita:</color> <color={ColorOk}>+{growthBonus:F0}%</color>");
                 }
                 else if (growthMultiplier < 1.0f)
                 {
                     float growthMalus = (1.0f - growthMultiplier) * 100f;
-                    sb.AppendLine($"  <color=#FF0000>-{growthMalus:F0}% velocità crescita</color>");
+                    sb.AppendLine($"  <color={ColorLabel}>velocità crescita:</color> <color={ColorBad}>-{growthMalus:F0}%</color>");
                 }
-                
+
                 if (productionMultiplier > 1.0f)
                 {
                     float productionBonus = (productionMultiplier - 1.0f) * 100f;
-                    sb.AppendLine($"  <color=#00FF00>+{productionBonus:F0}% produzione frutti</color>");
+                    sb.AppendLine($"  <color={ColorLabel}>produzione frutti:</color> <color={ColorOk}>+{productionBonus:F0}%</color>");
                 }
                 else if (productionMultiplier < 1.0f)
                 {
                     float productionMalus = (1.0f - productionMultiplier) * 100f;
-                    sb.AppendLine($"  <color=#FF0000>-{productionMalus:F0}% produzione frutti</color>");
+                    sb.AppendLine($"  <color={ColorLabel}>produzione frutti:</color> <color={ColorBad}>-{productionMalus:F0}%</color>");
                 }
             }
             
             sb.AppendLine();
-            sb.AppendLine("La pianta cresce quando si trova nel <color=#00FF00>range giusto</color> di:");
+            sb.AppendLine($"La pianta cresce quando si trova nel <color={ColorLabel}>range giusto</color> di:");
             sb.AppendLine();
 
-            // Water
-            string waterStatus = waterOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
-            sb.AppendLine($"• <color=#3F6FFF>Acqua (Water)</color>: {waterStatus}");
-            if (!waterOk)
+            string StatusColorForValue(int value, int minVal, int maxVal)
             {
-                sb.AppendLine($"  Range ideale: {stageReq.hydrationMin}% - {stageReq.hydrationMax}%");
-                sb.AppendLine($"  Attuale: {hydrationPercent}%");
+                if (value >= minVal && value <= maxVal) return ColorOk;
+                int range = Mathf.Max(1, maxVal - minVal);
+                int dist = value < minVal ? minVal - value : value - maxVal;
+                return dist <= Mathf.Max(1, range / 3) ? ColorWarn : ColorBad;
             }
+
+            // Water
+            bool waterOn = state.WateringSystemOn;
+            string waterOnOff = waterOn ? $" <color={ColorStatic}>(Impianto: ON)</color>" : $" <color={ColorStatic}>(Impianto: OFF)</color>";
+            string waterStatus = waterOk ? $"<color={ColorOk}>OK</color>" : $"<color={ColorBad}>NON OK</color>";
+            sb.AppendLine($"• <color=#3F6FFF>Acqua (Water)</color>: {waterStatus}{waterOnOff}");
+            sb.AppendLine($"  <color={ColorLabel}>Range ideale:</color> <color={ColorStatic}>{stageReq.hydrationMin}% - {stageReq.hydrationMax}%</color>");
+            string waterValColor = waterOk ? ColorOk : StatusColorForValue(hydrationPercent, stageReq.hydrationMin, stageReq.hydrationMax);
+            sb.AppendLine($"  <color={ColorLabel}>Attuale:</color> <color={waterValColor}>{hydrationPercent}%</color>");
             sb.AppendLine();
 
             // Light
-            string lightStatus = lightOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
-            sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}");
-            sb.AppendLine($"  Range ideale: <color=#00FF00>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
-            sb.AppendLine($"  Attuale: {(lightOk ? $"<color=#00FF00>{lightStressPercent}%</color>" : $"{lightStressPercent}%")}");
+            var ledState = state.LedSystemState;
+            string ledOnOff = ledState == LedSystemState.Off ? $" <color={ColorStatic}>(LED: OFF)</color>" : (ledState == LedSystemState.Blue ? $" <color={ColorStatic}>(LED: ON Blue)</color>" : $" <color={ColorStatic}>(LED: ON Red)</color>");
+            string lightStatus = lightOk ? $"<color={ColorOk}>OK</color>" : $"<color={ColorBad}>NON OK</color>";
+            sb.AppendLine($"• <color=#FFD700>Luce</color>: {lightStatus}{ledOnOff}");
+            sb.AppendLine($"  <color={ColorLabel}>Range ideale:</color> <color={ColorStatic}>{stageReq.lightMin}%-{stageReq.lightMed}%-{stageReq.lightMax}%</color>");
+            string lightValColor = lightOk ? ColorOk : StatusColorForValue(lightStressPercent, stageReq.lightMin, stageReq.lightMax);
+            sb.AppendLine($"  <color={ColorLabel}>Attuale:</color> <color={lightValColor}>{lightStressPercent}%</color>");
             sb.AppendLine();
 
             // Fertilizer (optional in Seed/Sprout)
             bool isFertilizerOptional = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout);
-            string fertilizerStatus = fertilizerOk ? "<color=#00FF00>OK</color>" : "<color=#FF0000>NON OK</color>";
+            string fertilizerStatus = fertilizerOk ? $"<color={ColorOk}>OK</color>" : $"<color={ColorBad}>NON OK</color>";
             string fertilizerLabel = isFertilizerOptional
                 ? $"• <color=#90EE90>Fertilizzante</color> (opzionale): {fertilizerStatus}"
                 : $"• <color=#90EE90>Fertilizzante</color>: {fertilizerStatus}";
             sb.AppendLine(fertilizerLabel);
-            if (!fertilizerOk)
-            {
-                sb.AppendLine($"  Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%");
-                sb.AppendLine($"  Attuale: {state.FertilizerLevel}%");
-            }
+            sb.AppendLine($"  <color={ColorLabel}>Range ideale:</color> <color={ColorStatic}>{stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%</color>");
+            string fertValColor = fertilizerOk ? ColorOk : StatusColorForValue(state.FertilizerLevel, stageReq.fertilizerMin, stageReq.fertilizerMax);
+            sb.AppendLine($"  <color={ColorLabel}>Attuale:</color> <color={fertValColor}>{state.FertilizerLevel}%</color>");
             if (isFertilizerOptional)
             {
                 sb.AppendLine("  <color=#FFFF00>Nota: Negli stadi Seed e Sprout, il fertilizzante è opzionale per avanzare.</color>");
@@ -2385,24 +2988,86 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (daysRemaining > 0)
             {
-                sb.AppendLine($"<color=#FFFF00>Giorni mancanti per avanzare:</color> <color=#FFFFFF>{daysRemaining}</color>");
-                sb.AppendLine($"  (Giorni nello stadio: {daysInStage} / {requiredDays})");
+                sb.AppendLine($"<color={ColorLabel}>Giorni mancanti per avanzare:</color> <color={ColorStatic}>{daysRemaining}</color>");
+                sb.AppendLine($"  <color={ColorLabel}>(Giorni nello stadio:</color> <color={ColorStatic}>{daysInStage} / {requiredDays}</color>)");
             }
             else
             {
-                sb.AppendLine("<color=#00FF00>✓ Giorni minimi raggiunti!</color>");
+                sb.AppendLine($"<color={ColorLabel}>✓ Giorni minimi raggiunti!</color>");
                 if (waterOk && lightOk && fertilizerOk)
                 {
-                    sb.AppendLine("<color=#00FF00>✓ Tutti i parametri sono nel range ideale!</color>");
-                    sb.AppendLine("<color=#00FF00>La pianta può avanzare al prossimo stadio.</color>");
+                    sb.AppendLine($"<color={ColorOk}>✓ Tutti i parametri sono nel range ideale!</color>");
+                    sb.AppendLine($"<color={ColorStatic}>La pianta può avanzare al prossimo stadio.</color>");
                 }
                 else
                 {
-                    sb.AppendLine("<color=#FFFF00>⚠️ Metti tutti i parametri nel range ideale per avanzare.</color>");
+                    sb.AppendLine($"<color={ColorWarn}>⚠️ Metti tutti i parametri nel range ideale per avanzare.</color>");
                 }
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>Genera consigli in stile black humor Sporium in base ai valori attuali del vaso.</summary>
+        private List<string> BuildConsiglioForPot(PotStateModel state, PlantData plantData)
+        {
+            var lines = new List<string>();
+            if (_potSystemConfig == null || state == null || state.IsEmpty || !state.HasPlant || plantData == null)
+            {
+                lines.Add("§WARN§Dati insufficienti. Consiglio: pianta qualcosa, o non piantare. La scelta è tua.§END§");
+                return lines;
+            }
+
+            PlantStage currentStage = (PlantStage)state.Stage;
+            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            if (stageReq == null)
+            {
+                lines.Add("§WARN§Requisiti stadio non disponibili. Il sistema non sa cosa consigliarti. Né noi.§END§");
+                return lines;
+            }
+
+            int maxHydration = _potSystemConfig.MaxHydration;
+            int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+            int lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
+
+            bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
+            bool lightOk = stageReq.IsLightInRange(lightStressPercent);
+            bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
+            bool waterOn = state.WateringSystemOn;
+            bool ledOn = state.LedSystemState != LedSystemState.Off;
+
+            int requiredDays = stageReq.durationDays;
+            int daysRemaining = Mathf.Max(0, requiredDays - state.DaysInCurrentStage);
+            bool canAdvanceByDays = daysRemaining <= 0;
+            bool allParamsOk = waterOk && lightOk && fertilizerOk;
+
+            if (state.ConditionScore < 40)
+                lines.Add("§WARN§Condizione critica. Il Dome non è un pronto soccorso: accendi acqua e/o LED se sono spenti, altrimenti aspetta. Se la pianta non reagisce, almeno avrai provato.§END§");
+
+            if (!waterOk && !waterOn)
+                lines.Add("§WARN§Idratazione fuori range e impianto a goccia spento. Accendilo (comando §CMD§WATERING [POT-ID]§END§). Altrimenti la pianta si disidrata in silenzio. Come tutti noi.§END§");
+            else if (!waterOk && waterOn)
+                lines.Add("§INFO§Acqua fuori range ma impianto già acceso. Aspetta un paio di giorni: le gocce fanno il loro lavoro. Quando vogliono loro.§END§");
+
+            if (!lightOk && !ledOn)
+                lines.Add("§WARN§Stress luminoso fuori range e LED spento. Accendilo (§CMD§LED BLUE§END§ o §CMD§LED RED§END§ a seconda dello stadio). Al buio qui non cresce nessuno. Letteralmente.§END§");
+            else if (!lightOk && ledOn)
+                lines.Add("§INFO§Luce fuori range ma LED già acceso. Pazienza: qualche giorno e la statistica si aggiusta. O la pianta no.§END§");
+
+            if (!fertilizerOk)
+                lines.Add("§WARN§Fertilizzante fuori range. §CMD§FERTILIZE [POT-ID]§END§ se vuoi dare una mano. La pianta non ti ringrazierà, ma potrebbe crescere.§END§");
+
+            if (allParamsOk && canAdvanceByDays)
+                lines.Add("§TITLE§Tutto in range e giorni sufficienti. La pianta potrebbe avanzare di stadio. Il miracolo della scienza. O della negligenza controllata.§END§");
+            else if (allParamsOk && !canAdvanceByDays)
+                lines.Add("§INFO§Parametri a posto. Manca solo il tempo: attendi i giorni richiesti nello stadio. Nel frattempo, la pianta aspetta. Sempre.§END§");
+
+            if (lines.Count == 0)
+                lines.Add("§INFO§Monitora i valori. Nel Dome nessuno sente le piante urlare. Figurati.§END§");
+
+            return lines;
         }
 
         private void FlushConsole()
@@ -2443,6 +3108,25 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
             _typewriterQueue.Clear();
             _typewriterActive = false;
+        }
+
+        /// <summary>Scrive subito in console tutto ciò che è ancora in coda al typewriter, così il prossimo comando mostra la risposta subito.</summary>
+        private void FlushTypewriterQueueImmediate()
+        {
+            if (_typewriterQueue.Count == 0 && _typewriterRoutine == null) return;
+            if (_typewriterRoutine != null)
+            {
+                StopCoroutine(_typewriterRoutine);
+                _typewriterRoutine = null;
+            }
+            while (_typewriterQueue.Count > 0)
+            {
+                string line = _typewriterQueue.Dequeue();
+                if (line != null)
+                    _consoleBuffer.AppendLine(line);
+            }
+            _typewriterActive = false;
+            FlushConsoleImmediate();
         }
 
         private void EnsureLoadingIndicator()
@@ -2540,7 +3224,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (upper == "START" || upper == "HELP") { context = "HELP"; }
             else if (upper == "STATUS") { context = "STATUS"; }
-            else if (upper == "FORECAST" || upper == "F") { context = "FORECAST"; }
+            else if (upper == "FORECAST") { context = "FORECAST"; }
             else if (upper == "PROTOCOL") { context = "PROTOCOL"; }
             else if (upper.StartsWith("OPEN"))
             {
@@ -2625,12 +3309,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (!_isVisible) return;
 
             // Shortcut keys
-            if (evt.keyCode == KeyCode.F)
-            {
-                HandleCommand("FORECAST");
-                evt.StopPropagation();
-                return;
-            }
             if (evt.character == '+')
             {
                 // PROTOCOL shortcut
@@ -2673,6 +3351,36 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Selezione", () => HandleSelectingItem(upper)));
                 return;
             }
+            if (_inputState == InputState.ConfirmingPlantDrip)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Idratazione");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Idratazione", () => HandlePlantDripChoice(upper)));
+                return;
+            }
+            if (_inputState == InputState.ConfirmingPlantLed)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("LED");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "LED", () => HandlePlantLedChoice(upper)));
+                return;
+            }
+            if (_inputState == InputState.ConfirmingPlantLedType)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Tipo LED");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Tipo LED", () => HandlePlantLedTypeChoice(upper)));
+                return;
+            }
             if (_inputState == InputState.ConfirmingActionToQueue)
             {
                 AppendRawLine($"> {trimmed}");
@@ -2696,6 +3404,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Clear any forecast hover hotspots when running a new command.
             ClearForecastConditionHotspots();
+
+            // Evita comandi sovrapposti: se un comando è ancora in fase di loading, annullalo e esegui solo il nuovo.
+            if (_loadingCoroutine != null)
+            {
+                StopCoroutine(_loadingCoroutine);
+                _loadingCoroutine = null;
+            }
+
+            // Scrivi subito in console l'eventuale output ancora in coda (es. FORECAST), così la risposta al nuovo comando appare subito.
+            FlushTypewriterQueueImmediate();
 
             AppendRawLine($"> {trimmed}");
             FlushConsole();
@@ -2726,7 +3444,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
-            if (upper == "FORECAST" || upper == "F")
+            if (upper == "FORECAST")
             {
                 SwitchToConsole();
                 PrintForecast();
@@ -3008,7 +3726,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             int totalAp = 0;
             foreach (var a in _queue) totalAp += a != null ? a.ApCost : 0;
 
-            AppendRawLine($"§INFO§Total actions: {_queue.Count} | Total AP: {totalAp}§END§");
+            AppendRawLine($"§INFO§Azioni in coda: {_queue.Count} | AP totali: {totalAp}§END§");
             AppendRawLine("");
         }
 
@@ -3537,7 +4255,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             Line("");
             Line("§TITLE§▸ GESTIONE E MONITORAGGIO VASI§END§");
             Line(CmdLine("§CMD§STATUS§END§", "§TITLE§Mostra stato e parametri di tutti i vasi§END§"));
-            Line(CmdLine("§CMD§FORECAST§END§ o §CMD§[F]§END§", "§TITLE§Previsione live (stadio)§END§"));
+            Line(CmdLine("§CMD§FORECAST§END§", "§TITLE§Previsione live (stadio)§END§"));
             Line(CmdLine("§CMD§OPEN [POT-ID]§END§", "§TITLE§Apri schermata analisi dettagliata vaso§END§"));
             Line(CmdLine("§CMD§NOTE [POT-ID]§END§", "§TITLE§Apri visualizzatore note diario vaso§END§"));
             Line(CmdLine("§CMD§PLANT [POT-ID]§END§", "§TITLE§Accoda azione piantare (1 AP)§END§"));
@@ -3606,6 +4324,41 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 AppendRawLine($"{potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {condition,-6} │ {hydDots,-4}");
             }
             AppendRawLine("");
+
+            // Condizioni per pot (stesso contenuto del tooltip conditions_badge di PlantCard2v)
+            AppendRawLine("§TITLE§▸ CONDIZIONI PER VASO§END§");
+            AppendRawLine("");
+            AppendRawLine("§INFO§Come leggere i dati:§END§ Per ogni vaso vengono mostrati §TITLE§Condizione§END§ (score 0-100%), §TITLE§Acqua§END§ e §TITLE§Luce§END§ con §TITLE§valore attuale§END§ e §TITLE§range ideale§END§ per lo stadio. §TITLE§OK§END§ = nel range; §TITLE§NON OK§END§ = fuori range. Sono indicati anche stato impianto acqua (§TITLE§ON/OFF§END§) e LED (§TITLE§OFF / Blue / Red§END§).");
+            AppendRawLine("§INFO§I requisiti§END§ (idratazione, stress luminoso, fertilizzante) si riferiscono allo §TITLE§stadio di crescita attuale§END§ della pianta.");
+            AppendRawLine("");
+            foreach (var pot in pots)
+            {
+                string potId = pot != null ? pot.PotId : "POT-???";
+                var state = pot != null && pot.PotActions != null ? pot.PotActions.PotState : null;
+                var plantData = state != null ? state.GetPlantData() : null;
+                if (state == null || state.IsEmpty || !state.HasPlant)
+                {
+                    AppendRawLine($"§DATA§--- {potId} ---§END§ VUOTO");
+                    AppendRawLine("");
+                    continue;
+                }
+                AppendRawLine($"§DATA§--- {potId} ---§END§");
+                string tooltipText = BuildGrowthTooltipLikePlantCardV2(state, plantData);
+                if (!string.IsNullOrEmpty(tooltipText))
+                {
+                    foreach (var line in tooltipText.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries))
+                        AppendRawLine(line);
+                }
+                var consiglioLines = BuildConsiglioForPot(state, plantData);
+                if (consiglioLines != null && consiglioLines.Count > 0)
+                {
+                    AppendRawLine("");
+                    AppendRawLine("§TITLE§▸ CONSIGLIO§END§");
+                    foreach (var line in consiglioLines)
+                        AppendRawLine(line);
+                }
+                AppendRawLine("");
+            }
         }
 
         private void OpenDetail(string potId, bool diaryOnly)
@@ -3960,12 +4713,12 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             };
 
             _inputState = InputState.ConfirmingActionToQueue;
-            AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
+            AppendRawLine("§TITLE§▸ CONFERMA AZIONE§END§");
             AppendRawLine($"  Action:  §DATA§UPROOT§END§");
             AppendRawLine($"  Target:  §DATA§{potId}§END§");
             AppendRawLine($"  Plant:   §DATA§{_pendingConfirmAction.TargetLabel}§END§");
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§WHITE§Conferma? [§Y§Y§END§/§N§N§END§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4023,7 +4776,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             };
 
             _inputState = InputState.ConfirmingActionToQueue;
-            AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
+            AppendRawLine("§TITLE§▸ CONFERMA AZIONE§END§");
             AppendRawLine($"  Action:  §DATA§{GetActionLabel(type)}§END§");
             AppendRawLine($"  Target:  §DATA§{potId}§END§");
             if (type == QueuedActionType.HydrationToggle)
@@ -4042,7 +4795,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 AppendRawLine($"  State:   §DATA§{stateLabel}§END§");
             }
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§WHITE§Conferma? [§Y§Y§END§/§N§N§END§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4103,9 +4856,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 string typeId = options[i];
                 int qty = GetAvailableQuantity(typeId);
                 string displayName = GetItemDisplayName(typeId);
-                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantity: {qty}");
+                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantità: {qty}");
             }
-            AppendRawLine("§INFO§Type item number or §CMD§N§INFO§ to cancel§END§");
+            AppendRawLine("§WHITE§Digita il numero dell'oggetto o §N§N§END§ per annullare§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4159,15 +4912,31 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             };
 
             _selection = null;
+
+            if (_pendingConfirmAction.Type == QueuedActionType.Plant)
+            {
+                _pendingPlantDrip = false;
+                _pendingPlantLed = 0;
+                _inputState = InputState.ConfirmingPlantDrip;
+                AppendRawLine($"§TITLE§✓ SELEZIONATO: {chosenDisplayName}§END§");
+                AppendRawLine("§TITLE§▸ IMPIANTO IDRATAZIONE A GOCCIA§END§");
+                AppendRawLine("§WHITE§Desidera attivare l'impianto di Idratazione a Goccia per questo vaso?§END§");
+                AppendRawLine("§WHITE§Attivato in questo step non costa un'azione aggiuntiva, ma avrà consumi di condensa e CRY previsti a fine giornata.§END§");
+                AppendRawLine("§WHITE§[§Y§Y§END§/§N§N§END§]§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
             _inputState = InputState.ConfirmingActionToQueue;
 
             AppendRawLine($"§TITLE§✓ SELEZIONATO: {chosenDisplayName}§END§");
-            AppendRawLine("§TITLE§▸ CONFIRM ACTION§END§");
+            AppendRawLine("§TITLE§▸ CONFERMA AZIONE§END§");
             AppendRawLine($"  Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§");
             AppendRawLine($"  Target:  §DATA§{_pendingConfirmAction.PotId}§END§");
             AppendRawLine($"  Item:    §DATA§{chosenDisplayName}§END§");
             AppendRawLine("  AP Cost: §VAL§1 AP§END§");
-            AppendRawLine("§INFO§Conferma? [§CMD§Y§INFO§/§CMD§N§INFO§]§END§");
+            AppendRawLine("§WHITE§Conferma? [§Y§Y§END§/§N§N§END§]§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4236,6 +5005,77 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             }
         }
 
+        private void HandlePlantDripChoice(string upper)
+        {
+            if (upper == "Y" || upper == "YES") { _pendingPlantDrip = true; }
+            else if (upper == "N" || upper == "NO") { _pendingPlantDrip = false; }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ INPUT NON VALIDO. DIGITA §Y§Y§END§ O §N§N§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+            _inputState = InputState.ConfirmingPlantLed;
+            AppendRawLine("§TITLE§▸ ACCENSIONE LED§END§");
+            AppendRawLine("§WHITE§Vuole accendere il LED per questo vaso? Attivato in questo step non costa un'azione aggiuntiva, ma avrà consumi di condensa e CRY previsti a fine giornata.§END§");
+            AppendRawLine("§WHITE§[§Y§Y§END§/§N§N§END§]§END§");
+            AppendRawLine("");
+            FlushConsole();
+        }
+
+        private void HandlePlantLedChoice(string upper)
+        {
+            if (upper == "Y" || upper == "YES")
+            {
+                _inputState = InputState.ConfirmingPlantLedType;
+                AppendRawLine("§TITLE§▸ TIPO LED§END§");
+                AppendRawLine("§WHITE§Quale? §BLUE§BLUE§END§ o §RED§RED§END§?§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+            if (upper == "N" || upper == "NO") { _pendingPlantLed = 0; }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ INPUT NON VALIDO. DIGITA §Y§Y§END§ O §N§N§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+            ShowPlantFinalConfirm();
+        }
+
+        private void HandlePlantLedTypeChoice(string upper)
+        {
+            if (upper == "RED") { _pendingPlantLed = 1; }
+            else if (upper == "BLUE") { _pendingPlantLed = 2; }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ INPUT NON VALIDO. DIGITA §CMD§RED§END§ O §CMD§BLUE§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+            ShowPlantFinalConfirm();
+        }
+
+        private void ShowPlantFinalConfirm()
+        {
+            _inputState = InputState.ConfirmingActionToQueue;
+            AppendRawLine("§TITLE§▸ CONFERMA AZIONE§END§");
+            AppendRawLine($"  Action:  §DATA§{GetActionLabel(_pendingConfirmAction.Type)}§END§");
+            AppendRawLine($"  Target:  §DATA§{_pendingConfirmAction.PotId}§END§");
+            AppendRawLine($"  Item:    §DATA§{_pendingConfirmAction.TargetLabel}§END§");
+            if (_pendingPlantDrip) AppendRawLine("  §INFO§+ Idratazione a goccia (attivata senza AP aggiuntivo)§END§");
+            if (_pendingPlantLed == 1) AppendRawLine("  §INFO§+ LED Rosso (attivato senza AP aggiuntivo)§END§");
+            if (_pendingPlantLed == 2) AppendRawLine("  §INFO§+ LED Blu (attivato senza AP aggiuntivo)§END§");
+            AppendRawLine("  AP Cost: §VAL§1 AP§END§");
+            AppendRawLine("§WHITE§Conferma? [§Y§Y§END§/§N§N§END§]§END§");
+            AppendRawLine("");
+            FlushConsole();
+        }
+
         private void HandleConfirmToQueue(string upper)
         {
             if (upper == "Y" || upper == "YES")
@@ -4243,8 +5083,29 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 if (_pendingConfirmAction != null)
                 {
                     _queue.Add(_pendingConfirmAction);
+                    if (_pendingConfirmAction.Type == QueuedActionType.Plant)
+                    {
+                        string potId = _pendingConfirmAction.PotId;
+                        if (_pendingPlantDrip)
+                        {
+                            _queue.Add(new QueuedAction { Type = QueuedActionType.HydrationToggle, PotId = potId, TargetLabel = potId, ApCost = 0, ItemTypeId = null });
+                            AppendRawLine($"§INFO§+ WATERING (idratazione a goccia) on {potId} [0 AP - incluso in PLANT]§END§");
+                        }
+                        if (_pendingPlantLed == 1)
+                        {
+                            _queue.Add(new QueuedAction { Type = QueuedActionType.LedRedToggle, PotId = potId, TargetLabel = potId, ApCost = 0, ItemTypeId = null });
+                            AppendRawLine($"§INFO§+ LED RED on {potId} [0 AP - incluso in PLANT]§END§");
+                        }
+                        if (_pendingPlantLed == 2)
+                        {
+                            _queue.Add(new QueuedAction { Type = QueuedActionType.LedBlueToggle, PotId = potId, TargetLabel = potId, ApCost = 0, ItemTypeId = null });
+                            AppendRawLine($"§INFO§+ LED BLUE on {potId} [0 AP - incluso in PLANT]§END§");
+                        }
+                        _pendingPlantDrip = false;
+                        _pendingPlantLed = 0;
+                    }
                     RebuildReservedItems();
-                    AppendRawLine("§TITLE§✓ ACTION QUEUED SUCCESSFULLY§END§");
+                    AppendRawLine("§TITLE§✓ AZIONE AGGIUNTA ALLA CODA§END§");
                     AppendRawLine($"§INFO§+ {GetActionLabel(_pendingConfirmAction.Type)} on {_pendingConfirmAction.PotId} [1 AP]§END§");
                     AppendRawLine("");
                 }
@@ -4256,15 +5117,17 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             }
             if (upper == "N" || upper == "NO")
             {
-                AppendRawLine("§WARN§⚠ ACTION CANCELLED§END§");
+                AppendRawLine("§WARN§⚠ AZIONE ANNULLATA§END§");
                 AppendRawLine("");
                 _pendingConfirmAction = null;
+                _pendingPlantDrip = false;
+                _pendingPlantLed = 0;
                 _inputState = InputState.Idle;
                 FlushConsole();
                 return;
             }
 
-            AppendRawLine("§ERROR§⚠ INVALID INPUT. TYPE Y OR N§END§");
+            AppendRawLine("§ERROR§⚠ INPUT NON VALIDO. DIGITA §Y§Y§END§ O §N§N§END§§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4273,8 +5136,8 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         {
             if (upper == "Y" || upper == "YES")
             {
-                AppendRawLine("§TITLE§✓ TERMINAL SESSION CLOSING§END§");
-                AppendRawLine("§INFO§Returning action queue for sequence confirmation...§END§");
+                AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
+                AppendRawLine("§INFO§Restituzione coda azioni per conferma sequenza...§END§");
                 AppendRawLine("");
                 FlushConsole();
                 _inputState = InputState.Idle;
@@ -4286,7 +5149,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             }
             if (upper == "N" || upper == "NO")
             {
-                AppendRawLine("§WARN§⚠ QUEUE DISCARDED§END§");
+                AppendRawLine("§WARN§⚠ CODA ANNULLATA§END§");
                 AppendRawLine("");
                 FlushConsole();
                 _queue.Clear();
@@ -4296,7 +5159,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return;
             }
 
-            AppendRawLine("§ERROR§⚠ INVALID INPUT. TYPE Y OR N§END§");
+            AppendRawLine("§ERROR§⚠ INPUT NON VALIDO. DIGITA §Y§Y§END§ O §N§N§END§§END§");
             AppendRawLine("");
             FlushConsole();
         }
@@ -4450,10 +5313,29 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             }
         }
 
-        private static string GetPlantDisplayName(string plantCode)
+        /// <summary>
+        /// Nome visualizzabile della pianta: da PlantData se disponibile (come V2), altrimenti dal codice.
+        /// </summary>
+        private static string GetPlantDisplayName(PlantData plantData, string plantCode)
         {
             if (string.IsNullOrEmpty(plantCode)) return "---";
+            if (plantData != null)
+            {
+                string plantName = plantData.name.Replace("PLT-", "").Replace("-", " ");
+                switch (plantData.PlantCode)
+                {
+                    case "PLT-STD-001": return "Ferric Fern";
+                    case "PLT-PURE-001": return "Arctic Hask";
+                    case "PLT-EVIL-001": return "Glasscap Fungus";
+                    default: return plantName;
+                }
+            }
             return plantCode.Replace("PLT-", "").Replace("-", " ");
+        }
+
+        private static string GetPlantDisplayName(string plantCode)
+        {
+            return GetPlantDisplayName(null, plantCode);
         }
 
         /// <summary>
@@ -4673,10 +5555,10 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             foreach (var a in _queue) totalAp += a != null ? a.ApCost : 0;
 
             _inputState = InputState.ConfirmingExecuteOrDiscardQueue;
-            AppendRawLine("§TITLE§✓ TERMINAL SESSION CLOSING§END§");
-            AppendRawLine("§INFO§Returning action queue for sequence confirmation...§END§");
+AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
+                AppendRawLine("§INFO§Restituzione coda azioni per conferma sequenza...§END§");
             AppendRawLine("");
-            AppendRawLine($"§DATA§Total actions queued: {_queue.Count}§END§");
+            AppendRawLine($"§DATA§Azioni in coda: {_queue.Count}§END§");
             AppendRawLine($"§DATA§Total AP cost: {totalAp} AP§END§");
             AppendRawLine("");
             AppendRawLine("§WARN§⚠ CONFIRMATION REQUIRED — EXECUTE QUEUE? [Y/N]§END§");
@@ -4699,6 +5581,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             const string yellow = "#E6C96F";
             const string red = "#D35F5F";
             const string cyan = "#00FFFF";
+            const string white = "#FFFFFF";
 
             return raw
                 .Replace("§TITLE§", $"<color={green}>")
@@ -4709,6 +5592,11 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 .Replace("§WARN§", $"<color={yellow}>")
                 .Replace("§PURPLE§", $"<color={purple}>")
                 .Replace("§ERROR§", $"<color={red}>")
+                .Replace("§Y§", $"<color={green}>")
+                .Replace("§N§", $"<color={red}>")
+                .Replace("§WHITE§", $"<color={white}>")
+                .Replace("§BLUE§", $"<color={blue}>")
+                .Replace("§RED§", $"<color={red}>")
                 .Replace("§END§", "</color>");
         }
     }
