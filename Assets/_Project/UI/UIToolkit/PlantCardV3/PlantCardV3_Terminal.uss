@@ -896,7 +896,6 @@
 
 .pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
     background-color: rgb(127, 255, 122);
-    background-image: ;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -913,7 +912,6 @@
 
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
     background-color: rgb(127, 255, 122);
-    background-image: ;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -930,17 +928,14 @@
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: ;
 }
 
 .pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: ;
 }
 
 .pcv3-potlist .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
     background-color: rgb(136, 255, 136);
-    background-image: ;
 }
 
 .pcv3-custom-scrollbar {
