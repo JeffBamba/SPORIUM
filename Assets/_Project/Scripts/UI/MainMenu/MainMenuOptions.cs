@@ -21,6 +21,9 @@ namespace _Project
 
         [SerializeField] private string _newGameSceneName;
 
+        /// <summary>Nome della scena di gioco (usato da Nuova Partita e da Carica per entrare in partita).</summary>
+        public string GameSceneName => _newGameSceneName;
+
         private void Start()
         {
             EnsureOptionsPopupController();

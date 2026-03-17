@@ -23,8 +23,8 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="pcv3-body" class="pcv3-body" style="left: -8px; top: 22px;">
                     <ui:VisualElement name="pcv3-left" class="pcv3-left pcv3-zona3-draggable" style="min-width: 167px; right: 622px; top: 188px; width: 172px; height: 339px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
-                        <ui:VisualElement name="pcv3-vital-stats-block-1" class="pcv3-vital-stats-block" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; top: -30px; width: 171px;">
-                            <ui:Label name="pcv3-vital-title-1" text="Vital Status:" class="pcv3-vital-title" />
+                        <ui:VisualElement name="pcv3-vital-stats-block-1" class="pcv3-vital-stats-block" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; top: -29px; width: 171px; left: -14px;">
+                            <ui:Label name="pcv3-vital-title-1" text="Stato Vitale:" class="pcv3-vital-title" />
                             <ui:VisualElement name="pcv3-vital-stats-inner-1" class="pcv3-potcard-stats">
                                 <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row pcv3-potcard-stat-row-first">
                                     <ui:Label name="pcv3-potcard-stat-label" text="STADIO:" class="pcv3-potcard-stat-label" />
@@ -46,11 +46,15 @@
                                     <ui:Label name="pcv3-potcard-stat-label" text="CICLI VITALI:" class="pcv3-potcard-stat-label" />
                                     <ui:Label name="pcv3-potcard-stat-value" text="---" class="pcv3-potcard-stat-value pcv3-value-green" />
                                 </ui:VisualElement>
+                                <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row">
+                                    <ui:Label name="pcv3-potcard-stat-label" text="LED COMPATIBILITÀ:" class="pcv3-potcard-stat-label" />
+                                    <ui:Label name="pcv3-potcard-stat-value" text="---" class="pcv3-potcard-stat-value pcv3-value-yellow" />
+                                </ui:VisualElement>
                                 <ui:VisualElement name="pcv3-potcard-separator" class="pcv3-potcard-separator" />
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement name="pcv3-vital-stats-block-2" class="pcv3-vital-stats-block pcv3-zona3-draggable" style="width: 170px; height: 286px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; top: 8px;">
-                            <ui:Label name="pcv3-vital-title-2" text="Vital Status:" class="pcv3-vital-title" />
+                        <ui:VisualElement name="pcv3-vital-stats-block-2" class="pcv3-vital-stats-block pcv3-zona3-draggable" style="width: 170px; height: 286px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; top: -18px; left: -11px;">
+                            <ui:Label name="pcv3-vital-title-2" text="Parametri:" class="pcv3-vital-title" />
                             <ui:VisualElement name="pcv3-vital-stats-inner-2" class="pcv3-potcard-stats">
                                 <ui:VisualElement name="pcv3-potcard-stat-row" class="pcv3-potcard-stat-row pcv3-potcard-stat-row-first">
                                     <ui:Label name="pcv3-potcard-stat-label" text="IDRATAZIONE:" class="pcv3-potcard-stat-label" />
@@ -95,10 +99,18 @@
                             </ui:VisualElement>
                             <ui:VisualElement name="pcv3-hud-plant-preview" class="pcv3-hud-plant-preview" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
                             <ui:VisualElement name="pcv3-hud-pot-slots" class="pcv3-hud-pot-slots" style="height: 51px; position: absolute; top: 405px; left: 9px;">
-                                <ui:VisualElement name="pcv3-hud-pot-slot-0" class="pcv3-hud-pot-slot" style="top: 0; left: 29px;" />
-                                <ui:VisualElement name="pcv3-hud-pot-slot-1" class="pcv3-hud-pot-slot" style="top: 0;" />
-                                <ui:VisualElement name="pcv3-hud-pot-slot-2" class="pcv3-hud-pot-slot" style="top: 0; right: 0; left: -26px;" />
-                                <ui:VisualElement name="pcv3-hud-pot-slot-3" class="pcv3-hud-pot-slot" style="top: 0; right: 0; left: -53px;" />
+                                <ui:VisualElement name="pcv3-hud-pot-slot-0" class="pcv3-hud-pot-slot" style="top: 0; left: 29px; width: 46px; height: 46px;">
+                                    <ui:Label text=" POT-001" class="pcv3-hud-pot-slot-label" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="pcv3-hud-pot-slot-1" class="pcv3-hud-pot-slot" style="top: 0; width: 46px; height: 46px;">
+                                    <ui:Label text=" POT-002" class="pcv3-hud-pot-slot-label" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="pcv3-hud-pot-slot-2" class="pcv3-hud-pot-slot" style="top: 0; right: 0; left: -26px; width: 46px; height: 46px;">
+                                    <ui:Label text=" POT-003" class="pcv3-hud-pot-slot-label" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="pcv3-hud-pot-slot-3" class="pcv3-hud-pot-slot" style="top: 0; right: 0; left: -53px; width: 46px; height: 46px;">
+                                    <ui:Label text=" POT-004" class="pcv3-hud-pot-slot-label" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>

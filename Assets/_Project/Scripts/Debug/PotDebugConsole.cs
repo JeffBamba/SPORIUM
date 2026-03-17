@@ -710,6 +710,7 @@ namespace Sporae.DevTools
                 if (GUI.Button(new Rect(0, i * 30f, consoleWidth - 40f, 28f), potInfo, buttonStyle)) // Aumentato da 25f/23f a 30f/28f
                 {
                     _selectedPot = pot;
+                    _editingScrollPosition = Vector2.zero; // Reset scroll così sono visibili Nuovo Stadio e pulsanti stadi
                     _selectedPotId = potState.PotId;
                     _stageInputValue = potState.Stage;
                     _stageInputString = potState.Stage.ToString();

@@ -129,14 +129,28 @@ namespace _Project.Sporae.Core.Installers
         public static bool SkipAutoLoad { get; set; }
 
         /// <summary>
-        /// Carica il salvataggio "default" solo dopo che GameManager è registrato e inizializzato,
-        /// così ApplySaveData può ripristinare CRY, azioni, inventario e condensazione correttamente.
+        /// Dopo che GameManager è pronto: se si è entrati da "Carica" (SlotToLoadOnNextScene impostato)
+        /// carica quello slot; altrimenti non fare auto-load (la scena di gioco si apre solo da Nuova Partita o Carica dal menu Bootstrap).
         /// </summary>
         private IEnumerator LoadSaveWhenGameManagerReady(SaveManager saveManager)
         {
             if (SkipAutoLoad)
             {
                 SkipAutoLoad = false;
+                yield break;
+            }
+
+            // Slot richiesto dal menu "Carica", altrimenti nessun auto-load (partita da zero solo con "Nuova Partita")
+            string slotToLoad = SaveManager.SlotToLoadOnNextScene;
+            SaveManager.SlotToLoadOnNextScene = null;
+            if (string.IsNullOrEmpty(slotToLoad) || !saveManager.SaveExists(slotToLoad))
+            {
+#if UNITY_EDITOR
+                if (string.IsNullOrEmpty(slotToLoad))
+                    SporiumLogger.LogInfo(LogCategory.Core, "Ingresso in scena di gioco senza slot da caricare");
+                else
+                    SporiumLogger.LogWarning(LogCategory.Core, $"Slot richiesto '{slotToLoad}' non trovato o vuoto");
+#endif
                 yield break;
             }
 
@@ -151,23 +165,15 @@ namespace _Project.Sporae.Core.Installers
                     break;
             }
 
-            if (!saveManager.SaveExists("default"))
-            {
-#if UNITY_EDITOR
-                SporiumLogger.LogInfo(LogCategory.Core, "Nessun salvataggio trovato, partita nuova");
-#endif
-                yield break;
-            }
-
-            bool loadSuccess = saveManager.LoadGame("default");
+            bool loadSuccess = saveManager.LoadGame(slotToLoad);
 #if UNITY_EDITOR
             if (loadSuccess)
-                SporiumLogger.LogInfo(LogCategory.Core, "✅ Salvataggio caricato automaticamente");
+                SporiumLogger.LogInfo(LogCategory.Core, $"✅ Salvataggio caricato: {slotToLoad}");
             else
-                SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
+                SporiumLogger.LogWarning(LogCategory.Core, $"⚠️ Errore durante il caricamento dello slot {slotToLoad}");
 #else
             if (!loadSuccess)
-                SporiumLogger.LogWarning(LogCategory.Core, "⚠️ Errore durante il caricamento automatico del salvataggio");
+                SporiumLogger.LogWarning(LogCategory.Core, $"⚠️ Errore durante il caricamento dello slot {slotToLoad}");
 #endif
         }
 

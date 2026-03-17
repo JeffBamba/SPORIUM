@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using Sporae.Core;
@@ -136,13 +137,20 @@ namespace _Project
         {
             var saveManager = SaveManager.Instance;
             if (saveManager == null) return;
-            if (saveManager.LoadGame(slotName))
+            if (!saveManager.SaveExists(slotName)) return;
+
+            // Siamo nel menu principale: non ci sono GameManager/PotActions in scena.
+            // Impostiamo lo slot da caricare e carichiamo la scena di gioco; il GamePlayInstaller
+            // applicherà il save quando la scena è pronta.
+            SaveManager.SlotToLoadOnNextScene = slotName;
+            var mainMenuOptions = FindObjectOfType<MainMenuOptions>();
+            string gameSceneName = mainMenuOptions != null ? mainMenuOptions.GameSceneName : null;
+            if (string.IsNullOrEmpty(gameSceneName))
             {
-                gameObject.SetActive(false);
-                var screens = GetComponentInParent<MainMenuScreens>(true);
-                if (screens != null)
-                    screens.Hide();
+                SaveManager.SlotToLoadOnNextScene = null;
+                return;
             }
+            SceneManager.LoadScene(gameSceneName);
         }
 
         private void OnDeleteSlot(string slotName)

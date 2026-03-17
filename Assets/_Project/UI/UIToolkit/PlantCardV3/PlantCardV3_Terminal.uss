@@ -348,6 +348,9 @@
 .pcv3-hud-pot-slot {
     width: 44px;
     height: 44px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     background-color: rgba(0, 0, 0, 0.5);
     border-left-width: 2px;
     border-right-width: 2px;
@@ -399,6 +402,15 @@
     border-right-color: rgba(180, 180, 180, 0.7);
     border-top-color: rgba(180, 180, 180, 0.7);
     border-bottom-color: rgba(180, 180, 180, 0.7);
+}
+
+.pcv3-hud-pot-slot-label {
+    font-size: 10px;
+    color: rgb(127, 255, 122);
+    -unity-text-align: middle-center;
+    width: 100%;
+    height: 100%;
+    min-height: 12px;
 }
 
 .pcv3-zona2-draggable {
@@ -999,8 +1011,9 @@
 
 .pcv3-console-text {
     font-size: 12px;
-    color: rgb(127, 255, 122);
+    color: rgb(153, 255, 153);
     white-space: pre;
+    -unity-text-align: upper-justified;
 }
 
 .pcv3-detail-placeholder {

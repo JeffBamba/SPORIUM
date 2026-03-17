@@ -230,6 +230,12 @@ namespace Sporae.Core
         }
 
         /// <summary>
+        /// Se impostato, alla prossima entrata nella scena di gioco verrà caricato questo slot invece di "default".
+        /// Usato quando l'utente sceglie "Carica" dal menu principale: si carica la scena e poi si applica il save.
+        /// </summary>
+        public static string SlotToLoadOnNextScene { get; set; }
+
+        /// <summary>
         /// Nomi slot disponibili per salvare/caricare.
         /// </summary>
         public static readonly string[] SlotNames = { "default", "slot2", "slot3" };
