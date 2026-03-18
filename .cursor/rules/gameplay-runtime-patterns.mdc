@@ -1,0 +1,18 @@
+---
+description: Gameplay runtime patterns for Dome, World, Core, and PlantCardV3 code
+globs:
+  - "**/Dome/**/*.cs"
+  - "**/World/**/*.cs"
+  - "**/Core/**/*.cs"
+  - "**/UI/UIToolkit/PlantCardV3/**/*.cs"
+alwaysApply: false
+---
+
+# Gameplay Runtime Patterns
+
+- New pot gameplay rules go into validators or processors first, then get called from `PotActions`.
+- New day-cycle steps go into dedicated processors/builders first, then get orchestrated by `DayCycleController`.
+- Do not add new heavy logic directly to `PotActions` or `DayCycleController` unless it is only a thin delegation layer.
+- Cache repeated component lookups in `Awake`, `Start`, or `OnEnable`; do not perform repeated `GetComponent` lookups inside `Update`/`OnGUI` paths unless required.
+- If a runtime dependency is needed by multiple systems, register it once and resolve it from `ServiceContainer`.
+- If you need all pots or all related controllers, read them from `DomePotRegistry` instead of scanning the scene.

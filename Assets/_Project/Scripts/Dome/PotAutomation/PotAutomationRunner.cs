@@ -56,6 +56,11 @@ namespace Sporae.Dome.PotAutomation
 
         private void Awake()
         {
+            if (ServiceContainer.Instance != null)
+            {
+                ServiceContainer.Instance.Register(this);
+            }
+
             _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
             if (_gameManager == null)
                 _gameManager = FindObjectOfType<GameManager>();

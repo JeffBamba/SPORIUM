@@ -55,34 +55,16 @@ public class ElevatorSystem : MonoBehaviour
     private PlayerClickMover2D playerMover;
     private UINotification uiNotification;
     private PlayerInteractAdvice interactAdvice; // DEBUG_SAFE_FIX: prompt "Press E"
+    private Camera _mainCamera;
+    private bool _waitingForRuntimeServices;
 
     void Start()
     {
         ValidateConfiguration();
-        
-        // Trova il GameManager nella scena
-        // Usa ServiceContainer invece di FindObjectOfType
-        gameManager = ServiceContainer.Instance?.Get<GameManager>();
-        if (gameManager == null)
-        {
-            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
-            }
-        }
-        playerMover = FindObjectOfType<PlayerClickMover2D>();
-        interactAdvice = FindObjectOfType<PlayerInteractAdvice>();
-        // Usa ServiceContainer invece di FindObjectOfType per UINotification
-        uiNotification = ServiceContainer.Instance?.Get<UINotification>();
-        if (uiNotification == null)
-        {
-            SporiumLogger.LogWarning(LogCategory.UI, "UINotification non disponibile via ServiceContainer. Tentativo late binding...");
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered += OnUINotificationRegistered;
-            }
-        }
+
+        ResolveRuntimeDependencies();
+        SubscribeToRuntimeServicesIfNeeded();
+        _mainCamera = Camera.main;
         
         if (uiPanel != null)
         {
@@ -131,7 +113,12 @@ public class ElevatorSystem : MonoBehaviour
         // Click come alternativa a E per aprire il menu quando si è dentro il trigger
         if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
         {
-            Camera cam = Camera.main != null ? Camera.main : UnityEngine.Object.FindObjectOfType<Camera>();
+            Camera cam = _mainCamera != null ? _mainCamera : Camera.main;
+            if (cam == null)
+            {
+                cam = UnityEngine.Object.FindObjectOfType<Camera>();
+                _mainCamera = cam;
+            }
             Vector2 worldPoint = cam != null ? (Vector2)cam.ScreenToWorldPoint(Input.mousePosition) : (Vector2)transform.position;
             Collider2D[] hits = Physics2D.OverlapCircleAll(worldPoint, 0.35f);
             for (int i = 0; i < hits.Length; i++)
@@ -516,11 +503,7 @@ public class ElevatorSystem : MonoBehaviour
         if (service is GameManager gm && gameManager == null)
         {
             gameManager = gm;
-            
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
-            }
+            TryUnsubscribeFromRuntimeServices();
         }
     }
     
@@ -532,37 +515,86 @@ public class ElevatorSystem : MonoBehaviour
         if (service is UINotification notification && uiNotification == null)
         {
             uiNotification = notification;
-            
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
-            }
+            TryUnsubscribeFromRuntimeServices();
+        }
+    }
+
+    private void OnPlayerMoverRegistered(object service)
+    {
+        if (service is PlayerClickMover2D mover && playerMover == null)
+        {
+            playerMover = mover;
+            TryUnsubscribeFromRuntimeServices();
+        }
+    }
+
+    private void OnInteractAdviceRegistered(object service)
+    {
+        if (service is PlayerInteractAdvice advice && interactAdvice == null)
+        {
+            interactAdvice = advice;
+            TryUnsubscribeFromRuntimeServices();
         }
     }
     
     // Metodo per aggiornare il riferimento al GameManager
     public void RefreshGameManagerReference()
     {
-        // Usa ServiceContainer invece di FindObjectOfType
-        gameManager = ServiceContainer.Instance?.Get<GameManager>();
-        if (gameManager == null)
-        {
-            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
-            if (ServiceContainer.Instance != null)
-            {
-                ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
-            }
-        }
+        ResolveRuntimeDependencies();
+        SubscribeToRuntimeServicesIfNeeded();
     }
     
     private void OnDestroy()
     {
         // Cleanup ServiceContainer subscriptions
-        if (ServiceContainer.Instance != null)
-        {
-            ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
-            ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
-        }
+        UnsubscribeFromRuntimeServices();
+    }
+
+    private void ResolveRuntimeDependencies()
+    {
+        gameManager = gameManager ?? ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+        playerMover = playerMover ?? ServiceContainer.Instance?.Get<PlayerClickMover2D>(suppressWarning: true);
+        interactAdvice = interactAdvice ?? ServiceContainer.Instance?.Get<PlayerInteractAdvice>(suppressWarning: true);
+        uiNotification = uiNotification ?? ServiceContainer.Instance?.Get<UINotification>(suppressWarning: true);
+    }
+
+    private void SubscribeToRuntimeServicesIfNeeded()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+
+        bool needsLateBinding = gameManager == null || playerMover == null || interactAdvice == null || uiNotification == null;
+        if (!needsLateBinding || _waitingForRuntimeServices)
+            return;
+
+        if (gameManager == null)
+            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
+        if (uiNotification == null)
+            SporiumLogger.LogWarning(LogCategory.UI, "UINotification non disponibile via ServiceContainer. Tentativo late binding...");
+
+        ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
+        ServiceContainer.Instance.OnServiceRegistered += OnUINotificationRegistered;
+        ServiceContainer.Instance.OnServiceRegistered += OnPlayerMoverRegistered;
+        ServiceContainer.Instance.OnServiceRegistered += OnInteractAdviceRegistered;
+        _waitingForRuntimeServices = true;
+    }
+
+    private void TryUnsubscribeFromRuntimeServices()
+    {
+        if (gameManager != null && playerMover != null && interactAdvice != null && uiNotification != null)
+            UnsubscribeFromRuntimeServices();
+    }
+
+    private void UnsubscribeFromRuntimeServices()
+    {
+        if (!_waitingForRuntimeServices || ServiceContainer.Instance == null)
+            return;
+
+        ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
+        ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
+        ServiceContainer.Instance.OnServiceRegistered -= OnPlayerMoverRegistered;
+        ServiceContainer.Instance.OnServiceRegistered -= OnInteractAdviceRegistered;
+        _waitingForRuntimeServices = false;
     }
 
     // Gizmos per debug

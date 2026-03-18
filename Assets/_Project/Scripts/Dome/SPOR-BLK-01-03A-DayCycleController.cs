@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Core;
+using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Fertilizer;
@@ -37,6 +38,8 @@ public class DayCycleController : MonoBehaviour
     private GameManager _gameManager;
     private UINotification _uiNotification;
     private ToastNotificationManager _toastManager;
+    private DomePotRegistry _potRegistry;
+    private readonly CondensationDayProcessor _condensationDayProcessor = new();
 
     private static bool IsDead(PotStateModel pot)
     {
@@ -47,6 +50,8 @@ public class DayCycleController : MonoBehaviour
 
     private void Awake()
     {
+        ServiceContainer.Instance?.Register(this);
+
         growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
         if (!growthConfig)
             SporiumLogger.LogWarning(LogCategory.Dome, $"PlantGrowthConfig non trovato in Resources/Configs/, verrà cercato in PotSystemConfig");
@@ -86,25 +91,14 @@ public class DayCycleController : MonoBehaviour
             return;
         
         // Trova UINotification se disponibile (per toast HUD)
-        // DEBUG_SAFE_FIX: Usa TryGetUINotification che prova prima ServiceContainer poi FindObjectOfType
-        // Inoltre cerca anche oggetti disattivati perché UINotification potrebbe non essere ancora attivo
+        // La risoluzione avviene via ServiceContainer; il late binding copre i casi di bootstrap tardivo.
         if (_uiNotification == null)
         {
             TryGetUINotification();
-            
-            // Se ancora non trovato, prova a cercare anche oggetti disattivati
-            if (_uiNotification == null)
-            {
-                _uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>(true); // true = include inactive
-            }
-            
-            // DEBUG_SAFE_FIX: Non mostrare warning se ServiceContainer non è ancora disponibile
-            // Il sistema si collegherà automaticamente tramite OnServiceRegistered quando UINotification viene registrato
+
             if (enableDebugLogs && _uiNotification == null && ServiceContainer.Instance != null)
             {
-                // Mostra warning solo se ServiceContainer è disponibile ma UINotification non è ancora registrato
-                // Questo evita warning falsi quando ServiceContainer non è ancora inizializzato
-                SporiumLogger.LogWarning(LogCategory.Dome, "UINotification non trovato in scena; i toast non verranno mostrati. Verrà collegato automaticamente quando registrato nel ServiceContainer.");
+                SporiumLogger.LogWarning(LogCategory.Dome, "UINotification non disponibile nel ServiceContainer; verrà collegato automaticamente quando registrato.");
             }
             else if (enableDebugLogs && _uiNotification != null)
             {
@@ -121,10 +115,10 @@ public class DayCycleController : MonoBehaviour
         // Cerca configurazione in PotSystemConfig se non trovata
         if (growthConfig == null)
         {
-            var potSystemConfig = FindObjectOfType<PotSystemConfig>();
-            if (potSystemConfig != null && potSystemConfig.GrowthConfig != null)
+            EnsurePotSystemConfigLoaded();
+            if (_potSystemConfig != null && _potSystemConfig.GrowthConfig != null)
             {
-                growthConfig = potSystemConfig.GrowthConfig;
+                growthConfig = _potSystemConfig.GrowthConfig;
                 if (enableDebugLogs)
                     SporiumLogger.LogInfo(LogCategory.Dome, "DayCycleController: Configurazione caricata da PotSystemConfig");
             }
@@ -138,20 +132,7 @@ public class DayCycleController : MonoBehaviour
         }
         
         // Cerca PotSystemConfig per ottenere MaxHydration e MaxLightExposure
-        // ScriptableObject non può essere trovato con FindObjectOfType, cerca solo in Resources
-        _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
-        
-        // Se non trovato con il nome esatto, cerca tutti i PotSystemConfig in Resources
-        if (_potSystemConfig == null)
-        {
-            var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
-            if (allConfigs != null && allConfigs.Length > 0)
-            {
-                _potSystemConfig = allConfigs[0];
-                if (enableDebugLogs)
-                    SporiumLogger.LogInfo(LogCategory.Dome, $"DayCycleController: PotSystemConfig trovato con nome alternativo '{_potSystemConfig.name}'");
-            }
-        }
+        EnsurePotSystemConfigLoaded();
         
         if (_potSystemConfig == null && enableDebugLogs)
         {
@@ -181,6 +162,7 @@ public class DayCycleController : MonoBehaviour
         
         // Cerca GameManager per consumo risorse watering system
         TryGetGameManager();
+        TryGetPotRegistry();
         
         // Cerca UINotification per mostrare warning
         TryGetUINotification();
@@ -249,35 +231,45 @@ public class DayCycleController : MonoBehaviour
             _gameManager = null;
         }
     }
+
+    private void TryGetPotRegistry()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+
+        _potRegistry = ServiceContainer.Instance.Get<DomePotRegistry>(suppressWarning: true);
+    }
     
     /// <summary>
     /// Tenta di ottenere UINotification dal ServiceContainer o FindObjectOfType
     /// </summary>
     private void TryGetUINotification()
     {
-        // Prova prima dal ServiceContainer
         if (ServiceContainer.Instance != null)
         {
-            try
+            _uiNotification = ServiceContainer.Instance.Get<UINotification>(suppressWarning: true);
+            if (_uiNotification != null && enableDebugLogs)
             {
-                _uiNotification = ServiceContainer.Instance.Get<UINotification>(suppressWarning: true);
-                if (_uiNotification != null && enableDebugLogs)
-                {
-                    SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato dal ServiceContainer!");
-                    return;
-                }
-            }
-            catch
-            {
-                // UINotification non nel ServiceContainer, prova FindObjectOfType
+                SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato dal ServiceContainer!");
             }
         }
-        
-        // Fallback: cerca nella scena
-        _uiNotification = UnityEngine.Object.FindObjectOfType<UINotification>();
-        if (_uiNotification != null && enableDebugLogs)
+    }
+
+    private void EnsurePotSystemConfigLoaded()
+    {
+        if (_potSystemConfig != null)
+            return;
+
+        _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+        if (_potSystemConfig == null)
         {
-            SporiumLogger.LogInfo(LogCategory.Core, "UINotification trovato nella scena!");
+            var allConfigs = Resources.LoadAll<PotSystemConfig>("Configs");
+            if (allConfigs != null && allConfigs.Length > 0)
+            {
+                _potSystemConfig = allConfigs[0];
+                if (enableDebugLogs)
+                    SporiumLogger.LogInfo(LogCategory.Dome, $"DayCycleController: PotSystemConfig trovato con nome alternativo '{_potSystemConfig.name}'");
+            }
         }
     }
     
@@ -324,6 +316,11 @@ public class DayCycleController : MonoBehaviour
             {
                 SporiumLogger.LogInfo(LogCategory.UI, "UINotification registrato! Collegato per warning watering system.");
             }
+        }
+
+        if (service is DomePotRegistry potRegistry && _potRegistry == null)
+        {
+            _potRegistry = potRegistry;
         }
         
         if (service is ToastNotificationManager toastManager && _toastManager == null)
@@ -1763,7 +1760,10 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private PotSlot FindPotSlot(string potId)
     {
-        // Cerca PotSlot nel sistema
+        TryGetPotRegistry();
+        if (_potRegistry != null)
+            return _potRegistry.FindPotById(potId);
+
         var allPots = FindObjectsOfType<PotSlot>();
         foreach (var pot in allPots)
         {
@@ -1956,7 +1956,10 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private PotGrowthController FindPotGrowthController(string potId)
     {
-        // Cerca tutti i PotGrowthController nella scena
+        TryGetPotRegistry();
+        if (_potRegistry != null)
+            return _potRegistry.FindGrowthController(potId);
+
         PotGrowthController[] controllers = FindObjectsOfType<PotGrowthController>();
         foreach (var controller in controllers)
         {
@@ -2632,48 +2635,19 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void ApplyCondensationSystem(int dayIndex)
     {
-        if (_gameManager == null || _gameManager.CondensationSystem == null)
+        var result = _condensationDayProcessor.Apply(_gameManager, _registeredPots);
+        if (!result.Applied)
         {
             if (enableDebugLogs)
                 SporiumLogger.LogWarning(LogCategory.Core, "GameManager o CondensationSystem non disponibili per calcolo condensazione");
             return;
         }
-        
-        // Verifica se almeno un LED è attivo (Blue o Red)
-        bool hasActiveLed = HasAnyActiveLed();
-        
-        // Passa lista pot attivi e stato LED al sistema condensazione
-        _gameManager.CondensationSystem.DayChanged(_registeredPots, hasActiveLed);
-        
-        // Notifica cambio condensazione tramite GameManager
-        _gameManager.NotifyCondensationChanged();
-        
+
         if (enableDebugLogs)
         {
-            float production = _gameManager.CondensationSystem.DailyProduction;
-            float accumulation = _gameManager.CondensationSystem.CurrentAccumulation;
             SporiumLogger.LogDebug(LogCategory.Core, 
-                $"Condensazione Day {dayIndex}: Produzione={production:F1}%, Accumulo={accumulation:F1}%, LED attivo={hasActiveLed}");
+                $"Condensazione Day {dayIndex}: Produzione={result.Production:F1}%, Accumulo={result.Accumulation:F1}%, LED attivo={result.HasActiveLed}");
         }
-    }
-    
-    /// <summary>
-    /// FASE 3: Verifica se almeno un pot ha LED attivo (Blue o Red).
-    /// </summary>
-    private bool HasAnyActiveLed()
-    {
-        foreach (var pot in _registeredPots)
-        {
-            if (pot == null || !pot.HasPlant) continue;
-            
-            // LED attivo se Blue o Red (non Off)
-            if (pot.LedSystemState != LedSystemState.Off)
-            {
-                return true;
-            }
-        }
-        
-        return false;
     }
     
     /// <summary>

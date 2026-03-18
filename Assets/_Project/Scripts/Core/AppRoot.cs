@@ -74,8 +74,10 @@ namespace Sporae.Core
         {
             if (_isInitialized) return;
             
-            // Verifica se c'è già un GameManager in scena
-            GameManager existingGameManager = FindObjectOfType<GameManager>();
+            // Verifica se c'è già un GameManager registrato o presente in scena
+            GameManager existingGameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            if (existingGameManager == null)
+                existingGameManager = FindObjectOfType<GameManager>();
             if (existingGameManager != null)
             {
                 _cachedGameManager = existingGameManager; // BUG FIX: Cache il GameManager trovato
@@ -154,7 +156,12 @@ namespace Sporae.Core
         private GameManager _cachedGameManager;
         public GameManager GetGameManager()
         {
-            // BUG FIX: Cache per evitare FindObjectOfType ripetuti
+            if (_cachedGameManager != null)
+                return _cachedGameManager;
+
+            _cachedGameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+
+            // Fallback legacy: evita rotture in scene non ancora migrate al ServiceContainer.
             if (_cachedGameManager == null)
             {
                 _cachedGameManager = FindObjectOfType<GameManager>();
@@ -164,11 +171,19 @@ namespace Sporae.Core
 
         public T GetSystem<T>() where T : Component
         {
+            T service = ServiceContainer.Instance?.Get<T>(suppressWarning: true);
+            if (service != null)
+                return service;
+
             return FindObjectOfType<T>();
         }
 
         public T[] GetAllSystems<T>() where T : Component
         {
+            T service = ServiceContainer.Instance?.Get<T>(suppressWarning: true);
+            if (service != null)
+                return new[] { service };
+
             return FindObjectsOfType<T>();
         }
 

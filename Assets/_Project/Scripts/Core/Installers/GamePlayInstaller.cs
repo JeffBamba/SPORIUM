@@ -5,6 +5,7 @@ using _Project.Pot;
 using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.Dome;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 
@@ -52,6 +53,7 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new WikiUnlockService());
             ServiceContainer.Instance.Register(new NightEventsGenerator());
             ServiceContainer.Instance.Register(new PotNotifications());
+            ServiceContainer.Instance.Register(new DomePotRegistry());
 
             // PhSystem (pH globale Dome): core gameplay; TopBar, EoD, DayCycleController, PotActions, piante, ecc. lo usano via ServiceContainer.
             if (!ServiceContainer.Instance.Contains(typeof(PhSystem)))

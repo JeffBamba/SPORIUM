@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using _Project;
+using _Project.Sporae.Core;
 using _Project.World.VaultMap;
 
 namespace _Project.Player
@@ -122,6 +123,8 @@ namespace _Project.Player
 
         private void Awake()
         {
+            RegisterInServiceContainer();
+
             _rb = GetComponent<Rigidbody2D>();
             _selfCollider = GetComponent<Collider2D>();
 
@@ -132,6 +135,14 @@ namespace _Project.Player
 
             // Ensure the player doesn't rotate due to collisions
             _rb.freezeRotation = true;
+        }
+
+        private void RegisterInServiceContainer()
+        {
+            if (ServiceContainer.Instance == null)
+                return;
+
+            ServiceContainer.Instance.Register(this);
         }
 
         private void OnEnable()

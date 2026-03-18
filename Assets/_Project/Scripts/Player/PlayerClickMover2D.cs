@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using _Project.Sporae.Core;
 using Sporae.DevTools;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -37,6 +38,16 @@ public class PlayerClickMover2D : MonoBehaviour
         rb.gravityScale = 0f;
         rb.drag = 0f;
         rb.angularDrag = 0f;
+
+        RegisterInServiceContainer();
+    }
+
+    private void RegisterInServiceContainer()
+    {
+        if (ServiceContainer.Instance == null)
+            return;
+
+        ServiceContainer.Instance.Register(this);
     }
 
     private void Update()

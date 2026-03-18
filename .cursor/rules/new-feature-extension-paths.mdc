@@ -1,0 +1,19 @@
+---
+description: Where new gameplay functionality should live in the refactored architecture
+globs:
+  - "**/Dome/**/*.cs"
+  - "**/World/**/*.cs"
+  - "**/Core/**/*.cs"
+  - "**/UI/UIToolkit/PlantCardV3/**/*.cs"
+alwaysApply: false
+---
+
+# New Feature Extension Paths
+
+- Before adding a new feature, decide its role: bootstrap, validation, execution, orchestration, or presentation.
+- If the feature adds a global runtime dependency, register it in an installer or service bootstrap, not with ad-hoc scene scans.
+- If the feature adds rules for pot actions, put checks in `PotActionValidator` and execution in a dedicated processor; keep `PotActions` as a thin facade.
+- If the feature adds daily lifecycle logic, put the step in a dedicated processor/builder and let `DayCycleController` orchestrate it.
+- If the feature needs all pots or related controllers, read them from `DomePotRegistry`.
+- If the feature only coordinates UI or flow, do not move gameplay state mutation into the UI controller.
+- New feature work should prefer extending an existing service/processor/registry before adding another monolithic block to a controller.

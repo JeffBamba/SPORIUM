@@ -1,6 +1,7 @@
 
 using TMPro;
 using UnityEngine;
+using _Project.Sporae.Core;
 
 namespace _Project
 {
@@ -9,6 +10,14 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _adviceLabel;
 
         private int _interactablesInRange = 0;
+
+        private void Awake()
+        {
+            if (ServiceContainer.Instance == null)
+                return;
+
+            ServiceContainer.Instance.Register(this);
+        }
         
         public void AddInteractable()
         {

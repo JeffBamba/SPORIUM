@@ -1,4 +1,6 @@
 using UnityEngine;
+using _Project.Sporae.Core;
+using Sporae.Dome;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Condition;
@@ -86,6 +88,13 @@ namespace Sporae.Dome.PotSystem.Growth
             }
             
             EnsureOverlayRenderers();
+
+            ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true)?.RegisterGrowthController(this);
+        }
+
+        private void OnDestroy()
+        {
+            ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true)?.UnregisterGrowthController(this);
         }
 
         /// <summary>

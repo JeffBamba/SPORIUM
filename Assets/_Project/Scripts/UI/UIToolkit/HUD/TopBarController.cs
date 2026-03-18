@@ -111,6 +111,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private PhSystem _phSystem;
         private DayCycleSystem _dayCycleSystem;
         private DayCycleController _dayCycleController;
+        private MutationOrbitUI _mutationOrbit;
         
         // Animation coroutines
         private Coroutine _condensationIdleCoroutine;
@@ -139,6 +140,8 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
+
+            _mutationOrbit = GetComponent<MutationOrbitUI>();
             
             // DEBUG_SAFE_FIX: Imposta sortingOrder per HUD base (sotto PlantCard, sopra background)
             if (_uiDocument != null)
@@ -156,8 +159,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         private void InitializeGameSystems()
         {
-            // Cerca GameManager nella scena
-            _gameManager = FindObjectOfType<GameManager>();
+            _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true) ?? FindObjectOfType<GameManager>();
             
             if (_gameManager != null)
             {
@@ -220,7 +222,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 
                 // Day cycle per tooltip pH (giorno corrente e drift previsto)
                 _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
-                _dayCycleController = FindObjectOfType<DayCycleController>();
+                _dayCycleController = ServiceContainer.Instance?.Get<DayCycleController>(suppressWarning: true);
                 
                 // Sottoscrivi all'evento OnServiceRegistered per collegarsi quando PhSystem viene registrato
                 if (ServiceContainer.Instance != null)
@@ -266,6 +268,10 @@ namespace Sporae.UI.UIToolkit.HUD
             if (service is PhSystem && _phSystem == null)
             {
                 TryConnectPhSystem();
+            }
+            else if (service is DayCycleController dayCycleController && _dayCycleController == null)
+            {
+                _dayCycleController = dayCycleController;
             }
         }
         
@@ -1345,10 +1351,9 @@ namespace Sporae.UI.UIToolkit.HUD
             }
             
             // Update MutationOrbitUI component
-            var mutationOrbit = GetComponent<MutationOrbitUI>();
-            if (mutationOrbit != null)
+            if (_mutationOrbit != null)
             {
-                mutationOrbit.UpdateMutation(_mutationIndex);
+                _mutationOrbit.UpdateMutation(_mutationIndex);
             }
         }
         
@@ -1643,7 +1648,7 @@ namespace Sporae.UI.UIToolkit.HUD
             bool hasLed = false;
             
             // Verifica LED attivi (se DayCycleController disponibile)
-            var dayCycleController = UnityEngine.Object.FindObjectOfType<DayCycleController>();
+            var dayCycleController = _dayCycleController ?? ServiceContainer.Instance?.Get<DayCycleController>(suppressWarning: true);
             if (dayCycleController != null)
             {
                 // Usa reflection o metodo pubblico se disponibile (per ora semplificato

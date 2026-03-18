@@ -35,6 +35,7 @@ public class PotActions : MonoBehaviour
     private PotStateModel _potState;
     private DayCycleSystem _dayCycleSystem;
     private PhSystem _phSystem;
+    private readonly PotWateringProcessor _wateringProcessor = new();
     
     // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
     private bool _isPlantingInProgress = false;
@@ -311,6 +312,24 @@ public class PotActions : MonoBehaviour
     
     #region Action Validation Methods
 
+    private PotActionValidator CreateValidator()
+    {
+        return new PotActionValidator(new PotActionValidationContext
+        {
+            PotState = _potState,
+            PlayerInventory = _playerInventory,
+            GameManager = _gameManager,
+            DayCycleSystem = _dayCycleSystem,
+            IsAutomationContext = IsAutomationContext,
+            ActionsCost = GetActionsCost(),
+            CryCost = GetCryCost(),
+            MaxLightExposure = GetMaxLightExposure(),
+            IsPlayerInRange = IsPlayerInRange,
+            IsDead = IsDead,
+            HasPlayerSeed = IsPlayerHasSeed
+        });
+    }
+
     public bool IsPlayerHasSeed()
     {
         return _playerInventory.Items.Any(
@@ -323,25 +342,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanPlant()
     {
-        if (_potState == null) 
-            return false;
-        if (IsDead())
-            return false;
-        
-        bool
-            isEmpty = _potState.IsEmpty,
-            // Terminal/Automation: il seme viene consumato alla conferma della queue, quindi qui non dobbiamo
-            // richiedere che l'inventario contenga ancora un seme al momento dell'esecuzione ritardata.
-            hasSeed = IsAutomationContext || IsPlayerHasSeed(),
-            inRange = IsAutomationContext || IsPlayerInRange(),
-            hasResources = IsAutomationContext || CanConsumeResources(),
-            // Plant-day gating ha senso per l'interazione live; in automazione non deve bloccare la sequenza.
-            notWateredOnThisDay = IsAutomationContext || _potState.LastWateredDay != _dayCycleSystem.CurrentDay;
-        
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanPlant: Empty={isEmpty}, Seed={hasSeed}, Range={inRange}, Resources={hasResources}");
-        
-        return isEmpty && hasSeed && inRange && hasResources && notWateredOnThisDay;
+        return CreateValidator().CanPlant();
     }
 
     public bool CanUproot()
@@ -359,40 +360,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanWater()
     {
-        if (_potState == null) 
-            return false;
-        if (IsDead())
-            return false;
-        
-        // Precondizioni base: vaso ha pianta, player in range
-        bool 
-            hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange();
-        
-        if (!hasPlant || !inRange)
-        {
-            if (showDebugLogs)
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater: Plant={hasPlant}, Range={inRange} - BLOCKED");
-            return false;
-        }
-        
-        // BUG1 FIX: Se stiamo spegnendo (WateringSystemOn=true), non richiediamo azioni
-        // Se stiamo accendendo (WateringSystemOn=false), richiediamo azioni
-        if (_potState.WateringSystemOn)
-        {
-            // Spegnere: sempre permesso (non consuma azioni)
-            if (showDebugLogs)
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Turn OFF): Plant={hasPlant}, Range={inRange} - ALLOWED (no resources needed)");
-            return true;
-        }
-        else
-        {
-            // Accendere: richiede azioni
-            bool hasResources = CanConsumeResources();
-            if (showDebugLogs)
-                SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanWater (Turn ON): Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
-            return hasResources;
-        }
+        return CreateValidator().CanWater();
     }
     
     /// <summary>
@@ -400,23 +368,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanLight()
     {
-        if (_potState == null)
-            return false;
-        if (IsDead())
-            return false;
-        
-        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
-        // MODIFICA: LED può essere acceso anche subito dopo aver piantato (stadio Seed)
-        // NOTA: BLK-02.07 - Non verifica più lightNotMax (LED è toggle persistente, non incremento immediato)
-        bool
-            hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
-        
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanLight: Plant={hasPlant}, Range={inRange}, Resources={hasResources}, CurrentState={_potState.LedSystemState}, Stage={(PlantStage)_potState.Stage}");
-        
-        return hasPlant && inRange && hasResources;
+        return CreateValidator().CanLight();
     }
     
     /// <summary>
@@ -434,20 +386,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanApplyAdditive()
     {
-        if (_potState == null)
-            return false;
-        if (IsDead())
-            return false;
-        
-        bool
-            hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
-        
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanApplyAdditive: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
-        
-        return hasPlant && inRange && hasResources;
+        return CreateValidator().CanApplyAdditive();
     }
     
     /// <summary>
@@ -455,24 +394,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanHarvest()
     {
-        if (_potState == null)
-            return false;
-        if (IsDead())
-            return false;
-        
-        // Precondizioni: vaso ha pianta in HarvestReady, ci sono frutti disponibili, player in range (o automation), risorse sufficienti (o automation)
-        float amountFruitsValue = _potState?.AmountFruits ?? 0f;
-        int stageValue = _potState?.Stage ?? -1;
-        bool
-            isHarvestReady = _potState.Stage == (int)PlantStage.HarvestReady,
-            hasFruits = amountFruitsValue > 0f,
-            inRange = IsAutomationContext || IsPlayerInRange(),
-            hasResources = IsAutomationContext || CanConsumeResources();
-
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanHarvest: HarvestReady={isHarvestReady}, Fruits={hasFruits}, Range={inRange}, Resources={hasResources}, Automation={IsAutomationContext}");
-        
-        return isHarvestReady && hasFruits && inRange && hasResources;
+        return CreateValidator().CanHarvest();
     }
     
     /// <summary>
@@ -480,21 +402,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanFertilize()
     {
-        if (_potState == null)
-            return false;
-        if (IsDead())
-            return false;
-        
-        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
-        bool
-            hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
-        
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanFertilize: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
-        
-        return hasPlant && inRange && hasResources;
+        return CreateValidator().CanFertilize();
     }
     
     /// <summary>
@@ -502,21 +410,7 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool CanPruning()
     {
-        if (_potState == null)
-            return false;
-        if (IsDead())
-            return false;
-        
-        // Precondizioni: vaso ha pianta, player in range, risorse sufficienti
-        bool
-            hasPlant = _potState.HasPlantGrowing,
-            inRange = IsPlayerInRange(),
-            hasResources = CanConsumeResources();
-        
-        if (showDebugLogs)
-            SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] CanPruning: Plant={hasPlant}, Range={inRange}, Resources={hasResources}");
-        
-        return hasPlant && inRange && hasResources;
+        return CreateValidator().CanPruning();
     }
     
     /// <summary>
@@ -880,40 +774,7 @@ public class PotActions : MonoBehaviour
             int actionsAfter = _gameManager?.ActionsLeft ?? 0;
             SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoWater - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter}), TurningOn: {isTurningOn}");
             
-            // Toggle del sistema irrigazione
-            _potState.WateringSystemOn = !_potState.WateringSystemOn;
-            
-            // Aggiorna contatori in base al nuovo stato
-            if (_potState.WateringSystemOn)
-            {
-                // Sistema attivato: incrementa contatore giorni ON
-                // (verrà incrementato anche a fine giornata se rimane ON)
-            }
-            else
-            {
-                // Sistema disattivato: reset contatori
-                _potState.DaysWateringSystemOn = 0;
-                _potState.WateringRawWaterAccumulator = 0f;
-            }
-
-            var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
-            if (dayActivityLog != null)
-                dayActivityLog.RecordWateringToggle(potSlot.PotId, _potState.WateringSystemOn);
-            var diaryStats = ServiceContainer.Instance.Get<DiaryStatistics>(suppressWarning: true);
-            if (diaryStats != null && _potState.WateringSystemOn)
-                diaryStats.PlantsWatered++;
-                
-            // Notifica il cambio stato
-            PotEvents.EmitAction(PotEvents.PotActionType.Water, potSlot);
-            PotEvents.EmitChanged(potSlot);
-                
-            if (showDebugLogs)
-            {
-                string stateMsg = _potState.WateringSystemOn ? "ON" : "OFF";
-                SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-002][{potSlot.PotId}] Watering System Toggle: {stateMsg} (consumo risorse a fine giornata)");
-            }
-            
-            return true;
+            return _wateringProcessor.ApplyToggle(_potState, potSlot, showDebugLogs);
         }
         finally
         {
@@ -1770,31 +1631,17 @@ public class PotActions : MonoBehaviour
     
     private string GetPlantFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.IsEmpty) return "Vaso non vuoto";
-        if (!_playerInventory.Has(Items.Seed001)) return "Nessun seme disponibile";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetPlantFailureReason();
     }
     
     private string GetWaterFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetWaterFailureReason();
     }
     
     private string GetLightFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (_potState.IsLightExposureMax(GetMaxLightExposure())) return "Luce al massimo";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetLightFailureReason();
     }
     
     private string GetSprayAntifungalFailureReason()
@@ -1805,56 +1652,22 @@ public class PotActions : MonoBehaviour
 
     private string GetApplyAdditiveFailureReason(string additiveTypeId)
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
-
-        if (_playerInventory != null && !string.IsNullOrEmpty(additiveTypeId))
-        {
-            // Legacy mapping: se richiesto basic ma c'è STR-004, lo gestisce il wrapper.
-            if (additiveTypeId == Items.AdditiveBasic && !_playerInventory.Has(Items.AdditiveBasic, 1) && _playerInventory.Has(Items.SprayAntifungal, 1))
-                return "Azione non permessa";
-
-            if (!_playerInventory.Has(additiveTypeId, 1))
-                return "Additivo non disponibile";
-        }
-
-        return "Azione non permessa";
+        return CreateValidator().GetApplyAdditiveFailureReason(additiveTypeId);
     }
     
     private string GetHarvestFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (_potState.Stage != (int)PlantStage.HarvestReady) 
-        {
-            return "Pianta non in HarvestReady";
-        }
-        if (_potState.AmountFruits <= 0f) 
-        {
-            return "Nessun frutto disponibile";
-        }
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetHarvestFailureReason();
     }
     
     private string GetFertilizeFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetFertilizeFailureReason();
     }
     
     private string GetPruningFailureReason()
     {
-        if (_potState == null) return "Stato vaso non valido";
-        if (!_potState.HasPlantGrowing) return "Vaso vuoto";
-        if (!IsPlayerInRange()) return "Troppo lontano";
-        if (!CanConsumeResources()) return "Azioni o CRY insufficienti";
-        return "Azione non permessa";
+        return CreateValidator().GetPruningFailureReason();
     }
     
     #endregion

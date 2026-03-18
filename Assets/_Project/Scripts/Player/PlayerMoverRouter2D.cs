@@ -1,4 +1,5 @@
 using UnityEngine;
+using _Project.Sporae.Core;
 
 namespace _Project.Player
 {
@@ -14,11 +15,21 @@ namespace _Project.Player
 
         private void Awake()
         {
+            RegisterInServiceContainer();
+
             if (perspectiveMover == null)
                 perspectiveMover = GetComponent<PlayerPerspectiveMover2D>();
 
             if (clickMover == null)
                 clickMover = GetComponent<PlayerClickMover2D>();
+        }
+
+        private void RegisterInServiceContainer()
+        {
+            if (ServiceContainer.Instance == null)
+                return;
+
+            ServiceContainer.Instance.Register(this);
         }
 
         private void OnEnable()

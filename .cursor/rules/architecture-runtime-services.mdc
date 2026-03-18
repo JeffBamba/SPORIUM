@@ -1,0 +1,14 @@
+---
+description: Runtime architecture standards for services, registries, and safe phased refactors
+alwaysApply: true
+---
+
+# Runtime Architecture
+
+- Do not introduce new `FindObjectOfType` or `FindObjectsOfType` in runtime gameplay code unless it is a temporary migration fallback and explicitly documented.
+- Resolve global gameplay/runtime services through `ServiceContainer`.
+- Resolve scene-specific references through serialized fields or controlled late binding, not ad-hoc scene scans.
+- For dynamic collections of scene objects like pots, terminals, or controllers, prefer a registry service over repeated scene-wide discovery.
+- Keep refactors incremental: stabilize dependencies first, then optimize lookups, then split large classes.
+- Preserve public APIs when refactoring critical systems. `PotActions` should remain the facade for pot commands, and `DayCycleController` should remain the orchestrator for daily flow.
+- Remove temporary fallbacks only after the new service/registry path is verified in scene.

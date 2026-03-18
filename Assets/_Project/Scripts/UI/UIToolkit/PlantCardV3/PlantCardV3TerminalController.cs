@@ -224,6 +224,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private DayCycleSystem _dayCycleSystem;
         private PhSystem _phSystem;
         private PotSystemConfig _potSystemConfig;
+        private DomePotRegistry _potRegistry;
 
         private SelectionContext _selection;
 
@@ -286,8 +287,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private bool _wasPlayerMoverSuspended;
         private PlayerPerspectiveMover2D _playerPerspectiveMover;
         private PlayerMoverRouter2D _playerMoverRouter;
+        private Sporae.Dome.PotAutomation.PotAutomationRunner _automationRunner;
         private bool _wasPerspectiveMoverEnabled;
         private bool _wasRouterEnabled;
+        private bool _waitingForRuntimeServices;
 
         // Focus guard: make terminal always "type-ready" without mouse clicks.
         // Keeps blast radius minimal by only acting while terminal is visible.
@@ -815,14 +818,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void Start()
         {
-            _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
-            if (_gameManager == null)
-                _gameManager = FindObjectOfType<GameManager>();
-
+            ResolveRuntimeDependencies();
             _foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             _inventory = _gameManager != null ? _gameManager.PlayerInventory : null;
-            _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
-            _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
             _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
             if (_potSystemConfig == null)
             {
@@ -830,11 +828,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 if (allConfigs != null && allConfigs.Length > 0)
                     _potSystemConfig = allConfigs[0];
             }
-
-            // Cache player mover for point&click suspension while terminal is open
-            _playerMover = FindObjectOfType<PlayerClickMover2D>();
-            _playerPerspectiveMover = FindObjectOfType<PlayerPerspectiveMover2D>();
-            _playerMoverRouter = FindObjectOfType<PlayerMoverRouter2D>();
+            SubscribeToRuntimeServicesIfNeeded();
 
             if (_isVisible)
             {
@@ -845,6 +839,107 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Safety: se siamo nella stessa Canvas della HUD, forza PlantCardV3 dopo TopBar/BottomNav nella gerarchia.
             TryMoveAfterHud();
+        }
+
+        private void ResolveRuntimeDependencies()
+        {
+            _gameManager = _gameManager ?? ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            _dayCycleSystem = _dayCycleSystem ?? ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+            _phSystem = _phSystem ?? ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            _potRegistry = _potRegistry ?? ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            _playerMover = _playerMover ?? ServiceContainer.Instance?.Get<PlayerClickMover2D>(suppressWarning: true);
+            _playerPerspectiveMover = _playerPerspectiveMover ?? ServiceContainer.Instance?.Get<PlayerPerspectiveMover2D>(suppressWarning: true);
+            _playerMoverRouter = _playerMoverRouter ?? ServiceContainer.Instance?.Get<PlayerMoverRouter2D>(suppressWarning: true);
+            _automationRunner = _automationRunner ?? ServiceContainer.Instance?.Get<Sporae.Dome.PotAutomation.PotAutomationRunner>(suppressWarning: true);
+
+            // Fallback temporanei per scene non ancora migrate completamente.
+            _gameManager = _gameManager ?? FindObjectOfType<GameManager>();
+            _playerMover = _playerMover ?? FindObjectOfType<PlayerClickMover2D>();
+            _playerPerspectiveMover = _playerPerspectiveMover ?? FindObjectOfType<PlayerPerspectiveMover2D>();
+            _playerMoverRouter = _playerMoverRouter ?? FindObjectOfType<PlayerMoverRouter2D>();
+            _automationRunner = _automationRunner ?? FindObjectOfType<Sporae.Dome.PotAutomation.PotAutomationRunner>();
+
+            if (_gameManager != null && _inventory == null)
+                _inventory = _gameManager.PlayerInventory;
+        }
+
+        private void SubscribeToRuntimeServicesIfNeeded()
+        {
+            if (ServiceContainer.Instance == null || _waitingForRuntimeServices)
+                return;
+
+            bool needsLateBinding = _gameManager == null
+                || _dayCycleSystem == null
+                || _phSystem == null
+                || _potRegistry == null
+                || _playerMover == null
+                || _playerPerspectiveMover == null
+                || _playerMoverRouter == null
+                || _automationRunner == null;
+
+            if (!needsLateBinding)
+                return;
+
+            ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+            _waitingForRuntimeServices = true;
+        }
+
+        private void OnServiceRegistered(object service)
+        {
+            if (service is GameManager gm && _gameManager == null)
+            {
+                _gameManager = gm;
+                _inventory = gm.PlayerInventory;
+            }
+            else if (service is DayCycleSystem dayCycle && _dayCycleSystem == null)
+            {
+                _dayCycleSystem = dayCycle;
+            }
+            else if (service is PhSystem phSystem && _phSystem == null)
+            {
+                _phSystem = phSystem;
+            }
+            else if (service is DomePotRegistry potRegistry && _potRegistry == null)
+            {
+                _potRegistry = potRegistry;
+            }
+            else if (service is PlayerClickMover2D playerMover && _playerMover == null)
+            {
+                _playerMover = playerMover;
+            }
+            else if (service is PlayerPerspectiveMover2D perspectiveMover && _playerPerspectiveMover == null)
+            {
+                _playerPerspectiveMover = perspectiveMover;
+            }
+            else if (service is PlayerMoverRouter2D moverRouter && _playerMoverRouter == null)
+            {
+                _playerMoverRouter = moverRouter;
+            }
+            else if (service is Sporae.Dome.PotAutomation.PotAutomationRunner automationRunner && _automationRunner == null)
+            {
+                _automationRunner = automationRunner;
+            }
+
+            if (_gameManager != null
+                && _dayCycleSystem != null
+                && _phSystem != null
+                && _potRegistry != null
+                && _playerMover != null
+                && _playerPerspectiveMover != null
+                && _playerMoverRouter != null
+                && _automationRunner != null)
+            {
+                UnsubscribeFromRuntimeServices();
+            }
+        }
+
+        private void UnsubscribeFromRuntimeServices()
+        {
+            if (!_waitingForRuntimeServices || ServiceContainer.Instance == null)
+                return;
+
+            ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
+            _waitingForRuntimeServices = false;
         }
 
         private void InitializeCustomScrollbars()
@@ -1219,6 +1314,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _outerGlowGenerator?.Dispose();
             _outerGlowGenerator = null;
             _outerGlowMaterialRuntime = null;
+            UnsubscribeFromRuntimeServices();
         }
 
         public void Open()
@@ -5307,8 +5403,8 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 bool hasPlantNow = state != null && state.HasPlant;
                 bool hasPlantQueued = _queue.Exists(a => a != null && a.Type == QueuedActionType.Plant && string.Equals(a.PotId, potId, StringComparison.OrdinalIgnoreCase));
-                var runner = FindObjectOfType<Sporae.Dome.PotAutomation.PotAutomationRunner>();
-                bool hasPlantPending = runner != null && runner.HasPlantPendingOrRunning(potId);
+                ResolveRuntimeDependencies();
+                bool hasPlantPending = _automationRunner != null && _automationRunner.HasPlantPendingOrRunning(potId);
 
                 if (!hasPlantNow && !hasPlantQueued && !hasPlantPending)
                 {
@@ -5826,7 +5922,8 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         private void TryStartAutomationRunner()
         {
             // Se c'è un runner in scena, passiamo la coda e confermiamo spendendo AP.
-            var runner = FindObjectOfType<Sporae.Dome.PotAutomation.PotAutomationRunner>();
+            ResolveRuntimeDependencies();
+            var runner = _automationRunner;
             if (runner == null)
             {
                 // Fallback: niente runner, quindi discard per non creare incoerenze (AP non spesi).
@@ -6062,7 +6159,10 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
         private static System.Collections.Generic.List<PotSlot> FindPots()
         {
-            var pots = new System.Collections.Generic.List<PotSlot>(FindObjectsOfType<PotSlot>());
+            var registry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            var pots = registry != null
+                ? registry.GetPotsSnapshot()
+                : new System.Collections.Generic.List<PotSlot>(FindObjectsOfType<PotSlot>());
             pots.Sort((a, b) => string.Compare(a != null ? a.PotId : "", b != null ? b.PotId : "", StringComparison.Ordinal));
             return pots;
         }
@@ -6070,6 +6170,14 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         private static PotSlot FindPotById(string potId)
         {
             if (string.IsNullOrEmpty(potId)) return null;
+            var registry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            if (registry != null)
+            {
+                var registryPot = registry.FindPotById(potId);
+                if (registryPot != null)
+                    return registryPot;
+            }
+
             var all = FindObjectsOfType<PotSlot>();
             foreach (var p in all)
             {

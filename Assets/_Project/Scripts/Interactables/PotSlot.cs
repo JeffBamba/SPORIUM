@@ -4,6 +4,7 @@ using System;
 
 using _Project;
 using _Project.Sporae.Core;
+using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -53,16 +54,16 @@ public class PotSlot : MonoBehaviour
     
     private void Awake()
     {
-        _gameManager = FindObjectOfType<GameManager>();
+        _gameManager = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true) ?? FindObjectOfType<GameManager>();
         _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         _diaryStatistics = ServiceContainer.Instance.Get<DiaryStatistics>();
-        
-        _inventory = _gameManager.PlayerInventory;
-        
-        _uiNotification = FindObjectOfType<UINotification>();
+        _inventory = _gameManager != null ? _gameManager.PlayerInventory : null;
+        _uiNotification = ServiceContainer.Instance?.Get<UINotification>(suppressWarning: true) ?? FindObjectOfType<UINotification>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _interactable = GetComponent<Interactable>();
         _potActions = GetComponent<PotActions>();
+
+        ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true)?.RegisterPot(this);
     }
     
     private void Start()
@@ -94,6 +95,8 @@ public class PotSlot : MonoBehaviour
         PotEvents.OnPotStateChanged -= OnPotStateChanged;
         PotEvents.OnPotAction -= OnPotAction;
         PotEvents.OnPlantStageChanged -= OnPlantStageChanged;
+
+        ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true)?.UnregisterPot(this);
     }
 
     private void HandleInteract()
