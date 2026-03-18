@@ -203,6 +203,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private readonly System.Collections.Generic.List<QueuedAction> _queue = new();
         private InputState _inputState = InputState.Idle;
         private List<PotSlot> _potsForStatusChoice = new List<PotSlot>();
+        private List<string> _statusLinesCollector;
+        private List<string> _pendingStatusSecondHalf;
+        private List<string> _pendingStatusResearchNotes;
+        private Coroutine _statusSecondHalfRoutine;
+        private Coroutine _environmentalPhRefreshRoutine;
+        private const int StatusSecondHalfChunkSize = 3;
+        private const float StatusSecondHalfChunkDelay = 0.22f;
         private QueuedAction _pendingConfirmAction;
         private bool _pendingPlantDrip;
         private int _pendingPlantLed; // 0 = none, 1 = red, 2 = blue
@@ -235,6 +242,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private int _selectedPotIndex = 0;
         private List<PotSlot> _hudPots = new List<PotSlot>(4);
         private bool _liveDotPulseLow;
+
+        /// <summary>Incrementare quando si cambia layout/frame in UI Builder per usare sempre posizioni UXML e non quelle salvate.</summary>
+        private const int TerminalLayoutVersion = 2;
+        private const string PrefsKeyTerminalLayoutVersion = "Sporium_TerminalPot_LayoutVersion";
 
         private const string PrefsKeyZona2Left = "Sporium_TerminalPot_Zona2_Left";
         private const string PrefsKeyZona2Top = "Sporium_TerminalPot_Zona2_Top";
@@ -720,17 +731,19 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _inputHintOverlay = _promptRoot.Q<Label>("pcv3-input-hint");
             if (_inputHintOverlay == null)
             {
-                // NOTE: the ">" is already rendered by pcv3-prompt-prefix in UXML. Avoid double ">".
-                _inputHintOverlay = new Label("Digita START per l'elenco comandi...");
+                // NOTE: the ">" is already rendered by pcv3-prompt-prefix in UXML. Spacing + START in colore comando.
+                const string cmdColor = "#5DB6E3";
+                _inputHintOverlay = new Label("  Digita <color=" + cmdColor + ">START</color> per l'elenco comandi...");
                 _inputHintOverlay.name = "pcv3-input-hint";
                 _inputHintOverlay.pickingMode = PickingMode.Ignore;
+                _inputHintOverlay.enableRichText = true;
                 _promptRoot.Add(_inputHintOverlay);
             }
 
             // Style it to match the mock (green-ish, subtle) and keep it in the prompt row.
             _inputHintOverlay.style.position = Position.Absolute;
-            // prefix label width is 16px; add a small gap so text doesn't touch the ">"
-            _inputHintOverlay.style.left = 18;
+            // prefix ">" + margine: distanziare bene il testo dal carattere >
+            _inputHintOverlay.style.left = 24;
             _inputHintOverlay.style.top = 0;
             _inputHintOverlay.style.bottom = 0;
             _inputHintOverlay.style.unityTextAlign = TextAnchor.MiddleLeft;
@@ -1246,6 +1259,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 ShowLoadingSpinner(false);
                 if (_loadingCoroutine != null) { StopCoroutine(_loadingCoroutine); _loadingCoroutine = null; }
                 StopTypewriter();
+                StopEnvironmentalPhRefresh();
             }
 
             // Visual requirement: when terminal is open, everything behind must be black / hidden.
@@ -1601,15 +1615,28 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_apLabel != null)
             {
-                int left = _gameManager != null ? _gameManager.ActionsLeft : 0;
-                int max = _gameManager != null && _gameManager.ActionSystem != null ? _gameManager.ActionSystem.MaxActions : 0;
-                _apLabel.text = $"AZIONI: {left}/{max}";
+                const int maxActionsDisplay = 4;
+                int left = _gameManager != null ? Math.Min(_gameManager.ActionsLeft, maxActionsDisplay) : 0;
+                _apLabel.text = $"AZIONI: {left}/{maxActionsDisplay}";
             }
 
             if (_queuedLabel != null)
             {
-                _queuedLabel.text = $"IN CODA: {_queue.Count}";
+                int effectiveCount = GetEffectiveQueueActionCount();
+                _queuedLabel.text = $"IN CODA: {effectiveCount}";
             }
+        }
+
+        /// <summary>Numero di azioni "che costano" in coda: non conta WATERING/LED inclusi nel flow PLANT (ApCost 0).</summary>
+        private int GetEffectiveQueueActionCount()
+        {
+            int n = 0;
+            for (int i = 0; i < _queue.Count; i++)
+            {
+                var a = _queue[i];
+                if (a != null && a.ApCost > 0) n++;
+            }
+            return n;
         }
 
         private void RefreshSidebar()
@@ -1651,28 +1678,56 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             UpdateHudSlotVisuals();
             RefreshHudFromSelectedPot();
 
-            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-hud-preview-group"), PrefsKeyZona2Left, PrefsKeyZona2Top);
-            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-1"), PrefsKeyZona3Block1Left, PrefsKeyZona3Block1Top);
-            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-2"), PrefsKeyZona3Block2Left, PrefsKeyZona3Block2Top);
+            // Se il layout è stato aggiornato in UI Builder (frame/posizioni), usa sempre UXML e ignora posizioni salvate
+            bool useSavedPositions = EnsureTerminalLayoutVersion();
 
-            SetupDraggableGroup(_pcv3Left, PrefsKeyBodyLeftLeft, PrefsKeyBodyLeftTop, 0f, 0f);
-            SetupDraggableGroup(_pcv3Center, PrefsKeyBodyCenterLeft, PrefsKeyBodyCenterTop, 230f, 0f);
-            SetupDraggableGroup(_pcv3Right, PrefsKeyBodyRightLeft, PrefsKeyBodyRightTop, 560f, 0f);
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-hud-preview-group"), PrefsKeyZona2Left, PrefsKeyZona2Top, useSavedPositions);
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-1"), PrefsKeyZona3Block1Left, PrefsKeyZona3Block1Top, useSavedPositions);
+            SetupDraggableGroup(_root.Q<VisualElement>("pcv3-vital-stats-block-2"), PrefsKeyZona3Block2Left, PrefsKeyZona3Block2Top, useSavedPositions);
+
+            SetupDraggableGroup(_pcv3Left, PrefsKeyBodyLeftLeft, PrefsKeyBodyLeftTop, useSavedPositions, 0f, 0f);
+            SetupDraggableGroup(_pcv3Center, PrefsKeyBodyCenterLeft, PrefsKeyBodyCenterTop, useSavedPositions, 230f, 0f);
+            SetupDraggableGroup(_pcv3Right, PrefsKeyBodyRightLeft, PrefsKeyBodyRightTop, useSavedPositions, 560f, 0f);
         }
 
-        private void SetupDraggableGroup(VisualElement group, string prefsKeyLeft, string prefsKeyTop, float defaultLeft = 0f, float defaultTop = 0f)
+        /// <summary>Se la versione salvata è minore di TerminalLayoutVersion, cancella le posizioni salvate così in Play si usa il layout UXML/UI Builder. Ritorna true se si possono applicare le posizioni salvate.</summary>
+        private bool EnsureTerminalLayoutVersion()
+        {
+            int saved = PlayerPrefs.GetInt(PrefsKeyTerminalLayoutVersion, 0);
+            if (saved >= TerminalLayoutVersion)
+                return true;
+            PlayerPrefs.SetInt(PrefsKeyTerminalLayoutVersion, TerminalLayoutVersion);
+            PlayerPrefs.DeleteKey(PrefsKeyZona2Left);
+            PlayerPrefs.DeleteKey(PrefsKeyZona2Top);
+            PlayerPrefs.DeleteKey(PrefsKeyZona3Block1Left);
+            PlayerPrefs.DeleteKey(PrefsKeyZona3Block1Top);
+            PlayerPrefs.DeleteKey(PrefsKeyZona3Block2Left);
+            PlayerPrefs.DeleteKey(PrefsKeyZona3Block2Top);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyLeftLeft);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyLeftTop);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyCenterLeft);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyCenterTop);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyRightLeft);
+            PlayerPrefs.DeleteKey(PrefsKeyBodyRightTop);
+            PlayerPrefs.Save();
+            return false;
+        }
+
+        private void SetupDraggableGroup(VisualElement group, string prefsKeyLeft, string prefsKeyTop, bool applySavedPositions, float defaultLeft = 0f, float defaultTop = 0f)
         {
             if (group == null) return;
-            float savedLeft = PlayerPrefs.GetFloat(prefsKeyLeft, float.MaxValue);
-            float savedTop = PlayerPrefs.GetFloat(prefsKeyTop, float.MaxValue);
-
-            if (savedLeft != float.MaxValue && savedTop != float.MaxValue)
+            if (applySavedPositions)
             {
-                group.style.position = Position.Absolute;
-                group.style.left = savedLeft;
-                group.style.top = savedTop;
-                group.style.right = StyleKeyword.Auto;
-                group.style.bottom = StyleKeyword.Auto;
+                float savedLeft = PlayerPrefs.GetFloat(prefsKeyLeft, float.MaxValue);
+                float savedTop = PlayerPrefs.GetFloat(prefsKeyTop, float.MaxValue);
+                if (savedLeft != float.MaxValue && savedTop != float.MaxValue)
+                {
+                    group.style.position = Position.Absolute;
+                    group.style.left = savedLeft;
+                    group.style.top = savedTop;
+                    group.style.right = StyleKeyword.Auto;
+                    group.style.bottom = StyleKeyword.Auto;
+                }
             }
 
             group.RegisterCallback<MouseDownEvent>(evt =>
@@ -1752,18 +1807,45 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void UpdateHudSlotVisuals()
         {
+            const string classStandard = "pcv3-hud-pot-slot-standard";
+            const string classPure = "pcv3-hud-pot-slot-pure";
+            const string classEvil = "pcv3-hud-pot-slot-evil";
+
             for (int i = 0; i < _hudPotSlots.Count; i++)
             {
                 var slot = _hudPotSlots[i];
+                var label = slot.Q<Label>(null, "pcv3-hud-pot-slot-label");
                 bool empty = IsPotSlotEmpty(i);
+                string potId = (i < _hudPots.Count) ? _hudPots[i].PotId : $"POT-{i + 1:D3}";
+                if (label != null)
+                    label.text = " " + potId;
+
                 if (empty)
                 {
                     slot.AddToClassList("pcv3-hud-pot-slot-empty");
                     slot.RemoveFromClassList("pcv3-hud-pot-slot-selected");
+                    slot.RemoveFromClassList(classStandard);
+                    slot.RemoveFromClassList(classPure);
+                    slot.RemoveFromClassList(classEvil);
                 }
                 else
                 {
                     slot.RemoveFromClassList("pcv3-hud-pot-slot-empty");
+                    slot.RemoveFromClassList(classStandard);
+                    slot.RemoveFromClassList(classPure);
+                    slot.RemoveFromClassList(classEvil);
+                    var state = _hudPots[i].PotActions?.PotState;
+                    var plantData = state?.GetPlantData();
+                    if (plantData != null)
+                    {
+                        switch (plantData.Family)
+                        {
+                            case PlantFamily.Standard: slot.AddToClassList(classStandard); break;
+                            case PlantFamily.Pure: slot.AddToClassList(classPure); break;
+                            case PlantFamily.Evil: slot.AddToClassList(classEvil); break;
+                            default: slot.AddToClassList(classStandard); break;
+                        }
+                    }
                     if (i == _selectedPotIndex)
                         slot.AddToClassList("pcv3-hud-pot-slot-selected");
                     else
@@ -1933,9 +2015,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             string hydrationText = !empty && state != null && _potSystemConfig != null
                 ? $"{PlantCardCalculators.CalculateHydrationPercent(state.Hydration, _potSystemConfig.MaxHydration)}%"
                 : "---";
-            string lightStressText = !empty && state != null && _potSystemConfig != null
-                ? $"{PlantCardCalculators.CalculateLightStressPercent(state.LightExposure, _potSystemConfig.MaxLightExposure)}%"
-                : "---";
+            // Stress Luce: stesso calcolo di Status (GetConsecutiveLedDays / MaxDaysForFullStress)
+            int lightStressPercent = 0;
+            if (!empty && state != null && _potSystemConfig != null)
+            {
+                int consecutiveDays = state.GetConsecutiveLedDays();
+                int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+                lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
+            }
+            string lightStressText = !empty && state != null && _potSystemConfig != null ? $"{lightStressPercent}%" : "---";
 
             // Rischio Muffa (0-3): Nessuno / Lieve / Severo / Critico — quando POT vuoto mostrare ---
             string moldText = "---";
@@ -2138,9 +2226,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 string hydrationText = state != null && _potSystemConfig != null
                     ? $"{PlantCardCalculators.CalculateHydrationPercent(state.Hydration, _potSystemConfig.MaxHydration)}%"
                     : "---";
-                string lightStressText = state != null && _potSystemConfig != null
-                    ? $"{PlantCardCalculators.CalculateLightStressPercent(state.LightExposure, _potSystemConfig.MaxLightExposure)}%"
-                    : "---";
+                // Stress Luce: stesso calcolo di Status (GetConsecutiveLedDays / MaxDaysForFullStress)
+                int lightStressPct = 0;
+                if (state != null && _potSystemConfig != null)
+                {
+                    int consecutiveDays = state.GetConsecutiveLedDays();
+                    int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+                    lightStressPct = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
+                }
+                string lightStressText = state != null && _potSystemConfig != null ? $"{lightStressPct}%" : "---";
 
                 // Trova le stat rows esistenti e popola i valori
                 var statRows = statsContainer.Query<VisualElement>(className: "pcv3-potcard-stat-row").ToList();
@@ -2418,7 +2512,102 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(200);
                 _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(350);
                 RequestRefocusSoon();
+                if (_pendingStatusSecondHalf != null && _pendingStatusSecondHalf.Count > 0 && _statusSecondHalfRoutine == null)
+                    _statusSecondHalfRoutine = StartCoroutine(StatusSecondHalfRoutine());
             }
+        }
+
+        private IEnumerator StatusSecondHalfRoutine()
+        {
+            var list = _pendingStatusSecondHalf;
+            if (list == null || list.Count == 0)
+            {
+                _pendingStatusSecondHalf = null;
+                _statusSecondHalfRoutine = null;
+                AppendPendingStatusResearchNotes();
+                yield break;
+            }
+            while (list.Count > 0)
+            {
+                int take = Mathf.Min(StatusSecondHalfChunkSize, list.Count);
+                for (int i = 0; i < take; i++)
+                {
+                    string line = list[0];
+                    list.RemoveAt(0);
+                    if (!string.IsNullOrEmpty(line))
+                        _consoleBuffer.AppendLine(ParseColors(line));
+                }
+                FlushConsoleImmediate();
+                AutoScrollConsole();
+                yield return new WaitForSeconds(StatusSecondHalfChunkDelay);
+            }
+            _pendingStatusSecondHalf = null;
+            _statusSecondHalfRoutine = null;
+            FlushConsoleImmediate();
+            AutoScrollConsole();
+            AppendPendingStatusResearchNotes();
+            _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(50);
+            _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(150);
+        }
+
+        private void StartEnvironmentalPhRefresh()
+        {
+            StopEnvironmentalPhRefresh();
+            if (_phSystem == null || _consoleText == null) return;
+            _environmentalPhRefreshRoutine = StartCoroutine(EnvironmentalPhRefreshRoutine());
+        }
+
+        private void StopEnvironmentalPhRefresh()
+        {
+            if (_environmentalPhRefreshRoutine != null)
+            {
+                StopCoroutine(_environmentalPhRefreshRoutine);
+                _environmentalPhRefreshRoutine = null;
+            }
+        }
+
+        /// <summary>Aggiorna la riga pH DOME in console con lo stesso valore oscillante di TopBar/tooltip (_phSystem.CurrentPh).</summary>
+        private IEnumerator EnvironmentalPhRefreshRoutine()
+        {
+            const float interval = 0.4f;
+            var wait = new WaitForSeconds(interval);
+            while (_consoleText != null && _phSystem != null)
+            {
+                yield return wait;
+                if (_consoleText == null || _phSystem == null) break;
+                string current = _consoleText.text;
+                if (string.IsNullOrEmpty(current) || current.IndexOf("pH DOME", StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    _environmentalPhRefreshRoutine = null;
+                    yield break;
+                }
+                float phValue = _phSystem.CurrentPh;
+                string phStr = phValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+                string phBand = GetPhBandNameForDisplay(phValue);
+                string phColorHex = GetPhColorHexForDriftValue(phValue);
+                string phLineRaw = "§DATA§" + StatusDottedLabelOnly("pH DOME") + "§END§<color=" + phColorHex + ">" + phStr + " — " + phBand + "</color>";
+                string newLine = ParseColors(phLineRaw);
+                string[] lines = current.Split(new[] { "\n", "\r\n" }, StringSplitOptions.None);
+                int idx = -1;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (lines[i].IndexOf("pH DOME", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx >= 0)
+                {
+                    lines[idx] = newLine;
+                    string newText = string.Join("\n", lines);
+                    _consoleText.text = newText;
+                    // Mantieni il buffer in sync così un eventuale Flush non sovrascrive il valore
+                    _consoleBuffer.Clear();
+                    _consoleBuffer.Append(newText);
+                }
+            }
+            _environmentalPhRefreshRoutine = null;
         }
 
         private bool IsLongOutputQueued()
@@ -2567,6 +2756,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void AppendRawLine(string line)
         {
+            if (_statusLinesCollector != null)
+            {
+                _statusLinesCollector.Add(line);
+                return;
+            }
             string parsed = ParseColors(line);
             if (_typewriterActive)
                 _typewriterQueue.Enqueue(parsed);
@@ -2950,7 +3144,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
 
-            // Light Stress: range ideale 20%-70% (0-20% non beneficia, 70-100% rischio burn)
+            // Light Stress: range ideale 20%-80% (0-20% non beneficia, 80-100% rischio burn)
             const int LightStressOkMin = 20;
             const int LightStressOkMax = 70;
             int consecutiveDays = state.GetConsecutiveLedDays();
@@ -3031,7 +3225,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             sb.AppendLine($"  <color={ColorSectionChild}>LUCE ACCESA:</color> {luceAccesaVal}");
             string stressStatus = lightOk ? $"<color={ColorOk}>OK</color>" : $"<color={ColorBad}>NON OK</color>";
             sb.AppendLine($"  <color={ColorSectionChild}>Stress da luce:</color> {stressStatus}");
-            sb.AppendLine($"  <color={ColorSectionChild}>Range ideale: 20% - 70% (sotto 20% la pianta non beneficia; sopra 70% rischio burn)</color>");
+            sb.AppendLine($"  <color={ColorSectionChild}>Range ideale: 20% - 80% (sotto 20% la pianta non beneficia; sopra 80% rischio burn)</color>");
             string lightValColor = lightOk ? ColorOk : (lightStressPercent < LightStressOkMin || lightStressPercent > LightStressOkMax ? ColorBad : ColorWarn);
             sb.AppendLine($"  <color={ColorSectionChild}>Attuale:</color> <color={lightValColor}>{lightStressPercent}%</color>");
             sb.AppendLine();
@@ -3115,7 +3309,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
 
             const int LightStressOkMin = 20;
-            const int LightStressOkMax = 70;
+            const int LightStressOkMax = 80;
             int maxHydration = _potSystemConfig.MaxHydration;
             int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             int consecutiveDays = state.GetConsecutiveLedDays();
@@ -3144,19 +3338,19 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             else if (!waterOk && waterOn)
                 lines.Add("§INFO§Acqua fuori range ma impianto già acceso. Aspetta un paio di giorni: le gocce fanno il loro lavoro. Quando vogliono loro.§END§");
 
-            // Luce / LED: consigli in base a LED acceso e stress 20%-70%
-            if (!ledOn)
+            // Luce / LED: consigli in base a LED e stress 20%-80%. Accendi solo se !ledOn && !lightOk; se suggerisci spegni, mostra comando.
+            if (!ledOn && !lightOk)
             {
                 var compat = LedCompatibilityHelper.GetCompatibleLedTypes(plantData.Family);
-                string cmdLed = compat == LedCompatibility.BlueOnly ? "§CMD§LED BLUE§END§" : (compat == LedCompatibility.RedOnly ? "§CMD§LED RED§END§" : "§CMD§LED BLUE§END§ o §CMD§LED RED§END§");
-                lines.Add($"§WARN§Luce spenta. Senza LED la pianta non passerà al prossimo stadio. Accendilo ({cmdLed} a seconda della famiglia).§END§");
+                string cmdLed = compat == LedCompatibility.BlueOnly ? "§CMD§LED BLUE " + state.PotId + "§END§" : (compat == LedCompatibility.RedOnly ? "§CMD§LED RED " + state.PotId + "§END§" : "§CMD§LED BLUE " + state.PotId + "§END§ o §CMD§LED RED " + state.PotId + "§END§");
+                lines.Add($"§WARN§Luce spenta e stress fuori range. Senza LED in range la pianta non passerà al prossimo stadio. Accendilo ({cmdLed} a seconda della famiglia).§END§");
             }
-            else if (!lightOk)
+            else if (ledOn && !lightOk)
             {
                 if (lightStressPercent < LightStressOkMin)
-                    lines.Add("§WARN§Stress da luce sotto il 20%: la pianta non beneficia ancora. Tieni il LED acceso ancora qualche giorno per entrare in range (20%-70%).§END§");
+                    lines.Add("§WARN§Stress da luce sotto il 20%: la pianta non beneficia ancora. Tieni il LED acceso ancora qualche giorno per entrare in range (20%-80%).§END§");
                 else if (lightStressPercent > LightStressOkMax)
-                    lines.Add("§WARN§Stress da luce sopra il 70%: rischio burn. Spegni il LED o aspetta senza tenerlo acceso troppo a lungo.§END§");
+                    lines.Add($"§WARN§Stress da luce sopra l'80%: rischio burn. Spegni il LED — comando §CMD§LED OFF {state.PotId}§END§ — o aspetta senza tenerlo acceso troppo a lungo.§END§");
             }
 
             if (!isSeedOrSprout && !stageReq.IsFertilizerInRange(state.FertilizerLevel))
@@ -3263,16 +3457,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _loadingSpinnerSchedule = null;
             }
 
+            // Rotellina disabilitata: non mostrare mai lo spinner, solo nascondere se era visibile
             if (show)
-            {
-                _loadingSpinnerAngle = 0f;
-                _loadingIndicator.AddToClassList("pcv3-loading-visible");
-                _loadingSpinnerSchedule = _loadingIndicator.schedule.Execute(UpdateLoadingSpinnerRotation).Every(80).Until(() => !_loadingIndicator.ClassListContains("pcv3-loading-visible"));
-            }
-            else
-            {
-                _loadingIndicator.RemoveFromClassList("pcv3-loading-visible");
-            }
+                return;
+            _loadingIndicator.RemoveFromClassList("pcv3-loading-visible");
         }
 
         private void UpdateLoadingSpinnerRotation()
@@ -4012,35 +4200,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             // ADVANCEMENT REQUIREMENTS (real data)
             AppendRawLine("REQUISITI AVANZAMENTO");
 
-            // Condition threshold for target
-            int requiredScore;
-            string conditionReqText;
-            bool conditionReqOk = true;
-            if (f.Trend == ForecastDirection.Up)
-            {
-                // Target is higher/equal
-                requiredScore = f.SoonInConditionName == "Rigogliosa" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
-                    : f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdSana
-                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
-                    : 0;
-                conditionReqOk = pot.ConditionScore >= requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condizione     {pot.ConditionScore}% | Richiesto: >={requiredScore}%";
-            }
-            else if (f.Trend == ForecastDirection.Down)
-            {
-                // Target is lower/equal: define threshold as "below next band start"
-                requiredScore = f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
-                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdSana
-                    : f.SoonInConditionName == "Critica" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
-                    : 100;
-                conditionReqOk = pot.ConditionScore < requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condizione     {pot.ConditionScore}% | Richiesto: <{requiredScore}%";
-            }
-            else
-            {
-                conditionReqText = $"✓ Condizione     {pot.ConditionScore}% | Richiesto: (stabile)";
-            }
-
+            // Condizione: avanzamento consentito se non bloccante (non critica/appassita). Il trend è solo informativo.
+            bool conditionReqOk = !f.BlockedByCondition;
+            string conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} Condizione     {pot.ConditionScore}% | Richiesto: non critica/appassita";
             AppendRawLine(conditionReqOk ? conditionReqText : $"§ERROR§{conditionReqText}§END§");
 
             // Hydration
@@ -4064,7 +4226,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
             }
             string luceAccesa = pot.LedSystemState == LedSystemState.Off ? "Nessuna" : (pot.LedSystemState == LedSystemState.Blue ? "Blu" : "Rosso");
-            string lightReq = "20-70%";
+            string lightReq = "20-80%";
             string lightLine = $"{(f.LedOk ? "✓" : "✗")} Luce accesa: {luceAccesa} | Stress da luce: {lightStressPercent}% (range {lightReq})";
             AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
 
@@ -4223,27 +4385,19 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             // Match DayCycleController advancement checks (read-only, conservative).
             result.HydrationOk = stageReq.IsHydrationInRange(hydrationPercent);
 
-            // LED OK: stress in range 20%-70% (sotto 20% non beneficia, sopra 70% burn). Se LED off, stress non in range = NON OK.
+            // LED OK: stress in range 20%-80% (sotto 20% non beneficia, sopra 80% burn). Con LED off conta se già in range.
             const int LightStressOkMin = 20;
-            const int LightStressOkMax = 70;
+            const int LightStressOkMax = 80;
             result.LedOk = false;
+            int consecutiveDaysLed = pot.GetConsecutiveLedDays();
+            int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
+            float stressPercentage = Mathf.Clamp01((float)consecutiveDaysLed / maxDaysForFullStress) * 100f;
+            bool stressInRange = stressPercentage >= LightStressOkMin && stressPercentage <= LightStressOkMax;
             if (pot.LedSystemState == LedSystemState.Off)
-            {
-                int consecutiveDays = pot.GetConsecutiveLedDays();
-                int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
-                float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-                result.LedOk = stressPercentage >= LightStressOkMin && stressPercentage <= LightStressOkMax;
-            }
+                result.LedOk = stressInRange;
             else
             {
-                result.LedOk = stageReq.IsLedRequirementMet(pot.LedSystemState);
-                if (result.LedOk)
-                {
-                    int consecutiveDays = pot.GetConsecutiveLedDays();
-                    int maxDaysForFullStress = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
-                    float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-                    result.LedOk = stressPercentage >= LightStressOkMin && stressPercentage <= LightStressOkMax;
-                }
+                result.LedOk = stageReq.IsLedRequirementMet(pot.LedSystemState) && stressInRange;
             }
 
             PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
@@ -4477,10 +4631,6 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
                 AppendRawLine($"{potId,-8} │ {status,-10} │ {plantName,-19} │ {stage,-12} │ {condition,-6} │ {hydDots,-4}");
             }
-            AppendRawLine("§DATA§▸ CONDIZIONI PER VASO§END§");
-            AppendRawLine("§INFO§Come leggere i dati:§END§ §TITLE§Luce accesa§END§: quale LED è acceso (Blu/Rosso) o §TITLE§Nessuna§END§ in rosso. §TITLE§Stress da luce§END§: range ideale 20%-70% (sotto 20% la pianta non beneficia, sopra 70% rischio burn). Acqua e Condizione come prima.");
-            AppendRawLine("§INFO§I requisiti§END§ (idratazione, stress luminoso, fertilizzante) si riferiscono allo §TITLE§stadio di crescita attuale§END§ della pianta.");
-            AppendRawLine("");
         }
 
         /// <summary>Approfondimento per un solo vaso: STATO CORRENTE, STAGE PROGRESSION, ADVANCEMENT REQUIREMENTS, CONSIGLIO.</summary>
@@ -4504,11 +4654,43 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             var consiglioLines = BuildConsiglioForPot(state, plantData);
             if (consiglioLines != null && consiglioLines.Count > 0)
             {
+                AppendRawLine("");
+                AppendRawLine("");
+                AppendRawLine("");
+                AppendRawLine("");
+                AppendRawLine("");
+                AppendRawLine("<color=#B88FC9>────────────────────────────────────────────────────────────────────────────</color>");
                 AppendRawLine("§DATA§▸ CONSIGLIO§END§");
+                AppendRawLine("§DATA§[§END§");
                 foreach (var line in consiglioLines)
-                    AppendRawLine(line);
+                {
+                    string formatted = FormatConsiglioLineWithCommands(line);
+                    AppendRawLine("§TITLE§      • " + formatted.Replace("§END§", "§END§§TITLE§") + "§END§");
+                }
+                AppendRawLine("§DATA§]§END§");
             }
             AppendRawLine("");
+            AppendRawLine("");
+            AppendRawLine("§DATA§▸ LEGENDA§END§");
+            AppendRawLine("§TITLE§Come leggere i dati:§END§ §TITLE§Luce accesa§END§: quale LED è acceso (Blu/Rosso) o §TITLE§Nessuna§END§ in rosso. §TITLE§Stress da luce§END§: range ideale 20%-80% (sotto 20% la pianta non beneficia, sopra 80% rischio burn). Acqua e Condizione come prima.");
+            AppendRawLine("§TITLE§I requisiti§END§ (idratazione, stress luminoso, fertilizzante) si riferiscono allo §TITLE§stadio di crescita attuale§END§ della pianta.");
+            AppendRawLine("");
+
+            // RESEARCHED NOTE (lore): quando si usa il collector per STATUS, non si aggiunge qui ma in coda a StatusSecondHalfRoutine
+            if (_statusLinesCollector == null)
+            {
+                AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+                AppendRawLine("§DATA§▸ RESEARCHED NOTE§END§");
+                string researchNotes = plantData != null && !string.IsNullOrWhiteSpace(plantData.ResearchNotes) ? plantData.ResearchNotes : null;
+                if (!string.IsNullOrEmpty(researchNotes))
+                {
+                    foreach (string line in researchNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
+                        AppendRawLine("§TITLE§" + line + "§END§");
+                }
+                else
+                    AppendRawLine("§TITLE§—§END§");
+                AppendRawLine("");
+            }
         }
 
         private void PrintStatusTable()
@@ -4519,84 +4701,140 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 PrintStatusDetailForPot(pot);
         }
 
-        /// <summary>Stampa le tre macro-sezioni per un vaso (STATO CORRENTE, STAGE PROGRESSION, ADVANCEMENT REQUIREMENTS) con colori e layout da reference.</summary>
+        private const int StatusLabelDotWidth = 22;
+
+        /// <summary>Riga in stile reference: LABEL.......: value</summary>
+        private static string StatusDotted(string label, string value)
+        {
+            int pad = Mathf.Max(0, StatusLabelDotWidth - label.Length);
+            return label + new string('.', pad) + ": " + value;
+        }
+
+        /// <summary>Solo la parte label + puntini + ": " per colorare label e valore separatamente.</summary>
+        private static string StatusDottedLabelOnly(string label)
+        {
+            int pad = Mathf.Max(0, StatusLabelDotWidth - label.Length);
+            return label + new string('.', pad) + ": ";
+        }
+
+        /// <summary>Evidenzia nel testo del Potere Attivo le parti numeriche/effetti (es. +5 global pH, cura muffe).</summary>
+        private static string FormatActivePowerHighlight(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return raw;
+            string s = raw;
+            s = s.Replace("+5 global pH", "§TITLE§+5 global pH§END§");
+            s = s.Replace("cura muffe Dome ogni 2 giorni", "§TITLE§cura muffe Dome ogni 2 giorni§END§");
+            s = s.Replace("−10% rischio muffe Dome", "§TITLE§−10% rischio muffe Dome§END§");
+            s = s.Replace("-10% rischio muffe Dome", "§TITLE§-10% rischio muffe Dome§END§");
+            s = s.Replace("+10% probabilità di mutazione Spore globali", "§TITLE§+10% probabilità di mutazione Spore globali§END§");
+            return s;
+        }
+
+        /// <summary>Potere passivo per STATUS (PlantData non ha ancora PassivePower; placeholder per futuro).</summary>
+        private static string GetPassivePowerForDisplay(PlantData plantData)
+        {
+            if (plantData == null) return "";
+            // TODO: quando PlantData avrà PassivePower, restituire plantData.PassivePower
+            return "";
+        }
+
+        /// <summary>Tag colore per valore condizione: verde acceso, verde spento, giallo, rosso.</summary>
+        private static string StatusConditionTag(PlantCondition c)
+        {
+            switch (c)
+            {
+                case PlantCondition.Rigogliosa: return "§TITLE§";
+                case PlantCondition.Sana: return "§DATA§";
+                case PlantCondition.Appassita: return "§WARN§";
+                case PlantCondition.Critica: return "§ERROR§";
+                default: return "§DATA§";
+            }
+        }
+
+        /// <summary>Layout STATUS stile reference: header, titolo pianta, PLANT STATUS (dotted), VITAL PARAMETERS (barre), REQUISITI E AVANZAMENTO.</summary>
         private void PrintStatusPotSections(PotSlot potSlot, PotStateModel pot, PlantData plantData, StageForecast f)
         {
-            string plantName = GetPlantDisplayName(pot.PlantCode);
-            AppendRawLine($"► §DATA§{f.PotId}§END§ | §DATA§{plantName}§END§ | §DATA§{pot.PlantCode}§END§");
-            AppendRawLine("<color=#B88FC9>────────────────────────────────────────────────────────────────────────────</color>");
+            string plantName = GetPlantDisplayName(plantData, pot.PlantCode);
+            string shortCode = pot.PlantCode.Replace("PLT-", "").Replace("-", " ");
+            string potId = f.PotId ?? "POT-???";
 
-            // STATO CORRENTE
+            // —— Header ——
+            AppendRawLine("§TITLE§• SPECIMEN ID:§END§ §DATA§" + potId + "§END§    §DATA§[SYSTEM STATUS: ACTIVE]§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+
+            // —— Title block: nome in grande (font size + MAIUSCOLO + spazi), [code], description ——
+            string nameBig = string.Join(" ", plantName.ToUpperInvariant().Select(c => c.ToString()));
+            AppendRawLine("<size=18>§TITLE§" + nameBig + "§END§</size>");
+            AppendRawLine("§DATA§[" + shortCode + "]§END§ §INFO§" + (plantData != null && !string.IsNullOrEmpty(plantData.Description) ? plantData.Description : "—") + "§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+
+            // —— ENVIRONMENTAL DATA (pH Dome = stesso valore oscillante di TopBar/tooltip, colore come PH drift bar, suffisso banda) ——
+            AppendRawLine("§TITLE§ENVIRONMENTAL DATA§END§");
+            float phValue = _phSystem != null ? _phSystem.CurrentPh : 0f;
+            float condensationPct = _gameManager != null && _gameManager.CondensationSystem != null ? _gameManager.CondensationSystem.CurrentAccumulation : 0f;
+            string phStr = phValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+            string phBand = GetPhBandNameForDisplay(phValue);
+            string phColorHex = GetPhColorHexForDriftValue(phValue);
+            string phLineRaw = "§DATA§" + StatusDottedLabelOnly("pH DOME") + "§END§<color=" + phColorHex + ">" + phStr + " — " + phBand + "</color>";
+            AppendRawLine(phLineRaw);
+            string condStr = Mathf.Clamp(Mathf.RoundToInt(condensationPct), 0, 100) + "%";
+            AppendRawLine("§DATA§" + StatusDotted("CONDENSAZIONE", condStr) + "§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            StartEnvironmentalPhRefresh();
+
+            // —— PLANT STATUS: CONDITION, TREND, GIORNI STADIO con scala colori; Stadio Attuale e Prossimo Stadio in cima (cyan) ——
             string stageLabel = PlantStageLabel(pot.Stage);
-            string conditionName = ConditionNameForUi(MapScoreToConditionForUi(pot.ConditionScore));
-            string trendLabel = f.Trend switch
-            {
-                ForecastDirection.Up => "§TITLE§▲§END§ CRESCITA",
-                ForecastDirection.Down => "§ERROR§▼§END§ CALO",
-                _ => "§DATA§■§END§ STABILE"
-            };
-            AppendRawLine("§DATA§STATO CORRENTE§END§");
-            AppendRawLine($"  §DATA§Stadio:§END§ {stageLabel}");
-            AppendRawLine($"  §DATA§Condizione:§END§ {pot.ConditionScore}% [{conditionName}]");
-            AppendRawLine($"  §DATA§Trend:§END§ {trendLabel}");
-
-            // STAGE PROGRESSION
+            PlantCondition conditionUi = MapScoreToConditionForUi(pot.ConditionScore);
+            string conditionName = ConditionNameForUi(conditionUi);
+            string conditionTag = StatusConditionTag(conditionUi);
+            string trendLabel = f.Trend == ForecastDirection.Up ? "▲ CRESCITA" : (f.Trend == ForecastDirection.Down ? "▼ CALO" : "■ STABILE");
+            string trendTag = f.Trend == ForecastDirection.Up ? "§TITLE§" : (f.Trend == ForecastDirection.Down ? "§ERROR§" : "§DATA§");
+            string nextStageLabel = f.NextStage.HasValue ? PlantStageLabel((int)f.NextStage.Value) : "—";
             int requiredDays = f.EffectiveRequiredDays;
             if (requiredDays <= 0 && f.StageReq != null) requiredDays = Mathf.Max(1, f.StageReq.durationDays);
-            string daysInStage = requiredDays > 0 ? $"{pot.DaysInCurrentStage}/{requiredDays} giorni" : $"{pot.DaysInCurrentStage}/— giorni";
-            int barWidth = 20;
-            int pct = Mathf.Clamp(f.ProgressPercent, 0, 100);
-            int filled = Mathf.RoundToInt((pct / 100f) * barWidth);
-            filled = Mathf.Clamp(filled, 0, barWidth);
-            string bar = new string('█', filled) + new string('░', barWidth - filled);
-            string eta = f.EstimatedDaysToAdvance.HasValue ? $"{f.EstimatedDaysToAdvance.Value} giorni rimanenti" : "—";
+            string daysInStage = requiredDays > 0 ? $"{pot.DaysInCurrentStage}/{requiredDays} giorni" : $"{pot.DaysInCurrentStage}/—";
+            int progressPct = requiredDays > 0 ? Mathf.Clamp((pot.DaysInCurrentStage * 100) / requiredDays, 0, 100) : 0;
+            string daysTag = progressPct >= 75 ? "§TITLE§" : (progressPct >= 50 ? "§DATA§" : (progressPct >= 25 ? "§WARN§" : "§DATA§"));
 
-            AppendRawLine("§DATA§STAGE PROGRESSION§END§");
-            AppendRawLine($"  §DATA§Giorni nello stadio:§END§ {daysInStage}");
-            AppendRawLine($"  §DATA§Progresso:§END§ {bar} {pct}%");
-            AppendRawLine($"  §DATA§Prossimo stadio:§END§ {f.SoonInConditionName}");
-            AppendRawLine($"  §DATA§Stima:§END§ {eta}");
-
-            // ADVANCEMENT REQUIREMENTS (formato reference: ✓ Category Value | Richiesto: threshold)
-            AppendRawLine("§DATA§ADVANCEMENT REQUIREMENTS§END§");
-
-            int requiredScore;
-            bool conditionReqOk;
-            string conditionReqText;
-            if (f.Trend == ForecastDirection.Up)
+            AppendRawLine("§TITLE§PLANT STATUS§END§");
+            AppendRawLine("§DATA§" + StatusDottedLabelOnly("CONDIZIONE") + "§END§" + conditionTag + $"{conditionName} ({pot.ConditionScore}%)" + "§END§");
+            AppendRawLine("§DATA§" + StatusDottedLabelOnly("TREND") + "§END§" + trendTag + trendLabel + "§END§");
+            AppendRawLine("§DATA§" + StatusDottedLabelOnly("GIORNI STADIO") + "§END§" + daysTag + daysInStage + "§END§");
+            // Modificatori giorni: solo se condizione o pH modificano i giorni richiesti
+            if (f.StageReq != null)
             {
-                requiredScore = f.SoonInConditionName == "Rigogliosa" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
-                    : f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdSana
-                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
-                    : 0;
-                conditionReqOk = pot.ConditionScore >= requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} §DATA§Condizione§END§    {pot.ConditionScore}% | Richiesto: >={requiredScore}%";
+                PlantCondition currentCondition = (PlantCondition)pot.ConditionLabel;
+                int daysModifier = ConditionGrowthModifier.GetDaysModifier(currentCondition);
+                int phDaysModifier = (_phSystem != null && plantData != null && plantData.IsPhInOptimalRange(_phSystem.CurrentPh)) ? -1 : 0;
+                if (daysModifier != 0 || phDaysModifier != 0)
+                {
+                    int baseDays = f.StageReq.durationDays;
+                    var modParts = new List<string>();
+                    if (daysModifier != 0) modParts.Add("condizione " + (daysModifier > 0 ? "+" : "") + daysModifier);
+                    if (phDaysModifier != 0) modParts.Add("pH " + (phDaysModifier > 0 ? "+" : "") + phDaysModifier);
+                    AppendRawLine("§INFO§  (richiesti effettivi: " + f.EffectiveRequiredDays + " = base " + baseDays + (modParts.Count > 0 ? ", " + string.Join(", ", modParts) : "") + ")§END§");
+                }
             }
-            else if (f.Trend == ForecastDirection.Down)
-            {
-                requiredScore = f.SoonInConditionName == "Sana" ? DifficultyCalibrationConfig.ConditionThresholdRigogliosa
-                    : f.SoonInConditionName == "Appassita" ? DifficultyCalibrationConfig.ConditionThresholdSana
-                    : f.SoonInConditionName == "Critica" ? DifficultyCalibrationConfig.ConditionThresholdAppassita
-                    : 100;
-                conditionReqOk = pot.ConditionScore < requiredScore;
-                conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} §DATA§Condizione§END§    {pot.ConditionScore}% | Richiesto: <{requiredScore}%";
-            }
-            else
-            {
-                conditionReqText = $"✓ §DATA§Condizione§END§    {pot.ConditionScore}% | Richiesto: (stabile)";
-                conditionReqOk = true;
-            }
-            AppendRawLine(conditionReqOk ? conditionReqText : $"§ERROR§{conditionReqText}§END§");
+            AppendRawLine("§DATA§" + StatusDotted("STADIO ATTUALE", stageLabel) + "§END§");
+            AppendRawLine("§DATA§" + StatusDotted("PROSSIMO STADIO", nextStageLabel) + "§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
 
+            // —— VITAL PARAMETERS (barre stile reference, distanziate in verticale) ——
+            AppendRawLine("§TITLE§VITAL PARAMETERS§END§");
             int maxHydration = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
             int hydrationPercent = maxHydration > 0 ? Mathf.RoundToInt((float)pot.Hydration / maxHydration * 100f) : 0;
             string hydrationReq = f.StageReq != null ? $"{f.StageReq.hydrationMin}%-{f.StageReq.hydrationMax}%" : "—";
-            string hydrationLine = $"{(f.HydrationOk ? "✓" : "✗")} §DATA§Idratazione§END§  {hydrationPercent}% | Richiesto: {hydrationReq}";
-            AppendRawLine(f.HydrationOk ? hydrationLine : $"§ERROR§{hydrationLine}§END§");
+            int barWidth = 12;
+            int hFilled = Mathf.Clamp((hydrationPercent * barWidth) / 100, 0, barWidth);
+            string hBar = "[" + new string('█', hFilled) + new string('░', barWidth - hFilled) + "]";
+            AppendRawLine("§DATA§IDRATAZIONE§END§ " + hBar + " §TITLE§" + hydrationPercent + "%§END§ §INFO§(" + hydrationReq + " ottimale)§END§");
+            AppendRawLine("");
 
             string fertReq = f.StageReq != null ? $"{f.StageReq.fertilizerMin}%-{f.StageReq.fertilizerMax}%" : "—";
-            string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} §DATA§Fertilizzante§END§ {pot.FertilizerLevel}% | Richiesto: {fertReq}";
-            AppendRawLine(f.FertilizerOk ? fertLine : $"§ERROR§{fertLine}§END§");
+            int fertFilled = Mathf.Clamp((pot.FertilizerLevel * barWidth) / 100, 0, barWidth);
+            string fertBar = "[" + new string('█', fertFilled) + new string('░', barWidth - fertFilled) + "]";
+            AppendRawLine("§DATA§FERTILIZZANTE§END§ " + fertBar + " §TITLE§" + pot.FertilizerLevel + "%§END§ §INFO§(" + fertReq + " ottimale)§END§");
+            AppendRawLine("");
 
             int lightStressPercent = 0;
             if (_potSystemConfig != null)
@@ -4605,14 +4843,70 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 int maxDaysForFullStress = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
                 lightStressPercent = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f);
             }
-            string lightReq = "20%-70%";
-            string lightLine = $"{(f.LedOk ? "✓" : "✗")} §DATA§Stress luce§END§  {lightStressPercent}% | Richiesto: {lightReq}";
-            AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
+            int lightFilled = Mathf.Clamp((lightStressPercent * barWidth) / 100, 0, barWidth);
+            string lightBar = "[" + new string('█', lightFilled) + new string('░', barWidth - lightFilled) + "]";
+            AppendRawLine("§DATA§STRESS LUCE§END§ " + lightBar + " §TITLE§" + lightStressPercent + "%§END§ §INFO§(20%-80% ottimale)§END§");
+            AppendRawLine("");
 
-            int mold = Mathf.Clamp(pot.MoldRiskLevel, 0, 3);
-            bool moldOk = mold < 2;
-            string moldLine = $"{(moldOk ? "✓" : "✗")} §DATA§Rischio muffa§END§ {mold} | Richiesto: <2";
+            int moldLevel = Mathf.Clamp(pot.MoldRiskLevel, 0, 3);
+            int moldFilled = Mathf.Clamp((moldLevel * barWidth) / 3, 0, barWidth);
+            string moldBar = "[" + new string('█', moldFilled) + new string('░', barWidth - moldFilled) + "]";
+            string moldLabel = moldLevel switch { 0 => "Sicuro", 1 => "Lieve", 2 => "Severo", 3 => "Critico", _ => "—" };
+            AppendRawLine("§DATA§RISCHIO MUFFA§END§ " + moldBar + " §TITLE§" + moldLabel + "§END§");
+            AppendRawLine("");
+
+            // —— Potere Attivo (a capo, con evidenziazione effetti) e Potere Passivo ——
+            AppendRawLine("§DATA§Potere Attivo:§END§");
+            string activePowerRaw = plantData != null && !string.IsNullOrWhiteSpace(plantData.ActivePower) ? plantData.ActivePower : "—";
+            string activePowerFormatted = FormatActivePowerHighlight(activePowerRaw).Replace("§END§", "§END§§INFO§");
+            AppendRawLine("§INFO§" + activePowerFormatted + "§END§");
+            AppendRawLine("");
+            AppendRawLine("§DATA§Potere Passivo:§END§");
+            string passivePower = plantData != null && !string.IsNullOrWhiteSpace(GetPassivePowerForDisplay(plantData)) ? GetPassivePowerForDisplay(plantData) : "—";
+            AppendRawLine("§INFO§" + passivePower + "§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+
+            // —— REQUISITI E AVANZAMENTO (condizione = non bloccante; trend solo informativo) ——
+            AppendRawLine("§TITLE§REQUISITI E AVANZAMENTO§END§");
+            bool conditionReqOk = !f.BlockedByCondition;
+            string conditionReqText = $"{(conditionReqOk ? "✓" : "✗")} §DATA§Condizione§END§    {pot.ConditionScore}% | Richiesto: non critica/appassita";
+            AppendRawLine(conditionReqOk ? conditionReqText : $"§ERROR§{conditionReqText}§END§");
+            AppendRawLine(conditionReqOk ? "§DIM§------ Condizione non bloccante.§END§" : "§DIM§------ Condizione critica o appassita: avanzamento bloccato.§END§");
+
+            string hydrationReqStr = f.StageReq != null ? $"{f.StageReq.hydrationMin}%-{f.StageReq.hydrationMax}%" : "—";
+            string hydrationLine = $"{(f.HydrationOk ? "✓" : "✗")} §DATA§Idratazione§END§  {hydrationPercent}% | Richiesto: {hydrationReqStr}";
+            AppendRawLine(f.HydrationOk ? hydrationLine : $"§ERROR§{hydrationLine}§END§");
+            string hydrationHint = pot.WateringSystemOn
+                ? (f.HydrationOk ? "------ Impianto goccia attivo, parametro in range." : "------ Impianto goccia attivo, situazione in miglioramento.")
+                : "------ Impianto spento, usa comando WATERING per attivarlo.";
+            AppendRawLine("§DIM§" + hydrationHint + "§END§");
+
+            string fertReqStr = f.StageReq != null ? $"{f.StageReq.fertilizerMin}%-{f.StageReq.fertilizerMax}%" : "—";
+            string fertLine = $"{(f.FertilizerOk ? "✓" : "✗")} §DATA§Fertilizzante§END§ {pot.FertilizerLevel}% | Richiesto: {fertReqStr}";
+            AppendRawLine(f.FertilizerOk ? fertLine : $"§ERROR§{fertLine}§END§");
+            AppendRawLine(f.FertilizerOk ? "§DIM§------ Fertilizzante in range.§END§" : "§DIM§------ Fuori range, usa comando FERTILIZE [POT-ID] se necessario.§END§");
+
+            string lightLine = $"{(f.LedOk ? "✓" : "✗")} §DATA§Stress luce§END§  {lightStressPercent}% | Richiesto: 20%-80%";
+            AppendRawLine(f.LedOk ? lightLine : $"§ERROR§{lightLine}§END§");
+            bool ledOn = pot.LedSystemState != LedSystemState.Off;
+            string lightHint = ledOn
+                ? (f.LedOk ? "------ LED acceso, stress in range." : "------ LED acceso, situazione in miglioramento (o spegni se stress >80%).")
+                : (f.LedOk ? "------ LED spento ma stress già in range." : "------ LED spento, usa comando LED BLUE/RED per attivarlo.");
+            AppendRawLine("§DIM§" + lightHint + "§END§");
+
+            bool moldOk = moldLevel < 2;
+            string moldLine = $"{(moldOk ? "✓" : "✗")} §DATA§Rischio muffa§END§ {moldLabel} | Richiesto: <2";
             AppendRawLine(moldOk ? moldLine : $"§ERROR§{moldLine}§END§");
+            AppendRawLine(moldOk ? "§DIM§------ Rischio sotto soglia.§END§" : "§DIM§------ Rischio elevato: ventila o riduci umidità.§END§");
+
+            // Giorni nello stadio già in PLANT STATUS (GIORNI STADIO X/Y); qui solo giorni ottimali e punti
+            string optimalLine = $"{(f.OptimalDaysOk ? "✓" : "✗")} §DATA§Giorni ottimali§END§   {pot.DaysConsecutiveOptimal} | Richiesti: {f.RequiredOptimalDays}";
+            AppendRawLine(f.OptimalDaysOk ? optimalLine : $"§ERROR§{optimalLine}§END§");
+            AppendRawLine(f.OptimalDaysOk ? "§DIM§------ Giorni consecutivi ottimali sufficienti.§END§" : "§DIM§------ Servono più giorni con tutti i parametri in range.§END§");
+
+            string pointsLine = $"{(f.PointsOk ? "✓" : "✗")} §DATA§Punti crescita§END§  W:{pot.GrowthPointsWater} L:{pot.GrowthPointsLight} F:{pot.GrowthPointsFertilizer} | Richiesti: {f.RequiredPoints}";
+            AppendRawLine(f.PointsOk ? pointsLine : $"§ERROR§{pointsLine}§END§");
+            AppendRawLine(f.PointsOk ? "§DIM§------ Punti W+L+F sufficienti.§END§" : "§DIM§------ Servono più punti (acqua, luce, fertilizzante in range).§END§");
 
             int unmet = 0;
             if (!conditionReqOk) unmet++;
@@ -4620,13 +4914,42 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             if (!f.FertilizerOk) unmet++;
             if (!f.LedOk) unmet++;
             if (!moldOk) unmet++;
+            if (!f.DurationOk) unmet++;
+            if (!f.OptimalDaysOk) unmet++;
+            if (!f.PointsOk) unmet++;
 
             if (f.BlocksAdvancement)
+            {
                 AppendRawLine("§ERROR§► STATUS: BLOCCATO§END§");
-            else if (unmet == 0 && f.HydrationOk && f.LedOk && f.FertilizerOk && f.DurationOk && f.OptimalDaysOk && f.PointsOk)
+                if (f.BlockedByCondition)
+                    AppendRawLine("§ERROR§  • Avanzamento bloccato: condizione critica o appassita§END§");
+                if (f.BlockedByMold)
+                    AppendRawLine("§ERROR§  • Avanzamento bloccato: rischio muffa grave (livello ≥2)§END§");
+                // Altri requisiti mancanti (senza ripetere condizione/muffa già spiegati sopra)
+                if (!f.HydrationOk) AppendRawLine("§ERROR§  • Idratazione fuori range§END§");
+                if (!f.FertilizerOk) AppendRawLine("§ERROR§  • Fertilizzante fuori range§END§");
+                if (!f.LedOk) AppendRawLine("§ERROR§  • Stress luce fuori range (20%-80%)§END§");
+                if (!moldOk && !f.BlockedByMold) AppendRawLine("§ERROR§  • Rischio muffa elevato (richiesto <2)§END§");
+                if (!f.DurationOk) AppendRawLine("§ERROR§  • Giorni nello stadio insufficienti§END§");
+                if (!f.OptimalDaysOk) AppendRawLine("§ERROR§  • Giorni consecutivi ottimali insufficienti§END§");
+                if (!f.PointsOk) AppendRawLine("§ERROR§  • Punti crescita insufficienti (W+L+F)§END§");
+            }
+            else if (unmet == 0)
+            {
                 AppendRawLine("§TITLE§► STATUS: PRONTO PER AVANZAMENTO§END§");
-            else if (unmet > 0)
+            }
+            else
+            {
                 AppendRawLine($"§ERROR§► STATUS: {unmet} REQUISITO/I NON SODDISFATTI§END§");
+                if (!conditionReqOk) AppendRawLine("§ERROR§  • Condizione critica o appassita (avanzamento bloccato)§END§");
+                if (!f.HydrationOk) AppendRawLine("§ERROR§  • Idratazione fuori range§END§");
+                if (!f.FertilizerOk) AppendRawLine("§ERROR§  • Fertilizzante fuori range§END§");
+                if (!f.LedOk) AppendRawLine("§ERROR§  • Stress luce fuori range (20%-80%)§END§");
+                if (!moldOk) AppendRawLine("§ERROR§  • Rischio muffa elevato (richiesto <2)§END§");
+                if (!f.DurationOk) AppendRawLine("§ERROR§  • Giorni nello stadio insufficienti§END§");
+                if (!f.OptimalDaysOk) AppendRawLine("§ERROR§  • Giorni consecutivi ottimali insufficienti§END§");
+                if (!f.PointsOk) AppendRawLine("§ERROR§  • Punti crescita insufficienti (W+L+F)§END§");
+            }
         }
 
         private void OpenDetail(string potId, bool diaryOnly)
@@ -5146,12 +5469,64 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 FlushConsole();
                 return;
             }
-            _typewriterActive = true;
             var pots = FindPots();
+            var allLines = new List<string>();
+            _statusLinesCollector = allLines;
             PrintStatusSummaryTable(pots);
             PrintStatusDetailForPot(chosen);
-            FlushConsole();
+            _statusLinesCollector = null;
+
+            // RESEARCHED NOTE: da mostrare sempre in fondo (append dopo second half)
+            var stateChosen = chosen.PotActions != null ? chosen.PotActions.PotState : null;
+            var plantDataChosen = stateChosen != null ? stateChosen.GetPlantData() : null;
+            _pendingStatusResearchNotes = new List<string>();
+            _pendingStatusResearchNotes.Add("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            _pendingStatusResearchNotes.Add("§DATA§▸ RESEARCHED NOTE§END§");
+            if (plantDataChosen != null && !string.IsNullOrWhiteSpace(plantDataChosen.ResearchNotes))
+            {
+                foreach (string line in plantDataChosen.ResearchNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
+                    _pendingStatusResearchNotes.Add("§TITLE§" + line + "§END§");
+            }
+            else
+                _pendingStatusResearchNotes.Add("§TITLE§—§END§");
+            _pendingStatusResearchNotes.Add("");
+
+            int total = allLines.Count;
+            int half = total / 2;
+            var firstHalf = new List<string>();
+            var secondHalf = new List<string>();
+            for (int i = 0; i < total; i++)
+            {
+                if (i < half)
+                    firstHalf.Add(allLines[i]);
+                else
+                    secondHalf.Add(allLines[i]);
+            }
+            _pendingStatusSecondHalf = secondHalf.Count > 0 ? secondHalf : null;
+            if (firstHalf.Count > 0)
+            {
+                _typewriterActive = true;
+                foreach (string raw in firstHalf)
+                    _typewriterQueue.Enqueue(ParseColors(raw));
+                FlushConsole();
+            }
+            else if (_pendingStatusSecondHalf != null && _pendingStatusSecondHalf.Count > 0)
+                _statusSecondHalfRoutine = StartCoroutine(StatusSecondHalfRoutine());
+            else
+                AppendPendingStatusResearchNotes();
             SwitchToConsole();
+        }
+
+        private void AppendPendingStatusResearchNotes()
+        {
+            if (_pendingStatusResearchNotes == null) return;
+            foreach (string line in _pendingStatusResearchNotes)
+                _consoleBuffer.AppendLine(ParseColors(line));
+            FlushConsoleImmediate();
+            AutoScrollConsole();
+            _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(50);
+            _consoleScroll?.schedule.Execute(() => AutoScrollConsole()).ExecuteLater(150);
+            _pendingStatusResearchNotes = null;
         }
 
         private void HandleSelectingItem(string upper)
@@ -5607,7 +5982,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 {
                     PlantStage.Seed => "SEME",
                     PlantStage.Sprout => "GERMOGLIO",
-                    PlantStage.Growth => "CRESCITA",
+                    PlantStage.Growth => "ADULTA",
                     PlantStage.Flowering => "FIORE",
                     PlantStage.HarvestReady => "MATURO",
                     PlantStage.Resting => "RIPOSO",
@@ -5873,6 +6248,43 @@ AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
             FlushConsole();
         }
 
+        /// <summary>Colore pH per valore -100..+100 (stessa logica TopBar/PH drift bar: acido=rosso, neutro=bianco, basico=blu).</summary>
+        private static string GetPhColorHexForDriftValue(float driftPh)
+        {
+            float phVisualScale = ((driftPh + 100f) / 200f) * 14f;
+            phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
+            float r, g, b;
+            if (phVisualScale <= 4f)
+            {
+                float t = phVisualScale / 4f;
+                r = Mathf.Lerp(1f, 1f, t); g = Mathf.Lerp(0.165f, 0.667f, t); b = Mathf.Lerp(0.165f, 0.2f, t);
+            }
+            else if (phVisualScale <= 7f)
+            {
+                float t = (phVisualScale - 4f) / 3f;
+                r = Mathf.Lerp(1f, 0.961f, t); g = Mathf.Lerp(0.667f, 0.969f, t); b = Mathf.Lerp(0.2f, 0.980f, t);
+            }
+            else if (phVisualScale <= 10f)
+            {
+                float t = (phVisualScale - 7f) / 3f;
+                r = Mathf.Lerp(0.961f, 0.2f, t); g = Mathf.Lerp(0.969f, 0.722f, t); b = Mathf.Lerp(0.980f, 1f, t);
+            }
+            else
+            {
+                float t = (phVisualScale - 10f) / 4f;
+                r = Mathf.Lerp(0.2f, 0.357f, t); g = Mathf.Lerp(0.722f, 0.310f, t); b = Mathf.Lerp(1f, 1f, t);
+            }
+            return "#" + Mathf.RoundToInt(r * 255).ToString("X2") + Mathf.RoundToInt(g * 255).ToString("X2") + Mathf.RoundToInt(b * 255).ToString("X2");
+        }
+
+        /// <summary>Banda pH per display (come tooltip TopBar: Acido / Neutrale / Basico).</summary>
+        private static string GetPhBandNameForDisplay(float ph)
+        {
+            if (ph < -25f) return "Acido";
+            if (ph > 25f) return "Basico";
+            return "Neutrale";
+        }
+
         /// <summary>
         /// Converte tag custom §X§...§END§ in rich text <color>.
         /// </summary>
@@ -5890,8 +6302,10 @@ AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
             const string yellow = "#E6C96F";     /* §WARN§: avvisi, consiglio */
             const string red = "#D35F5F";        /* §ERROR§: errori, NON OK */
             const string white = "#FFFFFF";
+            const string dimGray = "#A8A8A8";   /* §DIM§: grigio chiaro per note esplicative */
 
             return raw
+                .Replace("§DIM§", $"<color={dimGray}>")
                 .Replace("§TITLE§", $"<color={greenBright}>")
                 .Replace("§CMD§", $"<color={blue}>")
                 .Replace("§INFO§", $"<color={infoTeal}>")
@@ -5906,6 +6320,23 @@ AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
                 .Replace("§BLUE§", $"<color={blue}>")
                 .Replace("§RED§", $"<color={red}>")
                 .Replace("§END§", "</color>");
+        }
+
+        /// <summary>Rimuove i tag §...§ dal testo per ottenere plain text (es. per blocchi CONSIGLIO in un solo colore).</summary>
+        private static string StripSectionTags(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(raw, "§[A-Za-z]+§", "");
+        }
+
+        /// <summary>Formatta una riga di consiglio: testo in plain, comandi §CMD§...§END§ mantenuti e racchiusi in [ ].</summary>
+        private static string FormatConsiglioLineWithCommands(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return string.Empty;
+            string s = raw;
+            s = System.Text.RegularExpressions.Regex.Replace(s, "§(WARN|INFO|TITLE|ERROR|DATA)§", "");
+            s = System.Text.RegularExpressions.Regex.Replace(s, "§CMD§(.*?)§END§", "§CMD§[$1]§END§");
+            return s;
         }
     }
 }

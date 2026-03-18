@@ -413,6 +413,40 @@
     min-height: 12px;
 }
 
+/* Slot vuoto: label grigia */
+.pcv3-hud-pot-slot-empty .pcv3-hud-pot-slot-label {
+    color: rgba(180, 180, 180, 0.95);
+}
+
+/* Con pianta: colore per famiglia (verde / giallo / rosso) */
+.pcv3-hud-pot-slot-standard .pcv3-hud-pot-slot-label {
+    color: rgb(127, 255, 122);
+}
+.pcv3-hud-pot-slot-standard {
+    border-left-color: rgba(127, 255, 122, 0.7);
+    border-right-color: rgba(127, 255, 122, 0.7);
+    border-top-color: rgba(127, 255, 122, 0.7);
+    border-bottom-color: rgba(127, 255, 122, 0.7);
+}
+.pcv3-hud-pot-slot-pure .pcv3-hud-pot-slot-label {
+    color: rgb(255, 220, 100);
+}
+.pcv3-hud-pot-slot-pure {
+    border-left-color: rgba(255, 220, 100, 0.8);
+    border-right-color: rgba(255, 220, 100, 0.8);
+    border-top-color: rgba(255, 220, 100, 0.8);
+    border-bottom-color: rgba(255, 220, 100, 0.8);
+}
+.pcv3-hud-pot-slot-evil .pcv3-hud-pot-slot-label {
+    color: rgb(255, 100, 100);
+}
+.pcv3-hud-pot-slot-evil {
+    border-left-color: rgba(255, 100, 100, 0.8);
+    border-right-color: rgba(255, 100, 100, 0.8);
+    border-top-color: rgba(255, 100, 100, 0.8);
+    border-bottom-color: rgba(255, 100, 100, 0.8);
+}
+
 .pcv3-zona2-draggable {
     position: relative;
 }

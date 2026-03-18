@@ -44,7 +44,7 @@ namespace Sporae.UI.UIToolkit.PlantCard.Helpers
             {
                 PlantStage.Seed => "SEED",
                 PlantStage.Sprout => "SPROUT",
-                PlantStage.Growth => "GROWTH",
+                PlantStage.Growth => "ADULTA",
                 PlantStage.Flowering => "FLOWERING",
                 PlantStage.HarvestReady => "HARVEST READY",
                 PlantStage.Resting => "RESTING",

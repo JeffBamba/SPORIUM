@@ -107,18 +107,14 @@ namespace Sporae.Dome.PotSystem.Growth
             // Questo permette di considerare OK anche quando LED è spento ma i parametri sono in range
             if (pot.LedSystemState == LedSystemState.Off)
             {
-                // Quando LED è OFF, verifica se lo stress percentage è nel range ottimale (tra 0% e 100%)
+                // Quando LED è OFF: parametro OK se stress già in range 20%-80% (sotto 20% non beneficia, sopra 80% burn risk)
                 int consecutiveDays = pot.GetConsecutiveLedDays();
                 int maxDaysForFullStress = potConfig != null ? potConfig.MaxDaysForFullStress : 5;
                 float stressPercentage = Mathf.Clamp01((float)consecutiveDays / maxDaysForFullStress) * 100f;
-                
-                // Stress è nel range ottimale se è tra 0% e 100% (esclusi gli estremi)
-                // Questo è coerente con la logica di PlantConditionSystem
-                bool stressInOptimalRange = stressPercentage > 0f && stressPercentage < 100f;
-                
+                const float LightStressOkMin = 20f;
+                const float LightStressOkMax = 80f;
+                bool stressInOptimalRange = stressPercentage >= LightStressOkMin && stressPercentage <= LightStressOkMax;
                 SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_POINTS] {pot.PotId} Light OFF: ConsecutiveDays={consecutiveDays}, Stress%={stressPercentage:F1}, InOptimalRange={stressInOptimalRange}");
-                
-                // Se lo stress è nel range ottimale, considera OK anche se LED è spento
                 return stressInOptimalRange;
             }
             

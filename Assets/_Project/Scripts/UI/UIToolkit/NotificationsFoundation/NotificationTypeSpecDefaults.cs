@@ -266,9 +266,9 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "Errore durante l'automazione.\nVerifica risorse, stato del vaso e riprova."),
 
                 // ===== COMPAT: codici già usati in-game oggi (migrazione graduale, non rompe nulla) =====
-                Spec("STAGE-UP-001", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 0f,
+                Spec("STAGE-UP-001", NotificationCategory.Pot, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 0f,
                     "notif.stage_up",
-                    "Stage up: {potId} → {stage}",
+                    "Cambio stadio: {potId} → {stage}",
                     "Stage up: {potId} → {stage}",
                     "La pianta è passata allo stadio successivo.\nOgni stadio ha requisiti diversi (acqua, luce, pH)."),
                 Spec("CND-002", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 0f,
@@ -460,7 +460,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 // ===== VISITORS =====
                 Spec("VIS-001", NotificationCategory.System, NotificationSeverity.Info, NotificationChannel.Gameplay, true, false, true, 0f,
                     "notif.vis_001",
-                    "Visitor waiting for player!",
+                    "Visitatore in attesa",
                     "Visitor waiting for player!",
                     "Un visitatore è in attesa.\nVai alla posizione indicata per interagire."),
 

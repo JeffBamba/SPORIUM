@@ -15,6 +15,14 @@ MonoBehaviour:
   plantCode: PLT-STD-001
   seedItemConfig: {fileID: 11400000, guid: 57f01ae6a642c52408a589fb6538ae4c, type: 2}
   description: Una pianta standard robusta che mantiene l'equilibrio del pH ambientale
+  researchNotes: "Ferric Fern \u2014 Nota scientifica\n\nSpecie STANDARD rinvenuta in aree
+    industriali contaminate, la Ferric Fern mostra strutture fogliari con accumulo di
+    composti ferrosi e capacit\xE0 di assorbire metalli pesanti e tossine dal suolo e
+    dall'aria. I contaminanti vengono convertiti in forme inerti e trattenuti nei tessuti
+    vegetali. L'esposizione prolungata provoca un aumento della densit\xE0 strutturale e
+    una riduzione della crescita. La specie \xE8 classificata come organismo di bonifica
+    biologica, utile per stabilizzare ambienti compromessi, ma soggetta a degradazione
+    interna progressiva dovuta all'accumulo di sostanze nocive."
   activePower: "Purificatrice: \u221210% rischio muffe Dome"
   family: 0
   rarity: 0

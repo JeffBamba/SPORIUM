@@ -21,6 +21,9 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("Descrizione one-liner della pianta (per UI e tooltip)")]
         [SerializeField, TextArea(2, 4)] private string description;
 
+        [Tooltip("Note di ricerca / lore della pianta (Wiki, Diary, STATUS terminale). Distinto dall'oneliner.")]
+        [SerializeField, TextArea(6, 20)] private string researchNotes;
+
         [Tooltip("Potere attivo della pianta (effetto speciale quando attiva)")]
         [SerializeField, TextArea(2, 4)] private string activePower;
         
@@ -68,6 +71,7 @@ namespace Sporae.Dome.PotSystem.Growth
         public float OptimalPhMax => optimalPhMax;
         public string PreferredFaction => preferredFaction;
         public string Description => description;
+        public string ResearchNotes => researchNotes;
         public string ActivePower => activePower;
         public StageRequirements[] StageRequirements => stageRequirements;
         public PlantVisualSet VisualSet => visualSet;
