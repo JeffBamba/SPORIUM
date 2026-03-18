@@ -22,7 +22,9 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
         [Header("Behavior")]
         [SerializeField] private bool _startExpanded = true;
-        [SerializeField] private bool _enableDebugLogs = false;
+        #pragma warning disable CS0414
+        [SerializeField] private bool _enableDebugLogs = false; // Reserved for future debug toggles
+#pragma warning restore CS0414
         [Tooltip("Sprite mostrato nel box icona quando l'item non ha icona (es. Icona_placeholder).")]
         [SerializeField] private Sprite _itemIconPlaceholder;
 
@@ -288,14 +290,14 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                             tex = placeholderSprite.texture;
                         if (tex != null)
                         {
-                            ItemIcon.style.backgroundImage = new Background(tex);
+                            ItemIcon.style.backgroundImage = Background.FromTexture2D(tex);
                         }
                         else
                         {
                             var fallbackSprite = Resources.Load<Sprite>("icona_Placeholder") ?? Resources.Load<Sprite>("Icons/Items/placeholder");
                             var fallbackTex = fallbackSprite != null ? fallbackSprite.texture : Resources.Load<Texture2D>("icona_Placeholder");
                             if (fallbackTex != null)
-                                ItemIcon.style.backgroundImage = new Background(fallbackTex);
+                                ItemIcon.style.backgroundImage = Background.FromTexture2D(fallbackTex);
                             else
                                 ItemIcon.style.backgroundImage = new StyleBackground(StyleKeyword.Initial);
                         }

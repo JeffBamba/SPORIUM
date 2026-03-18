@@ -480,9 +480,7 @@
     margin-right: 2px;
 }
 
-.hydration-units-row > *:last-child {
-    margin-right: 0;
-}
+/* USS does not support :last-child - last item keeps margin-right */
 
 .hydration-units-label {
     font-size: var(--sp-font-size-10);

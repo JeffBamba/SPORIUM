@@ -40,9 +40,7 @@
     margin-bottom: 1px;
 }
 
-.inv-header-left > *:last-child {
-    margin-bottom: 0;
-}
+/* USS does not support :last-child - last item keeps margin-bottom */
 
 .inv-title {
     font-size: 14px;
@@ -88,9 +86,7 @@
     margin-bottom: 4px;
 }
 
-.inv-list > *:last-child {
-    margin-bottom: 0;
-}
+/* USS does not support :last-child - last item keeps margin-bottom */
 
 .inv-row {
     min-height: 48px;
@@ -167,9 +163,7 @@
     margin-right: 5px;
 }
 
-.inv-row-right > *:last-child {
-    margin-right: 0;
-}
+/* USS does not support :last-child - last item keeps margin-right */
 
 .inv-select {
     padding: 8px 14px;

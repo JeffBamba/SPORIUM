@@ -48,7 +48,7 @@ namespace Sporae.UI.UIToolkit.HUD.Components
             Graphics.Blit(null, _rt, _material);
 
             _target.style.backgroundImage = Background.FromRenderTexture(_rt);
-            _target.style.unityBackgroundScaleMode = ScaleMode.StretchToFill;
+            _target.style.backgroundSize = new BackgroundSize(new Length(100, LengthUnit.Percent), new Length(100, LengthUnit.Percent));
             _target.MarkDirtyRepaint();
         }
 

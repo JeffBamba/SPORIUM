@@ -118,12 +118,10 @@ namespace Sporae.Dome.PotSystem.Condition
             // Questo evita che il bonus venga rimosso immediatamente quando si spegne il LED con stress nel range
             // Il bonus viene rimosso solo a fine giornata quando lo stress viene ricalcolato
             int scoreBeforeLight = score;
-            bool lightBonusGiven = false;
             if (hasCorrectLight && (isLedOn && (stressPercentage > 0f && stressPercentage < 100f) || (stressPercentage == 0f || stressPercentage >= 100f)))
             {
                 score += DifficultyCalibrationConfig.BonusLightCorrect;
                 contributors.Add(new ConditionContributor("Luce corretta (LED)", DifficultyCalibrationConfig.BonusLightCorrect, true));
-                lightBonusGiven = true;
                 SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Luce corretta (LED) = +{DifficultyCalibrationConfig.BonusLightCorrect}, Score: {scoreBeforeLight} → {score}");
             }
             else if (!isLedOn && (stressPercentage > 0f && stressPercentage < 100f))
@@ -133,7 +131,6 @@ namespace Sporae.Dome.PotSystem.Condition
                 // Il bonus viene dato perché lo stress è nel range ottimale, indipendentemente dallo stato del LED
                 score += DifficultyCalibrationConfig.BonusLightCorrect;
                 contributors.Add(new ConditionContributor("Luce corretta (stress nel range, LED OFF)", DifficultyCalibrationConfig.BonusLightCorrect, true));
-                lightBonusGiven = true;
                 SporiumLogger.LogDebug(LogCategory.Pot, $"[DEBUG_CONDITION_STEP] {potState.PotId} Day={currentDay}: BONUS Luce corretta (LED OFF, stress in range) = +{DifficultyCalibrationConfig.BonusLightCorrect}, Score: {scoreBeforeLight} → {score}");
             }
             else

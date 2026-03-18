@@ -28,7 +28,9 @@ namespace _Project.UI.HUDNotifications2_0
         private bool _isExpanded = false; // Default: chiuso
         private HUDNotificationConfig2_0 _config;
         private EventTrigger _eventTrigger;
+#pragma warning disable CS0414
         private bool _isHovering = false;
+#pragma warning restore CS0414
         
         /// <summary>
         /// Evento emesso quando header viene toggle (espanso/contratto)

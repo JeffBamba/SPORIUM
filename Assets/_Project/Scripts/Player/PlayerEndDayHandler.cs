@@ -1,6 +1,7 @@
 using _Project.Sporae.Core;
 using _Project.Player;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -74,7 +75,7 @@ namespace _Project
                 catch (System.Exception ex)
                 {
                     if (showDebugLogs)
-                        Debug.LogWarning($"[PlayerEndDayHandler] ElevatorSystem.SetLevel failed: {ex.GetType().Name}: {ex.Message}", this);
+                        SporiumLogger.LogWarning(LogCategory.Core, $"[PlayerEndDayHandler] ElevatorSystem.SetLevel failed: {ex.GetType().Name}: {ex.Message}", this);
                 }
             }
 
@@ -84,15 +85,7 @@ namespace _Project
                 _perspectiveMover.TeleportToWorld(targetPos, pickAreaByPoint: true);
             }
             else
-            {
                 transform.position = targetPos;
-            }
-
-            if (showDebugLogs)
-            {
-                string spName = spawnPoint != null ? spawnPoint.gameObject.name : "<fallbackStartPosition>";
-                Debug.Log($"[PlayerEndDayHandler] Spawn applied. SpawnPoint={spName}, pos={targetPos}", this);
-            }
         }
     }
 }

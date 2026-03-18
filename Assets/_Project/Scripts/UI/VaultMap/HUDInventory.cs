@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
-using Sporae.UI.UIToolkit.SeedInventory;
+using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -396,7 +396,7 @@ namespace _Project
                     if (index < maxCapacity)
                     {
                         // Converti TypeId in nome leggibile se è un seed
-                        string displayName = SeedInventoryMenu.GetSeedDisplayName(slot.TypeId);
+                        string displayName = PlantCardFormatters.GetSeedDisplayName(slot.TypeId);
                         _hudItemContainer.SetItemData(index++, displayName, slot.Quantity);
                         SporiumLogger.LogDebug(LogCategory.UI, $"Item stackabile aggiunto all'indice {index-1}: {displayName} x{slot.Quantity}");
                     }
@@ -413,7 +413,7 @@ namespace _Project
                         if (index < maxCapacity)
                         {
                             // Converti TypeId in nome leggibile se è un seed
-                            string displayName = SeedInventoryMenu.GetSeedDisplayName(item.TypeId);
+                            string displayName = PlantCardFormatters.GetSeedDisplayName(item.TypeId);
                             _hudItemContainer.SetItemData(index++, displayName, -1);
                             SporiumLogger.LogDebug(LogCategory.UI, $"Item non-stackabile aggiunto all'indice {index-1}: {displayName}");
                         }

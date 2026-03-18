@@ -1,0 +1,129 @@
+================================================================================
+  COSA PUÒ FARE IL GIOCATORE NELLA BUILD ATTUALE
+  (in storytelling — basato sul codice attuale)
+================================================================================
+Data: 2025-03-18
+Aggiornato dopo verifica diretta del codice (non su documenti GDD/report precedenti).
+================================================================================
+
+
+--- INIZIO PARTITA ---
+
+Il giocatore vede il menu principale. Può avviare una nuova partita, aprire la 
+schermata per caricare un salvataggio (con riepilogo per ogni slot), salvare 
+la partita da lì se è in gioco, aprire le opzioni o uscire. Se carica un 
+salvataggio, il gioco ripristina lo stato (giorno, inventario, vasi, CRY, 
+missioni, diario) e lo porta nella mappa di gioco.
+
+
+--- LA GIORNATA IN VAULT ---
+
+In scena il giocatore si muove nella Vault. Ha a disposizione un budget di 
+azioni per la giornata e una risorsa (CRY) che si consuma per varie attività 
+e per “chiudere” il giorno. In barra in alto vede le azioni rimanenti, il pH 
+globale della cupola, la condensazione, l’indice di mutazione, il CRY e altri 
+indicatori; in basso può passare tra le stanze (per esempio la cupola).
+
+Può interagire con diversi oggetti: il letto per concludere la giornata, 
+l’ascensore per cambiare piano (con un costo in CRY), il terminale dei vasi 
+per gestire le piante, le macchine del laboratorio, il distributore cibo/acqua, 
+il terminale del mercato nero, il deposito semi, e così via. Cliccando su un 
+vaso lo “seleziona” visivamente, ma tutte le azioni sul vaso (piantare, 
+raccogliere, irrigazione, LED, potatura, ecc.) si fanno dal terminale.
+
+
+--- IL TERMINALE VASI ---
+
+Il giocatore si avvicina al terminale e interagisce: si apre la schermata 
+stile terminale retro (Plant Card V3). Lì legge lo stato delle piante, 
+l’idratazione, i punti crescita (acqua, luce, fertilizzante), le condizioni 
+e i messaggi tipo diario. Per agire non usa pulsanti grandi: digita comandi 
+(testo) e conferma. Può dare comandi per piantare, raccogliere, potare, 
+fertilizzare, spray, accendere o spegnere l’irrigazione a goccia per un vaso 
+(WATERING [ID-VASO]), accendere LED rosso o blu per un vaso, sradicare. 
+L’irrigazione a goccia è un sistema che può tenere ON o OFF per ogni vaso: 
+se è ON, a fine giornata la pianta riceve un bonus di idratazione; se è OFF, 
+un malus. Lo stato (ON/OFF) si vede nel terminale e nell’HUD dei vasi; il 
+cambio si fa solo da terminale, digitando il comando e confermando. Quando 
+pianta un seme, durante il flusso “PLANT” può anche aggiungere in coda 
+irrigazione e LED per quel vaso senza costo extra di azioni.
+
+Può mettere in coda più azioni e poi eseguirle (anche con un leggero ritardo 
+automatizzato, per esempio per lo sradicare). Il terminale è quindi il 
+punto unico da cui gestisce davvero i vasi: nessun altro pannello “a card” 
+sostituisce questa gestione nella build attuale.
+
+
+--- CRESCITA E STATO DELLE PIANTE ---
+
+Le piante passano per stadi (seme, germoglio, crescita, fioritura, raccolto 
+pronto, riposo). Lo stato di ogni vaso dipende da idratazione, luce (LED), 
+fertilizzante e pH. Il giocatore vede condizioni tipo “rigogliosa”, “sana”, 
+“stressata”, “appassita”, rischio muffa, e avvisi se l’irrigazione è spenta 
+o l’idratazione fuori range. I LED possono restare accesi per più giorni: 
+se abusati, la pianta va in stress da “burn” e può regredire di stadio o 
+perdere livello. Il pH della cupola e il “drift” per pianta influenzano 
+crescita e resa; in bande estreme alcune famiglie soffrono o diventano 
+sterili. I frutti si accumulano fino a un massimo (es. 3) e se non raccolti 
+in tempo marciscono. Raccogliendo si passa allo stadio di riposo; con il 
+fertilizzante giusto si riparte verso un nuovo ciclo e la pianta può salire 
+di livello (1–5), con effetti su quantità e qualità della resa.
+
+
+--- FINE GIORNATA ---
+
+Quando vuole chiudere la giornata, il giocatore interagisce con il letto. 
+Se il gioco lo permette, parte la sequenza “fine giornata”: prima una 
+conferma (“End Day?”), poi un riepilogo della giornata (azioni usate, CRY, 
+raccolti, irrigazioni, attività in lab, pH e conseguenze, condizioni attive, 
+note). Poi un frammento di diario in stile typewriter e la scelta della 
+ricerca notturna (archivio storico, database botanico, protocolli della 
+Vault) se ha ancora un’azione da spendere, altrimenti può saltare. Infine 
+la previsione per il giorno dopo e la transizione notte → alba. Dopo la 
+sequenza è mattina e ricomincia una nuova giornata con le azioni rinnovate.
+
+
+--- LABORATORIO ---
+
+Il giocatore può usare l’estrattore (frutto → spore, con minigame), 
+l’incubatore (spore → semi), il catalizzatore (maturazione spore, con 
+minigame), la pipetta/fusione (due spore → pre-seme, con flusso dedicato) 
+e il microscopio (minigame a precisione che consuma spore e azioni). 
+L’inventario è condiviso: i materiali e i risultati passano da e verso 
+il laboratorio. Dal mercato nero può sbloccare il modulo stem-cell. 
+Tutto questo è accessibile interagendo con le rispettive postazioni in scena.
+
+
+--- RESTO DELLA VAULT ---
+
+Può aprire il pannello inventario e lo stato del personaggio, usare la 
+macchina cibo/acqua per la produzione nel tempo, aprire il deposito semi, 
+ricevere notifiche (pannello notifiche e toast in-game). Le missioni hanno 
+obiettivi che si tracciano e si salvano. La condensazione si accumula e 
+può essere raccolta come risorsa (WAT-RAW), con effetti sul rischio muffa 
+se trascurata. Può salvare e caricare da slot con riepilogo (giorno, 
+piante in cupola, CRY, timestamp).
+
+
+--- COSA C’È NEL GDD MA NON (O NON PIENAMENTE) NELLA BUILD ---
+
+Nel GDD di Notion sono previsti: sistema mutazioni (con score e trigger), 
+slot passivi per piante di livello 5 (spostamento vaso ↔ slot, bonus, cap 
+sul drift pH), compatibilità fertilizzanti per famiglia (morte se sbagliato), 
+creazione compost in lab da prodotto pianta, sistema ibridi, codifica spore 
+(STABLE/STANDARD/UNSTABLE) e prodotti botanici (foglie, resine, ecc.). 
+Sono anche citati: diario SPORAE come schermata narrativa dedicata (riepilogo 
++ frammento glitch), tipi di toast “narrativo” e “tutorial”, idratazione 
+del giocatore come sistema completo (ora ci sono UI e eventi predisposti ma 
+non la logica piena), fazioni e reputazione, e in “sotto il cofano” 
+Addressables e telemetria. Nella build attuale il giocatore non può fare 
+quelle parti: può solo vivere il loop giorno/notte, vasi da terminale 
+(con comando WATERING per l’irrigazione a goccia), lab, economia, save/load 
+e sequenza fine giornata come descritto sopra.
+
+
+================================================================================
+Fine documento. Documento riscritto in storytelling e allineato al codice
+attuale; correzione: irrigazione ON/OFF gestita dal terminale (comando
+WATERING [POT-ID]), non da una “PlantCardV2” con toggle.
+================================================================================

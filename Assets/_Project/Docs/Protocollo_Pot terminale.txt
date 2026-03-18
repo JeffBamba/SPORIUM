@@ -1,35 +1,39 @@
-═ BIOLOGICAL PROTOCOL DOME_02 ═════════════════════════════════════════════╗
-║ Vital Parameters Interconnection (Vault Bio Systems – Rev. 4.8)       ║
-╠═══════════════════════════════════════════════════════════════════════════╣
-║                                                                           ║
-║ [BIO-PREAMBLE]                                                          ║
-║ All Dome systems operate in symbiosis.                                   ║
-║ Altering one means rewriting the behavior of the others.                 ║
-║ Equilibrium is a theoretical condition, useful only for statistics.      ║
-║ The Dome does not judge — it records and reacts.                         ║
-║                                                                           ║
-║ [CHEMO-AXIS / pH DRIFT]                                                 ║
-║ Chemical axis of the ecosystem.                                          ║
-║ Every pH variation alters metabolic activity, condensation, and active   ║
-║ genetic traits. Stable pH → conservation. Unstable pH → experimentation. ║
-║                                                                           ║
-║ [HYDRO-CYCLE / CONDENSATION]                                            ║
-║ Closed water cycle. Water is not born: it returns.                       ║
-║ Too much → fungal symbiosis. Too little → cellular collapse.             ║
-║ In both cases, the environment takes note and does not forget.           ║
-║                                                                           ║
-║ [GENE-DRIFT / MUTATION]                                                 ║
-║ Evolutionary index of the Vault. It grows in presence of stress or       ║
-║ biological curiosity. It only decreases when everything stops changing.  ║
-║ It is not error: it is unsolicited adaptation.                           ║
-║                                                                           ║
-║ [G-THRESHOLD / G-GATE]                                                  ║
-║ Genetic containment system. Closed → apparent stability.                 ║
-║ Open → expansion, risk, progress.                                        ║
-║ Every Gate adjustment rewrites chemical parameters.                      ║
-║                                                                           ║
-║ [SYSTEMIC SYNAPSIS]                                                     ║
-║ pH influences Condensation. Condensation alters Mutation.                ║
-║ Mutation regulates the G-Gate. The G-Gate, in turn, alters pH.           ║
-║ A perfect cycle of adaptation and failure.                               ║
-║ As long as the Dome breathes, the system works.       
+PROTOCOLLO BIOLOGICO DOME_02
+
+Interconnessione parametri vitali (Vault Bio Systems – Rev. 4.8)
+
+
+[BIO-PREAMBLE]
+Tutti i sistemi del Dome operano in simbiosi.
+Modificare uno significa riscrivere il comportamento degli altri.
+L'equilibrio è una condizione teorica, utile solo per le statistiche.
+Il Dome non giudica — registra e reagisce.
+
+
+[CHEMO-ASSE / pH DRIFT]
+Asse chimico dell'ecosistema.
+Ogni variazione di pH altera l'attività metabolica, la condensazione e i tratti genetici attivi. pH stabile → conservazione. pH instabile → sperimentazione.
+
+
+[IDRO-CICLO / CONDENSAZIONE]
+Ciclo chiuso dell'acqua. L'acqua non nasce: ritorna.
+Troppa → simbiosi fungina. Troppa poca → collasso cellulare.
+In entrambi i casi, l'ambiente prende nota e non dimentica.
+
+
+[GENE-DRIFT / MUTAZIONE]
+Indice evolutivo della Vault. Cresce in presenza di stress o curiosità biologica. Diminuisce solo quando tutto smette di cambiare.
+Non è errore: è adattamento non richiesto.
+
+
+[G-THRESHOLD / G-GATE]
+Sistema di contenimento genetico. Chiuso → stabilità apparente.
+Aperto → espansione, rischio, progresso.
+Ogni regolazione del Gate riscrive i parametri chimici.
+
+
+[SINAPSI SISTEMICA]
+Il pH influenza la Condensazione. La Condensazione altera la Mutazione.
+La Mutazione regola il G-Gate. Il G-Gate, a sua volta, altera il pH.
+Un ciclo perfetto di adattamento e fallimento.
+Finché il Dome respira, il sistema funziona.

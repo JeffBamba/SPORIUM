@@ -9,7 +9,8 @@ namespace _Project.Sporae.Core
     public static class ItemFabric
     {
         private static int _uniqueId = 0;
-        
+        private static readonly HashSet<string> _loggedMissingTypeIds = new HashSet<string>();
+
         /// <summary>
         /// Crea un Item dal typeId. Per SporeGeneric restituisce sempre una spora con status (Raw + Stabile):
         /// la spora senza status non esiste come item.
@@ -23,7 +24,8 @@ namespace _Project.Sporae.Core
             var config = Resources.Load<ItemConfig>("Items/" + typeId);
             if (!config)
             {
-                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config by id: {typeId}");
+                if (_loggedMissingTypeIds.Add(typeId))
+                    SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config by id: {typeId}");
                 return null;
             }
 

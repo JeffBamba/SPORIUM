@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit
 {
@@ -118,7 +119,7 @@ namespace Sporae.UI.UIToolkit
         {
             if (_uiDocument == null || _uiDocument.rootVisualElement == null)
             {
-                Debug.LogWarning("[GameViewportBackground] UIDocument o rootVisualElement non trovato!");
+                SporiumLogger.LogWarning(LogCategory.UI, "[GameViewportBackground] UIDocument o rootVisualElement non trovato!");
                 return;
             }
             
@@ -129,14 +130,11 @@ namespace Sporae.UI.UIToolkit
             // Pulisci eventuali elementi vecchi del sistema CRT (se esistono ancora)
             var oldCrtOverlay = _root.Q<VisualElement>("crt-overlay");
             if (oldCrtOverlay != null)
-            {
                 oldCrtOverlay.style.display = DisplayStyle.None;
-                Debug.Log("[GameViewportBackground] Rimosso vecchio elemento crt-overlay");
-            }
             
             if (_viewportGradient == null)
             {
-                Debug.LogWarning("[GameViewportBackground] Elemento 'viewport-gradient' non trovato in UXML!");
+                SporiumLogger.LogWarning(LogCategory.UI, "[GameViewportBackground] Elemento 'viewport-gradient' non trovato in UXML!");
                 return;
             }
             
@@ -186,7 +184,7 @@ namespace Sporae.UI.UIToolkit
         {
             if (_overlay == null)
             {
-                Debug.LogWarning("[GameViewportBackground] Elemento 'overlay' non trovato in UXML!");
+                SporiumLogger.LogWarning(LogCategory.UI, "[GameViewportBackground] Elemento 'overlay' non trovato in UXML!");
                 return;
             }
 
@@ -196,7 +194,6 @@ namespace Sporae.UI.UIToolkit
             {
                 _overlay.style.display = DisplayStyle.None;
                 _overlay.style.backgroundImage = null;
-                Debug.Log($"[GameViewportBackground] Overlay disabilitato: EnableOverlay={_enableOverlay}, Texture={(_overlayTexture != null ? _overlayTexture.name : "NULL")}");
                 return;
             }
 
@@ -217,7 +214,7 @@ namespace Sporae.UI.UIToolkit
             {
                 if (_overlayTexture == null)
                 {
-                    Debug.LogError("[GameViewportBackground] Overlay texture è NULL!");
+                    SporiumLogger.LogError(LogCategory.UI, "[GameViewportBackground] Overlay texture è NULL!");
                     return;
                 }
                 
@@ -225,19 +222,15 @@ namespace Sporae.UI.UIToolkit
                 
                 if (background == null)
                 {
-                    Debug.LogError("[GameViewportBackground] Background.FromTexture2D ha restituito NULL!");
+                    SporiumLogger.LogError(LogCategory.UI, "[GameViewportBackground] Background.FromTexture2D ha restituito NULL!");
                     return;
                 }
                 
                 _overlay.style.backgroundImage = background;
-                
-                // Verifica che sia stato applicato
-                var appliedBg = _overlay.style.backgroundImage.value;
-                Debug.Log($"[GameViewportBackground] Overlay aggiornato: Enabled={_enableOverlay}, Texture={_overlayTexture.name} ({_overlayTexture.width}x{_overlayTexture.height}), Opacity={_overlayOpacity}, Display={_overlay.style.display.value}, Width={_overlay.resolvedStyle.width}, Height={_overlay.resolvedStyle.height}, BackgroundApplied={appliedBg != null}, SortingOrder={(_uiDocument != null ? _uiDocument.sortingOrder : -1)}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[GameViewportBackground] Errore applicando texture overlay: {e.Message}\n{e.StackTrace}");
+                SporiumLogger.LogError(LogCategory.UI, $"[GameViewportBackground] Errore applicando texture overlay: {e.Message}\n{e.StackTrace}");
             }
         }
         
@@ -323,8 +316,6 @@ namespace Sporae.UI.UIToolkit
             // Disabilita overlay
             _enableOverlay = false;
             _overlayTexture = null;
-            
-            Debug.Log("[GameViewportBackground] Pulizia completa overlay eseguita");
         }
     }
 }

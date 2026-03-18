@@ -100,7 +100,7 @@ namespace Sporae.DevTools
                 {
                     _chevronTransform.DORotate(new Vector3(0, 0, targetRotation), 0.2f);
                 }
-                catch (System.Exception ex)
+                catch (System.Exception)
                 {
                     // Gestisci errore silenziosamente
                 }

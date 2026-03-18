@@ -96,20 +96,10 @@ namespace _Project
             bool isOverUI = UIBlocker.IsPointerOverUI();
 
             if (isOverUI)
-            {
-#if UNITY_EDITOR
-                Debug.Log($"[Interactable] {gameObject.name}: click ignorato — puntatore sopra UI (avvicinati e premi E, oppure clicca senza sovrapporre HUD)");
-#endif
                 return;
-            }
 
             if (!PlayerInRange)
-            {
-#if UNITY_EDITOR
-                Debug.Log($"[Interactable] {gameObject.name}: click ignorato — giocatore fuori portata (distanza max: {EffectiveInteractDistance}). Avvicinati o premi E quando sei a distanza.");
-#endif
                 return;
-            }
             
             _interacted = true;
             OnInteract?.Invoke();

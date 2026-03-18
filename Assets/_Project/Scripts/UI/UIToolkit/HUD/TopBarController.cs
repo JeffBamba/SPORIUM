@@ -634,7 +634,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (icon != null)
             {
                 iconBox.style.backgroundImage = new StyleBackground(icon);
-                iconBox.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                iconBox.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
             }
             var nameLabel = new Label { text = nameText, enableRichText = false };
             nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f); // quasi bianco come da reference

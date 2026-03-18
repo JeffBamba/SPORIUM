@@ -170,6 +170,33 @@ namespace Sporae.UI.UIToolkit.PlantCard.Helpers
                 _ => "Unknown"
             };
         }
+
+        /// <summary>
+        /// Nome leggibile per un seed (da seedTypeId). Usato da terminale, HUD, inventory.
+        /// </summary>
+        public static string GetSeedDisplayName(string seedTypeId)
+        {
+            if (string.IsNullOrEmpty(seedTypeId))
+                return seedTypeId;
+            var plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+            if (plantData != null)
+                return GetPlantDisplayNameForSeed(plantData);
+            return seedTypeId;
+        }
+
+        private static string GetPlantDisplayNameForSeed(PlantData plantData)
+        {
+            if (plantData == null)
+                return "Sconosciuto";
+            string baseName = plantData.PlantCode switch
+            {
+                "PLT-STD-001" => "Ferric Fern",
+                "PLT-PURE-001" => "Arctic Hask",
+                "PLT-EVIL-001" => "Glasscap Fungus",
+                _ => plantData.name.Replace("PLT-", "").Replace("-", " ")
+            };
+            return $"{baseName} Seed";
+        }
     }
 }
 

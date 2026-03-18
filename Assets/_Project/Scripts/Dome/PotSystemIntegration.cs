@@ -40,12 +40,8 @@ public class PotSystemIntegration : MonoBehaviour
         
         if (potsBootstrap != null)
         {
-            // Sottoscrivi agli eventi dei vasi
-            PotSlot.OnPotSelected += OnPotSelected;
-            
-            // Ottieni tutti i vasi
+            // Gestione vasi solo da Terminal Pot (PlantCardV3); nessuna sottoscrizione a OnPotSelected.
             allPots = new List<PotSlot>(potsBootstrap.GetAllPots());
-            
             SporiumLogger.LogInfo(LogCategory.Dome, $"Integrazione attivata con {allPots.Count} vasi.");
         }
         else
@@ -53,51 +49,6 @@ public class PotSystemIntegration : MonoBehaviour
             SporiumLogger.LogWarning(LogCategory.Dome, "Bootstrap vasi non trovato. Integrazione disabilitata.");
             enabled = false;
         }
-    }
-    
-    void OnDestroy()
-    {
-        // Annulla sottoscrizione
-        PotSlot.OnPotSelected -= OnPotSelected;
-    }
-    
-    private void OnPotSelected(PotSlot pot)
-    {
-        if (!enableIntegration) return;
-        
-        SporiumLogger.LogInfo(LogCategory.Pot, $"Vaso {pot.PotId} selezionato per azioni.");
-        
-        // Mostra opzioni disponibili (da implementare in BLK-01.02)
-        ShowAvailableActions(pot);
-    }
-    
-    /// <summary>
-    /// Mostra le azioni disponibili per il vaso selezionato
-    /// DA IMPLEMENTARE IN BLK-01.02
-    /// </summary>
-    private void ShowAvailableActions(PotSlot pot)
-    {
-        if (pot == null || pot.PotActions == null) return;
-        
-        SporiumLogger.LogInfo(LogCategory.Pot, $"Azioni disponibili per {pot.PotId}:");
-        
-        // Usa il nuovo sistema PotActions per determinare le azioni disponibili
-        if (pot.PotActions.CanPlant())
-        {
-            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Piantare seme (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
-        }
-        
-        if (pot.PotActions.CanWater())
-        {
-            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Annaffiare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
-        }
-        
-        if (pot.PotActions.CanLight())
-        {
-            SporiumLogger.LogInfo(LogCategory.Pot, $"  - Illuminare pianta (Costo: {potSystemConfig?.CostCryPerPotAction ?? 1} CRY)");
-        }
-        
-        SporiumLogger.LogInfo(LogCategory.Pot, "    Azioni richieste: 1 per azione");
     }
     
     /// <summary>

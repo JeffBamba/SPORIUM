@@ -107,7 +107,7 @@ namespace _Project.UI.HUDNotifications2_0
             _config = Resources.Load<HUDNotificationConfig2_0>("Configs/HUDNotificationConfig2.0");
             if (_config == null)
             {
-                Debug.LogWarning("[HUDNotificationFeedManager2.0] Config non trovato in Resources/Configs/! Usando valori default.");
+                SporiumLogger.LogWarning(LogCategory.UI, "[HUDNotificationFeedManager2.0] Config non trovato in Resources/Configs/! Usando valori default.");
             }
         }
         
@@ -156,7 +156,7 @@ namespace _Project.UI.HUDNotifications2_0
         {
             if (_config == null)
             {
-                Debug.LogWarning("[HUDNotificationFeedManager2.0] Config non caricato, impossibile mostrare notifica.");
+                SporiumLogger.LogWarning(LogCategory.UI, "[HUDNotificationFeedManager2.0] Config non caricato, impossibile mostrare notifica.");
                 return;
             }
             
@@ -173,14 +173,14 @@ namespace _Project.UI.HUDNotifications2_0
             // Ottieni notifica dal pool
             if (_pool == null)
             {
-                Debug.LogError("[HUDNotificationFeedManager2.0] Pool non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "[HUDNotificationFeedManager2.0] Pool non assegnato!");
                 return;
             }
             
             var notificationItem = _pool.GetFromPool();
             if (notificationItem == null)
             {
-                Debug.LogError("[HUDNotificationFeedManager2.0] Impossibile ottenere notifica dal pool!");
+                SporiumLogger.LogError(LogCategory.UI, "[HUDNotificationFeedManager2.0] Impossibile ottenere notifica dal pool!");
                 return;
             }
             
@@ -191,7 +191,7 @@ namespace _Project.UI.HUDNotifications2_0
             // Verifica che l'icona sia valida
             if (icon == null)
             {
-                Debug.LogWarning($"[HUDNotificationFeedManager2.0] Icona null per tipo {type}, usando fallback.");
+                SporiumLogger.LogWarning(LogCategory.UI, $"[HUDNotificationFeedManager2.0] Icona null per tipo {type}, usando fallback.");
                 // Usa InfoIcon come fallback
                 icon = _config.InfoIcon;
             }
@@ -230,7 +230,7 @@ namespace _Project.UI.HUDNotifications2_0
         {
             if (_config == null)
             {
-                Debug.LogWarning("[HUDNotificationFeedManager2.0] Config non caricato, impossibile mostrare notifica.");
+                SporiumLogger.LogWarning(LogCategory.UI, "[HUDNotificationFeedManager2.0] Config non caricato, impossibile mostrare notifica.");
                 return;
             }
             
@@ -247,14 +247,14 @@ namespace _Project.UI.HUDNotifications2_0
             // Ottieni notifica dal pool
             if (_pool == null)
             {
-                Debug.LogError("[HUDNotificationFeedManager2.0] Pool non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "[HUDNotificationFeedManager2.0] Pool non assegnato!");
                 return;
             }
             
             var notificationItem = _pool.GetFromPool();
             if (notificationItem == null)
             {
-                Debug.LogError("[HUDNotificationFeedManager2.0] Impossibile ottenere notifica dal pool!");
+                SporiumLogger.LogError(LogCategory.UI, "[HUDNotificationFeedManager2.0] Impossibile ottenere notifica dal pool!");
                 return;
             }
             

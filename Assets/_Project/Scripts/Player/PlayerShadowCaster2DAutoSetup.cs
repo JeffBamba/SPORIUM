@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using Sporae.DevTools;
 
 namespace _Project.Player
 {
@@ -40,7 +41,7 @@ namespace _Project.Player
             if (sr == null)
             {
                 if (showDebugLogs)
-                    Debug.LogWarning("[PlayerShadowCaster2DAutoSetup] SpriteRenderer not found in children. Cannot setup ShadowCaster2D.", this);
+                    SporiumLogger.LogWarning(LogCategory.Core, "[PlayerShadowCaster2DAutoSetup] SpriteRenderer not found in children. Cannot setup ShadowCaster2D.", this);
                 return;
             }
 
@@ -54,15 +55,6 @@ namespace _Project.Player
                 TrySetBool(caster, "useRendererSilhouette", true);
 
             TrySetBool(caster, "selfShadows", trySelfShadows);
-
-            if (showDebugLogs)
-            {
-                Debug.Log(
-                    $"[PlayerShadowCaster2DAutoSetup] ShadowCaster2D ensured on '{targetGO.name}'. " +
-                    $"useRendererSilhouette={(tryUseRendererSilhouette ? "try" : "skip")}, selfShadows={trySelfShadows}",
-                    this
-                );
-            }
         }
 
         private static void TrySetBool(object target, string memberName, bool value)

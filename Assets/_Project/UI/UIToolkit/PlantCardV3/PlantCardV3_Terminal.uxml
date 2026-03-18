@@ -3,13 +3,13 @@
     <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Panel-Base.uss?fileID=7433441132597879392&amp;guid=3cc1013e433eec845ab79e73d208a516&amp;type=3#SP-Panel-Base" />
     <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss?fileID=7433441132597879392&amp;guid=b37f4bda32a0604459559f294aa66d24&amp;type=3#PlantCardV3_Terminal" />
     <ui:VisualElement name="pcv3-root" class="pcv3-root">
-        <ui:VisualElement name="pcv3-backdrop" class="pcv3-backdrop" />
+        <ui:VisualElement name="pcv3-backdrop" class="pcv3-backdrop" style="top: 0; right: -1px; left: 2px; bottom: 0;" />
         <ui:VisualElement name="pcv3-dim" class="pcv3-dim" />
         <ui:VisualElement name="pcv3-window" class="pcv3-window">
             <ui:VisualElement name="pcv3-frame" class="pcv3-frame" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/frame_terminal.png?fileID=2800000&amp;guid=466f476bdea9b6742af57db7ab2df571&amp;type=3#frame_terminal&quot;);" />
             <ui:VisualElement name="pcv3-inner" class="pcv3-inner" style="left: 723px; top: 23px; bottom: 33px; right: 137px;">
                 <ui:VisualElement name="pcv3-outer-glow" class="pcv3-outer-glow" />
-                <ui:VisualElement name="pcv3-header" class="pcv3-header" style="display: flex; top: 35px; right: 106px; width: 920px; border-top-width: 2px; border-right-width: 2px; border-left-width: 2px;">
+                <ui:VisualElement name="pcv3-header" class="pcv3-header" style="display: flex; top: 35px; right: 74px; width: 893px; border-top-width: 2px; border-right-width: 2px; border-left-width: 2px;">
                     <ui:Label name="pcv3-title" text="TERMINALE CONTROLLO INCUBATORE v3.1" class="pcv3-title" style="letter-spacing: 9px;" />
                     <ui:VisualElement class="pcv3-header-right">
                         <ui:VisualElement name="pcv3-ap-box" class="pcv3-pill pcv3-pill-ap" style="height: 33px;">
@@ -22,7 +22,7 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="pcv3-body" class="pcv3-body" style="left: -8px; top: 22px;">
-                    <ui:VisualElement name="pcv3-left" class="pcv3-left pcv3-zona3-draggable" style="min-width: 167px; right: 694px; top: 135px; width: 172px; height: 339px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
+                    <ui:VisualElement name="pcv3-left" class="pcv3-left pcv3-zona3-draggable" style="min-width: 167px; right: 663px; top: 135px; width: 172px; height: 339px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
                         <ui:VisualElement name="pcv3-vital-stats-block-1" class="pcv3-vital-stats-block" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; top: -29px; width: 171px; left: -14px;">
                             <ui:Label name="pcv3-vital-title-1" text="Stato Vitale:" class="pcv3-vital-title" />
                             <ui:VisualElement name="pcv3-vital-stats-inner-1" class="pcv3-potcard-stats">
@@ -83,7 +83,7 @@
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="pcv3-center" class="pcv3-center pcv3-zona2-draggable" style="right: 668px; top: 28px; height: 476px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
+                    <ui:VisualElement name="pcv3-center" class="pcv3-center pcv3-zona2-draggable" style="right: 624px; top: 28px; height: 476px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
                         <ui:VisualElement name="pcv3-hud-preview-group" class="pcv3-hud-preview-group">
                             <ui:VisualElement name="pcv3-hud-plant-info-box" class="pcv3-hud-plant-info-box" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
                                 <ui:Label name="pcv3-hud-plant-name" text="---" class="pcv3-hud-plant-name" />
@@ -114,21 +114,16 @@
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="pcv3-right" class="pcv3-right" style="min-height: 783px; height: 861px; width: 874px; top: 0; left: 0;">
-                        <ui:VisualElement name="pcv3-console-view" class="pcv3-console-view" style="top: 16px; height: 573px; position: absolute; width: 918px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; left: -97px;">
-                            <ui:ScrollView name="pcv3-console-scroll" class="pcv3-console-scroll" style="top: 5px; height: 606px; width: 893px;">
+                    <ui:VisualElement name="pcv3-right" class="pcv3-right" style="min-height: 783px; height: 861px; width: 882px; top: 0; left: -8px;">
+                        <ui:VisualElement name="pcv3-console-view" class="pcv3-console-view pcv3-terminal-content-view" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; width: 895px; left: -52px; height: 564px;">
+                            <ui:ScrollView name="pcv3-console-scroll" class="pcv3-console-scroll pcv3-terminal-scroll-content">
                                 <ui:Label name="pcv3-console-text" class="pcv3-console-text" />
                             </ui:ScrollView>
                         </ui:VisualElement>
-                        <ui:VisualElement name="pcv3-protocol-view" class="pcv3-protocol-view" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
-                            <ui:ScrollView name="pcv3-protocol-scroll" class="pcv3-protocol-scroll">
-                                <ui:Label name="pcv3-protocol-text" class="pcv3-console-text" />
-                            </ui:ScrollView>
-                        </ui:VisualElement>
-                        <ui:VisualElement name="pcv3-detail-view" class="pcv3-detail-view">
+                        <ui:VisualElement name="pcv3-detail-view" class="pcv3-detail-view pcv3-terminal-content-view">
                             <ui:Label name="pcv3-detail-placeholder" text="ANALISI DETTAGLIATA (TODO)" class="pcv3-detail-placeholder" />
                         </ui:VisualElement>
-                        <ui:VisualElement name="pcv3-prompt" class="pcv3-prompt" style="-unity-text-align: upper-left; top: 597px; position: absolute; width: 918px; left: -99px;">
+                        <ui:VisualElement name="pcv3-prompt" class="pcv3-prompt" style="-unity-text-align: upper-left; top: 589px; position: absolute; width: 891px; left: -49px;">
                             <ui:Label name="pcv3-prompt-prefix" text="&gt;" class="pcv3-prompt-prefix" />
                             <ui:TextField name="pcv3-input" class="pcv3-input" style="height: 50px; min-height: 50px; max-height: 50px; width: 874px;" />
                             <ui:VisualElement name="pcv3-loading-indicator" class="pcv3-loading-indicator">

@@ -1,5 +1,6 @@
 using UnityEngine;
 using _Project;
+using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -19,7 +20,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_interactable != null)
                 _interactable.OnInteract += HandleInteract;
             else
-                Debug.LogWarning("PlantCardV3TerminalOpener: manca Interactable sullo stesso GameObject.");
+                SporiumLogger.LogWarning(LogCategory.UI, "PlantCardV3TerminalOpener: manca Interactable sullo stesso GameObject.");
         }
 
         private void OnDestroy()
@@ -32,7 +33,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_terminalUI == null)
             {
-                Debug.LogWarning("PlantCardV3TerminalOpener: Terminal UI non assegnata!");
+                SporiumLogger.LogWarning(LogCategory.UI, "PlantCardV3TerminalOpener: Terminal UI non assegnata!");
                 return;
             }
 

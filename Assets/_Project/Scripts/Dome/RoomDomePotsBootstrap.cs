@@ -107,11 +107,6 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             PotSlot existingSlot = existingPot.GetComponent<PotSlot>();
             if (existingSlot != null)
             {
-                if (showDebugLogs)
-                {
-                    Debug.Log($"[RoomDomePotsBootstrap] Vaso {potId} gi� esistente, saltato.");
-                }
-
                 // Assegna il riferimento
                 if (potNumber == 1) pot1 = existingSlot;
                 else pot2 = existingSlot;

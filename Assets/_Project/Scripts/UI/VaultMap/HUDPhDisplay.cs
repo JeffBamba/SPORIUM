@@ -20,9 +20,11 @@ namespace _Project
     [SerializeField] private Image phIndicatorImage; // Barra/indicatore visivo opzionale
     
     [Header("Settings")]
+#pragma warning disable CS0414
     [SerializeField] private bool updateOnStart = true;
-    [SerializeField] private float updateInterval = 0.1f; // Aggiorna ogni 0.1 secondi per catturare oscillazioni
     [SerializeField] private bool autoCreateUI = true; // Crea UI automaticamente se mancante
+#pragma warning restore CS0414
+    [SerializeField] private float updateInterval = 0.1f; // Aggiorna ogni 0.1 secondi per catturare oscillazioni
     [SerializeField] private Vector2 uiPosition = new Vector2(0f, -30f); // Posizione alto-centro
     
     [Header("Hover Tooltip")]
@@ -53,36 +55,12 @@ namespace _Project
             phBandText.gameObject.SetActive(false);
         }
         
-        return; // Non eseguire più nulla
-        
-        // Auto-setup: crea UI se mancante
-        if (autoCreateUI)
-        {
-            AutoSetupUI();
-        }
+        return; // Non eseguire più nulla (HUDPhDisplay deprecato, sostituito da TopBarController)
     }
     
     private void Start()
     {
         // DEPRECATO - non eseguire nulla
-        return;
-        // Cerca PhSystem nel ServiceContainer o crea uno temporaneo
-        TryGetPhSystem();
-        
-        // Cerca UINotification per i toast
-        _uiNotification = FindObjectOfType<UINotification>();
-        
-        // Setup hover detection e tooltip
-        if (enableHoverTooltip)
-        {
-            SetupHoverDetection();
-            CreateTooltipPanel();
-        }
-        
-        if (updateOnStart)
-        {
-            UpdatePhDisplay();
-        }
     }
     
     /// <summary>

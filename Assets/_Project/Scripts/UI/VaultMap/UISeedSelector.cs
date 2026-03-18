@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
-using Sporae.UI.UIToolkit.SeedInventory;
+using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -386,7 +386,7 @@ namespace _Project
         private string GetSeedButtonText(string seedTypeId, int quantity, PlantData plantData)
         {
             // Usa il nome leggibile del seed invece del codice
-            string seedDisplayName = SeedInventoryMenu.GetSeedDisplayName(seedTypeId);
+            string seedDisplayName = PlantCardFormatters.GetSeedDisplayName(seedTypeId);
             
             if (plantData != null)
             {

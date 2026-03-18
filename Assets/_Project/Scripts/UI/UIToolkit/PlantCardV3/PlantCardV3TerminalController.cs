@@ -18,7 +18,6 @@ using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.DevTools;
-using Sporae.UI.UIToolkit.SeedInventory;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -143,7 +142,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private Label _consoleText;
         private VisualElement _forecastConditionTooltip;
         private Label _forecastConditionTooltipText;
+#pragma warning disable CS0414
         private bool _shouldHideForecastConditionTooltip;
+#pragma warning restore CS0414
         private VisualElement _forecastHotspotLayer;
         private VisualElement _forecastHoverAnchor;
         private readonly List<ForecastConditionHoverRow> _forecastConditionHoverRows = new();
@@ -191,7 +192,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private readonly StringBuilder _consoleBuffer = new();
         private bool _isVisible;
         private Coroutine _bootRoutine;
+#pragma warning disable CS0414
         private bool _bootSequenceActive;
+#pragma warning restore CS0414
         private bool _typewriterActive;
         private readonly Queue<string> _typewriterQueue = new();
         private Coroutine _typewriterRoutine;
@@ -298,14 +301,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _uiDocument = GetComponent<UIDocument>();
 
             // Mettiamo il Terminale sopra HUD (50) e sopra PlantCardV2 (300).
-            // PotActionsMenu usa 400, AdditiveSelector 500: qui usiamo 600 per farlo modal.
+            // Sopra HUD (50) e altri pannelli: qui usiamo 600 per farlo modal.
             if (_uiDocument != null)
                 _uiDocument.sortingOrder = 600;
 
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
             if (_root == null)
             {
-                Debug.LogError("PlantCardV3TerminalController: rootVisualElement non trovato!");
+                SporiumLogger.LogError(LogCategory.UI, "PlantCardV3TerminalController: rootVisualElement non trovato!");
                 return;
             }
 
@@ -600,7 +603,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                         focusedName = "(non-VisualElement)";
                 }
 
-                Debug.Log($"[PlantCardV3TerminalController][FocusDebug #{_focusDebugSeq}] {msg} | visible={_isVisible} | focused={focusedType}:{focusedName}");
+                SporiumLogger.LogDebug(LogCategory.UI, $"[PlantCardV3TerminalController][FocusDebug #{_focusDebugSeq}] {msg} | visible={_isVisible} | focused={focusedType}:{focusedName}");
             }
             catch
             {
@@ -1342,7 +1345,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                         Destroy(_backdropTexture);
                     _backdropTexture = blurred;
                     _backdrop.style.backgroundImage = new StyleBackground(_backdropTexture);
-                    _backdrop.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop;
+                    _backdrop.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
                 }
                 finally
                 {
@@ -1421,17 +1424,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_suppressedUiDocuments.Count > 0) return;
 
-            // Basato su SceneHierarchy.txt: nomi reali dei GO UI.
+            // Nomi GO UI da nascondere quando il terminale è aperto (Pot Ops / IrrigationDialog / SeedInventory / AdditiveSelector rimossi).
             string[] goNames =
             {
                 "HUD_TopBar",
                 "HUD_BottomNavigation",
                 "PlayerStatusPanel",
-                "PlantCardV2",
-                "PotActionsMenu",
-                "SeedInventoryMenu",
-                "IrrigationDialog",
-                "UIAdditiveSelector",
                 "Notifications Foundation",
                 "HUD_GameViewportBackground"
             };
@@ -1914,7 +1912,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 if (previewSprite != null)
                 {
                     _hudPlantPreview.style.backgroundImage = new StyleBackground(previewSprite);
-                    _hudPlantPreview.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                    _hudPlantPreview.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
                 }
                 else
                     _hudPlantPreview.style.backgroundImage = new StyleBackground(StyleKeyword.Null);
@@ -2136,7 +2134,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (_potCardTemplate == null)
             {
-                Debug.LogError("PlantCardV3TerminalController: _potCardTemplate non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "PlantCardV3TerminalController: _potCardTemplate non assegnato!");
                 return new VisualElement();
             }
 
@@ -2149,7 +2147,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 cardRoot = templateRoot.Q<VisualElement>("pcv3-potcard");
                 if (cardRoot == null)
                 {
-                    Debug.LogError("PlantCardV3TerminalController: Template non contiene pcv3-potcard!");
+                    SporiumLogger.LogError(LogCategory.UI, "PlantCardV3TerminalController: Template non contiene pcv3-potcard!");
                     return templateRoot;
                 }
             }
@@ -2194,7 +2192,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (plantImage != null && previewSprite != null)
             {
                 plantImage.style.backgroundImage = new StyleBackground(previewSprite);
-                plantImage.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                plantImage.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
             }
 
             if (liveDot != null)
@@ -3068,7 +3066,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             float baseY = _consoleText.layout.y;
             float width = Mathf.Max(10f, _consoleText.layout.width);
 
-            bool debugLoggedFirst = false;
             for (int i = 0; i < lines.Length; i++)
             {
                 string plain = StripRichTextTags(lines[i] ?? string.Empty).TrimStart();
@@ -3076,13 +3073,11 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     continue;
 
                 string potId = null;
-                bool foundHeaderArrow = false;
                 for (int j = i; j >= 0; j--)
                 {
                     string headerPlain = StripRichTextTags(lines[j] ?? string.Empty);
                     int arrow = headerPlain.IndexOf('►');
                     if (arrow < 0) continue;
-                    foundHeaderArrow = true;
 
                     // Expected: "► POT-001 | ..."
                     string after = headerPlain[(arrow + 1)..].Trim();
@@ -3951,15 +3946,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (upper == "CLOSE")
             {
-                // Contestuale: se siamo in protocol/detail, torna a console; altrimenti warning.
-                if (_protocolView != null && _protocolView.style.display != DisplayStyle.None)
-                {
-                    AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
-                    AppendRawLine("");
-                    SwitchToConsole();
-                    FlushConsole();
-                    return;
-                }
+                // Contestuale: se siamo in detail, torna a console; altrimenti warning. PROTOCOL è in console, non ha vista dedicata.
                 if (_detailView != null && _detailView.style.display != DisplayStyle.None)
                 {
                     AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
@@ -4670,11 +4657,6 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 AppendRawLine("§DATA§]§END§");
             }
             AppendRawLine("");
-            AppendRawLine("");
-            AppendRawLine("§DATA§▸ LEGENDA§END§");
-            AppendRawLine("§TITLE§Come leggere i dati:§END§ §TITLE§Luce accesa§END§: quale LED è acceso (Blu/Rosso) o §TITLE§Nessuna§END§ in rosso. §TITLE§Stress da luce§END§: range ideale 20%-80% (sotto 20% la pianta non beneficia, sopra 80% rischio burn). Acqua e Condizione come prima.");
-            AppendRawLine("§TITLE§I requisiti§END§ (idratazione, stress luminoso, fertilizzante) si riferiscono allo §TITLE§stadio di crescita attuale§END§ della pianta.");
-            AppendRawLine("");
 
             // RESEARCHED NOTE (lore): quando si usa il collector per STATUS, non si aggiunge qui ma in coda a StatusSecondHalfRoutine
             if (_statusLinesCollector == null)
@@ -4866,6 +4848,11 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             AppendRawLine("§INFO§" + passivePower + "§END§");
             AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
 
+            // —— LEGENDA (sopra Requisiti e Avanzamento) ——
+            AppendRawLine("§DATA§▸ LEGENDA§END§");
+            AppendRawLine("§TITLE§Come leggere i dati:§END§ §TITLE§Luce accesa§END§: quale LED è acceso (Blu/Rosso) o §TITLE§Nessuna§END§ in rosso. §TITLE§Stress da luce§END§: range ideale 20%-80% (sotto 20% la pianta non beneficia, sopra 80% rischio burn). Acqua e Condizione come prima.");
+            AppendRawLine("§TITLE§I requisiti§END§ (idratazione, stress luminoso, fertilizzante) si riferiscono allo §TITLE§stadio di crescita attuale§END§ della pianta.");
+            AppendRawLine("");
             // —— REQUISITI E AVANZAMENTO (condizione = non bloccante; trend solo informativo) ——
             AppendRawLine("§TITLE§REQUISITI E AVANZAMENTO§END§");
             bool conditionReqOk = !f.BlockedByCondition;
@@ -4990,7 +4977,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             // Carica template detail page
             if (_detailPageTemplate == null)
             {
-                Debug.LogError("PlantCardV3TerminalController: _detailPageTemplate non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "PlantCardV3TerminalController: _detailPageTemplate non assegnato!");
                 AppendRawLine("§ERROR§⚠ ERRORE: TEMPLATE PAGINA DETTAGLIO NON ASSEGNATO.§END§");
                 AppendRawLine("");
                 FlushConsole();
@@ -5004,7 +4991,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 detailPage = templateRoot.Q<VisualElement>("pcv3-detail-page");
                 if (detailPage == null)
                 {
-                    Debug.LogError("PlantCardV3TerminalController: Template non contiene pcv3-detail-page!");
+                    SporiumLogger.LogError(LogCategory.UI, "PlantCardV3TerminalController: Template non contiene pcv3-detail-page!");
                     AppendRawLine("§ERROR§⚠ ERRORE: TEMPLATE PAGINA DETTAGLIO NON VALIDO.§END§");
                     AppendRawLine("");
                     FlushConsole();
@@ -5030,16 +5017,6 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
             var plantData = state.GetPlantData();
             bool hasCondition = TryGetCondition(state, plantData, out int conditionScore, out string conditionName);
-
-            // Helper: dotted leaders
-            static string Leader(string key, string value, int dots = 14)
-            {
-                if (string.IsNullOrEmpty(key)) key = "---";
-                if (string.IsNullOrEmpty(value)) value = "---";
-                string k = key;
-                int pad = Mathf.Max(1, dots - k.Length);
-                return $"{k}{new string('.', pad)}: {value}";
-            }
 
             // Helper: 20-char ascii bar
             static void SetBar(Label filled, Label empty, int percent)
@@ -5233,7 +5210,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 if (string.IsNullOrWhiteSpace(text)) return;
 
                 int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
-                PlantDiaryManager.Instance.AddNote(state.PotId, new PlantDiaryNotes.DiaryNote(currentDay, text));
+                PlantDiaryManager.Instance.AddNote(state.PotId, new PlantDiaryManager.DiaryNote(currentDay, text));
 
                 diaryInput.value = string.Empty;
                 RenderDiary();
@@ -6029,7 +6006,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return itemTypeId;
 
             // Prova a convertire in nome seed leggibile
-            string seedDisplayName = SeedInventoryMenu.GetSeedDisplayName(itemTypeId);
+            string seedDisplayName = PlantCardFormatters.GetSeedDisplayName(itemTypeId);
             
             // Se è diverso dal typeId originale, significa che è stato convertito (è un seed)
             if (seedDisplayName != itemTypeId)
@@ -6130,15 +6107,17 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
         private void ShowProtocolFromDocs()
         {
-            SwitchToProtocol();
-            
+            // Mostra il protocollo nella console (come STATUS), senza cambiare vista
             AppendRawLine("§CMD§PROTOCOL§END§");
-            AppendRawLine("§INFO§Digita CLOSE per tornare...§END§");
             AppendRawLine("");
-            FlushConsole();
 
             string protocol = TryLoadProtocolFromProjectDocs();
-            StartProtocolTypewriter(protocol);
+            string[] lines = (protocol ?? string.Empty).Replace("\r\n", "\n").Split('\n');
+            foreach (string line in lines)
+                AppendRawLine(line);
+
+            AppendRawLine("");
+            FlushConsole();
         }
 
         private string TryLoadProtocolFromProjectDocs()
@@ -6209,15 +6188,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
         private void RequestClose()
         {
-            // Se siamo in una sub-view, chiudiamo quella (come comando CLOSE).
-            if (_protocolView != null && _protocolView.style.display != DisplayStyle.None)
-            {
-                AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");
-                AppendRawLine("");
-                SwitchToConsole();
-                FlushConsole();
-                return;
-            }
+            // Se siamo in una sub-view, chiudiamo quella (come comando CLOSE). PROTOCOL ora è in console, non ha vista dedicata.
             if (_detailView != null && _detailView.style.display != DisplayStyle.None)
             {
                 AppendRawLine("§INFO§⚠ Chiusura vista dettaglio§END§");

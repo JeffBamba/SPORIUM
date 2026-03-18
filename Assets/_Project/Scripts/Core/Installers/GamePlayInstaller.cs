@@ -59,7 +59,7 @@ namespace _Project.Sporae.Core.Installers
                 ServiceContainer.Instance.Register(new PhSystem(0f));
             }
 
-            // Registra ToastNotificationManager se presente nella scena
+            // Registra ToastNotificationManager se presente nella scena (opzionale: il gioco usa Foundation/HUD 2.0)
             var toastManager = FindObjectOfType<ToastNotificationManager>();
             if (toastManager != null)
             {
@@ -68,7 +68,7 @@ namespace _Project.Sporae.Core.Installers
             }
             else
             {
-                SporiumLogger.LogWarning(LogCategory.Core, "ToastNotificationManager non trovato nella scena. Toast notifications potrebbero non funzionare.");
+                SporiumLogger.LogDebug(LogCategory.Core, "ToastNotificationManager non in scena (ok se usi Notifications Foundation / HUD 2.0).");
             }
 
             // Notifications Foundation (ex novo): registra sempre il service, ma può restare disabilitato in coexistence

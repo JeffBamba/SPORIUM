@@ -70,9 +70,7 @@
     margin-bottom: 7px;
 }
 
-.lab-fus-body > *:last-child {
-    margin-bottom: 0;
-}
+/* USS does not support :last-child - last item keeps margin-bottom */
 
 .lab-fus-hint {
     font-size: 11px;
@@ -88,9 +86,7 @@
     margin-right: 5px;
 }
 
-.lab-fus-row > *:last-child {
-    margin-right: 0;
-}
+/* USS does not support :last-child - last item keeps margin-right */
 
 .lab-fus-label {
     width: 120px;

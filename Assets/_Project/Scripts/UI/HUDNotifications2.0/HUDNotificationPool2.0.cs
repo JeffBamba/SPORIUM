@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using _Project.UI.HUDNotifications2_0;
+using Sporae.DevTools;
 
 namespace _Project.UI.HUDNotifications2_0
 {
@@ -75,7 +76,7 @@ namespace _Project.UI.HUDNotifications2_0
         {
             if (_prefab == null)
             {
-                Debug.LogError("[HUDNotificationPool2.0] Prefab non assegnato!");
+                SporiumLogger.LogError(LogCategory.UI, "[HUDNotificationPool2.0] Prefab non assegnato!");
                 return null;
             }
             

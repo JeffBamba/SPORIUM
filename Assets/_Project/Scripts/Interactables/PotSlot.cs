@@ -225,12 +225,9 @@ public class PotSlot : MonoBehaviour
         // Imposta questo vaso come selezionato
         IsSelected = true;
 
-        // NOTA: Non raccogliere automaticamente i frutti qui!
-        // L'harvest deve essere gestito tramite il widget UI (PotDetailsWidget)
-        // quando l'utente clicca esplicitamente sul pulsante "Harvest"
-        // CollectFruits() è stato rimosso per permettere all'utente di scegliere se fare harvest o vedere i dettagli
+        // NOTA: Harvest e gestione vaso sono gestiti solo dal Terminal Pot (PlantCardV3).
 
-        // Notifica la selezione - questo farà apparire il widget con i pulsanti di azione
+        // Notifica la selezione (per eventuali listener, es. log o altri sistemi).
         OnPotSelected?.Invoke(this);
     }
     

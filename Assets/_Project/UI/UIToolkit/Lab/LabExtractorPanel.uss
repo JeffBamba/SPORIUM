@@ -70,9 +70,7 @@
     margin-bottom: 7px;
 }
 
-.lab-ext-body > *:last-child {
-    margin-bottom: 0;
-}
+/* USS does not support :last-child - last item keeps margin-bottom */
 
 .lab-ext-row {
     flex-direction: row;
@@ -83,9 +81,7 @@
     margin-right: 5px;
 }
 
-.lab-ext-row > *:last-child {
-    margin-right: 0;
-}
+/* USS does not support :last-child - last item keeps margin-right */
 
 .lab-ext-label {
     width: 90px;

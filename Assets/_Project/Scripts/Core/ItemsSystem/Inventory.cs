@@ -42,7 +42,10 @@ namespace _Project.Sporae.Core
         
         public void Add(string typeId)
         {
-            Add(ItemFabric.CreateItemByType(typeId));
+            var item = ItemFabric.CreateItemByType(typeId);
+            if (item != null)
+                Add(item);
+            // Se null, ItemFabric ha già loggato il motivo (config mancante)
         }
         
         public void Add(Item item)

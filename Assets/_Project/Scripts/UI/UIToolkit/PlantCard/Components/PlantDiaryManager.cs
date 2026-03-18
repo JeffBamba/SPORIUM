@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Sporae.UI.UIToolkit.PlantCard.Components;
 
 namespace Sporae.UI.UIToolkit.PlantCard.Components
 {
@@ -11,10 +10,34 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
     /// </summary>
     public class PlantDiaryManager : MonoBehaviour
     {
+        [Serializable]
+        public struct DiaryNote
+        {
+            public int Day;
+            public string Text;
+            public DateTime Timestamp;
+
+            public DiaryNote(int day, string text)
+            {
+                Day = day;
+                Text = text;
+                Timestamp = DateTime.Now;
+            }
+
+            /// <summary>Per ripristino da save (timestamp da stringa).</summary>
+            public static DiaryNote FromSave(int day, string text, string timestampIso)
+            {
+                return new DiaryNote(day, text)
+                {
+                    Timestamp = DateTime.TryParse(timestampIso, out var t) ? t : DateTime.Now
+                };
+            }
+        }
+
         private static PlantDiaryManager _instance;
         
         // Storage: PotId -> Lista note
-        private Dictionary<string, List<PlantDiaryNotes.DiaryNote>> _notesByPotId = new Dictionary<string, List<PlantDiaryNotes.DiaryNote>>();
+        private Dictionary<string, List<DiaryNote>> _notesByPotId = new Dictionary<string, List<DiaryNote>>();
         
         public static PlantDiaryManager Instance
         {
@@ -46,14 +69,14 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
         /// <summary>
         /// Aggiunge una nota per un pot
         /// </summary>
-        public void AddNote(string potId, PlantDiaryNotes.DiaryNote note)
+        public void AddNote(string potId, DiaryNote note)
         {
             if (string.IsNullOrEmpty(potId))
                 return;
             
             if (!_notesByPotId.ContainsKey(potId))
             {
-                _notesByPotId[potId] = new List<PlantDiaryNotes.DiaryNote>();
+                _notesByPotId[potId] = new List<DiaryNote>();
             }
             
             _notesByPotId[potId].Add(note);
@@ -62,12 +85,12 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
         /// <summary>
         /// Ottiene tutte le note per un pot
         /// </summary>
-        public List<PlantDiaryNotes.DiaryNote> GetNotes(string potId)
+        public List<DiaryNote> GetNotes(string potId)
         {
             if (string.IsNullOrEmpty(potId) || !_notesByPotId.ContainsKey(potId))
-                return new List<PlantDiaryNotes.DiaryNote>();
+                return new List<DiaryNote>();
             
-            return new List<PlantDiaryNotes.DiaryNote>(_notesByPotId[potId]);
+            return new List<DiaryNote>(_notesByPotId[potId]);
         }
         
         /// <summary>
@@ -107,8 +130,8 @@ namespace Sporae.UI.UIToolkit.PlantCard.Components
             {
                 if (string.IsNullOrEmpty(n.potId)) continue;
                 if (!_notesByPotId.ContainsKey(n.potId))
-                    _notesByPotId[n.potId] = new List<PlantDiaryNotes.DiaryNote>();
-                _notesByPotId[n.potId].Add(PlantDiaryNotes.DiaryNote.FromSave(n.day, n.text, n.timestampIso));
+                    _notesByPotId[n.potId] = new List<DiaryNote>();
+                _notesByPotId[n.potId].Add(DiaryNote.FromSave(n.day, n.text, n.timestampIso));
             }
         }
 

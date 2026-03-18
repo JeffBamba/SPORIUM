@@ -40,9 +40,11 @@ public class PotActions : MonoBehaviour
     private bool _isPlantingInProgress = false;
     private bool _isLightingInProgress = false;
     private bool _isWateringInProgress = false;
+#pragma warning disable CS0414
     private bool _isSprayingInProgress = false;
     private bool _isHarvestingInProgress = false;
     private bool _isUprootingInProgress = false;
+#pragma warning restore CS0414
 
     // Terminal V3 / Automation: quando true, bypassa range check e consumi (AP + item).
     // Serve per esecuzione scenica ritardata dopo conferma dal terminale.

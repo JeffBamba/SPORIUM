@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
-using Sporae.UI.UIToolkit.SeedInventory;
+using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.Icons;
 
 namespace Sporae.UI.UIToolkit.PlayerInventory
@@ -565,7 +565,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (icon != null)
             {
                 iconGlyph.style.backgroundImage = new StyleBackground(icon);
-                iconGlyph.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                iconGlyph.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
             }
 
             iconBox.Add(iconGlyph);
@@ -592,7 +592,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataBySeedTypeId(typeId);
                 if (plantData != null)
-                    return SeedInventoryMenu.GetSeedDisplayName(typeId);
+                    return PlantCardFormatters.GetSeedDisplayName(typeId);
             }
             return typeId;
         }

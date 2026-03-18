@@ -66,10 +66,10 @@ namespace Sporae.DevTools
                 SporiumLogger.LogInfo(LogCategory.UI, $"ToastNotificationDebugConsole {(_isConsoleOpen ? "aperto" : "chiuso")}");
             }
             
-            // Aggiorna cache
+            // Aggiorna cache (suppressWarning: true per evitare spam se ToastNotificationManager non è in scena/registrato)
             if (_manager == null)
             {
-                _manager = ServiceContainer.Instance?.Get<ToastNotificationManager>();
+                _manager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                 if (_manager != null)
                     _history = _manager.GetHistory();
             }

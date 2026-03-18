@@ -4,6 +4,7 @@ using Sporae.Core;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using UnityEngine;
+using Sporae.DevTools;
 
 namespace _Project
 {
@@ -160,18 +161,11 @@ namespace _Project
         private void HandleInteract()
         {
             if (_labExtractorPanel != null)
-            {
                 _labExtractorPanel.Show();
-#if UNITY_EDITOR
-                Debug.Log("[Extractor] Pannello Lab Extractor aperto.");
-#endif
-            }
             else if (_labMiniGame != null)
                 _labMiniGame.Show();
-#if UNITY_EDITOR
             else
-                Debug.LogWarning("[Extractor] Nessun pannello assegnato.");
-#endif
+                SporiumLogger.LogWarning(LogCategory.UI, "[Extractor] Nessun pannello assegnato.");
         }
 
         public override Inventory GetInventory()

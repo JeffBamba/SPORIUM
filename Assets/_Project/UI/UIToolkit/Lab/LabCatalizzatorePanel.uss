@@ -70,9 +70,7 @@
     margin-bottom: 7px;
 }
 
-.lab-cat-body > *:last-child {
-    margin-bottom: 0;
-}
+/* USS does not support :last-child - last item keeps margin-bottom */
 
 .lab-cat-status {
     font-size: 12px;
@@ -96,9 +94,7 @@
     margin-right: 5px;
 }
 
-.lab-cat-row > *:last-child {
-    margin-right: 0;
-}
+/* USS does not support :last-child - last item keeps margin-right */
 
 .lab-cat-label {
     width: 140px;

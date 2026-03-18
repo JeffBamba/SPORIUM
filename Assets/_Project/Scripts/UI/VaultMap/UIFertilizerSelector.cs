@@ -44,7 +44,7 @@ namespace _Project
         public event Action OnCancelled;
         
         /// <summary>
-        /// Rimuove tutti i subscriber dagli eventi (per permettere a PlantCardV2Controller di sottoscriversi senza conflitti)
+        /// Rimuove tutti i subscriber dagli eventi (per evitare conflitti tra più chiamanti).
         /// </summary>
         public void ClearAllSubscribers()
         {

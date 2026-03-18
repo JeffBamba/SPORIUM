@@ -13,7 +13,6 @@ using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using System.IO;
 using System;
-using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 /// <summary>
 /// Controller per il ciclo giornaliero del sistema di crescita delle piante.

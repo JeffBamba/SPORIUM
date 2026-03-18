@@ -413,33 +413,36 @@
     min-height: 12px;
 }
 
-/* Slot vuoto: label grigia */
 .pcv3-hud-pot-slot-empty .pcv3-hud-pot-slot-label {
     color: rgba(180, 180, 180, 0.95);
 }
 
-/* Con pianta: colore per famiglia (verde / giallo / rosso) */
 .pcv3-hud-pot-slot-standard .pcv3-hud-pot-slot-label {
     color: rgb(127, 255, 122);
 }
+
 .pcv3-hud-pot-slot-standard {
     border-left-color: rgba(127, 255, 122, 0.7);
     border-right-color: rgba(127, 255, 122, 0.7);
     border-top-color: rgba(127, 255, 122, 0.7);
     border-bottom-color: rgba(127, 255, 122, 0.7);
 }
+
 .pcv3-hud-pot-slot-pure .pcv3-hud-pot-slot-label {
     color: rgb(255, 220, 100);
 }
+
 .pcv3-hud-pot-slot-pure {
     border-left-color: rgba(255, 220, 100, 0.8);
     border-right-color: rgba(255, 220, 100, 0.8);
     border-top-color: rgba(255, 220, 100, 0.8);
     border-bottom-color: rgba(255, 220, 100, 0.8);
 }
+
 .pcv3-hud-pot-slot-evil .pcv3-hud-pot-slot-label {
     color: rgb(255, 100, 100);
 }
+
 .pcv3-hud-pot-slot-evil {
     border-left-color: rgba(255, 100, 100, 0.8);
     border-right-color: rgba(255, 100, 100, 0.8);
@@ -749,10 +752,15 @@
     overflow: visible;
 }
 
+.pcv3-terminal-content-view {
+    position: absolute;
+    top: 16px;
+    left: -97px;
+    width: 918px;
+    height: 573px;
+}
+
 .pcv3-console-view {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-height: 0;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 4px;
@@ -768,12 +776,6 @@
 }
 
 .pcv3-protocol-view {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-height: 0;
-    height: 668px;
-    min-height: 668px;
-    max-height: 668px;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -789,12 +791,6 @@
 }
 
 .pcv3-detail-view {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-height: 0;
-    height: 668px;
-    min-height: 668px;
-    max-height: 668px;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
@@ -807,6 +803,14 @@
     padding-left: 10px;
     padding-right: 10px;
     box-shadow: 0 0 10px rgba(127, 255, 122, 0.3);
+}
+
+.pcv3-terminal-scroll-content {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    width: 893px;
+    height: 606px;
 }
 
 .pcv3-protocol-view {
@@ -830,8 +834,10 @@
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller {
-    width: 8px;
+    width: 20px;
     min-width: 20px;
+    flex-direction: column;
+    align-items: center;
     background-color: rgb(26, 35, 37);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -853,33 +859,40 @@
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__slider {
+    width: 100%;
+    align-items: center;
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     pointer-events: auto;
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__drag-container {
+    align-self: center;
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     pointer-events: auto;
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__high-button {
+    align-self: center;
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     border-radius: 4px;
     min-height: 22px;
-    min-width: 20px;
+    min-width: 16px;
+    width: 16px;
     pointer-events: auto;
     -unity-background-image-tint-color: rgb(127, 255, 122);
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__low-button {
+    align-self: center;
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     border-radius: 4px;
     min-height: 22px;
-    min-width: 20px;
+    min-width: 16px;
+    width: 16px;
     pointer-events: auto;
     -unity-background-image-tint-color: rgb(127, 255, 122);
 }
@@ -919,25 +932,31 @@
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    align-self: center;
+    width: 12px;
+    min-width: 12px;
     background-color: rgb(127, 255, 122);
     background-image: none;
     border-width: 0;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
     min-height: 24px;
     pointer-events: auto;
 }
 
 .pcv3-console-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
+    align-self: center;
+    width: 12px;
+    min-width: 12px;
     background-color: rgb(127, 255, 122);
     background-image: none;
     border-width: 0;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
 }
 
 .pcv3-protocol-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {

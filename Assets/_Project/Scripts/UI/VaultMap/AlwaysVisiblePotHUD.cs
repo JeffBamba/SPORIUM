@@ -39,10 +39,6 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     [Tooltip("Se true e bottomBarRect non è assegnato, prova a trovare automaticamente 'HUD_BottomNavigation' nella scena.")]
     [SerializeField] private bool autoFindBottomBar = true;
     
-    [Header("References")]
-    [Tooltip("Riferimento al pannello dettagliato (opzionale, cercato automaticamente se non assegnato)")]
-    [SerializeField] private PotDetailsWidget potDetailsWidget;
-    
     [Header("Prefab (Optional)")]
     [Tooltip("Prefab della HUD minimale (se assegnato, viene istanziato invece di creare dinamicamente)")]
     [SerializeField] private GameObject minimalHUDPrefab;
@@ -101,12 +97,6 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
             return;
         }
         
-        // Cerca PotDetailsWidget se non assegnato
-        if (potDetailsWidget == null)
-        {
-            potDetailsWidget = FindObjectOfType<PotDetailsWidget>();
-        }
-
         ResolveBottomBarSafeArea();
         
         // Crea le 4 HUD minimale sempre visibili

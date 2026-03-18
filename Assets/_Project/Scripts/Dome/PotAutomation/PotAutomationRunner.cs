@@ -341,11 +341,7 @@ namespace Sporae.Dome.PotAutomation
         {
             // MVP: se NotificationsFoundation non è disponibile, fallback Debug.Log.
             if (_foundation != null)
-            {
                 _foundation.PostToast(code, new NotificationPayload().With("message", text));
-                return;
-            }
-            Debug.Log($"[PotAutomationRunner] {code}: {text}");
         }
     }
 }

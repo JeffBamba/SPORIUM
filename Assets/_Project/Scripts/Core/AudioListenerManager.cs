@@ -8,7 +8,7 @@ namespace _Project
     /// Disabilita duplicati e mantiene solo quello sulla Main Camera principale
     /// Previene il warning Unity "There are 2 audio listeners in the scene"
     /// </summary>
-    [DefaultExecutionOrder(-200)] // Esegue prima di altri script
+    [DefaultExecutionOrder(-10000)] // Esegue per primo per correggere i listener prima che Unity logghi il warning
     public class AudioListenerManager : MonoBehaviour
     {
         [Header("Settings")]
@@ -45,11 +45,12 @@ namespace _Project
         }
         
         /// <summary>
-        /// Controllo rapido che rimuove duplicati senza log
+        /// Controllo rapido che rimuove duplicati senza log.
+        /// Disabilita subito i duplicati per fermare il warning Unity nello stesso frame (Destroy è a fine frame).
         /// </summary>
         private void EnsureSingleAudioListener()
         {
-            AudioListener[] allListeners = FindObjectsOfType<AudioListener>(true); // Include anche quelli disabilitati
+            AudioListener[] allListeners = FindObjectsOfType<AudioListener>(true);
             
             int enabledCount = 0;
             AudioListener firstEnabled = null;
@@ -60,40 +61,30 @@ namespace _Project
                 {
                     enabledCount++;
                     if (firstEnabled == null)
-                    {
                         firstEnabled = listener;
-                    }
                 }
             }
             
-            // Se ci sono più di un AudioListener abilitato, rimuovi i duplicati
-            if (enabledCount > 1 && firstEnabled != null)
+            if (enabledCount <= 1)
+                return;
+            
+            Camera mainCamera = Camera.main;
+            AudioListener mainCameraListener = mainCamera != null ? mainCamera.GetComponent<AudioListener>() : null;
+            AudioListener listenerToKeep = (mainCameraListener != null && mainCameraListener.enabled) ? mainCameraListener : firstEnabled;
+            
+            if (listenerToKeep == null)
+                return;
+            
+            // Disabilita subito i duplicati così Unity non logga il warning ogni frame (Destroy avviene a fine frame)
+            foreach (AudioListener listener in allListeners)
             {
-                // Trova la Main Camera
-                Camera mainCamera = Camera.main;
-                AudioListener mainCameraListener = null;
-                
-                if (mainCamera != null)
+                if (listener != null && listener != listenerToKeep && listener.enabled)
                 {
-                    mainCameraListener = mainCamera.GetComponent<AudioListener>();
-                }
-                
-                AudioListener listenerToKeep = mainCameraListener != null && mainCameraListener.enabled ? mainCameraListener : firstEnabled;
-                
-                // Rimuovi tutti gli altri
-                foreach (AudioListener listener in allListeners)
-                {
-                    if (listener != null && listener != listenerToKeep && listener.enabled)
-                    {
-                        if (Application.isPlaying)
-                        {
-                            Destroy(listener);
-                        }
-                        else
-                        {
-                            DestroyImmediate(listener);
-                        }
-                    }
+                    listener.enabled = false;
+                    if (Application.isPlaying)
+                        Destroy(listener);
+                    else
+                        DestroyImmediate(listener);
                 }
             }
         }
@@ -117,7 +108,6 @@ namespace _Project
             
             if (enabledCount <= 1)
             {
-                // Trova e memorizza il listener principale
                 foreach (AudioListener listener in allListeners)
                 {
                     if (listener.enabled && listener.gameObject.activeInHierarchy)
@@ -129,21 +119,12 @@ namespace _Project
                 return;
             }
             
-            // Trova la Main Camera
             Camera mainCamera = Camera.main;
-            AudioListener mainCameraListener = null;
+            AudioListener mainCameraListener = mainCamera != null ? mainCamera.GetComponent<AudioListener>() : null;
             
-            if (mainCamera != null)
-            {
-                mainCameraListener = mainCamera.GetComponent<AudioListener>();
-                if (mainCameraListener != null && mainCameraListener.enabled)
-                {
-                    _mainListener = mainCameraListener;
-                }
-            }
-            
-            // Se non c'è Main Camera o non ha AudioListener, usa il primo attivo
-            if (_mainListener == null)
+            if (mainCameraListener != null && mainCameraListener.enabled)
+                _mainListener = mainCameraListener;
+            else
             {
                 foreach (AudioListener listener in allListeners)
                 {
@@ -155,27 +136,23 @@ namespace _Project
                 }
             }
             
-            // Rimuovi fisicamente tutti gli altri AudioListener invece di solo disabilitarli
             int removedCount = 0;
             foreach (AudioListener listener in allListeners)
             {
-                if (listener != _mainListener)
+                if (listener != null && listener != _mainListener)
                 {
-                    // Rimuovi fisicamente il componente invece di solo disabilitarlo
+                    // Disabilita subito per fermare il warning Unity nello stesso frame
+                    if (listener.enabled)
+                    {
+                        listener.enabled = false;
+                        removedCount++;
+                    }
                     if (Application.isPlaying)
-                    {
                         Destroy(listener);
-                    }
                     else
-                    {
                         DestroyImmediate(listener);
-                    }
-                    removedCount++;
-                    
                     if (showDebugLogs)
-                    {
                         SporiumLogger.LogDebug(LogCategory.Audio, $"AudioListener rimosso da {listener.gameObject.name}");
-                    }
                 }
             }
             
