@@ -116,6 +116,28 @@ public class PotStateModel
     [Header("GDD 42 - Genetic / Harvest Metadata")]
     [Tooltip("Tratti genetica pianta: Fissi (0% mutare), Stabili (25%), Instabili (50%); usato per metadata frutto a harvest")]
     public GeneticType PlantGeneticType = GeneticType.Stable;
+
+    [Header("Seed Runtime Payload (Task 1)")]
+    [Tooltip("Famiglia runtime che ha generato la pianta (STANDARD/PURE/EVIL/...)")]
+    public string PlantFamilyMetadata;
+    [Tooltip("Codici sorgente provenienti dal Lab o dalla pianta madre")]
+    public string SourcePlantCodesMetadata;
+    public string ParentFamilyA;
+    public string ParentFamilyB;
+    public string CandidateTraitsCsv;
+    public string SelectedTraitsCsv;
+    public int TraitPowerPercent = 100;
+    public string ReagentUsedMetadata;
+    public string CustomPlantName;
+    public string SourcePlantDisplayName;
+    public string ActivePowerLabel;
+    public string PassivePowerLabel;
+    [Tooltip("Predisposizione runtime per i task successivi")]
+    public bool IsHybrid = false;
+    [Tooltip("Predisposizione runtime per il sistema mutazioni reale")]
+    public bool IsMutated = false;
+    [Tooltip("Predisposizione runtime per slot passivi reali")]
+    public bool IsInPassiveSlot = false;
     
     [Header("Mold System (BLK-07.01)")]
     [Tooltip("Livello rischio muffe (0=None, 1=Mild, 2=Severe, 3=Critical)")]
@@ -200,6 +222,7 @@ public class PotStateModel
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
         DaysBurnStressConsecutive = 0;
+        ClearSeedRuntimePayload();
         IsHydrationManuallySet = false;
         ManualHydrationBase = -1;
         IsLightExposureManuallySet = false;
@@ -257,6 +280,7 @@ public class PotStateModel
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
         DaysBurnStressConsecutive = 0;
+        ClearSeedRuntimePayload();
     }
     
     /// <summary>
@@ -330,6 +354,7 @@ public class PotStateModel
         PlantCode = plantCode;
         var pd = GetPlantData();
         PlantGeneticType = pd != null ? pd.DefaultGeneticType : GeneticType.Stable;
+        ClearSeedRuntimePayload();
         WateringSystemOn = false;  // Nuova pianta = sistema OFF
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
@@ -399,6 +424,7 @@ public class PotStateModel
         DaysLedBlueConsecutive = 0;
         DaysLedRedConsecutive = 0;
         PlantCode = null;
+        ClearSeedRuntimePayload();
         WateringSystemOn = false;
         DaysWateringSystemOn = 0;
         WateringRawWaterAccumulator = 0f;
@@ -423,6 +449,34 @@ public class PotStateModel
         DaysOverwateringConsecutive = 0;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
+    }
+
+    public void ApplySeedMetadata(Item seedItem, PlantData plantData = null)
+    {
+        PlantGeneticType = seedItem?.GeneticTypeValue ?? plantData?.DefaultGeneticType ?? GeneticType.Stable;
+        PlantFamilyMetadata = !string.IsNullOrWhiteSpace(seedItem?.FamilyMetadata)
+            ? NormalizeFamilyMetadata(seedItem.FamilyMetadata)
+            : NormalizeFamilyMetadata(plantData?.Family.ToString());
+        SourcePlantCodesMetadata = !string.IsNullOrWhiteSpace(seedItem?.SourcePlantCodeMetadata)
+            ? seedItem.SourcePlantCodeMetadata
+            : plantData?.PlantCode;
+        ParentFamilyA = NormalizeFamilyMetadata(seedItem?.ParentFamilyA);
+        ParentFamilyB = NormalizeFamilyMetadata(seedItem?.ParentFamilyB);
+        CandidateTraitsCsv = seedItem?.CandidateTraitsCsv;
+        SelectedTraitsCsv = seedItem?.SelectedTraitsCsv;
+        TraitPowerPercent = Mathf.Clamp(seedItem != null && seedItem.TraitPowerPercent > 0 ? seedItem.TraitPowerPercent : 100, 1, 999);
+        ReagentUsedMetadata = seedItem?.ReagentUsedMetadata;
+        CustomPlantName = seedItem?.CustomPlantName;
+        SourcePlantDisplayName = !string.IsNullOrWhiteSpace(seedItem?.SourcePlantDisplayName)
+            ? seedItem.SourcePlantDisplayName
+            : plantData?.name;
+        ActivePowerLabel = !string.IsNullOrWhiteSpace(seedItem?.ActivePowerLabel)
+            ? seedItem.ActivePowerLabel
+            : plantData?.ActivePower;
+        PassivePowerLabel = seedItem?.PassivePowerLabel;
+        IsHybrid = !string.IsNullOrWhiteSpace(ParentFamilyA)
+            && !string.IsNullOrWhiteSpace(ParentFamilyB)
+            && !string.Equals(ParentFamilyA, ParentFamilyB, StringComparison.OrdinalIgnoreCase);
     }
     
     /// <summary>
@@ -613,6 +667,30 @@ public class PotStateModel
     public override string ToString()
     {
         return $"[{PotId}] Plant:{HasPlant} Stage:{Stage}({GetStageName(Stage)}) H:{Hydration} L:{LightExposure} GP:{GrowthPoints} Day:{PlantedDay}";
+    }
+
+    private void ClearSeedRuntimePayload()
+    {
+        PlantFamilyMetadata = null;
+        SourcePlantCodesMetadata = null;
+        ParentFamilyA = null;
+        ParentFamilyB = null;
+        CandidateTraitsCsv = null;
+        SelectedTraitsCsv = null;
+        TraitPowerPercent = 100;
+        ReagentUsedMetadata = null;
+        CustomPlantName = null;
+        SourcePlantDisplayName = null;
+        ActivePowerLabel = null;
+        PassivePowerLabel = null;
+        IsHybrid = false;
+        IsMutated = false;
+        IsInPassiveSlot = false;
+    }
+
+    private static string NormalizeFamilyMetadata(string family)
+    {
+        return string.IsNullOrWhiteSpace(family) ? null : ItemFabric.NormalizeFamily(family);
     }
     
     /// <summary>

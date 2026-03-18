@@ -509,7 +509,7 @@ public class PotActions : MonoBehaviour
     /// Esegue l'azione di piantare un seme
     /// </summary>
     /// <param name="seedTypeId">TypeId del seme da piantare. Se null, cerca automaticamente il primo seme disponibile.</param>
-    public bool DoPlant(string seedTypeId = null, bool irrigate = false)
+    public bool DoPlant(string seedTypeId = null, bool irrigate = false, Item seedItem = null)
     {
         // DEBUG_SAFE_FIX: Guard per prevenire chiamate multiple nello stesso frame
         if (_isPlantingInProgress)
@@ -609,18 +609,21 @@ public class PotActions : MonoBehaviour
                 }
             }
             
+            Item consumedSeedItem = seedItem;
+
             // Consuma il seme dall'inventario (skip in automation: già consumato in conferma terminale)
             if (!IsAutomationContext)
             {
-                if (!_playerInventory.Consume(seedTypeId))
+                if (!_playerInventory.TryRemoveFirst(seedTypeId, out consumedSeedItem))
                 {
-                    SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed");
+                    SporiumLogger.LogError(LogCategory.Inventory, "Impossible to consume seed with metadata payload");
                     return false;
                 }
             }
             
             // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
             _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
+            _potState.ApplySeedMetadata(consumedSeedItem, plantData);
 
             // Se richiesto, irrigazione immediata: imposta hydration al 40% del max.
             if (irrigate)
@@ -1291,7 +1294,11 @@ public class PotActions : MonoBehaviour
         // BLK-02.02: Calcola qualità frutti basata su livello
         float baseQuality = 0f;
         float finalQuality = 0f;
-        ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+        string familyStr = plantData != null ? plantData.Family.ToString() : _potState?.PlantFamilyMetadata;
+        GeneticType? geneticType = _potState != null ? (GeneticType?)_potState.PlantGeneticType : null;
+        string sourcePlantCode = _potState?.PlantCode;
+        string fruitTypeId = ItemFabric.ResolveFruitTypeIdForPlant(sourcePlantCode, familyStr);
+        ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + fruitTypeId);
         if (fruitConfig != null)
         {
             baseQuality = fruitConfig.MaxQuality;
@@ -1310,20 +1317,33 @@ public class PotActions : MonoBehaviour
             }
         }
         
-        // GDD 42 Fase 0: metadata frutto (GeneticType, Family, SourcePlantCode) valorizzati da PotStateModel
-        string familyStr = plantData != null ? plantData.Family.ToString() : null;
-        GeneticType? geneticType = _potState != null ? (GeneticType?)_potState.PlantGeneticType : null;
-        string sourcePlantCode = _potState?.PlantCode;
+        // GDD 42: metadata frutto species-specific valorizzati da PotStateModel/PlantData
         int sourcePlantLevel = _potState != null ? Mathf.Max(1, _potState.PlantLevel) : 0;
+        string sourcePlantDisplayName = !string.IsNullOrWhiteSpace(_potState?.SourcePlantDisplayName)
+            ? _potState.SourcePlantDisplayName
+            : plantData?.name;
+        string activePowerLabel = !string.IsNullOrWhiteSpace(_potState?.ActivePowerLabel)
+            ? _potState.ActivePowerLabel
+            : plantData?.ActivePower;
+        string passivePowerLabel = _potState?.PassivePowerLabel;
 
         // Aggiungi frutti all'inventario con qualità e metadata (GDD 42 Fase 0)
         for (int i = 0; i < fruitsToHarvest; i++)
         {
-            Item fruitItem = ItemFabric.CreateItemWithMetadata(Items.Fruits, finalQuality, geneticType, familyStr, sourcePlantCode, sourcePlantLevel);
+            Item fruitItem = ItemFabric.CreateItemWithMetadata(
+                fruitTypeId,
+                finalQuality,
+                geneticType,
+                familyStr,
+                sourcePlantCode,
+                sourcePlantLevel,
+                sourcePlantDisplayName,
+                activePowerLabel,
+                passivePowerLabel);
             if (fruitItem != null)
                 _playerInventory.Add(fruitItem);
             else
-                _playerInventory.Add(Items.Fruits);
+                _playerInventory.Add(fruitTypeId);
         }
         
         // Reset frutti nel vaso

@@ -232,11 +232,13 @@ namespace Sporae.UI.UIToolkit.Lab
             if (string.IsNullOrEmpty(tratti) || tratti == "—") tratti = "Stabili";
             string family = string.IsNullOrWhiteSpace(first.FamilyMetadata) ? "STANDARD" : first.FamilyMetadata;
             string nameAndQty = $"{PlayerInventoryPanelController.GetItemDisplayName(first.TypeId, first)} x{_outputSeeds.Count}";
+            string provenienza = ExtractorTooltipTexts.GetOriginTraceLabel(first);
             var lines = new List<string>
             {
                 ExtractorTooltipTexts.WrapValue(nameAndQty),
                 $"Tratti: {ExtractorTooltipTexts.WrapValue(tratti)}",
-                $"Famiglia: {ExtractorTooltipTexts.WrapValue(family)}"
+                $"Famiglia: {ExtractorTooltipTexts.WrapValue(family)}",
+                $"Provenienza: {ExtractorTooltipTexts.WrapValue(provenienza)}"
             };
             if (!string.IsNullOrWhiteSpace(first.SelectedTraitsCsv))
                 lines.Add($"Tratti selezionati: {ExtractorTooltipTexts.WrapValue(first.SelectedTraitsCsv)}");

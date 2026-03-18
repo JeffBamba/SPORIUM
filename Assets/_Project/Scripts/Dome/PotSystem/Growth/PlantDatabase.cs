@@ -281,6 +281,38 @@ namespace Sporae.Dome.PotSystem.Growth
             return false;
         }
 
+        public List<string> ExportDiscoveredPlantCodes()
+        {
+            return _discoveredPlantCodes
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .OrderBy(code => code)
+                .ToList();
+        }
+
+        public void ImportDiscoveredPlantCodes(IEnumerable<string> plantCodes, bool persistToPrefs = false)
+        {
+            if (!_isInitialized)
+                InitializeDatabase();
+
+            _discoveredPlantCodes.Clear();
+
+            if (plantCodes != null)
+            {
+                foreach (var rawCode in plantCodes)
+                {
+                    if (string.IsNullOrWhiteSpace(rawCode))
+                        continue;
+
+                    string code = rawCode.Trim();
+                    if (_plantDataByCode.ContainsKey(code))
+                        _discoveredPlantCodes.Add(code);
+                }
+            }
+
+            if (persistToPrefs)
+                SaveDiscoveryState();
+        }
+
         public int MarkPlantCodesDiscoveredFromMetadata(string sourcePlantCodesMetadata)
         {
             if (string.IsNullOrWhiteSpace(sourcePlantCodesMetadata))

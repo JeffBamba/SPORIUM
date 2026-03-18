@@ -71,6 +71,8 @@ namespace _Project.Sporae.Core
 
             string plantName = "—";
             string level = "";
+            if (!string.IsNullOrWhiteSpace(fruit.SourcePlantDisplayName))
+                plantName = fruit.SourcePlantDisplayName;
             if (PlantDatabase.Instance != null && !string.IsNullOrEmpty(fruit.SourcePlantCodeMetadata))
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataByCode(fruit.SourcePlantCodeMetadata);

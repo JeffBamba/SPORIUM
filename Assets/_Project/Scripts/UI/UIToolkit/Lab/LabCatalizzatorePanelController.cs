@@ -176,10 +176,12 @@ namespace Sporae.UI.UIToolkit.Lab
                 string percentMutare = ExtractorTooltipTexts.GeneticTypeToPercentMutare(item.GeneticTypeValue);
                 string family = string.IsNullOrWhiteSpace(item.FamilyMetadata) ? "STANDARD" : item.FamilyMetadata;
                 string stato = "Matura ✓ (pronta per fusione)";
+                string provenienza = ExtractorTooltipTexts.GetOriginTraceLabel(item);
                 lines.Add($"Tratti: {ExtractorTooltipTexts.WrapValue(tratti)}");
                 lines.Add($"% di mutare: {ExtractorTooltipTexts.WrapValue(percentMutare)}");
                 lines.Add($"Famiglia: {ExtractorTooltipTexts.WrapValue(family)}");
                 lines.Add($"Stato: {ExtractorTooltipTexts.WrapValue(stato)}");
+                lines.Add($"Provenienza: {ExtractorTooltipTexts.WrapValue(provenienza)}");
                 shown++;
                 if (shown < 3) lines.Add("");
             }

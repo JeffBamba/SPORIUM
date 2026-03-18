@@ -34,7 +34,10 @@ namespace _Project.Sporae.Core
         public SporeStage? SporeStageValue { get; set; }
         public string FamilyMetadata { get; set; }
         public string SourcePlantCodeMetadata { get; set; }
+        public string SourcePlantDisplayName { get; set; }
         public int PlantLevelMetadata { get; set; }
+        public string ActivePowerLabel { get; set; }
+        public string PassivePowerLabel { get; set; }
 
         // Lab genetics pipeline metadata (Pre-Seed/Seed, Step 3-4)
         public string ParentFamilyA { get; set; }

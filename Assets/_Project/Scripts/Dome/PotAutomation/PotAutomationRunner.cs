@@ -39,6 +39,7 @@ namespace Sporae.Dome.PotAutomation
 
             // Optional payload
             public string ItemTypeId; // seed/fertilizer/additive
+            public Item ItemPayload;  // concrete item instance when metadata must survive queue execution
             public bool Irrigate;     // Plant only (future)
         }
 
@@ -292,7 +293,7 @@ namespace Sporae.Dome.PotAutomation
                     switch (action.Type)
                     {
                         case AutomationActionType.Plant:
-                            ok = pot.PotActions.DoPlant(action.ItemTypeId, action.Irrigate);
+                            ok = pot.PotActions.DoPlant(action.ItemTypeId, action.Irrigate, action.ItemPayload);
                             break;
                         case AutomationActionType.Fertilize:
                             ok = pot.PotActions.DoFertilize(action.ItemTypeId);

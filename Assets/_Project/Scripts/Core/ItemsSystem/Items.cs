@@ -4,6 +4,9 @@ namespace _Project.Sporae.Core
     {
         public const string Fruits = "fruits-001";
         public const string FruitsKnown = "fruits-known-001";
+        public const string FruitFerricPod = "fruit-ferric-pod";
+        public const string FruitArcticPod = "fruit-arctic-pod";
+        public const string FruitGlassPod = "fruit-glass-pod";
         public const string Water = "WAT-RAW";
         public const string WholePlant = "whole-plant";
         public const string OrganicScrap001 = "org-scr-001";
@@ -44,7 +47,8 @@ namespace _Project.Sporae.Core
         /// <summary> Tutti i typeId degli item esistenti in game (per inventario iniziale / debug ). </summary>
         public static readonly string[] AllTypeIds =
         {
-            Fruits, FruitsKnown, Water, WholePlant, OrganicScrap001, SporeGeneric, PreSeed,
+            FruitFerricPod, FruitArcticPod, FruitGlassPod,
+            Water, WholePlant, OrganicScrap001, SporeGeneric, PreSeed,
             Seed001, Seed002, Seed003,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
             SprayAntifungal, AdditiveBasic, AdditiveAcid,
@@ -52,5 +56,60 @@ namespace _Project.Sporae.Core
             ReagentX, ReagentY,
             FoodVegetable, FoodFungus, FoodMeat, WaterPotable, OrganicResidue
         };
+
+        public static readonly string[] SpecificFruitTypeIds =
+        {
+            FruitFerricPod, FruitArcticPod, FruitGlassPod
+        };
+
+        public static readonly string[] LegacyFruitTypeIds =
+        {
+            Fruits, FruitsKnown
+        };
+
+        public static readonly string[] AllFruitTypeIds =
+        {
+            FruitFerricPod, FruitArcticPod, FruitGlassPod, Fruits, FruitsKnown
+        };
+
+        public static readonly string[] StarterInventoryTypeIds =
+        {
+            FruitFerricPod, FruitArcticPod, FruitGlassPod,
+            Water, WholePlant, OrganicScrap001,
+            FertilizerStandard, FertilizerPure, FertilizerProhibited,
+            SprayAntifungal, AdditiveBasic, AdditiveAcid,
+            StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,
+            ReagentX, ReagentY,
+            FoodVegetable, FoodFungus, FoodMeat, WaterPotable, OrganicResidue
+        };
+
+        public static bool IsSpecificFruitType(string typeId)
+        {
+            return typeId == FruitFerricPod || typeId == FruitArcticPod || typeId == FruitGlassPod;
+        }
+
+        public static bool IsLegacyFruitType(string typeId)
+        {
+            return typeId == Fruits || typeId == FruitsKnown;
+        }
+
+        public static bool IsFruitType(string typeId, bool includeLegacy = true)
+        {
+            return IsSpecificFruitType(typeId) || (includeLegacy && IsLegacyFruitType(typeId));
+        }
+
+        public static bool IsStarterInventoryType(string typeId)
+        {
+            if (string.IsNullOrWhiteSpace(typeId))
+                return false;
+
+            for (int i = 0; i < StarterInventoryTypeIds.Length; i++)
+            {
+                if (StarterInventoryTypeIds[i] == typeId)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

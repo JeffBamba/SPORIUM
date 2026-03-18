@@ -747,7 +747,8 @@ namespace Sporae.DevTools
                     _maxFruitsInputString = "3";
                     
                     // Calcola qualità attesa frutti
-                    ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                    string fruitTypeId = ItemFabric.ResolveFruitTypeIdForPlant(potState.PlantCode, potState.PlantFamilyMetadata);
+                    ItemConfig fruitConfig = Resources.Load<ItemConfig>("Items/" + fruitTypeId);
                     if (fruitConfig != null)
                     {
                         float baseQuality = fruitConfig.MaxQuality;
@@ -1164,7 +1165,8 @@ namespace Sporae.DevTools
                     relativeY += 30f;
                     
                     // Qualità frutti attesa
-                    ItemConfig levelFruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                    string levelFruitTypeId = ItemFabric.ResolveFruitTypeIdForPlant(potState.PlantCode, potState.PlantFamilyMetadata);
+                    ItemConfig levelFruitConfig = Resources.Load<ItemConfig>("Items/" + levelFruitTypeId);
                     if (levelFruitConfig != null)
                     {
                         float baseQuality = levelFruitConfig.MaxQuality;
@@ -1442,7 +1444,8 @@ namespace Sporae.DevTools
                     _fruitQualityInputValue = Mathf.Max(0f, parsedQuality);
                     _fruitQualityInputString = _fruitQualityInputValue.ToString("F1");
                 }
-                ItemConfig fruitsFruitConfig = Resources.Load<ItemConfig>("Items/" + Items.Fruits);
+                string debugFruitTypeId = ItemFabric.ResolveFruitTypeIdForPlant(potState.PlantCode, potState.PlantFamilyMetadata);
+                ItemConfig fruitsFruitConfig = Resources.Load<ItemConfig>("Items/" + debugFruitTypeId);
                 if (fruitsFruitConfig != null)
                 {
                     float baseQuality = fruitsFruitConfig.MaxQuality;

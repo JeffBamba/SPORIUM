@@ -57,9 +57,9 @@ namespace _Project.Sporae.Core
                 _hydration.RecoverFromWater(quantity, false);
                 return;
             }
-            if (typeId == Items.Fruits || typeId == Items.FruitsKnown)
+            if (Items.IsFruitType(typeId))
             {
-                bool isPure = typeId == Items.FruitsKnown;
+                bool isPure = typeId == Items.FruitArcticPod || typeId == Items.FruitsKnown;
                 _hydration.RecoverFromFruit(quantity, isPure);
                 return;
             }
@@ -70,7 +70,7 @@ namespace _Project.Sporae.Core
             if (string.IsNullOrEmpty(typeId)) return false;
             return typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat
                    || typeId == Items.WaterPotable || typeId == Items.Water
-                   || typeId == Items.Fruits || typeId == Items.FruitsKnown;
+                   || Items.IsFruitType(typeId);
         }
     }
 }

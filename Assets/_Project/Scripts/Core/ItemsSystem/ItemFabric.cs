@@ -3,6 +3,7 @@ using Sporae.DevTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace _Project.Sporae.Core
 {
@@ -10,6 +11,38 @@ namespace _Project.Sporae.Core
     {
         private static int _uniqueId = 0;
         private static readonly HashSet<string> _loggedMissingTypeIds = new HashSet<string>();
+        private sealed class FruitDefinition
+        {
+            public string TypeId;
+            public string PlantCode;
+            public string DisplayName;
+            public string PassivePowerLabel;
+        }
+
+        private static readonly Dictionary<string, FruitDefinition> _fruitDefinitionsByTypeId = new Dictionary<string, FruitDefinition>(StringComparer.OrdinalIgnoreCase)
+        {
+            [Items.FruitFerricPod] = new FruitDefinition
+            {
+                TypeId = Items.FruitFerricPod,
+                PlantCode = "PLT-STD-001",
+                DisplayName = "Ferric Pod",
+                PassivePowerLabel = "Filtro Ferrico: stabilizza il bioma e attenua il rischio muffe residuo."
+            },
+            [Items.FruitArcticPod] = new FruitDefinition
+            {
+                TypeId = Items.FruitArcticPod,
+                PlantCode = "PLT-PURE-001",
+                DisplayName = "Arctic Pod",
+                PassivePowerLabel = "Permafrost Core: sostiene il recupero del pH e la purezza ambientale."
+            },
+            [Items.FruitGlassPod] = new FruitDefinition
+            {
+                TypeId = Items.FruitGlassPod,
+                PlantCode = "PLT-EVIL-001",
+                DisplayName = "Glass Pod",
+                PassivePowerLabel = "Nebbia Sporale: alza la pressione mutagena e la volatilita biologica."
+            }
+        };
 
         /// <summary>
         /// Crea un Item dal typeId. Per SporeGeneric restituisce sempre una spora con status (Raw + Stabile):
@@ -30,6 +63,7 @@ namespace _Project.Sporae.Core
             }
 
             var item = new Item(config, _uniqueId++);
+            ApplyBaseFruitMetadata(item, typeId);
             return item;
         }
         
@@ -49,6 +83,7 @@ namespace _Project.Sporae.Core
             }
 
             var item = new Item(config, _uniqueId++);
+            ApplyBaseFruitMetadata(item, typeId);
             item.Quality = quality;
             return item;
         }
@@ -57,7 +92,8 @@ namespace _Project.Sporae.Core
         /// Crea un Item (es. frutto) con metadata da harvest (GDD 42 Fase 0).
         /// </summary>
         public static Item CreateItemWithMetadata(string typeId, float quality,
-            GeneticType? geneticType, string family, string sourcePlantCode, int plantLevel = 0)
+            GeneticType? geneticType, string family, string sourcePlantCode, int plantLevel = 0,
+            string sourcePlantDisplayName = null, string activePowerLabel = null, string passivePowerLabel = null)
         {
             var config = Resources.Load<ItemConfig>("Items/" + typeId);
             if (!config)
@@ -66,11 +102,16 @@ namespace _Project.Sporae.Core
                 return null;
             }
             var item = new Item(config, _uniqueId++);
+            ApplyBaseFruitMetadata(item, typeId);
             item.Quality = quality;
             item.GeneticTypeValue = geneticType;
-            item.FamilyMetadata = family;
-            item.SourcePlantCodeMetadata = sourcePlantCode;
+            item.FamilyMetadata = !string.IsNullOrWhiteSpace(family) ? NormalizeFamily(family) : item.FamilyMetadata;
+            item.SourcePlantCodeMetadata = !string.IsNullOrWhiteSpace(sourcePlantCode) ? sourcePlantCode : item.SourcePlantCodeMetadata;
+            item.SourcePlantDisplayName = !string.IsNullOrWhiteSpace(sourcePlantDisplayName) ? sourcePlantDisplayName : item.SourcePlantDisplayName;
             item.PlantLevelMetadata = Mathf.Max(0, plantLevel);
+            item.ActivePowerLabel = !string.IsNullOrWhiteSpace(activePowerLabel) ? activePowerLabel : item.ActivePowerLabel;
+            item.PassivePowerLabel = !string.IsNullOrWhiteSpace(passivePowerLabel) ? passivePowerLabel : item.PassivePowerLabel;
+            ApplyPlantMetadataFromCode(item, item.SourcePlantCodeMetadata, onlyIfEmpty: true);
             return item;
         }
 
@@ -125,8 +166,11 @@ namespace _Project.Sporae.Core
                 : (fruit?.TypeId == Items.FruitsKnown ? "STANDARD" : null);
             item.SourcePlantCodeMetadata = !string.IsNullOrWhiteSpace(fruit?.SourcePlantCodeMetadata)
                 ? fruit.SourcePlantCodeMetadata
-                : (fruit?.TypeId == Items.FruitsKnown ? "Artic Hask" : null);
+                : (fruit?.TypeId == Items.FruitsKnown ? "PLT-PURE-001" : null);
             item.PlantLevelMetadata = fruit != null ? Mathf.Max(0, fruit.PlantLevelMetadata) : (fruit?.TypeId == Items.FruitsKnown ? 4 : 0);
+            CopyPlantPowerMetadata(fruit, item);
+            ApplyBaseFruitMetadata(item, fruit?.TypeId);
+            ApplyPlantMetadataFromCode(item, item.SourcePlantCodeMetadata, onlyIfEmpty: true);
             return item;
         }
 
@@ -145,6 +189,39 @@ namespace _Project.Sporae.Core
             item.FamilyMetadata = rawSpore?.FamilyMetadata;
             item.SourcePlantCodeMetadata = rawSpore?.SourcePlantCodeMetadata;
             item.PlantLevelMetadata = rawSpore != null ? Mathf.Max(0, rawSpore.PlantLevelMetadata) : 0;
+            CopyPlantPowerMetadata(rawSpore, item);
+            ApplyPlantMetadataFromCode(item, item.SourcePlantCodeMetadata, onlyIfEmpty: true);
+            return item;
+        }
+
+        public static Item CloneSpore(Item sourceSpore)
+        {
+            if (sourceSpore == null)
+                return null;
+
+            var config = Resources.Load<ItemConfig>("Items/" + Items.SporeGeneric);
+            if (!config)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory, $"Cannot find item config for {Items.SporeGeneric}");
+                return null;
+            }
+
+            var item = new Item(config, _uniqueId++);
+            item.SporeStageValue = sourceSpore.SporeStageValue ?? SporeStage.Raw;
+            item.GeneticTypeValue = sourceSpore.GeneticTypeValue;
+            item.FamilyMetadata = sourceSpore.FamilyMetadata;
+            item.SourcePlantCodeMetadata = sourceSpore.SourcePlantCodeMetadata;
+            item.SourcePlantDisplayName = sourceSpore.SourcePlantDisplayName;
+            item.PlantLevelMetadata = sourceSpore.PlantLevelMetadata;
+            item.ActivePowerLabel = sourceSpore.ActivePowerLabel;
+            item.PassivePowerLabel = sourceSpore.PassivePowerLabel;
+            item.ParentFamilyA = sourceSpore.ParentFamilyA;
+            item.ParentFamilyB = sourceSpore.ParentFamilyB;
+            item.CandidateTraitsCsv = sourceSpore.CandidateTraitsCsv;
+            item.SelectedTraitsCsv = sourceSpore.SelectedTraitsCsv;
+            item.TraitPowerPercent = sourceSpore.TraitPowerPercent;
+            item.ReagentUsedMetadata = sourceSpore.ReagentUsedMetadata;
+            item.CustomPlantName = sourceSpore.CustomPlantName;
             return item;
         }
 
@@ -183,6 +260,15 @@ namespace _Project.Sporae.Core
             item.ParentFamilyB = NormalizeFamily(sporeB?.FamilyMetadata);
             item.CandidateTraitsCsv = BuildCandidateTraitsCsv(item.ParentFamilyA, item.ParentFamilyB);
             item.SourcePlantCodeMetadata = $"{sporeA?.SourcePlantCodeMetadata}|{sporeB?.SourcePlantCodeMetadata}";
+            item.SourcePlantDisplayName = CombineDistinctValues(
+                sporeA?.SourcePlantDisplayName,
+                sporeB?.SourcePlantDisplayName);
+            item.ActivePowerLabel = CombineDistinctValues(
+                sporeA?.ActivePowerLabel,
+                sporeB?.ActivePowerLabel);
+            item.PassivePowerLabel = CombineDistinctValues(
+                sporeA?.PassivePowerLabel,
+                sporeB?.PassivePowerLabel);
             return item;
         }
 
@@ -225,7 +311,143 @@ namespace _Project.Sporae.Core
             item.ReagentUsedMetadata = reagentTypeId;
             item.SourcePlantCodeMetadata = preSeed?.SourcePlantCodeMetadata;
             item.CustomPlantName = chosenPlantName;
+            item.SourcePlantDisplayName = preSeed?.SourcePlantDisplayName;
+            item.ActivePowerLabel = preSeed?.ActivePowerLabel;
+            item.PassivePowerLabel = preSeed?.PassivePowerLabel;
             return item;
+        }
+
+        public static string GetFruitDisplayNameByTypeId(string typeId)
+        {
+            if (string.IsNullOrWhiteSpace(typeId))
+                return typeId;
+
+            if (_fruitDefinitionsByTypeId.TryGetValue(typeId, out var definition))
+                return definition.DisplayName;
+
+            if (typeId == Items.FruitsKnown)
+                return "Frutto conosciuto";
+
+            if (typeId == Items.Fruits)
+                return "Frutto";
+
+            return typeId;
+        }
+
+        public static string ResolveFruitTypeIdForPlant(string plantCode, string family = null)
+        {
+            if (!string.IsNullOrWhiteSpace(plantCode))
+            {
+                foreach (var definition in _fruitDefinitionsByTypeId.Values)
+                {
+                    if (string.Equals(definition.PlantCode, plantCode, StringComparison.OrdinalIgnoreCase))
+                        return definition.TypeId;
+                }
+            }
+
+            switch (NormalizeFamily(family))
+            {
+                case "PURE":
+                    return Items.FruitArcticPod;
+                case "EVIL":
+                    return Items.FruitGlassPod;
+                default:
+                    return Items.FruitFerricPod;
+            }
+        }
+
+        private static void CopyPlantPowerMetadata(Item source, Item target)
+        {
+            if (source == null || target == null)
+                return;
+
+            target.SourcePlantDisplayName = source.SourcePlantDisplayName;
+            target.ActivePowerLabel = source.ActivePowerLabel;
+            target.PassivePowerLabel = source.PassivePowerLabel;
+        }
+
+        private static bool ApplyBaseFruitMetadata(Item item, string typeId)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(typeId))
+                return false;
+
+            if (!_fruitDefinitionsByTypeId.TryGetValue(typeId, out var definition))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata))
+                item.SourcePlantCodeMetadata = definition.PlantCode;
+            if (item.PlantLevelMetadata <= 0)
+                item.PlantLevelMetadata = 1;
+
+            ApplyPlantMetadataFromCode(item, definition.PlantCode, onlyIfEmpty: true);
+            if (string.IsNullOrWhiteSpace(item.SourcePlantDisplayName))
+                item.SourcePlantDisplayName = definition.PlantCode;
+            if (string.IsNullOrWhiteSpace(item.PassivePowerLabel))
+                item.PassivePowerLabel = definition.PassivePowerLabel;
+            if (!item.GeneticTypeValue.HasValue)
+                item.GeneticTypeValue = GeneticType.Stable;
+            return true;
+        }
+
+        private static void ApplyPlantMetadataFromCode(Item item, string plantCode, bool onlyIfEmpty)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(plantCode))
+                return;
+
+            var plantData = ResolvePlantDataByCode(plantCode);
+            if (plantData == null)
+                return;
+
+            if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.FamilyMetadata))
+                item.FamilyMetadata = NormalizeFamily(plantData.Family.ToString());
+            if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata))
+                item.SourcePlantCodeMetadata = plantData.PlantCode;
+            if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.SourcePlantDisplayName))
+                item.SourcePlantDisplayName = plantData.name;
+            if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.ActivePowerLabel))
+                item.ActivePowerLabel = plantData.ActivePower;
+            if (!item.GeneticTypeValue.HasValue)
+                item.GeneticTypeValue = plantData.DefaultGeneticType;
+
+            if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.PassivePowerLabel))
+                item.PassivePowerLabel = ResolvePassivePowerLabel(plantData.PlantCode);
+        }
+
+        private static PlantData ResolvePlantDataByCode(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return null;
+
+            return Resources.Load<PlantData>("Plants/" + plantCode.Trim());
+        }
+
+        private static string ResolvePassivePowerLabel(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return null;
+
+            switch (plantCode.Trim().ToUpperInvariant())
+            {
+                case "PLT-PURE-001":
+                    return "Permafrost Core: sostiene il recupero del pH e la purezza ambientale.";
+                case "PLT-EVIL-001":
+                    return "Nebbia Sporale: alza la pressione mutagena e la volatilita biologica.";
+                case "PLT-STD-001":
+                    return "Filtro Ferrico: stabilizza il bioma e attenua il rischio muffe residuo.";
+                default:
+                    return null;
+            }
+        }
+
+        private static string CombineDistinctValues(params string[] values)
+        {
+            var distinct = values
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return distinct.Count == 0 ? null : string.Join(" | ", distinct);
         }
 
         public static string NormalizeFamily(string family)

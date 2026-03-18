@@ -195,8 +195,9 @@ public class PotSlot : MonoBehaviour
         var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
         if (foundation != null && foundation.Enabled)
         {
-            string displayName = PlayerInventoryPanelController.GetItemDisplayName(Items.Fruits);
-            foundation.PostAddedToInventory(Items.Fruits, displayName, amount, RoomNames.Dome);
+            string fruitTypeId = ItemFabric.ResolveFruitTypeIdForPlant(PotActions?.PotState?.PlantCode, PotActions?.PotState?.PlantFamilyMetadata);
+            string displayName = PlayerInventoryPanelController.GetItemDisplayName(fruitTypeId);
+            foundation.PostAddedToInventory(fruitTypeId, displayName, amount, RoomNames.Dome);
         }
         else
         {
@@ -210,7 +211,24 @@ public class PotSlot : MonoBehaviour
                 _uiNotification.ShowNotification($"New Fruit added to Inventory: {amount}", 3f, Color.green);
             }
         }
-        _inventory.Add(Items.Fruits, amount);
+        string typeId = ItemFabric.ResolveFruitTypeIdForPlant(PotActions?.PotState?.PlantCode, PotActions?.PotState?.PlantFamilyMetadata);
+        for (int i = 0; i < amount; i++)
+        {
+            var fruitItem = ItemFabric.CreateItemWithMetadata(
+                typeId,
+                4f,
+                PotActions?.PotState?.PlantGeneticType,
+                PotActions?.PotState?.PlantFamilyMetadata,
+                PotActions?.PotState?.PlantCode,
+                PotActions?.PotState != null ? Mathf.Max(1, PotActions.PotState.PlantLevel) : 1,
+                PotActions?.PotState?.SourcePlantDisplayName,
+                PotActions?.PotState?.ActivePowerLabel,
+                PotActions?.PotState?.PassivePowerLabel);
+            if (fruitItem != null)
+                _inventory.Add(fruitItem);
+            else
+                _inventory.Add(typeId);
+        }
         PotActions.PotState.AmountFruits -= amount;
         _amountOfFruits.text = "";
     }

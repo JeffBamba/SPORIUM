@@ -161,11 +161,12 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        // Inventario iniziale: 5 frutti (sconosciuti e conosciuti), 10 per gli altri item
+        // Inventario iniziale pulito per il loop reale: frutti specifici e materiali base,
+        // ma niente semi/spore/pre-seed placeholder.
         const int starterQuantity = 10;
-        const int starterFruitQuantity = 5;
-        foreach (string typeId in Items.AllTypeIds)
-            _playerInventory.Add(typeId, typeId == Items.Fruits || typeId == Items.FruitsKnown ? starterFruitQuantity : starterQuantity);
+        const int starterFruitQuantity = 3;
+        foreach (string typeId in Items.StarterInventoryTypeIds)
+            _playerInventory.Add(typeId, Items.IsSpecificFruitType(typeId) ? starterFruitQuantity : starterQuantity);
         
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR

@@ -187,11 +187,13 @@ namespace Sporae.UI.UIToolkit.Lab
             if (string.IsNullOrEmpty(tratti) || tratti == "—") tratti = "Stabili";
             string fa = string.IsNullOrWhiteSpace(first.ParentFamilyA) ? "STANDARD" : first.ParentFamilyA;
             string fb = string.IsNullOrWhiteSpace(first.ParentFamilyB) ? "STANDARD" : first.ParentFamilyB;
+            string provenienza = ExtractorTooltipTexts.GetOriginTraceLabel(first);
             var lines = new List<string>
             {
                 $"Pre-Seed x{ExtractorTooltipTexts.WrapValue(_outputPreSeeds.Count.ToString())}",
                 $"Tratti (fissati Step 3): {ExtractorTooltipTexts.WrapValue(tratti)}",
-                $"Famiglie sorgente: {ExtractorTooltipTexts.WrapValue(fa)} + {ExtractorTooltipTexts.WrapValue(fb)}"
+                $"Famiglie sorgente: {ExtractorTooltipTexts.WrapValue(fa)} + {ExtractorTooltipTexts.WrapValue(fb)}",
+                $"Provenienza: {ExtractorTooltipTexts.WrapValue(provenienza)}"
             };
             if (!string.IsNullOrWhiteSpace(first.CandidateTraitsCsv))
                 lines.Add($"Tratti compatibili: {ExtractorTooltipTexts.WrapValue(first.CandidateTraitsCsv)}");

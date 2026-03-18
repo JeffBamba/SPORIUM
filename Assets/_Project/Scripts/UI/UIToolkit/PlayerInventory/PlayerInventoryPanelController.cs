@@ -349,7 +349,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private static bool IsFruitType(string typeId)
         {
-            return typeId == Items.Fruits || typeId == Items.FruitsKnown;
+            return Items.IsFruitType(typeId);
         }
 
         /// <summary>Per i frutti: una riga per singolo item (mai cumulati), con tooltip per item.</summary>
@@ -360,7 +360,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
             string typeId = slot.TypeId;
             bool selectable = !isPicker || _pickerAllowedTypes.Contains(typeId);
-            string displayName = typeId == Items.FruitsKnown ? "Frutto conosciuto" : "Frutto";
+            string displayName = ItemFabric.GetFruitDisplayNameByTypeId(typeId);
 
             foreach (var fruit in slot.Items)
             {
@@ -369,7 +369,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 string tooltipContent;
                 if (typeId == Items.FruitsKnown)
                 {
-                    subText = unknown ? "Artic Hask" : Lab.ExtractorTooltipTexts.GetFruitDisplayName(fruit);
+                    subText = unknown ? "Arctic Hask" : Lab.ExtractorTooltipTexts.GetFruitDisplayName(fruit);
                     tooltipContent = unknown ? Lab.ExtractorTooltipTexts.BuildFruitKnownDemoTooltip() : Lab.ExtractorTooltipTexts.BuildFruitPreviewTooltip(fruit);
                 }
                 else
@@ -438,7 +438,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         {
             if (typeId == Items.WaterPotable || typeId == Items.Water) return "Bevi";
             if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat) return "Mangia";
-            if (typeId == Items.Fruits || typeId == Items.FruitsKnown) return "Mangia";
+            if (Items.IsFruitType(typeId)) return "Mangia";
             return "Usa";
         }
 
@@ -584,7 +584,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         {
             if (string.IsNullOrEmpty(typeId)) return typeId;
             if (typeId == Items.PreSeed) return "Pre-Seed";
-            if (typeId == Items.FruitsKnown) return "Frutto conosciuto";
+            if (Items.IsFruitType(typeId)) return ItemFabric.GetFruitDisplayNameByTypeId(typeId);
             if (typeId == Items.FoodVegetable) return "Vegetable Synthetic";
             if (typeId == Items.FoodFungus) return "Fungal Synthetic";
             if (typeId == Items.FoodMeat) return "Meat Synthetic";
@@ -608,12 +608,18 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             string fb = string.IsNullOrWhiteSpace(item.ParentFamilyB) ? "—" : item.ParentFamilyB;
             string famiglie = $"{fa} + {fb}";
             string trattiCompat = string.IsNullOrWhiteSpace(item.CandidateTraitsCsv) ? "—" : item.CandidateTraitsCsv;
+            string provenienza = Lab.ExtractorTooltipTexts.GetOriginTraceLabel(item);
             var lines = new List<string>
             {
                 $"Tratti (fissati Step 3): {Tv(trattiLabel)}",
                 $"Famiglie sorgente: {Tv(famiglie)}",
+                $"Provenienza: {Tv(provenienza)}",
                 $"Tratti compatibili: {Tv(trattiCompat)}"
             };
+            if (!string.IsNullOrWhiteSpace(item.ActivePowerLabel))
+                lines.Add($"Potere attivo ereditato: {Tv(item.ActivePowerLabel)}");
+            if (!string.IsNullOrWhiteSpace(item.PassivePowerLabel))
+                lines.Add($"Potere passivo ereditato: {Tv(item.PassivePowerLabel)}");
             return string.Join("\n", lines);
         }
 
@@ -636,6 +642,12 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 }
                 if (!string.IsNullOrWhiteSpace(firstItem.FamilyMetadata))
                     lines.Add($"Famiglia: {Tv(firstItem.FamilyMetadata)}");
+                if (!string.IsNullOrWhiteSpace(firstItem.SourcePlantDisplayName))
+                    lines.Add($"Pianta sorgente: {Tv(firstItem.SourcePlantDisplayName)}");
+                if (!string.IsNullOrWhiteSpace(firstItem.ActivePowerLabel))
+                    lines.Add($"Potere attivo: {Tv(firstItem.ActivePowerLabel)}");
+                if (!string.IsNullOrWhiteSpace(firstItem.PassivePowerLabel))
+                    lines.Add($"Potere passivo: {Tv(firstItem.PassivePowerLabel)}");
                 if (!string.IsNullOrWhiteSpace(firstItem.SelectedTraitsCsv))
                     lines.Add($"Tratti selezionati: {Tv(firstItem.SelectedTraitsCsv)}");
                 if (firstItem.TraitPowerPercent > 0 && firstItem.TraitPowerPercent < 100)
@@ -655,14 +667,20 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             string family = string.IsNullOrWhiteSpace(item.FamilyMetadata) ? "—" : item.FamilyMetadata;
             bool isRaw = item.SporeStageValue == SporeStage.Raw;
             string stato = isRaw ? "Raw (non combinabile)" : "Matura ✓ (pronta per fusione)";
+            string provenienza = Lab.ExtractorTooltipTexts.GetOriginTraceLabel(item);
 
             var lines = new List<string>
             {
                 $"Tratti: {Tv(tratti)}",
                 $"% di mutare: {Tv(percentMutare)}",
                 $"Famiglia: {Tv(family)}",
-                $"Stato: {Tv(stato)}"
+                $"Stato: {Tv(stato)}",
+                $"Provenienza: {Tv(provenienza)}"
             };
+            if (!string.IsNullOrWhiteSpace(item.ActivePowerLabel))
+                lines.Add($"Potere attivo sorgente: {Tv(item.ActivePowerLabel)}");
+            if (!string.IsNullOrWhiteSpace(item.PassivePowerLabel))
+                lines.Add($"Potere passivo sorgente: {Tv(item.PassivePowerLabel)}");
             return string.Join("\n", lines);
         }
 

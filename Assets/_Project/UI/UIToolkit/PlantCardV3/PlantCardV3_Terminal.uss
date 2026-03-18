@@ -312,7 +312,14 @@
 
 .pcv3-hud-plant-code-level-row .pcv3-hud-plant-level {
     font-size: 10px;
-    color: rgb(230, 201, 111);
+    color: rgb(192, 200, 197);
+    margin-bottom: 0;
+    margin-right: 8px;
+}
+
+.pcv3-hud-plant-code-level-row .pcv3-hud-plant-family {
+    font-size: 10px;
+    color: rgb(192, 200, 197);
     margin-bottom: 0;
 }
 
@@ -325,8 +332,26 @@
 
 .pcv3-hud-plant-level {
     font-size: 10px;
-    color: rgb(230, 201, 111);
+    color: rgb(192, 200, 197);
     margin-bottom: 6px;
+}
+
+.pcv3-hud-plant-family {
+    font-size: 10px;
+    color: rgb(192, 200, 197);
+    margin-bottom: 6px;
+}
+
+.pcv3-hud-plant-family-standard {
+    color: rgb(230, 201, 111);
+}
+
+.pcv3-hud-plant-family-pure {
+    color: rgb(127, 255, 122);
+}
+
+.pcv3-hud-plant-family-evil {
+    color: rgb(211, 95, 95);
 }
 
 .pcv3-hud-plant-oneliner {
@@ -838,6 +863,9 @@
     min-width: 20px;
     flex-direction: column;
     align-items: center;
+    padding-left: 4px;
+    padding-right: 4px;
+    box-sizing: border-box;
     background-color: rgb(26, 35, 37);
     border-left-width: 1px;
     border-right-width: 1px;

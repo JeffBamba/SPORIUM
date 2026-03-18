@@ -239,6 +239,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private Label _hudPlantName;
         private Label _hudPlantCode;
         private Label _hudPlantLevel;
+        private Label _hudPlantFamily;
         private Label _hudPlantOneliner;
         private List<VisualElement> _hudPotSlots = new List<VisualElement>(4);
         private VisualElement _vitalBlock1;
@@ -350,6 +351,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _hudPlantName = _root.Q<Label>("pcv3-hud-plant-name");
             _hudPlantCode = _root.Q<Label>("pcv3-hud-plant-code");
             _hudPlantLevel = _root.Q<Label>("pcv3-hud-plant-level");
+            _hudPlantFamily = _root.Q<Label>("pcv3-hud-plant-family");
             _hudPlantOneliner = _root.Q<Label>("pcv3-hud-plant-oneliner");
             _hudPotSlots.Clear();
             for (int i = 0; i < 4; i++)
@@ -965,7 +967,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             const float greenR = 127f / 255f, greenG = 255f / 255f, greenB = 122f / 255f;
             var green = new Color(greenR, greenG, greenB, 1f);
 
-            vScroller.style.width = 8;
+            // Non forzare width qui: l'USS definisce track 20px e thumb 12px centrato; override a 8px faceva sforare il thumb a destra.
+            // vScroller.style.width = 8;
 
             void ApplyToThumb(VisualElement el)
             {
@@ -1325,7 +1328,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             if (_playBootSequence)
                 StartBootSequence();
             else
+            {
                 RenderWelcome(clearConsole: true);
+                PrintStartCommands();
+            }
             RefreshHeader();
             RefreshSidebar();
             FocusInput();
@@ -2032,8 +2038,21 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     }
                 }
             }
-            if (_hudPlantCode != null) _hudPlantCode.text = empty ? "---" : FormatPlantFamilyBadge(state.PlantCode);
+            if (_hudPlantCode != null) _hudPlantCode.text = empty ? "---" : $"[{FormatPlantFamilyBadge(state.PlantCode)}]";
             if (_hudPlantLevel != null) _hudPlantLevel.text = empty ? "LEVEL ---" : $"LEVEL {state.PlantLevel}";
+            if (_hudPlantFamily != null)
+            {
+                _hudPlantFamily.enableRichText = true;
+                if (empty)
+                    _hudPlantFamily.text = "Famiglia: ---";
+                else
+                {
+                    var family = GetPlantFamilyForDisplay(plantData, state);
+                    string familyName = family.ToString(); // "Standard", "Pure", "Evil"
+                    string hex = ColorUtility.ToHtmlStringRGB(GetFamilyColor(family));
+                    _hudPlantFamily.text = $"Famiglia: <color=#{hex}>{familyName}</color>";
+                }
+            }
             if (_hudPlantOneliner != null)
             {
                 string desc = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
@@ -2525,6 +2544,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             AppendRawLine("<color=#E6C96F>[BOOT] Booting Sequence completato</color>");
             AppendRawLine("");
             RenderWelcome(clearConsole: false);
+            PrintStartCommands();
 
             _bootSequenceActive = false;
             if (_input != null)
@@ -4671,6 +4691,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             Line(CmdLine("§CMD§EXIT§END§", "§TITLE§Chiudi terminale (chiede S/N se c'è coda)§END§"));
             Line("");
             AppendRawLine("");
+            FlushConsole();
         }
 
         /// <summary>Riepilogo generale: tabella tutti i vasi + testo CONDIZIONI PER VASO.</summary>
@@ -4931,6 +4952,15 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             string moldBar = "[" + new string('█', moldFilled) + new string('░', barWidth - moldFilled) + "]";
             string moldLabel = moldLevel switch { 0 => "Sicuro", 1 => "Lieve", 2 => "Severo", 3 => "Critico", _ => "—" };
             AppendRawLine("§DATA§RISCHIO MUFFA§END§ " + moldBar + " §TITLE§" + moldLabel + "§END§");
+            AppendRawLine("");
+
+            int fruitCount = Mathf.Clamp(Mathf.RoundToInt(pot.AmountFruits), 0, 3);
+            int fruitFilled = Mathf.Clamp((fruitCount * barWidth) / 3, 0, barWidth);
+            string fruitBar = "[" + new string('█', fruitFilled) + new string('░', barWidth - fruitFilled) + "]";
+            string fruitInfo = pot.Stage == (int)PlantStage.HarvestReady
+                ? $"({fruitCount}/3 maturi)"
+                : "(disponibile a stadio MATURO)";
+            AppendRawLine("§DATA§FRUTTI MATURI§END§ " + fruitBar + " §TITLE§" + fruitCount + "/3§END§ §INFO§" + fruitInfo + "§END§");
             AppendRawLine("");
 
             // —— Potere Attivo (a capo, con evidenziazione effetti) e Potere Passivo ——
@@ -5959,13 +5989,8 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 }
             }
 
-            // Consume items now (design: item consumption on confirm)
-            foreach (var kv in required)
-            {
-                _inventory.Consume(kv.Key, kv.Value);
-            }
-
             var batch = new System.Collections.Generic.List<Sporae.Dome.PotAutomation.PotAutomationRunner.AutomationAction>();
+            var consumedItems = new List<Item>();
             foreach (var a in _queue)
             {
                 if (a == null) continue;
@@ -6010,12 +6035,39 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                         continue;
                 }
 
+                if (!string.IsNullOrEmpty(a.ItemTypeId))
+                {
+                    if (_inventory == null || !_inventory.TryRemoveFirst(a.ItemTypeId, out var removedItem) || removedItem == null)
+                    {
+                        foreach (var consumedItem in consumedItems)
+                        {
+                            _inventory?.Add(consumedItem);
+                        }
+
+                        AppendRawLine($"§ERROR§⚠ ERROR: IMPOSSIBLE TO RESOLVE ITEM PAYLOAD {a.ItemTypeId}§END§");
+                        AppendRawLine("");
+                        FlushConsole();
+                        _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", $"Item payload missing for {a.ItemTypeId}"));
+                        return;
+                    }
+
+                    consumedItems.Add(removedItem);
+                    if (a.Type == QueuedActionType.Plant)
+                    {
+                        mapped.ItemPayload = removedItem;
+                    }
+                }
+
                 batch.Add(mapped);
             }
 
             bool ok = runner.EnqueueAndRun(batch);
             if (!ok)
             {
+                foreach (var consumedItem in consumedItems)
+                {
+                    _inventory?.Add(consumedItem);
+                }
                 _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", "Automation failed: insufficient AP"));
                 AppendRawLine("§ERROR§⚠ Automation could not start (insufficient AP).§END§");
                 AppendRawLine("");
@@ -6119,6 +6171,28 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             return plantCode.StartsWith("PLT-", StringComparison.OrdinalIgnoreCase)
                 ? plantCode.Substring(4)
                 : plantCode;
+        }
+
+        private static PlantFamily GetPlantFamilyForDisplay(PlantData plantData, PotStateModel state)
+        {
+            if (plantData != null)
+                return plantData.Family;
+
+            string familyMetadata = state != null ? state.PlantFamilyMetadata : null;
+            if (!string.IsNullOrWhiteSpace(familyMetadata))
+            {
+                if (familyMetadata.Equals("PURE", StringComparison.OrdinalIgnoreCase))
+                    return PlantFamily.Pure;
+                if (familyMetadata.Equals("EVIL", StringComparison.OrdinalIgnoreCase))
+                    return PlantFamily.Evil;
+            }
+
+            return PlantFamily.Standard;
+        }
+
+        private static string GetPlantFamilyLabel(PlantData plantData, PotStateModel state)
+        {
+            return GetPlantFamilyForDisplay(plantData, state).ToString().ToUpperInvariant();
         }
 
         private static Color GetFamilyColor(PlantFamily family)

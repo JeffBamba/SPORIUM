@@ -1,4 +1,6 @@
+using System.Linq;
 using System.Text;
+using UnityEngine;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 
@@ -63,6 +65,10 @@ namespace Sporae.UI.UIToolkit.Lab
                 ? firstFruit.SourcePlantCodeMetadata
                 : "—";
             sb.AppendLine($"Origine: {WrapValue(origin)}");
+            if (!string.IsNullOrWhiteSpace(firstFruit.ActivePowerLabel))
+                sb.AppendLine($"Potere attivo: {WrapValue(firstFruit.ActivePowerLabel)}");
+            if (!string.IsNullOrWhiteSpace(firstFruit.PassivePowerLabel))
+                sb.AppendLine($"Potere passivo: {WrapValue(firstFruit.PassivePowerLabel)}");
             if (!string.IsNullOrWhiteSpace(firstFruit.SelectedTraitsCsv))
                 sb.AppendLine($"Tratti conosciuti: {WrapValue(firstFruit.SelectedTraitsCsv)}");
             return sb.ToString();
@@ -72,12 +78,14 @@ namespace Sporae.UI.UIToolkit.Lab
         public static string BuildFruitKnownDemoTooltip()
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"Nome frutto: {WrapValue("Artic Hask")}");
+            sb.AppendLine($"Nome frutto: {WrapValue("Arctic Hask")}");
             sb.AppendLine($"Livello pianta madre: {WrapValue("4")}");
             sb.AppendLine($"Famiglia pianta madre: {WrapValue("STANDARD")}");
             sb.AppendLine($"Tratti: {WrapValue("Stabili")}");
             sb.AppendLine($"% di mutare: {WrapValue("25%")}");
-            sb.AppendLine($"Origine: {WrapValue("Artic Hask Lvl 4")}");
+            sb.AppendLine($"Origine: {WrapValue("Arctic Hask Lvl 4")}");
+            sb.AppendLine($"Potere attivo: {WrapValue("Arctic Purification: rigenera +5 global pH e cura muffe Dome ogni 2 giorni")}");
+            sb.AppendLine($"Potere passivo: {WrapValue("Permafrost Core: sostiene il recupero del pH e la purezza ambientale.")}");
             sb.AppendLine($"Tratti conosciuti: {WrapValue("BalancedGrowth, NeutralYield, Resilience")}");
             return sb.ToString();
         }
@@ -171,6 +179,8 @@ namespace Sporae.UI.UIToolkit.Lab
         public static string GetFruitDisplayName(Item fruit)
         {
             if (fruit == null) return "—";
+            if (!string.IsNullOrEmpty(fruit.SourcePlantDisplayName))
+                return fruit.SourcePlantDisplayName;
             if (!string.IsNullOrEmpty(fruit.SourcePlantCodeMetadata) && PlantDatabase.Instance != null)
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataByCode(fruit.SourcePlantCodeMetadata);
@@ -200,6 +210,106 @@ namespace Sporae.UI.UIToolkit.Lab
                     return plantData.Family.ToString().ToUpperInvariant();
             }
             return "—";
+        }
+
+        public static string GetOriginTraceLabel(Item item)
+        {
+            if (item == null)
+                return "—";
+
+            string displayName = string.IsNullOrWhiteSpace(item.SourcePlantDisplayName)
+                ? null
+                : item.SourcePlantDisplayName.Trim();
+            string sourceCode = string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata)
+                ? null
+                : item.SourcePlantCodeMetadata.Trim();
+
+            sourceCode = NormalizeCombinedCodes(sourceCode);
+            displayName = NormalizeCombinedDisplayName(displayName, sourceCode);
+
+            if (!string.IsNullOrWhiteSpace(displayName) && !string.IsNullOrWhiteSpace(sourceCode))
+                return $"{displayName} [{sourceCode}]";
+            if (!string.IsNullOrWhiteSpace(displayName))
+                return displayName;
+            if (!string.IsNullOrWhiteSpace(sourceCode))
+                return sourceCode;
+            return "—";
+        }
+
+        private static string NormalizeCombinedDisplayName(string displayName, string sourceCode)
+        {
+            if (!string.IsNullOrWhiteSpace(displayName) && !string.Equals(displayName, sourceCode))
+                return displayName;
+
+            if (string.IsNullOrWhiteSpace(sourceCode))
+                return displayName;
+
+            var codes = sourceCode.Split('|');
+            var uniqueNames = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < codes.Length; i++)
+            {
+                string code = string.IsNullOrWhiteSpace(codes[i]) ? null : codes[i].Trim();
+                string resolvedName = ResolvePlantDisplayNameFromCode(code);
+                if (string.IsNullOrWhiteSpace(resolvedName))
+                    resolvedName = code;
+                if (string.IsNullOrWhiteSpace(resolvedName))
+                    continue;
+
+                if (!uniqueNames.Contains(resolvedName))
+                    uniqueNames.Add(resolvedName);
+            }
+
+            return uniqueNames.Count > 0 ? string.Join(" | ", uniqueNames) : displayName;
+        }
+
+        private static string NormalizeCombinedCodes(string sourceCode)
+        {
+            if (string.IsNullOrWhiteSpace(sourceCode))
+                return sourceCode;
+
+            var uniqueCodes = sourceCode
+                .Split('|')
+                .Select(code => string.IsNullOrWhiteSpace(code) ? null : code.Trim())
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct()
+                .ToArray();
+
+            return uniqueCodes.Length > 0 ? string.Join("|", uniqueCodes) : sourceCode;
+        }
+
+        private static string ResolvePlantDisplayNameFromCode(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return null;
+
+            var normalizedCode = plantCode.Trim().ToUpperInvariant();
+            switch (normalizedCode)
+            {
+                case "PLT-STD-001":
+                    return "Ferric Fern";
+                case "PLT-PURE-001":
+                    return "Arctic Hask";
+                case "PLT-EVIL-001":
+                    return "Glasscap Fungus";
+            }
+
+            var plantData = Resources.Load<PlantData>("Plants/" + normalizedCode);
+            if (plantData == null)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(plantData.ResearchNotes))
+            {
+                var note = plantData.ResearchNotes.Trim();
+                int separatorIndex = note.IndexOf(" - ", System.StringComparison.Ordinal);
+                if (separatorIndex <= 0)
+                    separatorIndex = note.IndexOf(" — ", System.StringComparison.Ordinal);
+                if (separatorIndex > 0)
+                    return note.Substring(0, separatorIndex).Trim();
+            }
+
+            return !string.IsNullOrWhiteSpace(plantData.Description)
+                ? plantData.Description.Trim()
+                : normalizedCode;
         }
 
     }

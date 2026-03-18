@@ -90,6 +90,7 @@
                                 <ui:VisualElement name="pcv3-hud-plant-code-level-row" class="pcv3-hud-plant-code-level-row">
                                     <ui:Label name="pcv3-hud-plant-code" text="---" class="pcv3-hud-plant-code" />
                                     <ui:Label name="pcv3-hud-plant-level" text="LEVEL ---" class="pcv3-hud-plant-level" />
+                                    <ui:Label name="pcv3-hud-plant-family" text="FAMILY ---" class="pcv3-hud-plant-family" />
                                 </ui:VisualElement>
                                 <ui:Label name="pcv3-hud-plant-oneliner" text="---" class="pcv3-hud-plant-oneliner" />
                             </ui:VisualElement>

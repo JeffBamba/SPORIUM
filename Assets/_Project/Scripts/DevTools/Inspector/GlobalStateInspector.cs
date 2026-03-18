@@ -430,8 +430,8 @@ namespace Sporae.DevTools
         
         private static readonly string[] KnownItemTypeIds = new[]
         {
-            Items.Fruits, Items.FruitsKnown, Items.Water, Items.WholePlant, Items.OrganicScrap001, Items.SporeGeneric,
-            Items.Seed001, Items.Seed002, Items.Seed003,
+            Items.FruitFerricPod, Items.FruitArcticPod, Items.FruitGlassPod,
+            Items.Water, Items.WholePlant, Items.OrganicScrap001,
             Items.FertilizerStandard, Items.FertilizerPure, Items.FertilizerProhibited,
             Items.SprayAntifungal, Items.AdditiveBasic, Items.AdditiveAcid,
             Items.StemCellVegetable, Items.StemCellFungus, Items.StemCellAnimal,

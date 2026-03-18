@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using _Project.Sporae.Core;
 using TMPro;
 using UnityEngine;
@@ -97,13 +97,10 @@ namespace _Project
             _resultGroup.SetActive(true);
 
             var seed =
-                _game.Stability > 80 ? "Stable Seed" :
-                _game.Stability > 60 ? "Unstable Seed" :
+                _game.Stability > 80 ? "Legacy path disattivato: usa Incubator" :
+                _game.Stability > 60 ? "Legacy path disattivato: usa Incubator" :
                 "Scrap";
-            
-            if (_game.Stability > 60)
-                _inventory.Add(Items.Seed001, 1);
-            
+
             _resultLabel.text = $"Stability: {_game.Stability:F1}\nProduct: {seed}";   
         }
         

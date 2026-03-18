@@ -169,7 +169,10 @@ namespace _Project
             }
             else
             {
-                _playerInventory.Add(Items.SporeGeneric, 1);
+                var inputSpore = _labMicroscope != null ? _labMicroscope.PeekInputSpore() : null;
+                var analyzedSpore = ItemFabric.CloneSpore(inputSpore);
+                if (analyzedSpore != null)
+                    _playerInventory.Add(analyzedSpore);
                 var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                 if (toastManager != null)
                 {

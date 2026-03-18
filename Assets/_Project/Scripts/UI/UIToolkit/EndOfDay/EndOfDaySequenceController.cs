@@ -27,6 +27,7 @@ namespace _Project
         [SerializeField] private float _typewriterCharsPerSecond = 35f;
 
         private VisualElement _root;
+        private VisualElement _overlay;
         private VisualElement _step1, _step2, _step3, _step4, _step5, _step6, _step7, _step8;
         private Label _snapshotTitle, _snapshotDate, _snapshotVault, _snapshotPh, _activitySummary, _drift, _notes;
         private Label _diarioText, _forecastToday, _forecastTomorrow, _forecastResearch;
@@ -109,6 +110,7 @@ namespace _Project
             if (currentRoot == null) return;
 
             _root = currentRoot;
+            _overlay = _root.Q<VisualElement>("eod-overlay");
             _step1 = _root.Q<VisualElement>("eod-step1");
             _step2 = _root.Q<VisualElement>("eod-step2");
             _step3 = _root.Q<VisualElement>("eod-step3");
@@ -153,18 +155,34 @@ namespace _Project
             _btnSleep = _root.Q<Button>("btn-eod-sleep");
             _btnDawnContinue = _root.Q<Button>("btn-eod-dawn-continue");
 
-            if (_btnYes != null) _btnYes.clicked += OnYesClicked;
-            if (_btnNo != null) _btnNo.clicked += OnNoClicked;
-            if (_btnSnapshotConfirm != null) _btnSnapshotConfirm.clicked += OnSnapshotConfirmClicked;
-            if (_btnDiarioContinue != null) _btnDiarioContinue.clicked += OnDiarioContinueClicked;
-            if (_btnResearchHistorical != null) _btnResearchHistorical.clicked += OnResearchHistoricalClicked;
-            if (_btnResearchBotanical != null) _btnResearchBotanical.clicked += OnResearchBotanicalClicked;
-            if (_btnResearchVault != null) _btnResearchVault.clicked += OnResearchVaultClicked;
-            if (_btnResearchSkip != null) _btnResearchSkip.clicked += OnResearchSkipClicked;
-            if (_btnSleep != null) _btnSleep.clicked += OnSleepClicked;
-            if (_btnDawnContinue != null) _btnDawnContinue.clicked += OnDawnContinueClicked;
+            RegisterModalButton(_btnYes, OnYesClicked);
+            RegisterModalButton(_btnNo, OnNoClicked);
+            RegisterModalButton(_btnSnapshotConfirm, OnSnapshotConfirmClicked);
+            RegisterModalButton(_btnDiarioContinue, OnDiarioContinueClicked);
+            RegisterModalButton(_btnResearchHistorical, OnResearchHistoricalClicked);
+            RegisterModalButton(_btnResearchBotanical, OnResearchBotanicalClicked);
+            RegisterModalButton(_btnResearchVault, OnResearchVaultClicked);
+            RegisterModalButton(_btnResearchSkip, OnResearchSkipClicked);
+            RegisterModalButton(_btnSleep, OnSleepClicked);
+            RegisterModalButton(_btnDawnContinue, OnDawnContinueClicked);
 
             _bound = true;
+        }
+
+        private static void RegisterModalButton(Button button, System.Action handler)
+        {
+            if (button == null || handler == null)
+                return;
+
+            foreach (var child in button.Children())
+                child.pickingMode = PickingMode.Ignore;
+
+            button.clicked += handler;
+            button.RegisterCallback<ClickEvent>(evt =>
+            {
+                handler();
+                evt.StopPropagation();
+            }, TrickleDown.TrickleDown);
         }
 
         /// <summary>Sorting order sopra tutti i pannelli (Food 1000, PlantCard 600, Lab 400) così EoD resta sempre in primo piano e non compete con Kitchen/Food.</summary>
@@ -182,8 +200,17 @@ namespace _Project
                 {
                     _uiDocument.rootVisualElement.style.display = DisplayStyle.Flex;
                     _uiDocument.rootVisualElement.SetEnabled(true);
+                    _uiDocument.rootVisualElement.pickingMode = PickingMode.Position;
+                    _uiDocument.rootVisualElement.BringToFront();
                 }
             }
+            if (_overlay != null)
+            {
+                _overlay.style.display = DisplayStyle.Flex;
+                _overlay.pickingMode = PickingMode.Position;
+            }
+            if (_root != null)
+                _root.pickingMode = PickingMode.Position;
             // Chiudi il pannello Food/Kitchen se aperto, così non intercetta i click (stesso sorting order 1000 → conflitto)
             var foodPanel = FindObjectOfType<FoodRoomPanelController>();
             if (foodPanel != null && foodPanel.IsVisible)
@@ -202,10 +229,21 @@ namespace _Project
         /// <summary>Chiude la sequenza e torna al vault (es. su NO in Step 1).</summary>
         public void Hide()
         {
+            if (_overlay != null)
+            {
+                _overlay.style.display = DisplayStyle.None;
+                _overlay.pickingMode = PickingMode.Ignore;
+            }
             if (_root != null)
+            {
                 _root.style.display = DisplayStyle.None;
+                _root.pickingMode = PickingMode.Ignore;
+            }
             if (_uiDocument != null && _uiDocument.rootVisualElement != null)
+            {
                 _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
+                _uiDocument.rootVisualElement.pickingMode = PickingMode.Ignore;
+            }
             gameObject.SetActive(false);
         }
 

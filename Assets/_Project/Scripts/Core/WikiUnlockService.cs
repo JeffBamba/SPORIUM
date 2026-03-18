@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using _Project.Sporae.Core;
 
 namespace _Project
@@ -32,6 +33,26 @@ namespace _Project
         public void Clear()
         {
             _unlockedIds.Clear();
+        }
+
+        public List<string> ExportUnlockedIds()
+        {
+            return _unlockedIds
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .OrderBy(id => id)
+                .ToList();
+        }
+
+        public void ImportUnlockedIds(IEnumerable<string> ids)
+        {
+            _unlockedIds.Clear();
+            if (ids == null) return;
+
+            foreach (var id in ids)
+            {
+                if (!string.IsNullOrWhiteSpace(id))
+                    _unlockedIds.Add(id.Trim());
+            }
         }
     }
 }

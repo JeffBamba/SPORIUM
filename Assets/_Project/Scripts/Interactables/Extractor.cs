@@ -196,15 +196,7 @@ namespace _Project
             bool hasStem = HasStemCellModule;
             string inputDesc = "";
             int sporeOut = 0, cell001Out = 0, cell002Out = 0, cell003Out = 0;
-            if (_inventory.Has(Items.Fruits) && _inventory.TryRemoveFirst(Items.Fruits, out var fruit))
-            {
-                inputDesc = "frutto"; sporeOut = 1; cell002Out = 1;
-                _slotInputFruit[idx] = fruit;
-                _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
-                SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
-                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 1, 0));
-            }
-            else if (_inventory.Has(Items.FruitsKnown) && _inventory.TryRemoveFirst(Items.FruitsKnown, out fruit))
+            if (TryRemoveFirstFruit(out var fruit))
             {
                 inputDesc = "frutto"; sporeOut = 1; cell002Out = 1;
                 _slotInputFruit[idx] = fruit;
@@ -361,6 +353,18 @@ namespace _Project
                 _worldStatusLabel.text = "Estrazione completata";
             else
                 _worldStatusLabel.text = "";
+        }
+
+        private bool TryRemoveFirstFruit(out Item fruit)
+        {
+            fruit = null;
+            foreach (var typeId in Items.AllFruitTypeIds)
+            {
+                if (_inventory.Has(typeId) && _inventory.TryRemoveFirst(typeId, out fruit) && fruit != null)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

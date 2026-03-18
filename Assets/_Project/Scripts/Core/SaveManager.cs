@@ -367,6 +367,18 @@ namespace Sporae.Core
 
             if (gameManager != null)
                 saveData.stemCellModuleUnlocked = gameManager.IsStemCellModuleUnlocked;
+
+            var plantDatabase = ServiceContainer.Instance?.Get<PlantDatabase>(suppressWarning: true) ?? PlantDatabase.Instance;
+            if (plantDatabase != null)
+            {
+                saveData.discoveredPlantCodes = plantDatabase.ExportDiscoveredPlantCodes();
+            }
+
+            var wikiUnlockService = ServiceContainer.Instance?.Get<WikiUnlockService>(suppressWarning: true);
+            if (wikiUnlockService != null)
+            {
+                saveData.wikiUnlockedIds = wikiUnlockService.ExportUnlockedIds();
+            }
             
             saveData.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             saveData.gameVersion = Application.version;
@@ -434,6 +446,18 @@ namespace Sporae.Core
 
             if (gameManager != null && saveData.gameState != null)
                 gameManager.SetStemCellModuleUnlocked(saveData.stemCellModuleUnlocked);
+
+            var plantDatabase = ServiceContainer.Instance?.Get<PlantDatabase>(suppressWarning: true) ?? PlantDatabase.Instance;
+            if (plantDatabase != null && saveData.discoveredPlantCodes != null)
+            {
+                plantDatabase.ImportDiscoveredPlantCodes(saveData.discoveredPlantCodes, persistToPrefs: true);
+            }
+
+            var wikiUnlockService = ServiceContainer.Instance?.Get<WikiUnlockService>(suppressWarning: true);
+            if (wikiUnlockService != null && saveData.wikiUnlockedIds != null)
+            {
+                wikiUnlockService.ImportUnlockedIds(saveData.wikiUnlockedIds);
+            }
 
             // Note diario piante
             if (saveData.diaryNotes != null && saveData.diaryNotes.Count > 0)
@@ -525,6 +549,7 @@ namespace Sporae.Core
                     potStates.Add(new PotStateData
                     {
                         potId = potState.PotId,
+                        payloadJson = JsonUtility.ToJson(potState),
                         hasPlant = potState.HasPlant,
                         stage = potState.Stage,
                         amountFruits = potState.AmountFruits,
@@ -573,6 +598,14 @@ namespace Sporae.Core
                     var potState = potAction.GetCurrentState();
                     if (potState != null && potState.PotId == potStateData.potId)
                     {
+                        if (!string.IsNullOrEmpty(potStateData.payloadJson))
+                        {
+                            JsonUtility.FromJsonOverwrite(potStateData.payloadJson, potState);
+                            if (string.IsNullOrEmpty(potState.PotId))
+                                potState.PotId = potStateData.potId;
+                            break;
+                        }
+
                         // Applica lo stato
                         potState.HasPlant = potStateData.hasPlant;
                         potState.Stage = potStateData.stage;
@@ -652,6 +685,9 @@ namespace Sporae.Core
                         sporeStage = item.SporeStageValue.HasValue ? (int)item.SporeStageValue.Value : 0,
                         familyMetadata = item.FamilyMetadata,
                         sourcePlantCodeMetadata = item.SourcePlantCodeMetadata,
+                        sourcePlantDisplayName = item.SourcePlantDisplayName,
+                        activePowerLabel = item.ActivePowerLabel,
+                        passivePowerLabel = item.PassivePowerLabel,
                         parentFamilyA = item.ParentFamilyA,
                         parentFamilyB = item.ParentFamilyB,
                         plantLevelMetadata = item.PlantLevelMetadata,
@@ -703,6 +739,9 @@ namespace Sporae.Core
                             item.SporeStageValue = (_Project.Sporae.Core.SporeStage)itemData.sporeStage;
                         item.FamilyMetadata = itemData.familyMetadata;
                         item.SourcePlantCodeMetadata = itemData.sourcePlantCodeMetadata;
+                        item.SourcePlantDisplayName = itemData.sourcePlantDisplayName;
+                        item.ActivePowerLabel = itemData.activePowerLabel;
+                        item.PassivePowerLabel = itemData.passivePowerLabel;
                         item.ParentFamilyA = itemData.parentFamilyA;
                         item.ParentFamilyB = itemData.parentFamilyB;
                         item.PlantLevelMetadata = itemData.plantLevelMetadata;
@@ -712,6 +751,34 @@ namespace Sporae.Core
                         item.ReagentUsedMetadata = itemData.reagentUsedMetadata;
                         item.CustomPlantName = itemData.customPlantName;
                     }
+
+                    if (_Project.Sporae.Core.Items.IsLegacyFruitType(item.TypeId)
+                        && (!string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata) || !string.IsNullOrWhiteSpace(item.FamilyMetadata)))
+                    {
+                        string migratedTypeId = _Project.Sporae.Core.ItemFabric.ResolveFruitTypeIdForPlant(item.SourcePlantCodeMetadata, item.FamilyMetadata);
+                        var migratedItem = _Project.Sporae.Core.ItemFabric.CreateItemWithMetadata(
+                            migratedTypeId,
+                            item.Quality,
+                            item.GeneticTypeValue,
+                            item.FamilyMetadata,
+                            item.SourcePlantCodeMetadata,
+                            item.PlantLevelMetadata,
+                            item.SourcePlantDisplayName,
+                            item.ActivePowerLabel,
+                            item.PassivePowerLabel);
+                        if (migratedItem != null)
+                        {
+                            migratedItem.ParentFamilyA = item.ParentFamilyA;
+                            migratedItem.ParentFamilyB = item.ParentFamilyB;
+                            migratedItem.CandidateTraitsCsv = item.CandidateTraitsCsv;
+                            migratedItem.SelectedTraitsCsv = item.SelectedTraitsCsv;
+                            migratedItem.TraitPowerPercent = item.TraitPowerPercent;
+                            migratedItem.ReagentUsedMetadata = item.ReagentUsedMetadata;
+                            migratedItem.CustomPlantName = item.CustomPlantName;
+                            item = migratedItem;
+                        }
+                    }
+
                     inventory.Add(item);
                 }
             }
@@ -759,7 +826,7 @@ namespace Sporae.Core
         // Strutture dati per serializzazione
         
         /// <summary>Versione formato inventario con metadata per item (genetica/famiglia/tratti).</summary>
-        private const int INVENTORY_VERSION_WITH_METADATA = 2;
+        private const int INVENTORY_VERSION_WITH_METADATA = 3;
 
         [Serializable]
         private class GameSaveData
@@ -775,6 +842,8 @@ namespace Sporae.Core
             public string gameVersion;
             public int inventoryVersion;
             public FoodRoomSaveData foodRoomData;
+            public List<string> discoveredPlantCodes;
+            public List<string> wikiUnlockedIds;
         }
         
         [Serializable]
@@ -826,6 +895,9 @@ namespace Sporae.Core
             public int sporeStage;
             public string familyMetadata;
             public string sourcePlantCodeMetadata;
+            public string sourcePlantDisplayName;
+            public string activePowerLabel;
+            public string passivePowerLabel;
             public string parentFamilyA;
             public string parentFamilyB;
             public int plantLevelMetadata;
@@ -840,6 +912,7 @@ namespace Sporae.Core
         private class PotStateData
         {
             public string potId;
+            public string payloadJson;
             public bool hasPlant;
             public int stage;
             public float amountFruits;

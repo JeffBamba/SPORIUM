@@ -238,8 +238,12 @@ namespace Sporae.UI.UIToolkit.Lab
             bool canAvvia = false;
             if (_storage != null)
             {
-                var fruitSlot = _storage.Items.FirstOrDefault(s => s.TypeId == Items.Fruits || s.TypeId == Items.FruitsKnown);
-                if (fruitSlot != null && fruitSlot.Quantity > 0) { inputDesc = $"{fruitSlot.TypeId} x{fruitSlot.Quantity}"; canAvvia = true; }
+                var fruitSlot = _storage.Items.FirstOrDefault(s => Items.IsFruitType(s.TypeId));
+                if (fruitSlot != null && fruitSlot.Quantity > 0)
+                {
+                    inputDesc = $"{PlayerInventoryPanelController.GetItemDisplayName(fruitSlot.TypeId, fruitSlot.Items.FirstOrDefault())} x{fruitSlot.Quantity}";
+                    canAvvia = true;
+                }
                 else if (HasStemCellModule && _storage.Has(Items.WholePlant)) { inputDesc = $"{Items.WholePlant} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.WholePlant)?.Quantity ?? 0}"; canAvvia = true; }
                 else if (HasStemCellModule && _storage.Has(Items.OrganicScrap001)) { inputDesc = $"{Items.OrganicScrap001} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicScrap001)?.Quantity ?? 0}"; canAvvia = true; }
                 else if (HasStemCellModule && _storage.Has(Items.ProteinResidue)) { inputDesc = $"{Items.ProteinResidue} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.ProteinResidue)?.Quantity ?? 0}"; canAvvia = true; }
@@ -317,7 +321,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private HashSet<string> ExtractorAllowedTypes()
         {
-            var set = new HashSet<string> { Items.Fruits, Items.FruitsKnown };
+            var set = new HashSet<string>(Items.AllFruitTypeIds);
             if (HasStemCellModule)
             {
                 set.Add(Items.WholePlant);

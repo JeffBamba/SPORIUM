@@ -123,6 +123,11 @@ namespace _Project
         {
             _storage.Consume(Items.SporeGeneric, 1);
         }
+
+        public Item PeekInputSpore()
+        {
+            return _storage != null ? _storage.PeekFirst(Items.SporeGeneric) : null;
+        }
         
         private void UpdateStorage()
         {

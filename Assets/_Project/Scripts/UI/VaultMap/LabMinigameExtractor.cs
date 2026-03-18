@@ -58,6 +58,7 @@ namespace _Project
         private HUDItemContainer _hudItemContainer;
         
         private UINotification _notification;
+        private Item _consumedFruitForRun;
         
         public void Show()
         {
@@ -121,7 +122,7 @@ namespace _Project
         {
             var wasTryingInThisDay = _lastPlayingDay == _dayCycleSystem.CurrentDay;
 
-            if (!_storage.Has(Items.Fruits))
+            if (!HasAnyFruitInStorage())
                 return;
             
             if (!_gameManager.TrySpendActionAndCry(_costAction, wasTryingInThisDay ? _costCry : 0))
@@ -131,7 +132,7 @@ namespace _Project
             if (dayActivityLog != null)
                 dayActivityLog.RecordLabAction(new DayActivityLog.LabActivityEntry { LabType = "Extractor", InputDescription = "frutto", SporeOut = 1, Cell001Out = 0, Cell002Out = 1, Cell003Out = 0 });
             _dragDropUI.ConfirmOperation();
-            _storage.Consume(Items.Fruits);
+            TryConsumeAnyFruit(out _consumedFruitForRun);
 
             _textLabel.text = _defaultText;
 
@@ -197,7 +198,9 @@ namespace _Project
 
             if (_isWon)
             {
-                _playerInventory.Add(Items.SporeGeneric);
+                var spore = ItemFabric.CreateSporeRawFromFruit(_consumedFruitForRun);
+                if (spore != null)
+                    _playerInventory.Add(spore);
                 // Usa Foundation se attivo, altrimenti legacy
                 var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 if (foundation != null && foundation.Enabled)
@@ -218,8 +221,32 @@ namespace _Project
                 }
             }
 
+            _consumedFruitForRun = null;
             StartCoroutine(HideRoutine());
             _textLabel.text = _isWon ? _wonText : _loseText;
+        }
+
+        private bool HasAnyFruitInStorage()
+        {
+            foreach (var typeId in Items.AllFruitTypeIds)
+            {
+                if (_storage.Has(typeId))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool TryConsumeAnyFruit(out Item consumedFruit)
+        {
+            consumedFruit = null;
+            foreach (var typeId in Items.AllFruitTypeIds)
+            {
+                if (_storage.TryRemoveFirst(typeId, out consumedFruit) && consumedFruit != null)
+                    return true;
+            }
+
+            return false;
         }
 
         private void UpdateUI()
