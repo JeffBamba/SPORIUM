@@ -1,0 +1,207 @@
+/* ── CRYO MACHINE PANEL ─────────────────────────────────────────────────── */
+
+.cryo-overlay {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: none;
+}
+
+.cryo-panel {
+    width: 480px;
+    background-color: rgba(8, 16, 26, 0.97);
+    border-width: 1px;
+    border-color: rgba(0, 200, 220, 0.45);
+    border-radius: 4px;
+    padding: 0;
+    flex-direction: column;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────────── */
+
+.cryo-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    background-color: rgba(0, 180, 210, 0.08);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 200, 220, 0.35);
+    padding: 14px 16px 12px 16px;
+}
+
+.cryo-header-text {
+    flex-direction: column;
+}
+
+.cryo-title {
+    font-size: 16px;
+    color: rgb(0, 210, 240);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+}
+
+.cryo-subtitle {
+    font-size: 10px;
+    color: rgba(0, 180, 200, 0.65);
+    letter-spacing: 1px;
+}
+
+.cryo-close-btn {
+    width: 28px;
+    height: 28px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: rgba(0, 200, 220, 0.3);
+    border-radius: 2px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+}
+
+.cryo-close-btn:hover {
+    background-color: rgba(220, 50, 50, 0.18);
+    border-color: rgba(220, 80, 80, 0.6);
+}
+
+.cryo-close-x {
+    font-size: 18px;
+    color: rgba(0, 200, 220, 0.8);
+    margin-top: -2px;
+}
+
+/* ── DESCRIPTION ─────────────────────────────────────────────────────────── */
+
+.cryo-desc {
+    font-size: 11px;
+    color: rgba(160, 200, 210, 0.6);
+    white-space: normal;
+    padding: 10px 16px 8px 16px;
+    -unity-text-align: upper-left;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 200, 220, 0.15);
+}
+
+/* ── SLOTS CONTAINER ─────────────────────────────────────────────────────── */
+
+.cryo-slots-container {
+    flex-direction: row;
+    padding: 14px 12px 10px 12px;
+    justify-content: space-between;
+}
+
+/* ── SINGLE SLOT ─────────────────────────────────────────────────────────── */
+
+.cryo-slot {
+    flex: 1;
+    margin: 0 4px;
+    background-color: rgba(0, 30, 50, 0.7);
+    border-width: 1px;
+    border-color: rgba(0, 150, 180, 0.25);
+    border-radius: 3px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cryo-slot-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(0, 120, 160, 0.12);
+    padding: 6px 8px 5px 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 150, 180, 0.2);
+}
+
+.cryo-slot-id {
+    font-size: 11px;
+    color: rgb(0, 190, 220);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+/* ── BADGE ───────────────────────────────────────────────────────────────── */
+
+.cryo-badge {
+    font-size: 9px;
+    -unity-font-style: bold;
+    padding: 2px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+}
+
+.cryo-badge-empty {
+    background-color: rgba(80, 80, 80, 0.4);
+    color: rgba(160, 160, 160, 0.8);
+    border-width: 1px;
+    border-color: rgba(100, 100, 100, 0.3);
+}
+
+.cryo-badge-active {
+    background-color: rgba(0, 160, 120, 0.25);
+    color: rgb(0, 220, 160);
+    border-width: 1px;
+    border-color: rgba(0, 180, 130, 0.5);
+}
+
+/* ── SLOT BODY ───────────────────────────────────────────────────────────── */
+
+.cryo-slot-body {
+    flex-direction: column;
+    padding: 8px 8px 10px 8px;
+    flex: 1;
+}
+
+.cryo-slot-empty-label {
+    font-size: 10px;
+    color: rgba(100, 140, 160, 0.55);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.cryo-slot-info {
+    flex-direction: column;
+}
+
+.cryo-info-level {
+    font-size: 12px;
+    color: rgb(240, 240, 100);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.cryo-info-family {
+    font-size: 10px;
+    color: rgba(180, 220, 230, 0.7);
+    margin-bottom: 6px;
+}
+
+.cryo-power-label {
+    font-size: 9px;
+    color: rgba(0, 180, 210, 0.55);
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
+}
+
+.cryo-info-power {
+    font-size: 10px;
+    color: rgba(120, 220, 200, 0.9);
+    white-space: normal;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+
+.cryo-footer {
+    font-size: 10px;
+    color: rgba(0, 160, 190, 0.5);
+    -unity-text-align: middle-center;
+    padding: 8px 16px 12px 16px;
+    border-top-width: 1px;
+    border-top-color: rgba(0, 200, 220, 0.15);
+    letter-spacing: 0.5px;
+}

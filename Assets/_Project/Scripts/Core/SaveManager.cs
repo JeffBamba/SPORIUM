@@ -339,6 +339,9 @@ namespace Sporae.Core
             
             // Stato dei vasi
             saveData.pots = CollectPotStates();
+
+            // Stato slot cryo (piante passive conservate nella Cryo Machine)
+            saveData.cryoSlots = CollectCryoSlotStates();
             
             // Statistiche del diario (se disponibile)
             var diaryStats = ServiceContainer.Instance?.Get<DiaryStatistics>();
@@ -442,6 +445,12 @@ namespace Sporae.Core
             if (saveData.pots != null && saveData.pots.Count > 0)
             {
                 ApplyPotStates(saveData.pots);
+            }
+
+            // Slot cryo
+            if (saveData.cryoSlots != null && saveData.cryoSlots.Count > 0)
+            {
+                ApplyCryoSlotStates(saveData.cryoSlots);
             }
 
             if (gameManager != null && saveData.gameState != null)
@@ -583,6 +592,33 @@ namespace Sporae.Core
             return potStates;
         }
         
+        /// <summary>
+        /// Raccoglie lo stato corrente di tutti i CryoSlot dalla Cryo Machine.
+        /// </summary>
+        private List<CryoSlotSaveEntry> CollectCryoSlotStates()
+        {
+            var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+            if (cryo == null)
+                return new List<CryoSlotSaveEntry>();
+
+            return cryo.CollectSaveData();
+        }
+
+        /// <summary>
+        /// Ripristina lo stato dei CryoSlot della Cryo Machine dai dati salvati.
+        /// </summary>
+        private void ApplyCryoSlotStates(List<CryoSlotSaveEntry> entries)
+        {
+            var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+            if (cryo == null)
+            {
+                SporiumLogger.LogWarning(LogCategory.Save, "ApplyCryoSlotStates: CryoMachineController non disponibile. Salto ripristino slot cryo.");
+                return;
+            }
+
+            cryo.RestoreFromSave(entries);
+        }
+
         /// <summary>
         /// Applica lo stato salvato ai vasi.
         /// </summary>
@@ -833,6 +869,7 @@ namespace Sporae.Core
         {
             public GameStateData gameState;
             public InventoryData inventory;
+            public List<CryoSlotSaveEntry> cryoSlots;
             public List<PotStateData> pots;
             public DiaryStatisticsData diaryStatistics;
             public MissionsData missions;

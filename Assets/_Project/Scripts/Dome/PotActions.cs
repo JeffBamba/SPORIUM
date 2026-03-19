@@ -11,6 +11,7 @@ using Sporae.Dome.PotSystem.Mold;
 using Sporae.Dome.PotSystem.Condition;
 using _Project;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -1739,7 +1740,171 @@ public class PotActions : MonoBehaviour
     }
     
     #endregion
-    
+
+    #region Cryo Machine — trasferimento slot passivi
+
+    /// <summary>
+    /// Trasferisce la pianta corrente (deve essere Lvl 5) in un CryoSlot libero.
+    /// Il pot si svuota; la pianta viene conservata con PassivePower attivo.
+    /// </summary>
+    public bool TransferToCryo()
+    {
+        if (_potState == null || !_potState.HasPlant)
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] TransferToCryo: nessuna pianta nel vaso.");
+            return false;
+        }
+
+        if (!PlantLevelSystem.CanMoveToPassiveSlot(_potState))
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] TransferToCryo: la pianta non è Lvl 5 (livello attuale: {_potState.PlantLevel}).");
+            return false;
+        }
+
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        if (cryo == null)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, "TransferToCryo: CryoMachineController non trovato nel ServiceContainer.");
+            return false;
+        }
+
+        var payload = CryoPlantPayload.FromPotState(_potState);
+
+        if (!cryo.TryOccupySlot(payload, out _))
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, "TransferToCryo: nessuno slot cryo libero disponibile.");
+            var foundationFull = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundationFull != null && foundationFull.Enabled)
+                foundationFull.PostToast("CRYO-FULL", new NotificationPayload().With("message", "Nessuno slot cryo disponibile."), NotificationSeverity.Warning);
+            return false;
+        }
+
+        if (dayCycleController != null)
+            dayCycleController.UnregisterPot(_potState);
+
+        _potState.ResetToEmpty();
+
+        if (showDebugLogs)
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[{potSlot?.PotId}] Pianta {payload.PlantCode} Lvl {payload.PlantLevel} trasferita in cryo.");
+
+        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        if (foundation != null && foundation.Enabled)
+            foundation.PostToast("CRYO-IN", new NotificationPayload().With("message", $"{payload.CustomPlantName ?? payload.PlantCode} trasferita in Cryo Machine."), NotificationSeverity.Info);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Ripristina una pianta da un CryoSlot in questo pot attivo.
+    /// Il pot deve essere vuoto. ActivePower viene ripristinato, PassivePower disattivato.
+    /// </summary>
+    public bool RestoreFromCryo(string cryoSlotId)
+    {
+        if (_potState == null)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, "RestoreFromCryo: _potState è null.");
+            return false;
+        }
+
+        if (_potState.HasPlant)
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, $"[{potSlot?.PotId}] RestoreFromCryo: il pot non è vuoto.");
+            return false;
+        }
+
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        if (cryo == null)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, "RestoreFromCryo: CryoMachineController non trovato nel ServiceContainer.");
+            return false;
+        }
+
+        var slot = cryo.GetSlotById(cryoSlotId);
+        if (slot == null || !slot.IsOccupied)
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, $"RestoreFromCryo: slot {cryoSlotId} non trovato o vuoto.");
+            return false;
+        }
+
+        var payload = cryo.FreeSlot(slot);
+        if (payload == null) return false;
+
+        // Reinietta i campi identitari nel PotStateModel; l'ActivePower torna operativo
+        // con il normale ciclo di crescita; IsInPassiveSlot viene azzerato da ApplyToPotState.
+        payload.ApplyToPotState(_potState);
+
+        // Imposta uno stage coerente per una pianta re-impiantata a Lvl 5
+        _potState.HasPlant = true;
+        if (_potState.Stage == (int)PlantStage.Empty)
+            _potState.Stage = (int)PlantStage.Resting;
+
+        RegisterPotIfNeeded();
+
+        if (showDebugLogs)
+            SporiumLogger.LogInfo(LogCategory.Pot, $"[{potSlot?.PotId}] Pianta {payload.PlantCode} Lvl {payload.PlantLevel} ripristinata da cryo.");
+
+        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        if (foundation != null && foundation.Enabled)
+            foundation.PostToast("CRYO-OUT-POT", new NotificationPayload().With("message", $"{payload.CustomPlantName ?? payload.PlantCode} ripristinata in pot attivo."), NotificationSeverity.Success);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Estrae una pianta da un CryoSlot e la conserva come WholePlant item nell'inventario.
+    /// I passive powers vengono disattivati (slot liberato). L'item conserva tutti i metadata Lvl5.
+    /// </summary>
+    public bool ExtractFromCryoToStorage(string cryoSlotId)
+    {
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        if (cryo == null)
+        {
+            SporiumLogger.LogError(LogCategory.Pot, "ExtractFromCryoToStorage: CryoMachineController non trovato nel ServiceContainer.");
+            return false;
+        }
+
+        var slot = cryo.GetSlotById(cryoSlotId);
+        if (slot == null || !slot.IsOccupied)
+        {
+            SporiumLogger.LogWarning(LogCategory.Pot, $"ExtractFromCryoToStorage: slot {cryoSlotId} non trovato o vuoto.");
+            return false;
+        }
+
+        var payload = cryo.FreeSlot(slot);
+        if (payload == null) return false;
+
+        // Crea WholePlant item enriched con tutti i metadata della pianta Lvl5
+        var wholePlantItem = ItemFabric.CreateItemWithMetadata(
+            Items.WholePlant,
+            4f,
+            (GeneticType)payload.PlantGeneticType,
+            payload.PlantFamilyMetadata,
+            payload.PlantCode,
+            payload.PlantLevel,
+            payload.SourcePlantDisplayName,
+            payload.ActivePowerLabel,
+            payload.PassivePowerLabel);
+
+        if (_playerInventory != null)
+        {
+            if (wholePlantItem != null)
+                _playerInventory.Add(wholePlantItem);
+            else
+                _playerInventory.Add(Items.WholePlant);
+        }
+
+        if (showDebugLogs)
+            SporiumLogger.LogInfo(LogCategory.Pot, $"Pianta {payload.PlantCode} Lvl {payload.PlantLevel} estratta da cryo verso storage.");
+
+        var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        if (foundation != null && foundation.Enabled)
+            foundation.PostToast("CRYO-OUT-STORAGE", new NotificationPayload().With("message", $"{payload.CustomPlantName ?? payload.PlantCode} estratta e conservata. Poteri passivi disattivati."), NotificationSeverity.Info);
+
+        return true;
+    }
+
+    #endregion
+
     #if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {

@@ -279,17 +279,19 @@ public class PotSlot : MonoBehaviour
     }
     
     /// <summary>
-    /// Pulisce la selezione di tutti i vasi
+    /// Pulisce la selezione di tutti i vasi attivi leggendo dal DomePotRegistry.
     /// </summary>
     private void ClearAllSelections()
     {
-        PotSlot[] allPots = FindObjectsOfType<PotSlot>();
-        foreach (PotSlot pot in allPots)
+        var registry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+        var allPots = registry != null
+            ? registry.GetActivePotsSnapshot()
+            : new System.Collections.Generic.List<PotSlot>();
+
+        foreach (var pot in allPots)
         {
-            if (pot != this)
-            {
+            if (pot != null && pot != this)
                 pot.ClearSelection();
-            }
         }
     }
     

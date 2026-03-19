@@ -443,6 +443,11 @@ public class DayCycleController : MonoBehaviour
             foodRoom.ProcessDailyProduction(dayIndex);
             foodRoom.ProcessDailyCosts();
         }
+
+        // 9. ApplyPassivePowers — scaffold Task 2. Legge i CryoSlot occupati e registra
+        //    il PassivePowerLabel a debug. Gli effetti reali verranno implementati in Task 3/4.
+        //    I CryoSlot non entrano mai in _registeredPots.
+        ApplyPassivePowers(dayIndex);
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
@@ -1900,6 +1905,29 @@ public class DayCycleController : MonoBehaviour
     public int GetRegisteredPotCount()
     {
         return _registeredPots.Count;
+    }
+
+    /// <summary>
+    /// Scaffold Task 2: registra a debug i passive power attivi dai CryoSlot occupati.
+    /// I CryoSlot non entrano mai in _registeredPots né nel loop produttivo.
+    /// Gli effetti reali dei poteri passivi verranno implementati in Task 3/4.
+    /// </summary>
+    private void ApplyPassivePowers(int dayIndex)
+    {
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        if (cryo == null) return;
+
+        var slots = cryo.GetPassiveSlotsSnapshot();
+        foreach (var slot in slots)
+        {
+            if (slot == null || !slot.IsOccupied || slot.Payload == null) continue;
+
+            if (enableDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Dome,
+                    $"[Day {dayIndex}] PassivePower attivo — {slot.SlotId}: {slot.Payload.PlantCode} Lvl {slot.Payload.PlantLevel} | Potere: {slot.Payload.PassivePowerLabel ?? "—"}");
+
+            // TODO Task 3/4: implementare qui gli effetti gameplay del PassivePower.
+        }
     }
 
     /// <summary>

@@ -46,6 +46,12 @@ namespace Sporae.Dome
                 .ToList();
         }
 
+        /// <summary>
+        /// Alias esplicito di GetPotsSnapshot() per enfatizzare che questo registro
+        /// contiene solo i 4 slot attivi della Dome (mai i CryoSlot passivi).
+        /// </summary>
+        public List<PotSlot> GetActivePotsSnapshot() => GetPotsSnapshot();
+
         public PotSlot FindPotById(string potId)
         {
             if (string.IsNullOrEmpty(potId))

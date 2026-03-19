@@ -38,7 +38,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             ConfirmingPlantLed,
             ConfirmingPlantLedType,
             ConfirmingActionToQueue,
-            ConfirmingExecuteOrDiscardQueue
+            ConfirmingExecuteOrDiscardQueue,
+            SelectingCryoSlotForExtract,
+            SelectingCryoSlotForRestore,
+            SelectingTargetPotForRestore
         }
 
         private enum QueuedActionType
@@ -206,6 +209,9 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private readonly System.Collections.Generic.List<QueuedAction> _queue = new();
         private InputState _inputState = InputState.Idle;
         private List<PotSlot> _potsForStatusChoice = new List<PotSlot>();
+        private List<CryoSlot> _cryoSlotsForChoice = new List<CryoSlot>();
+        private List<PotSlot>  _emptyPotsForChoice  = new List<PotSlot>();
+        private string         _pendingCryoSlotId;
         private List<string> _statusLinesCollector;
         private List<string> _pendingStatusSecondHalf;
         private List<string> _pendingStatusResearchNotes;
@@ -3637,6 +3643,21 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (upper == "START" || upper == "HELP") { context = "HELP"; }
             else if (upper == "STATUS") { context = "STATUS"; }
+            else if (upper == "PASSIVE") { context = "PASSIVE"; }
+            else if (upper.StartsWith("CRYO SEND"))
+            {
+                string potId = ExtractArgAtIndex(trimmed, 2);
+                if (string.IsNullOrEmpty(potId)) { isErrorPath = true; context = ""; }
+                else { context = "Cryo Transfer"; }
+            }
+            else if (upper.StartsWith("CRYO EXTRACT"))
+            {
+                context = "Cryo Estrazione";
+            }
+            else if (upper.StartsWith("CRYO RESTORE"))
+            {
+                context = "Cryo Ripristino";
+            }
             else if (upper == "FORECAST") { context = "FORECAST"; }
             else if (upper == "PROTOCOL") { context = "PROTOCOL"; }
             else if (upper.StartsWith("OPEN"))
@@ -3824,6 +3845,39 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 FlushConsole();
                 ShowLoadingSpinner(true);
                 _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "STATUS", () => HandleStatusPotChoice(upper)));
+                return;
+            }
+
+            if (_inputState == InputState.SelectingCryoSlotForExtract)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Cryo Estrazione");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Cryo Estrazione", () => HandleCryoExtractSlotChoice(upper)));
+                return;
+            }
+
+            if (_inputState == InputState.SelectingCryoSlotForRestore)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Cryo Ripristino");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Cryo Ripristino", () => HandleCryoRestoreSlotChoice(upper)));
+                return;
+            }
+
+            if (_inputState == InputState.SelectingTargetPotForRestore)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Cryo Ripristino");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Cryo Ripristino", () => HandleCryoRestorePotChoice(upper)));
                 return;
             }
 
@@ -4122,9 +4176,473 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return;
             }
 
+            if (upper == "PASSIVE")
+            {
+                ExecutePassiveOverview();
+                return;
+            }
+
+            if (upper.StartsWith("CRYO SEND"))
+            {
+                string potId = ExtractArgAtIndex(trimmed, 2);
+                if (string.IsNullOrEmpty(potId))
+                {
+                    AppendRawLine("§ERROR§⚠ ERRORE: ID VASO RICHIESTO. USO: CRYO SEND [POT-ID]§END§");
+                    AppendRawLine("");
+                    FlushConsole();
+                    return;
+                }
+                ExecuteCryoSend(potId);
+                return;
+            }
+
+            if (upper.StartsWith("CRYO EXTRACT"))
+            {
+                BeginCryoExtractSelection();
+                return;
+            }
+
+            if (upper.StartsWith("CRYO RESTORE"))
+            {
+                BeginCryoRestoreSlotSelection();
+                return;
+            }
+
             AppendRawLine("§ERROR§⚠ COMANDO NON VALIDO. DIGITA START PER AIUTO§END§");
             AppendRawLine("");
             FlushConsole();
+        }
+
+        /// <summary>
+        /// Comando PASSIVE: mostra l'overview dei 3 slot della Cryo Machine con stato,
+        /// pianta conservata, livello e PassivePowerLabel.
+        /// </summary>
+        private void ExecutePassiveOverview()
+        {
+            var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+
+            // ── PROTOCOLLO ──────────────────────────────────────────────────────────
+            AppendRawLine("§DATA§▸ CRYO MACHINE — PROTOCOLLO DI CONSERVAZIONE PASSIVA§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            AppendRawLine("");
+            AppendRawLine("§INFO§La Cryo Machine è un sistema di conservazione avanzato riservato§END§");
+            AppendRawLine("§INFO§alle piante che raggiungono il Livello 5 — il massimo evolutivo.§END§");
+            AppendRawLine("§INFO§Una pianta Lvl 5 in stato criogenico non richiede manutenzione§END§");
+            AppendRawLine("§INFO§quotidiana (irrigazione, concimazione, raccolta) ma rimane§END§");
+            AppendRawLine("§INFO§biologicamente attiva e influenza il Vault tramite i suoi POTERI PASSIVI.§END§");
+            AppendRawLine("");
+            AppendRawLine("§DATA§▸ POTERI ATTIVI vs POTERI PASSIVI§END§");
+            AppendRawLine("");
+            AppendRawLine("  §CMD§POTERI ATTIVI§END§");
+            AppendRawLine("  §DIM§Operativi solo quando la pianta è in un pot attivo (POT-001…004).§END§");
+            AppendRawLine("  §DIM§Influenzano produzione, qualità dei raccolti e cicli biologici.§END§");
+            AppendRawLine("  §DIM§Si disattivano automaticamente al trasferimento in Cryo.§END§");
+            AppendRawLine("");
+            AppendRawLine("  §CMD§POTERI PASSIVI§END§");
+            AppendRawLine("  §DIM§Operativi solo quando la pianta è in uno slot Cryo.§END§");
+            AppendRawLine("  §DIM§Influenzano il Vault con effetti ambientali e bonus permanenti§END§");
+            AppendRawLine("  §DIM§(atmosfera, resistenze, moltiplicatori Vault-wide).§END§");
+            AppendRawLine("  §DIM§Si disattivano quando la pianta viene rimossa dallo slot Cryo.§END§");
+            AppendRawLine("");
+            AppendRawLine("§DATA§▸ OPERAZIONI DISPONIBILI§END§");
+            AppendRawLine("");
+            AppendRawLine("  §CMD§CRYO SEND [POT-ID]§END§");
+            AppendRawLine("  §DIM§Trasferisce una pianta Lvl 5 da un pot attivo a uno slot Cryo libero.§END§");
+            AppendRawLine("  §DIM§I poteri attivi si disattivano, quelli passivi si attivano.§END§");
+            AppendRawLine("");
+            AppendRawLine("  §CMD§CRYO EXTRACT§END§");
+            AppendRawLine("  §DIM§Avvia la procedura guidata per rimuovere una pianta da un slot Cryo§END§");
+            AppendRawLine("  §DIM§e conservarla nell'inventario come WholePlant (tutti i metadata Lvl 5§END§");
+            AppendRawLine("  §DIM§preservati). I poteri passivi si disattivano.§END§");
+            AppendRawLine("");
+            AppendRawLine("  §CMD§CRYO RESTORE§END§");
+            AppendRawLine("  §DIM§Avvia la procedura guidata per trasferire una pianta da uno slot Cryo§END§");
+            AppendRawLine("  §DIM§a un pot attivo vuoto. I poteri passivi si disattivano, quelli attivi§END§");
+            AppendRawLine("  §DIM§vengono ripristinati.§END§");
+            AppendRawLine("");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            AppendRawLine("");
+
+            // ── STATO SLOT ───────────────────────────────────────────────────────────
+            AppendRawLine("§DATA§▸ STATO SLOT CRYO§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+
+            if (cryo == null)
+            {
+                AppendRawLine("§WARN§⚠ Cryo Machine non disponibile in questa scena.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var slots = cryo.GetPassiveSlotsSnapshot();
+            if (slots == null || slots.Count == 0)
+            {
+                AppendRawLine("§WARN§⚠ Nessuno slot cryo configurato.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            foreach (var slot in slots)
+            {
+                if (slot == null) continue;
+
+                AppendRawLine($"§DATA§{slot.SlotId}§END§");
+
+                if (!slot.IsOccupied)
+                {
+                    AppendRawLine("  §DIM§[ SLOT VUOTO — disponibile per trasferimento Lvl 5 ]§END§");
+                }
+                else
+                {
+                    var p = slot.Payload;
+                    string plantName  = !string.IsNullOrWhiteSpace(p.CustomPlantName) ? p.CustomPlantName : p.PlantCode;
+                    string family     = !string.IsNullOrWhiteSpace(p.PlantFamilyMetadata) ? p.PlantFamilyMetadata : "—";
+                    string passive    = !string.IsNullOrWhiteSpace(p.PassivePowerLabel) ? p.PassivePowerLabel : "—";
+                    string hybrid     = p.IsHybrid ? " §WARN§[IBRIDO]§END§" : "";
+                    string mutated    = p.IsMutated ? " §PURPLE§[MUTATO]§END§" : "";
+
+                    AppendRawLine($"  §TITLE§[ PASSIVE ACTIVE ]§END§{hybrid}{mutated}");
+                    AppendRawLine($"  §CMD§Pianta:§END§   {plantName}  §DIM§({p.PlantCode})§END§");
+                    AppendRawLine($"  §CMD§Livello:§END§  §VAL§Lvl {p.PlantLevel}§END§");
+                    AppendRawLine($"  §CMD§Famiglia:§END§ {family}");
+                    AppendRawLine($"  §CMD§Potere Passivo:§END§");
+                    AppendRawLine($"  §INFO§{passive}§END§");
+                }
+
+                AppendRawLine("");
+            }
+
+            AppendRawLine($"§DIM§Slot occupati: {cryo.OccupiedCount()} / {slots.Count}§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            AppendRawLine("");
+            FlushConsole();
+            SwitchToConsole();
+        }
+
+        /// <summary>CRYO SEND [POT-ID] — trasferisce la pianta Lvl 5 dal pot attivo al primo slot Cryo libero.</summary>
+        private void ExecuteCryoSend(string potId)
+        {
+            var pot = FindPotById(potId);
+            if (pot == null)
+            {
+                AppendRawLine($"§ERROR§⚠ ERRORE: Vaso '{potId}' non trovato nel registro.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var state = pot.PotActions?.PotState;
+            if (state == null || !state.HasPlant)
+            {
+                AppendRawLine($"§WARN§⚠ Il vaso {potId} è vuoto — nessuna pianta da trasferire.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            if (state.PlantLevel < 5)
+            {
+                AppendRawLine($"§WARN§⚠ Solo le piante Livello 5 possono essere trasferite alla Cryo Machine.§END§");
+                AppendRawLine($"§DIM§Livello attuale: {state.PlantLevel}§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            bool ok = pot.PotActions.TransferToCryo();
+            if (ok)
+            {
+                AppendRawLine("§TITLE§✓ TRASFERIMENTO COMPLETATO§END§");
+                AppendRawLine($"§INFO§La pianta è stata trasferita con successo alla Cryo Machine.§END§");
+                AppendRawLine($"§INFO§I poteri passivi sono ora attivi. Il vaso {potId} è disponibile.§END§");
+                AppendRawLine($"§DIM§Digita PASSIVE per aggiornare lo stato degli slot.§END§");
+                UpdateHudSlotVisuals();
+                RefreshHudFromSelectedPot();
+            }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ TRASFERIMENTO FALLITO — nessuno slot Cryo libero disponibile§END§");
+                AppendRawLine("§DIM§oppure la Cryo Machine non è configurata in scena.§END§");
+            }
+
+            AppendRawLine("");
+            FlushConsole();
+            SwitchToConsole();
+        }
+
+        // ── CRYO EXTRACT — procedura guidata ────────────────────────────────────
+
+        /// <summary>Passo 1: mostra la lista degli slot Cryo occupati e avvia la selezione.</summary>
+        private void BeginCryoExtractSelection()
+        {
+            var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+            if (cryo == null)
+            {
+                AppendRawLine("§ERROR§⚠ Cryo Machine non disponibile in questa scena.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var slots = cryo.GetPassiveSlotsSnapshot();
+            _cryoSlotsForChoice.Clear();
+            foreach (var s in slots)
+                if (s != null && s.IsOccupied) _cryoSlotsForChoice.Add(s);
+
+            if (_cryoSlotsForChoice.Count == 0)
+            {
+                AppendRawLine("§WARN§⚠ Nessuna pianta presente negli slot Cryo — nulla da estrarre.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            AppendRawLine("§DATA§▸ CRYO EXTRACT — Scegli lo slot da estrarre§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            for (int i = 0; i < _cryoSlotsForChoice.Count; i++)
+            {
+                var s = _cryoSlotsForChoice[i];
+                var p = s.Payload;
+                string name = !string.IsNullOrWhiteSpace(p.CustomPlantName) ? p.CustomPlantName : p.PlantCode;
+                string passive = !string.IsNullOrWhiteSpace(p.PassivePowerLabel) ? p.PassivePowerLabel : "—";
+                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{s.SlotId}§END§  {name}  §VAL§Lvl {p.PlantLevel}§END§");
+                AppendRawLine($"     §DIM§Potere Passivo: {passive}§END§");
+            }
+            AppendRawLine("");
+            AppendRawLine("§WARN§⚠ NOTA BENE — Deperimento organico§END§");
+            AppendRawLine("§DIM§Qualsiasi organismo inserito nell'inventario è soggetto a deperimento§END§");
+            AppendRawLine("§DIM§biologico: la pianta perde 1 punto Qualità per ogni giorno trascorso.§END§");
+            AppendRawLine("§DIM§Quando la Qualità raggiunge 0, la pianta si decompone in Scarto Organico.§END§");
+            AppendRawLine("§DIM§Una pianta Lvl 5 estratta dalla Cryo Machine è soggetta allo stesso processo.§END§");
+            AppendRawLine("§DIM§Pianifica con attenzione prima di procedere.§END§");
+            AppendRawLine("");
+            AppendRawLine("§WHITE§Digita il §CMD§numero§END§ dello slot oppure §N§N§END§ per annullare§END§");
+            FlushConsole();
+            _inputState = InputState.SelectingCryoSlotForExtract;
+        }
+
+        /// <summary>Passo 2: processa la scelta dello slot e esegue l'estrazione.</summary>
+        private void HandleCryoExtractSlotChoice(string upper)
+        {
+            if (upper == "N" || upper == "NO")
+            {
+                _inputState = InputState.Idle;
+                _cryoSlotsForChoice.Clear();
+                AppendRawLine("§DIM§Operazione annullata.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
+                return;
+            }
+
+            if (!int.TryParse(upper, out int choice) || choice < 1 || choice > _cryoSlotsForChoice.Count)
+            {
+                AppendRawLine($"§ERROR§⚠ Scelta non valida. Digita un numero da 1 a {_cryoSlotsForChoice.Count} oppure N per annullare.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var slot = _cryoSlotsForChoice[choice - 1];
+            string cryoId = slot.SlotId;
+            string plantName = slot.Payload != null
+                ? (!string.IsNullOrWhiteSpace(slot.Payload.CustomPlantName) ? slot.Payload.CustomPlantName : slot.Payload.PlantCode)
+                : cryoId;
+
+            _inputState = InputState.Idle;
+            _cryoSlotsForChoice.Clear();
+
+            var activePot = _hudPots.Count > 0 ? _hudPots[0] : null;
+            if (activePot?.PotActions == null)
+            {
+                AppendRawLine("§ERROR§⚠ Impossibile completare l'operazione: nessun pot attivo disponibile.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            bool ok = activePot.PotActions.ExtractFromCryoToStorage(cryoId);
+            if (ok)
+            {
+                AppendRawLine("§TITLE§✓ ESTRAZIONE COMPLETATA§END§");
+                AppendRawLine($"§INFO§{plantName} rimossa dalla Cryo Machine e conservata nell'inventario.§END§");
+                AppendRawLine($"§INFO§I poteri passivi sono stati disattivati.§END§");
+                AppendRawLine($"§DIM§Ricorda: la pianta deperisce in inventario. Usala o vendila al più presto.§END§");
+                UpdateHudSlotVisuals();
+                RefreshHudFromSelectedPot();
+            }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ ESTRAZIONE FALLITA — verifica log di sistema.§END§");
+            }
+
+            AppendRawLine("");
+            FlushConsole();
+            SwitchToConsole();
+        }
+
+        // ── CRYO RESTORE — procedura guidata ────────────────────────────────────
+
+        /// <summary>Passo 1: mostra la lista degli slot Cryo occupati e avvia la selezione.</summary>
+        private void BeginCryoRestoreSlotSelection()
+        {
+            var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+            if (cryo == null)
+            {
+                AppendRawLine("§ERROR§⚠ Cryo Machine non disponibile in questa scena.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var slots = cryo.GetPassiveSlotsSnapshot();
+            _cryoSlotsForChoice.Clear();
+            foreach (var s in slots)
+                if (s != null && s.IsOccupied) _cryoSlotsForChoice.Add(s);
+
+            if (_cryoSlotsForChoice.Count == 0)
+            {
+                AppendRawLine("§WARN§⚠ Nessuna pianta presente negli slot Cryo — nulla da ripristinare.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            AppendRawLine("§DATA§▸ CRYO RESTORE — Scegli la pianta da ripristinare§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            for (int i = 0; i < _cryoSlotsForChoice.Count; i++)
+            {
+                var s = _cryoSlotsForChoice[i];
+                var p = s.Payload;
+                string name = !string.IsNullOrWhiteSpace(p.CustomPlantName) ? p.CustomPlantName : p.PlantCode;
+                string passive = !string.IsNullOrWhiteSpace(p.PassivePowerLabel) ? p.PassivePowerLabel : "—";
+                string active  = !string.IsNullOrWhiteSpace(p.ActivePowerLabel)  ? p.ActivePowerLabel  : "—";
+                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{s.SlotId}§END§  {name}  §VAL§Lvl {p.PlantLevel}§END§");
+                AppendRawLine($"     §DIM§Potere Passivo (attuale): {passive}§END§");
+                AppendRawLine($"     §DIM§Potere Attivo (verrà ripristinato): {active}§END§");
+            }
+            AppendRawLine("");
+            AppendRawLine("§WARN§⚠ ATTENZIONE — Transizione da Criogenia a Pot Attivo§END§");
+            AppendRawLine("§DIM§Il trasferimento in un pot attivo disattiva immediatamente tutti i poteri§END§");
+            AppendRawLine("§DIM§passivi della pianta: la sua influenza sul Vault cesserà al completamento§END§");
+            AppendRawLine("§DIM§dell'operazione. I poteri attivi torneranno operativi nel ciclo biologico§END§");
+            AppendRawLine("§DIM§standard. La pianta richiederà nuovamente manutenzione quotidiana.§END§");
+            AppendRawLine("");
+            AppendRawLine("§WHITE§Digita il §CMD§numero§END§ della pianta oppure §N§N§END§ per annullare§END§");
+            FlushConsole();
+            _inputState = InputState.SelectingCryoSlotForRestore;
+        }
+
+        /// <summary>Passo 2: salva lo slot scelto e mostra i pot attivi vuoti disponibili.</summary>
+        private void HandleCryoRestoreSlotChoice(string upper)
+        {
+            if (upper == "N" || upper == "NO")
+            {
+                _inputState = InputState.Idle;
+                _cryoSlotsForChoice.Clear();
+                AppendRawLine("§DIM§Operazione annullata.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
+                return;
+            }
+
+            if (!int.TryParse(upper, out int choice) || choice < 1 || choice > _cryoSlotsForChoice.Count)
+            {
+                AppendRawLine($"§ERROR§⚠ Scelta non valida. Digita un numero da 1 a {_cryoSlotsForChoice.Count} oppure N per annullare.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            _pendingCryoSlotId = _cryoSlotsForChoice[choice - 1].SlotId;
+            _cryoSlotsForChoice.Clear();
+
+            // Mostra i pot attivi vuoti disponibili
+            _emptyPotsForChoice.Clear();
+            foreach (var pot in _hudPots)
+            {
+                if (pot?.PotActions?.PotState == null) continue;
+                if (!pot.PotActions.PotState.HasPlant)
+                    _emptyPotsForChoice.Add(pot);
+            }
+
+            if (_emptyPotsForChoice.Count == 0)
+            {
+                _inputState = InputState.Idle;
+                _pendingCryoSlotId = null;
+                AppendRawLine("§WARN§⚠ Nessun pot attivo disponibile (tutti occupati).§END§");
+                AppendRawLine("§DIM§Rimuovi prima una pianta da un pot attivo, poi riprova.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
+                return;
+            }
+
+            AppendRawLine("§DATA§▸ Scegli il pot attivo di destinazione§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+            for (int i = 0; i < _emptyPotsForChoice.Count; i++)
+            {
+                var pot = _emptyPotsForChoice[i];
+                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{pot.PotId}§END§  §DIM§[SLOT VUOTO]§END§");
+            }
+            AppendRawLine("");
+            AppendRawLine("§WHITE§Digita il §CMD§numero§END§ del pot oppure §N§N§END§ per annullare§END§");
+            FlushConsole();
+            _inputState = InputState.SelectingTargetPotForRestore;
+        }
+
+        /// <summary>Passo 3: esegue il ripristino nel pot selezionato.</summary>
+        private void HandleCryoRestorePotChoice(string upper)
+        {
+            if (upper == "N" || upper == "NO")
+            {
+                _inputState = InputState.Idle;
+                _emptyPotsForChoice.Clear();
+                _pendingCryoSlotId = null;
+                AppendRawLine("§DIM§Operazione annullata.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
+                return;
+            }
+
+            if (!int.TryParse(upper, out int choice) || choice < 1 || choice > _emptyPotsForChoice.Count)
+            {
+                AppendRawLine($"§ERROR§⚠ Scelta non valida. Digita un numero da 1 a {_emptyPotsForChoice.Count} oppure N per annullare.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            var pot = _emptyPotsForChoice[choice - 1];
+            string potId   = pot.PotId;
+            string cryoId  = _pendingCryoSlotId;
+
+            _inputState = InputState.Idle;
+            _emptyPotsForChoice.Clear();
+            _pendingCryoSlotId = null;
+
+            bool ok = pot.PotActions.RestoreFromCryo(cryoId);
+            if (ok)
+            {
+                AppendRawLine("§TITLE§✓ RIPRISTINO COMPLETATO§END§");
+                AppendRawLine($"§INFO§La pianta è stata trasferita da {cryoId} al vaso {potId}.§END§");
+                AppendRawLine($"§INFO§Poteri passivi disattivati — poteri attivi ripristinati.§END§");
+                AppendRawLine($"§DIM§La pianta è ora nel ciclo attivo e richiede manutenzione quotidiana.§END§");
+                UpdateHudSlotVisuals();
+                RefreshHudFromSelectedPot();
+            }
+            else
+            {
+                AppendRawLine("§ERROR§⚠ RIPRISTINO FALLITO — verifica log di sistema.§END§");
+            }
+
+            AppendRawLine("");
+            FlushConsole();
+            SwitchToConsole();
         }
 
         private void PrintQueue()
@@ -4681,6 +5199,12 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             Line(CmdLine("§CMD§LED RED [POT-ID]§END§", "§TITLE§Attiva/disattiva luce rossa (1 AP)§END§"));
             Line(CmdLine("§CMD§LED BLUE [POT-ID]§END§", "§TITLE§Attiva/disattiva luce blu (1 AP)§END§"));
             Line(CmdLine("§CMD§HARVEST [POT-ID]§END§", "§TITLE§Accoda raccolta (1 AP)§END§"));
+            Line("");
+            Line("§DATA§▸ SLOT PASSIVI (CRYO MACHINE)§END§");
+            Line(CmdLine("§CMD§PASSIVE§END§", "§TITLE§Protocollo + overview slot passivi Cryo Machine§END§"));
+            Line(CmdLine("§CMD§CRYO SEND [POT-ID]§END§", "§TITLE§Trasferisce pianta Lvl 5 dal pot allo slot Cryo§END§"));
+            Line(CmdLine("§CMD§CRYO EXTRACT§END§", "§TITLE§Sposta pianta da Cryo → inventario (guida interattiva)§END§"));
+            Line(CmdLine("§CMD§CRYO RESTORE§END§", "§TITLE§Sposta pianta da Cryo → pot attivo (guida interattiva)§END§"));
             Line("");
             Line("§DATA§▸ CONTROLLI SISTEMA§END§");
             Line(CmdLine("§CMD§PROTOCOL§END§", "§TITLE§Visualizza Protocollo Biologico DOME_02§END§"));
@@ -6097,6 +6621,16 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             var parts = raw.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2) return null;
             return parts[1].Trim().ToUpperInvariant();
+        }
+
+        /// <summary>Estrae il token all'indice <paramref name="index"/> (0-based) dalla stringa splittata per spazi.
+        /// Utile per comandi multi-parola come "CRYO SEND POT-001" (indice 2) o "CRYO RESTORE CRYO-01 POT-001".</summary>
+        private static string ExtractArgAtIndex(string raw, int index)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            var parts = raw.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length <= index) return null;
+            return parts[index].Trim().ToUpperInvariant();
         }
 
         private static string PlantStageLabel(int stageInt)

@@ -1659,50 +1659,6 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
-  - UI_WateringMinigame
-    [Component] RectTransform
-    - Image
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-    - Minigame
-      [Component] RectTransform
-      - RawImage
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] RawImage
-      - WateringLabel
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-      - CoverageLabel
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-      - Button
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-    - Result
-      [Component] RectTransform
-      - ResultLabel
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-      - CloseButton
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
   - UI_MicroscopeMinigame
     [Component] RectTransform
     [Component] MicroscopeMinigameController
@@ -2058,14 +2014,6 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-  - GrowthTooltipPanel
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - GrowthTooltipText
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] TextMeshProUGUI
   - ToastNotificationSystem
     [Component] RectTransform
     [Component] ToastNotificationManager
@@ -2124,9 +2072,6 @@
     [Component] RectTransform
     [Component] PlayerStatusPanelController
     [Component] UIDocument
-  - IrrigationDialog
-    [Component] Transform
-    [Component] UIDocument
   - PlantCardV3
     [Component] RectTransform
     [Component] UIDocument
@@ -2151,6 +2096,10 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] LabIncubatorPanelController
+  - CryoMachineHUDPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] CryoMachinePanelController
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2345,6 +2294,20 @@
 - Room Camra Bounds
   [Component] Transform
   [Component] PolygonCollider2D
+- CryoMachine
+  [Component] Transform
+  [Component] CryoMachineController
+  [Component] Interactable
+  [Component] CryoMachineOpener
+  - CryoSlot_01
+    [Component] Transform
+    [Component] CryoSlot
+  - CryoSlot_02
+    [Component] Transform
+    [Component] CryoSlot
+  - CryoSlot_03
+    [Component] Transform
+    [Component] CryoSlot
 - ROOM_Dome
   [Component] Transform
   [Component] RoomDomePotsBootstrap
@@ -2885,9 +2848,6 @@
 - AlwaysVisiblePotHUD
   [Component] Transform
   [Component] AlwaysVisiblePotHUD
-- PH DEBUG
-  [Component] Transform
-  [Component] HUDPhDisplay
 - AUTO SCRIPTS RUNTIME
   [Component] Transform
   [Component] PhSystemAutoSetup

@@ -12,16 +12,14 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     [Header("Pot Configuration")]
     [SerializeField] private string pot1Id = "POT-001";
     [SerializeField] private string pot2Id = "POT-002";
-    // pot3Id e pot4Id rimossi - non utilizzati attualmente
-    // [SerializeField] private string pot3Id = "POT-003";
-    // [SerializeField] private string pot4Id = "POT-004";
+    [SerializeField] private string pot3Id = "POT-003";
+    [SerializeField] private string pot4Id = "POT-004";
 
     [Header("Pot Positions")]
     [SerializeField] private Vector2 pot1Offset = new Vector2(-2.25f, 0f);
     [SerializeField] private Vector2 pot2Offset = new Vector2(-0.75f, 0f);
-    // pot3Offset e pot4Offset rimossi - non utilizzati attualmente
-    // [SerializeField] private Vector2 pot3Offset = new Vector2(0.75f, 0f);
-    // [SerializeField] private Vector2 pot4Offset = new Vector2(2.25f, 0f);
+    [SerializeField] private Vector2 pot3Offset = new Vector2(0.75f, 0f);
+    [SerializeField] private Vector2 pot4Offset = new Vector2(2.25f, 0f);
 
     [Header("Pot Settings")]
     [SerializeField] private float potScale = 1f;
@@ -39,6 +37,7 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     private PotSlot pot2;
     private PotSlot pot3;
     private PotSlot pot4;
+    // Slot passivi gestiti da CryoMachineController — non appartengono a questo bootstrap.
 
     void Start()
     {
@@ -55,9 +54,11 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         // Crea o trova l'anchor per i vasi
         CreatePotsAnchor();
 
-        // Crea i due vasi
+        // Crea i 4 vasi attivi (PotSystemConfig.ACTIVE_SLOT_COUNT = 4)
         CreatePot(pot1Id, pot1Offset, 1);
         CreatePot(pot2Id, pot2Offset, 2);
+        CreatePot(pot3Id, pot3Offset, 3);
+        CreatePot(pot4Id, pot4Offset, 4);
 
         if (showDebugLogs)
         {
@@ -109,8 +110,9 @@ public class RoomDomePotsBootstrap : MonoBehaviour
             {
                 // Assegna il riferimento
                 if (potNumber == 1) pot1 = existingSlot;
-                else pot2 = existingSlot;
-
+                else if (potNumber == 2) pot2 = existingSlot;
+                else if (potNumber == 3) pot3 = existingSlot;
+                else pot4 = existingSlot;
                 return;
             }
         }
@@ -261,7 +263,9 @@ public class RoomDomePotsBootstrap : MonoBehaviour
 
         // Assegna il riferimento
         if (potNumber == 1) pot1 = potSlot;
-        else pot2 = potSlot;
+        else if (potNumber == 2) pot2 = potSlot;
+        else if (potNumber == 3) pot3 = potSlot;
+        else pot4 = potSlot;
 
         if (showDebugLogs)
         {
@@ -286,11 +290,11 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     }
 
     /// <summary>
-    /// Restituisce tutti i vasi nella Dome
+    /// Restituisce tutti e 4 i vasi attivi della Dome.
     /// </summary>
     public PotSlot[] GetAllPots()
     {
-        return new PotSlot[] { pot1, pot2 };
+        return new PotSlot[] { pot1, pot2, pot3, pot4 };
     }
 
 
@@ -300,14 +304,13 @@ public class RoomDomePotsBootstrap : MonoBehaviour
     [ContextMenu("Recreate Pots")]
     public void RecreatePots()
     {
-        // Distruggi i vasi esistenti
         if (pot1 != null) DestroyImmediate(pot1.gameObject);
         if (pot2 != null) DestroyImmediate(pot2.gameObject);
+        if (pot3 != null) DestroyImmediate(pot3.gameObject);
+        if (pot4 != null) DestroyImmediate(pot4.gameObject);
 
-        pot1 = null;
-        pot2 = null;
+        pot1 = pot2 = pot3 = pot4 = null;
 
-        // Ricrea
         InitializeDomePots();
     }
 
@@ -319,20 +322,25 @@ public class RoomDomePotsBootstrap : MonoBehaviour
         // Disegna le posizioni dei vasi
         Vector3 anchorPos = transform.position;
 
-        // Vaso 1
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(anchorPos + new Vector3(pot1Offset.x, pot1Offset.y, 0), 0.3f);
         UnityEditor.Handles.Label(anchorPos + new Vector3(pot1Offset.x, pot1Offset.y, 0.5f), pot1Id);
 
-        // Vaso 2
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(anchorPos + new Vector3(pot2Offset.x, pot2Offset.y, 0), 0.3f);
         UnityEditor.Handles.Label(anchorPos + new Vector3(pot2Offset.x, pot2Offset.y, 0.5f), pot2Id);
 
-        // Anchor
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(anchorPos + new Vector3(pot3Offset.x, pot3Offset.y, 0), 0.3f);
+        UnityEditor.Handles.Label(anchorPos + new Vector3(pot3Offset.x, pot3Offset.y, 0.5f), pot3Id);
+
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawWireSphere(anchorPos + new Vector3(pot4Offset.x, pot4Offset.y, 0), 0.3f);
+        UnityEditor.Handles.Label(anchorPos + new Vector3(pot4Offset.x, pot4Offset.y, 0.5f), pot4Id);
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(anchorPos, Vector3.one * 0.2f);
-        UnityEditor.Handles.Label(anchorPos + Vector3.up * 0.3f, "Dome_PotsAnchor");
+        UnityEditor.Handles.Label(anchorPos + Vector3.up * 0.3f, "Dome_PotsAnchor [4 ACTIVE]");
     }
 #endif
 

@@ -11,6 +11,8 @@ public class PotSystemConfig : ScriptableObject
     [Header("Pot Configuration")]
     public const string POT_ID_PREFIX = "POT-";
     public const int MAX_POTS_PER_ROOM = 10;
+    public const int ACTIVE_SLOT_COUNT = 4;
+    public const int PASSIVE_SLOT_COUNT = 3;
     
     [Header("Interaction Settings")]
     public const float DEFAULT_INTERACT_DISTANCE = 1.5f;

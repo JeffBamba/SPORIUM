@@ -1,0 +1,77 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="CryoMachinePanel.uss" />
+    <ui:VisualElement name="cryo-overlay" class="cryo-overlay">
+        <ui:VisualElement name="cryo-panel" class="cryo-panel">
+
+            <!-- HEADER -->
+            <ui:VisualElement name="cryo-header" class="cryo-header">
+                <ui:VisualElement class="cryo-header-text">
+                    <ui:Label name="cryo-title" text="CRYO MACHINE" class="cryo-title" />
+                    <ui:Label name="cryo-subtitle" text="CONSERVAZIONE PASSIVA — LVL 5" class="cryo-subtitle" />
+                </ui:VisualElement>
+                <ui:Button name="btn-close" class="cryo-close-btn">
+                    <ui:Label text="×" class="cryo-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:Label name="cryo-desc" text="Le piante di Livello 5 in stato criogenico mantengono i loro poteri passivi attivi e influenzano il Vault senza richiedere manutenzione quotidiana." class="cryo-desc" />
+
+            <!-- SLOTS -->
+            <ui:VisualElement name="cryo-slots-container" class="cryo-slots-container">
+
+                <ui:VisualElement name="cryo-slot-0" class="cryo-slot">
+                    <ui:VisualElement class="cryo-slot-header-row">
+                        <ui:Label name="cryo-slot-0-id" text="CRYO-01" class="cryo-slot-id" />
+                        <ui:Label name="cryo-slot-0-badge" text="VUOTO" class="cryo-badge cryo-badge-empty" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="cryo-slot-0-body" class="cryo-slot-body">
+                        <ui:Label name="cryo-slot-0-plant" text="Slot disponibile" class="cryo-slot-empty-label" />
+                        <ui:VisualElement name="cryo-slot-0-info" class="cryo-slot-info" style="display: none;">
+                            <ui:Label name="cryo-slot-0-level" text="" class="cryo-info-level" />
+                            <ui:Label name="cryo-slot-0-family" text="" class="cryo-info-family" />
+                            <ui:Label name="cryo-slot-0-power-label" text="POTERE PASSIVO" class="cryo-power-label" />
+                            <ui:Label name="cryo-slot-0-power" text="" class="cryo-info-power" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="cryo-slot-1" class="cryo-slot">
+                    <ui:VisualElement class="cryo-slot-header-row">
+                        <ui:Label name="cryo-slot-1-id" text="CRYO-02" class="cryo-slot-id" />
+                        <ui:Label name="cryo-slot-1-badge" text="VUOTO" class="cryo-badge cryo-badge-empty" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="cryo-slot-1-body" class="cryo-slot-body">
+                        <ui:Label name="cryo-slot-1-plant" text="Slot disponibile" class="cryo-slot-empty-label" />
+                        <ui:VisualElement name="cryo-slot-1-info" class="cryo-slot-info" style="display: none;">
+                            <ui:Label name="cryo-slot-1-level" text="" class="cryo-info-level" />
+                            <ui:Label name="cryo-slot-1-family" text="" class="cryo-info-family" />
+                            <ui:Label name="cryo-slot-1-power-label" text="POTERE PASSIVO" class="cryo-power-label" />
+                            <ui:Label name="cryo-slot-1-power" text="" class="cryo-info-power" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="cryo-slot-2" class="cryo-slot">
+                    <ui:VisualElement class="cryo-slot-header-row">
+                        <ui:Label name="cryo-slot-2-id" text="CRYO-03" class="cryo-slot-id" />
+                        <ui:Label name="cryo-slot-2-badge" text="VUOTO" class="cryo-badge cryo-badge-empty" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="cryo-slot-2-body" class="cryo-slot-body">
+                        <ui:Label name="cryo-slot-2-plant" text="Slot disponibile" class="cryo-slot-empty-label" />
+                        <ui:VisualElement name="cryo-slot-2-info" class="cryo-slot-info" style="display: none;">
+                            <ui:Label name="cryo-slot-2-level" text="" class="cryo-info-level" />
+                            <ui:Label name="cryo-slot-2-family" text="" class="cryo-info-family" />
+                            <ui:Label name="cryo-slot-2-power-label" text="POTERE PASSIVO" class="cryo-power-label" />
+                            <ui:Label name="cryo-slot-2-power" text="" class="cryo-info-power" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <!-- FOOTER -->
+            <ui:Label name="cryo-footer" text="" class="cryo-footer" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
