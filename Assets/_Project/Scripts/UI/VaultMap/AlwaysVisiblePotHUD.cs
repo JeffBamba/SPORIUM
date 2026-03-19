@@ -1345,25 +1345,40 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     {
         if (_cryoStatusText == null) return;
 
-        var mods = _phSystem?.GetCryoPassiveModifiers();
-        if (mods == null || mods.Count == 0)
+        // Risolvi PhSystem lazy se era null durante Initialize()
+        if (_phSystem == null)
+            _phSystem = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        if (cryo == null)
         {
             _cryoStatusText.text = "CRYO: —";
             return;
         }
 
-        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
-        int total = cryo != null ? cryo.OccupiedCount() : mods.Count;
+        int occupied = cryo.OccupiedCount();
         int maxSlots = PotSystemConfig.PASSIVE_SLOT_COUNT;
 
-        var sb = new System.Text.StringBuilder("CRYO: [");
-        sb.Append(total).Append('/').Append(maxSlots).Append("] pH");
-
-        foreach (var m in mods)
+        if (occupied == 0)
         {
-            string drift = m.DailyDrift.ToString("+#0.0;-#0.0;0",
-                System.Globalization.CultureInfo.GetCultureInfo("it-IT"));
-            sb.Append(' ').Append(drift).Append("/g");
+            _cryoStatusText.text = "CRYO: —";
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder("CRYO: [");
+        sb.Append(occupied).Append('/').Append(maxSlots).Append(']');
+
+        // Aggiunge drift pH solo se PhSystem ha già elaborato almeno un tick
+        var mods = _phSystem?.GetCryoPassiveModifiers();
+        if (mods != null && mods.Count > 0)
+        {
+            sb.Append(" pH");
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+            foreach (var m in mods)
+            {
+                string drift = m.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
+                sb.Append(' ').Append(drift).Append("/g");
+            }
         }
 
         _cryoStatusText.text = sb.ToString();

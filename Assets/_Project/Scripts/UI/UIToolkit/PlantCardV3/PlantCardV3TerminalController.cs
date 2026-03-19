@@ -35,6 +35,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             SelectingItem,
             SelectingStatusPot,
             ConfirmingPlantDrip,
+            ConfirmingCryoSend,
             ConfirmingPlantLed,
             ConfirmingPlantLedType,
             ConfirmingActionToQueue,
@@ -212,6 +213,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private List<CryoSlot> _cryoSlotsForChoice = new List<CryoSlot>();
         private List<PotSlot>  _emptyPotsForChoice  = new List<PotSlot>();
         private string         _pendingCryoSlotId;
+        private string         _pendingCryoSendPotId;
         private List<string> _statusLinesCollector;
         private List<string> _pendingStatusSecondHalf;
         private List<string> _pendingStatusResearchNotes;
@@ -3881,6 +3883,17 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 return;
             }
 
+            if (_inputState == InputState.ConfirmingCryoSend)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Cryo Invio");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Cryo Invio", () => HandleCryoSendConfirm(upper)));
+                return;
+            }
+
             // Clear any forecast hover hotspots when running a new command.
             ClearForecastConditionHotspots();
 
@@ -4321,7 +4334,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             SwitchToConsole();
         }
 
-        /// <summary>CRYO SEND [POT-ID] — trasferisce la pianta Lvl 5 dal pot attivo al primo slot Cryo libero.</summary>
+        /// <summary>CRYO SEND [POT-ID] — mostra il prompt di conferma prima di trasferire.</summary>
         private void ExecuteCryoSend(string potId)
         {
             var pot = FindPotById(potId);
@@ -4348,6 +4361,68 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 AppendRawLine($"§DIM§Livello attuale: {state.PlantLevel}§END§");
                 AppendRawLine("");
                 FlushConsole();
+                return;
+            }
+
+            string plantName = !string.IsNullOrWhiteSpace(state.CustomPlantName)
+                ? state.CustomPlantName
+                : (state.PlantCode ?? potId);
+
+            AppendRawLine("§TITLE§⬡ CONFERMA TRASFERIMENTO CRYO§END§");
+            AppendRawLine("");
+            AppendRawLine($"§DATA§Pianta:§END§ §WHITE§{plantName}§END§  §DIM§(Lvl 5 — {potId})§END§");
+            AppendRawLine("");
+            AppendRawLine("§WARN§⚠ ATTENZIONE — Effetti del trasferimento:§END§");
+            AppendRawLine("");
+            AppendRawLine("  §DIM§• Il vaso {potId} si libera e torna disponibile per una nuova pianta.§END§".Replace("{potId}", potId));
+            AppendRawLine("  §DIM§• La pianta NON produce più: niente crescita, niente resa giornaliera.§END§");
+            AppendRawLine("  §DIM§• I Poteri Attivi si disattivano immediatamente.§END§");
+            AppendRawLine("  §DIM§• I Poteri Passivi si attivano: la pianta influenza il Vault§END§");
+            AppendRawLine("  §DIM§  con effetti latenti (pH drift, cap) finché rimane nello slot Cryo.§END§");
+            AppendRawLine("  §DIM§• La manutenzione quotidiana (acqua, luce, fertilizzante) non è più necessaria.§END§");
+            AppendRawLine("");
+            AppendRawLine("§WHITE§Confermi il trasferimento? §CMD§S§END§ §WHITE§= Sì   §N§N§END§ §WHITE§= No§END§");
+            AppendRawLine("");
+            FlushConsole();
+            SwitchToConsole();
+
+            _pendingCryoSendPotId = potId;
+            _inputState = InputState.ConfirmingCryoSend;
+        }
+
+        /// <summary>Gestisce la risposta S/N alla conferma CRYO SEND.</summary>
+        private void HandleCryoSendConfirm(string upper)
+        {
+            if (upper == "N" || upper == "NO")
+            {
+                _inputState = InputState.Idle;
+                _pendingCryoSendPotId = null;
+                AppendRawLine("§DIM§Trasferimento annullato. La pianta rimane nel pot attivo.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
+                return;
+            }
+
+            if (upper != "S" && upper != "SI" && upper != "SÌ" && upper != "YES" && upper != "Y")
+            {
+                AppendRawLine("§WARN§Risposta non riconosciuta. Digita §CMD§S§END§ per confermare o §N§N§END§ per annullare.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            string potId = _pendingCryoSendPotId;
+            _inputState = InputState.Idle;
+            _pendingCryoSendPotId = null;
+
+            var pot = FindPotById(potId);
+            if (pot == null)
+            {
+                AppendRawLine($"§ERROR§⚠ ERRORE: Vaso '{potId}' non più disponibile.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                SwitchToConsole();
                 return;
             }
 
