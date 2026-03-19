@@ -1,12 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/BottomNavigation.uss?fileID=7433441132597879392&amp;guid=5069f2ddb50b7ef4fad7d296a7a5306c&amp;type=3#BottomNavigation" />
-    <ui:VisualElement name="bottom-nav" class="bottom-nav">
+    <ui:VisualElement name="bottom-nav" class="bottom-nav" style="left: 0; bottom: -80px;">
         <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
         <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />
         <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
-        <ui:VisualElement name="scan-line-bottom" class="scan-line-top" />
-        <ui:VisualElement name="nav-content" class="bottom-nav-content" style="justify-content: center;">
+        <ui:VisualElement name="scan-line-bottom" class="scan-line-top" style="top: 88px; left: 8px;" />
+        <ui:VisualElement name="nav-content" class="bottom-nav-content" style="justify-content: center; display: none;">
             <ui:Button name="btn-visitor" class="room-button room-available">
                 <ui:VisualElement name="icon-visitor" class="icon-placeholder" />
                 <ui:Label text="VISITOR ROOM" class="room-label" />

@@ -860,7 +860,7 @@ namespace _Project
         }
 
         /// <summary>
-        /// Restituisce i modificatori cryo attivi. Usato dal tooltip pH e da AlwaysVisiblePotHUD.
+        /// Restituisce i modificatori cryo attivi. Usato dal tooltip pH e da DomeStatusHUDController.
         /// </summary>
         public System.Collections.Generic.List<CryoPassiveModifier> GetCryoPassiveModifiers()
         {

@@ -1,0 +1,298 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DomeStatusHUD — HUD unificato pots attivi + slot cryo
+   Espansione orizzontale (body a sinistra del toggle button)
+   Stile coerente con PlantCardV3 terminal: verde rgb(127,255,122)
+   Font size allineato a Toast Notification Foundation (13px primary)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Terminal green palette (matching PlantCardV3_Terminal.uss) ─── */
+/* Primary green : rgb(127, 255, 122)                               */
+/* Border green  : rgba(127, 255, 122, 0.65)                        */
+/* Bg panel      : rgba(0, 0, 0, 0.75)                              */
+/* Text muted    : rgb(192, 200, 197)                               */
+/* Yellow        : rgb(230, 201, 111)                               */
+/* Red           : rgb(211, 95, 95)                                 */
+
+/* Root: row layout, anchored bottom-right, raised ~20 % from edge  */
+.dome-hud-root {
+    position: absolute;
+    right: 24px;
+    bottom: 160px;
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+/* Body: the expandable panel */
+.dome-hud-body {
+    width: 320px;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.65);
+    border-right-color: rgba(127, 255, 122, 0.65);
+    border-top-color: rgba(127, 255, 122, 0.65);
+    border-bottom-color: rgba(127, 255, 122, 0.65);
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+
+/* Horizontal collapse: hide body when collapsed */
+.dome-hud-collapsed .dome-hud-body {
+    display: none;
+}
+
+/* ── Toggle button ─────────────────────────────────────────────── */
+.dome-hud-toggle-btn {
+    width: 22px;
+    align-self: stretch;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.65);
+    border-right-color: rgba(127, 255, 122, 0.65);
+    border-top-color: rgba(127, 255, 122, 0.65);
+    border-bottom-color: rgba(127, 255, 122, 0.65);
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+    padding: 0;
+    color: rgb(127, 255, 122);
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.dome-hud-toggle-btn:hover {
+    background-color: rgba(127, 255, 122, 0.12);
+}
+
+/* ── Tab bar ────────────────────────────────────────────────────── */
+.dome-hud-tabs {
+    flex-direction: row;
+    height: 30px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(127, 255, 122, 0.4);
+    flex-shrink: 0;
+}
+
+.dome-tab-btn {
+    flex: 1;
+    height: 30px;
+    background-color: transparent;
+    border-width: 0;
+    border-right-width: 1px;
+    border-right-color: rgba(127, 255, 122, 0.3);
+    color: rgb(192, 200, 197);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+}
+
+.dome-tab-btn:hover {
+    background-color: rgba(127, 255, 122, 0.08);
+    color: rgb(127, 255, 122);
+}
+
+.dome-tab-active {
+    color: rgb(127, 255, 122);
+    background-color: rgba(127, 255, 122, 0.12);
+}
+
+/* ── Sections ───────────────────────────────────────────────────── */
+.dome-hud-section {
+    flex-direction: column;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+/* ── Active pot rows ────────────────────────────────────────────── */
+.dome-pot-row {
+    flex-direction: row;
+    align-items: center;
+    padding-left: 7px;
+    padding-right: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(127, 255, 122, 0.18);
+}
+
+.dome-pot-row:hover {
+    background-color: rgba(127, 255, 122, 0.08);
+}
+
+/* Plant preview thumbnail */
+.dome-pot-preview {
+    width: 34px;
+    height: 34px;
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.40);
+    margin-right: 8px;
+    background-size: contain;
+    flex-shrink: 0;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(127, 255, 122, 0.4);
+    border-right-color: rgba(127, 255, 122, 0.4);
+    border-top-color: rgba(127, 255, 122, 0.4);
+    border-bottom-color: rgba(127, 255, 122, 0.4);
+}
+
+.dome-pot-info {
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Plant name — bright terminal green, 13px matching nf-row-msg */
+.dome-pot-name {
+    font-size: 13px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    overflow: hidden;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+/* Lvl / Stage / pH line — muted, 12px */
+.dome-pot-sub {
+    font-size: 12px;
+    color: rgb(192, 200, 197);
+    overflow: hidden;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+/* Condition line — tinted by controller per score, 12px */
+.dome-pot-cond {
+    font-size: 12px;
+    color: rgb(192, 200, 197);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dome-pot-indicators {
+    flex-direction: column;
+    align-items: center;
+    margin-left: 5px;
+    flex-shrink: 0;
+    width: 12px;
+}
+
+.dome-pot-indicator {
+    font-size: 11px;
+    color: rgb(192, 200, 197);
+    -unity-text-align: middle-center;
+    width: 12px;
+    height: 14px;
+}
+
+/* ── Cryo rows ──────────────────────────────────────────────────── */
+.dome-cryo-row {
+    flex-direction: row;
+    align-items: center;
+    padding-left: 7px;
+    padding-right: 6px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(127, 255, 122, 0.18);
+}
+
+.dome-cryo-row:hover {
+    background-color: rgba(93, 182, 227, 0.07);
+}
+
+/* CRYO slot ID — blue (cryo identity colour), 12px */
+.dome-cryo-id {
+    font-size: 12px;
+    color: var(--sp-color-blue-info);
+    -unity-font-style: bold;
+    width: 60px;
+    flex-shrink: 0;
+    -unity-text-align: middle-left;
+    letter-spacing: 0.5px;
+}
+
+.dome-cryo-info {
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Cryo plant name — terminal green, 13px */
+.dome-cryo-plant {
+    font-size: 13px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    overflow: hidden;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+/* Cryo drift / power — muted, 12px */
+.dome-cryo-detail {
+    font-size: 12px;
+    color: rgb(192, 200, 197);
+    overflow: hidden;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+/* ── Tooltip ────────────────────────────────────────────────────── */
+.dome-hud-tooltip {
+    position: absolute;
+    right: 347px;
+    bottom: 0;
+    width: 270px;
+    background-color: rgba(0, 0, 0, 0.92);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.70);
+    border-right-color: rgba(127, 255, 122, 0.70);
+    border-top-color: rgba(127, 255, 122, 0.70);
+    border-bottom-color: rgba(127, 255, 122, 0.70);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+/* Container for per-line colored labels */
+.dome-hud-tooltip-lines {
+    flex-direction: column;
+}
+
+/* Each tooltip line — 13px matching nf-row-msg (Toast Foundation) */
+.dome-hud-tooltip-line {
+    font-size: 13px;
+    white-space: normal;
+    line-height: 1.35;
+    margin-bottom: 1px;
+}
+
+.dome-hud-tooltip-line--bold {
+    -unity-font-style: bold;
+}
+
+/* Separator lines are slightly smaller and dimmer */
+.dome-hud-tooltip-sep {
+    font-size: 10px;
+    color: rgba(127, 255, 122, 0.35);
+    margin-top: 2px;
+    margin-bottom: 2px;
+}

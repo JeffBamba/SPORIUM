@@ -71,6 +71,7 @@ namespace Sporae.DevTools
         
         // Cache per sistemi
         private PhSystem _phSystem;
+        private DayCycleSystem _dayCycleSystem;
         private PotSystemConfig _potConfig;
         private PlantLevelConfig _plantLevelConfig;
         private MoldConfig _moldConfig;
@@ -136,11 +137,12 @@ namespace Sporae.DevTools
                 if (serviceContainer != null)
                 {
                     _phSystem = serviceContainer.Get<PhSystem>(suppressWarning: true);
+                    _dayCycleSystem = serviceContainer.Get<DayCycleSystem>(suppressWarning: true);
                 }
             }
             catch
             {
-                // PhSystem non disponibile
+                // Sistemi non disponibili
             }
         }
         
@@ -627,6 +629,42 @@ namespace Sporae.DevTools
             AddLog($"✅ {potState.PotId}: Infestazione muffe rimossa");
         }
         
+        private void DebugPlantSeed(string plantCode)
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+            
+            var potState = _selectedPot.PotState;
+            
+            if (potState.HasPlant)
+            {
+                AddLog($"⚠️ {potState.PotId}: Già occupato! Imposta prima stadio Empty.");
+                return;
+            }
+            
+            PlantData plantData = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
+            if (plantData == null)
+            {
+                AddLog($"⚠️ PlantData non trovato per codice: {plantCode}");
+                return;
+            }
+            
+            int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
+            potState.PlantSeed(currentDay, plantCode);
+            potState.ApplySeedMetadata(null, plantData);
+            
+            var potGrowthController = _selectedPot.GetComponent<PotGrowthController>();
+            potGrowthController?.UpdateVisuals();
+            
+            PotEvents.EmitPlantStageChanged(potState.PotId, PlantStage.Seed);
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            
+            AddLog($"✅ {potState.PotId}: Piantato {plantData.name} ({plantCode}) — Giorno {currentDay}");
+        }
+        
         private void AddLog(string message)
         {
             _debugLog.Add($"[{System.DateTime.Now:HH:mm:ss}] {message}");
@@ -792,7 +830,7 @@ namespace Sporae.DevTools
                 // pH Affinity: 30+~170=200, Growth Points: 30+30+35=95, LED: 30+30+30+35=125, 
                 // FRUITS: 30+35+35+40=140, Watering: 30+30+35=95, Pulsanti stadi: 30+30+40=100
                 // Totale: ~1390px (aumentato per includere sezione FRUITS e margine)
-                float editingContentHeight = 1450f;
+                float editingContentHeight = 1530f;
                 
                 // Inizia scroll view per sezione editing
                 _editingScrollPosition = GUI.BeginScrollView(
@@ -828,6 +866,29 @@ namespace Sporae.DevTools
                 
                 GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 70f), currentInfo, labelStyle);
                 relativeY += 75f; // Aumentato spazio
+                
+                // === SEZIONE DEBUG: IMPIANTA SEME ===
+                GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f),
+                    "=== Debug: Impianta Seme (senza inventario) ===", labelStyle);
+                relativeY += 30f;
+                
+                if (potState.HasPlant)
+                {
+                    GUI.Label(new Rect(10f, relativeY, consoleWidth - 40f, 25f),
+                        "POT occupato — imposta Empty prima di piantare", labelStyle);
+                    relativeY += 30f;
+                }
+                else
+                {
+                    float seedBtnW = (consoleWidth - 30f) / 3f;
+                    if (GUI.Button(new Rect(10f, relativeY, seedBtnW - 2f, 28f), "Ferric Fern\n(PLT-STD-001)", buttonStyle))
+                        DebugPlantSeed("PLT-STD-001");
+                    if (GUI.Button(new Rect(10f + seedBtnW, relativeY, seedBtnW - 2f, 28f), "Arctic Hask\n(PLT-PURE-001)", buttonStyle))
+                        DebugPlantSeed("PLT-PURE-001");
+                    if (GUI.Button(new Rect(10f + seedBtnW * 2f, relativeY, seedBtnW - 2f, 28f), "Glasscap Fungus\n(PLT-EVIL-001)", buttonStyle))
+                        DebugPlantSeed("PLT-EVIL-001");
+                    relativeY += 35f;
+                }
                 
                 // Input stadio manuale
                 GUI.Label(new Rect(10f, relativeY, 180f, 25f), "Nuovo Stadio (0-6):", labelStyle);
