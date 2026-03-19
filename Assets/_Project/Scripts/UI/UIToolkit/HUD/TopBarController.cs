@@ -76,6 +76,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _phTooltipTitleStatus;
         private Label _phTooltipValueCurrent;
         private VisualElement _phTooltipModifiersList;
+        private VisualElement _phTooltipPassiveList;
         private Label _phTooltipValueTotal;
         private Label _phTooltipValueEffects;
         private Label _phTooltipValueTip;
@@ -392,6 +393,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltipTitleStatus = _phTooltip?.Q<Label>("ph-tooltip-title-status");
             _phTooltipValueCurrent = _phTooltip?.Q<Label>("ph-tooltip-value-current");
             _phTooltipModifiersList = _phTooltip?.Q<VisualElement>("ph-tooltip-modifiers-list");
+            _phTooltipPassiveList = _phTooltip?.Q<VisualElement>("ph-tooltip-passive-list");
             _phTooltipValueTotal = _phTooltip?.Q<Label>("ph-tooltip-value-total");
             _phTooltipValueEffects = _phTooltip?.Q<Label>("ph-tooltip-value-effects");
             _phTooltipValueTip = _phTooltip?.Q<Label>("ph-tooltip-value-tip");
@@ -577,6 +579,58 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
+            // SLOT PASSIVI CRYO: legge da PhSystem.GetCryoPassiveModifiers() (delta numerico + cap)
+            // Fallback label-only da CryoMachineController se PhSystem non ha ancora contributi (giorno 1).
+            if (_phTooltipPassiveList != null)
+            {
+                _phTooltipPassiveList.Clear();
+                var cryoMods = _phSystem?.GetCryoPassiveModifiers();
+                bool hasCryo = cryoMods != null && cryoMods.Count > 0;
+
+                if (hasCryo)
+                {
+                    foreach (var m in cryoMods)
+                    {
+                        string driftStr = m.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
+                        string capStr = Mathf.Abs(m.PhCap) > 0.01f
+                            ? $" (cap {m.PhCap:+0;-0})" : "";
+                        AddPhPassiveRow(_phTooltipPassiveList,
+                            m.SlotId, m.PassivePowerLabel,
+                            $"{driftStr}/g{capStr}");
+                    }
+                }
+                else
+                {
+                    // Fallback: legge da CryoMachineController prima del primo tick
+                    var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+                    var cryoSlots = cryo?.GetPassiveSlotsSnapshot();
+                    bool hasOccupied = false;
+
+                    if (cryoSlots != null)
+                    {
+                        foreach (var slot in cryoSlots)
+                        {
+                            if (!slot.IsOccupied) continue;
+                            hasOccupied = true;
+                            var p = slot.Payload;
+                            string plantLabel = string.IsNullOrEmpty(p.CustomPlantName) ? p.PlantCode : p.CustomPlantName;
+                            string powerLabel = string.IsNullOrEmpty(p.PassivePowerLabel) ? "—" : p.PassivePowerLabel;
+                            AddPhPassiveRow(_phTooltipPassiveList, slot.SlotId, plantLabel, powerLabel);
+                        }
+                    }
+
+                    if (!hasOccupied)
+                    {
+                        var emptyRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
+                        var emptyIcon = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.1f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.3f) } };
+                        var emptyLabel = new Label { text = "Nessun slot cryo attivo", enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
+                        emptyRow.Add(emptyIcon);
+                        emptyRow.Add(emptyLabel);
+                        _phTooltipPassiveList.Add(emptyRow);
+                    }
+                }
+            }
+
             // Total daily drift = somma degli elementi in Active Modifiers (coerente con la lista)
             float totalDaily = totalFromModifiers;
             string totalStr = totalDaily.ToString("+#0.0;-#0.0;0", culture);
@@ -656,6 +710,26 @@ namespace Sporae.UI.UIToolkit.HUD
             list.Add(row);
         }
         
+        /// <summary>
+        /// Aggiunge una riga alla lista Slot Passivi Cryo: [icon box ciano] [SlotId + NomePianta] [PassivePowerLabel in ciano].
+        /// </summary>
+        private static void AddPhPassiveRow(VisualElement list, string slotId, string plantName, string powerLabel)
+        {
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
+            var iconBox = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.6f) } };
+            var nameLabel = new Label { text = $"<b>{slotId}</b>  {plantName}", enableRichText = true };
+            nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f);
+            nameLabel.style.fontSize = 11;
+            nameLabel.style.flexGrow = 1;
+            var valueLabel = new Label { text = powerLabel, enableRichText = false };
+            valueLabel.style.color = new Color(0.31f, 0.78f, 0.86f);
+            valueLabel.style.fontSize = 10;
+            row.Add(iconBox);
+            row.Add(nameLabel);
+            row.Add(valueLabel);
+            list.Add(row);
+        }
+
         private void InitializeUI()
         {
             if (_uiDocument == null)

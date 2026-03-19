@@ -75,6 +75,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
     private PhSystem _phSystem;
     private PotSystemConfig _potSystemConfig;
     private PlantGrowthConfig _growthConfig;
+    private TextMeshProUGUI _cryoStatusText;
     
     private void Start()
     {
@@ -101,7 +102,8 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         
         // Crea le 4 HUD minimale sempre visibili
         CreateAlwaysVisibleMinimalHUDs();
-        
+        CreateCryoStatusLabel();
+
         // Sottoscrivi agli eventi per aggiornare le HUD
         PotEvents.OnPotStateChanged += OnPotStateChanged;
         PotEvents.OnPlantGrew += OnPlantGrew;
@@ -754,6 +756,7 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
                 UpdateSingleMinimalHUD(_alwaysVisibleHUDs[i]);
             }
         }
+        UpdateCryoStatusLabel();
     }
     
     private void HandleDayChanged(int currentDay)
@@ -1314,6 +1317,56 @@ public class AlwaysVisiblePotHUD : MonoBehaviour
         }
         
         return sb.ToString();
+    }
+
+    private void CreateCryoStatusLabel()
+    {
+        if (_parentCanvas == null) return;
+
+        var go = new GameObject("CryoStatusLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+        go.transform.SetParent(_parentCanvas.transform, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot = new Vector2(1f, 0f);
+        rt.anchoredPosition = new Vector2(bottomRightOffset.x, _minBottomYOffset + minimalHUDSize.y * 4 + hudSpacing.y * 4 + 8f);
+        rt.sizeDelta = new Vector2(260, 22);
+
+        _cryoStatusText = go.GetComponent<TextMeshProUGUI>();
+        _cryoStatusText.fontSize = 10;
+        _cryoStatusText.color = new Color(0.31f, 0.78f, 0.86f);
+        _cryoStatusText.alignment = TextAlignmentOptions.Right;
+        _cryoStatusText.richText = true;
+        _cryoStatusText.text = "CRYO: —";
+    }
+
+    private void UpdateCryoStatusLabel()
+    {
+        if (_cryoStatusText == null) return;
+
+        var mods = _phSystem?.GetCryoPassiveModifiers();
+        if (mods == null || mods.Count == 0)
+        {
+            _cryoStatusText.text = "CRYO: —";
+            return;
+        }
+
+        var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+        int total = cryo != null ? cryo.OccupiedCount() : mods.Count;
+        int maxSlots = PotSystemConfig.PASSIVE_SLOT_COUNT;
+
+        var sb = new System.Text.StringBuilder("CRYO: [");
+        sb.Append(total).Append('/').Append(maxSlots).Append("] pH");
+
+        foreach (var m in mods)
+        {
+            string drift = m.DailyDrift.ToString("+#0.0;-#0.0;0",
+                System.Globalization.CultureInfo.GetCultureInfo("it-IT"));
+            sb.Append(' ').Append(drift).Append("/g");
+        }
+
+        _cryoStatusText.text = sb.ToString();
     }
 }
 

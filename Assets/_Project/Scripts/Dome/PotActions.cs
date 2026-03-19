@@ -1829,6 +1829,9 @@ public class PotActions : MonoBehaviour
         var payload = cryo.FreeSlot(slot);
         if (payload == null) return false;
 
+        var phSysRestore = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+        phSysRestore?.RemoveCryoPassiveContribution(cryoSlotId);
+
         // Reinietta i campi identitari nel PotStateModel; l'ActivePower torna operativo
         // con il normale ciclo di crescita; IsInPassiveSlot viene azzerato da ApplyToPotState.
         payload.ApplyToPotState(_potState);
@@ -1872,6 +1875,9 @@ public class PotActions : MonoBehaviour
 
         var payload = cryo.FreeSlot(slot);
         if (payload == null) return false;
+
+        var phSysExtract = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+        phSysExtract?.RemoveCryoPassiveContribution(cryoSlotId);
 
         // Crea WholePlant item enriched con tutti i metadata della pianta Lvl5
         var wholePlantItem = ItemFabric.CreateItemWithMetadata(

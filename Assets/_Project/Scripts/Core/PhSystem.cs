@@ -45,6 +45,10 @@ namespace _Project
         
         // Tracking piante individuali per tooltip dettagliato
         private System.Collections.Generic.List<PlantContribution> _plantContributions = new System.Collections.Generic.List<PlantContribution>();
+
+        // Tracking slot cryo passivi
+        private readonly System.Collections.Generic.List<CryoContribution> _cryoContributions = new System.Collections.Generic.List<CryoContribution>();
+        private float _queuedCryoDrift = 0f;
         
         /// <summary>
         /// Struttura per tracciare contributi di piante individuali
@@ -100,6 +104,15 @@ namespace _Project
             }
         }
 
+        private struct CryoContribution
+        {
+            public string SlotId;
+            public string PassivePowerLabel;
+            public float DailyDrift;
+            public float PhCap;
+            public int Day;
+        }
+
         public float CurrentPh => _currentPh + _idleOscillation; // Include oscillazione nel valore mostrato
         
         public event Action<float, float> OnPhChanged; // (newPh, delta)
@@ -147,6 +160,14 @@ namespace _Project
             public string ActionDisplayName;
             public string PotId;
             public float Delta;
+        }
+
+        public struct CryoPassiveModifier
+        {
+            public string SlotId;
+            public string PassivePowerLabel;
+            public float DailyDrift;
+            public float PhCap;
         }
 
         /// <summary>
@@ -655,10 +676,12 @@ namespace _Project
             _actionContributions.Clear();
             _eventContributions.Clear();
             _plantContributions.Clear();
+            _cryoContributions.Clear();
             _queuedPlantsDrift = 0f;
             _queuedActionsDrift = 0f;
             _queuedEventsDrift = 0f;
             _queuedDailyDrift = 0f;
+            _queuedCryoDrift = 0f;
         }
         
         /// <summary>
@@ -778,9 +801,86 @@ namespace _Project
         /// Applica tutti i drift accodati per la giornata in un’unica soluzione.
         /// pH_domani = pH_oggi + Σ drift accodati (piante, azioni, eventi, daily).
         /// </summary>
+        /// <summary>
+        /// Registra il drift pH passivo di un CryoSlot occupato.
+        /// Chiamato da DayCycleController.ApplyPassivePowers() ogni tick.
+        /// </summary>
+        public void RegisterCryoPassiveDrift(float drift, string slotId,
+            string passivePowerLabel, float phCap, int day)
+        {
+            _cryoContributions.RemoveAll(c => string.Equals(c.SlotId, slotId,
+                StringComparison.OrdinalIgnoreCase));
+
+            _cryoContributions.Add(new CryoContribution
+            {
+                SlotId = slotId ?? "CRY-?",
+                PassivePowerLabel = passivePowerLabel ?? "—",
+                DailyDrift = drift,
+                PhCap = phCap,
+                Day = day
+            });
+
+            if (Mathf.Abs(drift) > 0.01f)
+                _queuedCryoDrift += drift;
+        }
+
+        /// <summary>
+        /// Rimuove il contributo passivo di un CryoSlot liberato (CRYO EXTRACT / CRYO RESTORE).
+        /// </summary>
+        public void RemoveCryoPassiveContribution(string slotId)
+        {
+            if (string.IsNullOrEmpty(slotId)) return;
+            float removed = 0f;
+            for (int i = _cryoContributions.Count - 1; i >= 0; i--)
+            {
+                if (string.Equals(_cryoContributions[i].SlotId, slotId, StringComparison.OrdinalIgnoreCase))
+                {
+                    removed += _cryoContributions[i].DailyDrift;
+                    _cryoContributions.RemoveAt(i);
+                }
+            }
+            _queuedCryoDrift -= removed;
+        }
+
+        /// <summary>
+        /// Applica i cap pH passivi DOPO ApplyQueuedDrifts.
+        /// Pure: floor minimo; Evil: ceiling massimo.
+        /// </summary>
+        public void ApplyCryoPassiveCaps()
+        {
+            foreach (var c in _cryoContributions)
+            {
+                if (Mathf.Abs(c.PhCap) < 0.01f) continue;
+
+                if (c.DailyDrift > 0f)
+                    _currentPh = Mathf.Max(_currentPh, c.PhCap);
+                else if (c.DailyDrift < 0f)
+                    _currentPh = Mathf.Min(_currentPh, c.PhCap);
+            }
+        }
+
+        /// <summary>
+        /// Restituisce i modificatori cryo attivi. Usato dal tooltip pH e da AlwaysVisiblePotHUD.
+        /// </summary>
+        public System.Collections.Generic.List<CryoPassiveModifier> GetCryoPassiveModifiers()
+        {
+            var result = new System.Collections.Generic.List<CryoPassiveModifier>();
+            foreach (var c in _cryoContributions)
+            {
+                result.Add(new CryoPassiveModifier
+                {
+                    SlotId = c.SlotId,
+                    PassivePowerLabel = c.PassivePowerLabel,
+                    DailyDrift = c.DailyDrift,
+                    PhCap = c.PhCap
+                });
+            }
+            return result;
+        }
+
         public void ApplyQueuedDrifts()
         {
-            float totalQueued = _queuedPlantsDrift + _queuedActionsDrift + _queuedEventsDrift + _queuedDailyDrift;
+            float totalQueued = _queuedPlantsDrift + _queuedActionsDrift + _queuedEventsDrift + _queuedDailyDrift + _queuedCryoDrift;
             if (Mathf.Abs(totalQueued) < 0.0001f)
             {
                 return;
@@ -805,6 +905,7 @@ namespace _Project
             _queuedActionsDrift = 0f;
             _queuedEventsDrift = 0f;
             _queuedDailyDrift = 0f;
+            _queuedCryoDrift = 0f;
 
             // Non svuotare _actionContributions / _eventContributions qui: servono al tooltip
             // per mostrare LED, Overwatering, Spray, eventi. Si svuotano all'inizio del giorno in ClearDailyModifierContributions.

@@ -38,6 +38,16 @@ namespace Sporae.Dome.PotSystem.Growth
         [Tooltip("Drift pH giornaliero base (es. +2 per Pure, -2 per Evil, 0 per Standard)")]
         [SerializeField] private float dailyPhDrift = 0f;
         
+        [Header("Passive Slot (CryoMachine)")]
+        [Tooltip("Etichetta descrittiva del potere passivo (mostrata in CryoMachine HUD e tooltip pH)")]
+        [SerializeField, TextArea(2, 4)] private string passivePower;
+
+        [Tooltip("Drift pH giornaliero quando la pianta è in CryoSlot (es. +1 Pure, -1 Evil, 0 Standard)")]
+        [SerializeField] private float passivePhDrift = 0f;
+
+        [Tooltip("Cap pH passivo: per Pure = floor minimo (pH non scende sotto questo); per Evil = ceiling massimo (pH non sale sopra questo). 0 = nessun cap.")]
+        [SerializeField] private float passivePhCap = 0f;
+        
         [Tooltip("Range minimo pH ottimale")]
         [SerializeField] private float optimalPhMin = -29f;
         
@@ -73,6 +83,9 @@ namespace Sporae.Dome.PotSystem.Growth
         public string Description => description;
         public string ResearchNotes => researchNotes;
         public string ActivePower => activePower;
+        public string PassivePower => passivePower;
+        public float PassivePhDrift => passivePhDrift;
+        public float PassivePhCap => passivePhCap;
         public StageRequirements[] StageRequirements => stageRequirements;
         public PlantVisualSet VisualSet => visualSet;
         
@@ -144,6 +157,11 @@ namespace Sporae.Dome.PotSystem.Growth
             return Mathf.Clamp01(distance / 100f);
         }
         
+        /// <summary>
+        /// Restituisce il drift pH passivo (registrato nel PhSystem solo quando in CryoSlot).
+        /// </summary>
+        public float GetPassivePhDrift() => passivePhDrift;
+
         /// <summary>
         /// Restituisce il drift pH giornaliero con variazioni casuali se necessario
         /// </summary>

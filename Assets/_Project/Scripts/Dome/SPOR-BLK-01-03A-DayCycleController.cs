@@ -444,8 +444,8 @@ public class DayCycleController : MonoBehaviour
             foodRoom.ProcessDailyCosts();
         }
 
-        // 9. ApplyPassivePowers — scaffold Task 2. Legge i CryoSlot occupati e registra
-        //    il PassivePowerLabel a debug. Gli effetti reali verranno implementati in Task 3/4.
+        // 9. ApplyPassivePowers — Task 3: registra drift pH passivo dei CryoSlot e applica cap.
+        //    Chiamato DOPO ApplyQueuedDrifts così i cap agiscono sul pH già aggiornato.
         //    I CryoSlot non entrano mai in _registeredPots.
         ApplyPassivePowers(dayIndex);
         
@@ -1908,26 +1908,48 @@ public class DayCycleController : MonoBehaviour
     }
 
     /// <summary>
-    /// Scaffold Task 2: registra a debug i passive power attivi dai CryoSlot occupati.
+    /// Task 3: registra il drift pH passivo dei CryoSlot occupati nel PhSystem e applica i cap.
     /// I CryoSlot non entrano mai in _registeredPots né nel loop produttivo.
-    /// Gli effetti reali dei poteri passivi verranno implementati in Task 3/4.
     /// </summary>
     private void ApplyPassivePowers(int dayIndex)
     {
+        if (_phSystem == null) return;
         var cryo = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
         if (cryo == null) return;
 
+        var db = PlantDatabase.Instance;
         var slots = cryo.GetPassiveSlotsSnapshot();
+
         foreach (var slot in slots)
         {
             if (slot == null || !slot.IsOccupied || slot.Payload == null) continue;
 
+            var payload = slot.Payload;
+            float drift = 0f;
+            float cap   = 0f;
+            string label = payload.PassivePowerLabel ?? "—";
+
+            if (db != null && !string.IsNullOrEmpty(payload.PlantCode))
+            {
+                var pd = db.GetPlantDataByCode(payload.PlantCode);
+                if (pd != null)
+                {
+                    drift = pd.GetPassivePhDrift();
+                    cap   = pd.PassivePhCap;
+                    if (!string.IsNullOrEmpty(pd.PassivePower))
+                        label = pd.PassivePower;
+                }
+            }
+
+            _phSystem.RegisterCryoPassiveDrift(drift, slot.SlotId, label, cap, dayIndex);
+
             if (enableDebugLogs)
                 SporiumLogger.LogDebug(LogCategory.Dome,
-                    $"[Day {dayIndex}] PassivePower attivo — {slot.SlotId}: {slot.Payload.PlantCode} Lvl {slot.Payload.PlantLevel} | Potere: {slot.Payload.PassivePowerLabel ?? "—"}");
-
-            // TODO Task 3/4: implementare qui gli effetti gameplay del PassivePower.
+                    $"[Day {dayIndex}] PassivePower — {slot.SlotId}: {payload.PlantCode} Lv{payload.PlantLevel}" +
+                    $" | drift={drift:+0.0;-0.0;0} cap={cap} | {label}");
         }
+
+        _phSystem.ApplyCryoPassiveCaps();
     }
 
     /// <summary>

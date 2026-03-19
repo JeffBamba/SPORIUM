@@ -16,19 +16,22 @@ MonoBehaviour:
   seedItemConfig: {fileID: 11400000, guid: 3845f8bd739fe804590a8dd25fed8582, type: 2}
   description: Pianta pura che eleva il pH dell'ambiente, perfetta per ecosistemi
     alcalini
-  researchNotes: "Arctic Hask \u2014 Nota scientifica\n\nSpecie PURE recuperata in una stazione
-    artica pre-collasso, l'Arctic Hask presenta radici cristalline in grado di rilasciare
-    composti alcalini nell'aria, riducendo progressivamente acidit\xE0 e tossine ambientali.
-    Il fenomeno non dipende da condizioni esterne e suggerisce un comportamento attivo
-    sull'ecosistema. I dati indicano un'origine artificiale, probabilmente legata a progetti
-    di adattamento ambientale. Nel Vault \xE8 considerata fondamentale per la stabilizzazione
-    del pH e il mantenimento dell'equilibrio biologico. Non \xE8 determinabile se la specie
-    sia stata progettata per ripristinare ecosistemi esistenti o per prepararne di nuovi."
-  activePower: 'Arctic Purification: rigenera +5 global pH e cura muffe Dome ogni
-    2 giorni'
+  researchNotes: "Arctic Hask \u2014 Nota scientifica\n\nSpecie PURE recuperata in
+    una stazione artica pre-collasso, l'Arctic Hask presenta radici cristalline in
+    grado di rilasciare composti alcalini nell'aria, riducendo progressivamente acidit\xE0
+    e tossine ambientali. Il fenomeno non dipende da condizioni esterne e suggerisce
+    un comportamento attivo sull'ecosistema. I dati indicano un'origine artificiale,
+    probabilmente legata a progetti di adattamento ambientale. Nel Vault \xE8 considerata
+    fondamentale per la stabilizzazione del pH e il mantenimento dell'equilibrio
+    biologico. Non \xE8 determinabile se la specie sia stata progettata per ripristinare
+    ecosistemi esistenti o per prepararne di nuovi."
+  activePower: 'Arctic Purification: rigenera +5pH e cura muffe Dome ogni 2 giorni'
   family: 1
   rarity: 0
   dailyPhDrift: 2
+  passivePower: 
+  passivePhDrift: 1
+  passivePhCap: -20
   optimalPhMin: 50
   optimalPhMax: 100
   stageRequirements:
@@ -122,4 +125,6 @@ MonoBehaviour:
     fertilizerMax: 70
     durationDays: 2
     notes: Riposo Pure, riattivabile con fertilizzante
+  visualSet: {fileID: 0}
+  defaultGeneticType: 1
   preferredFaction: 
