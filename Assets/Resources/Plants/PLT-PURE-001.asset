@@ -29,7 +29,7 @@ MonoBehaviour:
   family: 1
   rarity: 0
   dailyPhDrift: 2
-  passivePower: 
+  passivePower: "Tensione roster: con 2+ Arctic Hask (attivi+cryo) e pH fuori banda Neutra, penalità raccolto sulle altre piante (max 35%)"
   passivePhDrift: 1
   passivePhCap: -20
   optimalPhMin: 50

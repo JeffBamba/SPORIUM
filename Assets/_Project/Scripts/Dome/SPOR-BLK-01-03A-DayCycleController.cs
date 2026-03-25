@@ -7,6 +7,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Fertilizer;
 using Sporae.Dome.PotSystem.Mold;
+using Sporae.Dome.PotSystem.Botanical;
 using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
@@ -40,6 +41,7 @@ public class DayCycleController : MonoBehaviour
     private ToastNotificationManager _toastManager;
     private DomePotRegistry _potRegistry;
     private readonly CondensationDayProcessor _condensationDayProcessor = new();
+    private bool _arcticTensionCallbacksHooked;
 
     private static bool IsDead(PotStateModel pot)
     {
@@ -51,6 +53,7 @@ public class DayCycleController : MonoBehaviour
     private void Awake()
     {
         ServiceContainer.Instance?.Register(this);
+        BotanicalArcticTensionNotifier.ResetSessionState();
 
         growthConfig = Resources.Load<PlantGrowthConfig>("Configs/PlantGrowthConfig");
         if (!growthConfig)
@@ -153,6 +156,10 @@ public class DayCycleController : MonoBehaviour
     /// </summary>
     private void SubscribeToEvents()
     {
+        // Unsubscribe first to prevent double-subscription when DayCycleSystem instance changes across scene reloads
+        if (_dayCycleSystem != null)
+            _dayCycleSystem.OnDayChanged -= HandleDayChanged;
+
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
         if (_dayCycleSystem != null)
             _dayCycleSystem.OnDayChanged += HandleDayChanged;
@@ -183,6 +190,35 @@ public class DayCycleController : MonoBehaviour
                 TryGetToastManager();
             }
         }
+
+        TryHookArcticTensionCallbacks();
+    }
+
+    private void TryHookArcticTensionCallbacks()
+    {
+        if (!_arcticTensionCallbacksHooked)
+        {
+            PotEvents.OnPotStateChanged += OnPotStateChangedForArcticTension;
+            _arcticTensionCallbacksHooked = true;
+        }
+        HookPhSystemArcticTension();
+    }
+
+    private void HookPhSystemArcticTension()
+    {
+        if (_phSystem == null) return;
+        _phSystem.OnPhChanged -= OnPhChangedForArcticTension;
+        _phSystem.OnPhChanged += OnPhChangedForArcticTension;
+    }
+
+    private void OnPotStateChangedForArcticTension(PotSlot _)
+    {
+        BotanicalArcticTensionNotifier.EvaluateAndNotify(_phSystem);
+    }
+
+    private void OnPhChangedForArcticTension(float _, float __)
+    {
+        BotanicalArcticTensionNotifier.EvaluateAndNotify(_phSystem);
     }
     
     /// <summary>
@@ -201,6 +237,8 @@ public class DayCycleController : MonoBehaviour
             {
                 SporiumLogger.LogInfo(LogCategory.Dome, "PhSystem trovato e collegato!");
             }
+            if (_phSystem != null)
+                HookPhSystemArcticTension();
         }
         catch
         {
@@ -307,6 +345,7 @@ public class DayCycleController : MonoBehaviour
             {
                 SporiumLogger.LogInfo(LogCategory.Ph, "PhSystem registrato! Collegato al sistema di crescita.");
             }
+            HookPhSystemArcticTension();
         }
         
         if (service is UINotification uiNotification && _uiNotification == null)
@@ -355,6 +394,14 @@ public class DayCycleController : MonoBehaviour
         {
             ServiceContainer.Instance.OnServiceRegistered -= OnServiceRegistered;
         }
+
+        if (_arcticTensionCallbacksHooked)
+        {
+            PotEvents.OnPotStateChanged -= OnPotStateChangedForArcticTension;
+            _arcticTensionCallbacksHooked = false;
+        }
+        if (_phSystem != null)
+            _phSystem.OnPhChanged -= OnPhChangedForArcticTension;
     }
 
     /// <summary>
@@ -448,6 +495,8 @@ public class DayCycleController : MonoBehaviour
         //    Chiamato DOPO ApplyQueuedDrifts così i cap agiscono sul pH già aggiornato.
         //    I CryoSlot non entrano mai in _registeredPots.
         ApplyPassivePowers(dayIndex);
+
+        BotanicalArcticTensionNotifier.EvaluateAndNotify(_phSystem);
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         
@@ -1632,7 +1681,6 @@ public class DayCycleController : MonoBehaviour
                 actionName += "_x1.5";
             
             _phSystem.RegisterActionDrift(phDelta, actionName, pot.PotId);
-            
             if (enableDebugLogs)
                 SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LED {state} giorno {consecutiveDays} - pH {(phDelta > 0 ? "+" : "")}{phDelta:F1} (mult: {effectMultiplier:F1})");
         }
@@ -2051,7 +2099,10 @@ public class DayCycleController : MonoBehaviour
                 continue;
             var plantData = pot.GetPlantData();
             if (plantData == null) continue;
-            total += plantData.GetDailyPhDrift();
+            float d = plantData.GetDailyPhDrift();
+            if (BotanicalPlantCodes.IsArcticHask(plantData.PlantCode))
+                d += 5f;
+            total += d;
         }
         return total;
     }
@@ -2125,8 +2176,10 @@ public class DayCycleController : MonoBehaviour
                 continue;
             }
             
-            // Calcola drift pH per questa pianta
+            // Calcola drift pH per questa pianta (+ Arctic Purification +5/g per ogni Hask attivo nel vaso)
             float plantDrift = plantData.GetDailyPhDrift();
+            if (BotanicalPlantCodes.IsArcticHask(plantData.PlantCode))
+                plantDrift += 5f;
             totalPhDrift += plantDrift;
             plantCount++;
             
@@ -2214,6 +2267,8 @@ public class DayCycleController : MonoBehaviour
         {
             SporiumLogger.LogWarning(LogCategory.Pot, "PotSystemConfig non disponibile per calcolo condizione. Uso valori di default (MaxHydration=10, MaxDaysForFullStress=5).");
         }
+
+        BotanicalRosterSnapshot botanicalSnapshot = BotanicalRosterSnapshot.FromServices(_phSystem);
         
         foreach (var pot in _registeredPots)
         {
@@ -2484,9 +2539,15 @@ public class DayCycleController : MonoBehaviour
                 // Incrementa giorni senza potatura
                 pot.DaysWithoutPruning++;
                 
-                // Calcola mold risk
+                // Calcola mold risk (Task 4: eccesso giorni modificato da Ferric Fern attivo / Glasscap cryo)
                 int oldMoldRiskLevel = pot.MoldRiskLevel;
-                pot.MoldRiskLevel = MoldSystem.GetMoldRiskLevel(pot, _phSystem, plantData, moldConfig);
+                int rawExcess = Mathf.Max(0, pot.DaysOverwateringConsecutive - moldConfig.overwateringDaysThreshold);
+                int adjustedExcess = BotanicalMoldModifiers.ApplyToRawExcess(rawExcess, botanicalSnapshot);
+                pot.MoldRiskLevel = MoldSystem.GetMoldRiskLevelFromAdjustedExcess(adjustedExcess, moldConfig);
+
+                // Arctic Hask attivo: −1 livello muffa su ogni vaso ogni 2 giorni di calendario
+                if (botanicalSnapshot.ActiveArcticHaskCount > 0 && dayIndex > 0 && dayIndex % 2 == 0)
+                    MoldSystem.ReduceMoldRiskLevel(pot);
                 
                 // BUG FIX 2: Tracking giorni a livello 3 per infestazione
                 if (pot.MoldRiskLevel == 3)

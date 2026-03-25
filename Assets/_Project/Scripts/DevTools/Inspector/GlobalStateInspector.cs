@@ -10,6 +10,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Mold;
+using Sporae.Dome.PotSystem.Botanical;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project;
 
@@ -44,6 +45,10 @@ namespace Sporae.DevTools
         private DayCycleSystem _dayCycleSystem;
         private DayCycleController _dayCycleController;
         private SaveManager _saveManager;
+        private CryoMachineController _cryoMachineController;
+
+        private string _gsiDebugSeedLevelMeta = "1";
+        private string _gsiDebugSeedTraitPower = "100";
         
         // Performance metrics
         private float _fps;
@@ -115,6 +120,7 @@ namespace Sporae.DevTools
             _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
             _dayCycleController = FindObjectOfType<DayCycleController>();
             _saveManager = ServiceContainer.Instance?.Get<SaveManager>(suppressWarning: true);
+            _cryoMachineController = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
         }
         
         private void OnServiceRegistered(object service)
@@ -127,6 +133,8 @@ namespace Sporae.DevTools
                 _dayCycleSystem = service as DayCycleSystem;
             else if (service is SaveManager && _saveManager == null)
                 _saveManager = service as SaveManager;
+            else if (service is CryoMachineController c && _cryoMachineController == null)
+                _cryoMachineController = c;
         }
         
         private void UpdatePerformanceMetrics()
@@ -176,6 +184,9 @@ namespace Sporae.DevTools
             GUILayout.Space(10);
             
             DrawPhSystemSection(labelStyle, buttonStyle, headerStyle);
+            GUILayout.Space(10);
+
+            DrawTask4DomeSection(labelStyle, buttonStyle, headerStyle);
             GUILayout.Space(10);
             
             DrawPotSystemSection(labelStyle, buttonStyle, headerStyle);
@@ -347,6 +358,151 @@ namespace Sporae.DevTools
             GUILayout.Label($"Total: {contrib.Total:F2}", labelStyle);
             
             GUILayout.EndVertical();
+        }
+
+        private void DrawTask4DomeSection(GUIStyle labelStyle, GUIStyle buttonStyle, GUIStyle headerStyle)
+        {
+            bool expanded = GetSectionExpanded("Task4Dome");
+            expanded = DrawSectionHeader("Task 4 — Dome (Ferric / Arctic Hask / Glasscap)", expanded, headerStyle);
+            SetSectionExpanded("Task4Dome", expanded);
+            if (!expanded) return;
+
+            GUILayout.BeginVertical(GUI.skin.box);
+
+            if (_phSystem == null)
+            {
+                GUILayout.Label("PhSystem non disponibile — snapshot parziale.", labelStyle);
+            }
+            else
+            {
+                var snap = BotanicalRosterSnapshot.FromServices(_phSystem);
+                GUILayout.Label(FormatTask4DomeSummary(snap), labelStyle);
+            }
+
+            GUILayout.Space(6);
+            GUILayout.Label("Semi in inventario (metadata come da lab / incubatore):", labelStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Liv.meta sul seme", labelStyle, GUILayout.Width(130));
+            _gsiDebugSeedLevelMeta = GUILayout.TextField(_gsiDebugSeedLevelMeta, 4, GUILayout.Width(50));
+            GUILayout.Label("Trait power %", labelStyle, GUILayout.Width(110));
+            _gsiDebugSeedTraitPower = GUILayout.TextField(_gsiDebugSeedTraitPower, 4, GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            if (_gameManager?.PlayerInventory == null)
+            {
+                GUILayout.Label("GameManager o inventario non disponibile.", labelStyle);
+            }
+            else
+            {
+                var inv = _gameManager.PlayerInventory;
+                int lvl = int.TryParse(_gsiDebugSeedLevelMeta, out int l) ? Mathf.Max(1, l) : 3;
+                int tp = int.TryParse(_gsiDebugSeedTraitPower, out int t) ? Mathf.Clamp(t, 1, 999) : 100;
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Seme Ferric +inv", buttonStyle, GUILayout.Width(150)))
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.FerricFern, lvl, tp);
+                if (GUILayout.Button("Seme Arctic +inv", buttonStyle, GUILayout.Width(150)))
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.ArcticHask, lvl, tp);
+                if (GUILayout.Button("Seme Glasscap +inv", buttonStyle, GUILayout.Width(160)))
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.GlasscapFungus, lvl, tp);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Tutti e 3 semi +inv", buttonStyle, GUILayout.Width(180)))
+                {
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.FerricFern, lvl, tp);
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.ArcticHask, lvl, tp);
+                    TryAddDebugSeed(inv, BotanicalPlantCodes.GlasscapFungus, lvl, tp);
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.Space(8);
+            GUILayout.Label("Cryo (primi slot liberi):", labelStyle);
+            if (_cryoMachineController == null)
+            {
+                GUILayout.Label("CryoMachineController non registrato.", labelStyle);
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("2× Arctic Hask in Cryo", buttonStyle, GUILayout.Width(200)))
+                {
+                    TryOccupyCryoDebug(BotanicalPlantCodes.ArcticHask);
+                    TryOccupyCryoDebug(BotanicalPlantCodes.ArcticHask);
+                }
+                if (GUILayout.Button("Glasscap in Cryo (1)", buttonStyle, GUILayout.Width(200)))
+                    TryOccupyCryoDebug(BotanicalPlantCodes.GlasscapFungus);
+                if (GUILayout.Button("Svuota tutti gli slot Cryo", buttonStyle, GUILayout.Width(220)))
+                    ClearAllCryoSlotsDebug();
+                GUILayout.EndHorizontal();
+                DrawCryoSlotStatusLines(labelStyle);
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        private static string FormatTask4DomeSummary(in BotanicalRosterSnapshot snap)
+        {
+            bool tension = snap.TotalArcticHaskCount >= 2 && !snap.ArcticTensionMitigatedByPh;
+            int imPct = Mathf.RoundToInt(snap.GlasscapActiveMutationBonusSum * 100f);
+            return $"Ferric in vaso: {(snap.AnyFerricFernActive ? "sì" : "no")} | Hask att/cryo/tot {snap.ActiveArcticHaskCount}/{snap.CryoArcticHaskCount}/{snap.TotalArcticHaskCount} | " +
+                   $"Tensione altre specie: {(tension ? "ON" : "OFF")} (~{snap.SterilityPressurePercent}%) | IM Glasscap ~+{imPct}% | cryo Glasscap slot {snap.GlasscapPassiveSlotCount} | pH mitiga tensione: {(snap.ArcticTensionMitigatedByPh ? "sì" : "no")}";
+        }
+
+        private static void TryAddDebugSeed(Inventory inv, string plantCode, int levelMeta, int traitPct)
+        {
+            if (inv == null || string.IsNullOrEmpty(plantCode)) return;
+            var item = ItemFabric.CreateDebugSeedWithLabLikeMetadata(plantCode, levelMeta, traitPct);
+            if (item != null)
+            {
+                inv.Add(item);
+                SporiumLogger.LogInfo(LogCategory.Inventory, $"GlobalStateInspector: +1 seme lab-like {plantCode}");
+            }
+        }
+
+        private void TryOccupyCryoDebug(string plantCode)
+        {
+            if (_cryoMachineController == null) return;
+            var payload = CryoPlantPayload.FromPlantCodeDebug(plantCode, 3);
+            if (payload == null)
+            {
+                SporiumLogger.LogWarning(LogCategory.Dome, $"Cryo debug: payload null per {plantCode}");
+                return;
+            }
+            if (_cryoMachineController.TryOccupySlot(payload, out var slot))
+                SporiumLogger.LogInfo(LogCategory.Dome, $"Cryo debug: {plantCode} → {slot?.SlotId}");
+            else
+                SporiumLogger.LogWarning(LogCategory.Dome, "Cryo debug: nessuno slot libero");
+        }
+
+        private void ClearAllCryoSlotsDebug()
+        {
+            if (_cryoMachineController == null) return;
+            var slots = _cryoMachineController.GetPassiveSlotsSnapshot();
+            if (slots == null) return;
+            for (int i = 0; i < slots.Count; i++)
+            {
+                var s = slots[i];
+                if (s != null && s.IsOccupied)
+                    _cryoMachineController.FreeSlot(s);
+            }
+            SporiumLogger.LogInfo(LogCategory.Dome, "Cryo debug: tutti gli slot svuotati");
+        }
+
+        private void DrawCryoSlotStatusLines(GUIStyle labelStyle)
+        {
+            if (_cryoMachineController == null) return;
+            var slots = _cryoMachineController.GetPassiveSlotsSnapshot();
+            if (slots == null) return;
+            for (int i = 0; i < slots.Count; i++)
+            {
+                var s = slots[i];
+                if (s == null) continue;
+                string line = s.IsOccupied && s.Payload != null
+                    ? $"{s.SlotId}: {s.Payload.PlantCode} L{s.Payload.PlantLevel}"
+                    : $"{s.SlotId}: [vuoto]";
+                GUILayout.Label(line, labelStyle);
+            }
         }
         
         private void DrawPotSystemSection(GUIStyle labelStyle, GUIStyle buttonStyle, GUIStyle headerStyle)

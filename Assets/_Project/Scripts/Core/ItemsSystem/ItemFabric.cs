@@ -515,5 +515,45 @@ namespace _Project.Sporae.Core
             return (string.Equals(a, x, StringComparison.OrdinalIgnoreCase) && string.Equals(b, y, StringComparison.OrdinalIgnoreCase))
                 || (string.Equals(a, y, StringComparison.OrdinalIgnoreCase) && string.Equals(b, x, StringComparison.OrdinalIgnoreCase));
         }
+
+        /// <summary>
+        /// Seme con metadata come da Lab/Incubatore (traits CSV, genetica, livello sul seme). QA Task 4 senza flusso lab.
+        /// </summary>
+        public static Item CreateDebugSeedWithLabLikeMetadata(string plantCode, int seedPlantLevelMetadata = 3, int traitPowerPercent = 100)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return null;
+            plantCode = plantCode.Trim();
+            var plantData = ResolvePlantDataByCode(plantCode);
+            if (plantData?.SeedItemConfig == null)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory,
+                    $"CreateDebugSeedWithLabLikeMetadata: PlantData o SeedItemConfig mancante per '{plantCode}'");
+                return null;
+            }
+
+            string typeId = plantData.SeedItemConfig.TypeId;
+            var config = Resources.Load<ItemConfig>("Items/" + typeId);
+            if (config == null)
+            {
+                SporiumLogger.LogError(LogCategory.Inventory,
+                    $"CreateDebugSeedWithLabLikeMetadata: ItemConfig mancante per '{typeId}'");
+                return null;
+            }
+
+            var item = new Item(config, _uniqueId++);
+            item.SourcePlantCodeMetadata = plantCode;
+            item.PlantLevelMetadata = Mathf.Max(1, seedPlantLevelMetadata);
+            item.GeneticTypeValue = plantData.DefaultGeneticType;
+            item.FamilyMetadata = NormalizeFamily(plantData.Family.ToString());
+            item.TraitPowerPercent = Mathf.Clamp(traitPowerPercent, 1, 999);
+            string famNorm = item.FamilyMetadata;
+            string traitCsv = BuildCandidateTraitsCsv(famNorm, famNorm);
+            item.CandidateTraitsCsv = traitCsv;
+            item.SelectedTraitsCsv = traitCsv;
+            item.ReagentUsedMetadata = "DEBUG-LAB-SKIP";
+            ApplyPlantMetadataFromCode(item, plantCode, onlyIfEmpty: true);
+            return item;
+        }
     }
 }

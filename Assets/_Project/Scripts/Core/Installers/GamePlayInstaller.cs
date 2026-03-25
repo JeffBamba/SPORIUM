@@ -44,7 +44,12 @@ namespace _Project.Sporae.Core.Installers
                 SporiumLogger.LogWarning(LogCategory.Core, "UINotification non assegnato! Alcune funzionalità potrebbero non funzionare.");
             }
             
-            // DayCycleSystem può essere creato anche se _fadeToBlack è null
+            // Dispose existing DayCycleSystem before creating a new one to prevent HandleFaded double-subscription
+            if (ServiceContainer.Instance.Contains(typeof(DayCycleSystem)))
+            {
+                var existingDcs = ServiceContainer.Instance.Get<DayCycleSystem>(suppressWarning: true);
+                existingDcs?.Dispose();
+            }
             ServiceContainer.Instance.Register(new DayCycleSystem(_fadeToBlack));
             
             ServiceContainer.Instance.Register(new GoalCheckers());

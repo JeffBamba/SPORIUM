@@ -12,6 +12,7 @@ using Sporae.Dome;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Growth; // LedSystemState
+using Sporae.Dome.PotSystem.Botanical;
 using System.Collections.Generic;
 using _Project.Player;
 using Sporae.UI.UIToolkit.HUD.Components;
@@ -249,6 +250,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private Label _hudPlantLevel;
         private Label _hudPlantFamily;
         private Label _hudPlantOneliner;
+        private Label _hudEffectsSummary;
         private List<VisualElement> _hudPotSlots = new List<VisualElement>(4);
         private VisualElement _vitalBlock1;
         private VisualElement _vitalBlock2;
@@ -361,6 +363,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             _hudPlantLevel = _root.Q<Label>("pcv3-hud-plant-level");
             _hudPlantFamily = _root.Q<Label>("pcv3-hud-plant-family");
             _hudPlantOneliner = _root.Q<Label>("pcv3-hud-plant-oneliner");
+            _hudEffectsSummary = _root.Q<Label>("pcv3-hud-effects");
             _hudPotSlots.Clear();
             for (int i = 0; i < 4; i++)
             {
@@ -2065,6 +2068,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             {
                 string desc = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
                 _hudPlantOneliner.text = desc;
+            }
+            if (_hudEffectsSummary != null)
+            {
+                if (empty || pot == null)
+                    _hudEffectsSummary.text = "";
+                else
+                    _hudEffectsSummary.text = BotanicalPowerFacade.BuildPcv3CenterEffectsText(pot.PotId, _phSystem);
             }
 
             if (_hudLivePill != null)
@@ -5428,12 +5438,11 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             return s;
         }
 
-        /// <summary>Potere passivo per STATUS (PlantData non ha ancora PassivePower; placeholder per futuro).</summary>
+        /// <summary>Potere passivo per STATUS (da PlantData).</summary>
         private static string GetPassivePowerForDisplay(PlantData plantData)
         {
             if (plantData == null) return "";
-            // TODO: quando PlantData avrà PassivePower, restituire plantData.PassivePower
-            return "";
+            return string.IsNullOrWhiteSpace(plantData.PassivePower) ? "" : plantData.PassivePower;
         }
 
         /// <summary>Tag colore per valore condizione: verde acceso, verde spento, giallo, rosso.</summary>
@@ -5571,6 +5580,12 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             AppendRawLine("§DATA§Potere Passivo:§END§");
             string passivePower = plantData != null && !string.IsNullOrWhiteSpace(GetPassivePowerForDisplay(plantData)) ? GetPassivePowerForDisplay(plantData) : "—";
             AppendRawLine("§INFO§" + passivePower + "§END§");
+            AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
+
+            var statusFx = new List<string>();
+            BotanicalPowerFacade.AppendStatusEffectLinesForPot(statusFx, pot.PotId, _phSystem);
+            for (int i = 0; i < statusFx.Count; i++)
+                AppendRawLine(statusFx[i]);
             AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
 
             // —— LEGENDA (sopra Requisiti e Avanzamento) ——

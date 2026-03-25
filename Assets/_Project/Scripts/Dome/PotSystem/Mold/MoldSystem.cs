@@ -131,6 +131,23 @@ namespace Sporae.Dome.PotSystem.Mold
             else
                 return 0; // None
         }
+
+        /// <summary>
+        /// Livello muffa da giorni di eccesso già modificati (Ferric/Glasscap Task 4), clamp 0–3.
+        /// </summary>
+        public static int GetMoldRiskLevelFromAdjustedExcess(int adjustedExcessDays, MoldConfig config)
+        {
+            if (config == null)
+                return 0;
+            float risk = Mathf.Clamp(adjustedExcessDays, 0f, 3f);
+            if (risk >= config.criticalRiskThreshold)
+                return 3;
+            if (risk >= config.severeRiskThreshold)
+                return 2;
+            if (risk >= config.mildRiskThreshold)
+                return 1;
+            return 0;
+        }
         
         /// <summary>
         /// Verifica se rischio si materializza in infestazione

@@ -4,6 +4,7 @@ using System.IO;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Botanical;
 using Sporae.Dome.PotSystem.Fertilizer;
 using Sporae.Dome.PotSystem.Pruning;
 using Sporae.Dome.PotSystem.Level;
@@ -1282,6 +1283,15 @@ public class PotActions : MonoBehaviour
                 if (showDebugLogs)
                     SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Modificatore resa Mold Risk Lvl {_potState.MoldRiskLevel} (Infestata: {_potState.IsInfested}) per {plantData.Family}: {moldYieldMultiplier:F2} (quantità: {oldAmount:F2} → {baseAmount:F2})");
             }
+        }
+
+        float arcticTensionMult = BotanicalHarvestModifier.GetArcticTensionYieldMultiplier(_potState, _phSystem);
+        if (arcticTensionMult < 0.999f)
+        {
+            float oldAmt = baseAmount;
+            baseAmount *= arcticTensionMult;
+            if (showDebugLogs)
+                SporiumLogger.LogDebug(LogCategory.Pot, $"[ACT-005][{potSlot.PotId}] Tensione roster Arctic Hask: ×{arcticTensionMult:F2} (quantità: {oldAmt:F2} → {baseAmount:F2})");
         }
         
         // Calcola quantità frutti da raccogliere (arrotondamento a intero)

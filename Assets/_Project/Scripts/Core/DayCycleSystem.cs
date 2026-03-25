@@ -20,7 +20,18 @@ namespace _Project.Sporae.Core
             _fadeToBlackAnimation = fadeToBlackAnimation;
             _gameManager = Object.FindObjectOfType<GameManager>();
 
-            _fadeToBlackAnimation.OnFaded += HandleFaded;
+            if (_fadeToBlackAnimation != null)
+                _fadeToBlackAnimation.OnFaded += HandleFaded;
+        }
+
+        /// <summary>
+        /// Scollega HandleFaded dalla FadeToBlackAnimation. Da chiamare prima di creare una nuova istanza
+        /// per evitare che la vecchia istanza rimanga agganciata e avanzi il giorno una seconda volta.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_fadeToBlackAnimation != null)
+                _fadeToBlackAnimation.OnFaded -= HandleFaded;
         }
 
         private void HandleFaded()

@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 
 /// <summary>
 /// Snapshot serializzabile dei campi identitari di una pianta al momento del trasferimento
@@ -74,5 +76,44 @@ public class CryoPlantPayload
         s.ParentFamilyB          = ParentFamilyB;
         s.SourcePlantDisplayName = SourcePlantDisplayName;
         s.IsInPassiveSlot        = false;
+    }
+
+    /// <summary>
+    /// Payload per riempire la Cryo da debug (Task 4 / QA) senza trasferimento da vaso.
+    /// </summary>
+    public static CryoPlantPayload FromPlantCodeDebug(string plantCode, int plantLevel = 3)
+    {
+        if (string.IsNullOrWhiteSpace(plantCode))
+            return null;
+        plantCode = plantCode.Trim();
+        if (PlantDatabase.Instance == null)
+        {
+            SporiumLogger.LogWarning(LogCategory.Dome, "FromPlantCodeDebug: PlantDatabase non inizializzato");
+            return null;
+        }
+
+        var pd = PlantDatabase.Instance.GetPlantDataByCode(plantCode);
+        if (pd == null)
+        {
+            SporiumLogger.LogWarning(LogCategory.Dome, $"FromPlantCodeDebug: nessun PlantData per {plantCode}");
+            return null;
+        }
+
+        string fam = ItemFabric.NormalizeFamily(pd.Family.ToString());
+        string traits = ItemFabric.BuildCandidateTraitsCsv(fam, fam);
+        return new CryoPlantPayload
+        {
+            PlantCode = plantCode,
+            PlantLevel = Mathf.Max(1, plantLevel),
+            PlantFamilyMetadata = fam,
+            PlantGeneticType = (int)pd.DefaultGeneticType,
+            SelectedTraitsCsv = traits,
+            TraitPowerPercent = 100,
+            ActivePowerLabel = pd.ActivePower,
+            PassivePowerLabel = pd.PassivePower,
+            SourcePlantDisplayName = pd.name,
+            IsHybrid = false,
+            IsMutated = false,
+        };
     }
 }

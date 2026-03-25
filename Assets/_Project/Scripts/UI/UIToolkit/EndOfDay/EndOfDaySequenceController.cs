@@ -47,6 +47,7 @@ namespace _Project
         private DayCycleController _dayCycleController;
 
         private bool _bound;
+        private VisualElement _eodVisualTreeBoundRoot;
         private bool _awaitingDawn;
         private bool _nightResearchChosen;
         private int _dayBeforeTransition;
@@ -104,11 +105,19 @@ namespace _Project
 
         private void TryBind()
         {
-            if (_bound) return;
             if (_uiDocument == null) return;
             var currentRoot = _uiDocument.rootVisualElement;
             if (currentRoot == null) return;
 
+            // Stesso albero UIToolkit già collegato correttamente
+            if (_bound && _eodVisualTreeBoundRoot == currentRoot && _btnYes != null && _btnNo != null)
+                return;
+
+            // Nuovo root o re-bind dopo bind incompleto: stacca handler vecchi per evitare doppie iscrizioni / ref stale
+            if (_btnYes != null || _btnNo != null || _btnSnapshotConfirm != null)
+                DetachEodButtonHandlers();
+
+            _eodVisualTreeBoundRoot = currentRoot;
             _root = currentRoot;
             _overlay = _root.Q<VisualElement>("eod-overlay");
             _step1 = _root.Q<VisualElement>("eod-step1");
@@ -166,7 +175,24 @@ namespace _Project
             RegisterModalButton(_btnSleep, OnSleepClicked);
             RegisterModalButton(_btnDawnContinue, OnDawnContinueClicked);
 
-            _bound = true;
+            _bound = _btnYes != null && _btnNo != null;
+            if (!_bound)
+                SporiumLogger.LogWarning(LogCategory.UI,
+                    "EndOfDaySequenceController: TryBind incompleto (btn-eod-yes/no assenti). Riprova al frame successivo.");
+        }
+
+        private void DetachEodButtonHandlers()
+        {
+            if (_btnYes != null) _btnYes.clicked -= OnYesClicked;
+            if (_btnNo != null) _btnNo.clicked -= OnNoClicked;
+            if (_btnSnapshotConfirm != null) _btnSnapshotConfirm.clicked -= OnSnapshotConfirmClicked;
+            if (_btnDiarioContinue != null) _btnDiarioContinue.clicked -= OnDiarioContinueClicked;
+            if (_btnResearchHistorical != null) _btnResearchHistorical.clicked -= OnResearchHistoricalClicked;
+            if (_btnResearchBotanical != null) _btnResearchBotanical.clicked -= OnResearchBotanicalClicked;
+            if (_btnResearchVault != null) _btnResearchVault.clicked -= OnResearchVaultClicked;
+            if (_btnResearchSkip != null) _btnResearchSkip.clicked -= OnResearchSkipClicked;
+            if (_btnSleep != null) _btnSleep.clicked -= OnSleepClicked;
+            if (_btnDawnContinue != null) _btnDawnContinue.clicked -= OnDawnContinueClicked;
         }
 
         private static void RegisterModalButton(Button button, System.Action handler)
@@ -178,11 +204,8 @@ namespace _Project
                 child.pickingMode = PickingMode.Ignore;
 
             button.clicked += handler;
-            button.RegisterCallback<ClickEvent>(evt =>
-            {
-                handler();
-                evt.StopPropagation();
-            }, TrickleDown.TrickleDown);
+            // StopPropagation only — handler must NOT be called here a second time
+            button.RegisterCallback<ClickEvent>(evt => evt.StopPropagation(), TrickleDown.TrickleDown);
         }
 
         /// <summary>Sorting order sopra tutti i pannelli (Food 1000, PlantCard 600, Lab 400) così EoD resta sempre in primo piano e non compete con Kitchen/Food.</summary>
@@ -221,9 +244,15 @@ namespace _Project
 
         private IEnumerator DeferredStartStep1()
         {
-            yield return null;
-            TryBind();
-            ShowStep(1);
+            const int maxAttempts = 24;
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                yield return null;
+                TryBind();
+                if (_btnYes != null && _btnNo != null)
+                    break;
+            }
+                ShowStep(1);
         }
 
         /// <summary>Chiude la sequenza e torna al vault (es. su NO in Step 1).</summary>
@@ -244,6 +273,9 @@ namespace _Project
                 _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
                 _uiDocument.rootVisualElement.pickingMode = PickingMode.Ignore;
             }
+            // Prossima apertura: forza re-bind se Unity ricrea l’albero UIToolkit
+            _bound = false;
+            _eodVisualTreeBoundRoot = null;
             gameObject.SetActive(false);
         }
 
@@ -810,16 +842,7 @@ namespace _Project
 
         private void OnDestroy()
         {
-            if (_btnYes != null) _btnYes.clicked -= OnYesClicked;
-            if (_btnNo != null) _btnNo.clicked -= OnNoClicked;
-            if (_btnSnapshotConfirm != null) _btnSnapshotConfirm.clicked -= OnSnapshotConfirmClicked;
-            if (_btnDiarioContinue != null) _btnDiarioContinue.clicked -= OnDiarioContinueClicked;
-            if (_btnResearchHistorical != null) _btnResearchHistorical.clicked -= OnResearchHistoricalClicked;
-            if (_btnResearchBotanical != null) _btnResearchBotanical.clicked -= OnResearchBotanicalClicked;
-            if (_btnResearchVault != null) _btnResearchVault.clicked -= OnResearchVaultClicked;
-            if (_btnResearchSkip != null) _btnResearchSkip.clicked -= OnResearchSkipClicked;
-            if (_btnSleep != null) _btnSleep.clicked -= OnSleepClicked;
-            if (_btnDawnContinue != null) _btnDawnContinue.clicked -= OnDawnContinueClicked;
+            DetachEodButtonHandlers();
         }
     }
 }

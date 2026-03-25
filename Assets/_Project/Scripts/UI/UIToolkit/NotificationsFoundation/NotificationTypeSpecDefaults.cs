@@ -247,6 +247,16 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "{plantName} {actionName} — {details}",
                     "{plantName} {actionName} — {details}",
                     "Azione sul vaso eseguita.\nControlla i dettagli per l'esito (crescita, pH, stress)."),
+                Spec("PLT-ARCTIC-TENSION-ON", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 6f,
+                    "notif.plt_arctic_tension_on",
+                    "Tensione Arctic Hask ({hask} esemplari) — penalità raccolto fino a {pressure}%",
+                    "Arctic Hask roster tension ({hask} specimens) — harvest penalty up to {pressure}%",
+                    "Almeno due Arctic Hask nella Dome con pH fuori banda Neutra.\nLe altre specie subiscono penalità al raccolto fino al rientro in neutro o al ridurre gli Hask."),
+                Spec("PLT-ARCTIC-TENSION-OFF", NotificationCategory.Pot, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 6f,
+                    "notif.plt_arctic_tension_off",
+                    "Tensione Arctic Hask rientrata",
+                    "Arctic Hask roster tension cleared",
+                    "La tensione da stack Arctic Hask non è più attiva (pH neutro o meno di due esemplari).\nLe penalità al raccolto sulle altre piante non si applicano."),
 
                 // ===== POT AUTOMATION (Terminal V3) =====
                 Spec("POT-AUTO-INPROGRESS", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 1f,

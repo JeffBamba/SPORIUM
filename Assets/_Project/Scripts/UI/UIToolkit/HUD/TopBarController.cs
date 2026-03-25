@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.DevTools;
@@ -9,6 +10,7 @@ using _Project;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Botanical;
 using Sporae.UI.Icons;
 
 namespace Sporae.UI.UIToolkit.HUD
@@ -27,6 +29,8 @@ namespace Sporae.UI.UIToolkit.HUD
         [SerializeField] private float _phLevel = 0f;
         [SerializeField] private float _condensation = 78f;
         [SerializeField] private float _mutationIndex = 0.42f;
+        /// <summary>Base designer (inspector); la UI mostra base + bonus Glasscap attivo.</summary>
+        private float _mutationDesignerBase;
         [SerializeField] private int _cryBalance = 1245;
         [SerializeField] private int _grateValue = 12;
         
@@ -77,6 +81,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _phTooltipValueCurrent;
         private VisualElement _phTooltipModifiersList;
         private VisualElement _phTooltipPassiveList;
+        private VisualElement _phTooltipSectionEffects;
         private Label _phTooltipValueTotal;
         private Label _phTooltipValueEffects;
         private Label _phTooltipValueTip;
@@ -230,12 +235,20 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
                 }
+
+                if (_dayCycleSystem != null)
+                    _dayCycleSystem.OnDayChanged += OnDayChangedRefreshBotanicalMutation;
+                PotEvents.OnPotStateChanged += OnPotStateChangedRefreshBotanicalMutation;
             }
             else
             {
                 SporiumLogger.LogWarning(LogCategory.UI, "TopBarController: GameManager non trovato. Usando valori mock.");
             }
         }
+
+        private void OnDayChangedRefreshBotanicalMutation(int _) => ApplyMutationDisplayFromDesignerBase();
+
+        private void OnPotStateChangedRefreshBotanicalMutation(PotSlot _) => ApplyMutationDisplayFromDesignerBase();
         
         private void TryConnectPhSystem()
         {
@@ -249,7 +262,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 // Aggiorna valore iniziale
                 _phLevel = _phSystem.CurrentPh;
                 UpdatePh(_phLevel);
-                
+                ApplyMutationDisplayFromDesignerBase();
                 
                 if (_enableDebugLogs)
                 {
@@ -394,6 +407,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _phTooltipValueCurrent = _phTooltip?.Q<Label>("ph-tooltip-value-current");
             _phTooltipModifiersList = _phTooltip?.Q<VisualElement>("ph-tooltip-modifiers-list");
             _phTooltipPassiveList = _phTooltip?.Q<VisualElement>("ph-tooltip-passive-list");
+            _phTooltipSectionEffects = _phTooltip?.Q<VisualElement>("ph-tooltip-section-effects");
             _phTooltipValueTotal = _phTooltip?.Q<Label>("ph-tooltip-value-total");
             _phTooltipValueEffects = _phTooltip?.Q<Label>("ph-tooltip-value-effects");
             _phTooltipValueTip = _phTooltip?.Q<Label>("ph-tooltip-value-tip");
@@ -488,7 +502,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 return;
 
             var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
-            string bandName = _phSystem.GetBandName();
             float currentPh = _phSystem.CurrentPh;
             int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
 
@@ -549,7 +562,7 @@ namespace Sporae.UI.UIToolkit.HUD
                     {
                         foreach (var p in plantMods)
                         {
-                            string plantName = GetPlantDisplayName(p.PlantCode);
+                            string plantName = GetPhModifierPlantLabel(p.PlantCode, p.PotId);
                             string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
                             Color valueColor = p.DailyDrift >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
                             var icon = GlobalIconResolver.GetPlantIcon(p.PlantCode);
@@ -638,14 +651,14 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phTooltipValueTotal != null)
                 _phTooltipValueTotal.text = $"<color=#7FFF7A>{totalStr}{stableStr}</color>";
 
-            // POTENTIAL EFFECTS (solo valore; titolo è fisso in UXML)
-            PhSystem.PhBand phBand = _phSystem.EvaluateState();
+            // Effetti globali Dome: solo Attivo/Passivo (PlantData) specie Task 4 — niente banda pH (già sopra)
             if (_phTooltipValueEffects != null)
             {
-                if (phBand == PhSystem.PhBand.Neutral)
-                    _phTooltipValueEffects.text = "  <color=#7FFF7A>✔ Optimal range: Normal growth conditions</color>\n  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>";
-                else
-                    _phTooltipValueEffects.text = $"  <color=#E6C96F>Banda attuale: {bandName}</color>\n  <color=#888888>— Placeholder: rimuovere quando esistono bonus/malus pH in game —</color>";
+                var domeFx = new List<string>();
+                BotanicalPowerFacade.AppendDomeGlobalPlantPowersTooltipLines(domeFx);
+                _phTooltipValueEffects.text = string.Join("\n", domeFx);
+                if (_phTooltipSectionEffects != null)
+                    _phTooltipSectionEffects.style.display = DisplayStyle.Flex;
             }
 
             // TIP (solo valore; titolo è fisso in UXML). Se nessuna pianta: invito a piantare dal Terminale POT.
@@ -681,6 +694,38 @@ namespace Sporae.UI.UIToolkit.HUD
                 return "Pianta";
             var plantData = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
             return plantData != null ? (plantData.name ?? plantCode) : plantCode;
+        }
+
+        /// <summary>Nome specie leggibile + Pot (es. Arctic Hask - Pot-001) per modificatori pH tooltip.</summary>
+        private static string GetPhModifierPlantLabel(string plantCode, string potId)
+        {
+            string species = BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode);
+            if (string.IsNullOrEmpty(species))
+            {
+                var pd = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
+                if (pd != null && !string.IsNullOrWhiteSpace(pd.Description))
+                {
+                    string d = pd.Description.Trim();
+                    int nl = d.IndexOfAny(new[] { '\n', '\r' });
+                    if (nl > 0)
+                        d = d.Substring(0, nl).Trim();
+                    int dot = d.IndexOf('.');
+                    if (dot > 8 && dot < 52)
+                        species = d.Substring(0, dot);
+                    else if (d.Length > 44)
+                        species = d.Substring(0, 41) + "…";
+                    else
+                        species = d;
+                }
+            }
+
+            if (string.IsNullOrEmpty(species))
+                species = GetPlantDisplayName(plantCode);
+
+            string pot = string.IsNullOrEmpty(potId) || string.Equals(potId, "Unknown", StringComparison.OrdinalIgnoreCase)
+                ? "—"
+                : potId;
+            return $"{species} - {pot}";
         }
         
         /// <summary>
@@ -980,7 +1025,7 @@ namespace Sporae.UI.UIToolkit.HUD
             UpdateActions(_actionsLeft, _maxActions);
             UpdatePh(_phLevel);
             UpdateCondensation(_condensation);
-            UpdateMutation(_mutationIndex);
+            UpdateMutation(_mutationIndex); // primo avvio: serializzato → designer base + bonus
             UpdateCryBalance(_cryBalance);
             UpdateGrate(_grateValue);
         }
@@ -1394,41 +1439,39 @@ namespace Sporae.UI.UIToolkit.HUD
         }
         
         /// <summary>
-        /// Aggiorna l'indice MUTATION.
+        /// Aggiorna la base designer dell'indice mutazione e ricalcola il display (incluso bonus Glasscap attivo).
         /// </summary>
-        public void UpdateMutation(float index)
+        public void UpdateMutation(float designerBaseIndex)
         {
-            _mutationIndex = Mathf.Clamp01(index);
-            
+            _mutationDesignerBase = Mathf.Clamp01(designerBaseIndex);
+            ApplyMutationDisplayFromDesignerBase();
+        }
+
+        private void ApplyMutationDisplayFromDesignerBase()
+        {
+            float bonus = 0f;
+            if (_phSystem != null)
+                bonus = BotanicalRosterSnapshot.FromServices(_phSystem).GlasscapActiveMutationBonusSum;
+            _mutationIndex = Mathf.Clamp01(_mutationDesignerBase + bonus);
+
             if (_mutationValueLabel != null)
             {
-                // Mostra come percentuale (come nell'immagine di riferimento: 45%)
                 int percentage = Mathf.RoundToInt(_mutationIndex * 100f);
                 _mutationValueLabel.text = $"{percentage}%";
-                
-                // Colore dinamico
+
                 Color color;
                 if (_mutationIndex <= 0.33f)
-                {
-                    color = _greenStable; // Stable
-                }
+                    color = _greenStable;
                 else if (_mutationIndex <= 0.66f)
-                {
-                    color = _yellowWarning; // Warning
-                }
+                    color = _yellowWarning;
                 else
-                {
-                    color = _redCritical; // Critical
-                }
-                
+                    color = _redCritical;
+
                 _mutationValueLabel.style.color = new StyleColor(color);
             }
-            
-            // Update MutationOrbitUI component
+
             if (_mutationOrbit != null)
-            {
                 _mutationOrbit.UpdateMutation(_mutationIndex);
-            }
         }
         
         /// <summary>
@@ -1492,6 +1535,10 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 _phSystem.OnPhChanged -= OnPhChanged;
             }
+
+            if (_dayCycleSystem != null)
+                _dayCycleSystem.OnDayChanged -= OnDayChangedRefreshBotanicalMutation;
+            PotEvents.OnPotStateChanged -= OnPotStateChangedRefreshBotanicalMutation;
             
             // Unregister hover events
             if (_phDisplay != null)

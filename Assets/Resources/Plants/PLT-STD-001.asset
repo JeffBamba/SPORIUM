@@ -29,7 +29,7 @@ MonoBehaviour:
   rarity: 0
   dailyPhDrift: 0
   passivePower: 'Stabilizzante: +1 Basic/giorno'
-  passivePhDrift: 0
+  passivePhDrift: 1
   passivePhCap: 0
   optimalPhMin: -30
   optimalPhMax: 50

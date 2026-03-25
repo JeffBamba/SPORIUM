@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Botanical;
 using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.DomeStatusHUD
@@ -670,6 +671,16 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 lines.Add(new TooltipLine("  ✗ INFESTATA DA MUFFE", TipRed, bold: true));
             }
 
+            lines.Add(TooltipLine.Sep());
+            var snap = BotanicalRosterSnapshot.FromServices(_phSystem);
+            var botanicalLines = new List<BotanicalHudTooltipLine>();
+            BotanicalPowerFacade.AppendDomeHudTooltipLines(botanicalLines, state, plantData, snap);
+            for (int i = 0; i < botanicalLines.Count; i++)
+            {
+                var bl = botanicalLines[i];
+                lines.Add(new TooltipLine(bl.Text, bl.Color, bl.Bold));
+            }
+
             return lines;
         }
 
@@ -707,11 +718,6 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                 }
             }
-
-            lines.Add(TooltipLine.Sep());
-            lines.Add(new TooltipLine("NOTE", TipGreen, bold: true));
-            lines.Add(new TooltipLine("   Poteri attivi sospesi in cryo", TipMuted));
-            lines.Add(new TooltipLine("   Nessuna manutenzione richiesta", TipMuted));
 
             return lines;
         }

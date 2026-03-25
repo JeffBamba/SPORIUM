@@ -93,6 +93,7 @@
                                     <ui:Label name="pcv3-hud-plant-family" text="FAMILY ---" class="pcv3-hud-plant-family" />
                                 </ui:VisualElement>
                                 <ui:Label name="pcv3-hud-plant-oneliner" text="---" class="pcv3-hud-plant-oneliner" />
+                                <ui:Label name="pcv3-hud-effects" text="" class="pcv3-hud-plant-oneliner" style="font-size: 9px; margin-top: 4px; white-space: normal;" />
                             </ui:VisualElement>
                             <ui:VisualElement name="pcv3-hud-live-pill" class="pcv3-hud-live-pill">
                                 <ui:VisualElement name="pcv3-hud-live-dot" class="pcv3-hud-live-dot" />

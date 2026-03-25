@@ -4,6 +4,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Mold;
 using Sporae.Dome.PotSystem.Level;
+using Sporae.Dome.PotSystem.Botanical;
 using _Project;
 using _Project.Sporae.Core;
 
@@ -68,6 +69,11 @@ namespace Sporae.DevTools
         private string _maxFruitsInputString = "3";
         private float _fruitQualityInputValue = 0f;
         private string _fruitQualityInputString = "0";
+
+        // Task 4 / semi lab-like in inventario + overwatering debug
+        private string _daysOverwateringInputString = "0";
+        private string _debugSeedLevelMetaString = "1";
+        private string _debugSeedTraitPowerString = "100";
         
         // Cache per sistemi
         private PhSystem _phSystem;
@@ -628,6 +634,65 @@ namespace Sporae.DevTools
             PotEvents.EmitChanged(_selectedPot.PotSlot);
             AddLog($"✅ {potState.PotId}: Infestazione muffe rimossa");
         }
+
+        private Inventory TryGetPlayerInventory()
+        {
+            var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            return gm?.PlayerInventory;
+        }
+
+        private void TryParseDebugSeedParams(out int levelMeta, out int traitPct)
+        {
+            levelMeta = int.TryParse(_debugSeedLevelMetaString, out int l) ? Mathf.Max(1, l) : 3;
+            traitPct = int.TryParse(_debugSeedTraitPowerString, out int t) ? Mathf.Clamp(t, 1, 999) : 100;
+        }
+
+        private void AddDebugLabSeedToInventory(string plantCode)
+        {
+            TryParseDebugSeedParams(out int lvl, out int tp);
+            var inv = TryGetPlayerInventory();
+            if (inv == null)
+            {
+                AddLog("⚠️ Inventario non disponibile (GameManager)");
+                return;
+            }
+
+            var item = ItemFabric.CreateDebugSeedWithLabLikeMetadata(plantCode, lvl, tp);
+            if (item == null)
+            {
+                AddLog($"⚠️ Seme lab-like fallito: {plantCode}");
+                return;
+            }
+
+            inv.Add(item);
+            AddLog($"✅ Inventario +1 seme (metadata lab) {plantCode} — liv.meta {lvl}, trait% {tp}");
+        }
+
+        private void SetDaysOverwateringConsecutiveFromInput()
+        {
+            if (_selectedPot == null || _selectedPot.PotState == null)
+            {
+                AddLog("⚠️ Nessun POT selezionato!");
+                return;
+            }
+
+            if (!int.TryParse(_daysOverwateringInputString, out int days))
+                days = 0;
+            days = Mathf.Max(0, days);
+            var ps = _selectedPot.PotState;
+            ps.DaysOverwateringConsecutive = days;
+            _daysOverwateringInputString = days.ToString();
+            PotEvents.EmitChanged(_selectedPot.PotSlot);
+            AddLog($"✅ {ps.PotId}: DaysOverwateringConsecutive = {days}");
+        }
+
+        private static string BuildTask4DomeSummaryLine(in BotanicalRosterSnapshot snap)
+        {
+            bool tension = snap.TotalArcticHaskCount >= 2 && !snap.ArcticTensionMitigatedByPh;
+            int imPct = Mathf.RoundToInt(snap.GlasscapActiveMutationBonusSum * 100f);
+            return $"Ferric in vaso: {(snap.AnyFerricFernActive ? "sì" : "no")} | Hask att/cryo/tot {snap.ActiveArcticHaskCount}/{snap.CryoArcticHaskCount}/{snap.TotalArcticHaskCount} | " +
+                   $"Tensione altre specie: {(tension ? "ON" : "OFF")} (~{snap.SterilityPressurePercent}%) | IM Glasscap ~+{imPct}% | cryo Glasscap slot {snap.GlasscapPassiveSlotCount} | pH mitiga tensione: {(snap.ArcticTensionMitigatedByPh ? "sì" : "no")}";
+        }
         
         private void DebugPlantSeed(string plantCode)
         {
@@ -771,6 +836,7 @@ namespace Sporae.DevTools
                     _completedCyclesInputString = potState.CompletedCycles.ToString();
                     _moldRiskLevelInputValue = potState.MoldRiskLevel;
                     _moldRiskLevelInputString = potState.MoldRiskLevel.ToString();
+                    _daysOverwateringInputString = potState.DaysOverwateringConsecutive.ToString();
                     _conditionScoreInputValue = potState.ConditionScore;
                     _conditionScoreInputString = potState.ConditionScore.ToString();
                     _ledStateInputValue = (int)potState.LedSystemState;
@@ -812,6 +878,37 @@ namespace Sporae.DevTools
             
             GUI.EndScrollView();
             currentY += listHeight + 15f; // Aumentato spazio
+
+            // ── Task 4: riepilogo Dome + semi in inventario (metadata come da lab) ──
+            GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 22f),
+                "Task 4 — Dome (lettura) + semi inventario (metadata lab)", labelStyle);
+            currentY += 24f;
+            {
+                string domeLine = _phSystem == null
+                    ? "PhSystem assente — snapshot non disponibile."
+                    : BuildTask4DomeSummaryLine(BotanicalRosterSnapshot.FromServices(_phSystem));
+                GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 24f, 52f), domeLine, labelStyle);
+            }
+            currentY += 54f;
+            GUI.Label(new Rect(consoleX + 10f, currentY, 130f, 22f), "Liv.meta seme:", labelStyle);
+            _debugSeedLevelMetaString = GUI.TextField(new Rect(consoleX + 140f, currentY, 44f, 22f), _debugSeedLevelMetaString, 4);
+            GUI.Label(new Rect(consoleX + 195f, currentY, 90f, 22f), "Trait power %:", labelStyle);
+            _debugSeedTraitPowerString = GUI.TextField(new Rect(consoleX + 285f, currentY, 44f, 22f), _debugSeedTraitPowerString, 4);
+            currentY += 26f;
+            float t4w = (consoleWidth - 28f) / 4f;
+            if (GUI.Button(new Rect(consoleX + 10f, currentY, t4w - 3f, 28f), "Seme Ferric\n+inv", buttonStyle))
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.FerricFern);
+            if (GUI.Button(new Rect(consoleX + 10f + t4w, currentY, t4w - 3f, 28f), "Seme Arctic\n+inv", buttonStyle))
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.ArcticHask);
+            if (GUI.Button(new Rect(consoleX + 10f + t4w * 2f, currentY, t4w - 3f, 28f), "Seme Glasscap\n+inv", buttonStyle))
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.GlasscapFungus);
+            if (GUI.Button(new Rect(consoleX + 10f + t4w * 3f, currentY, t4w - 3f, 28f), "Tutti e 3\n+inv", buttonStyle))
+            {
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.FerricFern);
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.ArcticHask);
+                AddDebugLabSeedToInventory(BotanicalPlantCodes.GlasscapFungus);
+            }
+            currentY += 34f;
             
             // Sezione editing POT selezionato - SCROLLABILE
             if (_selectedPot != null && _selectedPot.PotState != null)
@@ -829,8 +926,8 @@ namespace Sporae.DevTools
                 // Plant Condition: 30+30+35=95, Mold: 30+30+30+35=125, Plant Level: 30+30+30+35=125,
                 // pH Affinity: 30+~170=200, Growth Points: 30+30+35=95, LED: 30+30+30+35=125, 
                 // FRUITS: 30+35+35+40=140, Watering: 30+30+35=95, Pulsanti stadi: 30+30+40=100
-                // Totale: ~1390px (aumentato per includere sezione FRUITS e margine)
-                float editingContentHeight = 1530f;
+                // Totale: ~1390px + Task4 muffa/overwatering
+                float editingContentHeight = 1680f;
                 
                 // Inizia scroll view per sezione editing
                 _editingScrollPosition = GUI.BeginScrollView(
@@ -1082,6 +1179,12 @@ namespace Sporae.DevTools
                         $"Threshold: {_moldConfig.overwateringDaysThreshold} giorni", labelStyle);
                 }
                 relativeY += 30f;
+
+                GUI.Label(new Rect(10f, relativeY, 200f, 25f), "Imposta giorni overwatering:", labelStyle);
+                _daysOverwateringInputString = GUI.TextField(new Rect(210f, relativeY, 70f, 25f), _daysOverwateringInputString);
+                if (GUI.Button(new Rect(290f, relativeY, 140f, 25f), "Applica overwatering", buttonStyle))
+                    SetDaysOverwateringConsecutiveFromInput();
+                relativeY += 32f;
                 
                 // NOTA: Mold Risk ora calcolato SOLO da overwatering (1 livello per ogni giorno oltre soglia)
                 // Days w/o Pruning non influisce più sul calcolo
@@ -1096,9 +1199,15 @@ namespace Sporae.DevTools
                     float moldRisk = MoldSystem.CalculateMoldRisk(potState, _phSystem, moldPlantData, _moldConfig);
                     int calculatedLevel = MoldSystem.GetMoldRiskLevel(potState, _phSystem, moldPlantData, _moldConfig);
                     int daysOverThreshold = Mathf.Max(0, potState.DaysOverwateringConsecutive - _moldConfig.overwateringDaysThreshold);
-                    GUI.Label(new Rect(10f, relativeY, 400f, 25f), 
-                        $"Rischio calcolato: {moldRisk:F1} (Level: {calculatedLevel}) - Giorni oltre soglia: {daysOverThreshold}", labelStyle);
-                    relativeY += 30f;
+                    GUI.Label(new Rect(10f, relativeY, 650f, 25f), 
+                        $"Rischio base (no Task4 su eccesso): {moldRisk:F1} (Level: {calculatedLevel}) — giorni oltre soglia raw: {daysOverThreshold}", labelStyle);
+                    relativeY += 28f;
+                    var snap = BotanicalRosterSnapshot.FromServices(_phSystem);
+                    int adjExcess = BotanicalMoldModifiers.ApplyToRawExcess(daysOverThreshold, snap);
+                    int levelFromAdj = MoldSystem.GetMoldRiskLevelFromAdjustedExcess(adjExcess, _moldConfig);
+                    GUI.Label(new Rect(10f, relativeY, 650f, 40f),
+                        $"Task4 eccesso → aggiustato: raw {daysOverThreshold} → {adjExcess} (Ferric/Glasscap cryo nella Dome) | livello da eccesso aggiustato: {levelFromAdj} | MoldRiskLevel salvato su vaso: {potState.MoldRiskLevel}", labelStyle);
+                    relativeY += 44f;
                 }
                 
                 GUI.Label(new Rect(10f, relativeY, 150f, 25f), "Set Mold Risk (0-3):", labelStyle);
