@@ -1,0 +1,11 @@
+---
+description: When asked for an analysis, verify from the current main repo state
+alwaysApply: true
+---
+
+# Analysis Rules (No Suppositions)
+
+- When the user asks for an “analysis”, never base it on old assumptions or previous document versions.
+- Always run fresh, read-only checks against the current main repo (e.g., `rg`/search, file existence, line counts) and cite the evidence in the response.
+- If required data cannot be gathered, explicitly say what is missing and ask permission/scope for additional verification.
+
