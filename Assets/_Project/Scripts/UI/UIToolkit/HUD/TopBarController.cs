@@ -655,7 +655,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phTooltipValueEffects != null)
             {
                 var domeFx = new List<string>();
-                BotanicalPowerFacade.AppendDomeGlobalPlantPowersTooltipLines(domeFx);
+                BotanicalPowerFacade.AppendDomeGlobalPlantPowersTooltipLines(domeFx, _phSystem);
                 _phTooltipValueEffects.text = string.Join("\n", domeFx);
                 if (_phTooltipSectionEffects != null)
                     _phTooltipSectionEffects.style.display = DisplayStyle.Flex;

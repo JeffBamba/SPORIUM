@@ -579,6 +579,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "⚠️ Fertilizer out of range on {potId}. Growth slowed.",
                     "Il livello di fertilizzante non è nel range ottimale.\nRegola la dose per una crescita migliore."),
 
+                // Mold level gained/reduced (one toast per level, with cause for reductions)
+                Spec("MOLD-GAIN", NotificationCategory.Mold, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "warn.mold_gain",
+                    "⚠️ Muffa Lv{level} in {potId}",
+                    "⚠️ Mold Lv{level} on {potId}",
+                    "Il rischio muffe è aumentato a livello {level}.\nRiduci l'irrigazione, ventila e monitora overwatering."),
+                Spec("MOLD-REDUCE", NotificationCategory.Mold, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 0f,
+                    "notif.mold_reduce",
+                    "✅ Muffa ridotta su {potId} — {cause}",
+                    "✅ Mold reduced on {potId} — {cause}",
+                    "Il livello muffa è sceso di 1.\nCausa: {cause}. Continua a monitorare per evitare recidive."),
+
                 Spec("MLD-RISK-CRIT", NotificationCategory.Mold, NotificationSeverity.Danger, NotificationChannel.Gameplay, true, false, true, 0f,
                     "danger.mold_crit",
                     "🚨 Rischio muffe CRITICO su {potId}.",

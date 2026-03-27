@@ -13,7 +13,6 @@ using UnityEngine.SceneManagement;
 using _Project;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
-using System.IO;
 using System;
 
 /// <summary>
@@ -2543,12 +2542,74 @@ public class DayCycleController : MonoBehaviour
                 int oldMoldRiskLevel = pot.MoldRiskLevel;
                 int rawExcess = Mathf.Max(0, pot.DaysOverwateringConsecutive - moldConfig.overwateringDaysThreshold);
                 int adjustedExcess = BotanicalMoldModifiers.ApplyToRawExcess(rawExcess, botanicalSnapshot);
-                pot.MoldRiskLevel = MoldSystem.GetMoldRiskLevelFromAdjustedExcess(adjustedExcess, moldConfig);
+                int computedMoldRisk = MoldSystem.GetMoldRiskLevelFromAdjustedExcess(adjustedExcess, moldConfig);
+
+                // Se il livello muffa e' stato impostato via debug (livello > 0 ma nessun overwatering storico/reale),
+                // evita reset immediato a 0 al primo EndOfDay e lascia che i sistemi di riduzione lo consumino gradualmente.
+                bool looksLikeManualMoldOverride =
+                    oldMoldRiskLevel > 0 &&
+                    pot.DaysOverwateringConsecutive == 0 &&
+                    rawExcess == 0 &&
+                    !isOverwateringForMold &&
+                    computedMoldRisk == 0;
+
+                pot.MoldRiskLevel = looksLikeManualMoldOverride ? oldMoldRiskLevel : computedMoldRisk;
 
                 // Arctic Hask attivo: −1 livello muffa su ogni vaso ogni 2 giorni di calendario
+                bool arcticReducedMold = false;
                 if (botanicalSnapshot.ActiveArcticHaskCount > 0 && dayIndex > 0 && dayIndex % 2 == 0)
+                {
+                    int beforeArcticReduce = pot.MoldRiskLevel;
                     MoldSystem.ReduceMoldRiskLevel(pot);
-                
+                    arcticReducedMold = pot.MoldRiskLevel < beforeArcticReduce;
+                }
+
+                // Toast: mold level gained (one per level)
+                if (pot.MoldRiskLevel > oldMoldRiskLevel)
+                {
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    for (int lvl = oldMoldRiskLevel + 1; lvl <= pot.MoldRiskLevel; lvl++)
+                    {
+                        if (foundation != null && foundation.Enabled)
+                        {
+                            foundation.PostToast("MOLD-GAIN",
+                                new NotificationPayload()
+                                    .With("potId", pot.PotId)
+                                    .With("level", lvl.ToString()));
+                        }
+                        else if (_toastManager != null)
+                        {
+                            _toastManager.ShowWarning($"⚠️ Muffa Lv{lvl} in {pot.PotId}", "MOLD-GAIN");
+                        }
+                    }
+                }
+                // Toast: mold level reduced (with cause)
+                else if (pot.MoldRiskLevel < oldMoldRiskLevel)
+                {
+                    // Determine the most relevant cause for the toast tooltip:
+                    // Arctic periodic pulse > Ferric Fern adjustment > overwatering resolved
+                    string cause;
+                    if (arcticReducedMold)
+                        cause = "Arctic Hask Effect";
+                    else if (botanicalSnapshot.AnyFerricFernActive && rawExcess < (oldMoldRiskLevel))
+                        cause = "Ferric Fern Effect";
+                    else
+                        cause = "Overwatering rientrato";
+
+                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundation != null && foundation.Enabled)
+                    {
+                        foundation.PostToast("MOLD-REDUCE",
+                            new NotificationPayload()
+                                .With("potId", pot.PotId)
+                                .With("cause", cause));
+                    }
+                    else if (_toastManager != null)
+                    {
+                        _toastManager.ShowInfo($"✅ Muffa ridotta su {pot.PotId} — {cause}", "MOLD-REDUCE");
+                    }
+                }
+
                 // BUG FIX 2: Tracking giorni a livello 3 per infestazione
                 if (pot.MoldRiskLevel == 3)
                 {

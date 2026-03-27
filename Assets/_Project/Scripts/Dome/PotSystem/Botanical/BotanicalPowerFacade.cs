@@ -18,7 +18,7 @@ namespace Sporae.Dome.PotSystem.Botanical
         /// Tooltip TopBar — «Effetti globali»: testi da PlantData solo per l’ambito attuale.
         /// Vaso attivo → solo potere Attivo; cryo passivo → solo potere Passivo. Blocchi senza testo applicabile omessi.
         /// </summary>
-        public static void AppendDomeGlobalPlantPowersTooltipLines(List<string> lines)
+        public static void AppendDomeGlobalPlantPowersTooltipLines(List<string> lines, PhSystem phSystem = null)
         {
             if (lines == null) return;
 
@@ -104,6 +104,16 @@ namespace Sporae.Dome.PotSystem.Botanical
 
             if (!any)
                 lines.Add("  <color=#8FA0A6>Nessuna specie Task 4 con poteri globali Dome nei vasi o in cryo passivo.</color>");
+
+            // Tensione roster Arctic Hask: warning persistente se attiva (≥2 esemplari + pH fuori Neutra)
+            var snap = BotanicalRosterSnapshot.FromServices(phSystem);
+            if (snap.TotalArcticHaskCount >= 2 && !snap.ArcticTensionMitigatedByPh)
+            {
+                lines.Add("");
+                lines.Add($"  <color=#D46060>⚠ TENSIONE ARCTIC HASK ATTIVA ({snap.TotalArcticHaskCount} esemplari)</color>");
+                lines.Add($"  <color=#D46060>  Penalità raccolto ~{snap.SterilityPressurePercent}% su piante non-Arctic.</color>");
+                lines.Add("  <color=#8FA0A6>  Mitiga portando pH in Neutra o riducendo gli Arctic attivi.</color>");
+            }
         }
 
         private static int CompareTask4PotEntries((string potId, string plantCode) a, (string potId, string plantCode) b)

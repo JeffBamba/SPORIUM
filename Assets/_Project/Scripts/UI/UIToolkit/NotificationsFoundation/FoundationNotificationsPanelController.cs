@@ -251,7 +251,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
                 var isItemLayout = entry.Spec != null && entry.Spec.IsItemLayout && entry.Payload != null;
 
-                TooltipText = entry.Spec?.TooltipIt;
+                TooltipText = NotificationLocalization.Format(entry.Spec?.TooltipIt ?? string.Empty, entry.Payload?.Args);
                 if (ToastTooltip != null && Root != null)
                 {
                     Root.UnregisterCallback<MouseEnterEvent>(OnRowMouseEnter);
