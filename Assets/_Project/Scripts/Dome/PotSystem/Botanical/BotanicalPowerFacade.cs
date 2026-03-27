@@ -212,7 +212,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             const int totalLineWidth = 52;
             string head = $"  • {label}: ";
             string indent = new string(' ', head.Length);
-            var words = text.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            var words = text.Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
             var current = new StringBuilder();
             bool isFirstPhysicalLine = true;
 

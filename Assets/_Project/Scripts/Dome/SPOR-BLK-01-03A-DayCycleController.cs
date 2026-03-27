@@ -1160,7 +1160,7 @@ public class DayCycleController : MonoBehaviour
             // Emetti evento per l'UI
             PotEvents.EmitPlantStageChanged(pot.PotId, (PlantStage)pot.Stage);
             
-            // Toast cambio stadio
+            // Toast cambio stadio via Foundation
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
             {
@@ -1169,23 +1169,6 @@ public class DayCycleController : MonoBehaviour
                     new NotificationPayload()
                         .With("potId", pot.PotId)
                         .With("stage", ((PlantStage)pot.Stage).ToString()));
-            }
-            else if (_toastManager != null)
-            {
-                _toastManager.ShowToast(ToastNotificationType.StageUp, 
-                    $"Stage up: {pot.PotId} → {(PlantStage)pot.Stage}", 
-                    "STAGE-UP-001");
-            }
-            else if (_uiNotification != null)
-            {
-                _uiNotification.ShowNotification(
-                    $"Stage up: {pot.PotId} → {(PlantStage)pot.Stage}",
-                    3f,
-                    Color.cyan);
-            }
-            else if (enableDebugLogs)
-            {
-                SporiumLogger.LogWarning(LogCategory.UI, $"UINotification mancante: niente toast stage up per {pot.PotId} → {(PlantStage)pot.Stage}");
             }
             
             if (enableDebugLogs)
@@ -1330,17 +1313,6 @@ public class DayCycleController : MonoBehaviour
                     new NotificationPayload().With("message", message),
                     severityOverride: NotificationSeverity.Warning,
                     dedupKey: "WATRAW:WILL_DISABLE");
-            }
-            else
-            {
-                if (_toastManager != null)
-                {
-                    _toastManager.ShowWarning(message, "LGT-002");
-                }
-                else if (_uiNotification != null)
-                {
-                    _uiNotification.ShowNotification(message, 3f, Color.yellow);
-                }
             }
         }
     }
@@ -1719,14 +1691,23 @@ public class DayCycleController : MonoBehaviour
             if (pot.DaysBurnStressConsecutive >= 3)
             {
                 PlantStage currentStage = (PlantStage)pot.Stage;
+                var foundationBurn = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 
                 // Regressione stage (torna allo stadio precedente)
                 if (currentStage > PlantStage.Seed)
                 {
                     PlantStage previousStage = currentStage - 1;
                     pot.Stage = (int)previousStage;
-                    pot.DaysInCurrentStage = 0; // Reset giorni nello stadio
+                    pot.DaysInCurrentStage = 0;
                     
+                    if (foundationBurn != null && foundationBurn.Enabled)
+                    {
+                        foundationBurn.PostToast("BURN-STAGE-REGRESS",
+                            new NotificationPayload()
+                                .With("potId", pot.PotId)
+                                .With("oldStage", currentStage.ToString())
+                                .With("newStage", previousStage.ToString()));
+                    }
                     if (enableDebugLogs)
                         SporiumLogger.LogWarning(LogCategory.Pot, $"[BURN_STRESS_EXTREME] {pot.PotId}: Regressione stage da {currentStage} a {previousStage} (Burn Stress {pot.DaysBurnStressConsecutive} giorni)");
                 }
@@ -1736,6 +1717,16 @@ public class DayCycleController : MonoBehaviour
                 {
                     int oldLevel = pot.PlantLevel;
                     pot.PlantLevel--;
+                    if (foundationBurn != null && foundationBurn.Enabled)
+                    {
+                        foundationBurn.PostToast("PLT-LVL-DOWN",
+                            new NotificationPayload()
+                                .With("potId", pot.PotId)
+                                .With("plantCode", pot.PlantCode ?? "?")
+                                .With("oldLevel", oldLevel.ToString())
+                                .With("newLevel", pot.PlantLevel.ToString())
+                                .With("reason", "Burn Stress"));
+                    }
                     if (enableDebugLogs)
                         SporiumLogger.LogWarning(LogCategory.Pot, $"[BURN_STRESS_EXTREME] {pot.PotId}: Riduzione livello da {oldLevel} a {pot.PlantLevel} (Burn Stress {pot.DaysBurnStressConsecutive} giorni)");
                 }
@@ -1772,38 +1763,18 @@ public class DayCycleController : MonoBehaviour
     }
     
     /// <summary>
-    /// BLK-02.07: Mostra notifica LED (helper per toast)
+    /// BLK-02.07: Mostra notifica LED via Foundation
     /// </summary>
     private void ShowLedNotification(string message, Color color)
     {
         var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
         if (foundation != null && foundation.Enabled)
         {
-            ToastNotificationType type = ToastNotificationType.Info;
-            if (message.Contains("CRY insufficiente") || message.Contains("spento"))
-                type = ToastNotificationType.SystemDisabled;
-            
             string code = message.Contains("Blue") ? "LGT-003" : message.Contains("Red") ? "LGT-004" : "LGT-001";
-            var sev = type == ToastNotificationType.SystemDisabled ? NotificationSeverity.Warning : NotificationSeverity.Info;
+            var sev = (message.Contains("CRY insufficiente") || message.Contains("spento"))
+                ? NotificationSeverity.Warning
+                : NotificationSeverity.Info;
             foundation.PostToast(code, new NotificationPayload().With("message", message), sev);
-        }
-        else if (_toastManager != null)
-        {
-            // Determina tipo basato su colore o messaggio
-            ToastNotificationType type = ToastNotificationType.Info;
-            if (message.Contains("CRY insufficiente") || message.Contains("spento"))
-                type = ToastNotificationType.SystemDisabled;
-            
-            string code = message.Contains("Blue") ? "LGT-003" : message.Contains("Red") ? "LGT-004" : "LGT-001";
-            _toastManager.ShowToast(type, message, code);
-        }
-        else if (_uiNotification != null)
-        {
-            _uiNotification.ShowNotification(message, 3f, color);
-        }
-        else if (enableDebugLogs)
-        {
-            SporiumLogger.LogWarning(LogCategory.UI, $"UINotification non disponibile per: {message}");
         }
     }
     
@@ -2283,6 +2254,7 @@ public class DayCycleController : MonoBehaviour
             int preConditionScore = pot.ConditionScore;
             int preMoldRisk = pot.MoldRiskLevel;
             bool preInfested = pot.IsInfested;
+            bool preSterile = pot.IsSterile;
             
             // Salva score precedente per calcolo forecast
             int previousScore = pot.PreviousDayConditionScore >= 0 ? pot.PreviousDayConditionScore : pot.ConditionScore;
@@ -2411,11 +2383,20 @@ public class DayCycleController : MonoBehaviour
                 // Spegni sistemi persistenti per evitare consumi/side-effect post-morte.
                 pot.WateringSystemOn = false;
                 pot.LedSystemState = LedSystemState.Off;
+                pot.IsSterile = false;
                 
-                // Notifica morte
+                // Notifica morte via Foundation
                 int criticalThreshold = Sporae.DevTools.DifficultyCalibrationConfig.ConditionThresholdAppassita;
-                string reason = $"Condizione Critica per {pot.DaysCritical} giorni (score={pot.ConditionScore}<{criticalThreshold})";
-                PotEvents.EmitPlantDied(pot.PotId, reason);
+                string deathReason = $"Condizione Critica per {pot.DaysCritical} giorni (score<{criticalThreshold})";
+                PotEvents.EmitPlantDied(pot.PotId, deathReason);
+                
+                var foundationDeath = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (foundationDeath != null && foundationDeath.Enabled)
+                {
+                    foundationDeath.PostToast("PLANT-DEATH-001",
+                        new NotificationPayload()
+                            .With("reason", $"{pot.PlantCode ?? "Pianta"} — Condizione Critica ({pot.DaysCritical} giorni)"));
+                }
                 
                 // Aggiorna visual/UI
                 PotSlot potSlot = FindPotSlot(pot.PotId);
@@ -2433,62 +2414,30 @@ public class DayCycleController : MonoBehaviour
             }
             
             
-            // Verifica cambio condizione per notifica Toast
+            // Verifica cambio condizione per notifica Toast Foundation
             // Mostra il toast solo se il delta score è almeno ±20 (20%) per evitare spam su variazioni minime
-            // BUG FIX: Verifica anche che il delta sia effettivamente negativo per "peggiorata" o positivo per "migliorata"
-            if (!isFirstCalculation && oldCondition != pot.ConditionLabel && _uiNotification != null && Mathf.Abs(result.ScoreDelta) >= 20)
+            if (!isFirstCalculation && oldCondition != pot.ConditionLabel && Mathf.Abs(result.ScoreDelta) >= 20)
             {
                 string conditionName = PlantConditionSystem.GetConditionName(result.Condition, 
                     PlantConditionSystem.IsOverwatering(pot, _potSystemConfig.MaxHydration));
                 string forecastSymbol = PlantConditionSystem.GetForecastSymbol(result.Forecast);
+                var foundationCnd = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 
-                // Determina tipo notifica in base alla direzione del cambio
-                Color notificationColor;
-                
-                // BUG FIX: Verifica che il delta sia effettivamente positivo per miglioramento o negativo per peggioramento
-                // per evitare toast falsi quando il calcolo usa dati non aggiornati
-                if (pot.ConditionLabel < oldCondition && result.ScoreDelta > 0) // Miglioramento (condizione migliore E score aumentato)
+                if (pot.ConditionLabel < oldCondition && result.ScoreDelta > 0) // Miglioramento
                 {
-                    notificationColor = Color.green;
-                    string message = $"CND-002 - Condizione migliorata: {conditionName} ({result.Score}/100) {forecastSymbol}";
-                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-                    if (foundation != null && foundation.Enabled)
-                    {
-                        foundation.PostToast("CND-002", new NotificationPayload().With("details", message));
-                    }
-                    else if (_toastManager != null)
-                    {
-                        _toastManager.ShowToast(ToastNotificationType.ConditionImproved, message, "CND-002");
-                    }
-                    else if (_uiNotification != null)
-                    {
-                        _uiNotification.ShowNotification(message, 3f, notificationColor);
-                    }
+                    string message = $"{conditionName} ({result.Score}/100) {forecastSymbol}";
+                    if (foundationCnd != null && foundationCnd.Enabled)
+                        foundationCnd.PostToast("CND-002", new NotificationPayload().With("details", message));
                 }
-                else if (pot.ConditionLabel > oldCondition && result.ScoreDelta < 0) // Peggioramento (condizione peggiore E score diminuito)
+                else if (pot.ConditionLabel > oldCondition && result.ScoreDelta < 0) // Peggioramento
                 {
-                    notificationColor = Color.yellow;
-                    string message = $"CND-001 - Condizione peggiorata: {conditionName} ({result.Score}/100) {forecastSymbol}";
-                    var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-                    if (foundation != null && foundation.Enabled)
-                    {
-                        foundation.PostToast("CND-001", new NotificationPayload().With("details", message));
-                    }
-                    else if (_toastManager != null)
-                    {
-                        _toastManager.ShowToast(ToastNotificationType.ConditionDegraded, message, "CND-001");
-                    }
-                    else if (_uiNotification != null)
-                    {
-                        _uiNotification.ShowNotification(message, 3f, notificationColor);
-                    }
+                    string message = $"{conditionName} ({result.Score}/100) {forecastSymbol}";
+                    if (foundationCnd != null && foundationCnd.Enabled)
+                        foundationCnd.PostToast("CND-001", new NotificationPayload().With("details", message));
                 }
-                // Se il delta non corrisponde alla direzione del cambio condizione, non mostrare toast (evita falsi positivi)
                 
                 if (enableDebugLogs)
-                {
                     SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Condizione cambiata da {oldCondition} a {pot.ConditionLabel} ({conditionName}) - Score: {result.Score}/100, Forecast: {forecastSymbol}, Δ: {result.ScoreDelta}");
-                }
             }
             
             if (enableDebugLogs)
@@ -2577,10 +2526,6 @@ public class DayCycleController : MonoBehaviour
                                     .With("potId", pot.PotId)
                                     .With("level", lvl.ToString()));
                         }
-                        else if (_toastManager != null)
-                        {
-                            _toastManager.ShowWarning($"⚠️ Muffa Lv{lvl} in {pot.PotId}", "MOLD-GAIN");
-                        }
                     }
                 }
                 // Toast: mold level reduced (with cause)
@@ -2603,10 +2548,6 @@ public class DayCycleController : MonoBehaviour
                             new NotificationPayload()
                                 .With("potId", pot.PotId)
                                 .With("cause", cause));
-                    }
-                    else if (_toastManager != null)
-                    {
-                        _toastManager.ShowInfo($"✅ Muffa ridotta su {pot.PotId} — {cause}", "MOLD-REDUCE");
                     }
                 }
 
@@ -2656,30 +2597,44 @@ public class DayCycleController : MonoBehaviour
                     (pot.MoldRiskLevel == 3 && pot.DaysAtMoldRiskLevel3 >= requiredDaysAtLevel3);
                 if (shouldInfest && !pot.IsInfested)
                 {
-                    // Prima infestazione: applica effetti e mostra toast
+                    // Prima infestazione: applica effetti e mostra toast Foundation
                     pot.IsInfested = true;
                     PlantLevelConfig levelConfig = Resources.Load<PlantLevelConfig>("Configs/PlantLevelConfig");
+                    int levelBefore = pot.PlantLevel;
                     MoldSystem.ApplyInfestation(pot, pot.MoldRiskLevel, moldConfig, levelConfig);
+                    int levelLost = levelBefore - pot.PlantLevel;
                     
-                    // Toast notifica infestazione
-                    if (_toastManager != null)
+                    var foundationInfest = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundationInfest != null && foundationInfest.Enabled)
                     {
-                        _toastManager.ShowWarning($"La pianta nel pot {pot.PotId} è ora Infestata", "MOLD-001");
+                        foundationInfest.PostToast("MLD-INFESTED",
+                            new NotificationPayload()
+                                .With("potId", pot.PotId)
+                                .With("levelLost", levelLost.ToString()));
+                        
+                        if (levelLost > 0)
+                        {
+                            foundationInfest.PostToast("PLT-LVL-DOWN",
+                                new NotificationPayload()
+                                    .With("potId", pot.PotId)
+                                    .With("plantCode", pot.PlantCode ?? "?")
+                                    .With("oldLevel", levelBefore.ToString())
+                                    .With("newLevel", pot.PlantLevel.ToString())
+                                    .With("reason", "Infestazione muffe"));
+                        }
                     }
-                    else if (_uiNotification != null)
-                    {
-                        _uiNotification.ShowNotification(
-                            $"La pianta nel pot {pot.PotId} è ora Infestata",
-                            4f,
-                            Color.red);
-                    }
-                    
-                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: Infestazione applicata dopo {pot.DaysAtMoldRiskLevel3} giorni a livello 3");
+                    SporiumLogger.LogWarning(LogCategory.Pot, $"{pot.PotId}: Infestazione applicata dopo {pot.DaysAtMoldRiskLevel3} giorni a livello 3 (livello perso: {levelLost})");
                 }
                 else if (!shouldInfest && pot.IsInfested)
                 {
                     // Infestazione rimossa (livello sceso sotto 3)
                     pot.IsInfested = false;
+                    var foundationInfestClear = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundationInfestClear != null && foundationInfestClear.Enabled)
+                    {
+                        foundationInfestClear.PostToast("MLD-INFESTED-CLEARED",
+                            new NotificationPayload().With("potId", pot.PotId));
+                    }
                     SporiumLogger.LogInfo(LogCategory.Pot, $"{pot.PotId}: Infestazione rimossa (livello sceso a {pot.MoldRiskLevel})");
                 }
                 
@@ -2690,13 +2645,34 @@ public class DayCycleController : MonoBehaviour
                 }
             }
 
+            // Calcolo sterilità: Pure in pH Ultra Basico → sterile
+            if (plantData != null && _phSystem != null)
+            {
+                PhSystem.PhBand phBandNow = _phSystem.EvaluateState();
+                bool shouldBeSterile = PhGrowthModifier.IsSterile(phBandNow, plantData.Family);
+                if (shouldBeSterile != pot.IsSterile)
+                {
+                    pot.IsSterile = shouldBeSterile;
+                    var foundationSterile = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundationSterile != null && foundationSterile.Enabled)
+                    {
+                        string sterileCode = shouldBeSterile ? "STERILE-001" : "STERILE-CLEARED";
+                        foundationSterile.PostToast(sterileCode,
+                            new NotificationPayload()
+                                .With("potId", pot.PotId)
+                                .With("plantCode", pot.PlantCode ?? plantData.PlantCode ?? "?"));
+                    }
+                }
+            }
+
             // BUGFIX (POT-CONDITION-UI): se parametri/condizione cambiano a fine giornata, notifica le UI
             // anche quando il player non ha compiuto azioni (Water/LED/Spray...).
             bool anyChanged =
                 preConditionLabel != pot.ConditionLabel ||
                 preConditionScore != pot.ConditionScore ||
                 preMoldRisk != pot.MoldRiskLevel ||
-                preInfested != pot.IsInfested;
+                preInfested != pot.IsInfested ||
+                preSterile != pot.IsSterile;
 
             if (anyChanged)
             {
@@ -2725,30 +2701,18 @@ public class DayCycleController : MonoBehaviour
         // Spegni sistemi persistenti per evitare consumi/side-effect post-morte.
         pot.WateringSystemOn = false;
         pot.LedSystemState = LedSystemState.Off;
+        pot.IsSterile = false;
         
         // Notifica evento morte pianta
         string reason = $"pH estremo opposto ({phBand}) per famiglia {plantData.Family}";
         PotEvents.EmitPlantDied(pot.PotId, reason);
         
-        // Mostra Toast notifica morte
+        // Toast Foundation — unico canale per la morte da pH
         var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
         if (foundation != null && foundation.Enabled)
         {
             foundation.PostToast("PH-DEATH-001",
                 new NotificationPayload().With("plant", plantData.PlantCode ?? "Plant"));
-        }
-        else if (_toastManager != null)
-        {
-            _toastManager.ShowToast(ToastNotificationType.ExtremePhDeath, 
-                $"🚨 Pianta {plantData.PlantCode} morta per pH estremo!", 
-                "PH-DEATH-001");
-        }
-        else if (_uiNotification != null)
-        {
-            _uiNotification.ShowNotification(
-                $"🚨 Pianta {plantData.PlantCode} morta per pH estremo!",
-                4f,
-                new Color(1f, 0.2f, 0.2f)); // Rosso per morte
         }
         
         // Cerca PotSlot per aggiornare visuali
@@ -2774,7 +2738,6 @@ public class DayCycleController : MonoBehaviour
         // Mostra notifica solo quando countdown cambia (evita spam)
         if (countdown > 0)
         {
-            string message = $"⚠️ La pianta {plantData.PlantCode} tra {countdown} giorni morirà a causa del pH estremo!";
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
             {
@@ -2786,17 +2749,6 @@ public class DayCycleController : MonoBehaviour
                         .With("potId", pot.PotId)
                         .With("plant", plantData.PlantCode ?? "Plant")
                         .With("days", countdown.ToString()));
-            }
-            else if (_toastManager != null)
-            {
-                _toastManager.ShowToast(ToastNotificationType.CountdownAlert, message, "PH-COUNTDOWN-001");
-            }
-            else if (_uiNotification != null)
-            {
-                _uiNotification.ShowNotification(
-                    message,
-                    4f,
-                    new Color(1f, 0.5f, 0f)); // Arancione per allerta
             }
         }
     }

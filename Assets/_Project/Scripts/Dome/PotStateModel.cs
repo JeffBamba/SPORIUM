@@ -155,6 +155,9 @@ public class PotStateModel
     [Tooltip("Flag per indicare se la pianta è infestata (true dopo 2 giorni a livello 3)")]
     public bool IsInfested = false;
     
+    [Tooltip("Flag per indicare se la pianta Pure è sterile (pH Ultra Basico)")]
+    public bool IsSterile = false;
+    
     [Header("pH Extreme Death System")]
     [Tooltip("Giorni consecutivi in pH estremo opposto alla famiglia pianta (≥+80 per Evil, ≤-80 per Pure)")]
     public int DaysInExtremePh = 0;
@@ -219,6 +222,7 @@ public class PotStateModel
         DayOptimalParametersStarted = -1;
         DaysAtMoldRiskLevel3 = 0;
         IsInfested = false;
+        IsSterile = false;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
         DaysBurnStressConsecutive = 0;
@@ -280,6 +284,8 @@ public class PotStateModel
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
         DaysBurnStressConsecutive = 0;
+        IsInfested = false;
+        IsSterile = false;
         ClearSeedRuntimePayload();
     }
     
@@ -379,6 +385,8 @@ public class PotStateModel
         DaysOverwateringConsecutive = 0;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
+        IsInfested = false;
+        IsSterile = false;
     }
     
     /// <summary>
@@ -449,6 +457,8 @@ public class PotStateModel
         DaysOverwateringConsecutive = 0;
         DaysInExtremePh = 0;
         ExtremePhDeathCountdown = -1;
+        IsInfested = false;
+        IsSterile = false;
     }
 
     public void ApplySeedMetadata(Item seedItem, PlantData plantData = null)

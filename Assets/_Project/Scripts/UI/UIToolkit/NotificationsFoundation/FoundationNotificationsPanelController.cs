@@ -49,8 +49,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             if (_uiDocument != null)
             {
-                // Mettiamo il pannello leggermente sopra la HUD base (TopBar usa 50)
-                _uiDocument.sortingOrder = 60;
+                // Foundation toasts devono essere visibili sopra qualsiasi overlay di gioco (EOD = 2000, FoodRoom = 1000, PlantCard = 600)
+                _uiDocument.sortingOrder = 2100;
             }
         }
 

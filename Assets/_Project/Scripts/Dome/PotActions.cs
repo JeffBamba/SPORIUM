@@ -1494,9 +1494,19 @@ public class PotActions : MonoBehaviour
             if (levelConfig != null)
             {
                 bool levelUp = PlantLevelSystem.CheckLevelUp(_potState, levelConfig);
-                if (levelUp && showDebugLogs)
+                if (levelUp)
                 {
-                    SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel} (cicli completati: {_potState.CompletedCycles})!");
+                    var foundationLvlUp = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                    if (foundationLvlUp != null && foundationLvlUp.Enabled)
+                    {
+                        foundationLvlUp.PostToast("PLT-LVL-UP",
+                            new NotificationPayload()
+                                .With("potId", potSlot.PotId)
+                                .With("plantCode", _potState.PlantCode ?? "?")
+                                .With("level", _potState.PlantLevel.ToString()));
+                    }
+                    if (showDebugLogs)
+                        SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Livello aumentato a Lvl {_potState.PlantLevel} (cicli completati: {_potState.CompletedCycles})!");
                 }
                 if (showDebugLogs)
                     SporiumLogger.LogInfo(LogCategory.Pot, $"[ACT-015][{potSlot.PotId}] Ciclo completo! Cicli completati: {_potState.CompletedCycles}");
