@@ -41,8 +41,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BorderSoftness: 1
-    - _BorderThickness: 4
+    - _BorderSoftness: 0.5
+    - _BorderThickness: 1.5
     - _CornerRadius: 0
     - _EdgeMode: 0
     - _EnableExternalAlpha: 0

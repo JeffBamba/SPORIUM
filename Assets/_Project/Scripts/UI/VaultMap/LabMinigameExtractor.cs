@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
@@ -205,7 +206,10 @@ namespace _Project
                 var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 if (foundation != null && foundation.Enabled)
                 {
-                    foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", 1, RoomNames.Laboratory);
+                    if (spore != null)
+                        foundation.PostAddedToInventory(CollectionPayloadFactory.FromItem(spore, 1, RoomNames.Laboratory));
+                    else
+                        foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", 1, RoomNames.Laboratory);
                 }
                 else
                 {

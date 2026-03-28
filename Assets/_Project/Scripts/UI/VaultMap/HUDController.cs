@@ -42,23 +42,18 @@ public class HUDController : MonoBehaviour
     private bool ValidateUIReferences()
     {
         bool isValid = true;
-        
-        if (dayText == null)
-        {
-            SporiumLogger.LogError(LogCategory.UI, "dayText non assegnato!");
-            isValid = false;
-        }
-        
+
+        // dayText e cryText sono ora opzionali: gestiti da CompactBottomBar.
+        if (dayText != null)
+            SporiumLogger.LogDebug(LogCategory.UI, "HUDController: dayText assegnato (UGUI legacy, non richiesto).");
+
+        if (cryText != null)
+            SporiumLogger.LogDebug(LogCategory.UI, "HUDController: cryText assegnato (UGUI legacy, non richiesto).");
+
         if (actionsText == null)
         {
-            SporiumLogger.LogError(LogCategory.UI, "actionsText non assegnato!");
-            isValid = false;
-        }
-        
-        if (cryText == null)
-        {
-            SporiumLogger.LogError(LogCategory.UI, "cryText non assegnato!");
-            isValid = false;
+            SporiumLogger.LogWarning(LogCategory.UI, "actionsText non assegnato!");
+            // Non fatale: le azioni sono già gestite dalla TopBar UIToolkit
         }
         
         return isValid;

@@ -66,6 +66,12 @@ namespace _Project
             else 
                 Show();
         }
+
+        /// <summary>Stesso effetto del tasto ESC: mostra/nasconde il pannello menu in-game (Pages).</summary>
+        public void ToggleMenuPage()
+        {
+            Toggle();
+        }
         
         private void Update()
         {

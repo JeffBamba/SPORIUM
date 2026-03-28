@@ -1,112 +1,88 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <Style src="DomeStatusHUD.uss" />
-    <ui:VisualElement name="dome-hud-root" class="dome-hud-root dome-hud-collapsed">
-
-        <!-- Body: expands to the left of the toggle button -->
-        <ui:VisualElement name="dome-hud-body" class="dome-hud-body">
-
-            <!-- Tab bar -->
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/DomeStatusHUD/DomeStatusHUD.uss?fileID=7433441132597879392&amp;guid=0138b40a681e8a648b916d977f160dc9&amp;type=3#DomeStatusHUD" />
+    <ui:VisualElement name="dome-hud-root" class="dome-hud-root dome-hud-collapsed" style="bottom: 53px; right: 4px; display: none;">
+        <ui:VisualElement name="dome-hud-body" class="dome-hud-body" style="display: flex;">
             <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs">
-                <ui:Button name="btn-tab-pots" class="dome-tab-btn dome-tab-active" text="POTS [0/4]" />
-                <ui:Button name="btn-tab-cryo" class="dome-tab-btn" text="CRYO [0/3]" />
+                <ui:Button name="btn-tab-pots" text="POTS [0/4]" class="dome-tab-btn dome-tab-active" />
+                <ui:Button name="btn-tab-cryo" text="CRYO [0/3]" class="dome-tab-btn" />
             </ui:VisualElement>
-
-            <!-- Active Pots Section -->
             <ui:VisualElement name="dome-hud-section-pots" class="dome-hud-section">
-
                 <ui:VisualElement name="dome-pot-row-0" class="dome-pot-row">
                     <ui:VisualElement name="dome-pot-preview-0" class="dome-pot-preview" />
                     <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-0" class="dome-pot-name" text="—" />
-                        <ui:Label name="dome-pot-sub-0" class="dome-pot-sub" text="" />
-                        <ui:Label name="dome-pot-cond-0" class="dome-pot-cond" text="" />
+                        <ui:Label name="dome-pot-name-0" text="—" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-0" class="dome-pot-sub" />
+                        <ui:Label name="dome-pot-cond-0" class="dome-pot-cond" />
                     </ui:VisualElement>
                     <ui:VisualElement name="dome-pot-indicators-0" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-0" class="dome-pot-indicator" text="○" />
-                        <ui:Label name="dome-pot-led-0" class="dome-pot-indicator" text="○" />
+                        <ui:Label name="dome-pot-water-0" text="○" class="dome-pot-indicator" />
+                        <ui:Label name="dome-pot-led-0" text="○" class="dome-pot-indicator" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
                 <ui:VisualElement name="dome-pot-row-1" class="dome-pot-row">
                     <ui:VisualElement name="dome-pot-preview-1" class="dome-pot-preview" />
                     <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-1" class="dome-pot-name" text="—" />
-                        <ui:Label name="dome-pot-sub-1" class="dome-pot-sub" text="" />
-                        <ui:Label name="dome-pot-cond-1" class="dome-pot-cond" text="" />
+                        <ui:Label name="dome-pot-name-1" text="—" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-1" class="dome-pot-sub" />
+                        <ui:Label name="dome-pot-cond-1" class="dome-pot-cond" />
                     </ui:VisualElement>
                     <ui:VisualElement name="dome-pot-indicators-1" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-1" class="dome-pot-indicator" text="○" />
-                        <ui:Label name="dome-pot-led-1" class="dome-pot-indicator" text="○" />
+                        <ui:Label name="dome-pot-water-1" text="○" class="dome-pot-indicator" />
+                        <ui:Label name="dome-pot-led-1" text="○" class="dome-pot-indicator" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
                 <ui:VisualElement name="dome-pot-row-2" class="dome-pot-row">
                     <ui:VisualElement name="dome-pot-preview-2" class="dome-pot-preview" />
                     <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-2" class="dome-pot-name" text="—" />
-                        <ui:Label name="dome-pot-sub-2" class="dome-pot-sub" text="" />
-                        <ui:Label name="dome-pot-cond-2" class="dome-pot-cond" text="" />
+                        <ui:Label name="dome-pot-name-2" text="—" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-2" class="dome-pot-sub" />
+                        <ui:Label name="dome-pot-cond-2" class="dome-pot-cond" />
                     </ui:VisualElement>
                     <ui:VisualElement name="dome-pot-indicators-2" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-2" class="dome-pot-indicator" text="○" />
-                        <ui:Label name="dome-pot-led-2" class="dome-pot-indicator" text="○" />
+                        <ui:Label name="dome-pot-water-2" text="○" class="dome-pot-indicator" />
+                        <ui:Label name="dome-pot-led-2" text="○" class="dome-pot-indicator" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
                 <ui:VisualElement name="dome-pot-row-3" class="dome-pot-row">
                     <ui:VisualElement name="dome-pot-preview-3" class="dome-pot-preview" />
                     <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-3" class="dome-pot-name" text="—" />
-                        <ui:Label name="dome-pot-sub-3" class="dome-pot-sub" text="" />
-                        <ui:Label name="dome-pot-cond-3" class="dome-pot-cond" text="" />
+                        <ui:Label name="dome-pot-name-3" text="—" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-3" class="dome-pot-sub" />
+                        <ui:Label name="dome-pot-cond-3" class="dome-pot-cond" />
                     </ui:VisualElement>
                     <ui:VisualElement name="dome-pot-indicators-3" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-3" class="dome-pot-indicator" text="○" />
-                        <ui:Label name="dome-pot-led-3" class="dome-pot-indicator" text="○" />
+                        <ui:Label name="dome-pot-water-3" text="○" class="dome-pot-indicator" />
+                        <ui:Label name="dome-pot-led-3" text="○" class="dome-pot-indicator" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
             </ui:VisualElement>
-
-            <!-- Cryo Section (hidden until tab switched) -->
             <ui:VisualElement name="dome-hud-section-cryo" class="dome-hud-section" style="display: none;">
-
                 <ui:VisualElement name="dome-cryo-row-0" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-0" class="dome-cryo-id" text="CRYO-01" />
+                    <ui:Label name="dome-cryo-id-0" text="CRYO-01" class="dome-cryo-id" />
                     <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-0" class="dome-cryo-plant" text="—" />
-                        <ui:Label name="dome-cryo-detail-0" class="dome-cryo-detail" text="" />
+                        <ui:Label name="dome-cryo-plant-0" text="—" class="dome-cryo-plant" />
+                        <ui:Label name="dome-cryo-detail-0" class="dome-cryo-detail" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
                 <ui:VisualElement name="dome-cryo-row-1" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-1" class="dome-cryo-id" text="CRYO-02" />
+                    <ui:Label name="dome-cryo-id-1" text="CRYO-02" class="dome-cryo-id" />
                     <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-1" class="dome-cryo-plant" text="—" />
-                        <ui:Label name="dome-cryo-detail-1" class="dome-cryo-detail" text="" />
+                        <ui:Label name="dome-cryo-plant-1" text="—" class="dome-cryo-plant" />
+                        <ui:Label name="dome-cryo-detail-1" class="dome-cryo-detail" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
                 <ui:VisualElement name="dome-cryo-row-2" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-2" class="dome-cryo-id" text="CRYO-03" />
+                    <ui:Label name="dome-cryo-id-2" text="CRYO-03" class="dome-cryo-id" />
                     <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-2" class="dome-cryo-plant" text="—" />
-                        <ui:Label name="dome-cryo-detail-2" class="dome-cryo-detail" text="" />
+                        <ui:Label name="dome-cryo-plant-2" text="—" class="dome-cryo-plant" />
+                        <ui:Label name="dome-cryo-detail-2" class="dome-cryo-detail" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-
             </ui:VisualElement>
-
         </ui:VisualElement>
-
-        <!-- Toggle button: always visible, anchored to right edge -->
-        <ui:Button name="dome-hud-toggle-btn" class="dome-hud-toggle-btn" text="«" />
-
-        <!-- Shared floating tooltip (absolute, shown on row hover) -->
-        <!-- Lines are created dynamically by DomeStatusHUDController with per-line colors -->
+        <ui:Button name="dome-hud-toggle-btn" text="«" class="dome-hud-toggle-btn" />
         <ui:VisualElement name="dome-hud-tooltip" class="dome-hud-tooltip" style="display: none;">
             <ui:VisualElement name="dome-hud-tooltip-lines" class="dome-hud-tooltip-lines" />
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

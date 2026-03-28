@@ -45,6 +45,25 @@
     align-items: center;
 }
 
+.stat-header-left {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.hydration-box-icon {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    margin-right: 6px;
+    border-width: 1px;
+    border-color: rgba(149, 184, 226, 0.85);
+    background-color: rgba(149, 184, 226, 0.12);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .stat-label {
     font-size: 10px;
     color: rgb(192, 200, 197);

@@ -2296,9 +2296,11 @@
   [Component] PolygonCollider2D
 - CryoMachine
   [Component] Transform
+  [Component] SpriteRenderer
   [Component] CryoMachineController
   [Component] Interactable
   [Component] CryoMachineOpener
+  [Component] BoxCollider
   - CryoSlot_01
     [Component] Transform
     [Component] CryoSlot
@@ -2845,9 +2847,6 @@
     [Component] Transform
     [Component] CinemachinePipeline
     [Component] CinemachineFramingTransposer
-- AlwaysVisiblePotHUD
-  [Component] Transform
-  [Component] AlwaysVisiblePotHUD
 - AUTO SCRIPTS RUNTIME
   [Component] Transform
   [Component] PhSystemAutoSetup
@@ -2867,6 +2866,10 @@
 - ToastNotificationDebugConsole
   [Component] Transform
   [Component] ToastNotificationDebugConsole
+- DomeStatusHUD
+  [Component] Transform
+  [Component] UIDocument
+  [Component] DomeStatusHUDController
 - Notifications Foundation
   [Component] Transform
   [Component] UIDocument

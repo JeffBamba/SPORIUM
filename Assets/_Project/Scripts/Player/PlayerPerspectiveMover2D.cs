@@ -392,12 +392,16 @@ namespace _Project.Player
             _hasTarget = true;
         }
 
+        /// <summary>Fired whenever the player enters a new PerspectiveWalkArea2D. Used by RoomTracker.</summary>
+        public event Action<PerspectiveWalkArea2D> OnAreaChanged;
+
         public void SetCurrentArea(PerspectiveWalkArea2D area)
         {
             if (area == null)
                 return;
 
             currentWalkArea = area;
+            OnAreaChanged?.Invoke(area);
             TryInitUVFromCurrentPosition();
         }
 

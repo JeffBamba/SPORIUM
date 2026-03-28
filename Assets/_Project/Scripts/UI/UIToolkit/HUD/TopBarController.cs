@@ -65,7 +65,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _condensationValueLabel;
         private VisualElement _condensationDisplay; // FASE 10: Per tooltip futuro
         private Label _mutationValueLabel;
-        private Label _cryValueLabel;
+        // _cryValueLabel rimosso: CRY ora in CompactBottomBar
         private Label _grateValueLabel;
 
         private VisualElement _glowFrame;
@@ -94,6 +94,9 @@ namespace Sporae.UI.UIToolkit.HUD
         // FASE 8: Tooltip Condensation
         private VisualElement _condensationTooltip;
         private Label _condensationTooltipText;
+        private Label _condensationTooltipLevel;
+        private Label _condensationTooltipTip;
+        private VisualElement _condensationTooltipTipSection;
         private Button _condensationCollectButton;
         
         // pH Gradient Texture (creata runtime)
@@ -194,11 +197,8 @@ namespace Sporae.UI.UIToolkit.HUD
                     _economySystem = _gameManager.EconomySystem;
                     
                     // Sottoscrivi agli eventi
-                    _economySystem.OnCRYChanged += OnCRYChanged;
-                    
-                    // Aggiorna valore iniziale
-                    _cryBalance = _economySystem.CurrentCRY;
-                    UpdateCryBalance(_cryBalance);
+                    // OnCRYChanged rimosso da TopBar: CRY ora gestito da CompactBottomBar
+                    _cryBalance = _economySystem.CurrentCRY; // mantiene _cryBalance aggiornato per debug
                     
                     if (_enableDebugLogs)
                     {
@@ -810,7 +810,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _condensationValueLabel = _root.Q<Label>("condensation-value");
             _condensationDisplay = _root.Q<VisualElement>("condensation-display"); // FASE 10: Query per tooltip futuro
             _mutationValueLabel = _root.Q<Label>("mutation-value");
-            _cryValueLabel = _root.Q<Label>("cry-value");
+            // cry-value rimosso da TopBar — ora in CompactBottomBar
             _grateValueLabel = _root.Q<Label>("grate-value");
             
             // Setup tooltip per pH
@@ -1475,16 +1475,11 @@ namespace Sporae.UI.UIToolkit.HUD
         }
         
         /// <summary>
-        /// Aggiorna il CRY BALANCE con formattazione numerica.
+        /// Aggiorna il valore CRY interno (nessuna UI: il saldo è in CompactBottomBar).
         /// </summary>
         public void UpdateCryBalance(int value)
         {
             _cryBalance = value;
-            
-            if (_cryValueLabel != null)
-            {
-                _cryValueLabel.text = value.ToString("N0"); // Formato con virgole
-            }
         }
         
         /// <summary>
@@ -1514,10 +1509,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 _actionSystem.OnActionsChanged -= OnActionsChanged;
             }
             
-            if (_economySystem != null)
-            {
-                _economySystem.OnCRYChanged -= OnCRYChanged;
-            }
+            // OnCRYChanged unsub rimosso: subscription non più registrata in TopBar
             
             // FASE 10: Unsubscribe da CondensationSystem
             if (_gameManager != null)
@@ -1556,12 +1548,9 @@ namespace Sporae.UI.UIToolkit.HUD
                 _condensationDisplay.UnregisterCallback<MouseMoveEvent>(OnCondensationHoverMove);
             }
             
-            // FASE 8: Unregister tooltip hover events
-            if (_condensationTooltip != null)
-            {
-                _condensationTooltip.UnregisterCallback<MouseEnterEvent>(OnCondensationTooltipHoverEnter);
-                _condensationTooltip.UnregisterCallback<MouseLeaveEvent>(OnCondensationTooltipHoverExit);
-            }
+            // FASE 8: Unregister collect shortcut (doppio clic sulla metrica, stesso modello tooltip ph: niente hover sul tooltip)
+            if (_condensationDisplay != null)
+                _condensationDisplay.UnregisterCallback<ClickEvent>(OnCondensationDisplayDoubleClickCollect);
             
             // FASE 8: Unregister collect button
             if (_condensationCollectButton != null)
@@ -1597,10 +1586,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 _actionSystem.OnActionsChanged += OnActionsChanged;
             }
             
-            if (_economySystem != null)
-            {
-                _economySystem.OnCRYChanged += OnCRYChanged;
-            }
+            // OnCRYChanged re-sub rimosso: CRY ora in CompactBottomBar
             
             // FASE 10: Re-subscribe a CondensationSystem
             if (_gameManager != null)
@@ -1639,6 +1625,44 @@ namespace Sporae.UI.UIToolkit.HUD
             return 1.5f; // 80-100%
         }
         
+        /// <summary>Pixel font sizes per tooltip condensazione — in sync con TopBar.uss (.condensation-tooltip-root).</summary>
+        private static class CondensationTooltipFontPx
+        {
+            public const float Title = 13f;
+            public const float Caption = 12f;
+            public const float Level = 12f;
+            public const float Body = 10f;
+            public const float Tip = 10f;
+            public const float Button = 11f;
+        }
+
+        /// <summary>Riapplica tipografia dopo USS e dopo assegnazione rich text (il testo ricco può ignorare la font-size del Label).</summary>
+        private void ReapplyCondensationTooltipTypography()
+        {
+            if (_condensationTooltip == null)
+                return;
+
+            void SetFont(Label label, float px, FontStyle weight)
+            {
+                if (label == null) return;
+                label.style.fontSize = px;
+                label.style.unityFontStyleAndWeight = weight;
+            }
+
+            SetFont(_condensationTooltip.Q<Label>("condensation-tooltip-title"), CondensationTooltipFontPx.Title, FontStyle.Bold);
+            SetFont(_condensationTooltip.Q<Label>("condensation-tooltip-level-caption"), CondensationTooltipFontPx.Caption, FontStyle.Normal);
+            SetFont(_condensationTooltipLevel, CondensationTooltipFontPx.Level, FontStyle.Bold);
+            SetFont(_condensationTooltipText, CondensationTooltipFontPx.Body, FontStyle.Normal);
+            SetFont(_condensationTooltip.Q<Label>("condensation-tooltip-tip-caption"), CondensationTooltipFontPx.Caption, FontStyle.Bold);
+            SetFont(_condensationTooltipTip, CondensationTooltipFontPx.Tip, FontStyle.Normal);
+
+            if (_condensationCollectButton != null)
+            {
+                _condensationCollectButton.style.fontSize = CondensationTooltipFontPx.Button;
+                _condensationCollectButton.style.unityFontStyleAndWeight = FontStyle.Bold;
+            }
+        }
+
         /// <summary>
         /// FASE 8: Setup tooltip per condensazione (simile a SetupPhTooltip).
         /// </summary>
@@ -1649,9 +1673,10 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _condensationTooltip = _root.Q<VisualElement>("condensation-tooltip");
             _condensationTooltipText = _condensationTooltip?.Q<Label>("condensation-tooltip-text");
+            _condensationTooltipLevel = _condensationTooltip?.Q<Label>("condensation-tooltip-level");
+            _condensationTooltipTip = _condensationTooltip?.Q<Label>("condensation-tooltip-tip");
+            _condensationTooltipTipSection = _condensationTooltip?.Q<VisualElement>("condensation-tooltip-section-tip");
             _condensationCollectButton = _condensationTooltip?.Q<Button>("condensation-collect-button");
-            if (_condensationTooltip != null)
-                _condensationTooltip.pickingMode = PickingMode.Position;
 
             if (_condensationTooltip == null)
                 return;
@@ -1669,11 +1694,17 @@ namespace Sporae.UI.UIToolkit.HUD
                 });
             }
 
+            // Stesso modello del ph-tooltip: il tooltip non intercetta il puntatore; chiusura all'uscita dalla metrica.
+            if (_condensationTooltip != null)
+                _condensationTooltip.pickingMode = PickingMode.Ignore;
+
             _condensationDisplay.RegisterCallback<MouseEnterEvent>(OnCondensationHoverEnter);
             _condensationDisplay.RegisterCallback<MouseLeaveEvent>(OnCondensationHoverExit);
             _condensationDisplay.RegisterCallback<MouseMoveEvent>(OnCondensationHoverMove);
-            _condensationTooltip.RegisterCallback<MouseEnterEvent>(OnCondensationTooltipHoverEnter);
-            _condensationTooltip.RegisterCallback<MouseLeaveEvent>(OnCondensationTooltipHoverExit);
+            // Raccolta: con tooltip come ph non si può passare dal display al pulsante nel tooltip; doppio clic sulla metrica equivale a "Raccogli".
+            _condensationDisplay.RegisterCallback<ClickEvent>(OnCondensationDisplayDoubleClickCollect);
+
+            ReapplyCondensationTooltipTypography();
         }
         
         /// <summary>
@@ -1681,47 +1712,57 @@ namespace Sporae.UI.UIToolkit.HUD
         /// </summary>
         private void OnCondensationHoverEnter(MouseEnterEvent evt)
         {
-            if (_gameManager != null && _condensationTooltip != null)
+            if (_gameManager != null && _gameManager.CondensationSystem != null && _condensationTooltip != null)
             {
                 UpdateCondensationTooltipContent();
                 _condensationTooltip.style.display = DisplayStyle.Flex;
                 _condensationTooltip.BringToFront();
+                UpdateCondensationTooltipPosition();
             }
         }
-        
-        /// <summary>
-        /// FASE 8: Handler hover exit per condensazione display.
-        /// Non chiude il tooltip se il mouse è ancora sopra il tooltip stesso.
-        /// </summary>
+
+        /// <summary>FASE 8: Come OnPhHoverExit — chiude appena il puntatore esce dalla metrica condensazione.</summary>
         private void OnCondensationHoverExit(MouseLeaveEvent evt)
         {
-            // Non chiudere immediatamente - il tooltip gestirà la chiusura quando il mouse esce anche da lì
-            // Questo permette di spostare il mouse dal display al tooltip senza chiuderlo
-        }
-        
-        /// <summary>
-        /// FASE 8: Handler hover enter per tooltip condensazione.
-        /// Mantiene il tooltip aperto quando il mouse entra nel tooltip.
-        /// </summary>
-        private void OnCondensationTooltipHoverEnter(MouseEnterEvent evt)
-        {
             if (_condensationTooltip != null)
-            {
-                _condensationTooltip.style.display = DisplayStyle.Flex;
-                _condensationTooltip.BringToFront();
-            }
-        }
-        
-        /// <summary>
-        /// FASE 8: Handler hover exit per tooltip condensazione.
-        /// Chiude il tooltip solo quando il mouse esce anche dal tooltip.
-        /// </summary>
-        private void OnCondensationTooltipHoverExit(MouseLeaveEvent evt)
-        {
-            if (_condensationTooltip != null)
-            {
                 _condensationTooltip.style.display = DisplayStyle.None;
-            }
+        }
+
+        /// <summary>FASE 8: Doppio clic sulla metrica condensazione per raccogliere (stesso tooltip non interattivo come ph-tooltip).</summary>
+        private void OnCondensationDisplayDoubleClickCollect(ClickEvent evt)
+        {
+            if (evt.clickCount != 2)
+                return;
+            if (_gameManager == null || _gameManager.CondensationSystem == null)
+                return;
+            if (_gameManager.CondensationSystem.CurrentAccumulation <= 0f)
+                return;
+            OnCondensationCollectClicked();
+        }
+
+        /// <summary>FASE 8: Posizionamento tooltip accanto a condensation-display (stessa logica numerica di OnPhHoverMove).</summary>
+        private void UpdateCondensationTooltipPosition()
+        {
+            if (_condensationTooltip == null || _condensationTooltip.style.display != DisplayStyle.Flex || _condensationDisplay == null)
+                return;
+
+            var displayBounds = _condensationDisplay.worldBound;
+            var rootBounds = _root.worldBound;
+
+            float tooltipX = displayBounds.xMax + 10f;
+            float tooltipY = displayBounds.yMax - 20f;
+
+            float tooltipWidth = 480f;
+            float tooltipHeight = _condensationTooltip.resolvedStyle.height;
+
+            if (tooltipX + tooltipWidth > rootBounds.width)
+                tooltipX = displayBounds.xMin - tooltipWidth - 10f;
+
+            if (tooltipY + tooltipHeight > rootBounds.height)
+                tooltipY = displayBounds.yMin - tooltipHeight - 10f;
+
+            _condensationTooltip.style.left = tooltipX;
+            _condensationTooltip.style.top = tooltipY;
         }
         
         /// <summary>
@@ -1729,30 +1770,7 @@ namespace Sporae.UI.UIToolkit.HUD
         /// </summary>
         private void OnCondensationHoverMove(MouseMoveEvent evt)
         {
-            if (_condensationTooltip != null && _condensationTooltip.style.display == DisplayStyle.Flex && _condensationDisplay != null)
-            {
-                var displayBounds = _condensationDisplay.worldBound;
-                var rootBounds = _root.worldBound;
-                
-                float tooltipX = displayBounds.xMax + 10f;
-                float tooltipY = displayBounds.yMax - 20f;
-                
-                float tooltipWidth = 320f;
-                float tooltipHeight = _condensationTooltip.resolvedStyle.height;
-                
-                if (tooltipX + tooltipWidth > rootBounds.width)
-                {
-                    tooltipX = displayBounds.xMin - tooltipWidth - 10f;
-                }
-                
-                if (tooltipY + tooltipHeight > rootBounds.height)
-                {
-                    tooltipY = displayBounds.yMin - tooltipHeight - 10f;
-                }
-                
-                _condensationTooltip.style.left = tooltipX;
-                _condensationTooltip.style.top = tooltipY;
-            }
+            UpdateCondensationTooltipPosition();
         }
         
         /// <summary>
@@ -1800,17 +1818,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 estimatedRewardMax = 40;
             }
             
+            if (_condensationTooltipLevel != null)
+                _condensationTooltipLevel.text = $"{Mathf.RoundToInt(currentPercentage)}%";
+
             var sb = new System.Text.StringBuilder();
-            
-            // Titolo
-            sb.AppendLine($"💧 <color=#5DB6E3><b>CONDENSAZIONE</b></color>");
-            sb.AppendLine();
-            
-            // Livello attuale
-            sb.AppendLine($"<b>LIVELLO ATTUALE</b> <color=#5DB6E3>{Mathf.RoundToInt(currentPercentage)}%</color>");
-            sb.AppendLine();
-            
-            // Definizione
+
+            // Definizione (titolo e livello sono nel layout UXML, come il ph-tooltip)
             sb.AppendLine($"La <color=#5DB6E3>condensazione</color> è acqua grezza (WAT-RAW) raccolta dalla traspirazione delle piante (0-100%).");
             sb.AppendLine();
             
@@ -1853,10 +1866,14 @@ namespace Sporae.UI.UIToolkit.HUD
                 sb.AppendLine();
             }
             
-            // Suggerimento
-            sb.AppendLine($"💡 <color=#00FF00>SUGGERIMENTO: L'intervallo ottimale è 70-85%. Monitora ogni giorno per evitare problemi.</color>");
-            
             _condensationTooltipText.text = sb.ToString();
+
+            const string tipRich =
+                "💡 <color=#7FFF7A>L'intervallo ottimale è 70-85%. Monitora ogni giorno per evitare problemi.</color>";
+            if (_condensationTooltipTip != null)
+                _condensationTooltipTip.text = tipRich;
+            if (_condensationTooltipTipSection != null)
+                _condensationTooltipTipSection.style.display = DisplayStyle.Flex;
             
             // FASE 8: Aggiorna stato button Collect (visibile solo se c'è condensazione disponibile)
             if (_condensationCollectButton != null)
@@ -1864,6 +1881,8 @@ namespace Sporae.UI.UIToolkit.HUD
                 _condensationCollectButton.style.display = currentPercentage > 0f ? DisplayStyle.Flex : DisplayStyle.None;
                 _condensationCollectButton.SetEnabled(currentPercentage > 0f);
             }
+
+            ReapplyCondensationTooltipTypography();
         }
         
         /// <summary>

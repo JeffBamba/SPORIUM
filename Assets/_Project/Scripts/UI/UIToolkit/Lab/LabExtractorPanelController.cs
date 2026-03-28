@@ -6,7 +6,6 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.DevTools;
-using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
 
 namespace Sporae.UI.UIToolkit.Lab
@@ -344,13 +343,9 @@ namespace Sporae.UI.UIToolkit.Lab
         private void OnRitiraClicked()
         {
             if (_gameManager?.PlayerInventory == null || _extractor == null) return;
-            int count = _extractor.CompletedCount();
             _extractor.CollectOutput(_gameManager.PlayerInventory);
             RefreshDisplay();
-
-            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-            if (foundation != null && foundation.Enabled)
-                foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", count, RoomNames.Laboratory);
+            // PostAddedToInventory emesso da Extractor.CollectOutput (quantità reali spore/cellule).
         }
     }
 }

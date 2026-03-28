@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/CollectionBox.uss?fileID=7433441132597879392&amp;guid=fab8b8b8bf47f5848b09c0de6e615a88&amp;type=3#CollectionBox" />
+    <!-- Template: istanziato a runtime da CollectionBoxStackController per ogni item raccolto -->
+    <ui:VisualElement name="collection-box" class="cbox-root">
+        <ui:VisualElement name="corner-top-left" class="pixel-corner cbox-corner corner-top-left" picking-mode="Ignore" />
+        <ui:VisualElement name="corner-top-right" class="pixel-corner cbox-corner corner-top-right" picking-mode="Ignore" />
+        <ui:VisualElement name="corner-bottom-left" class="pixel-corner cbox-corner corner-bottom-left" picking-mode="Ignore" />
+        <ui:VisualElement name="corner-bottom-right" class="pixel-corner cbox-corner corner-bottom-right" picking-mode="Ignore" />
+        <!-- Item icon -->
+        <ui:VisualElement name="cbox-icon" class="cbox-icon" />
+        <!-- Quantity badge bottom-right -->
+        <ui:Label name="cbox-qty" text="1" class="cbox-qty-badge" />
+    </ui:VisualElement>
+</ui:UXML>

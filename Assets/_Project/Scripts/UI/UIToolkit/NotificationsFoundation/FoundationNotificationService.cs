@@ -50,6 +50,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         // Events for UI/debug
         public event Action OnChanged;
 
+        /// <summary>
+        /// Fired ogni volta che PostAddedToInventory viene chiamato con successo.
+        /// Usato da CollectionBoxStackController per creare box persistenti.
+        /// </summary>
+        public event Action<NotificationPayload> OnItemAdded;
+
         public FoundationNotificationService()
         {
             _startupRealtime = Time.realtimeSinceStartup;
@@ -226,6 +232,23 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         }
 
         /// <summary>
+        /// Mostra subito un toast "Added To Inventory" con payload già popolato (metadati in <see cref="NotificationPayload.Args"/>).
+        /// Bypassa coda e rate limit.
+        /// </summary>
+        public void PostAddedToInventory(NotificationPayload payload)
+        {
+            if (!Enabled) return;
+            if (payload == null) return;
+            if (string.IsNullOrEmpty(payload.ItemTypeId)) return;
+            if (string.IsNullOrEmpty(payload.ItemName)) payload.ItemName = payload.ItemTypeId;
+            if (string.IsNullOrEmpty(payload.ItemLocation)) payload.ItemLocation = "—";
+            if (payload.ItemIcon == null)
+                payload.ItemIcon = NotificationItemIconResolver.GetIcon(payload.ItemTypeId);
+            PostToastImmediate("ADDED-TO-INVENTORY", payload, NotificationSeverity.Success);
+            OnItemAdded?.Invoke(payload);
+        }
+
+        /// <summary>
         /// Mostra subito un toast "Added To Inventory" con dati item reali (titolo, icona, quantità, nome, room).
         /// Bypassa coda e rate limit. Usare per ogni raccolta/harvest/collection.
         /// </summary>
@@ -243,7 +266,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 ItemQuantity = quantity,
                 ItemLocation = roomDisplayName
             };
-            PostToastImmediate("ADDED-TO-INVENTORY", payload, NotificationSeverity.Success);
+            PostAddedToInventory(payload);
         }
 
         /// <summary>

@@ -1,0 +1,639 @@
+.cbb-hud-root {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.compact-bottom-bar {
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(18, 26, 28, 0.95);
+    border-top-width: 2px;
+    border-top-color: rgba(127, 255, 122, 0.7);
+    flex-direction: row;
+    align-items: center;
+    overflow: visible;
+}
+
+.cbb-scan-line {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(30, 40, 42, 0.08);
+    opacity: 0.12;
+}
+
+.pixel-corner {
+    width: 4px;
+    height: 4px;
+    position: absolute;
+    background-color: rgb(127, 255, 122);
+}
+
+.corner-top-left {
+    top: 0;
+    left: 0;
+}
+
+.corner-top-right {
+    top: 0;
+    right: 0;
+}
+
+.corner-bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.corner-bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.cbb-glow-top {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(127, 255, 122, 0.5);
+}
+
+.cbb-zone {
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+}
+
+.cbb-zone-left {
+    flex-shrink: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.cbb-zone-center {
+    flex-grow: 1;
+    flex-shrink: 1;
+    justify-content: center;
+    min-width: 0;
+}
+
+/*
+ * Corridoio fisso per i Collection box: sempre riservato nella barra, indipendente da quanti box ci sono.
+ * Larghezza: 5 slot × (44px box + 4px margine) + 8px padding = 264px.
+ * flex-shrink:0 → non si restringe mai; zone-center assorbe il resto.
+ */
+.cbb-zone-collectors {
+    flex-shrink: 0;
+    flex-grow: 0;
+    width: 264px;
+    min-width: 264px;
+    max-width: 264px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-left-width: 1px;
+    border-left-color: rgba(127, 255, 122, 0.22);
+    border-right-width: 1px;
+    border-right-color: rgba(127, 255, 122, 0.15);
+    overflow: visible;
+}
+
+.cbb-zone-right {
+    flex-shrink: 0;
+    padding-left: 4px;
+    padding-right: 8px;
+    justify-content: flex-end;
+}
+
+.cbb-badge {
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    min-height: 28px;
+    border-width: 1px;
+    background-color: rgba(0, 0, 0, 0.45);
+    padding-left: 6px;
+    padding-right: 8px;
+    margin-right: 8px;
+}
+
+.cbb-day-badge {
+    border-color: rgba(127, 255, 122, 0.55);
+}
+
+.cbb-day-icon {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    margin-right: 6px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.65);
+    background-color: rgba(127, 255, 122, 0.12);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.cbb-day-label {
+    font-size: 11px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-left;
+    text-shadow: 0 0 5px rgba(127, 255, 122, 0.35);
+}
+
+.cbb-cry-badge {
+    border-color: rgba(93, 182, 227, 0.55);
+    cursor: link;
+}
+
+.cbb-cry-badge:hover {
+    border-color: rgba(93, 182, 227, 0.85);
+    background-color: rgba(93, 182, 227, 0.12);
+}
+
+.cbb-cry-badge:active {
+    border-color: rgb(93, 182, 227);
+    background-color: rgba(93, 182, 227, 0.2);
+}
+
+.cbb-cry-badge:hover .cbb-cry-icon {
+    background-color: rgba(93, 182, 227, 0.22);
+    border-color: rgba(93, 182, 227, 0.65);
+}
+
+.cbb-cry-icon {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    margin-right: 6px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.75);
+    background-color: rgba(93, 182, 227, 0.12);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.cbb-cry-label {
+    font-size: 11px;
+    color: rgb(93, 182, 227);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-left;
+    text-shadow: 0 0 5px rgba(93, 182, 227, 0.35);
+}
+
+.cbb-room-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    margin-left: 3px;
+    margin-right: 3px;
+    cursor: link;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(127, 255, 122, 0.35);
+}
+
+.cbb-room-icon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    align-self: center;
+    background-color: rgba(127, 255, 122, 0.25);
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.4);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.room-active {
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(17, 34, 26, 0.92);
+}
+
+.room-active .cbb-room-icon {
+    background-color: rgba(127, 255, 122, 0.2);
+    border-color: rgb(127, 255, 122);
+}
+
+.room-available {
+    border-color: rgba(127, 255, 122, 0.35);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.room-available:hover {
+    border-color: rgba(127, 255, 122, 0.65);
+    background-color: rgba(127, 255, 122, 0.08);
+}
+
+.room-locked {
+    border-color: rgba(211, 95, 95, 0.35);
+    background-color: rgba(0, 0, 0, 0.4);
+    opacity: 0.55;
+}
+
+.room-locked .cbb-room-icon {
+    background-color: rgba(211, 95, 95, 0.1);
+    border-color: rgba(211, 95, 95, 0.4);
+}
+
+.cbb-sys-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.35);
+    background-color: rgba(0, 0, 0, 0.4);
+    margin-left: 4px;
+    align-items: center;
+    justify-content: center;
+    cursor: link;
+}
+
+.cbb-sys-icon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    align-self: center;
+    background-color: rgba(127, 255, 122, 0.25);
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.45);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.cbb-sys-btn:hover {
+    border-color: rgba(127, 255, 122, 0.75);
+    background-color: rgba(127, 255, 122, 0.1);
+}
+
+.cbb-sys-btn-options:hover {
+    border-color: rgba(93, 182, 227, 0.85);
+    background-color: rgba(93, 182, 227, 0.12);
+}
+
+.cbb-sys-btn-options:active {
+    border-color: rgb(93, 182, 227);
+    background-color: rgba(93, 182, 227, 0.2);
+}
+
+.cbb-sys-btn-options:hover .cbb-sys-icon {
+    background-color: rgba(93, 182, 227, 0.18);
+    border-color: rgba(93, 182, 227, 0.55);
+}
+
+.cbb-sys-btn-save {
+    border-color: rgba(225, 199, 112, 0.4);
+}
+
+.cbb-sys-btn-save:hover {
+    border-color: rgba(225, 199, 112, 0.85);
+    background-color: rgba(225, 199, 112, 0.12);
+}
+
+.cbb-sys-btn-save:active {
+    border-color: rgb(225, 199, 112);
+    background-color: rgba(225, 199, 112, 0.2);
+}
+
+.cbb-sys-btn-save:hover .cbb-sys-icon {
+    background-color: rgba(225, 199, 112, 0.18);
+    border-color: rgba(225, 199, 112, 0.55);
+}
+
+.cbb-sys-btn-exit {
+    border-color: rgba(189, 88, 87, 0.4);
+}
+
+.cbb-sys-btn-exit:hover {
+    border-color: rgba(189, 88, 87, 0.9);
+    background-color: rgba(189, 88, 87, 0.12);
+}
+
+.cbb-sys-btn-exit:active {
+    border-color: rgb(189, 88, 87);
+    background-color: rgba(189, 88, 87, 0.2);
+}
+
+.cbb-sys-btn-exit .cbb-sys-icon {
+    background-color: rgba(189, 88, 87, 0.15);
+    border-color: rgba(189, 88, 87, 0.55);
+}
+
+.cbb-sys-btn-exit:hover .cbb-sys-icon {
+    background-color: rgba(189, 88, 87, 0.22);
+    border-color: rgba(189, 88, 87, 0.65);
+}
+
+/* Stack orizzontale: i box si aggiungono da sinistra verso destra; non si shrinkano mai */
+.cbb-collection-stack {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    height: 36px;
+    min-height: 36px;
+    flex-grow: 1;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.cbb-collection-detail-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(4, 8, 10, 0.62);
+}
+
+.cbb-tooltip {
+    position: absolute;
+    bottom: 46px;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 8px;
+    border-width: 2px;
+    background-color: rgba(0, 0, 0, 0.9);
+    background-image: url("project://database/Assets/_Project/Art/Crt_background_tooltip.png?fileID=2800000&guid=b58ac99e855e3734b9992a506121e302&type=3#Crt_background_tooltip");
+}
+
+.cbb-cry-tooltip {
+    position: relative;
+    width: 360px;
+    max-width: 92%;
+    left: 24px;
+    border-color: rgb(226, 175, 103);
+}
+
+.cbb-cry-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+.cbb-cry-title-icon {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    margin-right: 8px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.75);
+    background-color: rgba(93, 182, 227, 0.2);
+}
+
+.cbb-cry-title {
+    font-size: 12px;
+    color: rgb(91, 176, 217);
+    -unity-font-style: bold;
+    -unity-text-align: upper-left;
+}
+
+.cbb-cry-outline-balance {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-width: 1px;
+    border-color: rgb(91, 176, 217);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+}
+
+.cbb-cry-outline-cycle {
+    flex-direction: column;
+    border-width: 1px;
+    border-color: rgb(91, 176, 217);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+}
+
+.cbb-cry-outline-cycle > .cbb-cry-label {
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.cbb-cry-outline-cycle .cbb-cry-row:last-child {
+    margin-bottom: 0;
+}
+
+.cbb-cry-sep {
+    height: 1px;
+    background-color: rgba(199, 202, 199, 0.45);
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.cbb-cry-section-stack {
+    flex-direction: column;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.cbb-cry-label {
+    font-size: 10px;
+    color: rgb(199, 202, 199);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+    margin-top: 2px;
+}
+
+.cbb-cry-label-spaced {
+    margin-top: 8px;
+}
+
+.cbb-cry-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.cbb-cry-key {
+    font-size: 10px;
+    color: rgb(199, 202, 199);
+    flex-grow: 1;
+    margin-right: 8px;
+    -unity-font-style: normal;
+}
+
+.cbb-cry-value {
+    font-size: 12px;
+    color: rgb(204, 204, 204);
+    -unity-text-align: middle-right;
+    white-space: normal;
+}
+
+.cbb-cry-balance-num {
+    font-size: 12px;
+    color: rgb(204, 204, 204);
+    -unity-font-style: bold;
+}
+
+.cbb-cry-green {
+    color: rgb(127, 255, 122);
+}
+
+.cbb-cry-red {
+    color: rgb(211, 95, 95);
+}
+
+.cbb-cry-net {
+    color: rgb(204, 204, 204);
+}
+
+.cbb-cry-plh {
+    font-size: 10px;
+    color: rgb(136, 136, 136);
+}
+
+.cbb-cry-ph-section {
+    flex-direction: column;
+    margin-bottom: 4px;
+    margin-top: 4px;
+    border-width: 1px;
+    border-color: rgba(199, 202, 199, 0.45);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding: 4px;
+    background-color: rgb(30, 40, 42);
+}
+
+.cbb-cry-section-header {
+    font-size: 10px;
+    color: rgb(200, 203, 200);
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+    margin-left: 8px;
+}
+
+.cbb-cry-ph-section .cbb-cry-row {
+    margin-left: 8px;
+}
+
+.cbb-cry-ph-section-accent {
+    border-color: rgba(80, 200, 220, 0.5);
+    background-color: rgb(20, 35, 40);
+}
+
+.cbb-cry-section-header-accent {
+    font-size: 10px;
+    color: rgb(80, 200, 220);
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+    margin-left: 8px;
+}
+
+.cbb-cry-ph-section-accent .cbb-cry-row {
+    margin-left: 8px;
+}
+
+.cbb-cry-ph-section-tip {
+    flex-direction: column;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    border-width: 1px;
+    border-color: rgb(226, 175, 103);
+    padding: 4px;
+}
+
+.cbb-cry-tip-header {
+    font-size: 10px;
+    color: rgb(226, 175, 103);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.cbb-cry-tip-value {
+    font-size: 10px;
+    color: rgb(226, 175, 103);
+    white-space: normal;
+}
+
+.cbb-cry-crt-refresh {
+    width: 100%;
+    margin-top: 2px;
+    background-color: rgba(50, 79, 62, 0.08);
+}
+
+.cbb-cry-crt-refresh-2 {
+    background-color: rgba(26, 35, 37, 0.07);
+    min-height: 10px;
+}
+
+.cbb-cry-crt-refresh-3 {
+    background-color: rgba(58, 79, 83, 0.2);
+}
+
+.cbb-room-tooltip {
+    width: 240px;
+    max-width: 40%;
+    border-color: rgb(127, 255, 122);
+    background-color: rgba(17, 34, 23, 0.95);
+    background-image: none;
+}
+
+.cbb-room-tooltip .cbb-tooltip-title {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    -unity-text-align: upper-left;
+}
+
+.cbb-room-tooltip .cbb-tooltip-floor {
+    font-size: 11px;
+    color: rgba(127, 255, 122, 0.65);
+    -unity-font-style: normal;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.cbb-room-tooltip .cbb-tooltip-desc {
+    font-size: 10px;
+    color: rgba(200, 220, 200, 0.8);
+    white-space: normal;
+    margin-top: 4px;
+    -unity-text-align: upper-left;
+}
+
+.cbb-room-tooltip .cbb-tooltip-sep {
+    height: 1px;
+    background-color: rgba(127, 255, 122, 0.3);
+    margin-top: 4px;
+    margin-bottom: 4px;
+}

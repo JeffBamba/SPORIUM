@@ -1,6 +1,7 @@
 using System.Collections;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using UnityEngine;
@@ -198,11 +199,12 @@ namespace _Project
             int sporeOut = 0, cell001Out = 0, cell002Out = 0, cell003Out = 0;
             if (TryRemoveFirstFruit(out var fruit))
             {
-                inputDesc = "frutto"; sporeOut = 1; cell002Out = 1;
+                // Solo spore Raw dal frutto (niente bonus cellula su questo slot; evita mismatch UI vs attesa "extractor spore").
+                inputDesc = "frutto"; sporeOut = 1; cell002Out = 0;
                 _slotInputFruit[idx] = fruit;
                 _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
-                SetSlotPlannedOutputs(idx, 1, 0, 1, 0);
-                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 1, 0));
+                SetSlotPlannedOutputs(idx, 1, 0, 0, 0);
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
@@ -304,24 +306,49 @@ namespace _Project
             int totalC1 = PendingCell001;
             int totalC2 = PendingCell002;
             int totalC3 = PendingCell003;
+            var foundationCollect = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            bool foundationNotify = foundationCollect != null && foundationCollect.Enabled;
 
-            // Spore: crea item per-slot preservando metadata del frutto madre.
+            // Spore: crea item per-slot preservando metadata del frutto madre; una notifica Collection per slot con payload reale.
             for (int i = 0; i < 3; i++)
             {
                 if (_slotStates[i] != 2 || _slotSpore[i] <= 0) continue;
+                Item sampleForUi = null;
                 for (int n = 0; n < _slotSpore[i]; n++)
                 {
                     var spore = ItemFabric.CreateSporeRawFromFruit(_slotInputFruit[i]);
                     if (spore != null)
+                    {
                         playerInventory.Add(spore);
+                        if (sampleForUi == null) sampleForUi = spore;
+                    }
                     else
                         playerInventory.AddSporeRaw(1);
+                }
+
+                if (foundationNotify && _slotSpore[i] > 0)
+                {
+                    if (sampleForUi != null)
+                        foundationCollect.PostAddedToInventory(CollectionPayloadFactory.FromItem(sampleForUi, _slotSpore[i], RoomNames.Laboratory));
+                    else
+                        foundationCollect.PostAddedToInventory(Items.SporeGeneric, "Spora Raw", _slotSpore[i], RoomNames.Laboratory);
                 }
             }
 
             if (totalC1 > 0) playerInventory.Add(Items.StemCellVegetable, totalC1);
             if (totalC2 > 0) playerInventory.Add(Items.StemCellFungus, totalC2);
             if (totalC3 > 0) playerInventory.Add(Items.StemCellAnimal, totalC3);
+
+            if (foundationNotify)
+            {
+                if (totalC1 > 0)
+                    foundationCollect.PostAddedToInventory(Items.StemCellVegetable, "Cellula staminale (vegetale)", totalC1, RoomNames.Laboratory);
+                if (totalC2 > 0)
+                    foundationCollect.PostAddedToInventory(Items.StemCellFungus, "Cellula staminale (fungina)", totalC2, RoomNames.Laboratory);
+                if (totalC3 > 0)
+                    foundationCollect.PostAddedToInventory(Items.StemCellAnimal, "Cellula staminale (animale)", totalC3, RoomNames.Laboratory);
+            }
+
             for (int i = 0; i < 3; i++)
             {
                 if (_slotStates[i] == 2)
