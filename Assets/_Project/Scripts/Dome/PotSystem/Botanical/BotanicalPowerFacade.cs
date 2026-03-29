@@ -385,14 +385,14 @@ namespace Sporae.Dome.PotSystem.Botanical
 
             if (t4 || hasActiveCopy)
             {
-                lines.Add(new BotanicalHudTooltipLine("── Poteri (vaso attivo) ──", BotanicalHudTooltipPalette.TipGreen, true));
+                lines.Add(new BotanicalHudTooltipLine("── Poteri (vaso attivo) ──", BotanicalHudTooltipPalette.TipPhCyan, true));
                 if (hasActiveCopy)
                     lines.Add(new BotanicalHudTooltipLine($"  Attivo: {activeTxt}", BotanicalHudTooltipPalette.TipMuted));
                 else if (t4)
                     lines.Add(new BotanicalHudTooltipLine("  (nessun testo Attivo su PlantData)", BotanicalHudTooltipPalette.TipMuted));
             }
 
-            lines.Add(new BotanicalHudTooltipLine("── Subiti (adesso) ──", BotanicalHudTooltipPalette.TipGreen, true));
+            lines.Add(new BotanicalHudTooltipLine("── Subiti (adesso) ──", BotanicalHudTooltipPalette.TipPhCyan, true));
             bool sub = false;
             bool moldRelevant = state.MoldRiskLevel >= 1 || state.DaysOverwateringConsecutive > 0;
 
@@ -424,6 +424,8 @@ namespace Sporae.Dome.PotSystem.Botanical
     public static class BotanicalHudTooltipPalette
     {
         public static readonly UnityEngine.Color TipGreen = new Color(0.498f, 1f, 0.478f, 1f);
+        /// <summary>Ciano tooltip TopBar ph-drift / DomeStatusHUD.</summary>
+        public static readonly UnityEngine.Color TipPhCyan = new Color(80f / 255f, 200f / 255f, 220f / 255f, 1f);
         public static readonly UnityEngine.Color TipMuted = new Color(0.62f, 0.66f, 0.68f, 1f);
         public static readonly UnityEngine.Color TipYellow = new Color(0.902f, 0.788f, 0.435f, 1f);
         public static readonly UnityEngine.Color TipRed = new Color(0.827f, 0.373f, 0.373f, 1f);

@@ -1,0 +1,82 @@
+---
+description: HUD UI Toolkit Foundation — parità UI Builder vs runtime, campioni visibili e placeholder nominati
+alwaysApply: true
+---
+
+# UI HUD Foundation — parità UI Builder e runtime
+
+## Principio fondamentale (non negoziabile)
+
+**L'autore decide visivamente in UI Builder. Quello che vede in UI Builder è quello che si vede in game.**
+
+L'agente ha il compito di garantire questa parità in ogni modifica. Se una modifica in UI Builder non si riflette a runtime, è un bug dell'agente, non un limite accettabile.
+
+## Regola assoluta: NESSUN BINARIO PARALLELO
+
+**È VIETATO creare elementi "campione" separati dagli elementi runtime.**
+
+Non creare mai:
+- `*-sample`, `*-preview`, `*-authoring` come copie di elementi runtime
+- Sezioni `builder-reference` che contengono duplicati di card/pannelli già presenti come elementi runtime
+- Qualsiasi struttura dove l'autore edita elemento A ma il gioco mostra elemento B
+
+**L'unica architettura corretta:**
+- L'elemento runtime (es. `dome-pot-card-0`) È la superficie di editing in UI Builder
+- Ha contenuto placeholder realistico (nome pianta, valori, condizione) visibile in Builder
+- L'area espansa è `display: flex` in UXML (visibile in Builder) — il controller la collassa a runtime in `SetupUI`
+- Il controller sovrascrive testo/immagini/classi con dati reali a runtime, ma le classi USS restano identiche
+- Blocchi `*-builder-reference` sono ammessi SOLO per elementi generati al 100% da codice (tooltip, liste dinamiche) che non hanno rappresentazione UXML statica
+
+## Obiettivo
+
+- In **UI Builder** l'autore deve sempre poter **vedere e modificare** pannelli, tooltip, menu e layout HUD Foundation (USS/UXML/posizioni), **senza** dipendere dall'esecuzione del codice.
+- La **versione mostrata in UI Builder** deve corrispondere a ciò che il giocatore vede **a runtime** (stesse classi USS, stessa gerarchia, stessi vincoli di layout), salvo dati dinamici sostituiti dal codice.
+- Dove il runtime **popola** testo o righe (tooltip, liste, ecc.), in UXML devono esistere **placeholder con `name` o classi stabili** che riflettono la struttura reale.
+
+## Come funziona la propagazione (cosa l'agente DEVE sapere)
+
+In Unity UI Toolkit esistono **due tipi di modifica** in UI Builder, con comportamenti opposti:
+
+### ✅ Modifica a classe USS → propaga in game
+Quando si modifica una proprietà tramite il pannello **StyleSheet** (si seleziona la classe `.nome-classe` e si cambia lì) → va nel file `.uss` → si applica a **tutti** gli elementi con quella classe, campione E card runtime.
+
+### ❌ Modifica inline (`style="..."`) → NON propaga al runtime
+Quando si modifica una proprietà dal pannello **Local Styles / Attributes** dell'Inspector → Unity scrive `style="..."` come attributo sull'elemento UXML specifico → vale solo per quell'elemento del campione, le card runtime 0-3 non lo vedono mai.
+
+### ❌ Testo (`text="..."`) → NON propaga automaticamente
+Il testo è un attributo UXML, non CSS. Se l'autore cambia il testo di un'etichetta nel campione, l'agente deve **manualmente aggiornare lo stesso testo in tutte le card runtime corrispondenti**.
+
+## Regole operative (per l'agente)
+
+1. **Niente `display: none` di default sui contenitori da editare**
+   - In UXML, evitare di nascondere in modo permanente il blocco che l'autore deve ritoccare.
+   - Preferire: **visibile in UXML**; in `OnEnable` / `SetupUI` del controller impostare `display: none` (o `Flex`) come serve **solo in Play Mode**.
+   - Eccezione documentata: stati alternativi (es. tab CRYO vs POT) possono restare nascosti se esiste un **campione dedicato** nella stessa UXML con **identiche classi** del ramo runtime.
+
+2. **Blocchi `*-builder-reference` o equivalenti**
+   - Devono restare **visibili in UI Builder** (`display: flex` o assenza di hide).
+   - In Play, nasconderli di default con un flag serializzato esplicito (es. `_showBuilderReferenceDuringPlay`).
+
+3. **Campione e card runtime devono essere sempre sincronizzati**
+   - Il campione (`dome-pot-card-sample` e simili) usa le **stesse classi USS** delle card runtime.
+   - Ogni volta che l'autore modifica il testo di un'etichetta nel campione, l'agente aggiorna **immediatamente** il testo nelle card runtime corrispondenti (0, 1, 2, 3…).
+   - Ogni stile che l'agente scrive inline nel campione deve avere il corrispondente nella classe USS, non nel `style=""` del campione.
+   - **Mai lasciare inline style sul campione** che non abbiano il corrispettivo nell'USS: creano disallineamento invisibile.
+
+4. **Stili da codice C#**
+   - Limitare `element.style` a valori **funzionali / dati di gioco** (colori condizione, visibilità tab, immagine sprite).
+   - Colori, font, padding, bordi "di marca" vivono in **USS**: non spostarli in C# o il Builder non li può tweakkare.
+   - Quando il codice imposta `element.style.color`, documentarlo nel controller come "override dato-dipendente, non tweakkabile da Builder".
+
+5. **Tooltip / menu generati da codice**
+   - Il nodo radice del tooltip deve avere in UXML **figli campione** con le stesse classi usate dal builder runtime.
+   - Il codice che fa `Clear()` sul contenitore tratta quei nodi come placeholder di authoring e li sostituisce a runtime.
+
+6. **Nuovi pannelli HUD**
+   - Ogni nuovo pannello Foundation: gerarchia UXML completa, `name` sugli elementi rilevanti, campioni per ogni stato visivo, piena conformità ai punti 1–5.
+
+## Riferimento progetto
+
+- `DomeStatusHUD.uxml` / `DomeStatusHUDController.cs` — campione `dome-pot-card-sample` dentro `dome-hud-builder-reference`.
+- Le label stat (`dome-pot-stat-label`) devono avere testo identico tra campione e card 0-3; lo stile vive in `.dome-pot-stat-label` nell'USS.
+- Testi attualmente sincronizzati: `IDRATAZIONE`, `FERTILIZZANTE`, `LUCE LED`.

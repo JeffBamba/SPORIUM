@@ -1,88 +1,300 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/DomeStatusHUD/DomeStatusHUD.uss?fileID=7433441132597879392&amp;guid=0138b40a681e8a648b916d977f160dc9&amp;type=3#DomeStatusHUD" />
-    <ui:VisualElement name="dome-hud-root" class="dome-hud-root dome-hud-collapsed" style="bottom: 53px; right: 4px; display: none;">
-        <ui:VisualElement name="dome-hud-body" class="dome-hud-body" style="display: flex;">
-            <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs">
-                <ui:Button name="btn-tab-pots" text="POTS [0/4]" class="dome-tab-btn dome-tab-active" />
-                <ui:Button name="btn-tab-cryo" text="CRYO [0/3]" class="dome-tab-btn" />
-            </ui:VisualElement>
-            <ui:VisualElement name="dome-hud-section-pots" class="dome-hud-section">
-                <ui:VisualElement name="dome-pot-row-0" class="dome-pot-row">
-                    <ui:VisualElement name="dome-pot-preview-0" class="dome-pot-preview" />
-                    <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-0" text="—" class="dome-pot-name" />
-                        <ui:Label name="dome-pot-sub-0" class="dome-pot-sub" />
-                        <ui:Label name="dome-pot-cond-0" class="dome-pot-cond" />
+    <ui:VisualElement name="dome-hud-root" class="dome-hud-root" style="bottom: 53px; right: 4px;">
+        <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs" style="display: flex;">
+            <ui:Button name="btn-tab-pots" class="dome-tab-btn dome-tab-btn--pots dome-tab-active">
+                <ui:VisualElement class="dome-tab-btn__content">
+                    <ui:VisualElement name="dome-tab-pots-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--pots" style="background-image: url(&quot;project://database/Assets/_Project/Art/Enviroments/Png/Elementi/status_sprout.png?fileID=2800000&amp;guid=939e2047e05c1364585ba82b99e00c85&amp;type=3#status_sprout&quot;); background-color: rgba(0, 0, 0, 0);" />
+                    <ui:Label name="lbl-tab-pots" text="POT [0/4]" class="dome-tab-btn__label" />
+                </ui:VisualElement>
+            </ui:Button>
+            <ui:Button name="btn-tab-cryo" class="dome-tab-btn dome-tab-btn--cryo">
+                <ui:VisualElement class="dome-tab-btn__content">
+                    <ui:VisualElement name="dome-tab-cryo-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--cryo" style="background-image: url(&quot;project://database/Assets/_Project/Art/icona_Placeholder_cryo.png?fileID=2800000&amp;guid=675fac4d91214294abdb91af31d837c9&amp;type=3#icona_Placeholder_cryo&quot;); background-color: rgba(0, 0, 0, 0);" />
+                    <ui:Label name="lbl-tab-cryo" text="CRYO [0/3]" class="dome-tab-btn__label" />
+                </ui:VisualElement>
+            </ui:Button>
+        </ui:VisualElement>
+        <ui:VisualElement name="dome-hud-section-pots" class="dome-hud-section">
+            <ui:VisualElement name="dome-pot-card-0" class="dome-pot-card dome-pot-card--fam-wild">
+                <ui:VisualElement name="dome-pot-header-0" class="dome-pot-header">
+                    <ui:Label name="dome-pot-chevron-0" text="v" class="dome-pot-chevron" />
+                    <ui:Label name="dome-pot-badge-0" text="POT-001" class="dome-pot-badge dome-pot-badge--occupied" />
+                    <ui:VisualElement name="dome-pot-preview-0" class="dome-pot-preview" style="background-image: resource(&apos;icona_Placeholder&apos;);" />
+                    <ui:VisualElement name="dome-pot-info-0" class="dome-pot-info">
+                        <ui:Label name="dome-pot-name-0" text="Arctic Hask" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-0" text="Lvl.1 • Seme • WILD" class="dome-pot-sub" />
+                        <ui:VisualElement name="dome-pot-cond-row-0" class="dome-pot-cond-row">
+                            <ui:VisualElement name="dome-pot-cond-dot-0" class="dome-pot-cond-dot" style="background-color: rgb(230, 201, 111);" />
+                            <ui:Label name="dome-pot-cond-0" text="APPASSITA (50%)" class="dome-pot-cond" style="color: rgb(230, 201, 111);" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="dome-pot-indicators-0" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-0" text="○" class="dome-pot-indicator" />
-                        <ui:Label name="dome-pot-led-0" text="○" class="dome-pot-indicator" />
+                    <ui:VisualElement name="dome-pot-status-col-0" class="dome-pot-status-col">
+                        <ui:VisualElement name="dome-pot-indicators-0" class="dome-pot-indicators">
+                            <ui:Label name="dome-pot-water-0" text="●" class="dome-pot-indicator" style="color: rgb(127, 255, 122);" />
+                            <ui:Label name="dome-pot-led-0" text="●" class="dome-pot-indicator" style="color: rgb(93, 182, 227);" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="dome-pot-row-1" class="dome-pot-row">
+                <ui:VisualElement name="dome-pot-expanded-0" class="dome-pot-expanded">
+                    <ui:VisualElement name="dome-pot-stats-grid-0" class="dome-pot-stats-grid">
+                        <ui:VisualElement name="dome-pot-stat-cell-0-water" class="dome-pot-stat-cell dome-pot-stat-cell--water">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--water" />
+                                <ui:Label name="dome-pot-stat-label-0-water" text="IDRATAZIONE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-water-0" text="50%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-0-fert" class="dome-pot-stat-cell dome-pot-stat-cell--fert">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--fert" />
+                                <ui:Label name="dome-pot-stat-label-0-fert" text="FERTILIZZANTE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-fert-0" text="50%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-0-led" class="dome-pot-stat-cell dome-pot-stat-cell--led">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--led" />
+                                <ui:Label name="dome-pot-stat-label-0-led" text="LUCE LED" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-led-0" text="OFF" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="dome-pot-stat-ph-0" text="pH +2.0/g" class="dome-pot-ph-line" />
+                    <ui:Label name="dome-pot-footer-0" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="dome-pot-card-1" class="dome-pot-card dome-pot-card--empty">
+                <ui:VisualElement name="dome-pot-header-1" class="dome-pot-header">
+                    <ui:Label name="dome-pot-chevron-1" text="&gt;" class="dome-pot-chevron" />
+                    <ui:Label name="dome-pot-badge-1" text="POT-002" class="dome-pot-badge dome-pot-badge--empty" />
                     <ui:VisualElement name="dome-pot-preview-1" class="dome-pot-preview" />
-                    <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-1" text="—" class="dome-pot-name" />
-                        <ui:Label name="dome-pot-sub-1" class="dome-pot-sub" />
-                        <ui:Label name="dome-pot-cond-1" class="dome-pot-cond" />
+                    <ui:VisualElement name="dome-pot-info-1" class="dome-pot-info">
+                        <ui:Label name="dome-pot-name-1" text="VASO VUOTO" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-1" text="Pronto per la piantagione" class="dome-pot-sub" />
+                        <ui:VisualElement name="dome-pot-cond-row-1" class="dome-pot-cond-row" style="display: none;">
+                            <ui:VisualElement name="dome-pot-cond-dot-1" class="dome-pot-cond-dot" />
+                            <ui:Label name="dome-pot-cond-1" class="dome-pot-cond" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="dome-pot-indicators-1" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-1" text="○" class="dome-pot-indicator" />
-                        <ui:Label name="dome-pot-led-1" text="○" class="dome-pot-indicator" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:VisualElement name="dome-pot-row-2" class="dome-pot-row">
-                    <ui:VisualElement name="dome-pot-preview-2" class="dome-pot-preview" />
-                    <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-2" text="—" class="dome-pot-name" />
-                        <ui:Label name="dome-pot-sub-2" class="dome-pot-sub" />
-                        <ui:Label name="dome-pot-cond-2" class="dome-pot-cond" />
-                    </ui:VisualElement>
-                    <ui:VisualElement name="dome-pot-indicators-2" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-2" text="○" class="dome-pot-indicator" />
-                        <ui:Label name="dome-pot-led-2" text="○" class="dome-pot-indicator" />
+                    <ui:VisualElement name="dome-pot-status-col-1" class="dome-pot-status-col">
+                        <ui:VisualElement name="dome-pot-indicators-1" class="dome-pot-indicators">
+                            <ui:Label name="dome-pot-water-1" text="○" class="dome-pot-indicator" />
+                            <ui:Label name="dome-pot-led-1" text="○" class="dome-pot-indicator" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="dome-pot-row-3" class="dome-pot-row">
-                    <ui:VisualElement name="dome-pot-preview-3" class="dome-pot-preview" />
-                    <ui:VisualElement class="dome-pot-info">
-                        <ui:Label name="dome-pot-name-3" text="—" class="dome-pot-name" />
-                        <ui:Label name="dome-pot-sub-3" class="dome-pot-sub" />
-                        <ui:Label name="dome-pot-cond-3" class="dome-pot-cond" />
+                <ui:VisualElement name="dome-pot-expanded-1" class="dome-pot-expanded" style="display: none;">
+                    <ui:VisualElement name="dome-pot-stats-grid-1" class="dome-pot-stats-grid">
+                        <ui:VisualElement name="dome-pot-stat-cell-1-water" class="dome-pot-stat-cell dome-pot-stat-cell--water">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--water" />
+                                <ui:Label name="dome-pot-stat-label-1-water" text="IDRATAZIONE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-water-1" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-1-fert" class="dome-pot-stat-cell dome-pot-stat-cell--fert">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--fert" />
+                                <ui:Label name="dome-pot-stat-label-1-fert" text="FERTILIZZANTE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-fert-1" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-1-led" class="dome-pot-stat-cell dome-pot-stat-cell--led">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--led" />
+                                <ui:Label name="dome-pot-stat-label-1-led" text="LUCE LED" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-led-1" text="OFF" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="dome-pot-indicators-3" class="dome-pot-indicators">
-                        <ui:Label name="dome-pot-water-3" text="○" class="dome-pot-indicator" />
-                        <ui:Label name="dome-pot-led-3" text="○" class="dome-pot-indicator" />
-                    </ui:VisualElement>
+                    <ui:Label name="dome-pot-stat-ph-1" class="dome-pot-ph-line" />
+                    <ui:Label name="dome-pot-footer-1" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="dome-hud-section-cryo" class="dome-hud-section" style="display: none;">
-                <ui:VisualElement name="dome-cryo-row-0" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-0" text="CRYO-01" class="dome-cryo-id" />
-                    <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-0" text="—" class="dome-cryo-plant" />
-                        <ui:Label name="dome-cryo-detail-0" class="dome-cryo-detail" />
+            <ui:VisualElement name="dome-pot-card-2" class="dome-pot-card dome-pot-card--empty">
+                <ui:VisualElement name="dome-pot-header-2" class="dome-pot-header">
+                    <ui:Label name="dome-pot-chevron-2" text="&gt;" class="dome-pot-chevron" />
+                    <ui:Label name="dome-pot-badge-2" text="POT-003" class="dome-pot-badge dome-pot-badge--empty" />
+                    <ui:VisualElement name="dome-pot-preview-2" class="dome-pot-preview" />
+                    <ui:VisualElement name="dome-pot-info-2" class="dome-pot-info">
+                        <ui:Label name="dome-pot-name-2" text="VASO VUOTO" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-2" text="Pronto per la piantagione" class="dome-pot-sub" />
+                        <ui:VisualElement name="dome-pot-cond-row-2" class="dome-pot-cond-row" style="display: none;">
+                            <ui:VisualElement name="dome-pot-cond-dot-2" class="dome-pot-cond-dot" />
+                            <ui:Label name="dome-pot-cond-2" class="dome-pot-cond" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="dome-pot-status-col-2" class="dome-pot-status-col">
+                        <ui:VisualElement name="dome-pot-indicators-2" class="dome-pot-indicators">
+                            <ui:Label name="dome-pot-water-2" text="○" class="dome-pot-indicator" />
+                            <ui:Label name="dome-pot-led-2" text="○" class="dome-pot-indicator" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="dome-cryo-row-1" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-1" text="CRYO-02" class="dome-cryo-id" />
-                    <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-1" text="—" class="dome-cryo-plant" />
-                        <ui:Label name="dome-cryo-detail-1" class="dome-cryo-detail" />
+                <ui:VisualElement name="dome-pot-expanded-2" class="dome-pot-expanded" style="display: none;">
+                    <ui:VisualElement name="dome-pot-stats-grid-2" class="dome-pot-stats-grid">
+                        <ui:VisualElement name="dome-pot-stat-cell-2-water" class="dome-pot-stat-cell dome-pot-stat-cell--water">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--water" />
+                                <ui:Label name="dome-pot-stat-label-2-water" text="IDRATAZIONE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-water-2" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-2-fert" class="dome-pot-stat-cell dome-pot-stat-cell--fert">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--fert" />
+                                <ui:Label name="dome-pot-stat-label-2-fert" text="FERTILIZZANTE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-fert-2" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-2-led" class="dome-pot-stat-cell dome-pot-stat-cell--led">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--led" />
+                                <ui:Label name="dome-pot-stat-label-2-led" text="LUCE LED" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-led-2" text="OFF" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="dome-pot-stat-ph-2" class="dome-pot-ph-line" />
+                    <ui:Label name="dome-pot-footer-2" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="dome-pot-card-3" class="dome-pot-card dome-pot-card--empty">
+                <ui:VisualElement name="dome-pot-header-3" class="dome-pot-header">
+                    <ui:Label name="dome-pot-chevron-3" text="&gt;" class="dome-pot-chevron" />
+                    <ui:Label name="dome-pot-badge-3" text="POT-004" class="dome-pot-badge dome-pot-badge--empty" />
+                    <ui:VisualElement name="dome-pot-preview-3" class="dome-pot-preview" />
+                    <ui:VisualElement name="dome-pot-info-3" class="dome-pot-info">
+                        <ui:Label name="dome-pot-name-3" text="VASO VUOTO" class="dome-pot-name" />
+                        <ui:Label name="dome-pot-sub-3" text="Pronto per la piantagione" class="dome-pot-sub" />
+                        <ui:VisualElement name="dome-pot-cond-row-3" class="dome-pot-cond-row" style="display: none;">
+                            <ui:VisualElement name="dome-pot-cond-dot-3" class="dome-pot-cond-dot" />
+                            <ui:Label name="dome-pot-cond-3" class="dome-pot-cond" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="dome-pot-status-col-3" class="dome-pot-status-col">
+                        <ui:VisualElement name="dome-pot-indicators-3" class="dome-pot-indicators">
+                            <ui:Label name="dome-pot-water-3" text="○" class="dome-pot-indicator" />
+                            <ui:Label name="dome-pot-led-3" text="○" class="dome-pot-indicator" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="dome-cryo-row-2" class="dome-cryo-row">
-                    <ui:Label name="dome-cryo-id-2" text="CRYO-03" class="dome-cryo-id" />
-                    <ui:VisualElement class="dome-cryo-info">
-                        <ui:Label name="dome-cryo-plant-2" text="—" class="dome-cryo-plant" />
-                        <ui:Label name="dome-cryo-detail-2" class="dome-cryo-detail" />
+                <ui:VisualElement name="dome-pot-expanded-3" class="dome-pot-expanded" style="display: none;">
+                    <ui:VisualElement name="dome-pot-stats-grid-3" class="dome-pot-stats-grid">
+                        <ui:VisualElement name="dome-pot-stat-cell-3-water" class="dome-pot-stat-cell dome-pot-stat-cell--water">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--water" />
+                                <ui:Label name="dome-pot-stat-label-3-water" text="IDRATAZIONE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-water-3" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-3-fert" class="dome-pot-stat-cell dome-pot-stat-cell--fert">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--fert" />
+                                <ui:Label name="dome-pot-stat-label-3-fert" text="FERTILIZZANTE" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-fert-3" text="0%" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dome-pot-stat-cell-3-led" class="dome-pot-stat-cell dome-pot-stat-cell--led">
+                            <ui:VisualElement class="dome-pot-stat-head">
+                                <ui:VisualElement picking-mode="Ignore" class="dome-pot-stat-icon dome-pot-stat-icon--led" />
+                                <ui:Label name="dome-pot-stat-label-3-led" text="LUCE LED" class="dome-pot-stat-label" />
+                            </ui:VisualElement>
+                            <ui:Label name="dome-pot-stat-led-3" text="OFF" class="dome-pot-stat-value" />
+                        </ui:VisualElement>
                     </ui:VisualElement>
+                    <ui:Label name="dome-pot-stat-ph-3" class="dome-pot-ph-line" />
+                    <ui:Label name="dome-pot-footer-3" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Button name="dome-hud-toggle-btn" text="«" class="dome-hud-toggle-btn" />
+        <ui:VisualElement name="dome-hud-section-cryo" class="dome-hud-section" style="display: none;">
+            <ui:VisualElement name="dome-cryo-row-0" class="dome-cryo-row">
+                <ui:Label name="dome-cryo-id-0" text="CRYO-01" class="dome-cryo-id" />
+                <ui:VisualElement name="dome-cryo-info-0" class="dome-cryo-info">
+                    <ui:Label name="dome-cryo-plant-0" text="—" class="dome-cryo-plant" />
+                    <ui:Label name="dome-cryo-detail-0" class="dome-cryo-detail" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="dome-cryo-row-1" class="dome-cryo-row">
+                <ui:Label name="dome-cryo-id-1" text="CRYO-02" class="dome-cryo-id" />
+                <ui:VisualElement name="dome-cryo-info-1" class="dome-cryo-info">
+                    <ui:Label name="dome-cryo-plant-1" text="—" class="dome-cryo-plant" />
+                    <ui:Label name="dome-cryo-detail-1" class="dome-cryo-detail" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="dome-cryo-row-2" class="dome-cryo-row">
+                <ui:Label name="dome-cryo-id-2" text="CRYO-03" class="dome-cryo-id" />
+                <ui:VisualElement name="dome-cryo-info-2" class="dome-cryo-info">
+                    <ui:Label name="dome-cryo-plant-2" text="—" class="dome-cryo-plant" />
+                    <ui:Label name="dome-cryo-detail-2" class="dome-cryo-detail" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:VisualElement name="dome-hud-tooltip" class="dome-hud-tooltip" style="display: none;">
-            <ui:VisualElement name="dome-hud-tooltip-lines" class="dome-hud-tooltip-lines" />
+            <ui:VisualElement name="dome-hud-tooltip-scanlines" picking-mode="Ignore" class="dome-hud-tooltip-scanlines" />
+            <ui:VisualElement name="dome-hud-tooltip-lines" class="dome-hud-tooltip-lines">
+                <ui:Label name="dome-hud-tooltip-ph-title" text="■ Pianta esempio  Lvl 1" class="dome-hud-tooltip-line dome-hud-tooltip-line--title" style="color: rgb(80, 200, 220);" />
+                <ui:Label name="dome-hud-tooltip-ph-sub" text="  POT-001 · Seme · Giorno 0" class="dome-hud-tooltip-line dome-hud-tooltip-line--subtitle" style="color: rgb(192, 200, 197);" />
+                <ui:VisualElement class="dome-hud-tooltip-sep" />
+                <ui:Label name="dome-hud-tooltip-ph-sec1" text="REQUISITI E AVANZAMENTO" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--section" style="color: rgb(200, 203, 200);" />
+                <ui:Label text="  Idratazione   : 30–70%" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
+                <ui:Label text="  LED           : nessuno" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
+                <ui:VisualElement class="dome-hud-tooltip-sep" />
+                <ui:Label name="dome-hud-tooltip-ph-sec2" text="STATO ATTUALE" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--section" style="color: rgb(200, 203, 200);" />
+                <ui:Label text="  Idratazione   : 0%" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(211, 95, 95);" />
+                <ui:Label text="  Condizione    : Appassita (50%)" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(230, 201, 111);" />
+                <ui:VisualElement class="dome-hud-tooltip-sep" />
+                <ui:Label text="── Poteri (vaso attivo) ──" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--poteri-h" style="color: rgb(80, 200, 220);" />
+                <ui:Label text="  Attivo: (esempio potere)" class="dome-hud-tooltip-line dome-hud-tooltip-line--in-poteri" style="color: rgb(192, 200, 197);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="dome-hud-builder-reference" class="dome-hud-builder-reference" style="display: flex;">
+            <ui:Label name="dome-hud-builder-hint" text="UI Builder — stesso stile runtime: anche dome-hud-tooltip (sopra) ha placeholder; questo blocco = card espansa + CRYO + campione ph aggiuntivo. Regola: .cursor/rules/ui-hud-foundation-ui-builder-parity.mdc" class="dome-hud-builder-hint" />
+            <ui:VisualElement name="dome-hud-builder-row" class="dome-hud-builder-row">
+                <ui:VisualElement name="dome-hud-builder-tooltip-sample" class="dome-hud-builder-ph-tooltip dome-hud-builder-sample-wrap" style="position: relative; margin-right: 8px; margin-bottom: 8px;">
+                    <ui:VisualElement class="dome-hud-builder-ph-title-row">
+                        <ui:VisualElement picking-mode="Ignore" class="dome-hud-builder-ph-title-icon" />
+                        <ui:Label text="STATO DRIFT pH — POT-001" class="dome-hud-builder-ph-title" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="dome-hud-builder-ph-section">
+                        <ui:VisualElement style="flex-direction: row; align-items: center;">
+                            <ui:Label text="VALORE / CONDIZIONE" class="dome-hud-builder-ph-label" />
+                            <ui:Label text="Appassita (50%) — Seme" class="dome-hud-builder-ph-value" />
+                        </ui:VisualElement>
+                        <ui:Label text="Il valore segue i requisiti dello stadio corrente." class="dome-hud-builder-ph-caption" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="dome-hud-builder-ph-box-grey">
+                        <ui:Label text="PARAMETRI VASO (come TopBar · modificatori)" class="dome-hud-builder-ph-box-title" />
+                        <ui:Label text="  Idratazione   : 0%" class="dome-hud-builder-ph-line" />
+                        <ui:Label text="  Fertilizzante : 0%" class="dome-hud-builder-ph-line" />
+                        <ui:Label text="  LED           : Blue" class="dome-hud-builder-ph-line" />
+                        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 4px;">
+                            <ui:Label text="→ Drift pH stimato (vaso):" class="dome-hud-builder-ph-line-bold" />
+                            <ui:Label text="-1.2" class="dome-hud-builder-ph-drift-value" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="dome-hud-builder-ph-box-cyan">
+                        <ui:Label text="SLOT PASSIVI / EFFETTI CRYO" class="dome-hud-builder-ph-cyan-title" />
+                        <ui:Label text="  Esempio riga passiva (stile ph-tooltip sezione CRYO)" class="dome-hud-builder-ph-line-cyan" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="dome-hud-builder-ph-box-tip">
+                        <ui:Label text="SUGGERIMENTO" class="dome-hud-builder-ph-tip-title" />
+                        <ui:Label text="Usa il terminale POT per annaffiare e regolare LED; il drift indicato si applica al cambio giornata." class="dome-hud-builder-ph-tip-body" />
+                    </ui:VisualElement>
+                    <ui:VisualElement picking-mode="Ignore" class="dome-hud-builder-ph-crt-bar" />
+                </ui:VisualElement>
+                <ui:VisualElement name="dome-hud-builder-cryo-sample" class="dome-hud-builder-cryo-sample" style="width: 380px;">
+                    <ui:VisualElement name="dome-cryo-row-sample" class="dome-cryo-row">
+                        <ui:Label name="dome-cryo-id-sample" text="CRYO-01" class="dome-cryo-id" />
+                        <ui:VisualElement name="dome-cryo-info-sample" class="dome-cryo-info">
+                            <ui:Label name="dome-cryo-plant-sample" text="Glasscap Fungus" class="dome-cryo-plant" />
+                            <ui:Label name="dome-cryo-detail-sample" text="pH 0/g  ·  Passive" class="dome-cryo-detail" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

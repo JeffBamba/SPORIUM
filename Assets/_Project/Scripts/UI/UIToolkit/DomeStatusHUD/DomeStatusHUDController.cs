@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,14 +8,17 @@ using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Botanical;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.PlantCard.Helpers;
 
 namespace Sporae.UI.UIToolkit.DomeStatusHUD
 {
     /// <summary>
     /// Controller UIToolkit per l'HUD unificato Dome Status (pots attivi + cryo slot).
-    /// Si espande orizzontalmente verso sinistra. Sempre visibile.
-    /// Auto-apre quando almeno un pot ha una pianta; l'utente può forzare il collasso.
+    /// Sidebar fissa sempre visibile. Ogni card POT può essere espansa con click.
     /// sortingOrder = 55 (tra TopBar/Bottom 50 e Foundation 60).
+    /// In UI Builder apri <c>DomeStatusHUD.uxml</c>: ogni elemento ha <c>name</c>; <c>dome-hud-tooltip</c> include
+    /// placeholder con le stesse classi di <c>SetTooltipLines</c>; <c>dome-hud-builder-reference</c> aggiunge card/espanso/CRYO.
+    /// Parità Builder/runtime: vedi <c>.cursor/rules/ui-hud-foundation-ui-builder-parity.mdc</c>.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class DomeStatusHUDController : MonoBehaviour
@@ -25,50 +29,69 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         [SerializeField] private StyleSheet _spPanelBase;
         [SerializeField] private StyleSheet _panelUss;
 
+        [Header("UI Builder")]
+        [Tooltip("Se attivo, il blocco dome-hud-builder-reference (campione tooltip/card/CRYO) resta visibile anche in Play Mode.")]
+        [SerializeField] private bool _showBuilderReferenceDuringPlay;
+
         // ── Services ──────────────────────────────────────────────────
         private DomePotRegistry _potRegistry;
         private CryoMachineController _cryoMachine;
         private PhSystem _phSystem;
         private DayCycleSystem _dayCycleSystem;
+        private PotSystemConfig _potSystemConfig;
 
         // ── Root elements ──────────────────────────────────────────────
         private VisualElement _hudRoot;
-        private Button _toggleBtn;
         private Button _tabPots;
         private Button _tabCryo;
+        private Label _tabPotsLabel;
+        private Label _tabCryoLabel;
         private VisualElement _sectionPots;
         private VisualElement _sectionCryo;
         private VisualElement _tooltip;
         private VisualElement _tooltipLines;
 
-        // ── Per-pot row elements ───────────────────────────────────────
-        private readonly VisualElement[] _potRows = new VisualElement[4];
-        private readonly VisualElement[] _potPreviews = new VisualElement[4];
-        private readonly Label[] _potNames = new Label[4];
-        private readonly Label[] _potSubs = new Label[4];
-        private readonly Label[] _potConds = new Label[4];
-        private readonly Label[] _potWater = new Label[4];
-        private readonly Label[] _potLed = new Label[4];
+        // ── Per-pot card elements ──────────────────────────────────────
+        private readonly VisualElement[] _potCards        = new VisualElement[4];
+        private readonly VisualElement[] _potHeaders      = new VisualElement[4];
+        private readonly Label[]         _potChevrons     = new Label[4];
+        private readonly Label[]         _potBadges       = new Label[4];
+        private readonly VisualElement[] _potPreviews     = new VisualElement[4];
+        private readonly Label[]         _potNames        = new Label[4];
+        private readonly Label[]         _potSubs         = new Label[4];
+        private readonly VisualElement[] _potCondRows     = new VisualElement[4];
+        private readonly VisualElement[] _potCondDots     = new VisualElement[4];
+        private readonly Label[]         _potConds        = new Label[4];
+        private readonly Label[]         _potWater        = new Label[4];
+        private readonly Label[]         _potLed          = new Label[4];
+
+        // ── Per-pot expanded area elements ─────────────────────────────
+        private readonly VisualElement[] _potExpandedAreas = new VisualElement[4];
+        private readonly Label[]         _potStatWater     = new Label[4];
+        private readonly Label[]         _potStatFert      = new Label[4];
+        private readonly Label[]         _potStatLed       = new Label[4];
+        private readonly Label[]         _potStatPh        = new Label[4];
 
         // ── Per-cryo row elements ──────────────────────────────────────
-        private readonly VisualElement[] _cryoRows = new VisualElement[3];
-        private readonly Label[] _cryoIds = new Label[3];
-        private readonly Label[] _cryoPlants = new Label[3];
-        private readonly Label[] _cryoDetails = new Label[3];
+        private readonly VisualElement[] _cryoRows    = new VisualElement[3];
+        private readonly Label[]         _cryoIds     = new Label[3];
+        private readonly Label[]         _cryoPlants  = new Label[3];
+        private readonly Label[]         _cryoDetails = new Label[3];
 
-        // ── Data caches (for tooltip) ──────────────────────────────────
-        private readonly PotSlot[] _cachedPots = new PotSlot[4];
-        private readonly PotStateModel[] _cachedStates = new PotStateModel[4];
-        private readonly PlantData[] _cachedPlantData = new PlantData[4];
-        private readonly CryoSlot[] _cachedCryoSlots = new CryoSlot[3];
+        // ── Data caches ────────────────────────────────────────────────
+        private readonly PotSlot[]       _cachedPots      = new PotSlot[4];
+        private readonly PotStateModel[] _cachedStates    = new PotStateModel[4];
+        private readonly PlantData[]     _cachedPlantData = new PlantData[4];
+        private readonly CryoSlot[]      _cachedCryoSlots = new CryoSlot[3];
 
         // ── State ──────────────────────────────────────────────────────
-        private bool _expanded;
-        private bool _userForcedCollapsed; // user explicitly closed → block auto-open
-        private bool _userForcedExpanded;  // user explicitly opened → block auto-close on empty
+        private readonly bool[] _expandedPots = new bool[4];
         private bool _showingCryo;
         private float _refreshTimer;
         private const float RefreshInterval = 0.5f;
+        private IVisualElementScheduledItem _tooltipSchedule;
+
+        private static Sprite _previewPlaceholderSprite;
 
         // ─────────────────────────────────────────────────────────────
         // Unity lifecycle
@@ -81,14 +104,18 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
             if (_uiDocument != null)
                 _uiDocument.sortingOrder = 55;
+
+            if (_previewPlaceholderSprite == null)
+                _previewPlaceholderSprite = Resources.Load<Sprite>("icona_Placeholder");
         }
 
         private void OnEnable()
         {
-            _potRegistry   = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
-            _cryoMachine   = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
-            _phSystem      = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
+            _potRegistry    = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            _cryoMachine    = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
+            _phSystem       = ServiceContainer.Instance?.Get<PhSystem>(suppressWarning: true);
             _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+            EnsurePotSystemConfig();
 
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged += HandleDayChanged;
@@ -96,7 +123,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             PotEvents.OnPotStateChanged += HandlePotStateChanged;
 
             SetupUI();
-            Refresh();
+            RefreshData();
         }
 
         private void OnDisable()
@@ -113,8 +140,6 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             if (_refreshTimer >= RefreshInterval)
             {
                 _refreshTimer = 0f;
-                // Timer only refreshes displayed data — does NOT touch expand state.
-                // Auto-expand logic runs only on real game events (OnEnable, pot changes, day changed).
                 RefreshData();
             }
         }
@@ -131,9 +156,16 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         private void HandlePotStateChanged(PotSlot pot)
         {
-            // Game state changed: clear the "user forced open" guard so auto-logic can recheck.
-            _userForcedExpanded = false;
-            Refresh();
+            RefreshData();
+            // Collapse expanded cards whose pot became empty
+            for (int i = 0; i < 4; i++)
+            {
+                if (_expandedPots[i] && !(_cachedStates[i]?.HasPlant ?? false))
+                {
+                    _expandedPots[i] = false;
+                    ApplyPotExpandState(i);
+                }
+            }
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -161,27 +193,49 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 return;
             }
 
-            _toggleBtn    = _hudRoot.Q<Button>("dome-hud-toggle-btn");
             _tabPots      = _hudRoot.Q<Button>("btn-tab-pots");
             _tabCryo      = _hudRoot.Q<Button>("btn-tab-cryo");
+            _tabPotsLabel = _tabPots?.Q<Label>("lbl-tab-pots");
+            _tabCryoLabel = _tabCryo?.Q<Label>("lbl-tab-cryo");
             _sectionPots  = _hudRoot.Q<VisualElement>("dome-hud-section-pots");
             _sectionCryo  = _hudRoot.Q<VisualElement>("dome-hud-section-cryo");
             _tooltip      = _hudRoot.Q<VisualElement>("dome-hud-tooltip");
             _tooltipLines = _hudRoot.Q<VisualElement>("dome-hud-tooltip-lines");
 
+            if (_tooltip != null)
+                _tooltip.style.display = DisplayStyle.None;
+
+            var builderRef = _hudRoot.Q<VisualElement>("dome-hud-builder-reference");
+            if (builderRef != null)
+            {
+                bool hideBuilder = Application.isPlaying && !_showBuilderReferenceDuringPlay;
+                builderRef.style.display = hideBuilder ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+
             for (int i = 0; i < 4; i++)
             {
-                _potRows[i]     = _hudRoot.Q<VisualElement>($"dome-pot-row-{i}");
-                _potPreviews[i] = _hudRoot.Q<VisualElement>($"dome-pot-preview-{i}");
-                _potNames[i]    = _hudRoot.Q<Label>($"dome-pot-name-{i}");
-                _potSubs[i]     = _hudRoot.Q<Label>($"dome-pot-sub-{i}");
-                _potConds[i]    = _hudRoot.Q<Label>($"dome-pot-cond-{i}");
-                _potWater[i]    = _hudRoot.Q<Label>($"dome-pot-water-{i}");
-                _potLed[i]      = _hudRoot.Q<Label>($"dome-pot-led-{i}");
+                _potCards[i]         = _hudRoot.Q<VisualElement>($"dome-pot-card-{i}");
+                _potHeaders[i]       = _hudRoot.Q<VisualElement>($"dome-pot-header-{i}");
+                _potChevrons[i]      = _hudRoot.Q<Label>($"dome-pot-chevron-{i}");
+                _potBadges[i]        = _hudRoot.Q<Label>($"dome-pot-badge-{i}");
+                _potPreviews[i]      = _hudRoot.Q<VisualElement>($"dome-pot-preview-{i}");
+                _potNames[i]         = _hudRoot.Q<Label>($"dome-pot-name-{i}");
+                _potSubs[i]          = _hudRoot.Q<Label>($"dome-pot-sub-{i}");
+                _potCondRows[i]      = _hudRoot.Q<VisualElement>($"dome-pot-cond-row-{i}");
+                _potCondDots[i]      = _hudRoot.Q<VisualElement>($"dome-pot-cond-dot-{i}");
+                _potConds[i]         = _hudRoot.Q<Label>($"dome-pot-cond-{i}");
+                _potWater[i]         = _hudRoot.Q<Label>($"dome-pot-water-{i}");
+                _potLed[i]           = _hudRoot.Q<Label>($"dome-pot-led-{i}");
+                _potExpandedAreas[i] = _hudRoot.Q<VisualElement>($"dome-pot-expanded-{i}");
+                _potStatWater[i]     = _hudRoot.Q<Label>($"dome-pot-stat-water-{i}");
+                _potStatFert[i]      = _hudRoot.Q<Label>($"dome-pot-stat-fert-{i}");
+                _potStatLed[i]       = _hudRoot.Q<Label>($"dome-pot-stat-led-{i}");
+                _potStatPh[i]        = _hudRoot.Q<Label>($"dome-pot-stat-ph-{i}");
 
                 int idx = i;
-                _potRows[i]?.RegisterCallback<MouseEnterEvent>(_ => OnPotRowHover(idx));
-                _potRows[i]?.RegisterCallback<MouseLeaveEvent>(_ => HideTooltip());
+                _potHeaders[i]?.RegisterCallback<MouseEnterEvent>(_ => OnPotRowHover(idx));
+                _potHeaders[i]?.RegisterCallback<MouseLeaveEvent>(_ => HideTooltip());
+                _potHeaders[i]?.RegisterCallback<ClickEvent>(_ => TogglePotExpand(idx));
             }
 
             for (int i = 0; i < 3; i++)
@@ -196,12 +250,6 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _cryoRows[i]?.RegisterCallback<MouseLeaveEvent>(_ => HideTooltip());
             }
 
-            if (_toggleBtn != null)
-            {
-                _toggleBtn.clicked -= ToggleExpanded;
-                _toggleBtn.clicked += ToggleExpanded;
-            }
-
             if (_tabPots != null)
             {
                 _tabPots.clicked -= OnTabPotsClicked;
@@ -214,59 +262,41 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _tabCryo.clicked += OnTabCryoClicked;
             }
 
-            _expanded = false;
-            ApplyExpandedState();
+            // Collassa tutte le aree espanse e resetta i placeholder di authoring di card-0.
+            // card-0 in UXML è visibile (expanded) per l'editing in UI Builder;
+            // a runtime parte collassata e il testo/colore viene sovrascritto da RefreshPots.
+            for (int i = 0; i < 4; i++)
+            {
+                if (_potExpandedAreas[i] != null)
+                    _potExpandedAreas[i].style.display = DisplayStyle.None;
+                if (_potCondRows[i] != null)
+                    _potCondRows[i].style.display = DisplayStyle.None;
+            }
+
             SwitchTab(false);
         }
 
         // ─────────────────────────────────────────────────────────────
-        // Expand / collapse
+        // Per-pot expand / collapse
         // ─────────────────────────────────────────────────────────────
 
-        private void ToggleExpanded()
+        private void TogglePotExpand(int idx)
         {
-            _expanded = !_expanded;
-            if (_expanded)
-            {
-                _userForcedCollapsed = false;
-                _userForcedExpanded  = true;  // user manually opened → don't auto-close on empty
-            }
-            else
-            {
-                _userForcedCollapsed = true;  // user manually closed → don't auto-open on plant
-                _userForcedExpanded  = false;
-            }
-            ApplyExpandedState();
+            if (!(_cachedStates[idx]?.HasPlant ?? false)) return;
+            _expandedPots[idx] = !_expandedPots[idx];
+            ApplyPotExpandState(idx);
         }
 
-        private void ApplyExpandedState()
+        private void ApplyPotExpandState(int idx)
         {
-            if (_hudRoot == null) return;
-            _hudRoot.EnableInClassList("dome-hud-collapsed", !_expanded);
-            if (_toggleBtn != null)
-                _toggleBtn.text = _expanded ? "»" : "«";
-        }
+            bool hasPlant  = _cachedStates[idx]?.HasPlant ?? false;
+            bool isExpanded = _expandedPots[idx] && hasPlant;
 
-        private void CheckAutoExpand()
-        {
-            var pots = _potRegistry?.GetActivePotsSnapshot();
-            bool hasAny = false;
-            if (pots != null)
-                foreach (var p in pots)
-                    if (p?.PotActions?.HasPlant ?? false) { hasAny = true; break; }
+            if (_potChevrons[idx] != null)
+                _potChevrons[idx].text = isExpanded ? "v" : ">";
 
-            if (hasAny && !_expanded && !_userForcedCollapsed)
-            {
-                // Auto-open: plants exist and user hasn't forced it closed
-                _expanded = true;
-                ApplyExpandedState();
-            }
-            else if (!hasAny && _expanded && !_userForcedExpanded)
-            {
-                // Auto-close: no plants and user hasn't forced it open
-                _expanded = false;
-                ApplyExpandedState();
-            }
+            if (_potExpandedAreas[idx] != null)
+                _potExpandedAreas[idx].style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -295,17 +325,6 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         // Refresh
         // ─────────────────────────────────────────────────────────────
 
-        // Full refresh: data + auto-expand check. Called from OnEnable and game events.
-        private void Refresh()
-        {
-            if (_hudRoot == null) return;
-            RefreshPots();
-            RefreshCryo();
-            UpdateTabCounters();
-            CheckAutoExpand();
-        }
-
-        // Data-only refresh: no expand-state changes. Called from the Update timer.
         private void RefreshData()
         {
             if (_hudRoot == null) return;
@@ -320,7 +339,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
             for (int i = 0; i < 4; i++)
             {
-                PotSlot pot = (pots != null && i < pots.Count) ? pots[i] : null;
+                PotSlot pot         = (pots != null && i < pots.Count) ? pots[i] : null;
                 PotStateModel state = pot?.PotActions?.GetCurrentState();
                 PlantData plantData = state?.GetPlantData();
 
@@ -328,15 +347,76 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _cachedStates[i]    = state;
                 _cachedPlantData[i] = plantData;
 
-                bool hasPlant = state?.HasPlant ?? false;
+                bool hasPlant  = state?.HasPlant ?? false;
+                string potLabel = pot?.PotId ?? $"POT-00{i + 1}";
 
-                // Preview sprite
+                // ── Badge ──
+                if (_potBadges[i] != null)
+                {
+                    _potBadges[i].text = potLabel;
+                    if (hasPlant)
+                    {
+                        _potBadges[i].RemoveFromClassList("dome-pot-badge--empty");
+                        _potBadges[i].AddToClassList("dome-pot-badge--occupied");
+                    }
+                    else
+                    {
+                        _potBadges[i].RemoveFromClassList("dome-pot-badge--occupied");
+                        _potBadges[i].AddToClassList("dome-pot-badge--empty");
+                    }
+                }
+
+                // ── Card: outline per famiglia; sfondo neutro (niente tinta condizione); vuoto = celeste ──
+                if (_potCards[i] != null)
+                {
+                    _potCards[i].RemoveFromClassList("dome-pot-card--empty");
+                    _potCards[i].RemoveFromClassList("dome-pot-card--fam-pure");
+                    _potCards[i].RemoveFromClassList("dome-pot-card--fam-evil");
+                    _potCards[i].RemoveFromClassList("dome-pot-card--fam-wild");
+
+                    if (hasPlant && state != null)
+                    {
+                        PlantFamily cardFamily = GetPlantFamilyForDisplay(plantData, state);
+                        switch (cardFamily)
+                        {
+                            case PlantFamily.Pure:
+                                _potCards[i].AddToClassList("dome-pot-card--fam-pure");
+                                break;
+                            case PlantFamily.Evil:
+                                _potCards[i].AddToClassList("dome-pot-card--fam-evil");
+                                break;
+                            default:
+                                _potCards[i].AddToClassList("dome-pot-card--fam-wild");
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        _potCards[i].AddToClassList("dome-pot-card--empty");
+                    }
+                }
+
+                // ── Preview sprite — usa il visual set della pianta (adultSprite = identità specie)
+                //    NON la sprite dello SpriteRenderer di scena (che cambierebbe con lo stadio
+                //    e al Seed mostrerebbe la sprite del seme, non la pianta).
                 if (_potPreviews[i] != null)
                 {
-                    var sprite = hasPlant ? pot?.Sprite : null;
-                    if (sprite != null)
+                    Sprite previewSprite = null;
+                    if (hasPlant && plantData != null)
                     {
-                        _potPreviews[i].style.backgroundImage = new StyleBackground(sprite);
+                        var vs = plantData.VisualSet;
+                        if (vs != null)
+                            previewSprite = vs.adultSprite ?? vs.floweringSprite;
+                    }
+
+                    if (previewSprite != null)
+                    {
+                        _potPreviews[i].style.backgroundImage = new StyleBackground(previewSprite);
+                        _potPreviews[i].style.backgroundSize  = new BackgroundSize(BackgroundSizeType.Contain);
+                    }
+                    else if (hasPlant && _previewPlaceholderSprite != null)
+                    {
+                        _potPreviews[i].style.backgroundImage = new StyleBackground(_previewPlaceholderSprite);
                         _potPreviews[i].style.backgroundSize  = new BackgroundSize(BackgroundSizeType.Contain);
                     }
                     else
@@ -345,53 +425,67 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                 }
 
-                // Name — green when occupied, muted when empty
+                // ── Name (colore = famiglia, come outline / ref. allegato 2) ──
                 if (_potNames[i] != null)
                 {
-                    string potLabel = pot?.PotId ?? $"POT-00{i + 1}";
-                    if (hasPlant)
+                    if (hasPlant && state != null)
                     {
                         _potNames[i].text = GetPlantDisplayName(plantData, state.PlantCode);
-                        _potNames[i].style.color = new StyleColor(new Color(0.498f, 1f, 0.478f)); // rgb(127,255,122)
+                        _potNames[i].style.color =
+                            new StyleColor(GetFamilyColor(GetPlantFamilyForDisplay(plantData, state)));
                     }
                     else
                     {
-                        _potNames[i].text = $"{potLabel}  —";
-                        _potNames[i].style.color = new StyleColor(new Color(0.55f, 0.55f, 0.55f));
+                        _potNames[i].text = "VASO VUOTO";
+                        _potNames[i].style.color = StyleKeyword.Null;
                     }
                 }
 
-                // Sub info: Lvl, Stage, pH drift
+                // ── Sub: Lvl • stadio • famiglia — grigio chiaro fisso (USS), non colore famiglia ──
                 if (_potSubs[i] != null)
                 {
                     if (hasPlant && state != null)
                     {
-                        string phStr = plantData != null ? FormatPhDrift(plantData.GetDailyPhDrift()) : "0";
-                        _potSubs[i].text = $"Lvl {state.PlantLevel} | {PlantStageLabel(state.Stage)} | pH {phStr}";
+                        PlantFamily family  = GetPlantFamilyForDisplay(plantData, state);
+                        string famLabel     = family.ToString().ToUpperInvariant();
+                        _potSubs[i].text    = $"Lvl.{state.PlantLevel} • {PlantStageLabel(state.Stage)} • {famLabel}";
+                        _potSubs[i].style.color = StyleKeyword.Null;
                     }
                     else
                     {
-                        _potSubs[i].text = "";
+                        _potSubs[i].text = "Pronto per la piantagione";
+                        _potSubs[i].style.color = StyleKeyword.Null;
                     }
                 }
 
-                // Condition — colour matches terminal: green/yellow/red
-                if (_potConds[i] != null)
+                // ── Condition (pallino + testo; allineato al tooltip: nome + %) ──
+                if (_potCondRows[i] != null)
+                    _potCondRows[i].style.display =
+                        hasPlant && state != null ? DisplayStyle.Flex : DisplayStyle.None;
+                if (hasPlant && state != null)
                 {
-                    if (hasPlant && state != null)
+                    Color condCol = ConditionColor(state.ConditionScore);
+                    if (_potCondDots[i] != null)
+                        _potCondDots[i].style.backgroundColor = new StyleColor(condCol);
+                    if (_potConds[i] != null)
                     {
                         string condStr = ConditionLabel(state.ConditionScore);
-                        _potConds[i].text = $"{condStr} ({state.ConditionScore}%)";
-                        _potConds[i].style.color = new StyleColor(ConditionColor(state.ConditionScore));
+                        _potConds[i].text = $"{condStr.ToUpperInvariant()} ({state.ConditionScore}%)";
+                        _potConds[i].style.color = new StyleColor(condCol);
                     }
-                    else
+                }
+                else
+                {
+                    if (_potCondDots[i] != null)
+                        _potCondDots[i].style.backgroundColor = StyleKeyword.Null;
+                    if (_potConds[i] != null)
                     {
                         _potConds[i].text = "";
                         _potConds[i].style.color = StyleKeyword.Null;
                     }
                 }
 
-                // Water indicator
+                // ── Water indicator ──
                 if (_potWater[i] != null)
                 {
                     if (hasPlant && state != null)
@@ -409,7 +503,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                 }
 
-                // LED indicator
+                // ── LED indicator ──
                 if (_potLed[i] != null)
                 {
                     if (hasPlant && state != null)
@@ -436,6 +530,83 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                         _potLed[i].style.color = new StyleColor(new Color(0.45f, 0.45f, 0.45f));
                     }
                 }
+
+                // ── Expanded area stats (valori 0 / LED off = rosso; label/outline da USS per tipo) ──
+                if (hasPlant && state != null)
+                {
+                    int hydPct = GetHydrationPercent(state);
+
+                    if (_potStatWater[i] != null)
+                    {
+                        _potStatWater[i].text = $"{hydPct}%";
+                        StageRequirements reqW = plantData?.GetStageRequirements((PlantStage)state.Stage);
+                        if (hydPct <= 0)
+                            _potStatWater[i].style.color = new StyleColor(TipRed);
+                        else if (reqW != null)
+                            _potStatWater[i].style.color = new StyleColor(RangeColor(hydPct, reqW.hydrationMin, reqW.hydrationMax));
+                        else
+                            _potStatWater[i].style.color = new StyleColor(TipMuted);
+                    }
+
+                    if (_potStatFert[i] != null)
+                    {
+                        _potStatFert[i].text = $"{state.FertilizerLevel}%";
+                        StageRequirements reqF = plantData?.GetStageRequirements((PlantStage)state.Stage);
+                        if (state.FertilizerLevel <= 0)
+                            _potStatFert[i].style.color = new StyleColor(TipRed);
+                        else if (reqF != null)
+                            _potStatFert[i].style.color = new StyleColor(RangeColor(state.FertilizerLevel, reqF.fertilizerMin, reqF.fertilizerMax));
+                        else
+                            _potStatFert[i].style.color = new StyleColor(TipMuted);
+                    }
+
+                    if (_potStatLed[i] != null)
+                    {
+                        string ledText = FormatLedStatText(state.LedSystemState);
+                        Color  ledColor;
+                        switch (state.LedSystemState)
+                        {
+                            case LedSystemState.Blue:
+                                ledColor = new Color(0.36f, 0.71f, 0.89f);
+                                break;
+                            case LedSystemState.Red:
+                                ledColor = new Color(0.83f, 0.37f, 0.37f);
+                                break;
+                            default:
+                                ledColor = TipRed;
+                                break;
+                        }
+                        _potStatLed[i].text = ledText;
+                        _potStatLed[i].style.color = new StyleColor(ledColor);
+                    }
+
+                    if (_potStatPh[i] != null && plantData != null)
+                        _potStatPh[i].text = $"pH {FormatPhDrift(plantData.GetDailyPhDrift())}/g";
+                    else if (_potStatPh[i] != null)
+                        _potStatPh[i].text = "";
+                }
+                else
+                {
+                    if (_potStatWater[i] != null)
+                    {
+                        _potStatWater[i].text = "—";
+                        _potStatWater[i].style.color = StyleKeyword.Null;
+                    }
+                    if (_potStatFert[i] != null)
+                    {
+                        _potStatFert[i].text = "—";
+                        _potStatFert[i].style.color = StyleKeyword.Null;
+                    }
+                    if (_potStatLed[i] != null)
+                    {
+                        _potStatLed[i].text = "—";
+                        _potStatLed[i].style.color = StyleKeyword.Null;
+                    }
+                    if (_potStatPh[i] != null) _potStatPh[i].text = "";
+                }
+
+                // ── Sync expand state visually ──
+                ApplyPotExpandState(i);
             }
         }
 
@@ -449,7 +620,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 CryoSlot slot = (slots != null && i < slots.Count) ? slots[i] : null;
                 _cachedCryoSlots[i] = slot;
 
-                bool occupied = slot?.IsOccupied ?? false;
+                bool occupied         = slot?.IsOccupied ?? false;
                 CryoPlantPayload payload = slot?.Payload;
 
                 if (_cryoIds[i] != null)
@@ -503,33 +674,46 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 foreach (var s in slots)
                     if (s?.IsOccupied ?? false) cryoOccupied++;
 
-            if (_tabPots != null) _tabPots.text = $"POTS [{potsOccupied}/4]";
-            if (_tabCryo != null) _tabCryo.text = $"CRYO [{cryoOccupied}/3]";
+            if (_tabPotsLabel != null)
+                _tabPotsLabel.text = $"POT [{potsOccupied}/4]";
+            else if (_tabPots != null)
+                _tabPots.text = $"POT [{potsOccupied}/4]";
+            if (_tabCryoLabel != null)
+                _tabCryoLabel.text = $"CRYO [{cryoOccupied}/3]";
+            else if (_tabCryo != null)
+                _tabCryo.text = $"CRYO [{cryoOccupied}/3]";
         }
 
         // ─────────────────────────────────────────────────────────────
-        // Tooltip
+        // Tooltip (delayed ~200ms on hover)
         // ─────────────────────────────────────────────────────────────
 
         private void OnPotRowHover(int idx)
         {
+            _tooltipSchedule?.Pause();
             if (_tooltip == null || idx >= 4) return;
 
-            var state     = _cachedStates[idx];
-            var plantData = _cachedPlantData[idx];
-
+            var state = _cachedStates[idx];
             if (state == null || !state.HasPlant)
             {
                 HideTooltip();
                 return;
             }
 
-            SetTooltipLines(BuildPotTooltipLines(state, plantData));
-            _tooltip.style.display = DisplayStyle.Flex;
+            int capturedIdx = idx;
+            _tooltipSchedule = _hudRoot.schedule.Execute(() =>
+            {
+                var s  = _cachedStates[capturedIdx];
+                var pd = _cachedPlantData[capturedIdx];
+                if (s == null || !s.HasPlant || _tooltip == null) return;
+                SetTooltipLines(BuildPotTooltipLines(s, pd));
+                _tooltip.style.display = DisplayStyle.Flex;
+            }).StartingIn(200);
         }
 
         private void OnCryoRowHover(int idx)
         {
+            _tooltipSchedule?.Pause();
             if (_tooltip == null || idx >= 3) return;
 
             var slot = _cachedCryoSlots[idx];
@@ -539,61 +723,124 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 return;
             }
 
-            SetTooltipLines(BuildCryoTooltipLines(slot));
-            _tooltip.style.display = DisplayStyle.Flex;
+            int capturedIdx = idx;
+            _tooltipSchedule = _hudRoot.schedule.Execute(() =>
+            {
+                var s = _cachedCryoSlots[capturedIdx];
+                if (s == null || !s.IsOccupied || s.Payload == null || _tooltip == null) return;
+                SetTooltipLines(BuildCryoTooltipLines(s));
+                _tooltip.style.display = DisplayStyle.Flex;
+            }).StartingIn(200);
         }
 
         private void SetTooltipLines(System.Collections.Generic.List<TooltipLine> lines)
         {
             if (_tooltipLines == null) return;
             _tooltipLines.Clear();
+
+            int contentIndex = 0;
+            string botZone = null; // "poteri" | "subiti" — stile reference 2 sui blocchi botanici
+
             foreach (var line in lines)
             {
-                var lbl = new Label(line.Text);
                 if (line.IsSep)
                 {
-                    lbl.AddToClassList("dome-hud-tooltip-sep");
+                    var rule = new VisualElement();
+                    rule.AddToClassList("dome-hud-tooltip-sep");
+                    _tooltipLines.Add(rule);
+                    continue;
+                }
+
+                var lbl = new Label(line.Text);
+                lbl.AddToClassList("dome-hud-tooltip-line");
+                if (line.Bold)
+                    lbl.AddToClassList("dome-hud-tooltip-line--bold");
+                lbl.style.color = new StyleColor(line.Color);
+
+                string t = line.Text ?? string.Empty;
+
+                if (contentIndex == 0)
+                    lbl.AddToClassList("dome-hud-tooltip-line--title");
+                else if (contentIndex == 1)
+                    lbl.AddToClassList("dome-hud-tooltip-line--subtitle");
+
+                if (line.Bold && IsTooltipSectionHeader(t))
+                    lbl.AddToClassList("dome-hud-tooltip-line--section");
+
+                if (IsTooltipIndentedKeyValueLine(t))
+                    lbl.AddToClassList("dome-hud-tooltip-line--kv");
+
+                if (t.Contains("Poteri") && t.Contains("──"))
+                {
+                    lbl.AddToClassList("dome-hud-tooltip-line--poteri-h");
+                    botZone = "poteri";
+                }
+                else if (t.Contains("Subiti") && t.Contains("──"))
+                {
+                    lbl.AddToClassList("dome-hud-tooltip-line--subiti-h");
+                    botZone = "subiti";
                 }
                 else
                 {
-                    lbl.AddToClassList("dome-hud-tooltip-line");
-                    if (line.Bold)
-                        lbl.AddToClassList("dome-hud-tooltip-line--bold");
-                    lbl.style.color = new StyleColor(line.Color);
+                    if (botZone == "poteri")
+                        lbl.AddToClassList("dome-hud-tooltip-line--in-poteri");
+                    else if (botZone == "subiti")
+                        lbl.AddToClassList("dome-hud-tooltip-line--in-subiti");
                 }
+
                 _tooltipLines.Add(lbl);
+                contentIndex++;
             }
+        }
+
+        private static bool IsTooltipSectionHeader(string t)
+        {
+            if (string.IsNullOrEmpty(t)) return false;
+            string u = t.TrimStart();
+            return u.StartsWith("REQUISITI", StringComparison.Ordinal)
+                || u.StartsWith("STATO ATTUALE", StringComparison.Ordinal)
+                || u.StartsWith("POTERE PASSIVO", StringComparison.Ordinal)
+                || u.StartsWith("EFFETTO pH", StringComparison.Ordinal);
+        }
+
+        private static bool IsTooltipIndentedKeyValueLine(string t)
+        {
+            if (string.IsNullOrEmpty(t) || t.IndexOf(':') < 0) return false;
+            return t.StartsWith("  ", StringComparison.Ordinal) || t.StartsWith("    ", StringComparison.Ordinal);
         }
 
         private void HideTooltip()
         {
+            _tooltipSchedule?.Pause();
             if (_tooltip != null)
                 _tooltip.style.display = DisplayStyle.None;
         }
 
-        // ── TooltipLine ──────────────────────────────────────────────
+        // ── TooltipLine struct ───────────────────────────────────────
         private struct TooltipLine
         {
             public string Text;
             public Color  Color;
             public bool   Bold;
-            public bool   IsSep; // renders as dim separator (smaller font via CSS)
+            public bool   IsSep;
 
             public TooltipLine(string text, Color color, bool bold = false)
             {
-                Text  = text; Color = color; Bold = bold; IsSep = false;
+                Text = text; Color = color; Bold = bold; IsSep = false;
             }
+
             public static TooltipLine Sep() =>
                 new TooltipLine { Text = "────────────────────────────────", IsSep = true };
         }
 
-        // ── Palette shortcuts ────────────────────────────────────────
+        // ── Palette shortcuts (tooltip allineato a TopBar ph-tooltip CRT) ─
         private static readonly Color TipGreen  = new Color(0.498f, 1f, 0.478f);
         private static readonly Color TipYellow = new Color(0.902f, 0.788f, 0.435f);
         private static readonly Color TipRed    = new Color(0.827f, 0.373f, 0.373f);
         private static readonly Color TipMuted  = new Color(0.753f, 0.784f, 0.773f);
+        private static readonly Color TipPhCyan = new Color(80f / 255f, 200f / 255f, 220f / 255f);
+        private static readonly Color TipPhSection = new Color(200f / 255f, 203f / 255f, 200f / 255f);
 
-        // Returns green/yellow/red based on whether value is within [min,max]
         private static Color RangeColor(float value, float min, float max)
         {
             if (value >= min && value <= max) return TipGreen;
@@ -602,11 +849,51 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             return TipRed;
         }
 
-        // Returns green if LED matches requirement, yellow if wrong LED active, red if off when needed
+        /// <summary>Stesso caricamento di <see cref="PotActions"/> / PlantCard: Resources/Configs/PotSystemConfig.</summary>
+        private void EnsurePotSystemConfig()
+        {
+            if (_potSystemConfig != null) return;
+            _potSystemConfig = Resources.Load<PotSystemConfig>("Configs/PotSystemConfig");
+            if (_potSystemConfig == null)
+            {
+                PotSystemConfig[] all = Resources.LoadAll<PotSystemConfig>("Configs");
+                if (all != null && all.Length > 0)
+                {
+                    foreach (PotSystemConfig cfg in all)
+                    {
+                        if (cfg != null && cfg.MaxHydration != 4)
+                        {
+                            _potSystemConfig = cfg;
+                            break;
+                        }
+                    }
+                    if (_potSystemConfig == null)
+                        _potSystemConfig = all[0];
+                }
+            }
+        }
+
+        private int GetHydrationPercent(PotStateModel state)
+        {
+            if (state == null) return 0;
+            int maxH = _potSystemConfig != null ? _potSystemConfig.MaxHydration : 10;
+            return PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxH);
+        }
+
+        private static string FormatLedStatText(LedSystemState s)
+        {
+            switch (s)
+            {
+                case LedSystemState.Blue: return "BLUE";
+                case LedSystemState.Red:  return "RED";
+                default:                   return "OFF";
+            }
+        }
+
         private static Color LedColor(LedSystemState current, LedType? required)
         {
             if (!required.HasValue) return TipGreen;
-            if (current == LedSystemState.Off)  return TipRed;
+            if (current == LedSystemState.Off) return TipRed;
             LedType currentType = current == LedSystemState.Blue ? LedType.Blue : LedType.Red;
             return currentType == required.Value ? TipGreen : TipYellow;
         }
@@ -619,16 +906,17 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             string stage = PlantStageLabel(state.Stage);
             string cond  = ConditionLabel(state.ConditionScore);
 
-            lines.Add(new TooltipLine($"■ {name}  Lvl {state.PlantLevel}", TipGreen, bold: true));
+            lines.Add(new TooltipLine($"■ {name}  Lvl {state.PlantLevel}", TipPhCyan, bold: true));
             lines.Add(new TooltipLine($"  {state.PotId} · {stage} · Giorno {state.DaysInCurrentStage}", TipMuted));
 
             StageRequirements req = plantData?.GetStageRequirements((PlantStage)state.Stage);
-            int hydPct = Mathf.Clamp(state.Hydration * 10, 0, 100);
+            int hydPct = GetHydrationPercent(state);
+            string ledStat = FormatLedStatText(state.LedSystemState);
 
             if (req != null)
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("REQUISITI E AVANZAMENTO", TipGreen, bold: true));
+                lines.Add(new TooltipLine("REQUISITI E AVANZAMENTO", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"  Idratazione   : {req.hydrationMin}–{req.hydrationMax}%", TipMuted));
                 LedType? reqLed = req.GetRequiredLed();
                 lines.Add(new TooltipLine($"  LED           : {(reqLed.HasValue ? reqLed.Value.ToString() : "nessuno")}", TipMuted));
@@ -636,21 +924,21 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 lines.Add(new TooltipLine($"  Durata        : {req.durationDays} giorni", TipMuted));
 
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("STATO ATTUALE", TipGreen, bold: true));
+                lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%",
                     RangeColor(hydPct, req.hydrationMin, req.hydrationMax)));
                 lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%",
                     RangeColor(state.FertilizerLevel, req.fertilizerMin, req.fertilizerMax)));
-                lines.Add(new TooltipLine($"  LED           : {state.LedSystemState}",
+                lines.Add(new TooltipLine($"  LED           : {ledStat}",
                     LedColor(state.LedSystemState, req.GetRequiredLed())));
             }
             else
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("STATO ATTUALE", TipGreen, bold: true));
+                lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%", TipMuted));
                 lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%", TipMuted));
-                lines.Add(new TooltipLine($"  LED           : {state.LedSystemState}", TipMuted));
+                lines.Add(new TooltipLine($"  LED           : {ledStat}", TipMuted));
             }
 
             lines.Add(new TooltipLine($"  Condizione    : {cond} ({state.ConditionScore}%)",
@@ -689,13 +977,13 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             var payload = slot.Payload;
             var lines   = new System.Collections.Generic.List<TooltipLine>();
 
-            lines.Add(new TooltipLine($"❄  {GetCryoPlantDisplayName(payload)}  Lvl {payload.PlantLevel}", TipGreen, bold: true));
+            lines.Add(new TooltipLine($"❄  {GetCryoPlantDisplayName(payload)}  Lvl {payload.PlantLevel}", TipPhCyan, bold: true));
             lines.Add(new TooltipLine($"   {slot.SlotId}", TipMuted));
 
             if (!string.IsNullOrWhiteSpace(payload.PassivePowerLabel))
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("POTERE PASSIVO", TipGreen, bold: true));
+                lines.Add(new TooltipLine("POTERE PASSIVO", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"   {payload.PassivePowerLabel}", TipMuted));
             }
 
@@ -707,8 +995,8 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     if (mod.SlotId == slot.SlotId)
                     {
                         lines.Add(TooltipLine.Sep());
-                        lines.Add(new TooltipLine("EFFETTO pH", TipGreen, bold: true));
-                        float drift = mod.DailyDrift;
+                        lines.Add(new TooltipLine("EFFETTO pH", TipPhCyan, bold: true));
+                        float drift    = mod.DailyDrift;
                         Color driftCol = Mathf.Abs(drift) < 0.01f ? TipMuted
                                        : drift > 0 ? TipGreen : TipYellow;
                         lines.Add(new TooltipLine($"   Drift/giorno: {FormatPhDrift(drift)}", driftCol));
@@ -723,7 +1011,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         }
 
         // ─────────────────────────────────────────────────────────────
-        // Static helpers
+        // Static helpers — display names / labels
         // ─────────────────────────────────────────────────────────────
 
         private static string GetPlantDisplayName(PlantData plantData, string plantCode)
@@ -769,12 +1057,11 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             return "Critica";
         }
 
-        // Terminal palette: green ≥60, yellow 40-59, red <40
         private static Color ConditionColor(int score)
         {
-            if (score >= 60) return new Color(0.498f, 1f, 0.478f);    // rgb(127,255,122) terminal green
-            if (score >= 40) return new Color(0.902f, 0.788f, 0.435f); // rgb(230,201,111) terminal yellow
-            return new Color(0.827f, 0.373f, 0.373f);                  // rgb(211, 95, 95) terminal red
+            if (score >= 60) return new Color(0.498f, 1f, 0.478f);
+            if (score >= 40) return new Color(0.902f, 0.788f, 0.435f);
+            return new Color(0.827f, 0.373f, 0.373f);
         }
 
         private static string FormatPhDrift(float drift)
@@ -788,5 +1075,34 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             if (string.IsNullOrEmpty(s) || s.Length <= maxLen) return s;
             return s.Substring(0, maxLen - 3) + "…";
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // Static helpers — family (aligned with PlantCardV3 logic)
+        // ─────────────────────────────────────────────────────────────
+
+        private static PlantFamily GetPlantFamilyForDisplay(PlantData plantData, PotStateModel state)
+        {
+            if (plantData != null) return plantData.Family;
+
+            string familyMetadata = state?.PlantFamilyMetadata;
+            if (!string.IsNullOrWhiteSpace(familyMetadata))
+            {
+                if (familyMetadata.Equals("PURE", System.StringComparison.OrdinalIgnoreCase))
+                    return PlantFamily.Pure;
+                if (familyMetadata.Equals("EVIL", System.StringComparison.OrdinalIgnoreCase))
+                    return PlantFamily.Evil;
+            }
+
+            return PlantFamily.Standard;
+        }
+
+        // Standard maps to WILD in the visual design (#E6C96F = rgb(230,201,111)).
+        private static Color GetFamilyColor(PlantFamily family) => family switch
+        {
+            PlantFamily.Pure     => new Color(0.498f, 1f, 0.478f, 1f),      // #7FFF7A verde LED
+            PlantFamily.Evil     => new Color(0.827f, 0.373f, 0.373f, 1f),  // #D35F5F rosso
+            PlantFamily.Standard => new Color(0.902f, 0.788f, 0.435f, 1f),  // #E6C96F giallo/gold
+            _                    => new Color(0.72f,  0.72f,  0.72f,  1f),
+        };
     }
 }

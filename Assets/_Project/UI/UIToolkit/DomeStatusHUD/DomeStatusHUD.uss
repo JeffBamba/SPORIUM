@@ -1,138 +1,354 @@
-/* ═══════════════════════════════════════════════════════════════════
-   DomeStatusHUD — HUD unificato pots attivi + slot cryo
-   Espansione orizzontale (body a sinistra del toggle button)
-   Stile coerente con PlantCardV3 terminal: verde rgb(127,255,122)
-   Font size allineato a Toast Notification Foundation (13px primary)
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* ── Terminal green palette (matching PlantCardV3_Terminal.uss) ─── */
-/* Primary green : rgb(127, 255, 122)                               */
-/* Border green  : rgba(127, 255, 122, 0.65)                        */
-/* Bg panel      : rgba(0, 0, 0, 0.75)                              */
-/* Text muted    : rgb(192, 200, 197)                               */
-/* Yellow        : rgb(230, 201, 111)                               */
-/* Red           : rgb(211, 95, 95)                                 */
-
-/* Root: row layout, anchored bottom-right, raised ~20 % from edge  */
 .dome-hud-root {
     position: absolute;
-    right: 24px;
-    bottom: 160px;
-    flex-direction: row;
-    align-items: flex-end;
-}
-
-/* Body: the expandable panel */
-.dome-hud-body {
-    width: 320px;
     flex-direction: column;
-    background-color: rgba(0, 0, 0, 0.75);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: rgba(127, 255, 122, 0.65);
-    border-right-color: rgba(127, 255, 122, 0.65);
-    border-top-color: rgba(127, 255, 122, 0.65);
-    border-bottom-color: rgba(127, 255, 122, 0.65);
-    border-top-left-radius: 2px;
-    border-bottom-left-radius: 2px;
-}
-
-/* Horizontal collapse: hide body when collapsed */
-.dome-hud-collapsed .dome-hud-body {
-    display: none;
-}
-
-/* ── Toggle button ─────────────────────────────────────────────── */
-.dome-hud-toggle-btn {
-    width: 22px;
-    align-self: stretch;
-    background-color: rgba(0, 0, 0, 0.75);
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: rgba(127, 255, 122, 0.65);
-    border-right-color: rgba(127, 255, 122, 0.65);
-    border-top-color: rgba(127, 255, 122, 0.65);
-    border-bottom-color: rgba(127, 255, 122, 0.65);
-    border-top-right-radius: 2px;
-    border-bottom-right-radius: 2px;
+    width: 380px;
+    margin: 0;
     padding: 0;
-    color: rgb(127, 255, 122);
-    font-size: 13px;
-    -unity-text-align: middle-center;
-    -unity-font-style: bold;
+    background-color: rgba(0, 0, 0, 0.82);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
-.dome-hud-toggle-btn:hover {
-    background-color: rgba(127, 255, 122, 0.12);
-}
-
-/* ── Tab bar ────────────────────────────────────────────────────── */
 .dome-hud-tabs {
     flex-direction: row;
-    height: 30px;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(127, 255, 122, 0.4);
+    align-items: stretch;
     flex-shrink: 0;
+    margin: 0;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(93, 182, 227);
+    border-right-color: rgb(93, 182, 227);
+    border-top-color: rgb(93, 182, 227);
+    border-bottom-color: rgb(93, 182, 227);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: rgba(0, 0, 0, 0.35);
 }
 
 .dome-tab-btn {
-    flex: 1;
-    height: 30px;
-    background-color: transparent;
-    border-width: 0;
-    border-right-width: 1px;
-    border-right-color: rgba(127, 255, 122, 0.3);
-    color: rgb(192, 200, 197);
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 28px;
+    margin-left: 3px;
+    margin-right: 3px;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     font-size: 11px;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.dome-tab-btn__content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.dome-tab-btn__label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    margin: 0;
     padding: 0;
 }
 
-.dome-tab-btn:hover {
-    background-color: rgba(127, 255, 122, 0.08);
+.dome-tab-icon-box {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    background-color: rgba(0, 0, 0, 0.4);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.dome-tab-icon-box--pots {
+    border-left-color: rgba(127, 255, 122, 0.55);
+    border-right-color: rgba(127, 255, 122, 0.55);
+    border-top-color: rgba(127, 255, 122, 0.55);
+    border-bottom-color: rgba(127, 255, 122, 0.55);
+    -unity-background-image-tint-color: rgb(127, 255, 122);
+}
+
+.dome-tab-icon-box--cryo {
+    border-left-color: rgba(93, 182, 227, 0.55);
+    border-right-color: rgba(93, 182, 227, 0.55);
+    border-top-color: rgba(93, 182, 227, 0.55);
+    border-bottom-color: rgba(93, 182, 227, 0.55);
+    -unity-background-image-tint-color: rgb(93, 182, 227);
+}
+
+.dome-tab-btn--pots {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(127, 255, 122, 0.45);
+    border-right-color: rgba(127, 255, 122, 0.45);
+    border-top-color: rgba(127, 255, 122, 0.45);
+    border-bottom-color: rgba(127, 255, 122, 0.45);
+    color: rgba(127, 255, 122, 0.75);
+}
+
+.dome-tab-btn--cryo {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(93, 182, 227, 0.45);
+    border-right-color: rgba(93, 182, 227, 0.45);
+    border-top-color: rgba(93, 182, 227, 0.45);
+    border-bottom-color: rgba(93, 182, 227, 0.45);
+    color: rgba(93, 182, 227, 0.75);
+}
+
+.dome-tab-btn--pots:hover {
+    background-color: rgba(0, 0, 0, 0.38);
     color: rgb(127, 255, 122);
 }
 
-.dome-tab-active {
-    color: rgb(127, 255, 122);
-    background-color: rgba(127, 255, 122, 0.12);
+.dome-tab-btn--cryo:hover {
+    background-color: rgba(0, 0, 0, 0.38);
+    color: rgb(93, 182, 227);
 }
 
-/* ── Sections ───────────────────────────────────────────────────── */
+.dome-tab-btn--pots.dome-tab-active {
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+    color: rgb(127, 255, 122);
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+.dome-tab-btn--cryo.dome-tab-active {
+    border-left-color: rgb(93, 182, 227);
+    border-right-color: rgb(93, 182, 227);
+    border-top-color: rgb(93, 182, 227);
+    border-bottom-color: rgb(93, 182, 227);
+    color: rgb(93, 182, 227);
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+.dome-tab-btn--pots .dome-tab-btn__label {
+    color: rgba(127, 255, 122, 0.75);
+}
+
+.dome-tab-btn--pots:hover .dome-tab-btn__label {
+    color: rgb(127, 255, 122);
+}
+
+.dome-tab-btn--pots.dome-tab-active .dome-tab-btn__label {
+    color: rgb(127, 255, 122);
+}
+
+.dome-tab-btn--cryo .dome-tab-btn__label {
+    color: rgba(93, 182, 227, 0.75);
+}
+
+.dome-tab-btn--cryo:hover .dome-tab-btn__label {
+    color: rgb(93, 182, 227);
+}
+
+.dome-tab-btn--cryo.dome-tab-active .dome-tab-btn__label {
+    color: rgb(93, 182, 227);
+}
+
 .dome-hud-section {
     flex-direction: column;
-    padding-top: 2px;
-    padding-bottom: 2px;
+    margin: 0;
+    padding: 0;
+    padding-top: 3px;
 }
 
-/* ── Active pot rows ────────────────────────────────────────────── */
-.dome-pot-row {
+.dome-pot-card {
+    flex-direction: column;
+    margin: 0;
+    margin-bottom: 3px;
+    padding: 0;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: rgba(0, 0, 0, 0.22);
+    transition-duration: 0.15s;
+    transition-property: background-color;
+}
+
+.dome-pot-card--fam-pure {
+    border-left-color: rgb(127, 255, 122);
+    border-right-color: rgb(127, 255, 122);
+    border-top-color: rgb(127, 255, 122);
+    border-bottom-color: rgb(127, 255, 122);
+}
+
+.dome-pot-card--fam-evil {
+    border-left-color: rgb(211, 95, 95);
+    border-right-color: rgb(211, 95, 95);
+    border-top-color: rgb(211, 95, 95);
+    border-bottom-color: rgb(211, 95, 95);
+}
+
+.dome-pot-card--fam-wild {
+    border-left-color: rgb(230, 201, 111);
+    border-right-color: rgb(230, 201, 111);
+    border-top-color: rgb(230, 201, 111);
+    border-bottom-color: rgb(230, 201, 111);
+}
+
+.dome-pot-card--empty {
+    border-left-color: rgba(93, 182, 227, 0.55);
+    border-right-color: rgba(93, 182, 227, 0.55);
+    border-top-color: rgba(93, 182, 227, 0.55);
+    border-bottom-color: rgba(93, 182, 227, 0.55);
+}
+
+.dome-pot-header {
     flex-direction: row;
     align-items: center;
-    padding-left: 7px;
+    margin: 0;
+    padding-left: 6px;
     padding-right: 6px;
     padding-top: 6px;
     padding-bottom: 6px;
+}
+
+.dome-pot-header:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.dome-pot-card--empty .dome-pot-header:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.dome-pot-chevron {
+    font-size: 10px;
+    color: rgb(105, 130, 120);
+    -unity-text-align: middle-center;
+    width: 12px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.dome-pot-card--fam-pure .dome-pot-chevron {
+    color: rgba(127, 255, 122, 0.8);
+}
+
+.dome-pot-card--fam-wild .dome-pot-chevron {
+    color: rgba(230, 201, 111, 0.85);
+}
+
+.dome-pot-card--fam-evil .dome-pot-chevron {
+    color: rgba(211, 95, 95, 0.85);
+}
+
+.dome-pot-badge {
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-right: 7px;
+    flex-shrink: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dome-pot-badge--occupied {
+    background-color: rgba(0, 0, 0, 0.28);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(127, 255, 122, 0.18);
 }
 
-.dome-pot-row:hover {
-    background-color: rgba(127, 255, 122, 0.08);
+.dome-pot-card--fam-pure .dome-pot-badge--occupied {
+    border-left-color: rgba(127, 255, 122, 0.65);
+    border-right-color: rgba(127, 255, 122, 0.65);
+    border-top-color: rgba(127, 255, 122, 0.65);
+    border-bottom-color: rgba(127, 255, 122, 0.65);
+    color: rgb(127, 255, 122);
 }
 
-/* Plant preview thumbnail */
+.dome-pot-card--fam-wild .dome-pot-badge--occupied {
+    border-left-color: rgba(230, 201, 111, 0.75);
+    border-right-color: rgba(230, 201, 111, 0.75);
+    border-top-color: rgba(230, 201, 111, 0.75);
+    border-bottom-color: rgba(230, 201, 111, 0.75);
+    color: rgb(230, 201, 111);
+}
+
+.dome-pot-card--fam-evil .dome-pot-badge--occupied {
+    border-left-color: rgba(211, 95, 95, 0.75);
+    border-right-color: rgba(211, 95, 95, 0.75);
+    border-top-color: rgba(211, 95, 95, 0.75);
+    border-bottom-color: rgba(211, 95, 95, 0.75);
+    color: rgb(211, 95, 95);
+}
+
+.dome-pot-badge--empty {
+    background-color: rgba(93, 182, 227, 0.15);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(93, 182, 227, 0.55);
+    border-right-color: rgba(93, 182, 227, 0.55);
+    border-top-color: rgba(93, 182, 227, 0.55);
+    border-bottom-color: rgba(93, 182, 227, 0.55);
+    color: rgb(93, 182, 227);
+}
+
 .dome-pot-preview {
     width: 34px;
     height: 34px;
-    border-radius: 2px;
-    background-color: rgba(0, 0, 0, 0.40);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: rgba(0, 0, 0, 0.45);
     margin-right: 8px;
     background-size: contain;
     flex-shrink: 0;
@@ -140,86 +356,289 @@
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
+    border-left-color: rgba(192, 200, 197, 0.18);
+    border-right-color: rgba(192, 200, 197, 0.18);
+    border-top-color: rgba(192, 200, 197, 0.18);
+    border-bottom-color: rgba(192, 200, 197, 0.18);
+}
+
+.dome-pot-card--fam-pure .dome-pot-preview {
     border-left-color: rgba(127, 255, 122, 0.4);
     border-right-color: rgba(127, 255, 122, 0.4);
     border-top-color: rgba(127, 255, 122, 0.4);
     border-bottom-color: rgba(127, 255, 122, 0.4);
 }
 
+.dome-pot-card--fam-wild .dome-pot-preview {
+    border-left-color: rgba(230, 201, 111, 0.45);
+    border-right-color: rgba(230, 201, 111, 0.45);
+    border-top-color: rgba(230, 201, 111, 0.45);
+    border-bottom-color: rgba(230, 201, 111, 0.45);
+}
+
+.dome-pot-card--fam-evil .dome-pot-preview {
+    border-left-color: rgba(211, 95, 95, 0.45);
+    border-right-color: rgba(211, 95, 95, 0.45);
+    border-top-color: rgba(211, 95, 95, 0.45);
+    border-bottom-color: rgba(211, 95, 95, 0.45);
+}
+
+.dome-pot-card--empty .dome-pot-preview {
+    border-left-color: rgba(93, 182, 227, 0.2);
+    border-right-color: rgba(93, 182, 227, 0.2);
+    border-top-color: rgba(93, 182, 227, 0.2);
+    border-bottom-color: rgba(93, 182, 227, 0.2);
+}
+
 .dome-pot-info {
     flex-direction: column;
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
     overflow: hidden;
 }
 
-/* Plant name — bright terminal green, 13px matching nf-row-msg */
 .dome-pot-name {
     font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     overflow: hidden;
     white-space: nowrap;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
-/* Lvl / Stage / pH line — muted, 12px */
+.dome-pot-card--empty .dome-pot-name {
+    color: rgb(70, 95, 110);
+    -unity-font-style: normal;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
 .dome-pot-sub {
-    font-size: 12px;
-    color: rgb(192, 200, 197);
+    font-size: 11px;
+    color: rgb(200, 205, 203);
     overflow: hidden;
     white-space: nowrap;
     margin-top: 1px;
+    letter-spacing: 1px;
 }
 
-/* Condition line — tinted by controller per score, 12px */
+.dome-pot-card--empty .dome-pot-sub {
+    font-size: 10px;
+    color: rgb(65, 88, 100);
+    letter-spacing: 1px;
+}
+
+.dome-pot-cond-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.dome-pot-cond-dot {
+    width: 9px;
+    height: 9px;
+    min-width: 9px;
+    min-height: 9px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background-color: rgb(127, 255, 122);
+}
+
 .dome-pot-cond {
-    font-size: 12px;
+    font-size: 10px;
     color: rgb(192, 200, 197);
-    overflow: hidden;
     white-space: nowrap;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    flex-grow: 0;
+}
+
+.dome-pot-status-col {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    align-self: stretch;
+    margin-left: 5px;
+    flex-shrink: 0;
 }
 
 .dome-pot-indicators {
-    flex-direction: column;
-    align-items: center;
-    margin-left: 5px;
-    flex-shrink: 0;
-    width: 12px;
+    flex-direction: row;
+    margin-top: 0;
 }
 
 .dome-pot-indicator {
     font-size: 11px;
     color: rgb(192, 200, 197);
     -unity-text-align: middle-center;
-    width: 12px;
+    width: 14px;
     height: 14px;
+    margin-left: 1px;
 }
 
-/* ── Cryo rows ──────────────────────────────────────────────────── */
+.dome-pot-expanded {
+    flex-direction: column;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(192, 200, 197, 0.12);
+    background-color: rgba(0, 0, 0, 0.28);
+}
+
+.dome-pot-stats-grid {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.dome-pot-stat-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+.dome-pot-stat-icon {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    margin-right: 4px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/_Project/Art/icona_Placeholder.png?fileID=21300000&guid=f95caadde6480e14d8c01359df07028c&type=3#icona_Placeholder");
+}
+
+.dome-pot-stat-icon--water {
+    -unity-background-image-tint-color: rgb(120, 195, 230);
+}
+
+.dome-pot-stat-icon--fert {
+    -unity-background-image-tint-color: rgb(127, 255, 122);
+}
+
+.dome-pot-stat-icon--led {
+    -unity-background-image-tint-color: rgb(230, 201, 111);
+}
+
+.dome-pot-stat-cell {
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    background-color: rgba(0, 0, 0, 0.32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-right: 2px;
+}
+
+.dome-pot-stat-cell--water {
+    border-left-color: rgba(120, 195, 230, 0.65);
+    border-right-color: rgba(120, 195, 230, 0.65);
+    border-top-color: rgba(120, 195, 230, 0.65);
+    border-bottom-color: rgba(120, 195, 230, 0.65);
+}
+
+.dome-pot-stat-cell--fert {
+    border-left-color: rgba(127, 255, 122, 0.55);
+    border-right-color: rgba(127, 255, 122, 0.55);
+    border-top-color: rgba(127, 255, 122, 0.55);
+    border-bottom-color: rgba(127, 255, 122, 0.55);
+}
+
+.dome-pot-stat-cell--led {
+    border-left-color: rgba(230, 201, 111, 0.65);
+    border-right-color: rgba(230, 201, 111, 0.65);
+    border-top-color: rgba(230, 201, 111, 0.65);
+    border-bottom-color: rgba(230, 201, 111, 0.65);
+}
+
+.dome-pot-stat-cell--water .dome-pot-stat-label {
+    color: rgb(120, 195, 230);
+}
+
+.dome-pot-stat-cell--fert .dome-pot-stat-label {
+    color: rgb(127, 255, 122);
+}
+
+.dome-pot-stat-cell--led .dome-pot-stat-label {
+    color: rgb(230, 201, 111);
+}
+
+.dome-pot-stat-label {
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 0;
+    white-space: normal;
+    max-width: 100%;
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+.dome-pot-stat-value {
+    font-size: 12px;
+    color: rgb(192, 200, 197);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: 1px;
+}
+
+.dome-pot-ph-line {
+    font-size: 10px;
+    color: rgb(105, 130, 120);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+
+.dome-pot-footer {
+    font-size: 10px;
+    color: rgb(85, 110, 100);
+    letter-spacing: 1px;
+    white-space: normal;
+    margin-top: 1px;
+}
+
 .dome-cryo-row {
     flex-direction: row;
     align-items: center;
-    padding-left: 7px;
-    padding-right: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
     padding-top: 7px;
     padding-bottom: 7px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(127, 255, 122, 0.18);
+    border-bottom-color: rgba(93, 182, 227, 0.15);
 }
 
 .dome-cryo-row:hover {
-    background-color: rgba(93, 182, 227, 0.07);
+    background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* CRYO slot ID — blue (cryo identity colour), 12px */
 .dome-cryo-id {
-    font-size: 12px;
-    color: var(--sp-color-blue-info);
+    font-size: 10px;
+    color: rgb(93, 182, 227);
     -unity-font-style: bold;
-    width: 60px;
+    width: 58px;
     flex-shrink: 0;
     -unity-text-align: middle-left;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .dome-cryo-info {
@@ -228,71 +647,453 @@
     overflow: hidden;
 }
 
-/* Cryo plant name — terminal green, 13px */
 .dome-cryo-plant {
     font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     overflow: hidden;
     white-space: nowrap;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
-/* Cryo drift / power — muted, 12px */
 .dome-cryo-detail {
-    font-size: 12px;
+    font-size: 11px;
     color: rgb(192, 200, 197);
     overflow: hidden;
     white-space: nowrap;
     margin-top: 1px;
+    letter-spacing: 1px;
 }
 
-/* ── Tooltip ────────────────────────────────────────────────────── */
-.dome-hud-tooltip {
-    position: absolute;
-    right: 347px;
-    bottom: 0;
-    width: 270px;
-    background-color: rgba(0, 0, 0, 0.92);
+.dome-hud-builder-ph-tooltip {
+    width: 420px;
+    max-width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    background-color: rgba(0, 0, 0, 0.9);
+    background-image: url("project://database/Assets/_Project/Art/Crt_background_tooltip.png?fileID=2800000&guid=b58ac99e855e3734b9992a506121e302&type=3#Crt_background_tooltip");
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-left-color: rgba(127, 255, 122, 0.70);
-    border-right-color: rgba(127, 255, 122, 0.70);
-    border-top-color: rgba(127, 255, 122, 0.70);
-    border-bottom-color: rgba(127, 255, 122, 0.70);
-    border-top-left-radius: 2px;
-    border-top-right-radius: 2px;
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 9px;
-    padding-bottom: 9px;
+    border-left-color: rgb(80, 200, 220);
+    border-right-color: rgb(80, 200, 220);
+    border-top-color: rgb(80, 200, 220);
+    border-bottom-color: rgb(80, 200, 220);
 }
 
-/* Container for per-line colored labels */
-.dome-hud-tooltip-lines {
-    flex-direction: column;
+.dome-hud-builder-ph-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+    width: 100%;
 }
 
-/* Each tooltip line — 13px matching nf-row-msg (Toast Foundation) */
-.dome-hud-tooltip-line {
+.dome-hud-builder-ph-title-icon {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    margin-right: 8px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: rgb(127, 255, 122);
+}
+
+.dome-hud-builder-ph-title {
     font-size: 13px;
+    color: rgb(80, 200, 220);
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-section {
+    flex-direction: column;
+    margin-bottom: 4px;
+    margin-left: 15px;
+}
+
+.dome-hud-builder-ph-label {
+    font-size: 12px;
+    color: rgb(199, 202, 199);
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 8px;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-value {
+    font-size: 12px;
+    color: rgb(204, 204, 204);
     white-space: normal;
-    line-height: 1.35;
-    margin-bottom: 1px;
+    margin: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-caption {
+    font-size: 11px;
+    color: rgb(136, 136, 136);
+    margin-top: 2px;
+    white-space: normal;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-box-grey {
+    flex-direction: column;
+    margin-bottom: 4px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(199, 202, 199, 0.45);
+    border-right-color: rgba(199, 202, 199, 0.45);
+    border-top-color: rgba(199, 202, 199, 0.45);
+    border-bottom-color: rgba(199, 202, 199, 0.45);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding: 4px;
+    background-color: rgb(30, 40, 42);
+}
+
+.dome-hud-builder-ph-box-title {
+    font-size: 12px;
+    color: rgb(200, 203, 200);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+    margin-left: 15px;
+    margin-top: 0;
+    margin-right: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-line {
+    font-size: 11px;
+    color: rgb(192, 200, 197);
+    margin-left: 15px;
+    margin-bottom: 2px;
+    white-space: normal;
+    margin-top: 0;
+    margin-right: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-line-bold {
+    font-size: 11px;
+    color: rgb(199, 202, 199);
+    -unity-font-style: bold;
+    margin-left: 15px;
+    margin-right: 8px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-drift-value {
+    font-size: 12px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-box-cyan {
+    flex-direction: column;
+    margin-bottom: 4px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(80, 200, 220, 0.5);
+    border-right-color: rgba(80, 200, 220, 0.5);
+    border-top-color: rgba(80, 200, 220, 0.5);
+    border-bottom-color: rgba(80, 200, 220, 0.5);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding: 4px;
+    background-color: rgb(20, 35, 40);
+}
+
+.dome-hud-builder-ph-cyan-title {
+    font-size: 12px;
+    color: rgb(80, 200, 220);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+    margin-left: 15px;
+    margin-top: 0;
+    margin-right: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-line-cyan {
+    font-size: 11px;
+    color: rgb(180, 210, 215);
+    margin-left: 15px;
+    white-space: normal;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-box-tip {
+    flex-direction: column;
+    margin-bottom: 4px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(218, 179, 108);
+    border-right-color: rgb(218, 179, 108);
+    border-top-color: rgb(218, 179, 108);
+    border-bottom-color: rgb(218, 179, 108);
+    padding: 4px;
+}
+
+.dome-hud-builder-ph-tip-title {
+    font-size: 12px;
+    color: rgb(218, 179, 108);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-tip-body {
+    font-size: 11px;
+    color: rgb(218, 179, 108);
+    white-space: normal;
+    margin: 0;
+    padding: 0;
+}
+
+.dome-hud-builder-ph-crt-bar {
+    height: 6px;
+    min-height: 6px;
+    margin-top: 2px;
+    width: 100%;
+    background-color: rgba(226, 175, 103, 0.18);
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: rgba(226, 175, 103, 0.35);
+    border-bottom-color: rgba(226, 175, 103, 0.1);
+}
+
+.dome-hud-tooltip {
+    position: absolute;
+    left: -522px;
+    bottom: 0;
+    width: 436px;
+    flex-direction: column;
+    overflow: hidden;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    background-image: url("project://database/Assets/_Project/Art/Crt_background_tooltip.png?fileID=2800000&guid=b58ac99e855e3734b9992a506121e302&type=3#Crt_background_tooltip");
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgb(80, 200, 220);
+    border-right-color: rgb(80, 200, 220);
+    border-top-color: rgb(80, 200, 220);
+    border-bottom-color: rgb(80, 200, 220);
+}
+
+.dome-hud-tooltip-scanlines {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    opacity: 0.04;
+    background-color: rgb(255, 255, 255);
+}
+
+.dome-hud-tooltip-lines {
+    position: relative;
+    flex-direction: column;
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 6px;
+}
+
+.dome-hud-tooltip-line--title {
+    font-size: 13px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.dome-hud-tooltip-line--subtitle {
+    font-size: 11px;
+    color: rgb(136, 136, 136);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-left: 15px;
+}
+
+.dome-hud-tooltip-sep {
+    height: 1px;
+    min-height: 1px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    background-color: rgba(199, 202, 199, 0.45);
+}
+
+.dome-hud-tooltip-line--section {
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    margin-left: 15px;
+    -unity-font-style: bold;
+}
+
+.dome-hud-tooltip-line--kv {
+    font-size: 11px;
+    margin-left: 15px;
+    margin-bottom: 2px;
+    padding-left: 0;
+}
+
+.dome-hud-tooltip-line {
+    font-size: 12px;
+    white-space: normal;
+    margin-bottom: 2px;
 }
 
 .dome-hud-tooltip-line--bold {
     -unity-font-style: bold;
 }
 
-/* Separator lines are slightly smaller and dimmer */
-.dome-hud-tooltip-sep {
-    font-size: 10px;
-    color: rgba(127, 255, 122, 0.35);
-    margin-top: 2px;
-    margin-bottom: 2px;
+.dome-hud-tooltip-line--poteri-h {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+    -unity-font-style: bold;
+}
+
+.dome-hud-tooltip-line--subiti-h {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+    -unity-font-style: bold;
+}
+
+.dome-hud-tooltip-line--in-poteri {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(199, 202, 199, 0.35);
+    border-right-color: rgba(199, 202, 199, 0.35);
+    border-top-color: rgba(199, 202, 199, 0.35);
+    border-bottom-color: rgba(199, 202, 199, 0.35);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding-left: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-right: 6px;
+    margin-left: 8px;
+    margin-bottom: 4px;
+    background-color: rgba(30, 40, 42, 0.85);
+}
+
+.dome-hud-tooltip-line--in-subiti {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(80, 200, 220, 0.35);
+    border-right-color: rgba(80, 200, 220, 0.35);
+    border-top-color: rgba(80, 200, 220, 0.35);
+    border-bottom-color: rgba(80, 200, 220, 0.35);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding-left: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-right: 6px;
+    margin-left: 8px;
+    margin-bottom: 4px;
+    background-color: rgba(20, 35, 40, 0.9);
+}
+
+.dome-hud-tooltip-crt-bar {
+    height: 6px;
+    min-height: 6px;
+    flex-shrink: 0;
+    width: 100%;
+    margin-top: 0;
+    background-color: rgba(226, 175, 103, 0.18);
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: rgba(226, 175, 103, 0.35);
+    border-bottom-color: rgba(226, 175, 103, 0.1);
+}
+
+.dome-hud-builder-reference {
+    flex-direction: column;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 255, 122, 0.25);
+    width: 100%;
+}
+
+.dome-hud-builder-hint {
+    font-size: 9px;
+    color: rgb(90, 115, 105);
+    letter-spacing: 1px;
+    white-space: normal;
+    margin-bottom: 6px;
+}
+
+.dome-hud-builder-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.dome-hud-builder-sample-wrap {
+    flex-shrink: 0;
+}
+
+.dome-hud-builder-card-sample {
+    flex-shrink: 0;
+}
+
+.dome-hud-builder-cryo-sample {
+    flex-shrink: 0;
 }

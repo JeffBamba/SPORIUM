@@ -1,0 +1,36 @@
+---
+description: Formato DEV REPORT — allineato ai report in Assets/Docs/REPORT (non duplicare un template nuovo)
+alwaysApply: true
+---
+
+# DEV REPORT — convenzione progetto (fonte di verità)
+
+Il formato **ufficiale** dei DEV REPORT è quello già usato nei file in:
+
+`Assets/Docs/REPORT/DEV_REPORT_*.md`
+
+**Riferimento template:** apri un report recente (es. `DEV_REPORT_0073_*`, `DEV_REPORT_0068_*`) e **replica la stessa struttura** (intestazione, sezioni, tabelle, chiusura).
+
+## Struttura attesa (obbligatoria su richiesta “DEV REPORT”)
+
+1. **Titolo:** `# DEV REPORT NNNN — <titolo descrittivo>` (il numero progressivo va scelto dopo l’ultimo file nella cartella REPORT, o indicato dall’utente).
+2. **Meta:** Data, Sprint / contesto, Riferimento piano (se c’è), **Report precedente** (link o nome file).
+3. **Sommario interventi** (bullet brevi).
+4. **Sezioni numerate** per area: per ogni blocco usare **Problema** → **Soluzione** → dettagli (file, metodi, tabelle prima/dopo se utile).
+5. **File modificati** — tabella `path | tipo modifica`.
+6. **Regole / vincoli** rispettati (es. ServiceContainer, niente FindObjectOfType, ecc.) se rilevanti.
+7. **Note operative** (Unity, scene, config) se servono.
+8. Chiusura tipo `*Fine DEV REPORT NNNN.*` se coerente con gli altri report.
+
+Lingua: **italiano** (come gli altri report), salvo richiesta contraria.
+
+## Cosa NON fare
+
+- **Non** inventare un secondo formato “DEV REPORT” parallelo a quello della cartella REPORT.
+- **Non** generare un report lungo se l’utente non lo chiede esplicitamente.
+
+## Output file (opzionale)
+
+Se l’utente vuole anche il file salvato in repo: path suggerito  
+`Assets/Docs/REPORT/DEV_REPORT_NNNN_<slug>_<YYYY-MM-DD>.md`  
+(allineato alla naming convention esistente).
