@@ -31,6 +31,8 @@ public class DayCycleController : MonoBehaviour
 
     // Lista dei vasi registrati per la crescita
     private readonly List<PotStateModel> _registeredPots = new();
+    /// <summary>Task 7: elenco temporaneo quando <see cref="_registeredPots"/> è vuoto ma i vasi esistono nel <see cref="DomePotRegistry"/>.</summary>
+    private readonly List<PotStateModel> _mutationPassScratch = new();
     private bool _isInitialized;
     
     private DayCycleSystem _dayCycleSystem;
@@ -434,6 +436,39 @@ public class DayCycleController : MonoBehaviour
     }
 
     /// <summary>
+    /// Stati vaso per il pass mutazioni: preferisce <see cref="_registeredPots"/>; se vuoto, usa
+    /// <see cref="DomePotRegistry"/> (vasi attivi Dome) così il Task 7 non dipende solo da RegisterPot esplicito.
+    /// </summary>
+    private IReadOnlyList<PotStateModel> GetPotStatesForMutationPass()
+    {
+        if (_registeredPots.Count > 0)
+            return _registeredPots;
+
+        _mutationPassScratch.Clear();
+        if (_potRegistry != null)
+        {
+            foreach (var slot in _potRegistry.GetActivePotsSnapshot())
+            {
+                var st = slot != null ? slot.PotActions?.PotState : null;
+                if (st != null && !_mutationPassScratch.Contains(st))
+                    _mutationPassScratch.Add(st);
+            }
+        }
+
+        return _mutationPassScratch;
+    }
+
+    /// <summary>Task 7: roll mutazioni spontanee dopo il tick giornaliero (IM + genetica + muffa).</summary>
+    private void ProcessSpontaneousMutations(int dayIndex)
+    {
+        var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+        var notifications = ServiceContainer.Instance?.Get<FoundationNotificationService>(suppressWarning: true);
+        float im = mutSvc != null && mutSvc.HasAuthoritativeSnapshot ? mutSvc.DisplayNormalized : 0f;
+        var potsForMut = GetPotStatesForMutationPass();
+        DomeSpontaneousMutation.ProcessEndOfDay(potsForMut, im, notifications, _potRegistry, _phSystem, dayIndex);
+    }
+
+    /// <summary>
     /// Gestisce il cambio di giorno dal GameManager
     /// </summary>
     private void HandleDayChanged(int dayIndex)
@@ -497,6 +532,8 @@ public class DayCycleController : MonoBehaviour
         ApplyPassivePowers(dayIndex);
 
         BotanicalArcticTensionNotifier.EvaluateAndNotify(_phSystem);
+
+        ProcessSpontaneousMutations(dayIndex);
         
         // 4. AdvanceDayHUD() - gestito automaticamente dal GameManager esistente
         

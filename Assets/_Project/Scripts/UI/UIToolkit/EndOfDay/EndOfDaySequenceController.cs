@@ -8,6 +8,7 @@ using _Project.Sporae.Core;
 using _Project.Systems.FoodRoom;
 using Sporae.Core;
 using Sporae.DevTools;
+using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.FoodRoom;
@@ -688,7 +689,12 @@ namespace _Project
             int cryForecast = cry - dailyCost;
 
             var topBar = FindObjectOfType<TopBarController>();
-            float mutation = topBar != null ? topBar.GetMutationIndex() : float.NaN;
+            var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+            float mutation = float.NaN;
+            if (mutSvc != null && mutSvc.HasAuthoritativeSnapshot)
+                mutation = mutSvc.DisplayNormalized;
+            else if (topBar != null)
+                mutation = topBar.GetMutationIndex();
             int grate = topBar != null ? topBar.GetGrateValue() : 0;
 
             string phDriftStr = float.IsNaN(phDrift) ? "—" : phDrift.ToString("+#0.00;-#0.00;0", System.Globalization.CultureInfo.InvariantCulture);

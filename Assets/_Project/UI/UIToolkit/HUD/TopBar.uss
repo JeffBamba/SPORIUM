@@ -17,7 +17,7 @@
     align-items: center;
     justify-content: center;
     overflow: visible;
-    box-shadow: 0 0 24px rgba(127, 255, 122, 0.84);
+    /* box-shadow non supportato in USS UI Toolkit — glow gestito da materiale glow-frame dove serve */
 }
 
 .glow-frame {
@@ -27,7 +27,6 @@
     top: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0);
-    picking-mode: ignore;
 }
 
 .glow-frame-bottom {
@@ -84,7 +83,6 @@
     background-color: rgba(127, 255, 122, 0.1);
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 20px rgba(127, 255, 122, 0.9);
 }
 
 .metric-icon-glyph {
@@ -148,7 +146,6 @@
 
 .mutation-value-solid {
     color: rgb(154, 92, 181);
-    text-shadow: none;
     -unity-text-outline-width: 0;
 }
 
@@ -174,7 +171,6 @@
     font-size: 14px;
     -unity-font-style: normal;
     -unity-text-align: middle-center;
-    box-shadow: 0 0 20px rgba(127, 255, 122, 0.9);
 }
 
 .icon-placeholder-center {
@@ -195,7 +191,6 @@
     top: 50%;
     margin-left: -16px;
     margin-top: -16px;
-    box-shadow: 0 0 20px rgba(127, 255, 122, 0.9);
 }
 
 .segmented-bar {
@@ -220,7 +215,6 @@
 .bar-segment.filled {
     background-color: rgb(230, 201, 111);
     border-color: rgb(230, 201, 111);
-    box-shadow: 0 0 16px rgb(230, 201, 111);
 }
 
 .mutation-orbit {
@@ -239,7 +233,6 @@
     position: relative;
     border-color: rgb(217, 70, 239);
     background-color: rgba(217, 70, 239, 0.08);
-    box-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
 }
 
 .mutation-nucleus {
@@ -254,7 +247,6 @@
     margin-top: -5px;
     border-radius: 50%;
     background-color: rgb(217, 70, 239);
-    box-shadow: 0 0 12px rgb(217, 70, 239);
 }
 
 .mutation-orbit-dot {
@@ -265,7 +257,6 @@
     position: absolute;
     border-radius: 50%;
     background-color: rgb(217, 70, 239);
-    box-shadow: 0 0 8px rgb(217, 70, 239);
 }
 
 .mutation-trail-dot {
@@ -288,7 +279,6 @@
     background-color: rgb(127, 255, 122);
     border-radius: 50%;
     position: absolute;
-    box-shadow: 0 0 12px rgb(127, 255, 122);
 }
 
 .ph-slider {
@@ -343,7 +333,6 @@
     -unity-text-align: middle-left;
     margin-top: 0;
     margin-bottom: 0;
-    font-weight: normal;
     white-space: nowrap;
 }
 
@@ -374,13 +363,11 @@
     width: 100%;
     height: 10px;
     min-height: 10px;
-    pointer-events: none;
     background-color: rgba(226, 175, 103, 0.18);
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-top-color: rgba(226, 175, 103, 0.4);
     border-bottom-color: rgba(226, 175, 103, 0.08);
-    box-shadow: 0 0 12px rgba(226, 175, 103, 0.25);
 }
 
 .pixel-corner {
@@ -388,7 +375,6 @@
     height: 3px;
     position: absolute;
     background-color: rgb(127, 255, 122);
-    box-shadow: 0 0 12px rgb(127, 255, 122);
 }
 
 .corner-top-left {
@@ -475,4 +461,36 @@
 .condensation-tooltip-root #condensation-collect-button {
     font-size: 11px;
     -unity-font-style: bold;
+}
+
+/* Tooltip Mutation Index (Task 7) — look in USS; testi statici in UXML, percentuali/breakdown da TopBarController */
+.mutation-tooltip-root {
+    display: none;
+    flex-direction: column;
+    width: 420px;
+    max-width: 420px;
+    min-height: 120px;
+    padding: 10px;
+    background-color: rgba(12, 14, 18, 0.95);
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: rgba(217, 70, 239, 0.8);
+    border-right-color: rgba(217, 70, 239, 0.8);
+    border-bottom-color: rgba(217, 70, 239, 0.8);
+    border-left-color: rgba(217, 70, 239, 0.8);
+    overflow: hidden;
+}
+
+.mutation-tooltip-root .mutation-tooltip-copy-stable {
+    color: rgb(127, 255, 122);
+}
+
+.mutation-tooltip-root .mutation-tooltip-copy-warn {
+    color: rgb(230, 201, 111);
+}
+
+.mutation-tooltip-root .mutation-tooltip-copy-high {
+    color: rgb(211, 95, 95);
 }

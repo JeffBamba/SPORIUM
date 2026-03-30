@@ -199,17 +199,31 @@ namespace _Project
 
             if (_isWon)
             {
-                var spore = ItemFabric.CreateSporeRawFromFruit(_consumedFruitForRun);
-                if (spore != null)
-                    _playerInventory.Add(spore);
-                // Usa Foundation se attivo, altrimenti legacy
+                Item sample = null;
+                int count = FruitSporeExtractionRules.RollSporeRawCount(_consumedFruitForRun);
+                GeneticType motherGt = _consumedFruitForRun?.GeneticTypeValue ?? GeneticType.Stable;
+                var fam = FruitSporeExtractionRules.ResolvePlantFamily(_consumedFruitForRun);
+                for (int n = 0; n < count; n++)
+                {
+                    Item spore = n == 0
+                        ? ItemFabric.CreateSporeRawFromFruit(_consumedFruitForRun)
+                        : ItemFabric.CreateSporeRawFromFruit(_consumedFruitForRun, FruitSporeExtractionRules.PickAlternateGeneticType(motherGt, fam));
+                    if (spore != null)
+                    {
+                        _playerInventory.Add(spore);
+                        if (sample == null) sample = spore;
+                    }
+                }
+
                 var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
                 if (foundation != null && foundation.Enabled)
                 {
-                    if (spore != null)
-                        foundation.PostAddedToInventory(CollectionPayloadFactory.FromItem(spore, 1, RoomNames.Laboratory));
+                    if (count >= 2)
+                        foundation.PostToastImmediate("LAB-EXT-VARIANT");
+                    if (sample != null)
+                        foundation.PostAddedToInventory(CollectionPayloadFactory.FromItem(sample, count, RoomNames.Laboratory));
                     else
-                        foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", 1, RoomNames.Laboratory);
+                        foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", count, RoomNames.Laboratory);
                 }
                 else
                 {

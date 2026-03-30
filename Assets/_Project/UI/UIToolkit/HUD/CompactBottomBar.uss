@@ -444,7 +444,8 @@
     margin-bottom: 6px;
 }
 
-.cbb-cry-outline-cycle .cbb-cry-row:last-child {
+/* USS non supporta :last-child — ultima riga ciclo marchiata esplicitamente in UXML */
+.cbb-cry-outline-cycle .cbb-cry-row-last {
     margin-bottom: 0;
 }
 

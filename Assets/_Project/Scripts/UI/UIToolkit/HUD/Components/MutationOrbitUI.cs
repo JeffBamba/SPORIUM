@@ -6,7 +6,7 @@ namespace Sporae.UI.UIToolkit.HUD
 {
     /// <summary>
     /// Icona mutation: sistema orbitale con nucleo viola pulsante e particella su orbita circolare.
-    /// Colore: #D946EF (0%) → #C4B5FD (100%). Rotazione: 4s (0%) → 1.5s (100%) per giro.
+    /// Colore: #D946EF (0%) → #C4B5FD (100%). Velocità orbita: IM basso ≈ fermo (~28s/giro), IM alto ~1.35s/giro (curva ease sul 0–1).
     /// Sopra 50%: scia dietro la particella e nucleo pulsa continuamente.
     /// </summary>
     public class MutationOrbitUI : MonoBehaviour
@@ -21,8 +21,10 @@ namespace Sporae.UI.UIToolkit.HUD
         private static readonly Color ColorLilac = new Color(0.769f, 0.71f, 0.992f, 1f);     // #C4B5FD @ 100%
         private static readonly Color ColorValueSolid = new Color(0.604f, 0.361f, 0.71f, 1f); // #9A5CB5 tinta unita label
 
-        private const float OrbitSecondsMin = 1.5f;  // 100% mutation
-        private const float OrbitSecondsMax = 4f;    // 0% mutation
+        private const float OrbitSecondsMin = 1.35f; // 100% mutation — giro rapido
+        private const float OrbitSecondsMax = 28f;   // 0% mutation — movimento appena percettibile
+        /// <summary>Espone IM nella curva: &gt;1 rallenta ancora di più la parte bassa (es. 1.2).</summary>
+        private const float OrbitSpeedEaseExponent = 1.2f;
         private const float CenterPx = 16f;
         private const float RadiusPx = 11f;
         private const float DotSizePx = 6f;
@@ -133,7 +135,10 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private float GetSecondsPerRevolution()
         {
-            return Mathf.Lerp(OrbitSecondsMax, OrbitSecondsMin, _mutationIndex);
+            float t = Mathf.Clamp01(_mutationIndex);
+            // IM basso → t piccolo: resta vicino a OrbitSecondsMax (lento). Crescita accelerata verso IM alto.
+            t = Mathf.Pow(t, OrbitSpeedEaseExponent);
+            return Mathf.Lerp(OrbitSecondsMax, OrbitSecondsMin, t);
         }
 
         private IEnumerator OrbitAnimation()

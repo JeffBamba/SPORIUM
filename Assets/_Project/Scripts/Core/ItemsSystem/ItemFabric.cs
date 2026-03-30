@@ -149,7 +149,8 @@ namespace _Project.Sporae.Core
             return item;
         }
 
-        public static Item CreateSporeRawFromFruit(Item fruit)
+        /// <param name="geneticOverride">Se valorizzato, sostituisce la genetica ereditata dal frutto (seconda spora Task 7).</param>
+        public static Item CreateSporeRawFromFruit(Item fruit, GeneticType? geneticOverride = null)
         {
             var config = Resources.Load<ItemConfig>("Items/" + Items.SporeGeneric);
             if (!config)
@@ -160,7 +161,7 @@ namespace _Project.Sporae.Core
 
             var item = new Item(config, _uniqueId++);
             item.SporeStageValue = SporeStage.Raw;
-            item.GeneticTypeValue = fruit?.GeneticTypeValue ?? GeneticType.Stable;
+            item.GeneticTypeValue = geneticOverride ?? fruit?.GeneticTypeValue ?? GeneticType.Stable;
             item.FamilyMetadata = !string.IsNullOrWhiteSpace(fruit?.FamilyMetadata)
                 ? fruit.FamilyMetadata
                 : (fruit?.TypeId == Items.FruitsKnown ? "STANDARD" : null);
@@ -763,7 +764,8 @@ namespace _Project.Sporae.Core
         /// <summary>
         /// Seme con metadata come da Lab/Incubatore (traits CSV, genetica, livello sul seme). QA Task 4 senza flusso lab.
         /// </summary>
-        public static Item CreateDebugSeedWithLabLikeMetadata(string plantCode, int seedPlantLevelMetadata = 3, int traitPowerPercent = 100)
+        /// <param name="geneticTypeOverride">Se valorizzato, sostituisce <see cref="PlantData.DefaultGeneticType"/> sul seme (debug / Pot console).</param>
+        public static Item CreateDebugSeedWithLabLikeMetadata(string plantCode, int seedPlantLevelMetadata = 3, int traitPowerPercent = 100, GeneticType? geneticTypeOverride = null)
         {
             if (string.IsNullOrWhiteSpace(plantCode))
                 return null;
@@ -789,7 +791,7 @@ namespace _Project.Sporae.Core
             item.SourcePlantCodeMetadata = plantCode;
             item.ResolvedPlantCodeMetadata = plantCode;
             item.PlantLevelMetadata = Mathf.Max(1, seedPlantLevelMetadata);
-            item.GeneticTypeValue = plantData.DefaultGeneticType;
+            item.GeneticTypeValue = geneticTypeOverride ?? plantData.DefaultGeneticType;
             item.FamilyMetadata = NormalizeFamily(plantData.Family.ToString());
             item.TraitPowerPercent = Mathf.Clamp(traitPowerPercent, 1, 999);
             string famNorm = item.FamilyMetadata;

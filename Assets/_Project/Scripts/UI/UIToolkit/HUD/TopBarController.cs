@@ -66,6 +66,11 @@ namespace Sporae.UI.UIToolkit.HUD
         private VisualElement _phSlider;
         private Label _condensationValueLabel;
         private VisualElement _condensationDisplay; // FASE 10: Per tooltip futuro
+        private VisualElement _mutationDisplay;
+        private VisualElement _mutationTooltip;
+        private Label _mutationTooltipCurrentLevel;
+        private Label _mutationTooltipBreakdownBase;
+        private Label _mutationTooltipBreakdownGlasscap;
         private Label _mutationValueLabel;
         // _cryValueLabel rimosso: CRY ora in CompactBottomBar
         private Label _grateValueLabel;
@@ -420,6 +425,14 @@ namespace Sporae.UI.UIToolkit.HUD
             _phCrtVisibleCount = 1;
             if (_phTooltip != null)
                 _phTooltip.pickingMode = PickingMode.Ignore;
+            if (_phTooltipCrtBars != null)
+            {
+                foreach (var bar in _phTooltipCrtBars)
+                {
+                    if (bar != null)
+                        bar.pickingMode = PickingMode.Ignore;
+                }
+            }
 
             ApplyPhTooltipTitleFont();
 
@@ -817,6 +830,7 @@ namespace Sporae.UI.UIToolkit.HUD
             
             _condensationValueLabel = _root.Q<Label>("condensation-value");
             _condensationDisplay = _root.Q<VisualElement>("condensation-display"); // FASE 10: Query per tooltip futuro
+            _mutationDisplay = _root.Q<VisualElement>("mutation-display");
             _mutationValueLabel = _root.Q<Label>("mutation-value");
             // cry-value rimosso da TopBar — ora in CompactBottomBar
             _grateValueLabel = _root.Q<Label>("grate-value");
@@ -826,6 +840,8 @@ namespace Sporae.UI.UIToolkit.HUD
             
             // FASE 8: Setup tooltip per condensazione
             SetupCondensationTooltip();
+
+            SetupMutationTooltip();
             
             // Crea texture gradiente pH (0-14 scale)
             CreatePhGradientTexture();
@@ -852,6 +868,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private void SetupGlowFrame()
         {
             if (_glowFrame == null) return;
+
+            _glowFrame.pickingMode = PickingMode.Ignore;
 
             if (_glowFrameMaterial == null)
             {
@@ -1418,10 +1436,20 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void ApplyMutationDisplayFromDesignerBase()
         {
-            float bonus = 0f;
-            if (_phSystem != null)
-                bonus = BotanicalRosterSnapshot.FromServices(_phSystem).GlasscapActiveMutationBonusSum;
-            _mutationIndex = Mathf.Clamp01(_mutationDesignerBase + bonus);
+            var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+            if (mutSvc != null)
+            {
+                mutSvc.SyncDisplay(_mutationDesignerBase, _phSystem);
+                _mutationIndex = mutSvc.DisplayNormalized;
+            }
+            else
+            {
+                // Fallback: scena senza GamePlayInstaller / servizio non registrato.
+                float bonus = 0f;
+                if (_phSystem != null)
+                    bonus = BotanicalRosterSnapshot.FromServices(_phSystem).GlasscapActiveMutationBonusSum;
+                _mutationIndex = Mathf.Clamp01(_mutationDesignerBase + bonus);
+            }
 
             if (_mutationValueLabel != null)
             {
@@ -1441,6 +1469,8 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (_mutationOrbit != null)
                 _mutationOrbit.UpdateMutation(_mutationIndex);
+
+            RefreshMutationTooltipIfOpen();
         }
         
         /// <summary>
@@ -1500,6 +1530,13 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= OnDayChangedRefreshBotanicalMutation;
             PotEvents.OnPotStateChanged -= OnPotStateChangedRefreshBotanicalMutation;
+
+            if (_mutationDisplay != null)
+            {
+                _mutationDisplay.UnregisterCallback<MouseEnterEvent>(OnMutationHoverEnter);
+                _mutationDisplay.UnregisterCallback<MouseLeaveEvent>(OnMutationHoverExit);
+                _mutationDisplay.UnregisterCallback<MouseMoveEvent>(OnMutationHoverMove);
+            }
             
             // Unregister hover events
             if (_phDisplay != null)
@@ -1630,6 +1667,101 @@ namespace Sporae.UI.UIToolkit.HUD
                 _condensationCollectButton.style.fontSize = CondensationTooltipFontPx.Button;
                 _condensationCollectButton.style.unityFontStyleAndWeight = FontStyle.Bold;
             }
+        }
+
+        private void SetupMutationTooltip()
+        {
+            _mutationTooltip = _root?.Q<VisualElement>("mutation-tooltip");
+            if (_mutationTooltip != null)
+                _mutationTooltip.pickingMode = PickingMode.Ignore;
+            _mutationTooltipCurrentLevel = _mutationTooltip?.Q<Label>("mutation-tooltip-current-level");
+            _mutationTooltipBreakdownBase = _mutationTooltip?.Q<Label>("mutation-tooltip-breakdown-base");
+            _mutationTooltipBreakdownGlasscap = _mutationTooltip?.Q<Label>("mutation-tooltip-breakdown-glasscap");
+            if (_mutationDisplay == null || _mutationTooltip == null)
+                return;
+            _mutationDisplay.RegisterCallback<MouseEnterEvent>(OnMutationHoverEnter);
+            _mutationDisplay.RegisterCallback<MouseLeaveEvent>(OnMutationHoverExit);
+            _mutationDisplay.RegisterCallback<MouseMoveEvent>(OnMutationHoverMove);
+        }
+
+        private void OnMutationHoverEnter(MouseEnterEvent evt)
+        {
+            if (_mutationTooltip == null) return;
+            UpdateMutationTooltipContent();
+            _mutationTooltip.style.display = DisplayStyle.Flex;
+            _mutationTooltip.BringToFront();
+            PositionMutationTooltipNearDisplay();
+        }
+
+        private void OnMutationHoverExit(MouseLeaveEvent evt)
+        {
+            if (_mutationTooltip != null)
+                _mutationTooltip.style.display = DisplayStyle.None;
+        }
+
+        private void OnMutationHoverMove(MouseMoveEvent evt)
+        {
+            PositionMutationTooltipNearDisplay();
+        }
+
+        private void PositionMutationTooltipNearDisplay()
+        {
+            if (_mutationTooltip == null || _mutationTooltip.style.display != DisplayStyle.Flex || _mutationDisplay == null || _root == null)
+                return;
+            var b = _mutationDisplay.worldBound;
+            var rootBounds = _root.worldBound;
+            float x = b.xMax + 10f;
+            float y = b.yMax - 20f;
+            const float tw = 420f;
+            float th = _mutationTooltip.resolvedStyle.height;
+            if (th < 1f) th = 200f;
+            if (x + tw > rootBounds.width)
+                x = Mathf.Max(0f, b.xMin - tw - 10f);
+            if (y + th > rootBounds.height)
+                y = Mathf.Max(0f, b.yMin - th - 10f);
+            _mutationTooltip.style.left = x;
+            _mutationTooltip.style.top = y;
+        }
+
+        private void UpdateMutationTooltipContent()
+        {
+            if (_mutationTooltipCurrentLevel == null) return;
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+            int pct = Mathf.RoundToInt(_mutationIndex * 100f);
+            string band = DomeMutationRuntimeService.GetBandLabelItalian(_mutationIndex);
+            _mutationTooltipCurrentLevel.text = $"{pct.ToString(culture)}% — {band}";
+            Color c;
+            if (_mutationIndex <= DomeMutationRuntimeService.BandStableMax)
+                c = _greenStable;
+            else if (_mutationIndex <= DomeMutationRuntimeService.BandBalancedMax)
+                c = _yellowWarning;
+            else
+                c = _redCritical;
+            _mutationTooltipCurrentLevel.style.color = new StyleColor(c);
+
+            var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+            if (_mutationTooltipBreakdownBase != null)
+            {
+                float b = mutSvc != null ? mutSvc.DesignerBaseNormalized : _mutationDesignerBase;
+                _mutationTooltipBreakdownBase.text = $"Base designer: {Mathf.RoundToInt(b * 100f).ToString(culture)}%";
+            }
+
+            if (_mutationTooltipBreakdownGlasscap != null)
+            {
+                float g = mutSvc != null ? mutSvc.GlasscapActiveBonusSum : 0f;
+                if (mutSvc == null && _phSystem != null)
+                    g = BotanicalRosterSnapshot.FromServices(_phSystem).GlasscapActiveMutationBonusSum;
+                int gp = Mathf.RoundToInt(g * 100f);
+                _mutationTooltipBreakdownGlasscap.text = gp > 0
+                    ? $"Bonus Glasscap (vasi attivi): +{gp.ToString(culture)}%"
+                    : "Bonus Glasscap (vasi attivi): +0% (nessuna Glasscap in crescita)";
+            }
+        }
+
+        private void RefreshMutationTooltipIfOpen()
+        {
+            if (_mutationTooltip != null && _mutationTooltip.style.display == DisplayStyle.Flex)
+                UpdateMutationTooltipContent();
         }
 
         /// <summary>

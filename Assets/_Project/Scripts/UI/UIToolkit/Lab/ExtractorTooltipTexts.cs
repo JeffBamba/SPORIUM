@@ -71,6 +71,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 sb.AppendLine($"Potere passivo: {WrapValue(firstFruit.PassivePowerLabel)}");
             if (!string.IsNullOrWhiteSpace(firstFruit.SelectedTraitsCsv))
                 sb.AppendLine($"Tratti conosciuti: {WrapValue(firstFruit.SelectedTraitsCsv)}");
+            sb.AppendLine();
+            sb.AppendLine($"{WrapValue("Estrazione")}: possibile 1 o 2 Spore RAW; con due output, la seconda ha genetica tra le due categorie diverse da quella della madre (bias Evil/Pure).");
             return sb.ToString();
         }
 
@@ -158,6 +160,11 @@ namespace Sporae.UI.UIToolkit.Lab
                 sb.AppendLine($"% di mutare: {WrapValue(percentMutare)}");
             sb.AppendLine($"Famiglia: {WrapValue(family)}");
             sb.AppendLine($"Stato: {WrapValue(stato)}");
+            if (snap.OutputSporeCount >= 2)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"{WrapValue("Quantità prevista")}: {snap.OutputSporeCount}× RAW — la seconda sarà variante genetica rispetto alla madre.");
+            }
             return sb.ToString();
         }
 

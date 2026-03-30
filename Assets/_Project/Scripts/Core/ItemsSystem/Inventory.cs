@@ -127,6 +127,23 @@ namespace _Project.Sporae.Core
             return true;
         }
 
+        /// <summary>Rimuove un'istanza specifica dallo slot del suo <see cref="Item.TypeId"/> (ordine preservato).</summary>
+        public bool TryRemoveExactItem(Item item, out Item removedItem)
+        {
+            removedItem = null;
+            if (item == null || string.IsNullOrEmpty(item.TypeId))
+                return false;
+            if (!_slots.TryGetValue(item.TypeId, out var slot))
+                return false;
+            if (!slot.RemoveItem(item))
+                return false;
+            if (slot.IsEmpty)
+                _slots.Remove(item.TypeId);
+            removedItem = item;
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
         /// <summary>Rimuove e restituisce la prima spora con lo stage richiesto (preserva metadata).</summary>
         public bool TryRemoveFirstSporeByStage(SporeStage stage, out Item removedItem)
         {

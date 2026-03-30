@@ -1,6 +1,7 @@
 using System.Collections;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -199,12 +200,17 @@ namespace _Project
             int sporeOut = 0, cell001Out = 0, cell002Out = 0, cell003Out = 0;
             if (TryRemoveFirstFruit(out var fruit))
             {
-                // Solo spore Raw dal frutto (niente bonus cellula su questo slot; evita mismatch UI vs attesa "extractor spore").
-                inputDesc = "frutto"; sporeOut = 1; cell002Out = 0;
+                // Task 7: 1 o 2 Spore RAW; seconda con genetica alternata rispetto alla madre.
+                inputDesc = "frutto";
+                sporeOut = FruitSporeExtractionRules.RollSporeRawCount(fruit);
+                cell002Out = 0;
                 _slotInputFruit[idx] = fruit;
-                _slotResultSnapshot[idx] = ExtractionResultSnapshot.FromFruit(fruit);
-                SetSlotPlannedOutputs(idx, 1, 0, 0, 0);
-                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 1, 0, 0, 0));
+                var snap = ExtractionResultSnapshot.FromFruit(fruit);
+                snap.OutputSporeCount = sporeOut;
+                snap.SecondSporeWillBeGeneticVariant = sporeOut >= 2;
+                _slotResultSnapshot[idx] = snap;
+                SetSlotPlannedOutputs(idx, sporeOut, 0, 0, 0);
+                _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, sporeOut, 0, 0, 0));
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
@@ -309,14 +315,26 @@ namespace _Project
             var foundationCollect = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             bool foundationNotify = foundationCollect != null && foundationCollect.Enabled;
 
-            // Spore: crea item per-slot preservando metadata del frutto madre; una notifica Collection per slot con payload reale.
+            // Spore: crea item per-slot preservando metadata del frutto madre; con 2 spore la seconda ha GeneticType alternato.
+            bool postedDualGeneticToast = false;
             for (int i = 0; i < 3; i++)
             {
                 if (_slotStates[i] != 2 || _slotSpore[i] <= 0) continue;
                 Item sampleForUi = null;
+                Item fruitRef = _slotInputFruit[i];
+                GeneticType motherGt = fruitRef?.GeneticTypeValue ?? GeneticType.Stable;
+                PlantFamily fam = FruitSporeExtractionRules.ResolvePlantFamily(fruitRef);
                 for (int n = 0; n < _slotSpore[i]; n++)
                 {
-                    var spore = ItemFabric.CreateSporeRawFromFruit(_slotInputFruit[i]);
+                    Item spore;
+                    if (n == 0)
+                        spore = ItemFabric.CreateSporeRawFromFruit(fruitRef);
+                    else
+                    {
+                        GeneticType alt = FruitSporeExtractionRules.PickAlternateGeneticType(motherGt, fam);
+                        spore = ItemFabric.CreateSporeRawFromFruit(fruitRef, alt);
+                    }
+
                     if (spore != null)
                     {
                         playerInventory.Add(spore);
@@ -324,6 +342,12 @@ namespace _Project
                     }
                     else
                         playerInventory.AddSporeRaw(1);
+                }
+
+                if (foundationNotify && _slotSpore[i] >= 2 && !postedDualGeneticToast)
+                {
+                    foundationCollect.PostToastImmediate("LAB-EXT-VARIANT");
+                    postedDualGeneticToast = true;
                 }
 
                 if (foundationNotify && _slotSpore[i] > 0)

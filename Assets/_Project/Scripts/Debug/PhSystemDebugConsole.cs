@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
+using Sporae.Dome;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Growth;
 
@@ -59,6 +60,20 @@ namespace Sporae.DevTools
             { "Stable Basic", +50f },
             { "Ultra Basic", +100f }
         };
+
+        /// <summary>Valori rapidi IM designer base 0–1 (display può includere bonus Glasscap da PhSystem).</summary>
+        private static readonly (string label, float value01)[] QuickImPresets =
+        {
+            ("IM 0%", 0f),
+            ("IM 20%", 0.20f),
+            ("IM 33% (soglia MID)", 0.34f),
+            ("IM 50%", 0.50f),
+            ("IM 66% (soglia HIGH)", 0.67f),
+            ("IM 85%", 0.85f),
+            ("IM 100%", 1f),
+        };
+
+        private string _imInputValue = "0.50";
 
         private void Awake()
         {
@@ -344,6 +359,56 @@ namespace Sporae.DevTools
             if (GUILayout.Button("Reset", buttonStyle, GUILayout.Width(104))) _phSystem.Reset(); // Scalato del 30% (80 * 1.3)
             GUILayout.EndHorizontal();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
+
+            // === IM (Indice mutazione) — allineato a TopBar / Foundation toasts DOME-IM-* ===
+            GUILayout.Label("=== Indice mutazione (IM) — test notifiche ===", labelStyle);
+            GUILayout.Label(
+                "Usa valori crescenti per attraversare le fasce (toast MID/HIGH su salita). Display = base designer + bonus botanico.",
+                new GUIStyle(GUI.skin.label) { fontSize = 15, normal = { textColor = Color.gray }, wordWrap = true });
+            var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+            if (mutSvc != null && mutSvc.HasAuthoritativeSnapshot)
+            {
+                int bNow = DomeMutationRuntimeService.GetBandIndex(mutSvc.DisplayNormalized);
+                string bandIt = DomeMutationRuntimeService.GetBandLabelItalian(mutSvc.DisplayNormalized);
+                GUILayout.Label(
+                    $"Attuale: display {mutSvc.DisplayNormalized:P0} ({bandIt}, banda {bNow}) · base designer {mutSvc.DesignerBaseNormalized:F3}",
+                    labelStyle);
+            }
+            else if (mutSvc != null)
+            {
+                GUILayout.Label("Servizio presente ma senza snapshot: premi un preset IM per inizializzare.", labelStyle);
+            }
+            else
+            {
+                GUILayout.Label("DomeMutationRuntimeService non nel ServiceContainer — IM non impostabile da qui.", labelStyle);
+            }
+
+            GUILayout.BeginHorizontal();
+            _imInputValue = GUILayout.TextField(_imInputValue, GUILayout.Width(104));
+            if (GUILayout.Button("Applica IM", buttonStyle, GUILayout.Width(130)))
+            {
+                if (float.TryParse(_imInputValue.Replace(',', '.'), System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out float imManual))
+                    SetQuickIm(Mathf.Clamp01(imManual));
+                else
+                    AddLog("IM: valore non valido");
+            }
+            GUILayout.EndHorizontal();
+
+            int imBtn = 0;
+            foreach (var preset in QuickImPresets)
+            {
+                if (imBtn % 3 == 0)
+                    GUILayout.BeginHorizontal();
+                if (GUILayout.Button(preset.label, buttonStyle, GUILayout.MinWidth(200)))
+                    SetQuickIm(preset.value01);
+                imBtn++;
+                if (imBtn % 3 == 0)
+                    GUILayout.EndHorizontal();
+            }
+            if (imBtn % 3 != 0)
+                GUILayout.EndHorizontal();
+            GUILayout.Space(7);
 
             // Simulazioni
             GUILayout.Label("Simulazioni:", labelStyle);
@@ -663,6 +728,22 @@ namespace Sporae.DevTools
                 _phSystem.SetPh(value);
                 AddLog($"pH impostato a {key}: {value:F2}");
             }
+        }
+
+        private void SetQuickIm(float designerBase01)
+        {
+            var mutSvc = ServiceContainer.Instance?.Get<DomeMutationRuntimeService>(suppressWarning: true);
+            if (mutSvc == null)
+            {
+                AddLog("IM: DomeMutationRuntimeService non disponibile");
+                return;
+            }
+
+            float clamped = Mathf.Clamp01(designerBase01);
+            mutSvc.SyncDisplay(clamped, _phSystem);
+            int band = DomeMutationRuntimeService.GetBandIndex(mutSvc.DisplayNormalized);
+            string bandIt = DomeMutationRuntimeService.GetBandLabelItalian(mutSvc.DisplayNormalized);
+            AddLog($"IM: base {clamped:P0} → display {mutSvc.DisplayNormalized:P0} ({bandIt}, banda {band})");
         }
 
         private void SimulateDailyDrift()

@@ -5,7 +5,6 @@ using UnityEngine.UIElements;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
-using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
 
@@ -362,15 +361,14 @@ namespace Sporae.UI.UIToolkit.Lab
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
                 "Seleziona spora Raw da inserire nel Catalizzatore",
-                (typeId, stage) =>
+                (typeId, stage, pickedItem) =>
                 {
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
                     if (typeId != Items.SporeGeneric || stage != SporeStage.Raw) return;
-                    if (_gameManager.PlayerInventory.TryRemoveFirstSporeByStage(SporeStage.Raw, out var rawSpore))
-                    {
-                        _storage.Add(rawSpore);
-                        RefreshDisplay();
-                    }
+                    if (pickedItem == null || pickedItem.SporeStageValue != SporeStage.Raw) return;
+                    if (!_gameManager.PlayerInventory.TryRemoveExactItem(pickedItem, out var rawSpore)) return;
+                    _storage.Add(rawSpore);
+                    RefreshDisplay();
                 },
                 () => { },
                 SporeStage.Raw

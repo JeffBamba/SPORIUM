@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e7d6c5b4a3928170635445362718aa, type: 3}
+  m_Name: MutationTraitCatalog
+  m_EditorClassIdentifier: 
+  minPlantLevelForSpontaneousMutation: 1
+  maxPlantLevelForSpontaneousMutation: 0
+  watchToastMinIm: 0.42
+  watchToastChance: 0.22
+  rows:
+  - traitId: growth
+    gameplayTag: GROWTH
+    weightStandard: 1
+    weightPure: 0.9
+    weightEvil: 1.15
+  - traitId: yield
+    gameplayTag: YIELD
+    weightStandard: 1.1
+    weightPure: 1.05
+    weightEvil: 0.85
+  - traitId: resilience
+    gameplayTag: RESILIENCE
+    weightStandard: 1
+    weightPure: 1.25
+    weightEvil: 1.1
+  - traitId: ph-stability
+    gameplayTag: PH_STABILITY
+    weightStandard: 1
+    weightPure: 1.35
+    weightEvil: 0.6
+  - traitId: led-adapt
+    gameplayTag: LED_ADAPT
+    weightStandard: 1
+    weightPure: 0.85
+    weightEvil: 1.2
+  - traitId: versatile
+    gameplayTag: VERSATILE
+    weightStandard: 1
+    weightPure: 1
+    weightEvil: 1

@@ -21,6 +21,12 @@ namespace _Project.Sporae.Core
         /// <summary>Per unknown: es. "SPO-???-247".</summary>
         public string OutputSporeId { get; set; }
 
+        /// <summary>Quanti item Spora RAW verranno generati al ritiro (1 o 2, Task 7).</summary>
+        public int OutputSporeCount { get; set; } = 1;
+
+        /// <summary>True se è prevista una seconda spora con profilo genetico divers dalla madre.</summary>
+        public bool SecondSporeWillBeGeneticVariant { get; set; }
+
         /// <summary>Crea snapshot da un frutto consumato. Se item è null o senza metadata utili, restituisce snapshot "unknown".</summary>
         public static ExtractionResultSnapshot FromFruit(Item fruit)
         {
@@ -86,6 +92,8 @@ namespace _Project.Sporae.Core
             snap.Origine = plantName + level;
             snap.Bonus = null; // TODO: da LabUpgradesConfig / modulo Cellule quando disponibile (es. "+1× CELL-002 (Fungina)")
             snap.Colore = null;
+            snap.OutputSporeCount = 1;
+            snap.SecondSporeWillBeGeneticVariant = false;
             return snap;
         }
     }

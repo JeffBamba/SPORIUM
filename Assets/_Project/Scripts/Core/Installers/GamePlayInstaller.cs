@@ -66,6 +66,11 @@ namespace _Project.Sporae.Core.Installers
                 ServiceContainer.Instance.Register(new PhSystem(0f));
             }
 
+            if (!ServiceContainer.Instance.Contains(typeof(DomeMutationRuntimeService)))
+            {
+                ServiceContainer.Instance.Register(new DomeMutationRuntimeService());
+            }
+
             // Registra ToastNotificationManager se presente nella scena (opzionale: il gioco usa Foundation/HUD 2.0)
             var toastManager = FindObjectOfType<ToastNotificationManager>();
             if (toastManager != null)
@@ -94,6 +99,7 @@ namespace _Project.Sporae.Core.Installers
                 var go = new GameObject("FoundationNotificationsRuntime");
                 go.AddComponent<FoundationNotificationsRunner>();
                 go.AddComponent<FoundationNotificationsWatchersRunner>();
+                go.AddComponent<FoundationMutationImWatcher>();
                 go.AddComponent<FoundationLoreSchedulerRunner>();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 go.AddComponent<FoundationNotificationsDebugConsole>();

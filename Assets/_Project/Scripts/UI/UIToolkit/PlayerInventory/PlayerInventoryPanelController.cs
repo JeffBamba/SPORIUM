@@ -35,7 +35,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private HashSet<string> _pickerAllowedTypes;
         /// <summary>Ordine dei typeId ammessi (per mostrare per primi gli item adatti al macchinario in modalità picker).</summary>
         private List<string> _pickerAllowedTypesOrdered;
-        private Action<string, SporeStage?> _onSelectedWithStage;
+        /// <summary>Item è l’istanza esatta selezionata (spora/frutto per riga); null per righe stack generico.</summary>
+        private Action<string, SporeStage?, Item> _onSelectedWithStage;
         private SporeStage? _pickerFilterSporeStage;
         private Action _onCancel;
         private string _pickerContext;
@@ -168,17 +169,26 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         /// </summary>
         public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string> onSelected, Action onCancel, string pickerContext = null)
         {
-            ShowAsPicker(allowedTypeIds, subtitle, (id, _) => onSelected(id), onCancel, null, pickerContext);
+            ShowAsPicker(allowedTypeIds, subtitle, (id, _, __) => onSelected(id), onCancel, null, pickerContext);
         }
 
         /// <summary>
         /// Picker con callback (typeId, sporeStage) e filtro opzionale per spore. pickerContext: es. "extractor" per tooltip frutto.
+        /// Per spore/frutto multi-riga preferire overload con <see cref="Item"/> così si rimuove l’istanza cliccata.
         /// </summary>
         public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?> onSelectedWithStage, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null)
         {
+            ShowAsPicker(allowedTypeIds, subtitle, (id, st, _) => onSelectedWithStage(id, st), onCancel, filterSporeStage, pickerContext);
+        }
+
+        /// <summary>
+        /// Picker con istanza esplicita per righe spora/frutto (stesso stage può comparire più volte con metadata diversi).
+        /// </summary>
+        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?, Item> onSelectedWithItem, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null)
+        {
             _pickerAllowedTypes = allowedTypeIds != null ? new HashSet<string>(allowedTypeIds) : new HashSet<string>();
             _pickerAllowedTypesOrdered = allowedTypeIds != null ? new List<string>(allowedTypeIds) : new List<string>();
-            _onSelectedWithStage = onSelectedWithStage;
+            _onSelectedWithStage = onSelectedWithItem;
             _pickerFilterSporeStage = filterSporeStage;
             _onCancel = onCancel;
             _pickerContext = pickerContext;
@@ -318,7 +328,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 {
                     var selectBtn = new Button(() =>
                     {
-                        _onSelectedWithStage?.Invoke(typeId, null);
+                        var rowItem = slot.Items.FirstOrDefault();
+                        _onSelectedWithStage?.Invoke(typeId, null, rowItem);
                         Hide();
                     }) { text = "Seleziona" };
                     selectBtn.AddToClassList("inv-select");
@@ -410,7 +421,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 {
                     var selectBtn = new Button(() =>
                     {
-                        _onSelectedWithStage?.Invoke(typeId, null);
+                        _onSelectedWithStage?.Invoke(typeId, null, fruit);
                         Hide();
                     }) { text = "Seleziona" };
                     selectBtn.AddToClassList("inv-select");
@@ -527,7 +538,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     var stage = item.SporeStageValue;
                     var selectBtn = new Button(() =>
                     {
-                        _onSelectedWithStage?.Invoke(Items.SporeGeneric, stage);
+                        _onSelectedWithStage?.Invoke(Items.SporeGeneric, stage, item);
                         Hide();
                     }) { text = "Seleziona" };
                     selectBtn.AddToClassList("inv-select");

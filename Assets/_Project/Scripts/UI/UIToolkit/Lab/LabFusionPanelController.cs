@@ -321,11 +321,12 @@ namespace Sporae.UI.UIToolkit.Lab
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
                 "Seleziona una Spora Maturata (obbligatoria per questo slot)",
-                (typeId, stage) =>
+                (typeId, stage, pickedItem) =>
                 {
                     if (typeId != Items.SporeGeneric || stage != SporeStage.Matured) return;
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
-                    if (!_gameManager.PlayerInventory.TryRemoveFirstSporeByStage(SporeStage.Matured, out var pickedSpore)) return;
+                    if (pickedItem == null || pickedItem.SporeStageValue != SporeStage.Matured) return;
+                    if (!_gameManager.PlayerInventory.TryRemoveExactItem(pickedItem, out var pickedSpore)) return;
                     _storage.Add(pickedSpore);
                     RefreshDisplay();
                 },

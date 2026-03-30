@@ -80,7 +80,7 @@
                         <ui:Label text="Speso oggi" class="cbb-cry-key" style="font-size: 11px;" />
                         <ui:Label name="cry-spent-today" text="-80 CRY" class="cbb-cry-value cbb-cry-red" />
                     </ui:VisualElement>
-                    <ui:VisualElement name="cry-tooltip-row-net" class="cbb-cry-row">
+                    <ui:VisualElement name="cry-tooltip-row-net" class="cbb-cry-row cbb-cry-row-last">
                         <ui:Label text="Netto oggi" class="cbb-cry-key" style="font-size: 11px;" />
                         <ui:Label name="cry-net-today" text="+160 CRY" class="cbb-cry-value cbb-cry-green" />
                     </ui:VisualElement>

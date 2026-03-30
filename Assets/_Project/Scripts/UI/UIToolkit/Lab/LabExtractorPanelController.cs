@@ -304,16 +304,24 @@ namespace Sporae.UI.UIToolkit.Lab
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
                 "Seleziona item da inserire nell'Extractor",
-                typeId =>
+                (typeId, _, pickedItem) =>
                 {
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
-                    if (_gameManager.PlayerInventory.TryRemoveFirst(typeId, out var selectedItem))
+                    if (pickedItem != null)
                     {
-                        _storage.Add(selectedItem);
-                        RefreshDisplay();
+                        if (!_gameManager.PlayerInventory.TryRemoveExactItem(pickedItem, out var sel)) return;
+                        _storage.Add(sel);
                     }
+                    else if (!string.IsNullOrEmpty(typeId))
+                    {
+                        if (!_gameManager.PlayerInventory.TryRemoveFirst(typeId, out var selectedItem)) return;
+                        _storage.Add(selectedItem);
+                    }
+                    else return;
+                    RefreshDisplay();
                 },
                 () => { },
+                null,
                 "extractor"
             );
         }

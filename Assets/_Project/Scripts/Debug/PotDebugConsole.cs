@@ -74,6 +74,8 @@ namespace Sporae.DevTools
         private string _daysOverwateringInputString = "0";
         private string _debugSeedLevelMetaString = "1";
         private string _debugSeedTraitPowerString = "100";
+        /// <summary>0=Fixed, 1=Stable, 2=Unstable — usato per semi +inv e piantatura diretta Task 4.</summary>
+        private int _debugSeedGeneticToolbar = 1;
         
         // Cache per sistemi
         private PhSystem _phSystem;
@@ -647,6 +649,16 @@ namespace Sporae.DevTools
             traitPct = int.TryParse(_debugSeedTraitPowerString, out int t) ? Mathf.Clamp(t, 1, 999) : 100;
         }
 
+        private GeneticType GetDebugTask4GeneticType()
+        {
+            return _debugSeedGeneticToolbar switch
+            {
+                0 => GeneticType.Fixed,
+                2 => GeneticType.Unstable,
+                _ => GeneticType.Stable,
+            };
+        }
+
         private void AddDebugLabSeedToInventory(string plantCode)
         {
             TryParseDebugSeedParams(out int lvl, out int tp);
@@ -657,7 +669,8 @@ namespace Sporae.DevTools
                 return;
             }
 
-            var item = ItemFabric.CreateDebugSeedWithLabLikeMetadata(plantCode, lvl, tp);
+            var gen = GetDebugTask4GeneticType();
+            var item = ItemFabric.CreateDebugSeedWithLabLikeMetadata(plantCode, lvl, tp, gen);
             if (item == null)
             {
                 AddLog($"⚠️ Seme lab-like fallito: {plantCode}");
@@ -665,7 +678,7 @@ namespace Sporae.DevTools
             }
 
             inv.Add(item);
-            AddLog($"✅ Inventario +1 seme (metadata lab) {plantCode} — liv.meta {lvl}, trait% {tp}");
+            AddLog($"✅ Inventario +1 seme (metadata lab) {plantCode} — liv.meta {lvl}, trait% {tp}, {gen}");
         }
 
         private void SetDaysOverwateringConsecutiveFromInput()
@@ -717,9 +730,19 @@ namespace Sporae.DevTools
                 return;
             }
             
+            TryParseDebugSeedParams(out int lvlMeta, out int traitPct);
+            var gen = GetDebugTask4GeneticType();
+            var seedItem = ItemFabric.CreateDebugSeedWithLabLikeMetadata(plantCode, lvlMeta, traitPct, gen);
+            if (seedItem == null)
+            {
+                AddLog($"⚠️ Seme lab-like (piantura diretta) fallito: {plantCode}");
+                return;
+            }
+
             int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
             potState.PlantSeed(currentDay, plantCode);
-            potState.ApplySeedMetadata(null, plantData);
+            potState.ApplySeedMetadata(seedItem, plantData);
+            potState.PlantLevel = Mathf.Clamp(seedItem.PlantLevelMetadata, 1, 5);
             
             var potGrowthController = _selectedPot.GetComponent<PotGrowthController>();
             potGrowthController?.UpdateVisuals();
@@ -727,7 +750,7 @@ namespace Sporae.DevTools
             PotEvents.EmitPlantStageChanged(potState.PotId, PlantStage.Seed);
             PotEvents.EmitChanged(_selectedPot.PotSlot);
             
-            AddLog($"✅ {potState.PotId}: Piantato {plantData.name} ({plantCode}) — Giorno {currentDay}");
+            AddLog($"✅ {potState.PotId}: Piantato {plantData.name} ({plantCode}) — {gen}, liv.meta {lvlMeta}, trait% {traitPct}, giorno {currentDay}");
         }
         
         private void AddLog(string message)
@@ -894,6 +917,10 @@ namespace Sporae.DevTools
             _debugSeedLevelMetaString = GUI.TextField(new Rect(consoleX + 140f, currentY, 44f, 22f), _debugSeedLevelMetaString, 4);
             GUI.Label(new Rect(consoleX + 195f, currentY, 90f, 22f), "Trait power %:", labelStyle);
             _debugSeedTraitPowerString = GUI.TextField(new Rect(consoleX + 285f, currentY, 44f, 22f), _debugSeedTraitPowerString, 4);
+            currentY += 26f;
+            GUI.Label(new Rect(consoleX + 10f, currentY, 120f, 22f), "Genetica seme:", labelStyle);
+            _debugSeedGeneticToolbar = GUI.Toolbar(new Rect(consoleX + 125f, currentY, consoleWidth - 145f, 22f), _debugSeedGeneticToolbar,
+                new[] { "Fixed", "Stable", "Unstable" });
             currentY += 26f;
             float t4w = (consoleWidth - 28f) / 4f;
             if (GUI.Button(new Rect(consoleX + 10f, currentY, t4w - 3f, 28f), "Seme Ferric\n+inv", buttonStyle))

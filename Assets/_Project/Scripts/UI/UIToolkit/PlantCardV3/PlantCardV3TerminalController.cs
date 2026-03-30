@@ -6830,6 +6830,17 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return lines;
             }
 
+            if (state.IsMutated || state.TraitPowerPercent != 100 || !string.IsNullOrWhiteSpace(state.SelectedTraitsCsv) ||
+                state.PlantGeneticType != GeneticType.Stable)
+            {
+                if (state.IsMutated)
+                    lines.Add("Mutazione spontanea: effetti non garantiti al 100% — confronta tag in STATUS con il catalogo.");
+                lines.Add($"Profilo runtime: {state.PlantGeneticType}, TraitPower {state.TraitPowerPercent}%");
+                if (!string.IsNullOrWhiteSpace(state.SelectedTraitsCsv))
+                    lines.Add($"Tag gameplay: {state.SelectedTraitsCsv}");
+                lines.Add("—");
+            }
+
             string researchNotes = plantData != null && !string.IsNullOrWhiteSpace(plantData.ResearchNotes) ? plantData.ResearchNotes : null;
             if (!string.IsNullOrEmpty(researchNotes))
             {

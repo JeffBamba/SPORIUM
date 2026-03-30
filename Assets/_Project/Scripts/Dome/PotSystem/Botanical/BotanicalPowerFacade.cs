@@ -401,6 +401,8 @@ namespace Sporae.Dome.PotSystem.Botanical
                     lines.Add(new BotanicalHudTooltipLine("  (nessun testo Attivo su PlantData)", BotanicalHudTooltipPalette.TipMuted));
             }
 
+            AppendGeneticLabProfileHudLines(lines, state);
+
             lines.Add(new BotanicalHudTooltipLine("── Subiti (adesso) ──", BotanicalHudTooltipPalette.TipPhCyan, true));
             bool sub = false;
             bool moldRelevant = state.MoldRiskLevel >= 1 || state.DaysOverwateringConsecutive > 0;
@@ -427,6 +429,32 @@ namespace Sporae.Dome.PotSystem.Botanical
             }
             if (!sub)
                 lines.Add(new BotanicalHudTooltipLine("    • —", BotanicalHudTooltipPalette.TipMuted));
+        }
+
+        /// <summary>Task 7: riepilogo genetica / ibrido / mutazione / tag allineato al runtime (Dome HUD).</summary>
+        static void AppendGeneticLabProfileHudLines(List<BotanicalHudTooltipLine> lines, PotStateModel state)
+        {
+            if (lines == null || state == null) return;
+            bool hybrid = LabHybridGameplayModifiers.PotHasLabHybridProfile(state);
+            bool hasTraits = !string.IsNullOrWhiteSpace(state.SelectedTraitsCsv);
+            if (!hybrid && !state.IsMutated && !hasTraits && state.TraitPowerPercent == 100 &&
+                state.PlantGeneticType == GeneticType.Stable)
+                return;
+
+            lines.Add(new BotanicalHudTooltipLine("── Profilo genetico / Lab ──", BotanicalHudTooltipPalette.TipPhCyan, true));
+            lines.Add(new BotanicalHudTooltipLine(
+                $"  Genetica: {state.PlantGeneticType} · TraitPower {state.TraitPowerPercent}%",
+                BotanicalHudTooltipPalette.TipMuted));
+            if (hybrid)
+                lines.Add(new BotanicalHudTooltipLine(
+                    "  Origine: profilo ibrido Lab — drift/crescita possono seguire i tag oltre alla specie base.",
+                    BotanicalHudTooltipPalette.TipMuted));
+            if (state.IsMutated)
+                lines.Add(new BotanicalHudTooltipLine(
+                    "  Mutazione: linea alterata — risultato non garantito al 100%; i tag contano con blending ridotto.",
+                    BotanicalHudTooltipPalette.TipYellow));
+            if (hasTraits)
+                lines.Add(new BotanicalHudTooltipLine($"  Tag: {state.SelectedTraitsCsv}", BotanicalHudTooltipPalette.TipMuted));
         }
     }
 
