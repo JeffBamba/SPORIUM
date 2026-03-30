@@ -43,7 +43,7 @@
                         <ui:VisualElement name="ph-neutral-zone" class="ph-neutral-zone" />
                         <ui:VisualElement name="ph-marker" class="ph-marker" />
                     </ui:VisualElement>
-                    <ui:Label name="ph-band" text="7.8" class="metric-value-ph" style="position: absolute; right: 0; top: -2px; font-size: 10px;" />
+                    <ui:Label name="ph-band" text="7.8" class="metric-value-ph ph-band" style="position: absolute; right: 0; top: -2px; font-size: 10px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="condensation-display" class="metric-module" style="margin-right: 88px;">
@@ -120,27 +120,33 @@
             </ui:VisualElement>
             <ui:Button name="condensation-collect-button" text="Raccogli" class="condensation-collect-btn" style="margin-top: 4px; width: 100%; height: 28px; border-width: 1px; border-color: rgba(93, 182, 227, 0.6); background-color: rgba(20, 35, 45, 0.95); color: rgb(245, 247, 250); -unity-text-align: middle-center;" />
         </ui:VisualElement>
-        <ui:VisualElement name="mutation-tooltip" class="mutation-tooltip-root" style="position: absolute;">
-            <ui:VisualElement class="mutation-tooltip-header-row" style="flex-direction: row; align-items: center; margin-bottom: 6px; width: 100%;">
-                <ui:VisualElement class="mutation-tooltip-title-glyph" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; margin-right: 8px; border-radius: 3px; border-width: 1px; border-color: rgb(217, 70, 239); background-color: rgba(217, 70, 239, 0.25);" />
+        <ui:VisualElement name="mutation-tooltip" class="mutation-tooltip-root ph-tooltip-crt" style="position: absolute; background-image: url(&quot;project://database/Assets/_Project/Art/Crt_background_tooltip.png?fileID=2800000&amp;guid=b58ac99e855e3734b9992a506121e302&amp;type=3#Crt_background_tooltip&quot;);">
+            <ui:VisualElement name="mutation-tooltip-header-row" class="mutation-tooltip-header-row" style="flex-direction: row; align-items: center; margin-bottom: 4px; width: 100%;">
+                <ui:VisualElement class="mutation-tooltip-title-glyph" style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; margin-right: 8px; border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgb(217, 70, 239); border-right-color: rgb(217, 70, 239); border-bottom-color: rgb(217, 70, 239); border-left-color: rgb(217, 70, 239); background-color: rgba(217, 70, 239, 0.25);" />
                 <ui:Label name="mutation-tooltip-title" text="MUTATION INDEX" class="mutation-tooltip-title" style="-unity-font-style: bold; font-size: 13px; color: rgb(217, 70, 239);" />
+                <ui:Label name="mutation-tooltip-current-level" text="45% — Bilanciato" class="mutation-tooltip-current-level" style="margin-left: auto; font-size: 11px; -unity-font-style: bold;" />
             </ui:VisualElement>
-            <ui:Label text="CURRENT LEVEL" class="mutation-tooltip-section-caps" style="font-size: 10px; color: rgb(180, 180, 185); margin-bottom: 2px; margin-left: 2px; -unity-font-style: bold;" />
-            <ui:Label name="mutation-tooltip-current-level" text="45% — Bilanciato" class="mutation-tooltip-current-level" style="font-size: 14px; margin-bottom: 8px; -unity-font-style: bold;" />
-            <ui:Label name="mutation-tooltip-para-stable" class="mutation-tooltip-paragraph mutation-tooltip-copy-stable" text="IM basso: predomina la stabilità e le linee Pure restano più prevedibili. Meno mutazioni spontanee." style="white-space: normal; font-size: 11px; margin-bottom: 4px;" />
-            <ui:Label name="mutation-tooltip-para-balanced" class="mutation-tooltip-paragraph mutation-tooltip-copy-warn" text="IM medio: equilibrio biologico tra ordine e variabilità. Possibili cambiamenti graduali." style="white-space: normal; font-size: 11px; margin-bottom: 4px;" />
-            <ui:Label name="mutation-tooltip-para-high" class="mutation-tooltip-paragraph mutation-tooltip-copy-high" text="IM alto: cresce la probabilità di mutazioni spontanee e tratti inediti. Maggiore imprevedibilità — e opportunità." style="white-space: normal; font-size: 11px; margin-bottom: 8px;" />
-            <ui:VisualElement class="mutation-tooltip-mechanics-box" style="flex-direction: column; margin-bottom: 8px; padding: 6px; border-width: 1px; border-color: rgba(127, 255, 122, 0.55); border-radius: 6px; background-color: rgba(30, 40, 42, 0.95);">
+            <ui:VisualElement style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(217, 70, 239, 0.4); border-right-color: rgba(217, 70, 239, 0.4); border-bottom-color: rgba(217, 70, 239, 0.4); border-left-color: rgba(217, 70, 239, 0.4); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; padding: 4px; background-color: rgb(18, 10, 22);">
+                <ui:Label name="mutation-tooltip-para-stable" class="mutation-tooltip-paragraph mutation-tooltip-copy-stable" text="IM basso: predomina la stabilità e le linee Pure restano più prevedibili. Meno mutazioni spontanee." style="white-space: normal; font-size: 11px; margin-bottom: 4px;" />
+                <ui:Label name="mutation-tooltip-para-balanced" class="mutation-tooltip-paragraph mutation-tooltip-copy-warn" text="IM medio: equilibrio biologico tra ordine e variabilità. Possibili cambiamenti graduali." style="white-space: normal; font-size: 11px; margin-bottom: 4px;" />
+                <ui:Label name="mutation-tooltip-para-high" class="mutation-tooltip-paragraph mutation-tooltip-copy-high" text="IM alto: cresce la probabilità di mutazioni spontanee e tratti inediti. Maggiore imprevedibilità — e opportunità." style="white-space: normal; font-size: 11px;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="mutation-tooltip-mechanics-box" style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(127, 255, 122, 0.55); border-right-color: rgba(127, 255, 122, 0.55); border-bottom-color: rgba(127, 255, 122, 0.55); border-left-color: rgba(127, 255, 122, 0.55); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; padding: 4px; background-color: rgb(18, 30, 22);">
                 <ui:Label text="Meccaniche" style="font-size: 10px; color: rgb(127, 255, 122); -unity-font-style: bold; margin-bottom: 4px;" />
                 <ui:Label name="mutation-tooltip-decreases" enable-rich-text="true" text="▼ Diminuisce con: pH stabile, assenza di spore instabili, idratazione equilibrata." style="white-space: normal; font-size: 10px; color: rgb(199, 202, 199); margin-bottom: 3px;" />
                 <ui:Label name="mutation-tooltip-increases" enable-rich-text="true" text="▲ Aumenta con: stress ambientale, muffa, esperimenti genetici, specie Evil attive (es. Glasscap in vaso)." style="white-space: normal; font-size: 10px; color: rgb(199, 202, 199);" />
             </ui:VisualElement>
-            <ui:VisualElement class="mutation-tooltip-breakdown" style="flex-direction: column; margin-bottom: 8px; padding: 4px; border-top-width: 1px; border-color: rgba(199, 202, 199, 0.35);">
-                <ui:Label text="Riepilogo numerico" style="font-size: 10px; color: rgb(199, 202, 199); -unity-font-style: bold; margin-bottom: 4px;" />
-                <ui:Label name="mutation-tooltip-breakdown-base" text="Base designer: —" style="white-space: normal; font-size: 10px; color: rgb(204, 204, 204);" />
-                <ui:Label name="mutation-tooltip-breakdown-glasscap" text="Bonus Glasscap attivo: —" style="white-space: normal; font-size: 10px; color: rgb(204, 204, 204);" />
+            <ui:VisualElement class="mutation-tooltip-breakdown" style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(199, 202, 199, 0.45); border-right-color: rgba(199, 202, 199, 0.45); border-bottom-color: rgba(199, 202, 199, 0.45); border-left-color: rgba(199, 202, 199, 0.45); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; padding: 4px; background-color: rgb(30, 40, 42);">
+                <ui:Label text="Riepilogo numerico" style="font-size: 10px; color: rgb(200, 203, 200); -unity-font-style: bold; margin-bottom: 4px; margin-left: 15px;" />
+                <ui:Label name="mutation-tooltip-breakdown-base" text="Base designer: —" style="white-space: normal; font-size: 10px; color: rgb(204, 204, 204); margin-left: 15px;" />
+                <ui:Label name="mutation-tooltip-breakdown-glasscap" text="Bonus Glasscap attivo: —" style="white-space: normal; font-size: 10px; color: rgb(204, 204, 204); margin-left: 15px;" />
             </ui:VisualElement>
-            <ui:Label name="mutation-tooltip-footer" text="Non sempre un rischio — a volte è evoluzione. Monitora IM e il profilo delle piante." class="mutation-tooltip-footer" style="white-space: normal; font-size: 10px; color: rgb(218, 179, 108); -unity-font-style: italic;" />
+            <ui:VisualElement style="flex-direction: column; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgb(218, 179, 108); border-right-color: rgb(218, 179, 108); border-bottom-color: rgb(218, 179, 108); border-left-color: rgb(218, 179, 108); padding: 4px; margin-bottom: 4px;">
+                <ui:Label name="mutation-tooltip-footer" text="Non sempre un rischio — a volte è evoluzione. Monitora IM e il profilo delle piante." class="mutation-tooltip-footer" style="white-space: normal; font-size: 10px; color: rgb(218, 179, 108); -unity-font-style: italic;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="ph-tooltip-crt-refresh" style="background-color: rgba(55, 15, 65, 0.08); height: 6px; border-top-width: 0; border-bottom-width: 0;" />
+            <ui:VisualElement class="ph-tooltip-crt-refresh" style="background-color: rgba(28, 12, 32, 0.07); border-top-width: 0; border-bottom-width: 0;" />
+            <ui:VisualElement class="ph-tooltip-crt-refresh" style="border-top-width: 0; background-color: rgba(65, 20, 75, 0.15); border-bottom-width: 0; height: 22px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

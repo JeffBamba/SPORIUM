@@ -355,7 +355,7 @@ namespace _Project
                     if (sampleForUi != null)
                         foundationCollect.PostAddedToInventory(CollectionPayloadFactory.FromItem(sampleForUi, _slotSpore[i], RoomNames.Laboratory));
                     else
-                        foundationCollect.PostAddedToInventory(Items.SporeGeneric, "Spora Raw", _slotSpore[i], RoomNames.Laboratory);
+                        foundationCollect.PostAddedToInventory(Items.SporeGeneric, "Spore Grezza", _slotSpore[i], RoomNames.Laboratory);
                 }
             }
 

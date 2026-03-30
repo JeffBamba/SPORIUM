@@ -75,22 +75,61 @@
 
 .cbb-zone-left {
     flex-shrink: 0;
+    margin-left: 24px;
     padding-left: 8px;
     padding-right: 8px;
 }
 
-.cbb-zone-center {
+.cbb-zone-location {
+    position: relative;
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.cbb-location-layout-fill {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    height: 100%;
+    width: 0;
+}
+
+.cbb-location-label {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 0;
+    bottom: 0;
+    color: rgb(93, 182, 227);
+    font-size: 12px;
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cbb-zone-center {
+    flex-grow: 0;
+    flex-shrink: 0;
     justify-content: center;
+    align-items: center;
     min-width: 0;
 }
 
-/*
- * Corridoio fisso per i Collection box: sempre riservato nella barra, indipendente da quanti box ci sono.
- * Larghezza: 5 slot × (44px box + 4px margine) + 8px padding = 264px.
- * flex-shrink:0 → non si restringe mai; zone-center assorbe il resto.
- */
+.cbb-zone-post-center {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    height: 100%;
+}
+
 .cbb-zone-collectors {
     flex-shrink: 0;
     flex-grow: 0;
@@ -155,6 +194,7 @@
 }
 
 .cbb-cry-badge {
+    margin-left: 12px;
     border-color: rgba(93, 182, 227, 0.55);
     cursor: link;
 }
@@ -344,7 +384,6 @@
     border-color: rgba(189, 88, 87, 0.65);
 }
 
-/* Stack orizzontale: i box si aggiungono da sinistra verso destra; non si shrinkano mai */
 .cbb-collection-stack {
     flex-direction: row;
     align-items: center;
@@ -444,7 +483,6 @@
     margin-bottom: 6px;
 }
 
-/* USS non supporta :last-child — ultima riga ciclo marchiata esplicitamente in UXML */
 .cbb-cry-outline-cycle .cbb-cry-row-last {
     margin-bottom: 0;
 }

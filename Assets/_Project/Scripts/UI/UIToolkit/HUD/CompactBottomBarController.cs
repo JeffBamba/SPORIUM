@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -34,6 +35,10 @@ namespace Sporae.UI.UIToolkit.HUD
         [SerializeField] private string _defaultRoom = "dome";
         [SerializeField] private bool _enableDebugLogs = false;
 
+        [Header("Location (RoomAreaTag)")]
+        [Tooltip("Ritardo tra caratteri per l'etichetta [Location: …] in basso.")]
+        [SerializeField, Range(0.01f, 0.2f)] private float _locationTypewriterCharDelay = 0.045f;
+
         // ── Services ──
         private GameManager _gameManager;
         private DayCycleSystem _dayCycleSystem;
@@ -49,6 +54,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _dayLabel;
         private VisualElement _cryBadge;
         private Label _cryLabel;
+        private Label _locationLabel;
+        private Coroutine _locationTypewriterRoutine;
         private VisualElement _cryTooltip;
         private Label _cryBalanceValue;
         private Label _cryEarnedToday;
@@ -106,11 +113,22 @@ namespace Sporae.UI.UIToolkit.HUD
             BuildUI();
             TryBindMainMenuScreens();
             SubscribeToServices();
-            SetActiveRoom(_defaultRoom);
+            if (_roomTracker != null && !string.IsNullOrEmpty(_roomTracker.CurrentRoomId))
+                OnRoomTrackerChanged(_roomTracker.CurrentRoomId);
+            else
+            {
+                SetActiveRoom(_defaultRoom);
+                PlayLocationTypewriter(_defaultRoom);
+            }
         }
 
         private void OnDestroy()
         {
+            if (_locationTypewriterRoutine != null)
+            {
+                StopCoroutine(_locationTypewriterRoutine);
+                _locationTypewriterRoutine = null;
+            }
             UnsubscribeFromServices();
         }
 
@@ -151,6 +169,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _dayLabel = _root.Q<Label>("day-label");
             _cryBadge = _root.Q<VisualElement>("cry-badge");
             _cryLabel = _root.Q<Label>("cry-label");
+            _locationLabel = _root.Q<Label>("location-label");
 
             // CRY tooltip — figlio di uiRoot (dopo TopBar) così il draw order è sopra il Player Box HUD
             _cryTooltip     = uiRoot.Q<VisualElement>("cry-tooltip");
@@ -229,11 +248,7 @@ namespace Sporae.UI.UIToolkit.HUD
             }
 
             if (_roomTracker != null)
-            {
-                _roomTracker.OnRoomChanged += SetActiveRoom;
-                if (!string.IsNullOrEmpty(_roomTracker.CurrentRoomId))
-                    SetActiveRoom(_roomTracker.CurrentRoomId);
-            }
+                _roomTracker.OnRoomChanged += OnRoomTrackerChanged;
         }
 
         private void UnsubscribeFromServices()
@@ -245,7 +260,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 _economySystem.OnCRYChanged -= OnCRYChanged;
 
             if (_roomTracker != null)
-                _roomTracker.OnRoomChanged -= SetActiveRoom;
+                _roomTracker.OnRoomChanged -= OnRoomTrackerChanged;
         }
 
         // ── DAY ──
@@ -287,6 +302,59 @@ namespace Sporae.UI.UIToolkit.HUD
                     _cryNetToday.AddToClassList(net >= 0 ? "cbb-cry-green" : "cbb-cry-red");
                 }
             }
+        }
+
+        // ── Location label (RoomTracker + RoomAreaTag.DisplayName) ──
+
+        private void OnRoomTrackerChanged(string roomId)
+        {
+            SetActiveRoom(roomId);
+            PlayLocationTypewriter(roomId);
+        }
+
+        private void PlayLocationTypewriter(string roomId)
+        {
+            if (_locationLabel == null) return;
+            string display = ResolveRoomDisplayName(roomId);
+            string full = $"[Location: {display}]";
+            if (_locationTypewriterRoutine != null)
+            {
+                StopCoroutine(_locationTypewriterRoutine);
+                _locationTypewriterRoutine = null;
+            }
+            _locationTypewriterRoutine = StartCoroutine(LocationTypewriterRoutine(full));
+        }
+
+        private string ResolveRoomDisplayName(string roomId)
+        {
+            if (string.IsNullOrEmpty(roomId))
+                return "—";
+            if (_roomTracker != null &&
+                string.Equals(_roomTracker.CurrentRoomId, roomId, StringComparison.Ordinal) &&
+                !string.IsNullOrEmpty(_roomTracker.CurrentDisplayName))
+                return _roomTracker.CurrentDisplayName;
+            if (_roomTags.TryGetValue(roomId, out var tag) && !string.IsNullOrEmpty(tag.DisplayName))
+                return tag.DisplayName;
+            return roomId.ToUpperInvariant();
+        }
+
+        private IEnumerator LocationTypewriterRoutine(string target)
+        {
+            _locationLabel.text = string.Empty;
+            if (string.IsNullOrEmpty(target))
+            {
+                _locationTypewriterRoutine = null;
+                yield break;
+            }
+
+            var wait = new WaitForSeconds(_locationTypewriterCharDelay);
+            for (int len = 1; len <= target.Length; len++)
+            {
+                _locationLabel.text = target.Substring(0, len);
+                yield return wait;
+            }
+
+            _locationTypewriterRoutine = null;
         }
 
         // ── Room navigation ──

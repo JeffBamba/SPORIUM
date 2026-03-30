@@ -15,6 +15,56 @@
     border-bottom-right-radius: 0;
 }
 
+/* Toggle btn: stesso stile del chevron nelle notifiche — compatto a destra nella barra tab */
+.dome-hud-toggle-btn {
+    flex-shrink: 0;
+    flex-grow: 0;
+    align-self: stretch;
+    min-width: 32px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-left: 4px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(93, 182, 227, 0.5);
+    border-right-color: rgba(93, 182, 227, 0.5);
+    border-top-color: rgba(93, 182, 227, 0.5);
+    border-bottom-color: rgba(93, 182, 227, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.dome-hud-toggle-btn:hover {
+    background-color: rgba(93, 182, 227, 0.14);
+    border-left-color: rgb(93, 182, 227);
+    border-right-color: rgb(93, 182, 227);
+    border-top-color: rgb(93, 182, 227);
+    border-bottom-color: rgb(93, 182, 227);
+}
+
+.dome-hud-toggle-chevron {
+    font-size: 14px;
+    color: rgb(93, 182, 227);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+    min-width: 16px;
+}
+
+/* Collassato: nasconde sezioni e tooltip, la barra tab resta visibile */
+.dome-hud-root.dome-hud--collapsed .dome-hud-section-pots,
+.dome-hud-root.dome-hud--collapsed .dome-hud-section-cryo,
+.dome-hud-root.dome-hud--collapsed .dome-hud-tooltip,
+.dome-hud-root.dome-hud--collapsed .dome-hud-builder-reference {
+    display: none;
+}
+
 .dome-hud-tabs {
     flex-direction: row;
     align-items: stretch;
@@ -191,13 +241,13 @@
     flex-direction: column;
     margin: 0;
     padding: 0;
-    padding-top: 3px;
+    padding-top: 6px;
 }
 
 .dome-pot-card {
     flex-direction: column;
     margin: 0;
-    margin-bottom: 3px;
+    margin-bottom: 6px;
     padding: 0;
     border-left-width: 1px;
     border-right-width: 1px;

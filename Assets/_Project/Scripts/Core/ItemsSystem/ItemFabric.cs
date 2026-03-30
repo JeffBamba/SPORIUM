@@ -172,6 +172,7 @@ namespace _Project.Sporae.Core
             CopyPlantPowerMetadata(fruit, item);
             ApplyBaseFruitMetadata(item, fruit?.TypeId);
             ApplyPlantMetadataFromCode(item, item.SourcePlantCodeMetadata, onlyIfEmpty: true);
+            EnsureSourcePlantDisplayIsHumanReadable(item);
             return item;
         }
 
@@ -192,6 +193,7 @@ namespace _Project.Sporae.Core
             item.PlantLevelMetadata = rawSpore != null ? Mathf.Max(0, rawSpore.PlantLevelMetadata) : 0;
             CopyPlantPowerMetadata(rawSpore, item);
             ApplyPlantMetadataFromCode(item, item.SourcePlantCodeMetadata, onlyIfEmpty: true);
+            EnsureSourcePlantDisplayIsHumanReadable(item);
             return item;
         }
 
@@ -224,6 +226,7 @@ namespace _Project.Sporae.Core
             item.ReagentUsedMetadata = sourceSpore.ReagentUsedMetadata;
             item.CustomPlantName = sourceSpore.CustomPlantName;
             item.ResolvedPlantCodeMetadata = sourceSpore.ResolvedPlantCodeMetadata;
+            EnsureSourcePlantDisplayIsHumanReadable(item);
             return item;
         }
 
@@ -537,7 +540,12 @@ namespace _Project.Sporae.Core
 
             ApplyPlantMetadataFromCode(item, definition.PlantCode, onlyIfEmpty: true);
             if (string.IsNullOrWhiteSpace(item.SourcePlantDisplayName))
-                item.SourcePlantDisplayName = definition.PlantCode;
+            {
+                var pdFallback = ResolvePlantDataByCode(definition.PlantCode);
+                item.SourcePlantDisplayName = pdFallback != null
+                    ? PlantSpeciesDisplayNames.FromPlantData(pdFallback)
+                    : (PlantSpeciesDisplayNames.FromPlantCode(definition.PlantCode) ?? definition.PlantCode);
+            }
             if (string.IsNullOrWhiteSpace(item.PassivePowerLabel))
                 item.PassivePowerLabel = definition.PassivePowerLabel;
             if (!item.GeneticTypeValue.HasValue)
@@ -559,7 +567,7 @@ namespace _Project.Sporae.Core
             if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata))
                 item.SourcePlantCodeMetadata = plantData.PlantCode;
             if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.SourcePlantDisplayName))
-                item.SourcePlantDisplayName = plantData.name;
+                item.SourcePlantDisplayName = PlantSpeciesDisplayNames.FromPlantData(plantData);
             if (!onlyIfEmpty || string.IsNullOrWhiteSpace(item.ActivePowerLabel))
                 item.ActivePowerLabel = plantData.ActivePower;
             if (!item.GeneticTypeValue.HasValue)
@@ -574,7 +582,71 @@ namespace _Project.Sporae.Core
             if (string.IsNullOrWhiteSpace(plantCode))
                 return null;
 
-            return Resources.Load<PlantData>("Plants/" + plantCode.Trim());
+            var trimmed = plantCode.Trim();
+            if (PlantDatabase.Instance != null)
+            {
+                var fromDb = PlantDatabase.Instance.GetPlantDataByCode(trimmed);
+                if (fromDb != null)
+                    return fromDb;
+            }
+
+            return Resources.Load<PlantData>("Plants/" + trimmed);
+        }
+
+        /// <summary>
+        /// Sostituisce <see cref="Item.SourcePlantDisplayName"/> quando è vuoto o coincide col codice pianta.
+        /// Non usa <see cref="PlantData.name"/> (spesso uguale al codice asset).
+        /// </summary>
+        private static void EnsureSourcePlantDisplayIsHumanReadable(Item item)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata))
+                return;
+
+            var code = item.SourcePlantCodeMetadata.Trim();
+            var disp = item.SourcePlantDisplayName?.Trim();
+            if (!string.IsNullOrWhiteSpace(disp) &&
+                !string.Equals(disp, code, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var label = ResolveSpeciesUiNameFromPlantCode(code);
+            if (!string.IsNullOrWhiteSpace(label))
+                item.SourcePlantDisplayName = label;
+        }
+
+        /// <summary>
+        /// Nome comune specie da codice pianta (mappa + <see cref="PlantSpeciesDisplayNames.FromPlantData"/>).
+        /// </summary>
+        private static string ResolveSpeciesUiNameFromPlantCode(string plantCode)
+        {
+            if (string.IsNullOrWhiteSpace(plantCode))
+                return null;
+            var trimmed = plantCode.Trim();
+            var fromMap = PlantSpeciesDisplayNames.FromPlantCode(trimmed);
+            if (!string.IsNullOrWhiteSpace(fromMap))
+                return fromMap;
+            var pd = ResolvePlantDataByCode(trimmed);
+            return pd != null ? PlantSpeciesDisplayNames.FromPlantData(pd) : trimmed;
+        }
+
+        /// <summary>
+        /// Nome pianta sorgente per UI (toast COLLECTION, meta righe).
+        /// </summary>
+        public static string ResolveSourcePlantDisplayNameForUi(Item item)
+        {
+            if (item == null)
+                return null;
+
+            var code = item.SourcePlantCodeMetadata?.Trim();
+            var disp = item.SourcePlantDisplayName?.Trim();
+
+            if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(disp) &&
+                !string.Equals(disp, code, StringComparison.OrdinalIgnoreCase))
+                return disp;
+
+            if (!string.IsNullOrEmpty(code))
+                return ResolveSpeciesUiNameFromPlantCode(code) ?? code;
+
+            return string.IsNullOrEmpty(disp) ? null : disp;
         }
 
         private static string ResolvePassivePowerLabel(string plantCode)

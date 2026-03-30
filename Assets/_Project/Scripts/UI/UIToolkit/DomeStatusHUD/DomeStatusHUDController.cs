@@ -34,6 +34,10 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         [Tooltip("Se attivo, il blocco dome-hud-builder-reference (campione tooltip/card/CRYO) resta visibile anche in Play Mode.")]
         [SerializeField] private bool _showBuilderReferenceDuringPlay;
 
+        [Header("HUD collapse")]
+        [Tooltip("Se true, all'avvio mostra tab POT/CRYO e card; se false, resta solo la barra con toggle (come header notifiche).")]
+        [SerializeField] private bool _startHudExpanded = true;
+
         // ── Services ──────────────────────────────────────────────────
         private DomePotRegistry _potRegistry;
         private CryoMachineController _cryoMachine;
@@ -88,6 +92,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         // ── State ──────────────────────────────────────────────────────
         private readonly bool[] _expandedPots = new bool[4];
         private bool _showingCryo;
+        private bool _hudBodyExpanded = true;
+        private Button _btnHudToggle;
+        private Label _hudToggleChevron;
         private float _refreshTimer;
         private const float RefreshInterval = 0.5f;
         private IVisualElementScheduledItem _tooltipSchedule;
@@ -263,6 +270,14 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _tabCryo.clicked += OnTabCryoClicked;
             }
 
+            _btnHudToggle = _hudRoot.Q<Button>("btn-dome-hud-toggle");
+            _hudToggleChevron = _hudRoot.Q<Label>("dome-hud-toggle-chevron");
+            if (_btnHudToggle != null)
+            {
+                _btnHudToggle.clicked -= ToggleHudBodyExpanded;
+                _btnHudToggle.clicked += ToggleHudBodyExpanded;
+            }
+
             // Collassa tutte le aree espanse e resetta i placeholder di authoring di card-0.
             // card-0 in UXML è visibile (expanded) per l'editing in UI Builder;
             // a runtime parte collassata e il testo/colore viene sovrascritto da RefreshPots.
@@ -274,7 +289,42 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     _potCondRows[i].style.display = DisplayStyle.None;
             }
 
+            // SwitchTab prima, poi ApplyHudBodyExpandedState: se collassato, sovrascrive la visibilità sezioni
             SwitchTab(false);
+            _hudBodyExpanded = _startHudExpanded;
+            ApplyHudBodyExpandedState();
+        }
+
+        private void ToggleHudBodyExpanded()
+        {
+            _hudBodyExpanded = !_hudBodyExpanded;
+            ApplyHudBodyExpandedState();
+        }
+
+        /// <summary>
+        /// Collassa / espande le sezioni card POT e CRYO. La barra tab (con toggle) è sempre visibile.
+        /// Le sezioni hanno inline style settato da SwitchTab, quindi gestiamo la visibilità direttamente
+        /// in C# piuttosto che affidarci solo al selettore CSS (inline > USS).
+        /// Chevron: ^ = espanso, v = collassato.
+        /// </summary>
+        private void ApplyHudBodyExpandedState()
+        {
+            if (_hudRoot == null) return;
+            _hudRoot.EnableInClassList("dome-hud--collapsed", !_hudBodyExpanded);
+            if (_hudToggleChevron != null)
+                _hudToggleChevron.text = _hudBodyExpanded ? "^" : "v";
+
+            if (!_hudBodyExpanded)
+            {
+                HideTooltip();
+                if (_sectionPots != null) _sectionPots.style.display = DisplayStyle.None;
+                if (_sectionCryo != null) _sectionCryo.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                // Ripristina lo stato tab corrente
+                SwitchTab(_showingCryo);
+            }
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -597,7 +647,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     {
                         float shownDrift = ComputeShownDailyPhDrift(state, plantData);
                         _potStatPh[i].text = $"pH {FormatPhDrift(shownDrift)}/g";
-                        _potStatPh[i].style.color = new StyleColor(PhGradientDisplayColors.GetColorFromDrift(shownDrift));
+                        _potStatPh[i].style.color = _phSystem != null
+                            ? new StyleColor(PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState()))
+                            : new StyleColor(PhGradientDisplayColors.GetColorFromScale(7f));
                     }
                     else if (_potStatPh[i] != null)
                         _potStatPh[i].text = "";
@@ -1066,8 +1118,11 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                         lines.Add(TooltipLine.Sep());
                         lines.Add(new TooltipLine("EFFETTO pH", TipPhCyan, bold: true));
                         float drift    = mod.DailyDrift;
-                        Color driftCol = Mathf.Abs(drift) < 0.01f ? TipMuted
-                                       : drift > 0 ? TipGreen : TipYellow;
+                        Color driftCol = Mathf.Abs(drift) < 0.01f
+                            ? TipMuted
+                            : (_phSystem != null
+                                ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
+                                : PhGradientDisplayColors.GetColorFromDrift(drift));
                         lines.Add(new TooltipLine($"   Drift/giorno: {FormatPhDrift(drift)}", driftCol));
                         if (Mathf.Abs(mod.PhCap) > 0.01f)
                             lines.Add(new TooltipLine($"   Cap pH: {mod.PhCap:F1}", TipMuted));

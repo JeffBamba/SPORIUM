@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit;
 
 namespace _Project
 {
@@ -632,15 +633,7 @@ namespace _Project
         /// </summary>
         public Color GetBandColor()
         {
-            return EvaluateState() switch
-            {
-                PhBand.UltraAcid => new Color(0.8f, 0.2f, 0.2f),      // Rosso scuro
-                PhBand.StableAcid => new Color(1f, 0.5f, 0.2f),      // Arancione
-                PhBand.Neutral => new Color(0.2f, 0.8f, 0.2f),       // Verde
-                PhBand.StableBasic => new Color(0.2f, 0.5f, 1f),     // Azzurro
-                PhBand.UltraBasic => new Color(0.2f, 0.2f, 0.8f),    // Blu scuro
-                _ => Color.white
-            };
+            return PhGradientDisplayColors.GetColorForPhBand(EvaluateState());
         }
 
         /// <summary>

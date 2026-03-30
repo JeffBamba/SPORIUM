@@ -1,11 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/DomeStatusHUD/DomeStatusHUD.uss?fileID=7433441132597879392&amp;guid=0138b40a681e8a648b916d977f160dc9&amp;type=3#DomeStatusHUD" />
     <ui:VisualElement name="dome-hud-root" class="dome-hud-root" style="bottom: 53px; right: 4px;">
-        <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs" style="display: flex;">
-            <ui:Button name="btn-tab-pots" class="dome-tab-btn dome-tab-btn--pots dome-tab-active">
+        <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs" style="display: flex; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-color: rgba(0, 0, 0, 0);">
+            <ui:Button name="btn-tab-pots" class="dome-tab-btn dome-tab-btn--pots dome-tab-active" style="border-left-color: rgb(179, 178, 156); border-right-color: rgb(179, 178, 156); border-top-color: rgb(179, 178, 156); border-bottom-color: rgb(179, 178, 156);">
                 <ui:VisualElement class="dome-tab-btn__content">
-                    <ui:VisualElement name="dome-tab-pots-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--pots" style="background-image: url(&quot;project://database/Assets/_Project/Art/Enviroments/Png/Elementi/status_sprout.png?fileID=2800000&amp;guid=939e2047e05c1364585ba82b99e00c85&amp;type=3#status_sprout&quot;); background-color: rgba(0, 0, 0, 0);" />
-                    <ui:Label name="lbl-tab-pots" text="POT [0/4]" class="dome-tab-btn__label" />
+                    <ui:VisualElement name="dome-tab-pots-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--pots" style="background-image: url(&quot;project://database/Assets/_Project/Art/Enviroments/Png/Elementi/status_sprout.png?fileID=2800000&amp;guid=939e2047e05c1364585ba82b99e00c85&amp;type=3#status_sprout&quot;); background-color: rgba(0, 0, 0, 0); color: rgb(179, 178, 156); border-left-color: rgba(179, 178, 156, 0.55); border-right-color: rgba(179, 178, 156, 0.55); border-top-color: rgba(179, 178, 156, 0.55); border-bottom-color: rgba(179, 178, 156, 0.55);" />
+                    <ui:Label name="lbl-tab-pots" text="POT [0/4]" class="dome-tab-btn__label" style="color: rgb(178, 178, 155);" />
                 </ui:VisualElement>
             </ui:Button>
             <ui:Button name="btn-tab-cryo" class="dome-tab-btn dome-tab-btn--cryo">
@@ -13,6 +13,9 @@
                     <ui:VisualElement name="dome-tab-cryo-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--cryo" style="background-image: url(&quot;project://database/Assets/_Project/Art/icona_Placeholder_cryo.png?fileID=2800000&amp;guid=675fac4d91214294abdb91af31d837c9&amp;type=3#icona_Placeholder_cryo&quot;); background-color: rgba(0, 0, 0, 0);" />
                     <ui:Label name="lbl-tab-cryo" text="CRYO [0/3]" class="dome-tab-btn__label" />
                 </ui:VisualElement>
+            </ui:Button>
+            <ui:Button name="btn-dome-hud-toggle" class="dome-hud-toggle-btn" tooltip="Apri / Chiudi panoramica POT e CRYO">
+                <ui:Label name="dome-hud-toggle-chevron" text="^" picking-mode="Ignore" class="dome-hud-toggle-chevron" />
             </ui:Button>
         </ui:VisualElement>
         <ui:VisualElement name="dome-hud-section-pots" class="dome-hud-section">
@@ -64,7 +67,7 @@
                     <ui:Label name="dome-pot-footer-0" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="dome-pot-card-1" class="dome-pot-card dome-pot-card--empty">
+            <ui:VisualElement name="dome-pot-card-1" class="dome-pot-card dome-pot-card--empty" style="border-left-color: rgba(93, 182, 227, 0.55); border-right-color: rgba(93, 182, 227, 0.55); border-top-color: rgba(93, 182, 227, 0.55); border-bottom-color: rgba(93, 182, 227, 0.55);">
                 <ui:VisualElement name="dome-pot-header-1" class="dome-pot-header">
                     <ui:Label name="dome-pot-chevron-1" text="&gt;" class="dome-pot-chevron" />
                     <ui:Label name="dome-pot-badge-1" text="POT-002" class="dome-pot-badge dome-pot-badge--empty" />
@@ -112,7 +115,7 @@
                     <ui:Label name="dome-pot-footer-1" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="dome-pot-card-2" class="dome-pot-card dome-pot-card--empty">
+            <ui:VisualElement name="dome-pot-card-2" class="dome-pot-card dome-pot-card--empty" style="border-left-color: rgba(93, 182, 227, 0.55); border-right-color: rgba(93, 182, 227, 0.55); border-top-color: rgba(93, 182, 227, 0.55); border-bottom-color: rgba(93, 182, 227, 0.55);">
                 <ui:VisualElement name="dome-pot-header-2" class="dome-pot-header">
                     <ui:Label name="dome-pot-chevron-2" text="&gt;" class="dome-pot-chevron" />
                     <ui:Label name="dome-pot-badge-2" text="POT-003" class="dome-pot-badge dome-pot-badge--empty" />
@@ -160,7 +163,7 @@
                     <ui:Label name="dome-pot-footer-2" text="Usa il terminale POT nella Dome per operare" class="dome-pot-footer" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="dome-pot-card-3" class="dome-pot-card dome-pot-card--empty">
+            <ui:VisualElement name="dome-pot-card-3" class="dome-pot-card dome-pot-card--empty" style="border-left-color: rgba(93, 182, 227, 0.55); border-right-color: rgba(93, 182, 227, 0.55); border-top-color: rgba(93, 182, 227, 0.55); border-bottom-color: rgba(93, 182, 227, 0.55);">
                 <ui:VisualElement name="dome-pot-header-3" class="dome-pot-header">
                     <ui:Label name="dome-pot-chevron-3" text="&gt;" class="dome-pot-chevron" />
                     <ui:Label name="dome-pot-badge-3" text="POT-004" class="dome-pot-badge dome-pot-badge--empty" />

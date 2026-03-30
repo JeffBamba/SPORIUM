@@ -52,9 +52,11 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (item.TypeId == Items.SporeGeneric)
             {
-                if (!string.IsNullOrWhiteSpace(item.SourcePlantDisplayName))
-                    return $"Spora Raw — {item.SourcePlantDisplayName}";
-                return "Spora Raw";
+                var plantLabel = ItemFabric.ResolveSourcePlantDisplayNameForUi(item);
+                bool matured = item.SporeStageValue == SporeStage.Matured;
+                if (!string.IsNullOrWhiteSpace(plantLabel))
+                    return matured ? $"Spore matura di {plantLabel}" : $"Spore Grezza di {plantLabel}";
+                return matured ? "Spore matura" : "Spore Grezza";
             }
 
             return PlayerInventoryPanelController.GetItemDisplayName(item.TypeId, item);
@@ -66,10 +68,8 @@ namespace Sporae.UI.UIToolkit.HUD
             p.Args[MetaMutatePct] = ExtractorTooltipTexts.GeneticTypeToPercentMutare(item.GeneticTypeValue);
             p.Args[MetaStage] = item.SporeStageValue == SporeStage.Matured ? "Maturata" : "Raw";
             p.Args[MetaFamily] = string.IsNullOrWhiteSpace(item.FamilyMetadata) ? "—" : item.FamilyMetadata;
-            var src = !string.IsNullOrWhiteSpace(item.SourcePlantDisplayName)
-                ? item.SourcePlantDisplayName
-                : (!string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata) ? item.SourcePlantCodeMetadata : "—");
-            p.Args[MetaSource] = src;
+            var src = ItemFabric.ResolveSourcePlantDisplayNameForUi(item);
+            p.Args[MetaSource] = string.IsNullOrWhiteSpace(src) ? "—" : src;
             p.Args[MetaQuality] = item.Quality.ToString("F1");
             p.Args[MetaActive] = string.IsNullOrWhiteSpace(item.ActivePowerLabel) ? "—" : item.ActivePowerLabel;
             p.Args[MetaPassive] = string.IsNullOrWhiteSpace(item.PassivePowerLabel) ? "—" : item.PassivePowerLabel;

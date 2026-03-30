@@ -2,15 +2,15 @@
 
 .cdetail-root {
     position: relative;
-    width: 280px;
-    max-width: 92%;
+    width: 400px;
+    max-width: 94%;
     flex-shrink: 0;
     background-color: rgba(8, 12, 14, 0.97);
     border-width: 2px;
     border-color: rgba(181, 128, 209, 0.7);
-    padding: 10px;
+    padding: 12px 14px 14px 14px;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .cdetail-corner {
@@ -22,8 +22,8 @@
 /* Header */
 .cdetail-header {
     flex-direction: row;
-    align-items: center;
-    margin-bottom: 6px;
+    align-items: flex-start;
+    margin-bottom: 8px;
 }
 
 .cdetail-icon {
@@ -47,6 +47,8 @@
 .cdetail-title-col {
     flex-direction: column;
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .cdetail-name {
@@ -54,6 +56,7 @@
     color: rgb(200, 203, 200);
     -unity-font-style: bold;
     letter-spacing: 1px;
+    white-space: normal;
 }
 
 .cdetail-typeid {
@@ -74,26 +77,33 @@
 /* Rows */
 .cdetail-row {
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 3px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-bottom: 5px;
 }
 
 .cdetail-key {
     font-size: 9px;
     color: rgba(192, 200, 197, 0.6);
+    width: 118px;
+    min-width: 118px;
+    flex-shrink: 0;
+    margin-right: 10px;
+    -unity-text-align: middle-left;
 }
 
 .cdetail-value {
     font-size: 9px;
     color: rgb(192, 200, 197);
-    -unity-text-align: middle-right;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    -unity-text-align: upper-left;
 }
 
 .cdetail-value-wrap {
     white-space: normal;
-    max-width: 180px;
-    -unity-text-align: upper-right;
+    -unity-text-align: upper-left;
 }
 
 .cdetail-plh {
@@ -104,6 +114,7 @@
     font-size: 8px;
     color: rgba(192, 200, 197, 0.35);
     -unity-text-align: middle-center;
-    margin-top: 4px;
+    margin-top: 10px;
     letter-spacing: 1px;
+    white-space: normal;
 }

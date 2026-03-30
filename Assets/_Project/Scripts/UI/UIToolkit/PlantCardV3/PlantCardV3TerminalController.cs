@@ -20,6 +20,7 @@ using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.UI.UIToolkit.PlayerInventory;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
 {
@@ -2207,7 +2208,29 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 new[] { "pcv3-value-green", "pcv3-value-yellow", "pcv3-value-green", "pcv3-value-blue", "pcv3-value-green", "pcv3-value-yellow" });
             UpdateBlock(_vitalBlock2,
                 new[] { hydrationText, lightStressText, phDriftText, growthText, moldText, trendText },
-                new[] { "pcv3-value-blue", "pcv3-value-yellow", drift > 0 ? "pcv3-value-red" : "pcv3-value-blue", "pcv3-value-green", moldClass, trendClass });
+                new[] { "pcv3-value-blue", "pcv3-value-yellow", "", "pcv3-value-green", moldClass, trendClass });
+            ApplyPhDriftStatColorFromDomeBand(_vitalBlock2, 2, drift);
+        }
+
+        /// <summary>Colore valore pH drift dalla banda Dome corrente (fallback classe rosso/blu se PhSystem assente).</summary>
+        private void ApplyPhDriftStatColorFromDomeBand(VisualElement container, int statRowIndex, float driftSignFallback)
+        {
+            if (container == null) return;
+            var statRows = container.Query<VisualElement>(className: "pcv3-potcard-stat-row").ToList();
+            if (statRowIndex >= statRows.Count) return;
+            var valueLabel = statRows[statRowIndex].Q<Label>(className: "pcv3-potcard-stat-value");
+            if (valueLabel == null) return;
+            valueLabel.RemoveFromClassList("pcv3-value-green");
+            valueLabel.RemoveFromClassList("pcv3-value-blue");
+            valueLabel.RemoveFromClassList("pcv3-value-yellow");
+            valueLabel.RemoveFromClassList("pcv3-value-red");
+            if (_phSystem != null)
+                valueLabel.style.color = new StyleColor(PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState()));
+            else
+            {
+                valueLabel.style.color = StyleKeyword.Null;
+                valueLabel.AddToClassList(driftSignFallback > 0 ? "pcv3-value-red" : "pcv3-value-blue");
+            }
         }
 
         private void RefreshPotCards()
@@ -2395,12 +2418,13 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 UpdateStatValue(rowIndex++, levelText, "pcv3-value-yellow");
                 UpdateStatValue(rowIndex++, conditionText, "pcv3-value-green");
                 UpdateStatValue(rowIndex++, phAffinityText, "pcv3-value-blue");
-                UpdateStatValue(rowIndex++, phDriftText, drift > 0 ? "pcv3-value-red" : "pcv3-value-blue");
+                UpdateStatValue(rowIndex++, phDriftText, "");
                 UpdateStatValue(rowIndex++, growthText, "pcv3-value-green");
                 // Separator è già nel template, skip
                 rowIndex++; // Skip separator
                 UpdateStatValue(rowIndex++, hydrationText, "pcv3-value-blue");
                 UpdateStatValue(rowIndex++, lightStressText, "pcv3-value-yellow");
+                ApplyPhDriftStatColorFromDomeBand(statsContainer, 4, drift);
             }
 
             if (openButton != null)
@@ -2717,7 +2741,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 float phValue = _phSystem.CurrentPh;
                 string phStr = phValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
                 string phBand = GetPhBandNameForDisplay(phValue);
-                string phColorHex = GetPhColorHexForDriftValue(phValue);
+                string phColorHex = GetPhColorHexForDomePhBand();
                 string phLineRaw = "§DATA§" + StatusDottedLabelOnly("pH DOME") + "§END§<color=" + phColorHex + ">" + phStr + " — " + phBand + "</color>";
                 string newLine = ParseColors(phLineRaw);
                 string[] lines = current.Split(new[] { "\n", "\r\n" }, StringSplitOptions.None);
@@ -5477,7 +5501,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             float condensationPct = _gameManager != null && _gameManager.CondensationSystem != null ? _gameManager.CondensationSystem.CurrentAccumulation : 0f;
             string phStr = phValue.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
             string phBand = GetPhBandNameForDisplay(phValue);
-            string phColorHex = GetPhColorHexForDriftValue(phValue);
+            string phColorHex = GetPhColorHexForDomePhBand();
             string phLineRaw = "§DATA§" + StatusDottedLabelOnly("pH DOME") + "§END§<color=" + phColorHex + ">" + phStr + " — " + phBand + "</color>";
             AppendRawLine(phLineRaw);
             string condStr = Mathf.Clamp(Mathf.RoundToInt(condensationPct), 0, 100) + "%";
@@ -5825,7 +5849,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             if (phDriftLine != null)
             {
                 phDriftLine.enableRichText = true;
-                phDriftLine.text = $"pH DRIFT.........: <color=#D35F5F>{phDriftValue}</color>";
+                phDriftLine.text = $"pH DRIFT.........: <color={GetPhColorHexForDomePhBand()}>{phDriftValue}</color>";
             }
 
             var growthLine = detailPage.Q<Label>("pcv3d-growth-line");
@@ -7107,33 +7131,12 @@ AppendRawLine("§TITLE§✓ CHIUSURA TERMINALE§END§");
             FlushConsole();
         }
 
-        /// <summary>Colore pH per valore -100..+100 (stessa logica TopBar/PH drift bar: acido=rosso, neutro=bianco, basico=blu).</summary>
-        private static string GetPhColorHexForDriftValue(float driftPh)
+        /// <summary>Hex rich text per pH Dome: colore dalla <see cref="PhSystem.PhBand"/> corrente (allineato TopBar/Dome HUD).</summary>
+        private string GetPhColorHexForDomePhBand()
         {
-            float phVisualScale = ((driftPh + 100f) / 200f) * 14f;
-            phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-            float r, g, b;
-            if (phVisualScale <= 4f)
-            {
-                float t = phVisualScale / 4f;
-                r = Mathf.Lerp(1f, 1f, t); g = Mathf.Lerp(0.165f, 0.667f, t); b = Mathf.Lerp(0.165f, 0.2f, t);
-            }
-            else if (phVisualScale <= 7f)
-            {
-                float t = (phVisualScale - 4f) / 3f;
-                r = Mathf.Lerp(1f, 0.961f, t); g = Mathf.Lerp(0.667f, 0.969f, t); b = Mathf.Lerp(0.2f, 0.980f, t);
-            }
-            else if (phVisualScale <= 10f)
-            {
-                float t = (phVisualScale - 7f) / 3f;
-                r = Mathf.Lerp(0.961f, 0.2f, t); g = Mathf.Lerp(0.969f, 0.722f, t); b = Mathf.Lerp(0.980f, 1f, t);
-            }
-            else
-            {
-                float t = (phVisualScale - 10f) / 4f;
-                r = Mathf.Lerp(0.2f, 0.357f, t); g = Mathf.Lerp(0.722f, 0.310f, t); b = Mathf.Lerp(1f, 1f, t);
-            }
-            return "#" + Mathf.RoundToInt(r * 255).ToString("X2") + Mathf.RoundToInt(g * 255).ToString("X2") + Mathf.RoundToInt(b * 255).ToString("X2");
+            if (_phSystem == null)
+                return "#888888";
+            return PhGradientDisplayColors.ToHtmlStringRgb(PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState()));
         }
 
         /// <summary>Banda pH per display (come tooltip TopBar: Acido / Neutrale / Basico).</summary>

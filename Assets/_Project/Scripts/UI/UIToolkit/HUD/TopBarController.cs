@@ -110,9 +110,6 @@ namespace Sporae.UI.UIToolkit.HUD
         private Texture2D _phGradientTexture;
         
         // pH marker gradient usa PhGradientDisplayColors (stesso gradiente barra)
-        private static readonly Color PH_GLOW_RED = new Color(1f, 0.165f, 0.165f, 1f); // #FF2A2A
-        private static readonly Color PH_GLOW_WHITE = new Color(0.847f, 1f, 0.898f, 1f); // #D8FFE5
-        private static readonly Color PH_GLOW_BLUE = new Color(0.2f, 0.722f, 1f, 1f); // #33B8FF
         private static readonly Color PH_NEUTRAL_ZONE = new Color(0.847f, 1f, 0.898f, 0.35f); // #D8FFE5 35%
         
         // Game Systems
@@ -523,7 +520,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             // CURRENT VALUE: valore con oscillazione ridotta (±0,5)
             _phTooltipValueCurrent.text = $"pH {valuePh.ToString("F1", culture)} — {bandNameDisplay}";
-            _phTooltipValueCurrent.style.color = new StyleColor(GetPhColorFromDrift(valuePh));
+            _phTooltipValueCurrent.style.color = new StyleColor(PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState()));
 
             // ACTIVE MODIFIERS: righe con [icon box] [nome quasi bianco] [valore colorato]
             // Total daily drift = somma di tutti i valori in Active Modifiers (piante + azioni + eventi)
@@ -1003,7 +1000,10 @@ namespace Sporae.UI.UIToolkit.HUD
                 if (_phBandLabel != null)
                 {
                     _phBandLabel.text = $"{valuePh:F1}";
-                    _phBandLabel.style.color = new StyleColor(GetPhColorFromDrift(valuePh));
+                    _phBandLabel.style.color = new StyleColor(
+                        _phSystem != null
+                            ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
+                            : GetPhColorFromDrift(valuePh));
                 }
                 // Target posizione marker: forbice +20%, movimento a scatti
                 float targetLeftPercent = ((cursorPhStepped + 100f) / 200f) * 100f;
@@ -1016,9 +1016,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
                 _phMarkerLeftPercent = targetLeftPercent; // scatti netti: niente lerp
                 _phMarker.style.left = new StyleLength(new Length(_phMarkerLeftPercent, LengthUnit.Percent));
-                float phVisualScale = ((cursorPhStepped + 100f) / 200f) * 14f;
-                phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-                _phMarker.style.backgroundColor = new StyleColor(GetPhColorFromScale(phVisualScale));
+                _phMarker.style.backgroundColor = new StyleColor(Color.white);
             }
             
             // Lampeggio cursore pH: sempre attivo quando il marker esiste, per far capire che è "staccato" e animato
@@ -1104,7 +1102,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _phGradientTexture.wrapMode = TextureWrapMode.Clamp;
             _phGradientTexture.filterMode = FilterMode.Bilinear;
             
-            // Crea gradiente: Rosso (0) → Arancione (4) → Bianco (7) → Azzurro (10) → Viola (14)
+            // Gradiente striscia 0–14 (rosso → … → viola), stesso campionamento di PhGradientDisplayColors
             for (int x = 0; x < width; x++)
             {
                 float normalizedX = x / (float)(width - 1);
@@ -1125,8 +1123,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 _phGradient.style.backgroundImage = new StyleBackground(_phGradientTexture);
             }
         }
-        
-        private Color GetPhColorFromScale(float phValue) => PhGradientDisplayColors.GetColorFromScale(phValue);
 
         private Color GetPhColorFromDrift(float driftPh) => PhGradientDisplayColors.GetColorFromDrift(driftPh);
 
@@ -1161,13 +1157,14 @@ namespace Sporae.UI.UIToolkit.HUD
             // NON convertire in scala 0-14 - il vecchio sistema mostrava currentPh direttamente
             float phDisplayValue = value;
             
-            // Colore base per "PH DRIFT" label
-            Color phDriftColor = new Color(0.392f, 0.565f, 0.933f, 0.85f); // rgba(83, 144, 255, 0.85)
-            
-            // Aggiorna label "PH DRIFT" (solo label, senza valore)
+            // Aggiorna label "PH DRIFT" — colore dalla banda pH Dome corrente
             if (_phDriftLabel != null)
             {
                 _phDriftLabel.text = "DRIFT pH";
+                Color phDriftColor = _phSystem != null
+                    ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
+                    : PhGradientDisplayColors.GetColorFromScale(7f);
+                phDriftColor.a = 0.85f;
                 _phDriftLabel.style.color = new StyleColor(phDriftColor);
             }
             
@@ -1176,8 +1173,9 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 // Mostra valore drift diretto (-100/+100), inizio partita = 0
                 _phBandLabel.text = $"{value:F1}";
-                // Colore secondo logica Acido / Neutro / Basico (come gradiente barra e tooltip)
-                Color valueColor = GetPhColorFromDrift(value);
+                Color valueColor = _phSystem != null
+                    ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
+                    : GetPhColorFromDrift(value);
                 _phBandLabel.style.color = new StyleColor(valueColor);
             }
             
@@ -1218,9 +1216,8 @@ namespace Sporae.UI.UIToolkit.HUD
                 // Reset margin-left per evitare conflitti
                 _phMarker.style.marginLeft = 0f;
                 
-                // Colore marker interpolato dal gradiente
-                Color markerColor = GetPhColorFromScale(phVisualScale);
-                _phMarker.style.backgroundColor = new StyleColor(markerColor);
+                // Marker sempre bianco (il colore di stato è sul numero e sulla barra)
+                _phMarker.style.backgroundColor = new StyleColor(Color.white);
                 
                 // Glow contestuale sul track (ph-slider)
                 UpdatePhGlow(phVisualScale);
@@ -1288,21 +1285,12 @@ namespace Sporae.UI.UIToolkit.HUD
             Color glowColor;
             float glowIntensity;
             
-            if (phValue < 5f)
-            {
-                // Rosso per pH < 5
-                glowColor = PH_GLOW_RED;
-            }
-            else if (phValue >= 5f && phValue <= 9f)
-            {
-                // Bianco-ghiaccio per zona neutrale 5-9
-                glowColor = PH_GLOW_WHITE;
-            }
+            if (phValue < 6f)
+                glowColor = PhGradientDisplayColors.GetColorFromScale(2f);
+            else if (phValue <= 8f)
+                glowColor = PhGradientDisplayColors.GetColorFromScale(7f);
             else
-            {
-                // Blu per pH > 9
-                glowColor = PH_GLOW_BLUE;
-            }
+                glowColor = PhGradientDisplayColors.GetColorFromScale(11f);
             
             // Intensità proporzionale al drift rate: |totalDrift| / 3
             float totalDrift = Mathf.Abs(CalculateTotalDailyDrift());
@@ -1332,31 +1320,6 @@ namespace Sporae.UI.UIToolkit.HUD
             else
             {
                 _phNeutralZone.style.display = DisplayStyle.None;
-            }
-        }
-        
-        private Color GetPhColor(float phValue)
-        {
-            // Gradient: Red (0) -> Orange (4) -> White (7) -> Blue (10) -> Purple (14)
-            if (phValue <= 4f)
-            {
-                float t = phValue / 4f;
-                return Color.Lerp(new Color(1f, 0.165f, 0.165f, 1f), new Color(1f, 0.667f, 0.2f, 1f), t); // Red to Orange
-            }
-            else if (phValue <= 7f)
-            {
-                float t = (phValue - 4f) / 3f;
-                return Color.Lerp(new Color(1f, 0.667f, 0.2f, 1f), new Color(0.961f, 0.969f, 0.980f, 1f), t); // Orange to White
-            }
-            else if (phValue <= 10f)
-            {
-                float t = (phValue - 7f) / 3f;
-                return Color.Lerp(new Color(0.961f, 0.969f, 0.980f, 1f), new Color(0.2f, 0.722f, 1f, 1f), t); // White to Blue
-            }
-            else
-            {
-                float t = (phValue - 10f) / 4f;
-                return Color.Lerp(new Color(0.2f, 0.722f, 1f, 1f), new Color(0.357f, 0.310f, 1f, 1f), t); // Blue to Purple
             }
         }
         

@@ -135,12 +135,13 @@
     white-space: nowrap;
 }
 
+/* Nessun text-shadow qui: i colori sono dinamici (mutazione tier, banda pH); un glow ciano fisso
+   rendeva il testo “sovraesposto” e falsava la lettura del colore. */
 .metric-value-large {
     font-size: 16px;
     color: rgb(93, 182, 227);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
-    text-shadow: 0 0 4px rgba(93, 182, 227, 0.8);
     white-space: nowrap;
 }
 
@@ -154,7 +155,6 @@
     color: rgb(93, 182, 227);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
-    text-shadow: 0 0 4px rgba(93, 182, 227, 0.8);
     white-space: nowrap;
 }
 
@@ -326,9 +326,9 @@
     border-radius: 50%;
 }
 
+/* Applicare anche la classe ph-band in UXML se serve override; colore reale da TopBarController. */
 .ph-band {
     font-size: 12px;
-    color: rgba(83, 144, 255, 0.85);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
     margin-top: 0;
@@ -463,15 +463,15 @@
     -unity-font-style: bold;
 }
 
-/* Tooltip Mutation Index (Task 7) — look in USS; testi statici in UXML, percentuali/breakdown da TopBarController */
+/* Tooltip Mutation Index — struttura allineata a ph-tooltip (CRT bg, sezioni box, scan lines), colori mutation mantenuti */
 .mutation-tooltip-root {
     display: none;
     flex-direction: column;
     width: 420px;
     max-width: 420px;
     min-height: 120px;
-    padding: 10px;
-    background-color: rgba(12, 14, 18, 0.95);
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.9);
     border-top-width: 2px;
     border-right-width: 2px;
     border-bottom-width: 2px;
