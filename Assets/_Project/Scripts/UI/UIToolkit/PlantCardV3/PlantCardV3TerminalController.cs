@@ -18,6 +18,7 @@ using _Project.Player;
 using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
+using Sporae.UI.UIToolkit.PlayerInventory;
 using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.PlantCardV3
@@ -2033,7 +2034,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (_hudPlantName != null)
             {
-                _hudPlantName.text = empty ? "---" : GetPlantDisplayName(plantData, state.PlantCode);
+                _hudPlantName.text = empty ? "---" : GetPotDisplayName(state, plantData);
                 // Colore nome per famiglia: Giallo Standard, Verde Pure, Rosso Evil
                 _hudPlantName.RemoveFromClassList("pcv3-hud-plant-name-standard");
                 _hudPlantName.RemoveFromClassList("pcv3-hud-plant-name-pure");
@@ -2300,7 +2301,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             var openButton = cardRoot.Q<Button>("pcv3-potcard-open");
 
             if (titleLabel != null)
-                titleLabel.text = $"{potId} -- {GetPlantDisplayName(state.PlantCode)}";
+                titleLabel.text = $"{potId} -- {GetPotDisplayName(state)}";
             if (badgeLabel != null)
                 badgeLabel.text = FormatPlantFamilyBadge(state.PlantCode);
 
@@ -2482,7 +2483,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     continue;
                 }
                 var plantData = state.GetPlantData();
-                string name = GetPlantDisplayName(plantData, state.PlantCode);
+                string name = GetPotDisplayName(state, plantData);
                 string code = state.PlantCode ?? "---";
                 occupied.Add($"{name} ({code})");
             }
@@ -4753,9 +4754,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 string pot = (a.PotId ?? "POT-???").PadRight(7).Substring(0, 7);
                 string action = GetActionLabel(a.Type).PadRight(13).Substring(0, 13);
                 
-                string itemDisplayName = string.IsNullOrEmpty(a.ItemTypeId) 
-                    ? "-" 
-                    : GetItemDisplayName(a.ItemTypeId);
+                string itemDisplayName = string.IsNullOrEmpty(a.TargetLabel)
+                    ? (string.IsNullOrEmpty(a.ItemTypeId) ? "-" : GetItemDisplayName(a.ItemTypeId))
+                    : a.TargetLabel;
                 string item = itemDisplayName.PadRight(19);
                 if (item.Length > 19) item = item.Substring(0, 19);
                 
@@ -5026,7 +5027,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return null;
 
             string potId = pot.PotId ?? "POT-???";
-            string plantName = GetPlantDisplayName(pot.PlantCode);
+            string plantName = GetPotDisplayName(pot);
 
             var result = new StageForecast
             {
@@ -5327,7 +5328,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 }
                 else
                 {
-                    plantName = GetPlantDisplayName(state.PlantCode);
+                    plantName = GetPotDisplayName(state);
                     stage = PlantStageLabel(state.Stage);
                     int score = state.ConditionScore;
                     bool isCritical = score < 40;
@@ -5389,14 +5390,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
                 AppendRawLine("§DATA§▸ RESEARCHED NOTE§END§");
-                string researchNotes = plantData != null && !string.IsNullOrWhiteSpace(plantData.ResearchNotes) ? plantData.ResearchNotes : null;
-                if (!string.IsNullOrEmpty(researchNotes))
-                {
-                    foreach (string line in researchNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
-                        AppendRawLine("§TITLE§" + line + "§END§");
-                }
-                else
-                    AppendRawLine("§TITLE§—§END§");
+                var noteLines = BuildResearchedNoteLines(state, plantData);
+                for (int i = 0; i < noteLines.Count; i++)
+                    AppendRawLine("§TITLE§" + noteLines[i] + "§END§");
                 AppendRawLine("");
             }
         }
@@ -5461,7 +5457,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         /// <summary>Layout STATUS stile reference: header, titolo pianta, PLANT STATUS (dotted), VITAL PARAMETERS (barre), REQUISITI E AVANZAMENTO.</summary>
         private void PrintStatusPotSections(PotSlot potSlot, PotStateModel pot, PlantData plantData, StageForecast f)
         {
-            string plantName = GetPlantDisplayName(plantData, pot.PlantCode);
+            string plantName = GetPotDisplayName(pot, plantData);
             string shortCode = pot.PlantCode.Replace("PLT-", "").Replace("-", " ");
             string potId = f.PotId ?? "POT-???";
 
@@ -5573,12 +5569,16 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
             // —— Potere Attivo (a capo, con evidenziazione effetti) e Potere Passivo ——
             AppendRawLine("§DATA§Potere Attivo:§END§");
-            string activePowerRaw = plantData != null && !string.IsNullOrWhiteSpace(plantData.ActivePower) ? plantData.ActivePower : "—";
+            string activePowerRaw = !string.IsNullOrWhiteSpace(pot.ActivePowerLabel)
+                ? pot.ActivePowerLabel
+                : (plantData != null && !string.IsNullOrWhiteSpace(plantData.ActivePower) ? plantData.ActivePower : "—");
             string activePowerFormatted = FormatActivePowerHighlight(activePowerRaw).Replace("§END§", "§END§§INFO§");
             AppendRawLine("§INFO§" + activePowerFormatted + "§END§");
             AppendRawLine("");
             AppendRawLine("§DATA§Potere Passivo:§END§");
-            string passivePower = plantData != null && !string.IsNullOrWhiteSpace(GetPassivePowerForDisplay(plantData)) ? GetPassivePowerForDisplay(plantData) : "—";
+            string passivePower = !string.IsNullOrWhiteSpace(pot.PassivePowerLabel)
+                ? pot.PassivePowerLabel
+                : (plantData != null && !string.IsNullOrWhiteSpace(GetPassivePowerForDisplay(plantData)) ? GetPassivePowerForDisplay(plantData) : "—");
             AppendRawLine("§INFO§" + passivePower + "§END§");
             AppendRawLine("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
 
@@ -5770,7 +5770,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
             // Header / identity
             string familyCode = FormatPlantFamilyBadge(state.PlantCode);
-            string plantName = GetPlantDisplayName(state.PlantCode).ToUpperInvariant();
+            string plantName = GetPotDisplayName(state).ToUpperInvariant();
             string oneLiner = plantData != null && !string.IsNullOrWhiteSpace(plantData.Description) ? plantData.Description : "---";
 
             var specimen = detailPage.Q<Label>("pcv3d-specimen");
@@ -5887,11 +5887,10 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             var researchTextLabel = detailPage.Q<Label>("pcv3d-research-text");
             if (researchTextLabel != null)
             {
-                string researchText = plantData != null && !string.IsNullOrWhiteSpace(plantData.ActivePower)
-                    ? plantData.ActivePower
-                    : (plantData != null && !string.IsNullOrWhiteSpace(plantData.Description)
-                        ? plantData.Description
-                        : "No research data available.");
+                var researchLines = BuildResearchedNoteLines(state, plantData);
+                string researchText = researchLines != null && researchLines.Count > 0
+                    ? string.Join("\n", researchLines)
+                    : "No research data available.";
                 researchTextLabel.text = researchText;
             }
 
@@ -6016,7 +6015,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 Type = QueuedActionType.Uproot,
                 PotId = potId,
-                TargetLabel = GetPlantDisplayName(state.PlantCode),
+                TargetLabel = GetPotDisplayName(state),
                 ApCost = 1
             };
 
@@ -6079,7 +6078,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 Type = type,
                 PotId = potId,
-                TargetLabel = state != null ? GetPlantDisplayName(state.PlantCode) : "---",
+                TargetLabel = state != null ? GetPotDisplayName(state) : "---",
                 ApCost = 1
             };
 
@@ -6163,7 +6162,8 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 string typeId = options[i];
                 int qty = GetAvailableQuantity(typeId);
-                string displayName = GetItemDisplayName(typeId);
+                Item displayItem = GetAvailableItemForDisplay(typeId);
+                string displayName = PlayerInventoryPanelController.GetItemDisplayName(typeId, displayItem);
                 AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantità: {qty}");
             }
             AppendRawLine("§WHITE§Digita il numero dell'oggetto o §N§N§END§ per annullare§END§");
@@ -6199,13 +6199,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             _pendingStatusResearchNotes = new List<string>();
             _pendingStatusResearchNotes.Add("<color=#00AA00>────────────────────────────────────────────────────────────────────────────</color>");
             _pendingStatusResearchNotes.Add("§DATA§▸ RESEARCHED NOTE§END§");
-            if (plantDataChosen != null && !string.IsNullOrWhiteSpace(plantDataChosen.ResearchNotes))
-            {
-                foreach (string line in plantDataChosen.ResearchNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
-                    _pendingStatusResearchNotes.Add("§TITLE§" + line + "§END§");
-            }
-            else
-                _pendingStatusResearchNotes.Add("§TITLE§—§END§");
+            var statusResearch = BuildResearchedNoteLines(stateChosen, plantDataChosen);
+            for (int i = 0; i < statusResearch.Count; i++)
+                _pendingStatusResearchNotes.Add("§TITLE§" + statusResearch[i] + "§END§");
             _pendingStatusResearchNotes.Add("");
 
             int total = allLines.Count;
@@ -6282,8 +6278,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             }
 
             string chosen = _selection.OptionsTypeIds[idx];
-            // Converti in nome leggibile per la visualizzazione
-            string chosenDisplayName = GetItemDisplayName(chosen);
+            // Converti in nome leggibile per la visualizzazione usando l'item reale (supporta nome custom seed).
+            Item chosenItem = GetAvailableItemForDisplay(chosen);
+            string chosenDisplayName = PlayerInventoryPanelController.GetItemDisplayName(chosen, chosenItem);
 
             _pendingConfirmAction = new QueuedAction
             {
@@ -6334,9 +6331,23 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
             if (type == QueuedActionType.Plant)
             {
-                if (GetAvailableQuantity(Items.Seed001) > 0) list.Add(Items.Seed001);
-                if (GetAvailableQuantity(Items.Seed002) > 0) list.Add(Items.Seed002);
-                if (GetAvailableQuantity(Items.Seed003) > 0) list.Add(Items.Seed003);
+                var pdb = PlantDatabase.Instance;
+                if (pdb != null)
+                {
+                    foreach (var seedTid in pdb.GetRegisteredSeedTypeIds())
+                    {
+                        if (GetAvailableQuantity(seedTid) > 0)
+                            list.Add(seedTid);
+                    }
+                }
+                else
+                {
+                    foreach (var tid in new[] { Items.Seed001, Items.Seed002, Items.Seed003 })
+                    {
+                        if (GetAvailableQuantity(tid) > 0)
+                            list.Add(tid);
+                    }
+                }
                 return list;
             }
             if (type == QueuedActionType.Fertilize)
@@ -6379,6 +6390,26 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             int total = GetQuantity(typeId);
             int reserved = GetReservedQuantity(typeId);
             return Mathf.Max(0, total - reserved);
+        }
+
+        private Item GetAvailableItemForDisplay(string typeId)
+        {
+            if (_inventory == null || string.IsNullOrEmpty(typeId))
+                return null;
+
+            int reserved = GetReservedQuantity(typeId);
+            foreach (var slot in _inventory.Items)
+            {
+                if (slot == null || slot.TypeId != typeId)
+                    continue;
+
+                if (slot.Items == null || slot.Items.Count <= 0)
+                    return null;
+
+                return slot.Items.Skip(reserved).FirstOrDefault() ?? slot.Items.FirstOrDefault();
+            }
+
+            return null;
         }
 
         private void RebuildReservedItems()
@@ -6768,6 +6799,46 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         private static string GetPlantDisplayName(string plantCode)
         {
             return GetPlantDisplayName(null, plantCode);
+        }
+
+        private static string GetPotDisplayName(PotStateModel state, PlantData plantData = null)
+        {
+            if (state == null) return "---";
+            if (!string.IsNullOrWhiteSpace(state.CustomPlantName))
+                return state.CustomPlantName;
+            return GetPlantDisplayName(plantData, state.PlantCode);
+        }
+
+        private static List<string> BuildResearchedNoteLines(PotStateModel state, PlantData plantData)
+        {
+            var lines = new List<string>();
+            if (state != null && LabHybridGameplayModifiers.PotHasLabHybridProfile(state))
+            {
+                lines.Add($"Specimen ibrido: {GetPotDisplayName(state, plantData)}");
+                string lineage = string.IsNullOrWhiteSpace(state.SourcePlantCodesMetadata)
+                    ? "—"
+                    : state.SourcePlantCodesMetadata.Replace("|", " × ");
+                lines.Add($"Lineage: {lineage}");
+                if (!string.IsNullOrWhiteSpace(state.ActivePowerLabel))
+                    lines.Add($"Attivo ereditato: {state.ActivePowerLabel}");
+                if (!string.IsNullOrWhiteSpace(state.PassivePowerLabel))
+                    lines.Add($"Passivo ereditato: {state.PassivePowerLabel}");
+                if (!string.IsNullOrWhiteSpace(state.SelectedTraitsCsv))
+                    lines.Add($"Tag gameplay: {state.SelectedTraitsCsv}");
+                if (!string.IsNullOrWhiteSpace(state.LabCareProfileMetadata))
+                    lines.Add($"Profilo cure: {state.LabCareProfileMetadata}");
+                return lines;
+            }
+
+            string researchNotes = plantData != null && !string.IsNullOrWhiteSpace(plantData.ResearchNotes) ? plantData.ResearchNotes : null;
+            if (!string.IsNullOrEmpty(researchNotes))
+            {
+                lines.AddRange(researchNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
+                return lines;
+            }
+
+            lines.Add("—");
+            return lines;
         }
 
         /// <summary>

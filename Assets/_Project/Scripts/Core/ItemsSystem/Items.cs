@@ -13,9 +13,10 @@ namespace _Project.Sporae.Core
         public const string SporeGeneric = "spore-generic";
         /// <summary>Output della Pipette (Fusione); usato come input nell'Incubatore.</summary>
         public const string PreSeed = "pre-seed";
-        public const string Seed001 = "seed-001";  // Standard
-        public const string Seed002 = "seed-002";  // Pure
-        public const string Seed003 = "seed-003";  // Evil
+        /// <summary>TypeId seme Legacy Wave 1 (allineati a PLT-STD/PURE/EVIL-001). Nuove specie usano altri seed-* da PlantData.</summary>
+        public const string Seed001 = "seed-001";
+        public const string Seed002 = "seed-002";
+        public const string Seed003 = "seed-003";
         
         // BLK-03.01-T1: Fertilizzanti
         public const string FertilizerStandard = "fertilizer-standard";    // 25 CRY, +25%

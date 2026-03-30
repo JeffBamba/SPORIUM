@@ -81,6 +81,7 @@ namespace Sporae.UI.Icons
             if (typeId == Items.SporeGeneric) return "spore";
             if (typeId == Items.PreSeed) return "preseed";
             if (typeId == Items.Seed001 || typeId == Items.Seed002 || typeId == Items.Seed003) return "seed";
+            if (typeId.StartsWith("seed-", StringComparison.OrdinalIgnoreCase)) return "seed";
             if (Items.IsFruitType(typeId)) return "fruit";
             if (typeId == Items.Water || typeId == Items.WaterPotable) return "water";
             if (typeId == Items.FertilizerStandard || typeId == Items.FertilizerPure || typeId == Items.FertilizerProhibited) return "fertilizer";

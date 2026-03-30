@@ -9,6 +9,7 @@ using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Botanical;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
+using Sporae.UI.UIToolkit;
 
 namespace Sporae.UI.UIToolkit.DomeStatusHUD
 {
@@ -430,7 +431,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 {
                     if (hasPlant && state != null)
                     {
-                        _potNames[i].text = GetPlantDisplayName(plantData, state.PlantCode);
+                        _potNames[i].text = !string.IsNullOrWhiteSpace(state.CustomPlantName)
+                            ? state.CustomPlantName
+                            : GetPlantDisplayName(plantData, state.PlantCode);
                         _potNames[i].style.color =
                             new StyleColor(GetFamilyColor(GetPlantFamilyForDisplay(plantData, state)));
                     }
@@ -535,11 +538,12 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 if (hasPlant && state != null)
                 {
                     int hydPct = GetHydrationPercent(state);
+                    PlantData careData = LabHybridGameplayModifiers.ResolvePlantDataForCareRequirements(state, plantData) ?? plantData;
 
                     if (_potStatWater[i] != null)
                     {
                         _potStatWater[i].text = $"{hydPct}%";
-                        StageRequirements reqW = plantData?.GetStageRequirements((PlantStage)state.Stage);
+                        StageRequirements reqW = careData?.GetStageRequirements((PlantStage)state.Stage);
                         if (hydPct <= 0)
                             _potStatWater[i].style.color = new StyleColor(TipRed);
                         else if (reqW != null)
@@ -550,14 +554,23 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
                     if (_potStatFert[i] != null)
                     {
-                        _potStatFert[i].text = $"{state.FertilizerLevel}%";
-                        StageRequirements reqF = plantData?.GetStageRequirements((PlantStage)state.Stage);
-                        if (state.FertilizerLevel <= 0)
-                            _potStatFert[i].style.color = new StyleColor(TipRed);
-                        else if (reqF != null)
-                            _potStatFert[i].style.color = new StyleColor(RangeColor(state.FertilizerLevel, reqF.fertilizerMin, reqF.fertilizerMax));
-                        else
+                        var stageEnum = (PlantStage)state.Stage;
+                        StageRequirements reqF = careData?.GetStageRequirements(stageEnum);
+                        if (IsFertilizerOptionalForStage(stageEnum))
+                        {
+                            _potStatFert[i].text = "NON NECESSARIO";
                             _potStatFert[i].style.color = new StyleColor(TipMuted);
+                        }
+                        else
+                        {
+                            _potStatFert[i].text = $"{state.FertilizerLevel}%";
+                            if (state.FertilizerLevel <= 0)
+                                _potStatFert[i].style.color = new StyleColor(TipRed);
+                            else if (reqF != null)
+                                _potStatFert[i].style.color = new StyleColor(RangeColor(state.FertilizerLevel, reqF.fertilizerMin, reqF.fertilizerMax));
+                            else
+                                _potStatFert[i].style.color = new StyleColor(TipMuted);
+                        }
                     }
 
                     if (_potStatLed[i] != null)
@@ -581,7 +594,11 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
 
                     if (_potStatPh[i] != null && plantData != null)
-                        _potStatPh[i].text = $"pH {FormatPhDrift(plantData.GetDailyPhDrift())}/g";
+                    {
+                        float shownDrift = ComputeShownDailyPhDrift(state, plantData);
+                        _potStatPh[i].text = $"pH {FormatPhDrift(shownDrift)}/g";
+                        _potStatPh[i].style.color = new StyleColor(PhGradientDisplayColors.GetColorFromDrift(shownDrift));
+                    }
                     else if (_potStatPh[i] != null)
                         _potStatPh[i].text = "";
                 }
@@ -602,7 +619,11 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                         _potStatLed[i].text = "—";
                         _potStatLed[i].style.color = StyleKeyword.Null;
                     }
-                    if (_potStatPh[i] != null) _potStatPh[i].text = "";
+                    if (_potStatPh[i] != null)
+                    {
+                        _potStatPh[i].text = "";
+                        _potStatPh[i].style.color = StyleKeyword.Null;
+                    }
                 }
 
                 // ── Sync expand state visually ──
@@ -849,6 +870,26 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             return TipRed;
         }
 
+        /// <summary>Allineato a GrowthPointsCalculator (LED off): stress ottimale 20–80%.</summary>
+        private const int LightStressOkMinHud = 20;
+        private const int LightStressOkMaxHud = 80;
+
+        private static bool IsFertilizerOptionalForStage(PlantStage stage) =>
+            stage == PlantStage.Seed || stage == PlantStage.Sprout;
+
+        private int GetLightStressPercent(PotStateModel state)
+        {
+            if (state == null) return 0;
+            EnsurePotSystemConfig();
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            int maxDays = _potSystemConfig != null ? _potSystemConfig.MaxDaysForFullStress : 5;
+            if (maxDays <= 0) maxDays = 5;
+            return Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDays) * 100f);
+        }
+
+        private static Color LightStressColor(int stressPercent) =>
+            RangeColor(stressPercent, LightStressOkMinHud, LightStressOkMaxHud);
+
         /// <summary>Stesso caricamento di <see cref="PotActions"/> / PlantCard: Resources/Configs/PotSystemConfig.</summary>
         private void EnsurePotSystemConfig()
         {
@@ -902,16 +943,19 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         {
             var lines = new System.Collections.Generic.List<TooltipLine>();
 
-            string name  = GetPlantDisplayName(plantData, state.PlantCode);
+            string name  = GetPotPlantDisplayName(state, plantData);
             string stage = PlantStageLabel(state.Stage);
             string cond  = ConditionLabel(state.ConditionScore);
 
             lines.Add(new TooltipLine($"■ {name}  Lvl {state.PlantLevel}", TipPhCyan, bold: true));
             lines.Add(new TooltipLine($"  {state.PotId} · {stage} · Giorno {state.DaysInCurrentStage}", TipMuted));
 
-            StageRequirements req = plantData?.GetStageRequirements((PlantStage)state.Stage);
+            var stageEnum = (PlantStage)state.Stage;
+            PlantData careForReq = LabHybridGameplayModifiers.ResolvePlantDataForCareRequirements(state, plantData) ?? plantData;
+            StageRequirements req = careForReq?.GetStageRequirements(stageEnum);
             int hydPct = GetHydrationPercent(state);
             string ledStat = FormatLedStatText(state.LedSystemState);
+            int lightStressPct = GetLightStressPercent(state);
 
             if (req != null)
             {
@@ -920,25 +964,50 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 lines.Add(new TooltipLine($"  Idratazione   : {req.hydrationMin}–{req.hydrationMax}%", TipMuted));
                 LedType? reqLed = req.GetRequiredLed();
                 lines.Add(new TooltipLine($"  LED           : {(reqLed.HasValue ? reqLed.Value.ToString() : "nessuno")}", TipMuted));
-                lines.Add(new TooltipLine($"  Fertilizzante : {req.fertilizerMin}–{req.fertilizerMax}%", TipMuted));
+                string fertReqLine = $"  Fertilizzante : {req.fertilizerMin}–{req.fertilizerMax}%";
+                if (IsFertilizerOptionalForStage(stageEnum))
+                    fertReqLine += " (opzionale Seme/Germoglio)";
+                lines.Add(new TooltipLine(fertReqLine, TipMuted));
                 lines.Add(new TooltipLine($"  Durata        : {req.durationDays} giorni", TipMuted));
 
                 lines.Add(TooltipLine.Sep());
                 lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%",
                     RangeColor(hydPct, req.hydrationMin, req.hydrationMax)));
-                lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%",
-                    RangeColor(state.FertilizerLevel, req.fertilizerMin, req.fertilizerMax)));
+                if (IsFertilizerOptionalForStage(stageEnum))
+                {
+                    lines.Add(new TooltipLine(
+                        "  Fertilizzante : non necessario in questo stadio",
+                        TipMuted));
+                }
+                else
+                {
+                    lines.Add(new TooltipLine(
+                        $"  Fertilizzante : {state.FertilizerLevel}% (necessario)",
+                        RangeColor(state.FertilizerLevel, req.fertilizerMin, req.fertilizerMax)));
+                }
+
                 lines.Add(new TooltipLine($"  LED           : {ledStat}",
                     LedColor(state.LedSystemState, req.GetRequiredLed())));
+                lines.Add(new TooltipLine($"  Light stress  : {lightStressPct}% (20–80% ideale)",
+                    LightStressColor(lightStressPct)));
             }
             else
             {
                 lines.Add(TooltipLine.Sep());
                 lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%", TipMuted));
-                lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%", TipMuted));
+                if (IsFertilizerOptionalForStage(stageEnum))
+                {
+                    lines.Add(new TooltipLine(
+                        "  Fertilizzante : non necessario in questo stadio",
+                        TipMuted));
+                }
+                else
+                    lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%", TipMuted));
                 lines.Add(new TooltipLine($"  LED           : {ledStat}", TipMuted));
+                lines.Add(new TooltipLine($"  Light stress  : {lightStressPct}% (20–80% ideale)",
+                    LightStressColor(lightStressPct)));
             }
 
             lines.Add(new TooltipLine($"  Condizione    : {cond} ({state.ConditionScore}%)",
@@ -1037,6 +1106,14 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             return GetPlantDisplayName(pd, payload.PlantCode);
         }
 
+        private static string GetPotPlantDisplayName(PotStateModel state, PlantData plantData)
+        {
+            if (state == null) return "—";
+            if (!string.IsNullOrWhiteSpace(state.CustomPlantName))
+                return state.CustomPlantName;
+            return GetPlantDisplayName(plantData, state.PlantCode);
+        }
+
         private static string PlantStageLabel(int stage) => stage switch
         {
             0 => "Vuoto",
@@ -1068,6 +1145,27 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         {
             if (Mathf.Abs(drift) < 0.01f) return "0";
             return drift > 0 ? $"+{drift:F1}" : $"{drift:F1}";
+        }
+
+        private static float ComputeShownDailyPhDrift(PotStateModel state, PlantData plantData)
+        {
+            if (state == null || plantData == null) return 0f;
+            float drift = plantData.GetDailyPhDrift();
+            if (HasArcticPurificationActive(state, plantData))
+                drift += 5f;
+            return LabHybridGameplayModifiers.ScaleDailyPhDrift(drift, state);
+        }
+
+        private static bool HasArcticPurificationActive(PotStateModel state, PlantData plantData)
+        {
+            if (state == null && plantData == null) return false;
+            if (BotanicalPlantCodes.IsArcticHask(plantData != null ? plantData.PlantCode : state?.PlantCode))
+                return true;
+            string active = !string.IsNullOrWhiteSpace(state?.ActivePowerLabel)
+                ? state.ActivePowerLabel
+                : plantData?.ActivePower;
+            return !string.IsNullOrWhiteSpace(active) &&
+                   active.IndexOf("Arctic Purification", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static string TruncateString(string s, int maxLen)

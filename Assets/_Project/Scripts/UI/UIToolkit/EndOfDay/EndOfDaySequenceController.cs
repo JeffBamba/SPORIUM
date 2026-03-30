@@ -499,7 +499,8 @@ namespace _Project
                         else if (fam.Contains("EVIL")) evil++;
                         else standard++;
                     }
-                    else if (slot.TypeId == Items.Seed001 || slot.TypeId == Items.Seed002 || slot.TypeId == Items.Seed003 || slot.TypeId == Items.PreSeed)
+                    else if (slot.TypeId == Items.PreSeed ||
+                             (PlantDatabase.Instance != null && PlantDatabase.Instance.IsRegisteredSeedTypeId(slot.TypeId)))
                         seeds++;
                     else if (slot.TypeId == Items.ReagentX || slot.TypeId == Items.ReagentY)
                         reagents++;
@@ -523,22 +524,27 @@ namespace _Project
             var inv = _gameManager?.PlayerInventory;
             if (inv == null) return "—";
             var seedParts = new List<string>();
-            int preSeed = 0, seed001 = 0, seed002 = 0, seed003 = 0;
+            int preSeed = 0;
+            var seedByTypeId = new Dictionary<string, int>();
+            var pdb = PlantDatabase.Instance;
             foreach (var slot in inv.Items)
             {
                 if (slot == null) continue;
                 foreach (var item in slot.Items)
                 {
                     if (slot.TypeId == Items.PreSeed) preSeed++;
-                    else if (slot.TypeId == Items.Seed001) seed001++;
-                    else if (slot.TypeId == Items.Seed002) seed002++;
-                    else if (slot.TypeId == Items.Seed003) seed003++;
+                    else if (pdb != null && pdb.IsRegisteredSeedTypeId(slot.TypeId))
+                    {
+                        if (seedByTypeId.TryGetValue(slot.TypeId, out int c))
+                            seedByTypeId[slot.TypeId] = c + 1;
+                        else
+                            seedByTypeId[slot.TypeId] = 1;
+                    }
                 }
             }
             if (preSeed > 0) seedParts.Add($"{preSeed} Pre-Seed");
-            if (seed001 > 0) seedParts.Add($"{seed001} Seed001");
-            if (seed002 > 0) seedParts.Add($"{seed002} Seed002");
-            if (seed003 > 0) seedParts.Add($"{seed003} Seed003");
+            foreach (var kv in seedByTypeId.OrderBy(k => k.Key))
+                seedParts.Add($"{kv.Value} {kv.Key}");
             return seedParts.Count > 0 ? string.Join(", ", seedParts) + "." : "—";
         }
 

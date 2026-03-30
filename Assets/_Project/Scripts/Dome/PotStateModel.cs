@@ -128,6 +128,8 @@ public class PotStateModel
     public string SelectedTraitsCsv;
     public int TraitPowerPercent = 100;
     public string ReagentUsedMetadata;
+    [Tooltip("Task 6: BLEND | PARENT_A | PARENT_B — quale PlantData usare per i range cure (acqua/LED/fertilizzante).")]
+    public string LabCareProfileMetadata;
     public string CustomPlantName;
     public string SourcePlantDisplayName;
     public string ActivePowerLabel;
@@ -476,6 +478,7 @@ public class PotStateModel
         SelectedTraitsCsv = seedItem?.SelectedTraitsCsv;
         TraitPowerPercent = Mathf.Clamp(seedItem != null && seedItem.TraitPowerPercent > 0 ? seedItem.TraitPowerPercent : 100, 1, 999);
         ReagentUsedMetadata = seedItem?.ReagentUsedMetadata;
+        LabCareProfileMetadata = seedItem?.LabCareProfileMetadata;
         CustomPlantName = seedItem?.CustomPlantName;
         SourcePlantDisplayName = !string.IsNullOrWhiteSpace(seedItem?.SourcePlantDisplayName)
             ? seedItem.SourcePlantDisplayName
@@ -689,6 +692,7 @@ public class PotStateModel
         SelectedTraitsCsv = null;
         TraitPowerPercent = 100;
         ReagentUsedMetadata = null;
+        LabCareProfileMetadata = null;
         CustomPlantName = null;
         SourcePlantDisplayName = null;
         ActivePowerLabel = null;

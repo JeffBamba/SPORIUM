@@ -572,11 +572,15 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             return iconBox;
         }
 
-        /// <summary>Nome leggibile per un typeId (semi da PlantData, Pre-Seed, altri da typeId). Se item ha CustomPlantName (seme da Incubatore) restituisce "Seme di Pianta {nome}".</summary>
+        /// <summary>Nome leggibile per un typeId (semi/pianta intera da metadata o da PlantData, altri da typeId).</summary>
         public static string GetItemDisplayName(string typeId, Item item = null)
         {
             if (item != null && !string.IsNullOrWhiteSpace(item.CustomPlantName))
+            {
+                if (typeId == Items.WholePlant)
+                    return "Pianta intera " + item.CustomPlantName;
                 return "Seme di Pianta " + item.CustomPlantName;
+            }
             return GetItemDisplayNameInternal(typeId);
         }
 
@@ -626,12 +630,15 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         /// <summary>Testo tooltip generico per qualsiasi item (inventario view o picker lab).</summary>
         private static string BuildGenericItemTooltip(string typeId, string displayName, int qty, Item firstItem)
         {
+            bool isSeed = PlantDatabase.Instance != null && PlantDatabase.Instance.GetPlantDataBySeedTypeId(typeId) != null;
             var lines = new List<string>
             {
                 Tv(displayName),
-                $"Tipo: {Tv(typeId)}",
                 $"Quantità: {Tv(qty.ToString())}"
             };
+            // I seed ibridi possono condividere TypeId legacy; non mostrare "seed-00x" nel tooltip utente.
+            if (!isSeed)
+                lines.Insert(1, $"Tipo: {Tv(typeId)}");
             if (firstItem != null)
             {
                 if (firstItem.GeneticTypeValue.HasValue)
@@ -652,8 +659,20 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     lines.Add($"Tratti selezionati: {Tv(firstItem.SelectedTraitsCsv)}");
                 if (firstItem.TraitPowerPercent > 0 && firstItem.TraitPowerPercent < 100)
                     lines.Add($"Potenza tratti: {Tv(firstItem.TraitPowerPercent.ToString() + "%")}");
+                if (IsOrganicDeterioratingType(typeId))
+                {
+                    int days = Mathf.Max(0, Mathf.CeilToInt(firstItem.Quality));
+                    lines.Add($"SI DETERIORA IN: {Tv(days.ToString() + " giorni. Mettilo in Seed Storage per freezarlo")}");
+                }
             }
             return string.Join("\n", lines);
+        }
+
+        private static bool IsOrganicDeterioratingType(string typeId)
+        {
+            if (string.IsNullOrWhiteSpace(typeId)) return false;
+            if (typeId == Items.SporeGeneric || typeId == Items.WholePlant) return true;
+            return PlantDatabase.Instance != null && PlantDatabase.Instance.IsRegisteredSeedTypeId(typeId);
         }
 
         /// <summary>Tooltip spora concordato: Tratti (Fissi/Stabili/Instabili), % di mutare, Famiglia, Stato.</summary>

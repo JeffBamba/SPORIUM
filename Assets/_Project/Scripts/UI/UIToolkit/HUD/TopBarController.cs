@@ -11,7 +11,9 @@ using Sporae.Core;
 using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.Dome.PotSystem.Botanical;
+using Sporae.Dome;
 using Sporae.UI.Icons;
+using Sporae.UI.UIToolkit;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -102,12 +104,7 @@ namespace Sporae.UI.UIToolkit.HUD
         // pH Gradient Texture (creata runtime)
         private Texture2D _phGradientTexture;
         
-        // pH Color constants (0-14 scale)
-        private static readonly Color PH_RED = new Color(1f, 0.165f, 0.165f, 1f); // #FF2A2A
-        private static readonly Color PH_ORANGE = new Color(1f, 0.667f, 0.2f, 1f); // #FFAA33
-        private static readonly Color PH_WHITE = new Color(0.961f, 0.969f, 0.980f, 1f); // #F5F7FA
-        private static readonly Color PH_BLUE = new Color(0.2f, 0.722f, 1f, 1f); // #33B8FF
-        private static readonly Color PH_PURPLE = new Color(0.357f, 0.310f, 1f, 1f); // #5B4FFF
+        // pH marker gradient usa PhGradientDisplayColors (stesso gradiente barra)
         private static readonly Color PH_GLOW_RED = new Color(1f, 0.165f, 0.165f, 1f); // #FF2A2A
         private static readonly Color PH_GLOW_WHITE = new Color(0.847f, 1f, 0.898f, 1f); // #D8FFE5
         private static readonly Color PH_GLOW_BLUE = new Color(0.2f, 0.722f, 1f, 1f); // #33B8FF
@@ -699,6 +696,17 @@ namespace Sporae.UI.UIToolkit.HUD
         /// <summary>Nome specie leggibile + Pot (es. Arctic Hask - Pot-001) per modificatori pH tooltip.</summary>
         private static string GetPhModifierPlantLabel(string plantCode, string potId)
         {
+            // Priorita a nome custom del vaso (ibridi Lab), fallback su specie da PlantCode.
+            var registry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            var potState = registry?.FindPotById(potId)?.PotActions?.PotState;
+            if (potState != null && !string.IsNullOrWhiteSpace(potState.CustomPlantName))
+            {
+                string potCustom = string.IsNullOrEmpty(potId) || string.Equals(potId, "Unknown", StringComparison.OrdinalIgnoreCase)
+                    ? "—"
+                    : potId;
+                return $"{potState.CustomPlantName} - {potCustom}";
+            }
+
             string species = BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode);
             if (string.IsNullOrEmpty(species))
             {
@@ -1083,7 +1091,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 float normalizedX = x / (float)(width - 1);
                 float phValue = normalizedX * 14f; // 0-14 scale
-                Color pixelColor = GetPhColorFromScale(phValue);
+                Color pixelColor = PhGradientDisplayColors.GetColorFromScale(phValue);
                 
                 for (int y = 0; y < height; y++)
                 {
@@ -1100,48 +1108,9 @@ namespace Sporae.UI.UIToolkit.HUD
             }
         }
         
-        /// <summary>
-        /// Ottiene colore pH dalla scala 0-14 con interpolazione lineare
-        /// </summary>
-        private Color GetPhColorFromScale(float phValue)
-        {
-            phValue = Mathf.Clamp(phValue, 0f, 14f);
-            
-            if (phValue <= 4f)
-            {
-                // Rosso (0) → Arancione (4)
-                float t = phValue / 4f;
-                return Color.Lerp(PH_RED, PH_ORANGE, t);
-            }
-            else if (phValue <= 7f)
-            {
-                // Arancione (4) → Bianco (7)
-                float t = (phValue - 4f) / 3f;
-                return Color.Lerp(PH_ORANGE, PH_WHITE, t);
-            }
-            else if (phValue <= 10f)
-            {
-                // Bianco (7) → Azzurro (10)
-                float t = (phValue - 7f) / 3f;
-                return Color.Lerp(PH_WHITE, PH_BLUE, t);
-            }
-            else
-            {
-                // Azzurro (10) → Viola (14)
-                float t = (phValue - 10f) / 4f;
-                return Color.Lerp(PH_BLUE, PH_PURPLE, t);
-            }
-        }
-        
-        /// <summary>
-        /// Mappa drift pH (-100..+100) al colore della banda (rosso → bianco → blu) per tooltip.
-        /// </summary>
-        private Color GetPhColorFromDrift(float driftPh)
-        {
-            float phVisualScale = ((driftPh + 100f) / 200f) * 14f;
-            phVisualScale = Mathf.Clamp(phVisualScale, 0f, 14f);
-            return GetPhColorFromScale(phVisualScale);
-        }
+        private Color GetPhColorFromScale(float phValue) => PhGradientDisplayColors.GetColorFromScale(phValue);
+
+        private Color GetPhColorFromDrift(float driftPh) => PhGradientDisplayColors.GetColorFromDrift(driftPh);
 
         /// <summary>Restituisce una banda pH per display (scala -100..+100) per il valore oscillante nel tooltip.</summary>
         private static string GetPhBandNameForDisplay(float ph)

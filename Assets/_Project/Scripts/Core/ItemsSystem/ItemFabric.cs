@@ -222,6 +222,7 @@ namespace _Project.Sporae.Core
             item.TraitPowerPercent = sourceSpore.TraitPowerPercent;
             item.ReagentUsedMetadata = sourceSpore.ReagentUsedMetadata;
             item.CustomPlantName = sourceSpore.CustomPlantName;
+            item.ResolvedPlantCodeMetadata = sourceSpore.ResolvedPlantCodeMetadata;
             return item;
         }
 
@@ -289,10 +290,41 @@ namespace _Project.Sporae.Core
             return a.CompareTo(b) <= 0 ? a : b;
         }
 
-        public static Item CreateSeedFromPreSeed(Item preSeed, string resolvedFamily, string selectedTraitsCsv, int traitPowerPercent, string reagentTypeId, string chosenPlantName = null)
+        /// <summary>
+        /// Incubatore: crea un Item seme il cui TypeId è quello della specie di riferimento (<see cref="PlantData.SeedItemConfig"/>),
+        /// non più un unico seme per famiglia (Task 6).
+        /// </summary>
+        /// <param name="referencePlantCodeOverride">Se valorizzato (es. PLT-STD-001), forza la specie del seme.</param>
+        /// <param name="activePowerOverride">Incubatore Reagente X: sovrascrive <see cref="Item.ActivePowerLabel"/>.</param>
+        /// <param name="passivePowerOverride">Incubatore Reagente X: sovrascrive <see cref="Item.PassivePowerLabel"/>.</param>
+        /// <param name="labCareProfileMetadata">BLEND | PARENT_A | PARENT_B per range cure in Dome (Task 6).</param>
+        public static Item CreateSeedFromPreSeed(
+            Item preSeed,
+            string resolvedFamily,
+            string selectedTraitsCsv,
+            int traitPowerPercent,
+            string reagentTypeId,
+            string chosenPlantName = null,
+            string referencePlantCodeOverride = null,
+            string activePowerOverride = null,
+            string passivePowerOverride = null,
+            string labCareProfileMetadata = null)
         {
-            string normalizedFamily = NormalizeFamily(resolvedFamily);
-            string seedTypeId = FamilyToSeedTypeId(normalizedFamily);
+            string plantCode = referencePlantCodeOverride;
+            if (string.IsNullOrWhiteSpace(plantCode))
+                plantCode = ResolveReferencePlantCodeForLabSeed(preSeed, resolvedFamily);
+            if (string.IsNullOrWhiteSpace(plantCode))
+                plantCode = MapFamilyToWave1PlantCode(NormalizeFamily(resolvedFamily));
+
+            var plantData = ResolvePlantDataByCode(plantCode);
+            string seedTypeId = plantData?.SeedItemConfig?.TypeId;
+            if (string.IsNullOrEmpty(seedTypeId))
+            {
+                SporiumLogger.LogError(LogCategory.Inventory,
+                    $"CreateSeedFromPreSeed: SeedItemConfig/TypeId mancante per plantCode={plantCode}");
+                return null;
+            }
+
             var config = Resources.Load<ItemConfig>("Items/" + seedTypeId);
             if (!config)
             {
@@ -302,7 +334,9 @@ namespace _Project.Sporae.Core
 
             var item = new Item(config, _uniqueId++);
             item.GeneticTypeValue = preSeed?.GeneticTypeValue ?? GeneticType.Stable;
-            item.FamilyMetadata = string.IsNullOrWhiteSpace(resolvedFamily) ? normalizedFamily : resolvedFamily;
+            item.FamilyMetadata = string.IsNullOrWhiteSpace(resolvedFamily)
+                ? NormalizeFamily(plantData.Family.ToString())
+                : resolvedFamily.Trim();
             item.ParentFamilyA = preSeed?.ParentFamilyA;
             item.ParentFamilyB = preSeed?.ParentFamilyB;
             item.CandidateTraitsCsv = preSeed?.CandidateTraitsCsv;
@@ -311,10 +345,131 @@ namespace _Project.Sporae.Core
             item.ReagentUsedMetadata = reagentTypeId;
             item.SourcePlantCodeMetadata = preSeed?.SourcePlantCodeMetadata;
             item.CustomPlantName = chosenPlantName;
+            item.ResolvedPlantCodeMetadata = plantCode;
             item.SourcePlantDisplayName = preSeed?.SourcePlantDisplayName;
             item.ActivePowerLabel = preSeed?.ActivePowerLabel;
             item.PassivePowerLabel = preSeed?.PassivePowerLabel;
+            if (!string.IsNullOrWhiteSpace(activePowerOverride))
+                item.ActivePowerLabel = activePowerOverride.Trim();
+            if (!string.IsNullOrWhiteSpace(passivePowerOverride))
+                item.PassivePowerLabel = passivePowerOverride.Trim();
+            item.LabCareProfileMetadata = string.IsNullOrWhiteSpace(labCareProfileMetadata)
+                ? null
+                : labCareProfileMetadata.Trim();
+            ApplyPlantMetadataFromCode(item, plantCode, onlyIfEmpty: true);
             return item;
+        }
+
+        /// <summary>
+        /// Specie di riferimento per il seme in output Lab: genitore la cui famiglia coincide con <paramref name="resolvedFamilyRaw"/>,
+        /// altrimenti primo genitore valido; HYBRID-WEAK → primo codice da metadata; fallback Wave 1 per famiglia.
+        /// </summary>
+        public static string ResolveReferencePlantCodeForLabSeed(Item preSeed, string resolvedFamilyRaw)
+        {
+            if (preSeed == null)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(resolvedFamilyRaw) &&
+                resolvedFamilyRaw.TrimStart().StartsWith("HYBRID-WEAK", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var code in ParseParentPlantCodes(preSeed.SourcePlantCodeMetadata))
+                {
+                    if (ResolvePlantDataByCode(code) != null)
+                        return code;
+                }
+                return MapFamilyToWave1PlantCode("STANDARD");
+            }
+
+            string targetFam = NormalizeFamily(resolvedFamilyRaw);
+            foreach (var code in ParseParentPlantCodes(preSeed.SourcePlantCodeMetadata))
+            {
+                var pd = ResolvePlantDataByCode(code);
+                if (pd == null) continue;
+                if (NormalizeFamily(pd.Family.ToString()) == targetFam)
+                    return pd.PlantCode;
+            }
+
+            foreach (var code in ParseParentPlantCodes(preSeed.SourcePlantCodeMetadata))
+            {
+                if (ResolvePlantDataByCode(code) != null)
+                    return code.Trim();
+            }
+
+            return MapFamilyToWave1PlantCode(targetFam);
+        }
+
+        /// <summary>
+        /// Incubatore Reagente X, nome libero e dominante AUTO: stima il <c>PlantCode</c> confrontando
+        /// i testi potere scelti con il primo rigo attivo/passivo di ogni genitore nel pre-seed (due linee).
+        /// Restituisce null se pareggio, nessun match o meno di due genitori.
+        /// </summary>
+        public static string TryResolveReferencePlantCodeFromPowerChoices(Item preSeed, string activePowerLine, string passivePowerLine)
+        {
+            if (preSeed == null) return null;
+            var codes = ParseParentPlantCodes(preSeed.SourcePlantCodeMetadata);
+            if (codes.Count < 2) return null;
+            var scores = new int[codes.Count];
+            void ScoreOne(string line)
+            {
+                if (string.IsNullOrWhiteSpace(line)) return;
+                string ln = line.Trim();
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    var pd = ResolvePlantDataByCode(codes[i]);
+                    if (pd == null) continue;
+                    string fa = FirstDescriptorLineOfPower(pd.ActivePower);
+                    string fp = FirstDescriptorLineOfPower(pd.PassivePower);
+                    if (!string.IsNullOrEmpty(fa) && string.Equals(fa, ln, StringComparison.OrdinalIgnoreCase)) scores[i]++;
+                    if (!string.IsNullOrEmpty(fp) && string.Equals(fp, ln, StringComparison.OrdinalIgnoreCase)) scores[i]++;
+                }
+            }
+            ScoreOne(activePowerLine);
+            ScoreOne(passivePowerLine);
+            int best = -1;
+            var winners = new List<int>();
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (scores[i] <= 0) continue;
+                if (scores[i] > best) { best = scores[i]; winners.Clear(); winners.Add(i); }
+                else if (scores[i] == best) winners.Add(i);
+            }
+            if (best < 0 || winners.Count != 1) return null;
+            return codes[winners[0]];
+        }
+
+        private static string FirstDescriptorLineOfPower(string multilineOrSingle)
+        {
+            if (string.IsNullOrWhiteSpace(multilineOrSingle)) return null;
+            int cut = multilineOrSingle.IndexOfAny(new[] { '\r', '\n' });
+            string s = cut < 0 ? multilineOrSingle.Trim() : multilineOrSingle.Substring(0, cut).Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        public static List<string> ParseParentPlantCodes(string meta)
+        {
+            var list = new List<string>();
+            if (string.IsNullOrWhiteSpace(meta)) return list;
+            var parts = meta.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var p in parts)
+            {
+                var t = p.Trim();
+                if (!string.IsNullOrEmpty(t) && !list.Exists(x => x.Equals(t, StringComparison.OrdinalIgnoreCase)))
+                    list.Add(t);
+            }
+            return list;
+        }
+
+        private static string MapFamilyToWave1PlantCode(string normalizedFamily)
+        {
+            switch (NormalizeFamily(normalizedFamily))
+            {
+                case "PURE":
+                    return "PLT-PURE-001";
+                case "EVIL":
+                    return "PLT-EVIL-001";
+                default:
+                    return "PLT-STD-001";
+            }
         }
 
         public static string GetFruitDisplayNameByTypeId(string typeId)
@@ -497,23 +652,112 @@ namespace _Project.Sporae.Core
             }
         }
 
-        private static string FamilyToSeedTypeId(string normalizedFamily)
-        {
-            switch (NormalizeFamily(normalizedFamily))
-            {
-                case "PURE":
-                    return Items.Seed002;
-                case "EVIL":
-                    return Items.Seed003;
-                default:
-                    return Items.Seed001;
-            }
-        }
-
         private static bool PairIs(string a, string b, string x, string y)
         {
             return (string.Equals(a, x, StringComparison.OrdinalIgnoreCase) && string.Equals(b, y, StringComparison.OrdinalIgnoreCase))
                 || (string.Equals(a, y, StringComparison.OrdinalIgnoreCase) && string.Equals(b, x, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static readonly HashSet<string> GameplayTraitTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "GROWTH", "YIELD", "RESILIENCE", "LED_ADAPT", "PH_STABILITY", "VERSATILE"
+        };
+
+        /// <summary>
+        /// Incubatore Reagente X: deriva tag gameplay (Task 6) da testi potere attivo/passivo scelti dal giocatore.
+        /// </summary>
+        public static string BuildSelectedTraitsCsvFromPowerChoices(string activeLabel, string passiveLabel)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var g in MapPowerDescriptionToGameplayTags(activeLabel))
+                set.Add(g);
+            foreach (var g in MapPowerDescriptionToGameplayTags(passiveLabel))
+                set.Add(g);
+            if (set.Count == 0)
+                set.Add("VERSATILE");
+            return string.Join(",", set.OrderBy(s => s, StringComparer.Ordinal));
+        }
+
+        /// <summary>
+        /// Normalizza una riga tratti (legacy Lab o già tag) al CSV di tag gameplay usato da <see cref="Sporae.Dome.PotSystem.Growth.LabHybridGameplayModifiers"/>.
+        /// </summary>
+        public static string NormalizeTraitsRowToGameplayTagCsv(string csvOrSingle)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var raw in ParseTraits(csvOrSingle ?? string.Empty))
+            {
+                string t = raw.Trim();
+                if (string.IsNullOrEmpty(t)) continue;
+                if (GameplayTraitTags.Contains(t))
+                    set.Add(t.ToUpperInvariant());
+                else
+                    set.Add(MapLegacyTraitTokenToGameplayTag(t));
+            }
+            if (set.Count == 0)
+                set.Add("VERSATILE");
+            return string.Join(",", set.OrderBy(s => s, StringComparer.Ordinal));
+        }
+
+        static string MapLegacyTraitTokenToGameplayTag(string legacy)
+        {
+            switch ((legacy ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "YIELDBOOST":
+                case "NEUTRALYIELD":
+                    return "YIELD";
+                case "GROWTHSPEED":
+                case "BALANCEDGROWTH":
+                    return "GROWTH";
+                case "DARKRESILIENCE":
+                case "RESILIENCE":
+                case "TOXINAFFINITY":
+                case "AGGRESSIVESPREAD":
+                    return "RESILIENCE";
+                case "PURITYAURA":
+                case "MINDBLOOM":
+                    return "PH_STABILITY";
+                case "PHEROMONEPULSE":
+                case "NEURALECHO":
+                    return "LED_ADAPT";
+                default:
+                    return "VERSATILE";
+            }
+        }
+
+        static IEnumerable<string> MapPowerDescriptionToGameplayTags(string label)
+        {
+            if (string.IsNullOrWhiteSpace(label)) yield break;
+            string s = label.Trim();
+            if (s.StartsWith("—", StringComparison.Ordinal)) yield break;
+            string lower = s.ToLowerInvariant();
+            bool any = false;
+            if (lower.Contains("resa") || lower.Contains("yield") || lower.Contains("raccolto") || lower.Contains("frutt"))
+            {
+                any = true;
+                yield return "YIELD";
+            }
+            if (lower.Contains("cresci") || lower.Contains("growth") || lower.Contains("veloce"))
+            {
+                any = true;
+                yield return "GROWTH";
+            }
+            if (lower.Contains("resilien") || lower.Contains("tossin") || lower.Contains("spread") || lower.Contains("nebbia spor"))
+            {
+                any = true;
+                yield return "RESILIENCE";
+            }
+            if (lower.Contains("led") || lower.Contains("luce") || lower.Contains("foto") || lower.Contains("ipnot") || lower.Contains("pulse"))
+            {
+                any = true;
+                yield return "LED_ADAPT";
+            }
+            if (lower.Contains("ph") || lower.Contains("filtro") || lower.Contains("stabil") || lower.Contains("purity") || lower.Contains("equilibr"))
+            {
+                any = true;
+                yield return "PH_STABILITY";
+            }
+            if (!any)
+                yield return "VERSATILE";
         }
 
         /// <summary>
@@ -543,6 +787,7 @@ namespace _Project.Sporae.Core
 
             var item = new Item(config, _uniqueId++);
             item.SourcePlantCodeMetadata = plantCode;
+            item.ResolvedPlantCodeMetadata = plantCode;
             item.PlantLevelMetadata = Mathf.Max(1, seedPlantLevelMetadata);
             item.GeneticTypeValue = plantData.DefaultGeneticType;
             item.FamilyMetadata = NormalizeFamily(plantData.Family.ToString());
@@ -550,7 +795,7 @@ namespace _Project.Sporae.Core
             string famNorm = item.FamilyMetadata;
             string traitCsv = BuildCandidateTraitsCsv(famNorm, famNorm);
             item.CandidateTraitsCsv = traitCsv;
-            item.SelectedTraitsCsv = traitCsv;
+            item.SelectedTraitsCsv = NormalizeTraitsRowToGameplayTagCsv(traitCsv);
             item.ReagentUsedMetadata = "DEBUG-LAB-SKIP";
             ApplyPlantMetadataFromCode(item, plantCode, onlyIfEmpty: true);
             return item;

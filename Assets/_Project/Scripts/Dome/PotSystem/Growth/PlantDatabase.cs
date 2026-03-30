@@ -338,6 +338,28 @@ namespace Sporae.Dome.PotSystem.Growth
             
             return _plantDataBySeedTypeId.Count;
         }
+
+        /// <summary>
+        /// True se il TypeId è un seme registrato (mappa SeedItemConfig → PlantData).
+        /// </summary>
+        public bool IsRegisteredSeedTypeId(string seedTypeId)
+        {
+            if (string.IsNullOrEmpty(seedTypeId))
+                return false;
+            if (!_isInitialized)
+                InitializeDatabase();
+            return _plantDataBySeedTypeId.ContainsKey(seedTypeId);
+        }
+
+        /// <summary>
+        /// Elenco TypeId seme noti (per UI inventario, EOD, deterioramento).
+        /// </summary>
+        public List<string> GetRegisteredSeedTypeIds()
+        {
+            if (!_isInitialized)
+                InitializeDatabase();
+            return _plantDataBySeedTypeId.Keys.ToList();
+        }
         
         #if UNITY_EDITOR
         [ContextMenu("Reload Database")]

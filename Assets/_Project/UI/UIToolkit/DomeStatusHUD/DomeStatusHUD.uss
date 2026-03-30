@@ -602,10 +602,11 @@
 }
 
 .dome-pot-ph-line {
-    font-size: 10px;
+    font-size: 11px;
     color: rgb(105, 130, 120);
     letter-spacing: 1px;
     margin-bottom: 3px;
+    -unity-font-style: bold;
 }
 
 .dome-pot-footer {

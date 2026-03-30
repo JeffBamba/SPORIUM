@@ -243,11 +243,20 @@ namespace Sporae.Dome.PotAutomation
             string plantDisplayName = null;
             if (action.Type == AutomationActionType.Plant && !string.IsNullOrEmpty(action.ItemTypeId))
             {
-                var plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(action.ItemTypeId);
-                if (plantData != null)
+                var payload = action.ItemPayload;
+                string resolvedCode = payload != null && !string.IsNullOrWhiteSpace(payload.ResolvedPlantCodeMetadata)
+                    ? payload.ResolvedPlantCodeMetadata
+                    : null;
+                var plantData = !string.IsNullOrWhiteSpace(resolvedCode)
+                    ? PlantDatabase.Instance?.GetPlantDataByCode(resolvedCode)
+                    : PlantDatabase.Instance?.GetPlantDataBySeedTypeId(action.ItemTypeId);
+                if (plantData != null || !string.IsNullOrWhiteSpace(resolvedCode))
                 {
-                    plantCode = plantData.PlantCode ?? "";
-                    plantDisplayName = plantData.name ?? plantData.PlantCode ?? plantCode;
+                    plantCode = !string.IsNullOrWhiteSpace(resolvedCode) ? resolvedCode : (plantData.PlantCode ?? "");
+                    if (payload != null && !string.IsNullOrWhiteSpace(payload.CustomPlantName))
+                        plantDisplayName = payload.CustomPlantName;
+                    else
+                        plantDisplayName = plantData != null ? (plantData.name ?? plantData.PlantCode ?? plantCode) : plantCode;
                 }
                 else
                     plantCode = action.ItemTypeId;

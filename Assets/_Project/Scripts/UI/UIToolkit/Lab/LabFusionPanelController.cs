@@ -191,7 +191,7 @@ namespace Sporae.UI.UIToolkit.Lab
             var lines = new List<string>
             {
                 $"Pre-Seed x{ExtractorTooltipTexts.WrapValue(_outputPreSeeds.Count.ToString())}",
-                $"Tratti (fissati Step 3): {ExtractorTooltipTexts.WrapValue(tratti)}",
+                $"Genetica (da spore, non modificabile qui): {ExtractorTooltipTexts.WrapValue(tratti)}",
                 $"Famiglie sorgente: {ExtractorTooltipTexts.WrapValue(fa)} + {ExtractorTooltipTexts.WrapValue(fb)}",
                 $"Provenienza: {ExtractorTooltipTexts.WrapValue(provenienza)}"
             };

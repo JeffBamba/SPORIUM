@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace _Project.Scripts.Core
 {
@@ -12,7 +13,6 @@ namespace _Project.Scripts.Core
 
         private static readonly List<string> k_itemsToDeterioration = new()
         {
-            Items.Seed001, 
             Items.SporeGeneric,
             Items.WholePlant
         };
@@ -36,7 +36,9 @@ namespace _Project.Scripts.Core
             foreach (
                 var inventorySlot in _inventory.Items
                     .ToList()
-                    .Where(item => k_itemsToDeterioration.Contains(item.TypeId))
+                    .Where(item => k_itemsToDeterioration.Contains(item.TypeId)
+                                   || (PlantDatabase.Instance != null &&
+                                       PlantDatabase.Instance.IsRegisteredSeedTypeId(item.TypeId)))
             )
                 DeteriorateInventorySlot(inventorySlot);
         }

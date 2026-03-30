@@ -12,6 +12,7 @@ using Sporae.Dome.PotSystem.Level;
 using UnityEngine.SceneManagement;
 using _Project;
 using Sporae.DevTools;
+using System.Globalization;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using System;
 
@@ -653,10 +654,13 @@ public class DayCycleController : MonoBehaviour
         if (plantData != null)
         {
             moldGrowthMultiplier = PhGrowthModifier.GetMoldGrowthModifier(pot.MoldRiskLevel, plantData.Family, phBand);
+            moldGrowthMultiplier = LabHybridGameplayModifiers.DampenMoldGrowthMultiplier(moldGrowthMultiplier, pot);
         }
         
         // Moltiplicatori cumulativi (moltiplicativi, non additivi)
         float totalGrowthMultiplier = conditionGrowthMultiplier * phGrowthMultiplier * moldGrowthMultiplier;
+        float labHyGrowth = LabHybridGameplayModifiers.GetHybridGrowthMultiplier(pot);
+        totalGrowthMultiplier *= labHyGrowth;
         
         if (totalGrowthMultiplier != 1.0f && pointsResult.TotalPoints > 0)
         {
@@ -717,13 +721,14 @@ public class DayCycleController : MonoBehaviour
             bool phInRange = _phSystem != null && plantData != null && 
                              plantData.IsPhInOptimalRange(_phSystem.CurrentPh);
             bool isFirstFruit = false;
+            float hyYieldMul = LabHybridGameplayModifiers.GetHarvestDailyIncrementMultiplier(pot);
             if (pot.AmountFruits == 0f)
             {
                 // Se i frutti sono appena decaduti o è il primo giorno, inizializza
                 if (pot.DaysInHarvestReady == 1 || pot.DaysFruitsUnharvested == 0)
                 {
                     // Primo giorno o dopo decay completo: inizializza a 1 frutto
-                    pot.AmountFruits = 1f;
+                    pot.AmountFruits = Mathf.Min(1f * hyYieldMul, 3f);
                     pot.DaysFruitsUnharvested = 0; // Reset contatore quando si produce il primo frutto
                     isFirstFruit = true;
                 }
@@ -735,6 +740,7 @@ public class DayCycleController : MonoBehaviour
                 {
                     // 30% possibilità doppio frutto se pH in range
                     float fruitsToAdd = (UnityEngine.Random.Range(0f, 1f) < 0.3f) ? 2f : 1f;
+                    fruitsToAdd *= hyYieldMul;
                     pot.AmountFruits = Mathf.Min(pot.AmountFruits + fruitsToAdd, 3f);
                 }
                 else
@@ -742,7 +748,7 @@ public class DayCycleController : MonoBehaviour
                     // Possibilità mancata produzione (20%) se pH fuori range
                     if (UnityEngine.Random.Range(0f, 1f) >= 0.2f)
                     {
-                        pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f, 3f);
+                        pot.AmountFruits = Mathf.Min(pot.AmountFruits + 1f * hyYieldMul, 3f);
                     }
                 }
             }
@@ -2070,8 +2076,9 @@ public class DayCycleController : MonoBehaviour
             var plantData = pot.GetPlantData();
             if (plantData == null) continue;
             float d = plantData.GetDailyPhDrift();
-            if (BotanicalPlantCodes.IsArcticHask(plantData.PlantCode))
+            if (HasArcticPurificationActive(pot, plantData))
                 d += 5f;
+            d = LabHybridGameplayModifiers.ScaleDailyPhDrift(d, pot);
             total += d;
         }
         return total;
@@ -2146,10 +2153,11 @@ public class DayCycleController : MonoBehaviour
                 continue;
             }
             
-            // Calcola drift pH per questa pianta (+ Arctic Purification +5/g per ogni Hask attivo nel vaso)
+            // Calcola drift pH per questa pianta (+ Arctic Purification +5/g se attivo, anche su ibridi con metadata).
             float plantDrift = plantData.GetDailyPhDrift();
-            if (BotanicalPlantCodes.IsArcticHask(plantData.PlantCode))
+            if (HasArcticPurificationActive(pot, plantData))
                 plantDrift += 5f;
+            plantDrift = LabHybridGameplayModifiers.ScaleDailyPhDrift(plantDrift, pot);
             totalPhDrift += plantDrift;
             plantCount++;
             
@@ -2206,6 +2214,22 @@ public class DayCycleController : MonoBehaviour
         {
             SporiumLogger.LogDebug(LogCategory.Pot, $"Cleanup: {activePotIds.Count} vasi attivi su {_registeredPots.Count} registrati");
         }
+    }
+
+    private static bool HasArcticPurificationActive(PotStateModel pot, PlantData plantData)
+    {
+        if (pot == null && plantData == null)
+            return false;
+
+        if (BotanicalPlantCodes.IsArcticHask(plantData != null ? plantData.PlantCode : pot?.PlantCode))
+            return true;
+
+        string active = !string.IsNullOrWhiteSpace(pot?.ActivePowerLabel)
+            ? pot.ActivePowerLabel
+            : plantData?.ActivePower;
+
+        return !string.IsNullOrWhiteSpace(active)
+               && active.IndexOf("Arctic Purification", StringComparison.OrdinalIgnoreCase) >= 0;
     }
     
     /// <summary>

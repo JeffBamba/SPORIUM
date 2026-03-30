@@ -26,7 +26,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             var cryoCtrl = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
             var cryoSlots = cryoCtrl?.GetPassiveSlotsSnapshot();
 
-            var task4Active = new List<(string potId, string plantCode)>();
+            var task4Active = new List<(string potId, string plantCode, string displayName, string activeLabel)>();
             if (registry != null)
             {
                 var pots = registry.GetActivePotsSnapshot();
@@ -40,7 +40,10 @@ namespace Sporae.Dome.PotSystem.Botanical
                     if (!IsGlobalDomeBotanicalCode(code))
                         continue;
                     string potId = string.IsNullOrEmpty(slot.PotId) ? "—" : slot.PotId;
-                    task4Active.Add((potId, code));
+                    string displayName = !string.IsNullOrWhiteSpace(state.CustomPlantName)
+                        ? state.CustomPlantName
+                        : (BotanicalPlantCodes.GetSpeciesUiDisplayName(code) ?? code);
+                    task4Active.Add((potId, code, displayName, state.ActivePowerLabel));
                 }
             }
 
@@ -49,8 +52,8 @@ namespace Sporae.Dome.PotSystem.Botanical
             bool any = false;
             for (int i = 0; i < task4Active.Count; i++)
             {
-                var (potId, plantCode) = task4Active[i];
-                if (AppendGlobalEffectBlockForActivePot(lines, potId, plantCode))
+                var (potId, plantCode, displayName, activeLabel) = task4Active[i];
+                if (AppendGlobalEffectBlockForActivePot(lines, potId, plantCode, displayName, activeLabel))
                     any = true;
             }
 
@@ -71,7 +74,7 @@ namespace Sporae.Dome.PotSystem.Botanical
                         continue;
                     if (BotanicalPlantCodes.IsGlasscap(s.Payload.PlantCode))
                     {
-                        if (AppendGlobalEffectBlockForCryoSlot(lines, s.SlotId, BotanicalPlantCodes.GlasscapFungus))
+                        if (AppendGlobalEffectBlockForCryoSlot(lines, s.SlotId, BotanicalPlantCodes.GlasscapFungus, s.Payload.PassivePowerLabel))
                             any = true;
                     }
 
@@ -116,7 +119,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             }
         }
 
-        private static int CompareTask4PotEntries((string potId, string plantCode) a, (string potId, string plantCode) b)
+        private static int CompareTask4PotEntries((string potId, string plantCode, string displayName, string activeLabel) a, (string potId, string plantCode, string displayName, string activeLabel) b)
         {
             int oa = Task4SpeciesSortOrder(a.plantCode);
             int ob = Task4SpeciesSortOrder(b.plantCode);
@@ -133,10 +136,13 @@ namespace Sporae.Dome.PotSystem.Botanical
             return 99;
         }
 
-        private static bool AppendGlobalEffectBlockForActivePot(List<string> lines, string potId, string plantCode)
+        private static bool AppendGlobalEffectBlockForActivePot(List<string> lines, string potId, string plantCode, string displayName, string activeLabel)
         {
-            string species = BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode) ?? plantCode;
+            string species = string.IsNullOrWhiteSpace(displayName)
+                ? (BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode) ?? plantCode)
+                : displayName;
             var data = PlantDatabase.Instance != null ? PlantDatabase.Instance.GetPlantDataByCode(plantCode) : null;
+            string effectiveActive = !string.IsNullOrWhiteSpace(activeLabel) ? activeLabel : data?.ActivePower;
             if (data == null)
             {
                 lines.Add($"  <color=#C8F5C8>{species} - {potId}</color>");
@@ -144,19 +150,20 @@ namespace Sporae.Dome.PotSystem.Botanical
                 return true;
             }
 
-            if (string.IsNullOrWhiteSpace(NormalizeTooltipCopy(data.ActivePower)))
+            if (string.IsNullOrWhiteSpace(NormalizeTooltipCopy(effectiveActive)))
                 return false;
 
             lines.Add($"  <color=#C8F5C8>{species} - {potId}</color>");
-            AppendWrappedBulletLines(lines, "Attivo", data.ActivePower);
+            AppendWrappedBulletLines(lines, "Attivo", effectiveActive);
             return true;
         }
 
-        private static bool AppendGlobalEffectBlockForCryoSlot(List<string> lines, string slotId, string plantCode)
+        private static bool AppendGlobalEffectBlockForCryoSlot(List<string> lines, string slotId, string plantCode, string passiveLabel)
         {
             string species = BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode) ?? plantCode;
             string sid = string.IsNullOrEmpty(slotId) ? "—" : slotId;
             var data = PlantDatabase.Instance != null ? PlantDatabase.Instance.GetPlantDataByCode(plantCode) : null;
+            string effectivePassive = !string.IsNullOrWhiteSpace(passiveLabel) ? passiveLabel : data?.PassivePower;
             if (data == null)
             {
                 lines.Add($"  <color=#C8F5C8>{species} - {sid}</color> <color=#8FA0A6>(cryo passivo)</color>");
@@ -164,11 +171,11 @@ namespace Sporae.Dome.PotSystem.Botanical
                 return true;
             }
 
-            if (string.IsNullOrWhiteSpace(NormalizeTooltipCopy(data.PassivePower)))
+            if (string.IsNullOrWhiteSpace(NormalizeTooltipCopy(effectivePassive)))
                 return false;
 
             lines.Add($"  <color=#C8F5C8>{species} - {sid}</color> <color=#8FA0A6>(cryo passivo)</color>");
-            AppendWrappedBulletLines(lines, "Passivo (cryo)", data.PassivePower);
+            AppendWrappedBulletLines(lines, "Passivo (cryo)", effectivePassive);
             return true;
         }
 
@@ -380,7 +387,9 @@ namespace Sporae.Dome.PotSystem.Botanical
             if (lines == null || state == null) return;
 
             bool t4 = IsGlobalDomeBotanicalCode(state.PlantCode);
-            string activeTxt = plantData != null ? NormalizeTooltipCopy(plantData.ActivePower) : null;
+            string activeTxt = !string.IsNullOrWhiteSpace(state.ActivePowerLabel)
+                ? NormalizeTooltipCopy(state.ActivePowerLabel)
+                : (plantData != null ? NormalizeTooltipCopy(plantData.ActivePower) : null);
             bool hasActiveCopy = !string.IsNullOrWhiteSpace(activeTxt);
 
             if (t4 || hasActiveCopy)

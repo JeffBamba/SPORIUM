@@ -731,7 +731,9 @@ namespace Sporae.Core
                         selectedTraitsCsv = item.SelectedTraitsCsv,
                         traitPowerPercent = item.TraitPowerPercent,
                         reagentUsedMetadata = item.ReagentUsedMetadata,
-                        customPlantName = item.CustomPlantName
+                        labCareProfileMetadata = item.LabCareProfileMetadata,
+                        customPlantName = item.CustomPlantName,
+                        resolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata
                     });
                 }
             }
@@ -785,7 +787,14 @@ namespace Sporae.Core
                         item.SelectedTraitsCsv = itemData.selectedTraitsCsv;
                         item.TraitPowerPercent = itemData.traitPowerPercent > 0 ? itemData.traitPowerPercent : 100;
                         item.ReagentUsedMetadata = itemData.reagentUsedMetadata;
+                        item.LabCareProfileMetadata = itemData.labCareProfileMetadata;
                         item.CustomPlantName = itemData.customPlantName;
+                        item.ResolvedPlantCodeMetadata = itemData.resolvedPlantCodeMetadata;
+                        if (string.IsNullOrWhiteSpace(item.ResolvedPlantCodeMetadata))
+                        {
+                            var pdSeed = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(item.TypeId);
+                            item.ResolvedPlantCodeMetadata = pdSeed?.PlantCode;
+                        }
                     }
 
                     if (_Project.Sporae.Core.Items.IsLegacyFruitType(item.TypeId)
@@ -811,6 +820,8 @@ namespace Sporae.Core
                             migratedItem.TraitPowerPercent = item.TraitPowerPercent;
                             migratedItem.ReagentUsedMetadata = item.ReagentUsedMetadata;
                             migratedItem.CustomPlantName = item.CustomPlantName;
+                            migratedItem.LabCareProfileMetadata = item.LabCareProfileMetadata;
+                            migratedItem.ResolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata;
                             item = migratedItem;
                         }
                     }
@@ -942,7 +953,9 @@ namespace Sporae.Core
             public string selectedTraitsCsv;
             public int traitPowerPercent;
             public string reagentUsedMetadata;
+            public string labCareProfileMetadata;
             public string customPlantName;
+            public string resolvedPlantCodeMetadata;
         }
         
         [Serializable]

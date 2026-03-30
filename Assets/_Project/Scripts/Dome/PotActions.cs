@@ -13,6 +13,7 @@ using Sporae.Dome.PotSystem.Condition;
 using _Project;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.UI.UIToolkit.HUD;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -584,33 +585,6 @@ public class PotActions : MonoBehaviour
             int actionsAfter = _gameManager?.ActionsLeft ?? 0;
             SporiumLogger.LogDebug(LogCategory.Pot, $"[{potSlot?.PotId}] DoPlant - Azioni dopo consumo: {actionsAfter} (consumate: {actionsBefore - actionsAfter})");
             
-            // Cerca PlantData dal database usando il TypeId del seme
-            PlantData plantData = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
-            string plantCode = plantData?.PlantCode;
-            
-            if (plantData == null)
-            {
-                if (showDebugLogs)
-                {
-                    SporiumLogger.LogWarning(LogCategory.Pot, $"Nessun PlantData trovato per seme TypeId '{seedTypeId}'. La pianta non avrà drift pH.");
-                }
-                // IMPORTANTE: Anche se PlantData non è trovato, piantiamo comunque il seme
-                // ma senza PlantCode, quindi non avrà drift pH
-            }
-            else
-            {
-                if (showDebugLogs)
-                {
-                    SporiumLogger.LogInfo(LogCategory.Pot, $"PlantData trovato: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
-                }
-                
-                // Verifica che PlantCode non sia null o vuoto
-                if (string.IsNullOrEmpty(plantCode))
-                {
-                    SporiumLogger.LogError(LogCategory.Pot, $"PlantData '{plantData.name}' ha PlantCode NULL o vuoto! La pianta non avrà drift pH.");
-                }
-            }
-            
             Item consumedSeedItem = seedItem;
 
             // Consuma il seme dall'inventario (skip in automation: già consumato in conferma terminale)
@@ -622,10 +596,64 @@ public class PotActions : MonoBehaviour
                     return false;
                 }
             }
+
+            string resolvedCodeMeta = consumedSeedItem != null && !string.IsNullOrWhiteSpace(consumedSeedItem.ResolvedPlantCodeMetadata)
+                ? consumedSeedItem.ResolvedPlantCodeMetadata.Trim()
+                : null;
+
+            // Runtime canonical path: prefer metadata species stored in the seed payload.
+            PlantData plantData = !string.IsNullOrWhiteSpace(resolvedCodeMeta)
+                ? PlantDatabase.Instance?.GetPlantDataByCode(resolvedCodeMeta)
+                : PlantDatabase.Instance?.GetPlantDataBySeedTypeId(seedTypeId);
+
+            string plantCode = !string.IsNullOrWhiteSpace(resolvedCodeMeta)
+                ? resolvedCodeMeta
+                : plantData?.PlantCode;
+
+            if (consumedSeedItem != null && !string.IsNullOrWhiteSpace(plantCode))
+                consumedSeedItem.ResolvedPlantCodeMetadata = plantCode;
+
+            if (plantData == null)
+            {
+                if (showDebugLogs)
+                {
+                    SporiumLogger.LogWarning(LogCategory.Pot,
+                        $"Nessun PlantData trovato per seme TypeId '{seedTypeId}' (resolvedMeta='{resolvedCodeMeta ?? ""}').");
+                }
+            }
+            else if (showDebugLogs)
+            {
+                SporiumLogger.LogInfo(LogCategory.Pot,
+                    $"PlantData risolto: {plantData.PlantCode} ({plantData.Family}), drift pH: {plantData.DailyPhDrift}/giorno");
+            }
             
             // Aggiorna lo stato del vaso (Stage 1 = Seed) con PlantCode
             _potState.PlantSeed(_dayCycleSystem.CurrentDay, plantCode);
             _potState.ApplySeedMetadata(consumedSeedItem, plantData);
+
+            if (ShouldPostHybridPlantedToast(_potState))
+            {
+                var fn = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (fn != null && fn.Enabled)
+                {
+                    string lineage = string.IsNullOrWhiteSpace(_potState.SourcePlantCodesMetadata)
+                        ? "—"
+                        : _potState.SourcePlantCodesMetadata.Replace("|", " × ");
+                    string disp = !string.IsNullOrWhiteSpace(_potState.CustomPlantName)
+                        ? _potState.CustomPlantName
+                        : (!string.IsNullOrWhiteSpace(_potState.SourcePlantDisplayName)
+                            ? _potState.SourcePlantDisplayName
+                            : (plantData != null ? (plantData.name ?? plantData.PlantCode) : (plantCode ?? "?")));
+                    int day = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 0;
+                    string potIdForToast = potSlot != null ? potSlot.PotId : "?";
+                    fn.PostToast("PLT-HYB-PLANTED", new NotificationPayload()
+                        .With("potId", potIdForToast)
+                        .With("plantCode", string.IsNullOrWhiteSpace(_potState.PlantCode) ? "?" : _potState.PlantCode)
+                        .With("displayName", disp)
+                        .With("lineage", lineage),
+                        dedupKey: $"hyb-plant-{potIdForToast}-d{day}");
+                }
+            }
 
             // Se richiesto, irrigazione immediata: imposta hydration al 40% del max.
             if (irrigate)
@@ -698,6 +726,37 @@ public class PotActions : MonoBehaviour
     {
         if (!CanUproot())
             return false;
+
+        var stateBefore = _potState;
+        var plantDataBefore = stateBefore != null ? stateBefore.GetPlantData() : null;
+        string plantCodeBefore = stateBefore != null ? stateBefore.PlantCode : null;
+        string sourceMetaBefore = stateBefore != null ? stateBefore.SourcePlantCodesMetadata : null;
+
+        var wholePlantItem = ItemFabric.CreateItemWithMetadata(
+            Items.WholePlant,
+            4f,
+            stateBefore != null ? stateBefore.PlantGeneticType : GeneticType.Stable,
+            stateBefore != null ? stateBefore.PlantFamilyMetadata : null,
+            plantCodeBefore,
+            stateBefore != null ? Mathf.Max(1, stateBefore.PlantLevel) : 1,
+            stateBefore != null ? stateBefore.SourcePlantDisplayName : (plantDataBefore != null ? plantDataBefore.name : null),
+            stateBefore != null ? stateBefore.ActivePowerLabel : null,
+            stateBefore != null ? stateBefore.PassivePowerLabel : null);
+
+        if (wholePlantItem != null)
+        {
+            wholePlantItem.CustomPlantName = stateBefore != null ? stateBefore.CustomPlantName : null;
+            wholePlantItem.LabCareProfileMetadata = stateBefore != null ? stateBefore.LabCareProfileMetadata : null;
+            wholePlantItem.ParentFamilyA = stateBefore != null ? stateBefore.ParentFamilyA : null;
+            wholePlantItem.ParentFamilyB = stateBefore != null ? stateBefore.ParentFamilyB : null;
+            wholePlantItem.CandidateTraitsCsv = stateBefore != null ? stateBefore.CandidateTraitsCsv : null;
+            wholePlantItem.SelectedTraitsCsv = stateBefore != null ? stateBefore.SelectedTraitsCsv : null;
+            wholePlantItem.TraitPowerPercent = stateBefore != null && stateBefore.TraitPowerPercent > 0 ? stateBefore.TraitPowerPercent : 100;
+            wholePlantItem.ReagentUsedMetadata = stateBefore != null ? stateBefore.ReagentUsedMetadata : null;
+            wholePlantItem.ResolvedPlantCodeMetadata = plantCodeBefore;
+            if (!string.IsNullOrWhiteSpace(sourceMetaBefore))
+                wholePlantItem.SourcePlantCodeMetadata = sourceMetaBefore;
+        }
         
         // BLK-02.03: Rimuovi contributi pH della pianta prima di rimuoverla
         if (_phSystem != null && !string.IsNullOrEmpty(_potState.PlantCode))
@@ -722,7 +781,24 @@ public class PotActions : MonoBehaviour
         if (potGrowthController != null)
             potGrowthController.OnUprooted();
 
-        _playerInventory.Add(Items.WholePlant);
+        int qtyBefore = _playerInventory?.Items?.FirstOrDefault(s => s != null && s.TypeId == Items.WholePlant)?.Quantity ?? 0;
+        if (_playerInventory != null)
+        {
+            if (wholePlantItem != null)
+                _playerInventory.Add(wholePlantItem);
+            else
+                _playerInventory.Add(Items.WholePlant);
+        }
+        int qtyAfter = _playerInventory?.Items?.FirstOrDefault(s => s != null && s.TypeId == Items.WholePlant)?.Quantity ?? 0;
+
+        var foundationCollect = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+        if (foundationCollect != null && foundationCollect.Enabled)
+        {
+            if (wholePlantItem != null)
+                foundationCollect.PostAddedToInventory(CollectionPayloadFactory.FromItem(wholePlantItem, 1, RoomNames.Dome));
+            else
+                foundationCollect.PostAddedToInventory(Items.WholePlant, "Pianta conservata", 1, RoomNames.Dome);
+        }
         
         // Notifica il cambio stato
         PotEvents.EmitAction(PotEvents.PotActionType.Uproot, potSlot);
@@ -1930,6 +2006,19 @@ public class PotActions : MonoBehaviour
     }
 
     #endregion
+
+    /// <summary>Vaso con seme da incrocio Lab (due famiglie, due linee, o famiglia HYBRID-WEAK da incubazione senza reagente).</summary>
+    private static bool ShouldPostHybridPlantedToast(PotStateModel s)
+    {
+        if (s == null) return false;
+        if (s.IsHybrid) return true;
+        if (!string.IsNullOrEmpty(s.SourcePlantCodesMetadata) && s.SourcePlantCodesMetadata.Contains("|"))
+            return true;
+        if (!string.IsNullOrWhiteSpace(s.PlantFamilyMetadata) &&
+            s.PlantFamilyMetadata.StartsWith("HYBRID-WEAK", StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
 
     #if UNITY_EDITOR
     void OnDrawGizmosSelected()

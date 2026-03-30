@@ -123,7 +123,7 @@ namespace _Project
                 _hudItemContainer.SetItemData(i, item.TypeId, item.Quantity);
             }
             
-            bool hasSpore = _storage.Has(Items.Seed001), 
+            bool hasSpore = _storage.Has(Items.SporeGeneric),
                  hasActions = _actionSystem.ActionsLeft > 0;
             _startButtonLabel.text = hasSpore && hasActions ? "Avvia" :
                 !hasActions ? "Nessuna azione rimasta" : "Nessun campione disponibile";

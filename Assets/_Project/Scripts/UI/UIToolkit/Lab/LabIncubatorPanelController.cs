@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,6 +7,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
 
@@ -31,11 +33,14 @@ namespace Sporae.UI.UIToolkit.Lab
         private VisualElement _outputSlotRow;
         private VisualElement _xConfigRow;
         private DropdownField _familyDropdown;
-        private DropdownField _trait1Dropdown;
-        private DropdownField _trait2Dropdown;
+        private DropdownField _activePowerDropdown;
+        private DropdownField _passivePowerDropdown;
+        private DropdownField _careProfileDropdown;
         private DropdownField _nameDropdown;
         private VisualElement _nameCustomRow;
         private TextField _nameCustomField;
+        private VisualElement _dominantGenomeRow;
+        private DropdownField _dominantGenomeDropdown;
         private Button _btnSelectPreseed;
         private Button _btnSelectReagent;
         private Button _btnClearReagent;
@@ -54,9 +59,39 @@ namespace Sporae.UI.UIToolkit.Lab
         private int _incubationDay;
         private Item _incubatingPreSeed;
         private string _selectedFamilyX;
-        private string _selectedTrait1X;
-        private string _selectedTrait2X;
+        private string _selectedActivePowerX;
+        private string _selectedPassivePowerX;
+        private string _selectedCareProfileValue = "BLEND";
         private string _selectedNameX;
+        private bool _nameModeIsCustom;
+        /// <summary>AUTO | PARENT_A | PARENT_B — quale PlantCode usare quando il nome è libero (Reagente X).</summary>
+        private string _dominantGenomeForCustomName = DominantGenomeAuto;
+        /// <summary>Incubatore X: etichetta nome → PlantCode dominante per TypeId/drift (allineato al mix scelto).</summary>
+        private readonly Dictionary<string, string> _nameChoiceToReferencePlantCode = new(System.StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Valori UI catturati all'Avvia: dopo il consumo del pre-seed <see cref="RefreshReagentXSelectors"/> non ha più un Peek valido e azzerava nome/poteri.</summary>
+        private sealed class PendingReagentXSnapshot
+        {
+            public string Family;
+            public string ActivePower;
+            public string PassivePower;
+            public string CareProfile;
+            public bool NameModeCustom;
+            public string CustomName;
+            public string SelectedMixName;
+            public string DominantGenome;
+        }
+
+        private PendingReagentXSnapshot _pendingReagentX;
+
+        private const string NoPowerChoice = "— nessuno —";
+        private static readonly string[] CareProfileValues = { "BLEND", "PARENT_A", "PARENT_B" };
+        private static readonly string[] CareProfileLabels =
+        {
+            "Specie del seme (range cure default)",
+            "Come genitore A (acqua / LED / fertilizzante)",
+            "Come genitore B (acqua / LED / fertilizzante)"
+        };
         private bool _uiBound;
 
         private const string IncubatorProgressToastKey = "incubator-progress";
@@ -113,11 +148,14 @@ namespace Sporae.UI.UIToolkit.Lab
             _outputSlotRow = _root.Q<VisualElement>("lab-inc-output-row");
             _xConfigRow = _root.Q<VisualElement>("lab-inc-x-config-row");
             _familyDropdown = _root.Q<DropdownField>("lab-inc-x-family");
-            _trait1Dropdown = _root.Q<DropdownField>("lab-inc-x-trait1");
-            _trait2Dropdown = _root.Q<DropdownField>("lab-inc-x-trait2");
+            _activePowerDropdown = _root.Q<DropdownField>("lab-inc-x-active-power");
+            _passivePowerDropdown = _root.Q<DropdownField>("lab-inc-x-passive-power");
+            _careProfileDropdown = _root.Q<DropdownField>("lab-inc-x-care-profile");
             _nameDropdown = _root.Q<DropdownField>("lab-inc-x-name");
             _nameCustomRow = _root.Q<VisualElement>("lab-inc-x-name-custom-row");
             _nameCustomField = _root.Q<TextField>("lab-inc-x-name-custom");
+            _dominantGenomeRow = _root.Q<VisualElement>("lab-inc-x-dominant-row");
+            _dominantGenomeDropdown = _root.Q<DropdownField>("lab-inc-x-dominant-genome");
             _btnSelectPreseed = _root.Q<Button>("btn-select-preseed");
             _btnSelectReagent = _root.Q<Button>("btn-select-reagent");
             _btnClearReagent = _root.Q<Button>("btn-clear-reagent");
@@ -144,30 +182,58 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 _reagentTypeId = null;
                 _selectedFamilyX = null;
-                _selectedTrait1X = null;
-                _selectedTrait2X = null;
+                _selectedActivePowerX = null;
+                _selectedPassivePowerX = null;
+                _selectedCareProfileValue = "BLEND";
                 _selectedNameX = null;
+                _nameModeIsCustom = false;
+                _dominantGenomeForCustomName = DominantGenomeAuto;
+                _pendingReagentX = null;
                 RefreshDisplay();
             };
             if (_familyDropdown != null)
                 _familyDropdown.RegisterValueChangedCallback(evt => _selectedFamilyX = evt.newValue);
-            if (_trait1Dropdown != null)
-                _trait1Dropdown.RegisterValueChangedCallback(evt => _selectedTrait1X = evt.newValue);
-            if (_trait2Dropdown != null)
-                _trait2Dropdown.RegisterValueChangedCallback(evt => _selectedTrait2X = evt.newValue);
+            if (_activePowerDropdown != null)
+                _activePowerDropdown.RegisterValueChangedCallback(evt => _selectedActivePowerX = evt.newValue);
+            if (_passivePowerDropdown != null)
+                _passivePowerDropdown.RegisterValueChangedCallback(evt => _selectedPassivePowerX = evt.newValue);
+            if (_careProfileDropdown != null)
+                _careProfileDropdown.RegisterValueChangedCallback(OnCareProfileChanged);
             if (_nameDropdown != null)
                 _nameDropdown.RegisterValueChangedCallback(evt => OnNameDropdownChanged(evt.newValue));
             if (_nameCustomField != null)
-                _nameCustomField.RegisterValueChangedCallback(evt => _selectedNameX = string.IsNullOrWhiteSpace(evt.newValue) ? null : evt.newValue.Trim());
+                _nameCustomField.RegisterValueChangedCallback(evt =>
+                {
+                    if (_nameModeIsCustom)
+                        _selectedNameX = string.IsNullOrWhiteSpace(evt.newValue) ? null : evt.newValue.Trim();
+                });
+            if (_dominantGenomeDropdown != null)
+                _dominantGenomeDropdown.RegisterValueChangedCallback(OnDominantGenomeChanged);
             _uiBound = true;
         }
 
         private void OnNameDropdownChanged(string newValue)
         {
-            bool isCustom = string.Equals(newValue, "Nome personalizzato", System.StringComparison.OrdinalIgnoreCase);
+            _nameModeIsCustom = string.Equals(newValue, CustomNameOption, System.StringComparison.OrdinalIgnoreCase);
             if (_nameCustomRow != null)
-                _nameCustomRow.style.display = isCustom ? DisplayStyle.Flex : DisplayStyle.None;
-            _selectedNameX = isCustom ? (_nameCustomField?.value?.Trim()) : newValue;
+                _nameCustomRow.style.display = _nameModeIsCustom ? DisplayStyle.Flex : DisplayStyle.None;
+            _selectedNameX = _nameModeIsCustom ? (_nameCustomField?.value?.Trim()) : newValue;
+            SyncDominantGenomeUi();
+        }
+
+        private void OnDominantGenomeChanged(ChangeEvent<string> evt)
+        {
+            int i = _dominantGenomeDropdown != null ? _dominantGenomeDropdown.index : -1;
+            if (i >= 0 && i < DominantGenomeValueOrder.Length)
+                _dominantGenomeForCustomName = DominantGenomeValueOrder[i];
+        }
+
+        private void OnCareProfileChanged(ChangeEvent<string> evt)
+        {
+            if (_careProfileDropdown == null) return;
+            int i = _careProfileDropdown.index;
+            if (i >= 0 && i < CareProfileValues.Length)
+                _selectedCareProfileValue = CareProfileValues[i];
         }
 
         private void OnCloseClicked() => Hide();
@@ -241,7 +307,13 @@ namespace Sporae.UI.UIToolkit.Lab
                 $"Provenienza: {ExtractorTooltipTexts.WrapValue(provenienza)}"
             };
             if (!string.IsNullOrWhiteSpace(first.SelectedTraitsCsv))
-                lines.Add($"Tratti selezionati: {ExtractorTooltipTexts.WrapValue(first.SelectedTraitsCsv)}");
+                lines.Add($"Tag gameplay (Task 6): {ExtractorTooltipTexts.WrapValue(first.SelectedTraitsCsv)}");
+            if (!string.IsNullOrWhiteSpace(first.LabCareProfileMetadata))
+                lines.Add($"Profilo cure: {ExtractorTooltipTexts.WrapValue(first.LabCareProfileMetadata)}");
+            if (!string.IsNullOrWhiteSpace(first.ActivePowerLabel))
+                lines.Add($"Attivo: {ExtractorTooltipTexts.WrapValue(first.ActivePowerLabel)}");
+            if (!string.IsNullOrWhiteSpace(first.PassivePowerLabel))
+                lines.Add($"Passivo: {ExtractorTooltipTexts.WrapValue(first.PassivePowerLabel)}");
             if (first.TraitPowerPercent > 0)
                 lines.Add($"Potenza tratti: {ExtractorTooltipTexts.WrapValue(first.TraitPowerPercent.ToString() + "%")}");
             if (!string.IsNullOrWhiteSpace(first.ReagentUsedMetadata))
@@ -345,8 +417,13 @@ namespace Sporae.UI.UIToolkit.Lab
                     if (_reagentTypeId != Items.ReagentX)
                     {
                         _selectedFamilyX = null;
-                        _selectedTrait1X = null;
-                        _selectedTrait2X = null;
+                        _selectedActivePowerX = null;
+                        _selectedPassivePowerX = null;
+                        _selectedCareProfileValue = "BLEND";
+                        _selectedNameX = null;
+                        _nameModeIsCustom = false;
+                        _dominantGenomeForCustomName = DominantGenomeAuto;
+                        _pendingReagentX = null;
                     }
                     RefreshDisplay();
                 },
@@ -367,13 +444,24 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 _incubationDay = 0;
                 var seed = BuildSeedOutputFromIncubation();
+                _pendingReagentX = null;
                 if (seed != null)
                     _outputSeeds.Add(seed);
                 _incubatingPreSeed = null;
                 if (foundation != null && foundation.Enabled)
                 {
                     foundation.RemoveToast(IncubatorProgressToastKey);
-                    foundation.UpsertToast(IncubatorDoneToastKey, "LAB-INC-DONE", new NotificationPayload().With("count", _outputSeeds.Count.ToString()));
+                    var first = _outputSeeds.Count > 0 ? _outputSeeds[0] : null;
+                    int qty = _outputSeeds.Count;
+                    string displayName = first != null
+                        ? PlayerInventoryPanelController.GetItemDisplayName(first.TypeId, first)
+                        : "Seme";
+                    BuildIncubatorCollectedProfile(first, out string profile, out string detail);
+                    foundation.UpsertToast(IncubatorDoneToastKey, "LAB-INC-DONE", new NotificationPayload()
+                        .With("itemName", string.IsNullOrWhiteSpace(displayName) ? "Seme" : displayName)
+                        .With("quantity", Mathf.Max(1, qty).ToString())
+                        .With("profile", profile ?? string.Empty)
+                        .With("detail", detail ?? string.Empty));
                 }
             }
             RefreshDisplay();
@@ -420,8 +508,6 @@ namespace Sporae.UI.UIToolkit.Lab
                     && _gameManager != null && _gameManager.ActionSystem != null && _gameManager.ActionSystem.ActionsLeft >= _costAction;
                 if (canAvvia && !string.IsNullOrEmpty(_reagentTypeId))
                     canAvvia = _gameManager.PlayerInventory.Has(_reagentTypeId);
-                if (canAvvia && requireXSetup)
-                    canAvvia = IsReagentXSelectionValid();
                 _btnAvvia.SetEnabled(canAvvia);
             }
             if (_btnClearReagent != null)
@@ -439,16 +525,42 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!string.IsNullOrEmpty(_reagentTypeId) && !_gameManager.PlayerInventory.Has(_reagentTypeId))
                 return;
             if (RequiresReagentXSetup() && !IsReagentXSelectionValid())
+            {
+                var f0 = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+                if (f0 != null && f0.Enabled)
+                    f0.PostToastImmediate("LAB-INC-X-INCOMPLETE");
                 return;
+            }
+
+            PendingReagentXSnapshot capX = null;
+            if (RequiresReagentXSetup())
+            {
+                capX = new PendingReagentXSnapshot
+                {
+                    Family = _selectedFamilyX,
+                    ActivePower = _selectedActivePowerX,
+                    PassivePower = _selectedPassivePowerX,
+                    CareProfile = _selectedCareProfileValue,
+                    NameModeCustom = _nameModeIsCustom,
+                    CustomName = _nameCustomField?.value?.Trim(),
+                    SelectedMixName = _selectedNameX,
+                    DominantGenome = _dominantGenomeForCustomName ?? DominantGenomeAuto
+                };
+            }
 
             if (!_gameManager.TrySpendAction(_costAction))
                 return;
+
+            _pendingReagentX = capX;
 
             var dayActivityLog = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
             if (dayActivityLog != null)
                 dayActivityLog.RecordLabAction("Incubator");
             if (!_gameManager.PlayerInventory.TryRemoveFirst(Items.PreSeed, out _incubatingPreSeed))
+            {
+                _pendingReagentX = null;
                 return;
+            }
             if (!string.IsNullOrEmpty(_reagentTypeId))
                 _gameManager.PlayerInventory.Consume(_reagentTypeId, 1);
 
@@ -494,10 +606,26 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             if (!RequiresReagentXSetup()) return true;
             if (string.IsNullOrWhiteSpace(_selectedFamilyX)) return false;
-            if (string.IsNullOrWhiteSpace(_selectedTrait1X)) return false;
-            if (string.IsNullOrWhiteSpace(_selectedNameX)) return false;
-            if (string.Equals(_selectedNameX, CustomNameOption, System.StringComparison.OrdinalIgnoreCase))
-                return !string.IsNullOrWhiteSpace(_nameCustomField?.value);
+            if (_nameModeIsCustom)
+            {
+                if (string.IsNullOrWhiteSpace(_nameCustomField?.value?.Trim()))
+                    return false;
+            }
+            else if (string.IsNullOrWhiteSpace(_selectedNameX))
+                return false;
+
+            var pre = GetPreviewPreSeed();
+            if (pre != null)
+            {
+                bool needActive = BuildActivePowerOptions(pre).Exists(s => s != NoPowerChoice);
+                bool needPassive = BuildPassivePowerOptions(pre).Exists(s => s != NoPowerChoice);
+                if (needActive && (string.IsNullOrWhiteSpace(_selectedActivePowerX) ||
+                                   string.Equals(_selectedActivePowerX, NoPowerChoice, StringComparison.Ordinal)))
+                    return false;
+                if (needPassive && (string.IsNullOrWhiteSpace(_selectedPassivePowerX) ||
+                                    string.Equals(_selectedPassivePowerX, NoPowerChoice, StringComparison.Ordinal)))
+                    return false;
+            }
             return true;
         }
 
@@ -513,18 +641,119 @@ namespace Sporae.UI.UIToolkit.Lab
                 _xConfigRow.style.display = showX ? DisplayStyle.Flex : DisplayStyle.None;
             if (!showX) return;
 
+            if (_incubationDay != 0 && _pendingReagentX != null)
+                return;
+
             var preSeed = GetPreviewPreSeed();
             var familyOptions = BuildFamilyOptionsForX(preSeed);
-            var traitOptions = BuildTraitOptionsForX(preSeed);
-            var nameOptions = BuildNameOptionsForX(preSeed);
+            var activeOpts = BuildActivePowerOptions(preSeed);
+            var passiveOpts = BuildPassivePowerOptions(preSeed);
+            var nameOptions = BuildNameOptionsForX(preSeed, _nameChoiceToReferencePlantCode);
 
             SetDropdownChoices(_familyDropdown, familyOptions, ref _selectedFamilyX);
-            SetDropdownChoices(_trait1Dropdown, traitOptions, ref _selectedTrait1X);
-            SetDropdownChoicesWithExclude(_trait2Dropdown, traitOptions, ref _selectedTrait2X, _selectedTrait1X);
+            SetDropdownChoices(_activePowerDropdown, activeOpts, ref _selectedActivePowerX);
+            SetDropdownChoices(_passivePowerDropdown, passiveOpts, ref _selectedPassivePowerX);
             SetDropdownChoices(_nameDropdown, nameOptions, ref _selectedNameX);
+            _nameModeIsCustom = string.Equals(_nameDropdown?.value, CustomNameOption, StringComparison.OrdinalIgnoreCase);
+            if (_nameModeIsCustom)
+                _selectedNameX = _nameCustomField?.value?.Trim();
+            SyncCareProfileDropdown();
+            SyncDominantGenomeUi();
+        }
+
+        private void SyncDominantGenomeUi()
+        {
+            var preSeed = GetPreviewPreSeed();
+            var codes = ItemFabric.ParseParentPlantCodes(preSeed?.SourcePlantCodeMetadata ?? "");
+            bool twoParents = codes.Count >= 2 &&
+                !string.Equals(codes[0], codes[1], StringComparison.OrdinalIgnoreCase);
+            bool showDominant = RequiresReagentXSetup() && _nameModeIsCustom && twoParents;
 
             if (_nameCustomRow != null)
-                _nameCustomRow.style.display = string.Equals(_selectedNameX, "Nome personalizzato", System.StringComparison.OrdinalIgnoreCase) ? DisplayStyle.Flex : DisplayStyle.None;
+                _nameCustomRow.style.display = _nameModeIsCustom ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_dominantGenomeRow != null)
+                _dominantGenomeRow.style.display = showDominant ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (_dominantGenomeDropdown == null || !showDominant)
+                return;
+
+            string la = string.IsNullOrWhiteSpace(codes[0]) ? "—" : (GetPlantBaseName(codes[0]) ?? codes[0]);
+            string lb = codes.Count > 1 && !string.IsNullOrWhiteSpace(codes[1])
+                ? (GetPlantBaseName(codes[1]) ?? codes[1])
+                : "—";
+            var labels = new List<string>
+            {
+                "Automatico (specie da famiglia scelta)",
+                $"Genitore A — {la}",
+                $"Genitore B — {lb}"
+            };
+            _dominantGenomeDropdown.choices = labels;
+            int idx = 0;
+            for (int j = 0; j < DominantGenomeValueOrder.Length; j++)
+            {
+                if (string.Equals(DominantGenomeValueOrder[j], _dominantGenomeForCustomName, StringComparison.OrdinalIgnoreCase))
+                {
+                    idx = j;
+                    break;
+                }
+            }
+            if (idx < 0 || idx >= labels.Count) idx = 0;
+            _dominantGenomeForCustomName = DominantGenomeValueOrder[idx];
+            _dominantGenomeDropdown.index = idx;
+        }
+
+        private void SyncCareProfileDropdown()
+        {
+            if (_careProfileDropdown == null) return;
+            _careProfileDropdown.choices = CareProfileLabels.ToList();
+            int idx = Array.IndexOf(CareProfileValues, _selectedCareProfileValue);
+            if (idx < 0) idx = 0;
+            _selectedCareProfileValue = CareProfileValues[idx];
+            _careProfileDropdown.index = idx;
+        }
+
+        private static string FirstDescriptorLine(string multilineOrSingle)
+        {
+            if (string.IsNullOrWhiteSpace(multilineOrSingle)) return null;
+            int cut = multilineOrSingle.IndexOfAny(new[] { '\r', '\n' });
+            string s = cut < 0 ? multilineOrSingle.Trim() : multilineOrSingle.Substring(0, cut).Trim();
+            return string.IsNullOrEmpty(s) ? null : s;
+        }
+
+        private static List<string> BuildActivePowerOptions(Item preSeed)
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var code in ItemFabric.ParseParentPlantCodes(preSeed?.SourcePlantCodeMetadata))
+            {
+                var pd = PlantDatabase.Instance?.GetPlantDataByCode(code);
+                if (pd == null) continue;
+                string line = FirstDescriptorLine(pd.ActivePower);
+                if (!string.IsNullOrEmpty(line)) set.Add(line);
+            }
+            var list = set.ToList();
+            list.Sort(StringComparer.OrdinalIgnoreCase);
+            if (list.Count == 0)
+                return new List<string> { NoPowerChoice };
+            list.Insert(0, NoPowerChoice);
+            return list;
+        }
+
+        private static List<string> BuildPassivePowerOptions(Item preSeed)
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var code in ItemFabric.ParseParentPlantCodes(preSeed?.SourcePlantCodeMetadata))
+            {
+                var pd = PlantDatabase.Instance?.GetPlantDataByCode(code);
+                if (pd == null) continue;
+                string line = FirstDescriptorLine(pd.PassivePower);
+                if (!string.IsNullOrEmpty(line)) set.Add(line);
+            }
+            var list = set.ToList();
+            list.Sort(StringComparer.OrdinalIgnoreCase);
+            if (list.Count == 0)
+                return new List<string> { NoPowerChoice };
+            list.Insert(0, NoPowerChoice);
+            return list;
         }
 
         /// <summary>Solo le famiglie possibili del Pre-Seed (A e B). Fallback STANDARD se preSeed senza famiglia.</summary>
@@ -544,24 +773,25 @@ namespace Sporae.UI.UIToolkit.Lab
             return options;
         }
 
-        /// <summary>Solo i tratti esistenti per le famiglie del Pre-Seed. Fallback un tratto se lista vuota (altrimenti Avvia resterebbe disabilitato).</summary>
-        private static List<string> BuildTraitOptionsForX(Item preSeed)
-        {
-            string csv = preSeed?.CandidateTraitsCsv;
-            if (string.IsNullOrWhiteSpace(csv) && preSeed != null)
-                csv = ItemFabric.BuildCandidateTraitsCsv(preSeed.ParentFamilyA, preSeed.ParentFamilyB);
-            var parsed = ItemFabric.ParseTraits(csv);
-            if (parsed.Count == 0 && preSeed != null)
-                parsed.Add("BalancedGrowth");
-            return parsed;
-        }
-
         private const string CustomNameOption = "Nome personalizzato";
+        private const string DominantGenomeAuto = "AUTO";
+        private const string DominantGenomeParentA = "PARENT_A";
+        private const string DominantGenomeParentB = "PARENT_B";
+        private static readonly string[] DominantGenomeValueOrder = { DominantGenomeAuto, DominantGenomeParentA, DominantGenomeParentB };
 
         /// <summary>Opzioni nome: stessa pianta = un solo nome madre; ibrido = mix dei due nomi + Nome personalizzato. Fallback "Seme" se metadata assente.</summary>
-        private static List<string> BuildNameOptionsForX(Item preSeed)
+        /// <param name="referencePlantCodeByLabel">Se non null, per ogni voce (tranne nome personalizzato) viene impostato il <see cref="PlantData.PlantCode"/> usato come specie del seme.</param>
+        private static List<string> BuildNameOptionsForX(Item preSeed, Dictionary<string, string> referencePlantCodeByLabel = null)
         {
+            void MapRef(string label, string code)
+            {
+                if (referencePlantCodeByLabel == null || string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(code))
+                    return;
+                referencePlantCodeByLabel[label.Trim()] = code.Trim();
+            }
+
             var list = new List<string>();
+            referencePlantCodeByLabel?.Clear();
             if (preSeed == null)
                 return list;
             if (string.IsNullOrWhiteSpace(preSeed.SourcePlantCodeMetadata))
@@ -569,9 +799,9 @@ namespace Sporae.UI.UIToolkit.Lab
                 list.Add("Seme");
                 return list;
             }
-            var parts = preSeed.SourcePlantCodeMetadata.Split('|');
-            string codeA = parts.Length > 0 ? parts[0]?.Trim() : null;
-            string codeB = parts.Length > 1 ? parts[1]?.Trim() : null;
+            var codes = ItemFabric.ParseParentPlantCodes(preSeed.SourcePlantCodeMetadata);
+            string codeA = codes.Count > 0 ? codes[0] : null;
+            string codeB = codes.Count > 1 ? codes[1] : null;
             string nameA = GetPlantBaseName(codeA);
             string nameB = GetPlantBaseName(codeB);
             if (string.IsNullOrEmpty(nameA)) nameA = codeA ?? "—";
@@ -582,6 +812,7 @@ namespace Sporae.UI.UIToolkit.Lab
             if (samePlant || string.IsNullOrEmpty(codeB))
             {
                 list.Add(nameA);
+                MapRef(nameA, codeA);
                 if (list.Count == 1)
                     list.Add(CustomNameOption);
                 return list;
@@ -590,13 +821,25 @@ namespace Sporae.UI.UIToolkit.Lab
             var wordsB = nameB.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
             if (wordsA.Count >= 2 && wordsB.Count >= 2)
             {
-                list.Add($"{wordsB[0]} {wordsA[1]}");
-                list.Add($"{wordsA[0]} {wordsB[1]}");
-                list.Add($"{wordsA[1]} {wordsB[0]}");
-                list.Add($"{wordsB[1]} {wordsA[0]}");
+                string o1 = $"{wordsB[0]} {wordsA[1]}";
+                list.Add(o1);
+                MapRef(o1, codeB);
+                string o2 = $"{wordsA[0]} {wordsB[1]}";
+                list.Add(o2);
+                MapRef(o2, codeA);
+                string o3 = $"{wordsA[1]} {wordsB[0]}";
+                list.Add(o3);
+                MapRef(o3, codeA);
+                string o4 = $"{wordsB[1]} {wordsA[0]}";
+                list.Add(o4);
+                MapRef(o4, codeB);
             }
-            list.Add($"{nameA} × {nameB}");
-            list.Add($"{nameB} × {nameA}");
+            string xa = $"{nameA} × {nameB}";
+            list.Add(xa);
+            MapRef(xa, codeA);
+            string xb = $"{nameB} × {nameA}";
+            list.Add(xb);
+            MapRef(xb, codeB);
             list.Add(CustomNameOption);
             return list;
         }
@@ -630,24 +873,30 @@ namespace Sporae.UI.UIToolkit.Lab
             field.value = selected;
         }
 
-        /// <summary>Come SetDropdownChoices ma preferisce un valore diverso da exclude (es. per Tratto 2 rispetto a Tratto 1).</summary>
-        private static void SetDropdownChoicesWithExclude(DropdownField field, List<string> choices, ref string selected, string exclude)
+        /// <summary>True se il seme deriva da incrocio (due linee in metadata o due famiglie genitrici distinte).</summary>
+        public static bool IsLabHybridProfileSeed(Item seed)
         {
-            if (field == null) return;
-            field.choices = choices;
-            if (choices == null || choices.Count == 0)
-            {
-                selected = null;
-                field.value = "";
+            if (seed == null) return false;
+            if (!string.IsNullOrEmpty(seed.SourcePlantCodeMetadata) && seed.SourcePlantCodeMetadata.Contains("|"))
+                return true;
+            if (!string.IsNullOrWhiteSpace(seed.ParentFamilyA) && !string.IsNullOrWhiteSpace(seed.ParentFamilyB)
+                && !string.Equals(seed.ParentFamilyA, seed.ParentFamilyB, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }
+
+        private static void BuildIncubatorCollectedProfile(Item firstSeed, out string profile, out string detail)
+        {
+            const string baseDetailIt = "Ritira l'output dall'Incubatore per aggiungere i semi all'inventario.";
+            profile = string.Empty;
+            detail = baseDetailIt;
+            if (firstSeed == null || !IsLabHybridProfileSeed(firstSeed))
                 return;
-            }
-            if (string.IsNullOrWhiteSpace(selected) || !choices.Contains(selected) || selected == exclude)
-            {
-                selected = choices.Count >= 2 && !string.IsNullOrEmpty(exclude)
-                    ? choices.FirstOrDefault(c => !c.Equals(exclude, System.StringComparison.OrdinalIgnoreCase)) ?? choices[0]
-                    : choices[0];
-            }
-            field.value = selected;
+            string fam = string.IsNullOrWhiteSpace(firstSeed.FamilyMetadata) ? "—" : firstSeed.FamilyMetadata.Trim();
+            string traits = string.IsNullOrWhiteSpace(firstSeed.SelectedTraitsCsv) ? "—" : firstSeed.SelectedTraitsCsv.Trim();
+            string reag = string.IsNullOrWhiteSpace(firstSeed.ReagentUsedMetadata) ? "—" : firstSeed.ReagentUsedMetadata.Trim();
+            profile = $" — {fam} | {traits}";
+            detail = $"Profilo Lab: famiglia {fam}, tratti: {traits}, reagente: {reag}.\n{baseDetailIt}";
         }
 
         private Item BuildSeedOutputFromIncubation()
@@ -664,16 +913,33 @@ namespace Sporae.UI.UIToolkit.Lab
             string traitsResult;
             int traitPower;
 
+            string activePick = null;
+            string passivePick = null;
+            string careProfile = null;
+
+            PendingReagentXSnapshot xSnap = (_reagentTypeId == Items.ReagentX) ? _pendingReagentX : null;
+            bool useXSnap = xSnap != null;
+
             if (_reagentTypeId == Items.ReagentX)
             {
-                familyResult = string.IsNullOrWhiteSpace(_selectedFamilyX)
+                string famPick = useXSnap ? xSnap.Family : _selectedFamilyX;
+                familyResult = string.IsNullOrWhiteSpace(famPick)
                     ? ItemFabric.NormalizeFamily(_incubatingPreSeed.ParentFamilyA)
-                    : _selectedFamilyX;
-                var chosen = new List<string>();
-                if (!string.IsNullOrWhiteSpace(_selectedTrait1X)) chosen.Add(_selectedTrait1X);
-                if (!string.IsNullOrWhiteSpace(_selectedTrait2X) && !_selectedTrait2X.Equals(_selectedTrait1X)) chosen.Add(_selectedTrait2X);
-                traitsResult = string.Join(",", chosen);
+                    : famPick;
+                string actRaw = useXSnap ? xSnap.ActivePower : _selectedActivePowerX;
+                string pasRaw = useXSnap ? xSnap.PassivePower : _selectedPassivePowerX;
+                activePick = string.IsNullOrWhiteSpace(actRaw) ||
+                             string.Equals(actRaw, NoPowerChoice, StringComparison.Ordinal)
+                    ? null
+                    : actRaw;
+                passivePick = string.IsNullOrWhiteSpace(pasRaw) ||
+                              string.Equals(pasRaw, NoPowerChoice, StringComparison.Ordinal)
+                    ? null
+                    : pasRaw;
+                traitsResult = ItemFabric.BuildSelectedTraitsCsvFromPowerChoices(activePick, passivePick);
                 traitPower = 100;
+                string careSrc = useXSnap ? xSnap.CareProfile : _selectedCareProfileValue;
+                careProfile = string.IsNullOrWhiteSpace(careSrc) ? "BLEND" : careSrc.Trim();
             }
             else if (_reagentTypeId == Items.ReagentY)
             {
@@ -682,7 +948,7 @@ namespace Sporae.UI.UIToolkit.Lab
                 if (pool.Count == 0)
                     pool = ItemFabric.ParseTraits(ItemFabric.BuildCandidateTraitsCsv(_incubatingPreSeed.ParentFamilyA, _incubatingPreSeed.ParentFamilyB));
                 string picked = pool.OrderBy(t => t).FirstOrDefault() ?? "BalancedGrowth";
-                traitsResult = picked;
+                traitsResult = ItemFabric.NormalizeTraitsRowToGameplayTagCsv(picked);
                 traitPower = 100;
             }
             else
@@ -693,23 +959,54 @@ namespace Sporae.UI.UIToolkit.Lab
                 familyResult = sameFamily ? fa : $"HYBRID-WEAK({fa}/{fb})";
                 var pool = ItemFabric.ParseTraits(_incubatingPreSeed.CandidateTraitsCsv);
                 string picked = pool.OrderBy(t => t).FirstOrDefault() ?? "BalancedGrowth";
-                traitsResult = picked;
+                traitsResult = ItemFabric.NormalizeTraitsRowToGameplayTagCsv(picked);
                 traitPower = 50;
             }
 
             string chosenPlantName = null;
+            bool nameModeCustom = false;
+            string dominantGenomeValue = DominantGenomeAuto;
             if (_reagentTypeId == Items.ReagentX)
             {
-                if (string.Equals(_selectedNameX, CustomNameOption, System.StringComparison.OrdinalIgnoreCase))
-                    chosenPlantName = _nameCustomField?.value?.Trim();
-                else
-                    chosenPlantName = _selectedNameX;
+                nameModeCustom = useXSnap ? xSnap.NameModeCustom : _nameModeIsCustom;
+                dominantGenomeValue = useXSnap
+                    ? (string.IsNullOrWhiteSpace(xSnap.DominantGenome) ? DominantGenomeAuto : xSnap.DominantGenome)
+                    : _dominantGenomeForCustomName;
+                chosenPlantName = nameModeCustom
+                    ? (useXSnap ? xSnap.CustomName : _nameCustomField?.value?.Trim())
+                    : (useXSnap ? xSnap.SelectedMixName : _selectedNameX);
             }
             else
             {
-                var nameOpts = BuildNameOptionsForX(_incubatingPreSeed);
+                var nameOpts = BuildNameOptionsForX(_incubatingPreSeed, null);
                 if (nameOpts.Count > 0 && nameOpts[0] != CustomNameOption)
                     chosenPlantName = nameOpts[0];
+            }
+
+            if (_reagentTypeId == Items.ReagentX)
+            {
+                string refPlantOverride = null;
+                if (nameModeCustom)
+                {
+                    var pcodes = ItemFabric.ParseParentPlantCodes(_incubatingPreSeed.SourcePlantCodeMetadata);
+                    if (string.Equals(dominantGenomeValue, DominantGenomeParentA, StringComparison.OrdinalIgnoreCase) &&
+                        pcodes.Count > 0)
+                        refPlantOverride = pcodes[0];
+                    else if (string.Equals(dominantGenomeValue, DominantGenomeParentB, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (pcodes.Count > 1) refPlantOverride = pcodes[1];
+                        else if (pcodes.Count > 0) refPlantOverride = pcodes[0];
+                    }
+                    else
+                        refPlantOverride = ItemFabric.TryResolveReferencePlantCodeFromPowerChoices(
+                            _incubatingPreSeed, activePick, passivePick);
+                }
+                // Per i nomi non-custom (preset/mix) NON forziamo la specie:
+                // la specie resta determinata da famiglia selezionata + risoluzione standard in ItemFabric.
+                // Questo evita mismatch tipo "nome mix Evil/Pure" che forza accidentalmente PLT-PURE-001.
+                return ItemFabric.CreateSeedFromPreSeed(
+                    _incubatingPreSeed, familyResult, traitsResult, traitPower, _reagentTypeId, chosenPlantName,
+                    refPlantOverride, activePick, passivePick, careProfile);
             }
             return ItemFabric.CreateSeedFromPreSeed(_incubatingPreSeed, familyResult, traitsResult, traitPower, _reagentTypeId, chosenPlantName);
         }

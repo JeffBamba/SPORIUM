@@ -241,9 +241,14 @@
                 <ui:Label name="dome-hud-tooltip-ph-sec1" text="REQUISITI E AVANZAMENTO" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--section" style="color: rgb(200, 203, 200);" />
                 <ui:Label text="  Idratazione   : 30–70%" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
                 <ui:Label text="  LED           : nessuno" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
+                <ui:Label text="  Fertilizzante : 0–60% (opzionale Seme/Germoglio)" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
+                <ui:Label text="  Durata        : 2 giorni" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
                 <ui:VisualElement class="dome-hud-tooltip-sep" />
                 <ui:Label name="dome-hud-tooltip-ph-sec2" text="STATO ATTUALE" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--section" style="color: rgb(200, 203, 200);" />
                 <ui:Label text="  Idratazione   : 0%" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(211, 95, 95);" />
+                <ui:Label text="  Fertilizzante : non necessario in questo stadio" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(192, 200, 197);" />
+                <ui:Label text="  LED           : OFF" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(211, 95, 95);" />
+                <ui:Label text="  Light stress  : 40% (20–80% ideale)" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(230, 201, 111);" />
                 <ui:Label text="  Condizione    : Appassita (50%)" class="dome-hud-tooltip-line dome-hud-tooltip-line--kv" style="color: rgb(230, 201, 111);" />
                 <ui:VisualElement class="dome-hud-tooltip-sep" />
                 <ui:Label text="── Poteri (vaso attivo) ──" class="dome-hud-tooltip-line dome-hud-tooltip-line--bold dome-hud-tooltip-line--poteri-h" style="color: rgb(80, 200, 220);" />

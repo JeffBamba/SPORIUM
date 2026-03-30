@@ -17,6 +17,7 @@ public class CryoPlantPayload
     public int PlantGeneticType; // GeneticType enum salvato come int per serializzazione JSON
     public string SelectedTraitsCsv;
     public int TraitPowerPercent = 100;
+    public string LabCareProfileMetadata;
     public string CustomPlantName;
     public string ActivePowerLabel;
     public string PassivePowerLabel;
@@ -42,6 +43,7 @@ public class CryoPlantPayload
             PlantGeneticType       = (int)s.PlantGeneticType,
             SelectedTraitsCsv      = s.SelectedTraitsCsv,
             TraitPowerPercent      = s.TraitPowerPercent,
+            LabCareProfileMetadata = s.LabCareProfileMetadata,
             CustomPlantName        = s.CustomPlantName,
             ActivePowerLabel       = s.ActivePowerLabel,
             PassivePowerLabel      = s.PassivePowerLabel,
@@ -67,6 +69,7 @@ public class CryoPlantPayload
         s.PlantGeneticType       = (GeneticType)PlantGeneticType;
         s.SelectedTraitsCsv      = SelectedTraitsCsv;
         s.TraitPowerPercent      = TraitPowerPercent;
+        s.LabCareProfileMetadata = LabCareProfileMetadata;
         s.CustomPlantName        = CustomPlantName;
         s.ActivePowerLabel       = ActivePowerLabel;
         s.PassivePowerLabel      = PassivePowerLabel;

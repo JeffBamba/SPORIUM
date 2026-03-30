@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
@@ -25,9 +26,12 @@ namespace Sporae.Dome.PotSystem.Growth
                 return result;
             }
             
-            // Ottieni requisiti per lo stadio corrente
+            // Ottieni requisiti per lo stadio corrente (specie seme vs genitore A/B se profilo Lab — Task 6)
             PlantStage currentStage = (PlantStage)pot.Stage;
-            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            PlantData careData = LabHybridGameplayModifiers.ResolvePlantDataForCareRequirements(pot, plantData) ?? plantData;
+            StageRequirements stageReq = careData != null
+                ? careData.GetStageRequirements(currentStage)
+                : null;
             
             if (stageReq == null)
             {
@@ -118,8 +122,8 @@ namespace Sporae.Dome.PotSystem.Growth
                 return stressInOptimalRange;
             }
             
-            // Verifica LED richiesto quando LED è acceso
-            if (!stageReq.IsLedRequirementMet(pot.LedSystemState))
+            // Verifica LED richiesto quando LED è acceso (ibridi LED_ADAPT: tolleranza Task 6)
+            if (!LabHybridGameplayModifiers.IsLedRequirementMetWithHybridTolerance(stageReq, pot))
                 return false;
             
             // Verifica intensità luce nel range (se implementato)
