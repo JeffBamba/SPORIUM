@@ -14497,6 +14497,7 @@ GameObject:
   - component: {fileID: 606924781}
   - component: {fileID: 606924780}
   - component: {fileID: 606924779}
+  - component: {fileID: 606924782}
   m_Layer: 5
   m_Name: HUD_TopBar
   m_TagString: Untagged
@@ -14561,6 +14562,21 @@ MonoBehaviour:
   _phTooltipTitleFont: {fileID: 12800000, guid: ea0fa6fd95d52a040a1114dd12f304e3, type: 3}
   _glowFrameMaterial: {fileID: 2100000, guid: e170c7eca5aa4c242a5ee6334677476f, type: 2}
   _glowFrameLiveUpdate: 1
+--- !u!114 &606924782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606924777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f3a9c2e1d4b8a6f90e1c2d3b4a5f678, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enable: 1
+  _cursorOverride: {fileID: 0}
+  _hotspotOverride: {x: 0, y: 0}
 --- !u!114 &606924781
 MonoBehaviour:
   m_ObjectHideFlags: 0

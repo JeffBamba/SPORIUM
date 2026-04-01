@@ -17,7 +17,7 @@ using Sporae.UI.UIToolkit.NotificationsFoundation;
 namespace _Project
 {
     /// <summary>
-    /// Controller della sequenza End of Day: Conferma → Snapshot → Diario → (Night Research se azioni≥1) → Forecast → Sleep → Dawn → Hide.
+    /// Controller della sequenza Fine giornata: Conferma → Snapshot → Diario → (ricerca notturna se azioni≥1) → Previsione → Riposo → Alba → chiusura.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class EndOfDaySequenceController : MonoBehaviour
@@ -296,8 +296,8 @@ namespace _Project
             if (step == 5) PopulateForecast();
             if (step == 7)
             {
-                if (_eodDayFrom != null) _eodDayFrom.text = $"DAY {_dayBeforeTransition:D2}";
-                if (_eodDayTo != null) _eodDayTo.text = $"→ DAY {_dayBeforeTransition + 1:D2}";
+                if (_eodDayFrom != null) _eodDayFrom.text = $"GIORNO {_dayBeforeTransition:D2}";
+                if (_eodDayTo != null) _eodDayTo.text = $"→ GIORNO {_dayBeforeTransition + 1:D2}";
             }
         }
 
@@ -312,23 +312,23 @@ namespace _Project
         private void PopulateSnapshot()
         {
             int day = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 0;
-            if (_snapshotTitle != null) _snapshotTitle.text = $"SPORAE — Day {day}";
-            if (_snapshotDate != null) _snapshotDate.text = "System Date: " + System.DateTime.Now.ToString("dd.MM.yyyy");
-            if (_snapshotVault != null) _snapshotVault.text = "Vault Status: Operational";
+            if (_snapshotTitle != null) _snapshotTitle.text = $"SPORAE — Giorno {day}";
+            if (_snapshotDate != null) _snapshotDate.text = "Data di sistema: " + System.DateTime.Now.ToString("dd.MM.yyyy");
+            if (_snapshotVault != null) _snapshotVault.text = "Stato Vault: operativo";
 
-            string phLine = "Dome pH: —";
+            string phLine = "pH Cupola: —";
             if (_phSystem != null)
-                phLine = $"Dome pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})";
+                phLine = $"pH Cupola: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})";
             if (_snapshotPh != null) _snapshotPh.text = phLine;
 
             var sb = new StringBuilder();
             if (_diaryStatistics != null)
             {
                 int max = _gameManager?.ActionSystem?.MaxActions ?? 4;
-                sb.AppendLine($"Actions used: {_diaryStatistics.ActionsSpent}/{max}");
-                sb.AppendLine($"CRY earned: {_diaryStatistics.CryEarned}, spent: {_diaryStatistics.CrySpent}");
+                sb.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent}/{max}");
+                sb.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
                 if (_gameManager != null)
-                    sb.AppendLine($"Balance: {_gameManager.CurrentCRY} CRY");
+                    sb.AppendLine($"Saldo: {_gameManager.CurrentCRY} CRY");
             }
             if (_dayActivityLog != null)
             {
@@ -355,17 +355,17 @@ namespace _Project
                         string displayName = PlantDatabase.Instance?.GetPlantDataByCode(plantCode)?.name ?? plantCode;
                         harvestParts.Add($"{amount} {displayName} (L{level})");
                     }
-                    sb.AppendLine("Harvested: " + string.Join(", ", harvestParts) + ".");
+                    sb.AppendLine("Raccolto: " + string.Join(", ", harvestParts) + ".");
                 }
 
                 var waterPots = new List<string>();
                 foreach (var e in domeEntries)
                 {
                     if (e.ActionKind == "Water" && !string.IsNullOrEmpty(e.PotId))
-                        waterPots.Add("Pot " + FormatPotNumber(e.PotId));
+                        waterPots.Add("POT " + FormatPotNumber(e.PotId));
                 }
                 if (waterPots.Count > 0)
-                    sb.AppendLine("Watered " + string.Join(", ", waterPots.Distinct()) + ".");
+                    sb.AppendLine("Annaffiati " + string.Join(", ", waterPots.Distinct()) + ".");
 
                 var bestPerPot = new Dictionary<string, DayActivityLog.DomeActivityEntry>();
                 int actionPriority(string k) => k == "Plant" ? 5 : k == "Water" ? 4 : k == "Light" ? 3 : k == "Fertilize" ? 2 : k == "Pruning" ? 1 : 0;
@@ -421,16 +421,16 @@ namespace _Project
                 var conditions = _dayCycleController.GetActiveConditionsForReport();
                 if (conditions.Count > 0)
                 {
-                    sb.AppendLine("Active conditions:");
+                    sb.AppendLine("Condizioni attive:");
                     foreach (var c in conditions)
                     {
-                        string severity = c.IsInfested ? "Infestation" : (c.MoldRiskLevel >= 2 ? "Severe Mold Risk" : "Light Mold Risk");
-                        sb.AppendLine($"  Pot {FormatPotNumber(c.PotId)}: {severity} (mold risk if untreated tomorrow).");
+                        string severity = c.IsInfested ? "Infestazione" : (c.MoldRiskLevel >= 2 ? "Rischio muffa grave" : "Rischio muffa lieve");
+                        sb.AppendLine($"  POT {FormatPotNumber(c.PotId)}: {severity} (rischio muffa se non trattato domani).");
                     }
                 }
             }
 
-            string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : "No activity recorded.";
+            string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : "Nessuna attività registrata.";
             if (_activitySummary != null)
             {
                 _activitySummary.enableRichText = true;
@@ -441,14 +441,14 @@ namespace _Project
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string phDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
             string phTrendLine = _phSystem != null
-                ? $"pH trend: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()}), drift {phDriftStr}"
-                : "pH trend: —";
+                ? $"Andamento pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()}), deriva {phDriftStr}"
+                : "Andamento pH: —";
 
             var driftSb = new StringBuilder();
-            driftSb.AppendLine("Drift & Consequences:");
+            driftSb.AppendLine("Deriva e conseguenze:");
             driftSb.AppendLine(phTrendLine);
-            driftSb.AppendLine("The Dome breathes.");
-            driftSb.AppendLine(PlaceholderOpen + "Consequence: pH stabilized / environmental note [placeholder: collegare a eventi]" + PlaceholderClose);
+            driftSb.AppendLine("La Cupola respira.");
+            driftSb.AppendLine(PlaceholderOpen + "Conseguenza: pH stabilizzato / nota ambientale [placeholder: collegare a eventi]" + PlaceholderClose);
             if (_drift != null)
             {
                 _drift.enableRichText = true;
@@ -456,20 +456,20 @@ namespace _Project
             }
 
             var notesSb = new StringBuilder();
-            notesSb.AppendLine("[NOTES & TAGS]");
-            notesSb.AppendLine("Inventory ......... " + BuildInventorySummary());
-            notesSb.AppendLine("Seed Storage ...... " + BuildSeedStorageSummary());
-            notesSb.AppendLine("Research .......... ON HOLD");
+            notesSb.AppendLine("[NOTE E TAG]");
+            notesSb.AppendLine("Inventario ........ " + BuildInventorySummary());
+            notesSb.AppendLine("Deposito semi ..... " + BuildSeedStorageSummary());
+            notesSb.AppendLine("Ricerca ........... IN ATTESA");
             notesSb.AppendLine();
-            notesSb.AppendLine("Kitchen Food ...... " + BuildKitchenFoodSummary());
-            notesSb.AppendLine("Potable Water ..... " + BuildPotableWaterSummary());
+            notesSb.AppendLine("Cibo cucina ....... " + BuildKitchenFoodSummary());
+            notesSb.AppendLine("Acqua potabile .... " + BuildPotableWaterSummary());
             notesSb.AppendLine();
-            notesSb.Append("Warning ............ ");
+            notesSb.Append("Avviso .............. ");
             if (_dayCycleController != null)
             {
                 var moldPots = _dayCycleController.GetActiveConditionsForReport().Select(c => FormatPotNumber(c.PotId)).Distinct().ToList();
                 if (moldPots.Count > 0)
-                    notesSb.Append($"Mold risk in Pot {string.Join(", ", moldPots)}.");
+                    notesSb.Append($"Rischio muffa nel POT {string.Join(", ", moldPots)}.");
                 else
                     notesSb.Append("—");
             }
@@ -511,12 +511,12 @@ namespace _Project
             if (spores > 0)
             {
                 if (pure > 0 || evil > 0 || standard > 0)
-                    parts.Add($"{spores} spores (Pure: {pure}, Evil: {evil}, Standard: {standard})");
+                    parts.Add($"{spores} spore (Puri: {pure}, Malvagi: {evil}, Standard: {standard})");
                 else
-                    parts.Add($"{spores} spores");
+                    parts.Add($"{spores} spore");
             }
-            if (seeds > 0) parts.Add($"{seeds} seeds");
-            if (reagents > 0) parts.Add($"{reagents} reagents");
+            if (seeds > 0) parts.Add($"{seeds} semi");
+            if (reagents > 0) parts.Add($"{reagents} reagenti");
             return parts.Count > 0 ? string.Join(", ", parts) + "." : "—";
         }
 
@@ -558,16 +558,16 @@ namespace _Project
             {
                 if (slot.State == SlotState.Growing)
                 {
-                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Vegetable" : slot.Type == FoodProductionType.Fungus ? "Fungal" : slot.Type == FoodProductionType.Meat ? "Meat" : "Food";
-                    parts.Add($"{typeName} in progress ({slot.DaysRemaining} day(s) left)");
+                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Ortaggi" : slot.Type == FoodProductionType.Fungus ? "Funghi" : slot.Type == FoodProductionType.Meat ? "Carne" : "Cibo";
+                    parts.Add($"{typeName} in corso ({slot.DaysRemaining} giorno/i rimanenti)");
                 }
                 else if (slot.State == SlotState.Ready)
                 {
-                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Vegetable" : slot.Type == FoodProductionType.Fungus ? "Fungal" : slot.Type == FoodProductionType.Meat ? "Meat" : "Food";
-                    parts.Add($"{typeName} ready for harvest");
+                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Ortaggi" : slot.Type == FoodProductionType.Fungus ? "Funghi" : slot.Type == FoodProductionType.Meat ? "Carne" : "Cibo";
+                    parts.Add($"{typeName} pronto per il raccolto");
                 }
             }
-            return parts.Count > 0 ? string.Join("; ", parts) + "." : "No food in production.";
+            return parts.Count > 0 ? string.Join("; ", parts) + "." : "Nessun cibo in produzione.";
         }
 
         private string BuildPotableWaterSummary()
@@ -576,10 +576,10 @@ namespace _Project
             if (foodRoom == null) return "—";
             var water = foodRoom.WaterSlot;
             if (!water.IsActive)
-                return "No purification in progress.";
+                return "Nessuna potabilizzazione in corso.";
             if (water.PotableWaterOutput > 0)
-                return $"{water.PotableWaterOutput} unit(s) potable water ready for collection.";
-            return "Purification in progress.";
+                return $"{water.PotableWaterOutput} unità di acqua potabile pronte per la raccolta.";
+            return "Potabilizzazione in corso.";
         }
 
         private static string FormatPotNumber(string potId)
@@ -596,13 +596,13 @@ namespace _Project
             if (_dayActivityLog != null)
             {
                 var h = _dayActivityLog.HarvestsThisDay;
-                if (h.Count > 0) sb.AppendLine("Today you harvested. The spores remember.");
+                if (h.Count > 0) sb.AppendLine("Oggi hai raccolto. Le spore ricordano.");
                 var w = _dayActivityLog.PotIdsWateringTurnedOnThisDay;
-                if (w.Count > 0) sb.AppendLine("Water flowed. Life sustained.");
+                if (w.Count > 0) sb.AppendLine("L’acqua è scorsa. La vita è stata sostenuta.");
             }
-            sb.AppendLine("SPORAE System: Recording completed.");
-            sb.AppendLine("Memory integrity: 100%. Next wake in: —");
-            sb.Append("Good night, Biologist. Or whoever you are.");
+            sb.AppendLine("Sistema SPORAE: registrazione completata.");
+            sb.AppendLine("Integrità memoria: 100%. Prossimo risveglio tra: —");
+            sb.Append("Buona notte, Biologo. O chiunque tu sia.");
             string full = sb.ToString();
             if (_diarioText != null)
             {
@@ -613,29 +613,30 @@ namespace _Project
 
         private void PopulateForecast()
         {
-            var sbToday = new StringBuilder("[TODAY]\n");
+            var sbToday = new StringBuilder("[OGGI]\n");
             if (_diaryStatistics != null)
             {
                 int max = _gameManager?.ActionSystem?.MaxActions ?? 4;
-                sbToday.AppendLine($"Actions Used: {_diaryStatistics.ActionsSpent} / {max}");
-                sbToday.AppendLine($"CRY Gained: {_diaryStatistics.CryEarned}, Spent: {_diaryStatistics.CrySpent}");
+                sbToday.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent} / {max}");
+                sbToday.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
             }
             if (_phSystem != null)
                 sbToday.AppendLine($"pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})");
-            sbToday.Append("Reputations: —");
+            sbToday.Append("Reputazioni: —");
             string textToday = sbToday.ToString();
 
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string predictedPhDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
 
-            var sbTomorrow = new StringBuilder("[TOMORROW FORECAST]\n");
-            sbTomorrow.AppendLine("Actions Available: 4");
-            sbTomorrow.AppendLine($"Predicted pH Drift: {predictedPhDriftStr}");
-            sbTomorrow.AppendLine("Environmental Risks: —");
-            sbTomorrow.Append("Missions Active: —");
+            int maxActionsForecast = _gameManager?.ActionSystem?.MaxActions ?? 4;
+            var sbTomorrow = new StringBuilder("[PREVISIONE DOMANI]\n");
+            sbTomorrow.AppendLine($"Azioni disponibili: {maxActionsForecast}");
+            sbTomorrow.AppendLine($"Deriva pH prevista: {predictedPhDriftStr}");
+            sbTomorrow.AppendLine("Rischi ambientali: —");
+            sbTomorrow.Append("Missioni attive: —");
             string textTomorrow = sbTomorrow.ToString();
 
-            string textResearch = _nightResearchChosen ? "Research Complete: → New lore fragment unlocked." : "";
+            string textResearch = _nightResearchChosen ? "Ricerca completata: → Nuovo frammento di lore sbloccato." : "";
             StartCoroutine(RunForecastTypewriter(textToday, textTomorrow, textResearch));
         }
 
@@ -674,9 +675,9 @@ namespace _Project
         private void PopulateDawn(int newDay)
         {
             var title = _root.Q<Label>("eod-dawn-title");
-            if (title != null) title.text = "DAWN SUMMARY";
+            if (title != null) title.text = "RIEPILOGO ALBA";
             var sub = _root.Q<Label>("eod-dawn-subtitle");
-            if (sub != null) sub.text = $"DAY {newDay} – OVERNIGHT CHANGES";
+            if (sub != null) sub.text = $"GIORNO {newDay} – VARIAZIONI NOTTURNE";
 
             int dailyCost = 20;
             var endDayBtn = FindObjectOfType<EndDayButton>();
@@ -698,21 +699,21 @@ namespace _Project
             int grate = topBar != null ? topBar.GetGrateValue() : 0;
 
             string phDriftStr = float.IsNaN(phDrift) ? "—" : phDrift.ToString("+#0.00;-#0.00;0", System.Globalization.CultureInfo.InvariantCulture);
-            string phTrend = float.IsNaN(phDrift) ? "" : (phDrift < 0 ? " (acidic trend)" : " (alkaline trend)");
+            string phTrend = float.IsNaN(phDrift) ? "" : (phDrift < 0 ? " (tendenza acida)" : " (tendenza alcalina)");
 
-            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation) ? "Indice di Mutazione: —" : $"Indice di Mutazione: {mutation:P0}");
-            SetDawnRow("eod-dawn-text-ph", $"pH Drift: {phDriftStr}{phTrend}");
-            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation) ? "Condensation: —" : $"Condensation: {condensation:F0}%");
+            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation) ? "Indice di mutazione: —" : $"Indice di mutazione: {mutation:P0}");
+            SetDawnRow("eod-dawn-text-ph", $"Deriva pH: {phDriftStr}{phTrend}");
+            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation) ? "Condensazione: —" : $"Condensazione: {condensation:F0}%");
             SetDawnRow("eod-dawn-text-grate", $"G-rate: +{grate}");
-            SetDawnRow("eod-dawn-text-cry", $"CRY Balance (forecast fine giorno): {cryForecast} (costi fissi only)");
+            SetDawnRow("eod-dawn-text-cry", $"Saldo CRY (previsione fine giorno): {cryForecast} (solo costi fissi)");
 
             var tooltips = new Dictionary<string, (string title, string desc, string tip)>
             {
-                ["mutation"] = ("[MUTATION INDEX]", "The mutation index reflects genetic drift in the Dome. Overnight conditions can shift mutation probability.", "TIP: Monitor high mutation zones and use stabilizers in the Lab if needed."),
-                ["ph"] = ("[PH DRIFT DETECTED]", float.IsNaN(phDrift) ? "pH trend is monitored overnight. Drift affects plant growth and mutation probability." : "The Dome environment has shifted toward " + (phDrift < 0 ? "acidity" : "alkalinity") + ". This affects plant growth patterns and mutation probability.", "TIP: Use alkaline substrates or activate pH stabilizers in the Lab to counteract drift."),
-                ["condensation"] = ("[CONDENSATION LEVEL CHANGE]", "Condensation has accumulated overnight. Excess humidity can encourage mold growth but benefits water-dependent species.", "TIP: Monitor plants for mold signs. Consider harvesting condensation-sensitive species soon."),
-                ["grate"] = ("[G-RATE UPDATE]", "Daily growth rate contribution from systems. Affects resource accumulation and plant development.", "TIP: Maximize G-rate through balanced Dome and Lab activities."),
-                ["cry"] = ("[CRY BALANCE FORECAST]", "Projected CRY at end of day considering fixed costs only (e.g. power). Does not include variable actions.", "TIP: Ensure sufficient CRY before night to cover fixed costs.")
+                ["mutation"] = ("[INDICE DI MUTAZIONE]", "L’indice di mutazione riflette la deriva genetica nella Cupola. Le condizioni notturne possono spostare la probabilità di mutazione.", "SUGGERIMENTO: Monitora le zone a mutazione elevata e usa stabilizzatori in Lab se necessario."),
+                ["ph"] = ("[DERIVA pH RILEVATA]", float.IsNaN(phDrift) ? "L’andamento del pH è monitorato durante la notte. La deriva influenza la crescita delle piante e la probabilità di mutazione." : "L’ambiente della Cupola si è spostato verso " + (phDrift < 0 ? "l’acidità" : "l’alcalinità") + ". Influenza i modelli di crescita e la probabilità di mutazione.", "SUGGERIMENTO: Usa substrati alcalini o attiva stabilizzatori di pH in Lab per contrastare la deriva."),
+                ["condensation"] = ("[VARIAZIONE LIVELLO CONDENSAZIONE]", "La condensazione si è accumulata durante la notte. L’umidità eccessiva favorisce la muffa ma beneficia le specie dipendenti dall’acqua.", "SUGGERIMENTO: Controlla le piante per segni di muffa. Valuta di raccogliere presto le specie sensibili alla condensazione."),
+                ["grate"] = ("[AGGIORNAMENTO G-RATE]", "Contributo giornaliero al tasso di crescita dai sistemi. Influenza accumulo risorse e sviluppo delle piante.", "SUGGERIMENTO: Massimizza il G-rate bilanciando attività in Cupola e Lab."),
+                ["cry"] = ("[PREVISIONE SALDO CRY]", "CRY previsti a fine giornata considerando solo i costi fissi (es. energia). Non include azioni variabili.", "SUGGERIMENTO: Assicurati di avere CRY sufficienti prima della notte per coprire i costi fissi.")
             };
 
             _dawnTooltipData = tooltips;
@@ -740,7 +741,16 @@ namespace _Project
                     if (_dawnTooltipData == null || !_dawnTooltipData.TryGetValue(paramIdCopy, out var t)) return;
                     if (_dawnTooltipTitle != null) _dawnTooltipTitle.text = t.title;
                     if (_dawnTooltipDesc != null) _dawnTooltipDesc.text = t.desc;
-                    if (_dawnTooltipTip != null) _dawnTooltipTip.text = t.tip.StartsWith("TIP:", System.StringComparison.OrdinalIgnoreCase) ? t.tip : "TIP: " + t.tip;
+                    if (_dawnTooltipTip != null)
+                    {
+                        var tip = t.tip;
+                        if (tip.StartsWith("SUGGERIMENTO:", System.StringComparison.OrdinalIgnoreCase))
+                            _dawnTooltipTip.text = tip;
+                        else if (tip.StartsWith("TIP:", System.StringComparison.OrdinalIgnoreCase))
+                            _dawnTooltipTip.text = "SUGGERIMENTO:" + tip.Substring(4);
+                        else
+                            _dawnTooltipTip.text = "SUGGERIMENTO: " + tip;
+                    }
                     _dawnTooltip.style.display = DisplayStyle.Flex;
                     _dawnTooltip.BringToFront();
                     PositionDawnTooltipAtMouse(evt.mousePosition, row);

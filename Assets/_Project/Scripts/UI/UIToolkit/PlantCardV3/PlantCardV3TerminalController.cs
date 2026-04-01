@@ -6649,7 +6649,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 if (_inventory == null || !_inventory.Has(kv.Key, kv.Value))
                 {
-                    string msg = $"Insufficient item {kv.Key} x{kv.Value} for queued actions";
+                    string msg = NotificationLocalization.Pick(
+                        $"Oggetto insufficiente {kv.Key} x{kv.Value} per le azioni in coda",
+                        $"Insufficient item {kv.Key} x{kv.Value} for queued actions");
                     AppendRawLine($"§ERROR§⚠ ERROR: INSUFFICIENT ITEM {kv.Key} x{kv.Value}§END§");
                     AppendRawLine("");
                     FlushConsole();
@@ -6716,7 +6718,10 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                         AppendRawLine($"§ERROR§⚠ ERROR: IMPOSSIBLE TO RESOLVE ITEM PAYLOAD {a.ItemTypeId}§END§");
                         AppendRawLine("");
                         FlushConsole();
-                        _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", $"Item payload missing for {a.ItemTypeId}"));
+                        _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message",
+                            NotificationLocalization.Pick(
+                                $"Payload oggetto mancante per {a.ItemTypeId}",
+                                $"Item payload missing for {a.ItemTypeId}")));
                         return;
                     }
 
@@ -6737,7 +6742,10 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 {
                     _inventory?.Add(consumedItem);
                 }
-                _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message", "Automation failed: insufficient AP"));
+                _foundation?.PostToast("POT-AUTO-ERROR", new NotificationPayload().With("message",
+                    NotificationLocalization.Pick(
+                        "Automazione non riuscita: punti azione insufficienti",
+                        "Automation failed: insufficient AP")));
                 AppendRawLine("§ERROR§⚠ Automation could not start (insufficient AP).§END§");
                 AppendRawLine("");
                 FlushConsole();
@@ -6751,13 +6759,33 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
         private static string GetActionLabel(QueuedActionType type)
         {
-            return type switch
-            {
-                QueuedActionType.HydrationToggle => "WATERING",
-                QueuedActionType.LedRedToggle => "LED RED",
-                QueuedActionType.LedBlueToggle => "LED BLUE",
-                _ => type.ToString().ToUpperInvariant()
-            };
+            return NotificationLocalization.Pick(
+                type switch
+                {
+                    QueuedActionType.Plant => "SEMINA",
+                    QueuedActionType.Fertilize => "FERTILIZZAZIONE",
+                    QueuedActionType.Spray => "SPRAY",
+                    QueuedActionType.HydrationToggle => "IMPIANTO A GOCCIA",
+                    QueuedActionType.LedRedToggle => "LED DI CRESCITA ROSSO",
+                    QueuedActionType.LedBlueToggle => "LED DI CRESCITA BLU",
+                    QueuedActionType.Prune => "POTATURA",
+                    QueuedActionType.Harvest => "RACCOLTA",
+                    QueuedActionType.Uproot => "SRADICAMENTO",
+                    _ => type.ToString().ToUpperInvariant()
+                },
+                type switch
+                {
+                    QueuedActionType.Plant => "PLANT",
+                    QueuedActionType.Fertilize => "FERTILIZE",
+                    QueuedActionType.Spray => "SPRAY",
+                    QueuedActionType.HydrationToggle => "DRIP IRRIGATION",
+                    QueuedActionType.LedRedToggle => "RED GROW LED",
+                    QueuedActionType.LedBlueToggle => "BLUE GROW LED",
+                    QueuedActionType.Prune => "PRUNE",
+                    QueuedActionType.Harvest => "HARVEST",
+                    QueuedActionType.Uproot => "UPROOT",
+                    _ => type.ToString().ToUpperInvariant()
+                });
         }
 
         private static string ExtractPotIdArgument(string raw)

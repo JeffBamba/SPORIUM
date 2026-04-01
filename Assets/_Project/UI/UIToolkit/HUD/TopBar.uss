@@ -463,25 +463,7 @@
     -unity-font-style: bold;
 }
 
-/* Tooltip Mutation Index — struttura allineata a ph-tooltip (CRT bg, sezioni box, scan lines), colori mutation mantenuti */
-.mutation-tooltip-root {
-    display: none;
-    flex-direction: column;
-    width: 420px;
-    max-width: 420px;
-    min-height: 120px;
-    padding: 8px;
-    background-color: rgba(0, 0, 0, 0.9);
-    border-top-width: 2px;
-    border-right-width: 2px;
-    border-bottom-width: 2px;
-    border-left-width: 2px;
-    border-top-color: rgba(217, 70, 239, 0.8);
-    border-right-color: rgba(217, 70, 239, 0.8);
-    border-bottom-color: rgba(217, 70, 239, 0.8);
-    border-left-color: rgba(217, 70, 239, 0.8);
-    overflow: hidden;
-}
+/* Tooltip Mutation Index — guscio e metriche come ph-tooltip (TopBar.uxml inline + sp-tooltip); bordo viola e sezioni IM in UXML */
 
 .mutation-tooltip-root .mutation-tooltip-copy-stable {
     color: rgb(127, 255, 122);

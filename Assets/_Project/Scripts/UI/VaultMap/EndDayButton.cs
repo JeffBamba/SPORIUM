@@ -21,7 +21,7 @@ public class EndDayButton : MonoBehaviour
     [SerializeField] private bool validateOnStart = true;
     [SerializeField] private bool showDebugLogs = true;
 
-    [Header("End of Day — prefer EoD sequence (UIToolkit)")]
+    [Header("Fine giornata — preferisci sequenza EoD (UIToolkit)")]
     [SerializeField] private EndOfDaySequenceController _eodController;
     [SerializeField] private DiaryUI _diaryUI;
     

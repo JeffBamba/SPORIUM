@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Sporae.UI.UIToolkit;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.DevTools;
 using System.Linq;
 using _Project;
@@ -191,6 +192,13 @@ namespace Sporae.UI.UIToolkit
             _inventoryButton = _root.Q<Button>("inventory-btn");
             _reputationButton = _root.Q<Button>("reputation-btn");
             _diaryButton = _root.Q<Button>("diary-btn");
+
+            var hydrationLabel = _root.Q<Label>("hydration-label");
+            if (hydrationLabel != null)
+                hydrationLabel.text = NotificationLocalization.Pick("IDRATAZIONE", "HYDRATION");
+            var diaryLabel = _root.Q<Label>("diary-label");
+            if (diaryLabel != null)
+                diaryLabel.text = NotificationLocalization.Pick("Diario SPORAE", "SPORAE Diary");
             
             if (_warningLabel != null && !_hydrationConnectedToRealSystem)
                 _warningLabel.text = "▲ -1 Azione se <40%";

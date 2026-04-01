@@ -688,7 +688,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 "Overwatering e LED Rosso spostano il pH; usa le azioni con consapevolezza.",
                 "Condensazione e fertilizzanti contribuiscono al drift giornaliero.",
                 "Ogni pianta nei Pot ha un impatto giornaliero sul pH: meno vasi = drift più prevedibile.",
-                "Il forecast del giorno dopo (End of Day) include tutti gli effetti: piante, LED, azioni.",
+                "Il forecast del giorno dopo (fine giornata) include tutti gli effetti: piante, LED, azioni.",
                 "Usa il Laboratorio e l'Extractor per spore e semi; il pH non influenza l'estrazione.",
             };
             int index = (day - 1) % tips.Length;

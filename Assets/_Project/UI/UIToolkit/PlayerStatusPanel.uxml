@@ -16,8 +16,8 @@
         <ui:VisualElement name="hydration-bar-container" class="stat-bar-container" style="top: -45px; margin-bottom: -1px;">
             <ui:VisualElement name="hydration-bar-header" class="stat-bar-header">
                 <ui:VisualElement name="hydration-header-left" class="stat-header-left">
-                    <ui:VisualElement name="hydration-box-icon" picking-mode="Ignore" class="hydration-box-icon" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/Icone%20ITEMS%20&amp;%20Actions/Icona%20Condensa_sil.png?fileID=2800000&amp;guid=b53d0a1fe4e7701428546650dca34697&amp;type=3#Icona Condensa_sil&quot;); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-color: rgba(149, 184, 226, 0);" />
-                    <ui:Label name="hydration-label" text="HYDRATION" class="stat-label" style="right: 6px; color: rgb(149, 184, 226); font-size: 12px;" />
+                    <ui:VisualElement name="hydration-box-icon" picking-mode="Ignore" class="hydration-box-icon" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/Icone%20ITEMS%20&amp;%20Actions/Icona%20Condenza_sil.png?fileID=2800000&amp;guid=b53d0a1fe4e7701428546650dca34697&amp;type=3#Icona Condenza_sil&quot;); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-color: rgba(149, 184, 226, 0);" />
+                    <ui:Label name="hydration-label" text="IDRATAZIONE" class="stat-label" style="right: 6px; color: rgb(149, 184, 226); font-size: 12px;" />
                 </ui:VisualElement>
                 <ui:Label name="hydration-value" text="30%" class="stat-value" style="font-size: 12px;" />
             </ui:VisualElement>
@@ -38,7 +38,7 @@
         </ui:VisualElement>
         <ui:Button name="diary-btn" class="diary-button" style="white-space: nowrap; text-overflow: ellipsis; top: -31px; border-left-color: rgb(183, 148, 246); border-right-color: rgb(183, 148, 246); border-top-color: rgb(183, 148, 246); border-bottom-color: rgb(183, 148, 246);">
             <ui:VisualElement name="diary-icon" class="diary-icon" style="left: -38px; background-color: rgb(183, 148, 246);" />
-            <ui:Label name="diary-label" text="SPORAE Diary" class="diary-label" style="white-space: nowrap; -unity-text-align: middle-left; left: -42px; color: rgb(183, 148, 246); font-size: 12px;" />
+            <ui:Label name="diary-label" text="Diario SPORAE" class="diary-label" style="white-space: nowrap; -unity-text-align: middle-left; left: -42px; color: rgb(183, 148, 246); font-size: 12px;" />
         </ui:Button>
         <ui:Button name="inventory-btn" text="INV" class="header-button" style="width: 30px; top: 21px; right: 10px; min-width: auto; height: 30px; left: 186px; position: absolute; color: rgb(68, 208, 65); border-left-color: rgb(69, 209, 65); border-right-color: rgb(69, 209, 65); border-top-color: rgb(69, 209, 65); border-bottom-color: rgb(69, 209, 65); background-image: none; margin-left: 11px;" />
     </ui:VisualElement>

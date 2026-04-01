@@ -87,7 +87,9 @@ namespace Sporae.Dome.PotAutomation
 
             if (_gameManager == null || !_gameManager.TrySpendAction(totalAp))
             {
-                PostToast("POT-AUTO-ERROR", $"Automation failed: insufficient AP ({totalAp})");
+                PostToast("POT-AUTO-ERROR", NotificationLocalization.Pick(
+                    $"Automazione non riuscita: punti azione insufficienti ({totalAp})",
+                    $"Automation failed: insufficient AP ({totalAp})"));
                 return false;
             }
 
@@ -150,7 +152,9 @@ namespace Sporae.Dome.PotAutomation
 
             if (_gameManager == null || !_gameManager.TrySpendAction(totalAp))
             {
-                PostToast("POT-AUTO-ERROR", $"Automation failed: insufficient AP ({totalAp})");
+                PostToast("POT-AUTO-ERROR", NotificationLocalization.Pick(
+                    $"Automazione non riuscita: punti azione insufficienti ({totalAp})",
+                    $"Automation failed: insufficient AP ({totalAp})"));
                 return false;
             }
 
@@ -194,7 +198,9 @@ namespace Sporae.Dome.PotAutomation
                 delay = Mathf.Max(0.25f, delay);
                 string dangerKey = $"POT-AUTO:{action.PotId}";
                 _foundation?.UpsertDanger(dangerKey, "POT-AUTO-INPROGRESS",
-                    new NotificationPayload().With("message", $"{action.PotId}: {action.Type} in progress — ETA {Mathf.CeilToInt(delay)}s"));
+                    new NotificationPayload().With("message", NotificationLocalization.Pick(
+                        $"{action.PotId}: {AutomationActionLabel(action.Type)} in corso — tempo stimato {Mathf.CeilToInt(delay)} s",
+                        $"{action.PotId}: {AutomationActionLabel(action.Type)} in progress — ETA {Mathf.CeilToInt(delay)}s")));
                 // Keep progress visible until success; avoid expiring toast.
 
                 armAnimator?.StartActionAnimation(action.Type, action.PotId);
@@ -285,6 +291,38 @@ namespace Sporae.Dome.PotAutomation
             }
         }
 
+        /// <summary>Etichetta per toast/UI: IT usa «impianto a goccia» e «LED di crescita».</summary>
+        private static string AutomationActionLabel(AutomationActionType type)
+        {
+            return NotificationLocalization.Pick(
+                type switch
+                {
+                    AutomationActionType.Plant => "Semina",
+                    AutomationActionType.Fertilize => "Fertilizzazione",
+                    AutomationActionType.Spray => "Spray",
+                    AutomationActionType.HydrationToggle => "Impianto a goccia",
+                    AutomationActionType.LedRedToggle => "LED di crescita (rosso)",
+                    AutomationActionType.LedBlueToggle => "LED di crescita (blu)",
+                    AutomationActionType.Prune => "Potatura",
+                    AutomationActionType.Harvest => "Raccolta",
+                    AutomationActionType.Uproot => "Sradicamento",
+                    _ => type.ToString()
+                },
+                type switch
+                {
+                    AutomationActionType.Plant => "Plant",
+                    AutomationActionType.Fertilize => "Fertilize",
+                    AutomationActionType.Spray => "Spray",
+                    AutomationActionType.HydrationToggle => "Drip irrigation",
+                    AutomationActionType.LedRedToggle => "Red grow LED",
+                    AutomationActionType.LedBlueToggle => "Blue grow LED",
+                    AutomationActionType.Prune => "Prune",
+                    AutomationActionType.Harvest => "Harvest",
+                    AutomationActionType.Uproot => "Uproot",
+                    _ => type.ToString()
+                });
+        }
+
         private void ExecuteAction(AutomationAction action)
         {
             try
@@ -292,7 +330,9 @@ namespace Sporae.Dome.PotAutomation
                 var pot = FindPotById(action.PotId);
                 if (pot == null || pot.PotActions == null)
                 {
-                    PostToast("POT-AUTO-ERROR", $"{action.PotId}: action failed (pot not found)");
+                    PostToast("POT-AUTO-ERROR", NotificationLocalization.Pick(
+                        $"{action.PotId}: azione non riuscita (vaso non trovato)",
+                        $"{action.PotId}: action failed (pot not found)"));
                     return;
                 }
 
@@ -331,12 +371,16 @@ namespace Sporae.Dome.PotAutomation
                     }
                 }
 
-                PostToast(ok ? "POT-AUTO-SUCCESS" : "POT-AUTO-ERROR", $"{action.PotId}: {action.Type} {(ok ? "completed" : "failed")}");
+                PostToast(ok ? "POT-AUTO-SUCCESS" : "POT-AUTO-ERROR", NotificationLocalization.Pick(
+                    $"{action.PotId}: {AutomationActionLabel(action.Type)} — {(ok ? "completata" : "non riuscita")}",
+                    $"{action.PotId}: {AutomationActionLabel(action.Type)} — {(ok ? "completed" : "failed")}"));
             }
             catch (Exception ex)
             {
                 // Make failures visible in-game instead of silently stopping the automation.
-                PostToast("POT-AUTO-ERROR", $"{action?.PotId ?? "POT-???"}: exception {ex.GetType().Name}: {ex.Message}");
+                PostToast("POT-AUTO-ERROR", NotificationLocalization.Pick(
+                    $"{action?.PotId ?? "POT-???"}: eccezione {ex.GetType().Name}: {ex.Message}",
+                    $"{action?.PotId ?? "POT-???"}: exception {ex.GetType().Name}: {ex.Message}"));
                 Debug.LogException(ex);
             }
         }

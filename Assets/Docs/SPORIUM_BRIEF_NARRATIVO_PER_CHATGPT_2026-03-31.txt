@@ -1,0 +1,139 @@
+SPORIUM - BRIEF NARRATIVO PER CHATGPT
+Data: 2026-03-31
+Autore: visione operativa dal progetto attuale
+
+---
+
+Se dovessi raccontarti Sporium in modo sincero, ti direi questo:
+
+Sporium e un gioco sulla coltivazione in condizioni estreme, ma in realta parla di controllo, adattamento e compromesso.
+Non e un farming rilassato. E un ecosistema ostile in cui ogni scelta tecnica diventa scelta morale:
+quanta vita forzi, quanta ne preservi, quanta ne scarti per andare avanti.
+
+Il cuore del gioco e la Dome: un ambiente chiuso dove il giocatore cresce piante, gestisce pH, idratazione, fertilizzanti, luce LED, rischio muffa e cicli di crescita.
+Ogni pianta e un organismo con bisogni reali, stress reali e conseguenze reali.
+Il giocatore non "spamma azioni": interpreta segnali, legge pattern, corregge errori, accetta perdite.
+
+Sporium oggi e gia forte su questo asse:
+- loop piante concreto e leggibile;
+- progressione su stadi, condizione e raccolta;
+- gestione pH e tradeoff operativi;
+- terminali e HUD che trasformano i numeri in decisioni.
+
+Ma Sporium, nel suo destino, non vuole fermarsi al simulatore.
+Sta andando verso un gioco in cui botanica, politica e memoria si contaminano.
+
+In pratica: dalla "cura della pianta" alla "cura di una civilta che sopravvive grazie alle piante".
+
+---
+
+IDENTITA TONALE (COME SCRIVERE STORIE IN SPORIUM)
+
+Parole chiave tono:
+- bio-industriale
+- intimo ma duro
+- poetico funzionale (mai fantasy generico)
+- tecnico-emotivo
+- speranza sotto pressione
+
+Sporium funziona quando la narrazione fa sentire insieme:
+1) il dettaglio pratico (valori, strumenti, protocolli),
+2) il peso umano (paura, ossessione, dipendenza, fede nel metodo),
+3) il sottotesto politico (chi decide cosa coltivare e per chi).
+
+Evitare:
+- eroi puri o villain caricaturali;
+- lore astratta senza impatto sul gameplay;
+- "magia" disconnessa dai sistemi biologici.
+
+Preferire:
+- conflitti a bassa voce ma ad alta conseguenza;
+- documenti, log, appunti, testimonianze contraddittorie;
+- verita parziali e versioni in competizione.
+
+---
+
+CHE COSA SONO LE PIANTE IN SPORIUM (NARRATIVAMENTE)
+
+Le piante non sono risorse. Sono infrastruttura vitale.
+Sono:
+- cibo,
+- medicina,
+- leva economica,
+- strumento di controllo sociale,
+- archivio biologico del passato.
+
+Ogni specie puo portare una promessa e un costo.
+Ogni mutazione puo essere vista come:
+- progresso (efficienza, resa, resistenza),
+- deviazione (instabilita, dipendenza, perdita di biodiversita),
+- segnale (il sistema sta evolvendo oltre i protocolli umani).
+
+Per questo i racconti migliori su Sporium non sono "favole sulle piante":
+sono storie su persone che usano piante per risolvere problemi impossibili, e pagano il conto dopo.
+
+---
+
+FAZIONI: COME TRATTARLE NELLA SCRITTURA
+
+Nel progetto, le fazioni sono una direzione forte di worldbuilding, anche se non tutto e ancora formalizzato a livello sistemico.
+Questa e un'opportunita narrativa: puoi costruirle ora come forze vive che precedono la loro piena implementazione ludica.
+
+Template utile per ogni fazione:
+1) Paura fondativa (cosa teme davvero)
+2) Dogma operativo (regola che non tradisce mai)
+3) Risorsa chiave (cosa controlla)
+4) Rapporto con le piante (cura, sfruttamento, simbiosi, monopolio)
+5) Lessico e rituali (come parla e come legittima le scelte)
+6) Contraddizione interna (dove puo rompersi)
+
+Una buona fazione di Sporium non dice "noi siamo i buoni".
+Dice: "senza di noi non mangia nessuno", e forse ha ragione.
+
+---
+
+DOVE STA ANDANDO SPORIUM (VISIONE)
+
+Direzione plausibile e coerente:
+
+FASE 1 - Solidita del core (gia in corso)
+- il giocatore capisce il sistema;
+- ogni variabile ha un feedback;
+- il terminale diventa linguaggio del mondo.
+
+FASE 2 - Profondita biologica
+- mutazioni, ibridi, slot passivi, catene piu complesse;
+- le piante smettono di essere solo "output" e diventano strategia.
+
+FASE 3 - Profondita politica e narrativa
+- reputazione e fazioni;
+- conseguenze sociali delle scelte agronomiche;
+- eventi e crisi che reinterpretano cio che hai coltivato.
+
+FASE 4 - Identita autoriale piena
+- Sporium non e solo "gestione":
+  diventa un racconto emergente su sopravvivenza, potere e responsabilita biologica.
+
+---
+
+COME USARE QUESTO BRIEF CON CHATGPT
+
+Quando chiedi storie, aneddoti, background o lore:
+- specifica sempre una scala (micro: singola pianta; meso: laboratorio; macro: fazione/colonia);
+- chiedi sempre il conflitto concreto (non solo atmosfera);
+- richiedi almeno una conseguenza sistemica (pH, resa, scarsita, reputazione, accesso risorse);
+- chiedi una verita incompleta (versione ufficiale vs versione sul campo).
+
+Prompt base consigliato:
+"Usa il contesto Sporium qui sotto. Scrivi [formato], tono bio-industriale intimo e duro, con conflitto pratico e conseguenza sistemica visibile. Evita fantasy generico e moralismi semplici. Mostra compromessi."
+
+---
+
+CHIUSURA PERSONALE
+
+Per me Sporium e questo:
+un gioco che usa la botanica come specchio etico.
+
+All'inizio sembra che tu stia solo coltivando.
+Poi capisci che stai scegliendo che tipo di societa puo ancora esistere domani.
+

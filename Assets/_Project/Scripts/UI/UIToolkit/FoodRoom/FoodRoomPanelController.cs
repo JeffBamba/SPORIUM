@@ -201,7 +201,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (ok)
             {
                 _selectedStemCellTypeId = null;
-                if (_stemCellLabel != null) _stemCellLabel.text = "INSERT STEM CELL";
+                if (_stemCellLabel != null) _stemCellLabel.text = "INSERISCI CELLULA STAMINALE";
             }
             Refresh();
         }
@@ -279,7 +279,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_overlay != null) _overlay.style.display = DisplayStyle.Flex;
             _selectedChamberType = FoodProductionType.None;
             _selectedStemCellTypeId = null;
-            if (_stemCellLabel != null) _stemCellLabel.text = "INSERT STEM CELL";
+            if (_stemCellLabel != null) _stemCellLabel.text = "INSERISCI CELLULA STAMINALE";
             /* Counter unità acqua a 0 all'apertura (così al ritorno dopo una purificazione completata si vede 0) */
             if (_foodRoom != null && !_foodRoom.WaterSlot.IsActive)
                 _purifyAmount = 0;
@@ -329,20 +329,20 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             {
                 int totalDays = _config.GetDaysFor(displaySlot.Type);
                 int elapsed = displaySlot.State == SlotState.Ready ? totalDays : (totalDays - displaySlot.DaysRemaining);
-                if (_tankStatus != null) _tankStatus.text = displaySlot.State == SlotState.Ready ? "READY FOR HARVEST" : "CULTIVATION IN PROGRESS";
-                if (_tankMessage != null) _tankMessage.text = displaySlot.State == SlotState.Ready ? "Collect biomass from the panel." : "Cellular proliferation in progress...";
-                if (_prodTimer != null) _prodTimer.text = $"GROWTH TIMER: {elapsed} / {totalDays} days";
+                if (_tankStatus != null) _tankStatus.text = displaySlot.State == SlotState.Ready ? "PRONTO PER LA RACCOLTA" : "COLTIVAZIONE IN CORSO";
+                if (_tankMessage != null) _tankMessage.text = displaySlot.State == SlotState.Ready ? "Raccogli la biomassa dal pannello." : "Proliferazione cellulare in corso…";
+                if (_prodTimer != null) _prodTimer.text = $"TIMER CRESCITA: {elapsed} / {totalDays} giorni";
                 int cryPerDay = _config.GetCryPerDayFor(displaySlot.Type);
-                if (_prodEnergy != null) _prodEnergy.text = displaySlot.State == SlotState.Growing ? $"ENERGY COST: +{cryPerDay} CRY/day" : "ENERGY COST: 0 CRY";
-                if (_prodQuality != null) _prodQuality.text = "BIOMASS QUALITY: Common";
+                if (_prodEnergy != null) _prodEnergy.text = displaySlot.State == SlotState.Growing ? $"COSTO ENERGIA: +{cryPerDay} CRY/giorno" : "COSTO ENERGIA: 0 CRY";
+                if (_prodQuality != null) _prodQuality.text = "QUALITÀ BIOMASSA: comune";
             }
             else
             {
-                if (_tankStatus != null) _tankStatus.text = "GROWTH TANKS IDLE";
-                if (_tankMessage != null) _tankMessage.text = "Select a synthesis protocol to begin growth cycle.";
-                if (_prodTimer != null) _prodTimer.text = "GROWTH TIMER: IDLE";
-                if (_prodEnergy != null) _prodEnergy.text = "ENERGY COST: 0 CRY";
-                if (_prodQuality != null) _prodQuality.text = "BIOMASS QUALITY: N/A";
+                if (_tankStatus != null) _tankStatus.text = "SERBATOI DI CRESCITA INATTIVI";
+                if (_tankMessage != null) _tankMessage.text = "Seleziona un protocollo di sintesi per avviare il ciclo di crescita.";
+                if (_prodTimer != null) _prodTimer.text = "TIMER CRESCITA: inattivo";
+                if (_prodEnergy != null) _prodEnergy.text = "COSTO ENERGIA: 0 CRY";
+                if (_prodQuality != null) _prodQuality.text = "QUALITÀ BIOMASSA: N/D";
             }
 
             if (_indElectricity != null) _indElectricity.text = "87.1%";
@@ -369,7 +369,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             {
                 if (showCollectButton)
                 {
-                    _btnPurify.text = "💧 COLLECT";
+                    _btnPurify.text = "💧 RACCOGLI";
                     if (waterReadyToCollect)
                     {
                         _btnPurify.SetEnabled(true);
@@ -383,7 +383,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 }
                 else
                 {
-                    _btnPurify.text = "💧 PURIFY WATER";
+                    _btnPurify.text = "💧 POTABILIZZA ACQUA";
                     _btnPurify.SetEnabled(canPurify);
                     if (canPurify) _btnPurify.AddToClassList("btn-purify--enabled");
                     else _btnPurify.RemoveFromClassList("btn-purify--enabled");
@@ -409,7 +409,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_bottomHint != null)
             {
                 _bottomHint.style.display = (showProgressBlock || showWaterProgressBlock) ? DisplayStyle.None : DisplayStyle.Flex;
-                _bottomHint.text = "Select a growth chamber to begin cultivation";
+                _bottomHint.text = "Seleziona una camera di crescita per avviare la coltivazione";
             }
 
             if (_cultivationProgressBlock != null)
@@ -430,7 +430,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 {
                     var label = _cultivationProgressBlock.Q<Label>("cultivation-progress-label");
                     if (label != null)
-                        label.text = anyReady && !anyGrowing ? "Ready for harvest" : "Cultivation in Progress";
+                        label.text = anyReady && !anyGrowing ? "Pronto per la raccolta" : "Coltivazione in corso";
                 }
             }
 
@@ -448,7 +448,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 _waterProgressFill.style.width = new Length(Mathf.Clamp01(totalProgress) * 100f, LengthUnit.Percent);
                 var wLabel = _waterProgressBlock?.Q<Label>("water-progress-label");
                 if (wLabel != null)
-                    wLabel.text = (waterReadyToCollectForBar && !waterInProgress) ? "Ready for collection" : "Water purification in progress";
+                    wLabel.text = (waterReadyToCollectForBar && !waterInProgress) ? "Pronto per la raccolta" : "Potabilizzazione in corso";
             }
 
             /* KitchenHome: active chamber card (usa displaySlot per evidenziare quale camera è attiva/ready) */

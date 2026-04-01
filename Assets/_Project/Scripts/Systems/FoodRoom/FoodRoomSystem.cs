@@ -151,7 +151,7 @@ namespace _Project.Systems.FoodRoom
                 case FoodProductionType.Meat:
                     int resProtQty = 1;
                     _inventory.Add(Items.ProteinResidue, resProtQty);
-                    foundation.PostAddedToInventory(Items.ProteinResidue, "Res Protein", resProtQty, RoomNames.Kitchen);
+                    foundation.PostAddedToInventory(Items.ProteinResidue, "Proteina residua", resProtQty, RoomNames.Kitchen);
                     break;
                 default:
                     break;
@@ -168,7 +168,7 @@ namespace _Project.Systems.FoodRoom
             _waterSlot.IsActive = false;
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostAddedToInventory(Items.WaterPotable, "Potable Water", amount, RoomNames.Kitchen);
+                foundation.PostAddedToInventory(Items.WaterPotable, "Acqua potabile", amount, RoomNames.Kitchen);
             RefreshWaterToasts();
             return true;
         }
@@ -254,10 +254,10 @@ namespace _Project.Systems.FoodRoom
         {
             switch (type)
             {
-                case FoodProductionType.Vegetable: return "Vegetable Synthetic";
-                case FoodProductionType.Fungus: return "Fungal Synthetic";
-                case FoodProductionType.Meat: return "Meat Synthetic";
-                default: return "Food";
+                case FoodProductionType.Vegetable: return "Sintetico vegetale";
+                case FoodProductionType.Fungus: return "Sintetico fungino";
+                case FoodProductionType.Meat: return "Sintetico carnoso";
+                default: return "Cibo";
             }
         }
 

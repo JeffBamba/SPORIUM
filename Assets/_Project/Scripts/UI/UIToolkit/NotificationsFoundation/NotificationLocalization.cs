@@ -56,6 +56,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         {
             return GetLanguage() == NotificationLanguage.It ? "AGGIUNTO ALL'INVENTARIO" : "ADDED TO INVENTORY";
         }
+
+        /// <summary>Stringa per toast/messaggi costruiti a codice: italiano se lingua IT, altrimenti inglese.</summary>
+        public static string Pick(string italian, string english)
+        {
+            return GetLanguage() == NotificationLanguage.It ? italian : english;
+        }
     }
 }
 

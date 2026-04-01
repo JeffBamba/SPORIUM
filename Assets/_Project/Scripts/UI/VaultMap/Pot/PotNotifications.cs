@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Sporae.Dome.PotSystem.Growth;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
@@ -35,24 +35,36 @@ namespace _Project.Pot
         {
             string text;
             
-            // GDD AZ-11: Usa il messaggio specifico se disponibile, altrimenti usa messaggio generico
             if (!string.IsNullOrEmpty(message))
             {
                 text = message;
             }
             else
             {
-                // Fallback a messaggi generici se message è vuoto
                 text = type switch
                 {
-                    PotEvents.PotActionType.Light => "You cannot illuminate the plant.",
-                    PotEvents.PotActionType.Plant => "You cannot plant the plant.",
-                    PotEvents.PotActionType.Water => "You failed to water the plant",
-                    PotEvents.PotActionType.Fertilize => "You cannot fertilize the plant.",  // BLK-03.01-T1
-                    PotEvents.PotActionType.Harvest => "You cannot harvest the plant.",
-                    PotEvents.PotActionType.Spray => "You cannot spray the plant.",
-                    PotEvents.PotActionType.Uproot => "You cannot uproot the plant.",
-                    _ => "Action failed."
+                    PotEvents.PotActionType.Light => NotificationLocalization.Pick(
+                        "Impossibile modificare il LED di crescita.",
+                        "You cannot change the grow LED."),
+                    PotEvents.PotActionType.Plant => NotificationLocalization.Pick(
+                        "Impossibile completare la semina.",
+                        "You cannot plant."),
+                    PotEvents.PotActionType.Water => NotificationLocalization.Pick(
+                        "Impossibile attivare o disattivare l’impianto a goccia.",
+                        "You failed to toggle drip irrigation."),
+                    PotEvents.PotActionType.Fertilize => NotificationLocalization.Pick(
+                        "Impossibile fertilizzare la pianta.",
+                        "You cannot fertilize the plant."),
+                    PotEvents.PotActionType.Harvest => NotificationLocalization.Pick(
+                        "Impossibile raccogliere.",
+                        "You cannot harvest the plant."),
+                    PotEvents.PotActionType.Spray => NotificationLocalization.Pick(
+                        "Impossibile applicare lo spray.",
+                        "You cannot spray the plant."),
+                    PotEvents.PotActionType.Uproot => NotificationLocalization.Pick(
+                        "Impossibile sradicare la pianta.",
+                        "You cannot uproot the plant."),
+                    _ => NotificationLocalization.Pick("Azione non riuscita.", "Action failed.")
                 };
             }
 
@@ -119,53 +131,78 @@ namespace _Project.Pot
             
             if (type == PotEvents.PotActionType.Water)
             {
-                // GDD AZ-11: Messaggio per toggle sistema irrigazione
                 if (pot != null && pot.PotActions != null && pot.PotActions.IsWateringSystemOn())
                 {
-                    text = "Il sistema di Irrigazione a goccia è attivo";
+                    text = NotificationLocalization.Pick(
+                        $"Impianto a goccia attivo ({pot.PotId}).",
+                        $"Drip irrigation on ({pot.PotId}).");
                 }
                 else
                 {
-                    text = "Il sistema di Irrigazione a goccia è disattivato";
+                    string pid = pot != null ? pot.PotId : "?";
+                    text = NotificationLocalization.Pick(
+                        $"Impianto a goccia disattivato ({pid}).",
+                        $"Drip irrigation off ({pid}).");
                 }
             }
             else if (type == PotEvents.PotActionType.Light)
             {
-                // BLK-02.07: Messaggio specifico per toggle LED
                 if (pot != null && pot.PotActions != null)
                 {
                     var ledState = pot.PotActions.GetLedSystemState();
                     switch (ledState)
                     {
                         case LedSystemState.Off:
-                            text = $"Hai spento il LED ({pot.PotId})";
+                            text = NotificationLocalization.Pick(
+                                $"LED di crescita spento ({pot.PotId}).",
+                                $"Grow LED off ({pot.PotId}).");
                             break;
                         case LedSystemState.Blue:
-                            text = $"Hai acceso il LED Blu ({pot.PotId})";
+                            text = NotificationLocalization.Pick(
+                                $"LED di crescita blu acceso ({pot.PotId}).",
+                                $"Blue grow LED on ({pot.PotId}).");
                             break;
                         case LedSystemState.Red:
-                            text = $"Hai acceso il LED Rosso ({pot.PotId})";
+                            text = NotificationLocalization.Pick(
+                                $"LED di crescita rosso acceso ({pot.PotId}).",
+                                $"Red grow LED on ({pot.PotId}).");
                             break;
                         default:
-                            text = "Hai modificato il LED";
+                            text = NotificationLocalization.Pick(
+                                $"LED di crescita aggiornato ({pot.PotId}).",
+                                $"Grow LED updated ({pot.PotId}).");
                             break;
                     }
                 }
                 else
                 {
-                    text = "You have successfully illuminated the plant.";
+                    text = NotificationLocalization.Pick(
+                        "LED di crescita aggiornato.",
+                        "Grow LED updated successfully.");
                 }
             }
             else
             {
                 text = type switch
                 {
-                    PotEvents.PotActionType.Plant => "You have successfully planted the plant.",
-                    PotEvents.PotActionType.Fertilize => "Hai fertilizzato la pianta in maniera corretta",  // BLK-03.01-T1
-                    PotEvents.PotActionType.Harvest => "You have successfully harvested the plant.",
-                    PotEvents.PotActionType.Spray => "You have successfully sprayed the plant.",
-                    PotEvents.PotActionType.Uproot => "You have successfully uprooted the plant.",
-                    _ => "Action completed successfully."
+                    PotEvents.PotActionType.Plant => NotificationLocalization.Pick(
+                        "Semina completata con successo.",
+                        "Planting completed successfully."),
+                    PotEvents.PotActionType.Fertilize => NotificationLocalization.Pick(
+                        "Fertilizzazione applicata correttamente.",
+                        "Fertilizer applied successfully."),
+                    PotEvents.PotActionType.Harvest => NotificationLocalization.Pick(
+                        "Raccolto completato con successo.",
+                        "Harvest completed successfully."),
+                    PotEvents.PotActionType.Spray => NotificationLocalization.Pick(
+                        "Spray applicato con successo.",
+                        "Spray applied successfully."),
+                    PotEvents.PotActionType.Uproot => NotificationLocalization.Pick(
+                        "Pianta sradicata con successo.",
+                        "Uproot completed successfully."),
+                    _ => NotificationLocalization.Pick(
+                        "Azione completata con successo.",
+                        "Action completed successfully.")
                 };
             }
 

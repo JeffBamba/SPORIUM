@@ -268,7 +268,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private void OnDayChanged(int day)
         {
             if (_dayLabel != null)
-                _dayLabel.text = $"DAY - {day}";
+                _dayLabel.text = NotificationLocalization.Pick($"GIORNO - {day}", $"DAY - {day}");
         }
 
         // ── CRY ──
@@ -316,7 +316,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_locationLabel == null) return;
             string display = ResolveRoomDisplayName(roomId);
-            string full = $"[Location: {display}]";
+            string full = NotificationLocalization.Pick($"[Posizione: {display}]", $"[Location: {display}]");
             if (_locationTypewriterRoutine != null)
             {
                 StopCoroutine(_locationTypewriterRoutine);
@@ -329,6 +329,8 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (string.IsNullOrEmpty(roomId))
                 return "—";
+            if (TryGetLocalizedRoomTooltip(roomId, out var locName, out _, out _))
+                return locName;
             if (_roomTracker != null &&
                 string.Equals(_roomTracker.CurrentRoomId, roomId, StringComparison.Ordinal) &&
                 !string.IsNullOrEmpty(_roomTracker.CurrentDisplayName))
@@ -396,7 +398,13 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_roomTooltip == null) return;
 
-            if (_roomTags.TryGetValue(roomId, out var tag))
+            if (TryGetLocalizedRoomTooltip(roomId, out var name, out var floor, out var desc))
+            {
+                if (_roomTooltipName  != null) _roomTooltipName.text  = name;
+                if (_roomTooltipFloor != null) _roomTooltipFloor.text = floor;
+                if (_roomTooltipDesc  != null) _roomTooltipDesc.text  = desc;
+            }
+            else if (_roomTags.TryGetValue(roomId, out var tag))
             {
                 if (_roomTooltipName  != null) _roomTooltipName.text  = tag.DisplayName;
                 if (_roomTooltipFloor != null) _roomTooltipFloor.text = tag.FloorName;
@@ -506,6 +514,79 @@ namespace Sporae.UI.UIToolkit.HUD
                 _appRoot.QuitApplication();
             else
                 Application.Quit();
+        }
+
+        /// <summary>
+        /// Copia IT/EN per tooltip e etichetta posizione — indipendente dai <see cref="RoomAreaTag"/> in scena
+        /// (così la lingua delle opzioni controlla il testo senza editare la scena).
+        /// </summary>
+        private static bool TryGetLocalizedRoomTooltip(string roomId, out string name, out string floor, out string desc)
+        {
+            name = floor = desc = string.Empty;
+            if (string.IsNullOrEmpty(roomId))
+                return false;
+
+            switch (roomId.ToLowerInvariant())
+            {
+                case "dome":
+                    name = NotificationLocalization.Pick("Cupola", "Dome");
+                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
+                    desc = NotificationLocalization.Pick(
+                        "Cuore biologico del Vault. Le piante ti obbediscono — o ti tradiscono.",
+                        "Biological heart of the Vault. The plants obey—or betray—you.");
+                    return true;
+                case "lab":
+                    name = NotificationLocalization.Pick("Laboratorio", "Lab");
+                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
+                    desc = NotificationLocalization.Pick(
+                        "Ricerca, analisi, protocolli. Ogni campione racconta una storia.",
+                        "Research, analysis, protocols. Every sample tells a story.");
+                    return true;
+                case "kitchen":
+                    name = NotificationLocalization.Pick("Cucina", "Kitchen");
+                    floor = NotificationLocalization.Pick("Piano -2", "Floor -2");
+                    desc = NotificationLocalization.Pick(
+                        "Coltiva ciò che ti tiene in vita. Non tutto ciò che nutre è puro.",
+                        "Grow what keeps you alive. Not everything that feeds is pure.");
+                    return true;
+                case "dormitory":
+                    name = NotificationLocalization.Pick("Dormitorio", "Dormitory");
+                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
+                    desc = NotificationLocalization.Pick(
+                        "Riposo e recupero. Il corpo ricorda ciò che la mente vorrebbe dimenticare.",
+                        "Rest and recovery. The body remembers what the mind would forget.");
+                    return true;
+                case "visitor":
+                    name = NotificationLocalization.Pick("Sala visitatori", "Visitor Room");
+                    floor = NotificationLocalization.Pick("Piano terra", "Ground floor");
+                    desc = NotificationLocalization.Pick(
+                        "Punto d'ingresso per i sopravvissuti. Ogni visita può cambiare l'equilibrio del Vault.",
+                        "Entry point for survivors. Every visit can shift the Vault's balance.");
+                    return true;
+                case "storage":
+                    name = NotificationLocalization.Pick("Deposito semi", "Seed Storage");
+                    floor = NotificationLocalization.Pick("Piano terra", "Ground floor");
+                    desc = NotificationLocalization.Pick(
+                        "Archivio criogenico per semi e spore. Tutto dorme finché non serve.",
+                        "Cryogenic archive for seeds and spores. Everything sleeps until needed.");
+                    return true;
+                case "restricted1":
+                    name = NotificationLocalization.Pick("Zona riservata I", "Restricted Zone I");
+                    floor = NotificationLocalization.Pick("Accesso limitato", "Restricted access");
+                    desc = NotificationLocalization.Pick(
+                        "Oltre questa soglia valgono protocolli di sicurezza diversi.",
+                        "Beyond this threshold, different security protocols apply.");
+                    return true;
+                case "restricted2":
+                    name = NotificationLocalization.Pick("Zona riservata II", "Restricted Zone II");
+                    floor = NotificationLocalization.Pick("Accesso limitato", "Restricted access");
+                    desc = NotificationLocalization.Pick(
+                        "Livello di sicurezza elevato. Solo autorizzazione esplicita.",
+                        "High security clearance. Explicit authorization only.");
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

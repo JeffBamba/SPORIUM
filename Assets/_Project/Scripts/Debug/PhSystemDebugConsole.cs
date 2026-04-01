@@ -111,7 +111,7 @@ namespace Sporae.DevTools
             
             _gameManager = gameManager;
 
-            // Ottieni DayCycleSystem per pulsante End of Day
+            // Ottieni DayCycleSystem per pulsante Fine giornata
             TryGetDayCycleSystem();
             
             // Ottieni CondensationSystem
@@ -159,7 +159,7 @@ namespace Sporae.DevTools
                     _dayCycleSystem = serviceContainer.Get<DayCycleSystem>(suppressWarning: true);
                     if (_dayCycleSystem != null)
                     {
-                        AddLog("DayCycleSystem trovato - pulsante End of Day disponibile");
+                        AddLog("DayCycleSystem trovato - pulsante Fine giornata disponibile");
                     }
                 }
             }
@@ -500,20 +500,20 @@ namespace Sporae.DevTools
                 bool canEndDay = _dayCycleSystem.CanEndDay();
                 
                 GUI.enabled = canEndDay;
-                if (GUILayout.Button($"End of Day (Giorno {currentDay})", buttonStyle, GUILayout.Width(260)))
+                if (GUILayout.Button($"Fine giornata (Giorno {currentDay})", buttonStyle, GUILayout.Width(260)))
                 {
                     var eodController = UnityEngine.Object.FindObjectOfType<EndOfDaySequenceController>();
                     if (eodController != null)
                     {
                         eodController.StartSequence();
-                        AddLog($"✅ Sequenza End of Day avviata (conferma dalla UI).");
+                        AddLog($"✅ Sequenza Fine giornata avviata (conferma dalla UI).");
                     }
                     else
                     {
                         if (_dayCycleSystem.EndDay())
-                            AddLog($"✅ End of Day attivato (fallback). Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+                            AddLog($"✅ Fine giornata attivata (fallback). Nuovo giorno: {_dayCycleSystem.CurrentDay}");
                         else
-                            AddLog("❌ End of Day fallito - CRY insufficienti");
+                            AddLog("❌ Fine giornata non riuscita — CRY insufficienti");
                     }
                 }
                 GUI.enabled = true;
@@ -533,7 +533,7 @@ namespace Sporae.DevTools
             else
             {
                 GUI.enabled = false;
-                GUILayout.Button("End of Day (N/A)", buttonStyle, GUILayout.Width(260));
+                GUILayout.Button("Fine giornata (N/D)", buttonStyle, GUILayout.Width(260));
                 GUI.enabled = true;
                 
                 // Prova a recuperare DayCycleSystem se non disponibile

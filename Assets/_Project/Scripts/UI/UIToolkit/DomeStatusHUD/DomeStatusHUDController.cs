@@ -10,6 +10,7 @@ using Sporae.Dome.PotSystem.Botanical;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit;
+using Sporae.UI.UIToolkit.HUD;
 
 namespace Sporae.UI.UIToolkit.DomeStatusHUD
 {
@@ -241,6 +242,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _potStatPh[i]        = _hudRoot.Q<Label>($"dome-pot-stat-ph-{i}");
 
                 int idx = i;
+                _potHeaders[i]?.AddToClassList(HudTooltipCursor.TooltipHostUssClass);
                 _potHeaders[i]?.RegisterCallback<MouseEnterEvent>(_ => OnPotRowHover(idx));
                 _potHeaders[i]?.RegisterCallback<MouseLeaveEvent>(_ => HideTooltip());
                 _potHeaders[i]?.RegisterCallback<ClickEvent>(_ => TogglePotExpand(idx));
@@ -254,6 +256,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _cryoDetails[i] = _hudRoot.Q<Label>($"dome-cryo-detail-{i}");
 
                 int idx = i;
+                _cryoRows[i]?.AddToClassList(HudTooltipCursor.TooltipHostUssClass);
                 _cryoRows[i]?.RegisterCallback<MouseEnterEvent>(_ => OnCryoRowHover(idx));
                 _cryoRows[i]?.RegisterCallback<MouseLeaveEvent>(_ => HideTooltip());
             }
