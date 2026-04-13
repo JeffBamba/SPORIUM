@@ -2483,6 +2483,8 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
+    - ExtractorDisplayAnchor
+      [Component] Transform
   - Catallizatore
     [Component] Transform
     [Component] SpriteRenderer

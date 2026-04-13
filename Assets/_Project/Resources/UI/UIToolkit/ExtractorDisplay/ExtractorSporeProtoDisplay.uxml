@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/ExtractorDisplay/ExtractorSporeProtoDisplay.uss?fileID=7433441132597879392&amp;guid=2d5390e579104e5d8ec51534fb6f1e64&amp;type=3#ExtractorSporeProtoDisplay" />
+    <ui:VisualElement name="extp-root" class="extp-root extp-idle">
+        <ui:VisualElement name="extp-frame" class="extp-frame">
+            <ui:VisualElement name="extp-art" class="extp-art">
+                <ui:VisualElement name="extp-art-stage" class="extp-art-stage">
+                    <ui:VisualElement name="extp-fruit-zone" class="extp-fruit-zone">
+                        <ui:VisualElement name="extp-scan-band" class="extp-scan-band" />
+                        <ui:VisualElement name="extp-fruit-stack" class="extp-fruit-stack">
+                            <ui:VisualElement name="extp-fruit-stem" class="extp-fruit-stem" />
+                            <ui:VisualElement name="extp-fruit-shell" class="extp-fruit-shell">
+                                <ui:VisualElement name="extp-fruit-core" class="extp-fruit-core" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="extp-flow-zone" class="extp-flow-zone">
+                        <ui:VisualElement name="extp-flow-line" class="extp-flow-line">
+                            <ui:VisualElement name="extp-flow-line-fill" class="extp-flow-line-fill" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="extp-flow-dots" class="extp-flow-dots">
+                            <ui:VisualElement name="extp-spore-dot-0" class="extp-spore-dot" />
+                            <ui:VisualElement name="extp-spore-dot-1" class="extp-spore-dot" />
+                            <ui:VisualElement name="extp-spore-dot-2" class="extp-spore-dot" />
+                            <ui:VisualElement name="extp-spore-dot-3" class="extp-spore-dot" />
+                            <ui:VisualElement name="extp-spore-dot-4" class="extp-spore-dot" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="extp-collector-zone" class="extp-collector-zone">
+                        <ui:VisualElement name="extp-collector-ring" class="extp-collector-ring">
+                            <ui:VisualElement name="extp-collector-core" class="extp-collector-core" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

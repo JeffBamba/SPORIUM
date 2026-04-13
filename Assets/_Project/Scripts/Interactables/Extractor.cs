@@ -3,6 +3,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.HUD;
+using Sporae.UI.UIToolkit.ExtractorDisplay;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using UnityEngine;
@@ -29,6 +30,7 @@ namespace _Project
         private Interactable _interactable;
         private LabUpgradesConfig _labUpgradesConfig;
         private DayCycleSystem _dayCycleSystem;
+        private ExtractorInGameDisplayRuntime _inGameDisplay;
 
         /// <summary>Per ogni slot: 0=vuoto, 1=in corso, 2=completato. Fino a 3 processi in parallelo.</summary>
         private readonly int[] _slotStates = new int[3];
@@ -113,6 +115,10 @@ namespace _Project
             _dayCycleSystem = Sporae.Core.ServiceContainer.Instance?.Get<DayCycleSystem>();
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            _inGameDisplay = GetComponent<ExtractorInGameDisplayRuntime>();
+            if (_inGameDisplay == null)
+                _inGameDisplay = gameObject.AddComponent<ExtractorInGameDisplayRuntime>();
+            _inGameDisplay.Bind(this);
             UpdateWorldStatusLabel();
         }
 
@@ -392,6 +398,7 @@ namespace _Project
 
         private void UpdateWorldStatusLabel()
         {
+            _inGameDisplay?.RefreshNow();
             if (_worldStatusLabel == null) return;
             if (AnySlotInProgress())
             {

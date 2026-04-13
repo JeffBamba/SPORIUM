@@ -1,0 +1,222 @@
+.extp-root {
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.extp-frame {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(10, 18, 20, 0.92);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(74, 138, 128, 0.58);
+    border-right-color: rgba(74, 138, 128, 0.58);
+    border-bottom-color: rgba(74, 138, 128, 0.58);
+    border-left-color: rgba(74, 138, 128, 0.58);
+}
+
+.extp-art {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+}
+
+.extp-art-stage {
+    width: 100%;
+    height: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(16, 30, 28, 0.62);
+}
+
+.extp-fruit-zone,
+.extp-flow-zone,
+.extp-collector-zone {
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.extp-fruit-zone {
+    width: 33%;
+    position: relative;
+}
+
+.extp-flow-zone {
+    width: 34%;
+}
+
+.extp-collector-zone {
+    width: 33%;
+}
+
+.extp-fruit-stack {
+    width: 68%;
+    height: 80%;
+    align-items: center;
+    justify-content: center;
+}
+
+.extp-fruit-stem {
+    width: 8%;
+    min-width: 8px;
+    height: 11%;
+    min-height: 12px;
+    background-color: rgba(122, 186, 132, 0.7);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.extp-fruit-shell {
+    width: 70%;
+    height: 56%;
+    background-color: rgba(78, 196, 118, 0.52);
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    border-bottom-right-radius: 60px;
+    border-bottom-left-radius: 60px;
+    justify-content: center;
+    align-items: center;
+}
+
+.extp-fruit-core {
+    width: 48%;
+    height: 42%;
+    background-color: rgba(170, 245, 152, 0.5);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    border-bottom-left-radius: 24px;
+}
+
+.extp-flow-line {
+    width: 100%;
+    height: 4px;
+    justify-content: flex-start;
+    background-color: rgba(58, 104, 114, 0.28);
+}
+
+.extp-flow-line-fill {
+    width: 0%;
+    height: 100%;
+    background-color: rgba(112, 230, 255, 0.86);
+}
+
+.extp-scan-band {
+    position: absolute;
+    left: 14%;
+    width: 72%;
+    height: 14%;
+    background-color: rgba(210, 255, 226, 0.18);
+}
+
+.extp-flow-dots {
+    width: 100%;
+    margin-top: 16px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.extp-collector-ring {
+    width: 48%;
+    height: 34%;
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+    border-top-color: rgba(116, 224, 172, 0.62);
+    border-right-color: rgba(116, 224, 172, 0.62);
+    border-bottom-color: rgba(116, 224, 172, 0.62);
+    border-left-color: rgba(116, 224, 172, 0.62);
+    border-top-left-radius: 37px;
+    border-top-right-radius: 37px;
+    border-bottom-right-radius: 37px;
+    border-bottom-left-radius: 37px;
+    justify-content: center;
+    align-items: center;
+}
+
+.extp-collector-core {
+    width: 54%;
+    height: 54%;
+    background-color: rgba(128, 244, 196, 0.22);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+}
+
+.extp-spore-dot {
+    width: 10px;
+    height: 10px;
+    background-color: rgba(170, 250, 214, 0.86);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    opacity: 0.05;
+}
+
+.extp-progress .extp-frame {
+    border-top-color: rgba(94, 212, 244, 0.72);
+    border-right-color: rgba(94, 212, 244, 0.72);
+    border-bottom-color: rgba(94, 212, 244, 0.72);
+    border-left-color: rgba(94, 212, 244, 0.72);
+}
+
+.extp-progress .extp-art-stage {
+    background-color: rgba(12, 26, 30, 0.74);
+}
+
+.extp-progress .extp-flow-line-fill {
+    background-color: rgba(112, 230, 255, 0.94);
+}
+
+.extp-progress .extp-collector-ring {
+    border-top-color: rgba(102, 214, 246, 0.76);
+    border-right-color: rgba(102, 214, 246, 0.76);
+    border-bottom-color: rgba(102, 214, 246, 0.76);
+    border-left-color: rgba(102, 214, 246, 0.76);
+}
+
+.extp-progress .extp-collector-core {
+    background-color: rgba(110, 220, 250, 0.24);
+}
+
+.extp-progress .extp-fruit-core {
+    background-color: rgba(182, 248, 164, 0.54);
+}
+
+.extp-ready .extp-frame {
+    border-top-color: rgba(132, 238, 178, 0.82);
+    border-right-color: rgba(132, 238, 178, 0.82);
+    border-bottom-color: rgba(132, 238, 178, 0.82);
+    border-left-color: rgba(132, 238, 178, 0.82);
+}
+
+.extp-ready .extp-art-stage {
+    background-color: rgba(14, 28, 22, 0.78);
+}
+
+.extp-ready .extp-flow-line-fill {
+    background-color: rgba(146, 252, 186, 0.9);
+}
+
+.extp-ready .extp-collector-ring {
+    border-top-color: rgba(146, 252, 186, 0.9);
+    border-right-color: rgba(146, 252, 186, 0.9);
+    border-bottom-color: rgba(146, 252, 186, 0.9);
+    border-left-color: rgba(146, 252, 186, 0.9);
+}
+
+.extp-ready .extp-collector-core {
+    background-color: rgba(146, 252, 186, 0.54);
+}

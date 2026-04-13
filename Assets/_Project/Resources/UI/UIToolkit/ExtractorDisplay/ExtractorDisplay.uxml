@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/ExtractorDisplay/ExtractorDisplay.uss?fileID=7433441132597879392&amp;guid=35b38763880c76a4db14b6fd9ac7b62f&amp;type=3#ExtractorDisplay" />
+    <ui:VisualElement name="extd-root" class="extd-root extd-idle" style="background-image: none; background-color: rgba(40, 40, 40, 0);">
+        <ui:VisualElement name="extd-frame" class="extd-frame">
+            <ui:VisualElement name="extd-art" class="extd-art" style="width: 46px;" />
+            <ui:VisualElement name="extd-content" class="extd-content">
+                <ui:Label name="extd-machine-label" text="ESTRATTORE" class="extd-machine-label" style="font-size: 250px; -unity-font-style: bold; -unity-text-align: upper-center;" />
+                <ui:VisualElement name="extd-progress-wrap" class="extd-progress-wrap" style="-unity-slice-scale: 1px;">
+                    <ui:VisualElement name="extd-progress-track" class="extd-progress-track" style="height: 150px;">
+                        <ui:VisualElement name="extd-progress-fill" class="extd-progress-fill" />
+                    </ui:VisualElement>
+                    <ui:Label name="extd-progress-label" text="0%" class="extd-progress-label" />
+                </ui:VisualElement>
+                <ui:Label name="extd-output-label" text="INSERISCI FRUTTO" class="extd-output-label" style="font-size: 220px; -unity-text-align: upper-center;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
