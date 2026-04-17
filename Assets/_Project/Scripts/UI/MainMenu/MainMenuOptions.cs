@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project.Sporae.Core.Installers;
+using _Project.UI.UIToolkit.MainMenu;
 
 namespace _Project
 {
@@ -24,9 +25,13 @@ namespace _Project
         /// <summary>Nome della scena di gioco (usato da Nuova Partita e da Carica per entrare in partita).</summary>
         public string GameSceneName => _newGameSceneName;
 
+        /// <summary>Espone il riferimento ai popup manager del menu.</summary>
+        public MainMenuScreens MenuScreens => _menuScreens;
+
         private void Start()
         {
             EnsureOptionsPopupController();
+            EnsureMainMenuUiToolkitController();
 
             _newGameButton.onClick.AddListener(HandleNewGame);
             _continueButton?.onClick.AddListener(HandleHide);
@@ -36,6 +41,12 @@ namespace _Project
                 _saveButton.onClick.AddListener(HandleSave);
             _quitButton.onClick.AddListener(HandleQuit);
             _hideButton?.onClick.AddListener(HandleHide);
+        }
+
+        private void EnsureMainMenuUiToolkitController()
+        {
+            if (GetComponent<MainMenuUIToolkitController>() == null)
+                gameObject.AddComponent<MainMenuUIToolkitController>();
         }
 
         private void EnsureOptionsPopupController()
@@ -87,6 +98,38 @@ namespace _Project
 #else
             Application.Quit();
 #endif
+        }
+
+        public void OpenLoadPopupFromExternalUI()
+        {
+            HandleLoad();
+        }
+
+        public void OpenOptionsPopupFromExternalUI()
+        {
+            HandleOptions();
+        }
+
+        public void QuitFromExternalUI()
+        {
+            HandleQuit();
+        }
+
+        public void SetLegacyButtonsVisible(bool visible)
+        {
+            SetButtonVisible(_newGameButton, visible);
+            SetButtonVisible(_continueButton, visible);
+            SetButtonVisible(_loadButton, visible);
+            SetButtonVisible(_saveButton, visible);
+            SetButtonVisible(_optionsButton, visible);
+            SetButtonVisible(_quitButton, visible);
+            SetButtonVisible(_hideButton, visible);
+        }
+
+        private static void SetButtonVisible(Button button, bool visible)
+        {
+            if (button == null) return;
+            button.gameObject.SetActive(visible);
         }
     }
 }

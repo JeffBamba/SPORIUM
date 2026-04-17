@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using _Project;
 using _Project.Sporae.Core;
 using _Project.World.VaultMap;
+using _Project.UI.UIToolkit.MainMenu;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -26,6 +27,10 @@ namespace Sporae.UI.UIToolkit.HUD
 
         [Header("System References")]
         [SerializeField] private AppRoot _appRoot;
+        [Tooltip("Bridge verso il flusso opzioni del menu (apertura popup opzioni senza aprire il vecchio pannello Pages).")]
+        [SerializeField] private MainMenuOptions _mainMenuOptions;
+        [SerializeField] private MainMenuUIToolkitController _mainMenuUIToolkit;
+        private GameObject _mainMenuUiToolkitHost;
         [Tooltip("Menu in-game (stesso effetto del tasto ESC su Pages). Assegna il GO Menu con MainMenuScreens.")]
         [SerializeField] private MainMenuScreens _mainMenuScreens;
         /// <summary>Fallback se MainMenuScreens non è in scena.</summary>
@@ -88,10 +93,9 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
 
-            // PlayerStatusPanelController / TopBar usano sortingOrder 50. Senza questo, l’intero documento
-            // (incluso cry-tooltip) resta sotto al Player Status box. Tooltip deve vincere lo stesso layer HUD.
+            // Stesso layer di TopBar (200): sopra toast Foundation (150), sotto pannelli fullscreen/modali.
             if (_uiDocument != null)
-                _uiDocument.sortingOrder = 55;
+                _uiDocument.sortingOrder = 200;
 
             // UXML tiene cry/room tooltip in display:flex per UI Builder; in Play li nascondiamo subito (hover li riapre).
             HideTooltipsUntilHover();
@@ -112,6 +116,9 @@ namespace Sporae.UI.UIToolkit.HUD
             ResolveServices();
             BuildUI();
             TryBindMainMenuScreens();
+            if (_mainMenuScreens != null)
+                _mainMenuScreens.SetEscapeHandlingEnabled(false);
+            EnsureInGameMainMenuController();
             SubscribeToServices();
             if (_roomTracker != null && !string.IsNullOrEmpty(_roomTracker.CurrentRoomId))
                 OnRoomTrackerChanged(_roomTracker.CurrentRoomId);
@@ -465,24 +472,65 @@ namespace Sporae.UI.UIToolkit.HUD
             _mainMenuScreens = UnityEngine.Object.FindFirstObjectByType<MainMenuScreens>(FindObjectsInactive.Include);
         }
 
+        private void TryBindMainMenuOptions()
+        {
+            if (_mainMenuOptions != null) return;
+            _mainMenuOptions = UnityEngine.Object.FindFirstObjectByType<MainMenuOptions>(FindObjectsInactive.Include);
+        }
+
+        private void TryBindMainMenuUiToolkit()
+        {
+            if (_mainMenuUIToolkit != null) return;
+            _mainMenuUIToolkit = UnityEngine.Object.FindFirstObjectByType<MainMenuUIToolkitController>(FindObjectsInactive.Include);
+        }
+
+        private void EnsureInGameMainMenuController()
+        {
+            TryBindMainMenuUiToolkit();
+            if (_mainMenuUIToolkit != null)
+            {
+                if (!_mainMenuUIToolkit.gameObject.activeInHierarchy || !_mainMenuUIToolkit.IsRuntimeReady)
+                {
+                    _mainMenuUIToolkit = null;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            TryBindMainMenuOptions();
+            if (_mainMenuOptions == null)
+                return;
+
+            _mainMenuUIToolkit = _mainMenuOptions.GetComponent<MainMenuUIToolkitController>();
+            if (_mainMenuUIToolkit == null)
+            {
+                if (_mainMenuUiToolkitHost == null)
+                {
+                    _mainMenuUiToolkitHost = new GameObject("InGameMainMenu_UIToolkitHost");
+                }
+
+                _mainMenuUIToolkit = _mainMenuUiToolkitHost.GetComponent<MainMenuUIToolkitController>();
+                if (_mainMenuUIToolkit == null)
+                    _mainMenuUIToolkit = _mainMenuUiToolkitHost.AddComponent<MainMenuUIToolkitController>();
+                _mainMenuUIToolkit.InjectRuntimeReferences(_mainMenuOptions, _mainMenuScreens);
+            }
+
+            // Spegne definitivamente ESC legacy del vecchio menu GUI.
+            if (_mainMenuScreens != null)
+                _mainMenuScreens.SetEscapeHandlingEnabled(false);
+        }
+
         private void OnOptionsClicked()
         {
-            TryBindMainMenuScreens();
-
-            // Stesso comportamento di ESC: MainMenuScreens.Toggle() → mostra/nasconde Pages
-            if (_mainMenuScreens != null)
+            EnsureInGameMainMenuController();
+            if (_mainMenuUIToolkit != null)
             {
-                _mainMenuScreens.ToggleMenuPage();
+                _mainMenuUIToolkit.ToggleInGameMenu();
                 return;
             }
-
-            if (_optionsController != null)
-            {
-                _optionsController.gameObject.SetActive(true);
-                return;
-            }
-
-            SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] Assegna MainMenuScreens (Menu) per replicare ESC, oppure OptionsPopupController.");
+            SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] MainMenuUIToolkitController non disponibile: impossibile aprire il nuovo menu.");
         }
 
         private void OnSaveClicked()

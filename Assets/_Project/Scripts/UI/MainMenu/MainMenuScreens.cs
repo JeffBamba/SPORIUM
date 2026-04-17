@@ -8,6 +8,7 @@ namespace _Project
         [SerializeField] private GameObject _slotsPopup;
 
         [SerializeField] private GameObject _page;
+        [SerializeField] private bool _handleEscapeInput = false;
         
         private GameObject _activePopup = null;
         private SaveSlotsPopupController _slotsController;
@@ -72,10 +73,15 @@ namespace _Project
         {
             Toggle();
         }
+
+        public void SetEscapeHandlingEnabled(bool enabled)
+        {
+            _handleEscapeInput = enabled;
+        }
         
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (_handleEscapeInput && Input.GetKeyDown(KeyCode.Escape))
                 Toggle();
         }
     }

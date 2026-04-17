@@ -151,9 +151,9 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _mutationOrbit = GetComponent<MutationOrbitUI>();
             
-            // DEBUG_SAFE_FIX: Imposta sortingOrder per HUD base (sotto PlantCard, sopra background)
+            // Sopra Foundation toasts (150) così i tooltip restano leggibili; sotto modali (400+) e PlantCard (600).
             if (_uiDocument != null)
-                _uiDocument.sortingOrder = 50;
+                _uiDocument.sortingOrder = 200;
         }
         
         private void Start()

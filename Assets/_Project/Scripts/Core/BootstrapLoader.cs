@@ -8,6 +8,7 @@ public class BootstrapLoader : MonoBehaviour
     [SerializeField] private string firstScene = "SCN_MainMenu";
     [SerializeField] private float delayBeforeLoad = 0.1f;
     [SerializeField] private bool loadOnStart = true;
+    [SerializeField] private bool useLegacySceneLoadingUI = false;
     
     [Header("Validation")]
     [SerializeField] private bool validateOnStart = true;
@@ -84,19 +85,21 @@ public class BootstrapLoader : MonoBehaviour
             yield return new WaitForSeconds(delayBeforeLoad);
         }
         
-        // Verifica se c'è già un SceneLoadingUI attivo
-        SceneLoadingUI existingLoader = FindObjectOfType<SceneLoadingUI>();
-        if (existingLoader != null)
+        // Legacy path opzionale: usa il vecchio SceneLoadingUI (uGUI) solo se esplicitamente richiesto.
+        if (useLegacySceneLoadingUI)
         {
-            if (showDebugLogs)
+            SceneLoadingUI existingLoader = FindObjectOfType<SceneLoadingUI>();
+            if (existingLoader != null && existingLoader.isActiveAndEnabled)
             {
-                SporiumLogger.LogInfo(LogCategory.Core, "SceneLoadingUI trovato, delega il caricamento a lui.");
+                if (showDebugLogs)
+                {
+                    SporiumLogger.LogInfo(LogCategory.Core, "SceneLoadingUI legacy trovato, delega il caricamento a lui.");
+                }
+
+                existingLoader.LoadScene(firstScene);
+                isLoading = false;
+                yield break;
             }
-            
-            // Delega il caricamento al SceneLoadingUI esistente
-            existingLoader.LoadScene(firstScene);
-            isLoading = false;
-            yield break;
         }
         
         // Verifica se siamo già nella scena target

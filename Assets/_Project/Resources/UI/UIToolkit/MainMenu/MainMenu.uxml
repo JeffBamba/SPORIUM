@@ -1,0 +1,81 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Foundation.uss?fileID=7433441132597879392&amp;guid=41a5d4aa05ca1f9409da757ce7607bf4&amp;type=3#SP-Foundation" />
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/MainMenu/MainMenu.uss?fileID=7433441132597879392&amp;guid=791f1b16d4e143f7a1ee0e4efe87b12f&amp;type=3#MainMenu" />
+    <ui:VisualElement name="main-menu-root" style="background-color: rgba(40, 40, 40, 0); background-image: none;">
+        <ui:VisualElement name="main-menu-background" />
+        <ui:VisualElement name="main-menu-content">
+            <ui:VisualElement name="brand-header">
+                <ui:VisualElement name="logo-placeholder-box" style="background-image: url(&quot;project://database/Assets/_Project/Art/logo_game_ufficiale.png?fileID=2800000&amp;guid=aa8ee0fcda11e4b48bf09e9d2a874e6f&amp;type=3#logo_game_ufficiale&quot;); background-color: rgba(0, 0, 0, 0);" />
+                <ui:Label text="SPORIUM" name="brand-title" />
+                <ui:Label text="BOTANICAL VAULT SIMULATION" name="brand-subtitle" />
+                <ui:Label text="v0.8.2-ALPHA • BUILD 2026.04.01" name="brand-build-line" />
+            </ui:VisualElement>
+            <ui:VisualElement name="action-list">
+                <ui:Button name="btn-new-game" class="menu-action menu-action--green">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Nuova partita" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="1" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="btn-load-game" class="menu-action menu-action--blue">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Carica partita" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="2" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="btn-demo" class="menu-action menu-action--yellow">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Gioca demo" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="3" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="btn-credits" class="menu-action menu-action--violet">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Credits" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="4" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="btn-exit" class="menu-action menu-action--red">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Esci da Sporium" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="5" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="loading-overlay">
+                <ui:VisualElement name="loading-panel">
+                    <ui:Label text="Caricamento 0%" name="loading-text" />
+                    <ui:VisualElement name="loading-progress-track">
+                        <ui:VisualElement name="loading-progress-fill" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Button name="btn-settings" style="border-left-color: rgb(88, 172, 212); border-right-color: rgb(88, 172, 212); border-top-color: rgb(88, 172, 212); border-bottom-color: rgb(88, 172, 212); right: 83px; bottom: 61px;">
+                <ui:VisualElement name="settings-icon-placeholder-box" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/Icone%20ITEMS%20&amp;%20Actions/Icon_settings.png?fileID=2800000&amp;guid=b4571e5175138734c8b9e901a1dee9de&amp;type=3#Icon_settings&quot;); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
+            </ui:Button>
+            <ui:VisualElement name="footer-left">
+                <ui:Label text="TERMINAL ID: VLT-01-ALPHA" name="footer-terminal-id" style="color: rgba(55, 107, 134, 0.88);" />
+                <ui:Label text="BIOLOGIST STATION" name="footer-station" style="color: rgba(55, 108, 134, 0.78);" />
+            </ui:VisualElement>
+            <ui:VisualElement name="footer-center-status">
+                <ui:VisualElement name="footer-live-dot" />
+                <ui:Label text="VAULT SYSTEMS ONLINE • ALL PROTOCOLS NOMINAL" name="footer-live-text" style="color: rgba(70, 141, 67, 0.9);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

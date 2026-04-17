@@ -2125,7 +2125,7 @@ MonoBehaviour:
   _optionsButton: {fileID: 5699369993850134083}
   _quitButton: {fileID: 7055635153020655230}
   _hideButton: {fileID: 0}
-  _newGameSceneName: SCN_Intro
+  _newGameSceneName: SCN_VaultMap
 --- !u!1 &8427429359820031190
 GameObject:
   m_ObjectHideFlags: 0

@@ -209,8 +209,8 @@ namespace _Project
             button.RegisterCallback<ClickEvent>(evt => evt.StopPropagation(), TrickleDown.TrickleDown);
         }
 
-        /// <summary>Sorting order sopra tutti i pannelli (Food 1000, PlantCard 600, Lab 400) così EoD resta sempre in primo piano e non compete con Kitchen/Food.</summary>
-        private const int EodSortingOrder = 2000;
+        /// <summary>Sopra HUD, toast Foundation (150) e pannelli (Food/Lab/PlantCard); full-screen EoD in primo piano.</summary>
+        private const int EodSortingOrder = 2500;
 
         public void StartSequence()
         {

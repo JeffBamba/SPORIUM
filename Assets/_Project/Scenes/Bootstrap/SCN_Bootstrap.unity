@@ -490,7 +490,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -643,7 +643,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1147598778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -737,12 +737,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1147598777}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28b769cadd5ec534ebaeafa55e4eb146, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetScene: SCN_Intro
+  targetScene: SCN_MainMenu
   loadMode: 0
   allowSceneActivation: 1
   loadingText: {fileID: 711398877}
@@ -967,7 +967,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstScene: SCN_MainMenu
-  delayBeforeLoad: 0.1
+  delayBeforeLoad: 0
   loadOnStart: 1
   validateOnStart: 1
   showDebugLogs: 1

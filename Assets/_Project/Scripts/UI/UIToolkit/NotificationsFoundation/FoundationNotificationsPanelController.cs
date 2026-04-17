@@ -49,8 +49,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             if (_uiDocument != null)
             {
-                // Foundation toasts devono essere visibili sopra qualsiasi overlay di gioco (EOD = 2000, FoodRoom = 1000, PlantCard = 600)
-                _uiDocument.sortingOrder = 2100;
+                // Ordine relativo agli altri UIDocument: vale solo se condividono lo stesso Panel Settings
+                // (vedi SCN_VaultMap: Notifications Foundation usa PlayerStatusPanelSettings come TopBar/Bottom).
+                // Sotto TopBar/Bottom (200): tooltip sopra i toast; sopra viewport (100) e PlayerStatus (50).
+                _uiDocument.sortingOrder = 150;
             }
         }
 

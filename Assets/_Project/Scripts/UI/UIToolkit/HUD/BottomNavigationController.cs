@@ -44,9 +44,9 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
             
-            // DEBUG_SAFE_FIX: Imposta sortingOrder per HUD base (sotto PlantCard, sopra background)
+            // Allineato a TopBar/CompactBottomBar (200): tooltip sopra toast Foundation (150).
             if (_uiDocument != null)
-                _uiDocument.sortingOrder = 50;
+                _uiDocument.sortingOrder = 200;
         }
         
         private void Start()

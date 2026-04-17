@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,38 +19,6 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private UIDocument[] _documents;
         private bool _lastHintActive;
-
-        // #region agent log
-        private bool _prevComputedHint;
-        private int _logFrameThrottle;
-
-        private static void AgentLogNdjson(string hypothesisId, string location, string message, string dataJson)
-        {
-            try
-            {
-                var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "debug-416e12.log"));
-                long ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                var sb = new StringBuilder(256);
-                sb.Append("{\"sessionId\":\"416e12\",\"hypothesisId\":\"");
-                sb.Append(hypothesisId);
-                sb.Append("\",\"location\":\"");
-                sb.Append(location.Replace("\\", "\\\\").Replace("\"", "\\\""));
-                sb.Append("\",\"message\":\"");
-                sb.Append((message ?? "").Replace("\\", "\\\\").Replace("\"", "\\\""));
-                sb.Append("\",\"data\":");
-                sb.Append(string.IsNullOrEmpty(dataJson) ? "{}" : dataJson);
-                sb.Append(",\"timestamp\":");
-                sb.Append(ts);
-                sb.Append("}\n");
-                File.AppendAllText(path, sb.ToString());
-            }
-            catch
-            {
-                /* ignore */
-            }
-        }
-
-        // #endregion
 
         private void OnEnable()
         {
@@ -90,12 +57,6 @@ namespace Sporae.UI.UIToolkit.HUD
             bool overUiRaycast = UIBlocker.IsPointerOverUI();
             if (!overUiRaycast)
             {
-                // #region agent log
-                if (_prevComputedHint)
-                    AgentLogNdjson("H1", "HudTooltipCursorDriver:L56", "pointer_over_ui_false_while_hint_was_true",
-                        "{\"from\":\"UIBlocker\"}");
-                // #endregion
-                _prevComputedHint = false;
                 SetHintActive(false);
                 return;
             }
@@ -147,16 +108,6 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (!hint && breakReason == "none")
                 breakReason = "no_host_any_panel";
-
-            // #region agent log
-            if (hint != _prevComputedHint || (_logFrameThrottle++ % 45 == 0))
-            {
-                AgentLogNdjson("H3_H4_H5", "HudTooltipCursorDriver:L110", "pick_scan",
-                    $"{{\"runId\":\"post-fix\",\"computedHint\":{(hint ? "true" : "false")},\"breakReason\":\"{breakReason}\",\"mouse\":\"{screen.x:F0},{screen.y:F0}\",\"scan\":\"{scanSb.ToString().Replace("\"", "'")}\"}}");
-            }
-
-            _prevComputedHint = hint;
-            // #endregion
 
             SetHintActive(hint);
         }

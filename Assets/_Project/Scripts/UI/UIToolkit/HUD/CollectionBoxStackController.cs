@@ -17,8 +17,8 @@ namespace Sporae.UI.UIToolkit.HUD
     [DefaultExecutionOrder(20)]
     public class CollectionBoxStackController : MonoBehaviour
     {
-        /// <summary>Sopra Foundation notifications (2100) e la maggior parte dei pannelli HUD.</summary>
-        private const float CollectionDetailSortOrder = 2200f;
+        /// <summary>Sopra toast Foundation (150) e barra HUD (200), sotto PlantCard (600).</summary>
+        private const float CollectionDetailSortOrder = 350f;
 
         [Header("UI Toolkit")]
         [SerializeField] private UIDocument _uiDocument;
@@ -33,7 +33,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private VisualElement _stack;
         private VisualElement _detailOverlay;
-        private float _restoreUiDocumentSortOrder = 55f;
+        private float _restoreUiDocumentSortOrder = 200f;
         private VisualElement _detailPanel;
         private Label _detailName;
         private Label _detailTypeId;
