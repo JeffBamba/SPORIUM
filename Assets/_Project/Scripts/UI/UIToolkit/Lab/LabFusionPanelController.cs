@@ -257,6 +257,12 @@ namespace Sporae.UI.UIToolkit.Lab
                 gameObject.SetActive(false);
         }
 
+        public bool IsFusionInProgress => _fusionInProgress;
+        public float FusionProgress01 => _fusionProgress;
+        public int ReadyPreSeedCount => _outputPreSeeds.Count;
+        public bool HasWorkPending => IsFusionInProgress || ReadyPreSeedCount > 0;
+        public Item ReadyPreSeedPreview => _outputPreSeeds.Count > 0 ? _outputPreSeeds[0] : null;
+
         private int GetMaturedCount()
         {
             if (_storage == null || !_storage.Has(Items.SporeGeneric))

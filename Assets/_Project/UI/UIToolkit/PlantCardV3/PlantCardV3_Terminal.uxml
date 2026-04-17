@@ -93,7 +93,7 @@
                                     <ui:Label name="pcv3-hud-plant-family" text="FAMILY ---" class="pcv3-hud-plant-family" />
                                 </ui:VisualElement>
                                 <ui:Label name="pcv3-hud-plant-oneliner" text="---" class="pcv3-hud-plant-oneliner" />
-                                <ui:Label name="pcv3-hud-effects" text="" class="pcv3-hud-plant-oneliner" style="font-size: 9px; margin-top: 4px; white-space: normal;" />
+                                <ui:Label name="pcv3-hud-effects" class="pcv3-hud-plant-oneliner" style="font-size: 9px; margin-top: 4px; white-space: normal;" />
                             </ui:VisualElement>
                             <ui:VisualElement name="pcv3-hud-live-pill" class="pcv3-hud-live-pill">
                                 <ui:VisualElement name="pcv3-hud-live-dot" class="pcv3-hud-live-dot" />
@@ -112,6 +112,23 @@
                                 </ui:VisualElement>
                                 <ui:VisualElement name="pcv3-hud-pot-slot-3" class="pcv3-hud-pot-slot" style="top: 0; right: 0; left: -53px; width: 46px; height: 46px;">
                                     <ui:Label text=" POT-004" class="pcv3-hud-pot-slot-label" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="pcv3-a9-quick-panel" class="pcv3-a9-quick-panel" style="top: 128px;">
+                                <ui:Label name="pcv3-a9-title" text="A9 QUICK PANEL" class="pcv3-a9-title" />
+                                <ui:Label name="pcv3-a9-suggestions" text="Seleziona un POT per vedere i suggerimenti operativi." class="pcv3-a9-suggestions" />
+                                <ui:Label name="pcv3-a9-commands-title" text="COMANDI RAPIDI" class="pcv3-a9-commands-title" />
+                                <ui:VisualElement name="pcv3-quick-actions-grid" class="pcv3-quick-actions-grid" style="top: 36px;">
+                                    <ui:VisualElement class="pcv3-quick-actions-row" style="top: -23px; height: 33px;">
+                                        <ui:Button name="pcv3-quick-watering" text="WATERING OFF" class="pcv3-quick-action-button" />
+                                        <ui:Button name="pcv3-quick-led-blue" text="LED BLUE OFF" class="pcv3-quick-action-button" />
+                                        <ui:Button name="pcv3-quick-led-red" text="LED RED OFF" class="pcv3-quick-action-button" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="pcv3-quick-actions-row" style="top: 4px; height: 29px;">
+                                        <ui:Button name="pcv3-quick-fertilize" text="FERTILIZE" class="pcv3-quick-action-button" />
+                                        <ui:Button name="pcv3-quick-spray" text="SPRAY" class="pcv3-quick-action-button" />
+                                        <ui:Button name="pcv3-quick-prune" text="PRUNE" class="pcv3-quick-action-button" />
+                                    </ui:VisualElement>
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>

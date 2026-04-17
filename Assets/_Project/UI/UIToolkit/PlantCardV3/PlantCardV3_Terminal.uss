@@ -197,6 +197,7 @@
     background-color: rgba(0, 0, 0, 0.4);
     align-items: center;
     justify-content: flex-start;
+    z-index: 10;
 }
 
 .pcv3-hud-preview-group {
@@ -368,6 +369,104 @@
     justify-content: space-between;
     width: 100%;
     height: 48px;
+}
+
+.pcv3-a9-quick-panel {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(127, 255, 122, 0.5);
+    border-right-color: rgba(127, 255, 122, 0.5);
+    border-top-color: rgba(127, 255, 122, 0.5);
+    border-bottom-color: rgba(127, 255, 122, 0.5);
+}
+
+.pcv3-a9-title {
+    font-size: 10px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.pcv3-a9-suggestions {
+    font-size: 9px;
+    color: rgb(245, 247, 250);
+    white-space: normal;
+    margin-bottom: 4px;
+    min-height: 36px;
+}
+
+.pcv3-a9-commands-title {
+    font-size: 10px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    margin-top: 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 255, 122, 0.3);
+    padding-top: 5px;
+}
+
+.pcv3-quick-actions-grid {
+    flex-direction: column;
+    width: 100%;
+}
+
+.pcv3-quick-actions-row {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.pcv3-quick-action-button {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 26px;
+    margin-right: 3px;
+    background-color: rgba(127, 255, 122, 0.08);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(127, 255, 122, 0.8);
+    border-right-color: rgba(127, 255, 122, 0.8);
+    border-top-color: rgba(127, 255, 122, 0.8);
+    border-bottom-color: rgba(127, 255, 122, 0.8);
+    color: rgb(127, 255, 122);
+    font-size: 8px;
+    letter-spacing: 0.4px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.pcv3-quick-action-button.pcv3-quick-toggle-on {
+    background-color: rgba(62, 182, 95, 0.28);
+    border-left-color: rgba(110, 255, 145, 0.95);
+    border-right-color: rgba(110, 255, 145, 0.95);
+    border-top-color: rgba(110, 255, 145, 0.95);
+    border-bottom-color: rgba(110, 255, 145, 0.95);
+    color: rgb(173, 255, 194);
+}
+
+.pcv3-quick-action-button.pcv3-quick-toggle-off {
+    background-color: rgba(143, 46, 46, 0.28);
+    border-left-color: rgba(231, 106, 106, 0.95);
+    border-right-color: rgba(231, 106, 106, 0.95);
+    border-top-color: rgba(231, 106, 106, 0.95);
+    border-bottom-color: rgba(231, 106, 106, 0.95);
+    color: rgb(255, 170, 170);
+}
+
+.pcv3-quick-action-button.pcv3-quick-disabled {
+    opacity: 0.45;
 }
 
 .pcv3-hud-pot-slot {

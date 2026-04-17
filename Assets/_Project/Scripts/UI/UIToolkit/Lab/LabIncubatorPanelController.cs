@@ -371,6 +371,12 @@ namespace Sporae.UI.UIToolkit.Lab
             gameObject.SetActive(false);
         }
 
+        public bool IsIncubationInProgress => _incubationDay == 1 || _incubationDay == 2;
+        public int IncubationDay => _incubationDay;
+        public int ReadySeedCount => _outputSeeds.Count;
+        public bool HasWorkPending => IsIncubationInProgress || ReadySeedCount > 0;
+        public Item ReadySeedPreview => _outputSeeds.Count > 0 ? _outputSeeds[0] : null;
+
         private void OnSelectPreseedClicked()
         {
             if (_playerInventoryPanel == null)

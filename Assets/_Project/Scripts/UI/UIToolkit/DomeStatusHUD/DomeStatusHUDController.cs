@@ -6,6 +6,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Botanical;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
@@ -520,12 +521,13 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                         hasPlant && state != null ? DisplayStyle.Flex : DisplayStyle.None;
                 if (hasPlant && state != null)
                 {
-                    Color condCol = ConditionColor(state.ConditionScore);
+                    var condEnum = ConditionFromScore(state);
+                    Color condCol = ConditionColor(condEnum);
                     if (_potCondDots[i] != null)
                         _potCondDots[i].style.backgroundColor = new StyleColor(condCol);
                     if (_potConds[i] != null)
                     {
-                        string condStr = ConditionLabel(state.ConditionScore);
+                        string condStr = ConditionLabel(condEnum);
                         _potConds[i].text = $"{condStr.ToUpperInvariant()} ({state.ConditionScore}%)";
                         _potConds[i].style.color = new StyleColor(condCol);
                     }
@@ -1000,7 +1002,8 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
             string name  = GetPotPlantDisplayName(state, plantData);
             string stage = PlantStageLabel(state.Stage);
-            string cond  = ConditionLabel(state.ConditionScore);
+            var condEnum = ConditionFromScore(state);
+            string cond  = ConditionLabel(condEnum);
 
             lines.Add(new TooltipLine($"■ {name}  Lvl {state.PlantLevel}", TipPhCyan, bold: true));
             lines.Add(new TooltipLine($"  {state.PotId} · {stage} · Giorno {state.DaysInCurrentStage}", TipMuted));
@@ -1065,8 +1068,22 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     LightStressColor(lightStressPct)));
             }
 
-            lines.Add(new TooltipLine($"  Condizione    : {cond} ({state.ConditionScore}%)",
-                ConditionColor(state.ConditionScore)));
+            lines.Add(TooltipLine.Sep());
+            lines.Add(new TooltipLine("CONDIZIONE", TipPhSection, bold: true));
+            lines.Add(new TooltipLine($"  {cond.ToUpperInvariant()} ({state.ConditionScore}%)  {PlantConditionSystem.GetForecastSymbol((ForecastDirection)state.ForecastDirection)}",
+                ConditionColor(condEnum), bold: true));
+            string effectHint = ConditionEffectHint(condEnum);
+            if (!string.IsNullOrEmpty(effectHint))
+                lines.Add(new TooltipLine($"  ↳ {effectHint}", TipMuted));
+
+            // Top 3 fattori that are pushing condition
+            var drivers = BuildConditionDrivers(state, plantData);
+            if (drivers.Count > 0)
+            {
+                lines.Add(new TooltipLine("  Fattori:", TipMuted));
+                foreach (var (driverText, driverCol) in drivers)
+                    lines.Add(new TooltipLine($"    · {driverText}", driverCol));
+            }
             lines.Add(new TooltipLine($"  Giorni ottimali: {state.DaysConsecutiveOptimal}",
                 state.DaysConsecutiveOptimal > 0 ? TipGreen : TipMuted));
 
@@ -1184,19 +1201,94 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             _ => $"Stadio {stage}"
         };
 
-        private static string ConditionLabel(int score)
+        // Derives PlantCondition from live ConditionScore using simulation thresholds (80/40/20).
+        // Morta is irreversible and set explicitly — trust stored ConditionLabel only for that.
+        private static PlantCondition ConditionFromScore(PotStateModel state)
         {
-            if (score >= 80) return "Rigogliosa";
-            if (score >= 60) return "Sana";
-            if (score >= 40) return "Appassita";
-            return "Critica";
+            if (state == null) return PlantCondition.Sana;
+            if ((PlantCondition)state.ConditionLabel == PlantCondition.Morta) return PlantCondition.Morta;
+            int score = state.ConditionScore;
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdRigogliosa) return PlantCondition.Rigogliosa;
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdSana)       return PlantCondition.Sana;
+            if (score >= DifficultyCalibrationConfig.ConditionThresholdAppassita)  return PlantCondition.Appassita;
+            return PlantCondition.Critica;
         }
 
-        private static Color ConditionColor(int score)
+        // Uses the enum derived from live score — avoids stale ConditionLabel (updated only at day-end).
+        private static string ConditionLabel(PlantCondition cond, bool overwatering = false)
+            => PlantConditionSystem.GetConditionName(cond, overwatering);
+
+        private static Color ConditionColor(PlantCondition cond) => cond switch
         {
-            if (score >= 60) return new Color(0.498f, 1f, 0.478f);
-            if (score >= 40) return new Color(0.902f, 0.788f, 0.435f);
-            return new Color(0.827f, 0.373f, 0.373f);
+            PlantCondition.Rigogliosa => new Color(0.22f, 0.90f, 0.22f),
+            PlantCondition.Sana       => new Color(0.498f, 1f, 0.478f),
+            PlantCondition.Appassita  => new Color(0.902f, 0.788f, 0.435f),
+            PlantCondition.Critica    => new Color(0.827f, 0.373f, 0.373f),
+            PlantCondition.Morta      => new Color(0.50f, 0.10f, 0.10f),
+            _                         => new Color(0.498f, 1f, 0.478f),
+        };
+
+        private static string ConditionEffectHint(PlantCondition cond) => cond switch
+        {
+            PlantCondition.Rigogliosa => "Crescita +20% · Produzione +15%",
+            PlantCondition.Sana       => "Crescita normale",
+            PlantCondition.Appassita  => "Crescita -30% · Avanzamento bloccato",
+            PlantCondition.Critica    => "Avanzamento bloccato · rischio morte",
+            PlantCondition.Morta      => "Nessuna crescita — esegui UPROOT",
+            _                         => string.Empty,
+        };
+
+        // Returns up to 3 condition drivers (text + color) derived from existing state data.
+        private List<(string text, Color col)> BuildConditionDrivers(PotStateModel state, PlantData plantData)
+        {
+            var drivers = new List<(string, Color)>();
+            if (state == null) return drivers;
+
+            var stageEnum = (PlantStage)state.Stage;
+            PlantData careData = LabHybridGameplayModifiers.ResolvePlantDataForCareRequirements(state, plantData) ?? plantData;
+            StageRequirements req = careData?.GetStageRequirements(stageEnum);
+
+            // Hydration
+            int hydPct = GetHydrationPercent(state);
+            if (req != null)
+            {
+                if (hydPct < req.hydrationMin)
+                    drivers.Add(($"Idratazione bassa ({hydPct}% / min {req.hydrationMin}%)", TipRed));
+                else if (hydPct > req.hydrationMax)
+                    drivers.Add(($"Sovra-irrigazione ({hydPct}% / max {req.hydrationMax}%)", TipYellow));
+            }
+
+            // Fertilizer
+            if (!IsFertilizerOptionalForStage(stageEnum) && req != null)
+            {
+                if (state.FertilizerLevel < req.fertilizerMin)
+                    drivers.Add(($"Fertilizzante basso ({state.FertilizerLevel}% / min {req.fertilizerMin}%)", TipRed));
+                else if (state.FertilizerLevel > req.fertilizerMax)
+                    drivers.Add(($"Fertilizzante in eccesso ({state.FertilizerLevel}%)", TipYellow));
+            }
+
+            // Light stress
+            int lightStress = GetLightStressPercent(state);
+            if (lightStress > 80)
+                drivers.Add(($"Light stress critico ({lightStress}%)", TipRed));
+            else if (lightStress > 50)
+                drivers.Add(($"Light stress elevato ({lightStress}%)", TipYellow));
+
+            // Mold
+            if (state.IsInfested)
+                drivers.Add(("INFESTATA DA MUFFE — esegui PRUNE", TipRed));
+            else if (state.MoldRiskLevel >= 3)
+                drivers.Add(($"Rischio muffa critico (liv. {state.MoldRiskLevel})", TipRed));
+            else if (state.MoldRiskLevel >= 1)
+                drivers.Add(($"Rischio muffa (liv. {state.MoldRiskLevel})", TipYellow));
+
+            // Neglect streak
+            if (state.DaysNeglectedStreak >= 3)
+                drivers.Add(($"Vaso trascurato da {state.DaysNeglectedStreak} giorni", TipYellow));
+
+            // Return top 3 only
+            if (drivers.Count > 3) drivers = drivers.GetRange(0, 3);
+            return drivers;
         }
 
         private static string FormatPhDrift(float drift)

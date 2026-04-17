@@ -259,6 +259,23 @@ namespace Sporae.UI.UIToolkit.Lab
                 gameObject.SetActive(false);
         }
 
+        public bool HasProcessInProgress => AnySlotInProgress();
+        public int ReadyOutputCount => ReadyCount();
+        public bool HasWorkPending => HasProcessInProgress || ReadyOutputCount > 0;
+        public Item ReadyMaturedPreviewSource
+        {
+            get
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (_slotStates[i] == 2 && _slotInputRawSpores[i] != null)
+                        return _slotInputRawSpores[i];
+                }
+
+                return null;
+            }
+        }
+
         private void HandleDayChanged(int day)
         {
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);

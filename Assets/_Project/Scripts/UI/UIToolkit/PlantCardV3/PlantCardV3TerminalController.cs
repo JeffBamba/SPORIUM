@@ -11,6 +11,7 @@ using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem;
 using Sporae.Dome.PotSystem.Condition;
+using Sporae.Dome.PotSystem.Fertilizer;
 using Sporae.Dome.PotSystem.Growth; // LedSystemState
 using Sporae.Dome.PotSystem.Botanical;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             ConfirmingPlantLed,
             ConfirmingPlantLedType,
             ConfirmingActionToQueue,
+            ConfirmingCriticalFertilize,
             ConfirmingExecuteOrDiscardQueue,
             SelectingCryoSlotForExtract,
             SelectingCryoSlotForRestore,
@@ -256,7 +258,17 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private List<VisualElement> _hudPotSlots = new List<VisualElement>(4);
         private VisualElement _vitalBlock1;
         private VisualElement _vitalBlock2;
+        private VisualElement _a9QuickPanel;
+        private Label _a9SuggestionsLabel;
+        private Button _quickWateringButton;
+        private Button _quickLedBlueButton;
+        private Button _quickLedRedButton;
+        private Button _quickFertilizeButton;
+        private Button _quickSprayButton;
+        private Button _quickPruneButton;
+        private bool _quickActionsBound;
         private int _selectedPotIndex = 0;
+
         private List<PotSlot> _hudPots = new List<PotSlot>(4);
         private bool _liveDotPulseLow;
 
@@ -374,6 +386,14 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             }
             _vitalBlock1 = _root.Q<VisualElement>("pcv3-vital-stats-inner-1");
             _vitalBlock2 = _root.Q<VisualElement>("pcv3-vital-stats-inner-2");
+            _a9QuickPanel = _root.Q<VisualElement>("pcv3-a9-quick-panel");
+            _a9SuggestionsLabel = _root.Q<Label>("pcv3-a9-suggestions");
+            _quickWateringButton = _root.Q<Button>("pcv3-quick-watering");
+            _quickLedBlueButton = _root.Q<Button>("pcv3-quick-led-blue");
+            _quickLedRedButton = _root.Q<Button>("pcv3-quick-led-red");
+            _quickFertilizeButton = _root.Q<Button>("pcv3-quick-fertilize");
+            _quickSprayButton = _root.Q<Button>("pcv3-quick-spray");
+            _quickPruneButton = _root.Q<Button>("pcv3-quick-prune");
 
             // Custom scrollbars (opzionale se potlist rimosso)
             _potListScrollbar = _root.Q<VisualElement>("pcv3-potlist-scrollbar");
@@ -1782,6 +1802,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     child.pickingMode = PickingMode.Ignore;
             }
 
+            BindQuickActionButtons();
+
             _hudPots.Clear();
             var pots = FindPots();
             for (int i = 0; i < Mathf.Min(4, pots.Count); i++)
@@ -2009,6 +2031,283 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             RefreshHudFromSelectedPot();
         }
 
+        private void BindQuickActionButtons()
+        {
+            if (_quickActionsBound) return;
+            _quickActionsBound = true;
+
+            // Ensure the A9 panel itself is always interactive
+            if (_a9QuickPanel != null)
+                _a9QuickPanel.pickingMode = PickingMode.Position;
+
+            void BindBtn(Button btn, string command)
+            {
+                if (btn == null) return;
+                // Explicit picking mode: pcv3-right console-view extends -97px left and can swallow clicks
+                btn.pickingMode = PickingMode.Position;
+                btn.clicked += () => ExecuteQuickAction(command);
+                btn.RegisterCallback<MouseDownEvent>(e => e.StopPropagation());
+                btn.RegisterCallback<PointerDownEvent>(e => e.StopPropagation());
+            }
+
+            BindBtn(_quickWateringButton, "WATERING");
+            BindBtn(_quickLedBlueButton, "LED BLUE");
+            BindBtn(_quickLedRedButton, "LED RED");
+            BindBtn(_quickFertilizeButton, "FERTILIZE");
+            BindBtn(_quickSprayButton, "SPRAY");
+            BindBtn(_quickPruneButton, "PRUNE");
+        }
+
+        private void ExecuteQuickAction(string baseCommand)
+        {
+            var pot = GetSelectedHudPot();
+            if (pot == null || string.IsNullOrEmpty(pot.PotId))
+            {
+                AppendRawLine("§WARN§Seleziona prima un POT valido per usare i comandi rapidi.§END§");
+                AppendRawLine("");
+                FlushConsole();
+                return;
+            }
+
+            HandleCommand($"{baseCommand} {pot.PotId}");
+        }
+
+        private PotSlot GetSelectedHudPot()
+        {
+            if (_selectedPotIndex < 0 || _selectedPotIndex >= _hudPots.Count)
+                return null;
+            return _hudPots[_selectedPotIndex];
+        }
+
+        private void UpdateQuickActionPanel(PotSlot pot, PotStateModel state, PlantData plantData, bool empty)
+        {
+            if (_a9QuickPanel != null)
+                _a9QuickPanel.style.display = DisplayStyle.Flex;
+
+            bool hasPot = pot != null && !string.IsNullOrEmpty(pot.PotId);
+            string selectedPotId = hasPot ? pot.PotId : "---";
+            string disabledReason = empty ? "Vaso vuoto: pianta prima un seme." : "Azione non disponibile ora.";
+
+            if (_a9SuggestionsLabel != null)
+            {
+                _a9SuggestionsLabel.enableRichText = true;
+                _a9SuggestionsLabel.text = BuildA9SuggestionText(state, plantData, empty);
+                _a9SuggestionsLabel.tooltip = $"Suggerimenti live per {selectedPotId}";
+            }
+
+            var actions = pot?.PotActions;
+
+            // Terminal context: range check always fails (player is remote via terminal).
+            // Mirror the same gate used by BeginConfirmToggleAction/BeginSelectItemForAction:
+            // enabled iff the pot has a living plant (dead or empty → disabled).
+            bool hasPotPlant = !empty && state != null && state.HasPlant &&
+                               (PlantCondition)state.ConditionLabel != PlantCondition.Morta;
+
+            bool isWateringOn = actions != null && actions.IsWateringSystemOn();
+            LedSystemState ledState = actions != null ? actions.GetLedSystemState() : LedSystemState.Off;
+            bool isLedBlueOn = ledState == LedSystemState.Blue;
+            bool isLedRedOn = ledState == LedSystemState.Red;
+
+            SetQuickToggleButtonState(_quickWateringButton, isWateringOn, hasPotPlant, "WATERING ON", "WATERING OFF", selectedPotId, disabledReason);
+            SetQuickToggleButtonState(_quickLedBlueButton, isLedBlueOn, hasPotPlant, "LED BLUE ON", "LED BLUE OFF", selectedPotId, disabledReason);
+            SetQuickToggleButtonState(_quickLedRedButton, isLedRedOn, hasPotPlant, "LED RED ON", "LED RED OFF", selectedPotId, disabledReason);
+            SetQuickActionButtonState(_quickFertilizeButton, hasPotPlant, "FERTILIZE", selectedPotId, disabledReason);
+            SetQuickActionButtonState(_quickSprayButton, hasPotPlant, "SPRAY", selectedPotId, disabledReason);
+            SetQuickActionButtonState(_quickPruneButton, hasPotPlant, "PRUNE", selectedPotId, disabledReason);
+        }
+
+        private void SetQuickToggleButtonState(Button button, bool isOn, bool enabled, string onLabel, string offLabel, string potId, string disabledReason)
+        {
+            if (button == null) return;
+            button.text = isOn ? onLabel : offLabel;
+            button.SetEnabled(enabled);
+            button.tooltip = enabled ? $"{button.text} [{potId}]" : disabledReason;
+            button.RemoveFromClassList("pcv3-quick-toggle-on");
+            button.RemoveFromClassList("pcv3-quick-toggle-off");
+            button.RemoveFromClassList("pcv3-quick-disabled");
+            button.AddToClassList(isOn ? "pcv3-quick-toggle-on" : "pcv3-quick-toggle-off");
+            if (!enabled)
+                button.AddToClassList("pcv3-quick-disabled");
+        }
+
+        private void SetQuickActionButtonState(Button button, bool enabled, string label, string potId, string disabledReason)
+        {
+            if (button == null) return;
+            button.text = label;
+            button.SetEnabled(enabled);
+            button.tooltip = enabled ? $"{label} [{potId}]" : disabledReason;
+            button.RemoveFromClassList("pcv3-quick-toggle-on");
+            button.RemoveFromClassList("pcv3-quick-toggle-off");
+            button.RemoveFromClassList("pcv3-quick-disabled");
+            if (!enabled)
+                button.AddToClassList("pcv3-quick-disabled");
+        }
+
+        // ─── colori richtext A9 (palette ufficiale dal USS) ───
+        private const string A9ColGreen  = "#7FFF7A";
+        private const string A9ColYellow = "#E6C96F";
+        private const string A9ColRed    = "#D35F5F";
+        private const string A9ColBlue   = "#5DB6E3";
+        private const string A9ColDim    = "#C0C8C5";
+
+        private string BuildA9SuggestionText(PotStateModel state, PlantData plantData, bool empty)
+        {
+            if (empty || state == null)
+                return $"<color={A9ColDim}>Nessuna pianta nel vaso. Pianta un seme per attivare il monitor.</color>";
+            if (plantData == null)
+                return $"<color={A9ColDim}>Dati pianta non disponibili.</color>";
+
+            var sb = new System.Text.StringBuilder();
+
+            // Riga 1: STATO ORA — condizione derivata da score live (ConditionLabel è stale, aggiornato solo a fine giornata)
+            var condEnum = (PlantCondition)state.ConditionLabel == PlantCondition.Morta
+                ? PlantCondition.Morta
+                : MapScoreToConditionForUi(state.ConditionScore);
+            string officialName = PlantConditionSystem.GetConditionName(condEnum).ToUpperInvariant();
+            string condColor = condEnum switch
+            {
+                PlantCondition.Rigogliosa => A9ColGreen,
+                PlantCondition.Sana       => A9ColGreen,
+                PlantCondition.Appassita  => A9ColYellow,
+                PlantCondition.Critica    => A9ColRed,
+                PlantCondition.Morta      => A9ColRed,
+                _                         => A9ColGreen,
+            };
+            string condLabel = $"{officialName} ({state.ConditionScore}%)";
+            var trend = (ForecastDirection)state.ForecastDirection;
+            string trendArrow = trend == ForecastDirection.Up ? "▲" : (trend == ForecastDirection.Down ? "▼" : "→");
+            string trendColor = trend == ForecastDirection.Up ? A9ColGreen : (trend == ForecastDirection.Down ? A9ColRed : A9ColYellow);
+            sb.AppendLine($"<color={A9ColDim}>STATO:</color> <color={condColor}>{condLabel}</color>  <color={trendColor}>{trendArrow}</color>");
+
+            // Riga 1b: effetto gameplay della condizione (B.1 — dizionario condizioni)
+            string effectHint = condEnum switch
+            {
+                PlantCondition.Rigogliosa => "Crescita +20% · Produzione +15%",
+                PlantCondition.Appassita  => "Crescita -30% · Avanzamento bloccato",
+                PlantCondition.Critica    => "Avanzamento bloccato · rischio morte",
+                PlantCondition.Morta      => "Nessuna crescita — esegui UPROOT",
+                _                         => string.Empty,
+            };
+            if (!string.IsNullOrEmpty(effectHint))
+                sb.AppendLine($"<color={A9ColDim}>  ↳ {effectHint}</color>");
+
+            // Riga 2: FATTORI — cause principali (B.2, nomi italiani ufficiali)
+            var drivers = BuildQuickDrivers(state, plantData);
+            if (drivers.Count > 0)
+            {
+                string sep = $"<color={A9ColDim}> | </color>";
+                var coloredDrivers = drivers.Select(d =>
+                    d.isCritical ? $"<color={A9ColRed}>{d.label}</color>" : $"<color={A9ColYellow}>{d.label}</color>");
+                sb.AppendLine($"<color={A9ColDim}>FATTORI:</color> {string.Join(sep, coloredDrivers)}");
+            }
+
+            // Riga 3: SUGGERIMENTO — prima frase operativa (max ~90 char)
+            var tips = BuildConsiglioForPot(state, plantData);
+            if (tips != null && tips.Count > 0)
+            {
+                string tip = StripTerminalTokens(tips[0]);
+                if (!string.IsNullOrWhiteSpace(tip))
+                {
+                    if (tip.Length > 90) tip = tip.Substring(0, 87) + "...";
+                    sb.AppendLine($"<color={A9ColBlue}>▶</color> <color={A9ColDim}>{tip}</color>");
+                }
+            }
+
+            // Riga pH sintetico (C.1): direzione + distanza qualitativa dal target pianta
+            if (_phSystem != null && plantData != null)
+            {
+                float currentPh = _phSystem.CurrentPh;
+                float phMin = plantData.OptimalPhMin;
+                float phMax = plantData.OptimalPhMax;
+                string phDir, phDist, phColor;
+                if (currentPh < phMin)
+                {
+                    float dist = phMin - currentPh;
+                    phDir = "ALZA";
+                    phDist = dist < 10f ? "VICINO" : dist < 30f ? "MEDIO" : "LONTANO";
+                    phColor = dist < 10f ? A9ColYellow : A9ColRed;
+                }
+                else if (currentPh > phMax)
+                {
+                    float dist = currentPh - phMax;
+                    phDir = "ABBASSA";
+                    phDist = dist < 10f ? "VICINO" : dist < 30f ? "MEDIO" : "LONTANO";
+                    phColor = dist < 10f ? A9ColYellow : A9ColRed;
+                }
+                else
+                {
+                    phDir = "OK";
+                    phDist = string.Empty;
+                    phColor = A9ColGreen;
+                }
+                string phLine = string.IsNullOrEmpty(phDist)
+                    ? $"<color={A9ColDim}>pH:</color> <color={phColor}>{phDir}</color>"
+                    : $"<color={A9ColDim}>pH:</color> <color={phColor}>{phDir} · {phDist}</color>";
+                sb.AppendLine(phLine);
+            }
+
+            // Riga 4: CTA
+            sb.Append($"<color={A9ColDim}>→ Digita</color> <color={A9ColGreen}>STATUS</color> <color={A9ColDim}>per analisi completa</color>");
+
+            return sb.ToString().Trim();
+        }
+
+        private List<(string label, bool isCritical)> BuildQuickDrivers(PotStateModel state, PlantData plantData)
+        {
+            var drivers = new List<(string, bool)>();
+            if (_potSystemConfig == null || state == null || plantData == null) return drivers;
+
+            PlantStage currentStage = (PlantStage)state.Stage;
+            StageRequirements stageReq = plantData.GetStageRequirements(currentStage);
+            if (stageReq == null) return drivers;
+
+            int maxHydration = _potSystemConfig.MaxHydration;
+            int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
+            if (hydrationPercent < stageReq.hydrationMin)
+                drivers.Add(("Idratazione bassa", false));
+            else if (hydrationPercent > stageReq.hydrationMax)
+                drivers.Add(("Sovra-irrigazione", false));
+
+            int consecutiveDays = state.GetConsecutiveLedDays();
+            int maxDays = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
+            int lightStress = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDays) * 100f);
+            if (lightStress > 80)
+                drivers.Add(("Light stress critico", true));
+            else if (lightStress > 50)
+                drivers.Add(("Light stress alto", false));
+
+            bool isSeedOrSprout = currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout;
+            if (!isSeedOrSprout && state.FertilizerLevel < stageReq.fertilizerMin)
+                drivers.Add(("Fertilizzante basso", false));
+            else if (!isSeedOrSprout && state.FertilizerLevel > stageReq.fertilizerMax)
+                drivers.Add(("Fertilizzante in eccesso", false));
+
+            if (state.IsInfested)
+                drivers.Add(("INFESTATA — esegui PRUNE", true));
+            else if (state.MoldRiskLevel >= 3)
+                drivers.Add(("Rischio muffa critico", true));
+            else if (state.MoldRiskLevel >= 2)
+                drivers.Add(("Rischio muffa", false));
+
+            if (drivers.Count > 3) drivers = drivers.GetRange(0, 3);
+            return drivers;
+        }
+
+        private static string StripTerminalTokens(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return string.Empty;
+            string text = raw;
+            string[] tokens =
+            {
+                "§TITLE§", "§CMD§", "§INFO§", "§DATA§", "§VAL§", "§WARN§", "§ERROR§",
+                "§Y§", "§N§", "§WHITE§", "§PURPLE§", "§END§"
+            };
+            for (int i = 0; i < tokens.Length; i++)
+                text = text.Replace(tokens[i], string.Empty);
+            text = text.Replace("⚠️", string.Empty).Replace("⚠", string.Empty);
+            return text.Trim();
+        }
+
         private void RefreshHudFromSelectedPot()
         {
             PotSlot pot = _selectedPotIndex < _hudPots.Count ? _hudPots[_selectedPotIndex] : null;
@@ -2093,6 +2392,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 _hudLiveLabel.text = empty ? "Offline" : "LIVE";
 
             RefreshVitalBlocks(state, plantData);
+            UpdateQuickActionPanel(pot, state, plantData, empty);
         }
 
         private Sprite ResolveIncubatorSprite(PotStateModel potState, PlantData plantData)
@@ -3862,6 +4162,16 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                 ShowLoadingSpinner(true);
                 float delay = (_pendingConfirmAction != null && _pendingConfirmAction.Type == QueuedActionType.Plant) ? _loadingDelayPlantFlowStep : _loadingDelayStep;
                 _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(delay, "Conferma", () => HandleConfirmToQueue(upper)));
+                return;
+            }
+            if (_inputState == InputState.ConfirmingCriticalFertilize)
+            {
+                AppendRawLine($"> {trimmed}");
+                FlushConsole();
+                AppendLoadingLines("Verifica critica");
+                FlushConsole();
+                ShowLoadingSpinner(true);
+                _loadingCoroutine = StartCoroutine(LoadingThenExecuteStep(_loadingDelayStep, "Verifica critica", () => HandleConfirmCriticalFertilize(upper)));
                 return;
             }
             if (_inputState == InputState.ConfirmingExecuteOrDiscardQueue)
@@ -6177,6 +6487,9 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 return;
             }
 
+            var potState = pot.PotActions != null ? pot.PotActions.PotState : null;
+            var potPlantData = potState != null ? potState.GetPlantData() : null;
+
             _selection = new SelectionContext { Type = type, PotId = potId, OptionsTypeIds = options };
             _inputState = InputState.SelectingItem;
 
@@ -6188,7 +6501,25 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 int qty = GetAvailableQuantity(typeId);
                 Item displayItem = GetAvailableItemForDisplay(typeId);
                 string displayName = PlayerInventoryPanelController.GetItemDisplayName(typeId, displayItem);
-                AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantità: {qty}");
+
+                // C.2: SPRAY — mostra delta pH e direzione vs target pianta
+                if (type == QueuedActionType.Spray && _phSystem != null && potPlantData != null)
+                {
+                    float delta = typeId == Items.AdditiveAcid ? -5f : 5f;
+                    float resultPh = _phSystem.CurrentPh + delta;
+                    float phMin = potPlantData.OptimalPhMin;
+                    float phMax = potPlantData.OptimalPhMax;
+                    bool wasInRange = _phSystem.CurrentPh >= phMin && _phSystem.CurrentPh <= phMax;
+                    bool willBeInRange = resultPh >= phMin && resultPh <= phMax;
+                    string sign = delta > 0 ? "+" : "";
+                    string direction = willBeInRange ? "§DATA§→ verso target§END§" :
+                                       wasInRange ? "§WARN§⚠ fuori target§END§" : "§WARN§lontano dal target§END§";
+                    AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Δ pH: {sign}{delta:F0}  {direction}   Qtà: {qty}");
+                }
+                else
+                {
+                    AppendRawLine($"  §CMD§{i + 1}.§END§ §DATA§{displayName}§END§   Quantità: {qty}");
+                }
             }
             AppendRawLine("§WHITE§Digita il numero dell'oggetto o §N§N§END§ per annullare§END§");
             AppendRawLine("");
@@ -6317,6 +6648,39 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
 
             _selection = null;
 
+            // C.3: FERTILIZE incompatibile — doppia conferma prima di procedere
+            if (_pendingConfirmAction.Type == QueuedActionType.Fertilize)
+            {
+                var fertPot = FindPotById(_pendingConfirmAction.PotId);
+                var fertState = fertPot?.PotActions?.PotState;
+                var fertPlantData = fertState?.GetPlantData();
+                if (fertPlantData != null)
+                {
+                    FertilizerType fertType = chosen switch
+                    {
+                        "fertilizer-pure"       => FertilizerType.Pure,
+                        "fertilizer-prohibited" => FertilizerType.Prohibited,
+                        _                       => FertilizerType.Standard,
+                    };
+                    PlantFamily family = fertPlantData.Family;
+                    if (!FertilizerSystem.IsFertilizerCompatible(fertType, family))
+                    {
+                        _inputState = InputState.ConfirmingCriticalFertilize;
+                        string compatDesc = FertilizerSystem.GetCompatibilityDescription(fertType, family);
+                        WritePlantFlowBlock(() =>
+                        {
+                            AppendRawLine("§ERROR§⚠ PERICOLO CRITICO — FERTILIZZANTE INCOMPATIBILE§END§");
+                            AppendRawLine($"§ERROR§  {compatDesc}§END§");
+                            AppendRawLine($"§ERROR§  Famiglia pianta: {family}   Fertilizzante: {fertType}§END§");
+                            AppendRawLine("§WARN§  Esito atteso: MORTE IMMEDIATA DELLA PIANTA§END§");
+                            AppendRawLine("§WHITE§Confermi di voler procedere comunque? [§Y§Y§END§/§N§N§END§]§END§");
+                            AppendRawLine("");
+                        });
+                        return;
+                    }
+                }
+            }
+
             if (_pendingConfirmAction.Type == QueuedActionType.Plant)
             {
                 _pendingPlantDrip = false;
@@ -6444,6 +6808,31 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
                 if (action == null || string.IsNullOrEmpty(action.ItemTypeId)) continue;
                 _reservedItems.TryGetValue(action.ItemTypeId, out int cur);
                 _reservedItems[action.ItemTypeId] = cur + 1;
+            }
+        }
+
+        // C.3: Prima conferma per fertilizzante incompatibile — se Y, chiede seconda conferma definitiva.
+        private void HandleConfirmCriticalFertilize(string upper)
+        {
+            if (upper == "Y")
+            {
+                _inputState = InputState.ConfirmingActionToQueue;
+                WritePlantFlowBlock(() =>
+                {
+                    AppendRawLine("§ERROR§⚠ CONFERMA DEFINITIVA RICHIESTA§END§");
+                    AppendRawLine("§ERROR§  Questa azione UCCIDERÀ la pianta in modo irreversibile.§END§");
+                    AppendRawLine("§WARN§  Per continuare digita Y un'altra volta. N per annullare.§END§");
+                    AppendRawLine("§WHITE§[§Y§Y§END§/§N§N§END§]§END§");
+                    AppendRawLine("");
+                });
+            }
+            else
+            {
+                _pendingConfirmAction = null;
+                _inputState = InputState.Idle;
+                AppendRawLine("§WARN§⚠ Operazione annullata. Pianta al sicuro.§END§");
+                AppendRawLine("");
+                FlushConsole();
             }
         }
 

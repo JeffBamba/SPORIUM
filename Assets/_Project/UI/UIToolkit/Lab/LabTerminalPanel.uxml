@@ -1,0 +1,113 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Lab/LabTerminalPanel.uss?fileID=7433441132597879392&amp;guid=9ec05017512b7f44d8a24d5481f451f8&amp;type=3#LabTerminalPanel" />
+    <ui:VisualElement name="lab-terminal-overlay" class="lab-terminal-overlay">
+        <ui:VisualElement name="lab-terminal-panel" class="lab-terminal-panel">
+            <ui:VisualElement class="lab-terminal-header">
+                <ui:Label text="TERMINALE LABORATORIO" class="lab-terminal-title" />
+                <ui:Button name="btn-close" class="lab-terminal-close">
+                    <ui:Label text="×" class="lab-terminal-close-x" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:Label text="Hub operativo del laboratorio: usa i macchinari singolarmente o avvia il flow guidato Crea Nuovo Seme." class="lab-terminal-subtitle" />
+
+            <ui:VisualElement class="lab-terminal-section lab-terminal-section-standalone">
+                <ui:VisualElement class="lab-terminal-section-header">
+                    <ui:Label text="MACCHINARI" class="lab-terminal-section-title" />
+                    <ui:Button name="btn-toggle-machines-section" text="v" class="lab-terminal-section-toggle" />
+                </ui:VisualElement>
+                <ui:VisualElement name="lab-terminal-machines-content" class="lab-terminal-machines-content">
+                    <ui:Label text="Modalità standalone: apri e usa ogni macchinario singolarmente, senza avviare un progetto guidato." class="lab-terminal-section-hint" />
+
+                    <ui:VisualElement class="lab-terminal-machine-row">
+                        <ui:Label text="Extractor" class="lab-terminal-machine-name" />
+                        <ui:Label name="lab-terminal-machine-extractor-status" text="Idle" class="lab-terminal-machine-status" />
+                        <ui:Button name="btn-open-extractor" text="Apri" class="lab-terminal-open-btn" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="lab-terminal-machine-row">
+                        <ui:Label text="Catalizzatore" class="lab-terminal-machine-name" />
+                        <ui:Label name="lab-terminal-machine-catalizzatore-status" text="Idle" class="lab-terminal-machine-status" />
+                        <ui:Button name="btn-open-catalizzatore" text="Apri" class="lab-terminal-open-btn" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="lab-terminal-machine-row">
+                        <ui:Label text="Fusion (Pipette)" class="lab-terminal-machine-name" />
+                        <ui:Label name="lab-terminal-machine-fusion-status" text="Idle" class="lab-terminal-machine-status" />
+                        <ui:Button name="btn-open-fusion" text="Apri" class="lab-terminal-open-btn" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="lab-terminal-machine-row">
+                        <ui:Label text="Incubator" class="lab-terminal-machine-name" />
+                        <ui:Label name="lab-terminal-machine-incubator-status" text="Idle" class="lab-terminal-machine-status" />
+                        <ui:Button name="btn-open-incubator" text="Apri" class="lab-terminal-open-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="lab-terminal-section lab-terminal-section-project">
+                <ui:Label text="PROGETTO SEME" class="lab-terminal-section-title" />
+                <ui:Label name="lab-terminal-project-status" text="Nessun progetto attivo." class="lab-terminal-project-status" />
+                <ui:VisualElement class="lab-terminal-project-top-row">
+                    <ui:VisualElement class="lab-terminal-project-main-col">
+                        <ui:VisualElement class="lab-terminal-quick-panel">
+                            <ui:Label text="GUIDA STATICA" class="lab-terminal-quick-title-static" />
+                            <ui:Label name="lab-terminal-quick-intro" text="Progetto Seme: pipeline guidata Frutto -> Spora -> Maturazione -> Pre-seed -> Incubazione." class="lab-terminal-quick-line lab-terminal-quick-static" />
+                            <ui:Label text="STATO DINAMICO" class="lab-terminal-quick-title-dynamic" />
+                            <ui:Label name="lab-terminal-quick-what-now" text="Nessun progetto attivo. Premi CREA NUOVO SEME per avviare il flow guidato." class="lab-terminal-quick-line lab-terminal-quick-dynamic" />
+                            <ui:Label name="lab-terminal-quick-live" text="Live: modalità standalone." class="lab-terminal-quick-line lab-terminal-quick-dynamic" />
+                            <ui:Label name="lab-terminal-quick-outcome" text="Outcome: nessun risultato ancora." class="lab-terminal-quick-line lab-terminal-quick-dynamic lab-terminal-quick-outcome" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="lab-terminal-actions-row">
+                            <ui:Button name="btn-create-project" text="CREA NUOVO SEME" class="lab-terminal-primary-btn lab-terminal-action-btn" />
+                            <ui:Button name="btn-open-current-step" text="APRI STEP CORRENTE" class="lab-terminal-secondary-btn lab-terminal-action-btn" />
+                            <ui:Button name="btn-cancel-project" text="TERMINA PROGETTO" class="lab-terminal-secondary-btn lab-terminal-danger-btn lab-terminal-action-btn" />
+                        </ui:VisualElement>
+                </ui:VisualElement>
+                    <ui:VisualElement name="lab-terminal-project-image-placeholder" class="lab-terminal-project-image-placeholder">
+                        <ui:Label text="PROJECT IMAGE PLACEHOLDER" class="lab-terminal-project-image-placeholder-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="lab-terminal-project-board" class="lab-terminal-project-board">
+                    <ui:Label text="LAVAGNA DIGITALE" class="lab-terminal-board-title" />
+                    <ui:VisualElement class="lab-terminal-board-legend">
+                        <ui:Label text="Legenda:" class="lab-terminal-legend-title" />
+                        <ui:Label text="● In corso" class="lab-terminal-legend-item lab-terminal-legend-inprogress" />
+                        <ui:Label text="● Completato" class="lab-terminal-legend-item lab-terminal-legend-completed" />
+                        <ui:Label text="● Da fare" class="lab-terminal-legend-item lab-terminal-legend-todo" />
+                        <ui:Label text="● Bloccato" class="lab-terminal-legend-item lab-terminal-legend-blocked" />
+                    </ui:VisualElement>
+                    <ui:Label name="lab-terminal-step-extractor" text="Frutto -> Spora: Da fare" class="lab-terminal-step-label" />
+                    <ui:Label name="lab-terminal-step-catalizzatore" text="Spora -> Maturazione: Bloccato" class="lab-terminal-step-label" />
+                    <ui:Label name="lab-terminal-step-fusion" text="Maturazione -> Pre-seed: Bloccato" class="lab-terminal-step-label" />
+                    <ui:Label name="lab-terminal-step-incubator" text="Pre-seed -> Incubazione: Bloccato" class="lab-terminal-step-label" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="lab-terminal-analysis-block" class="lab-terminal-analysis-fullscreen">
+            <ui:VisualElement class="lab-terminal-analysis-fullscreen-card">
+                <ui:Label text="ANALISI PROGETTO SEME" class="lab-terminal-analysis-title" />
+                <ui:Label name="lab-terminal-analysis-status" text="Analisi in preparazione..." class="lab-terminal-analysis-status" />
+                <ui:VisualElement class="lab-terminal-analysis-progress-track">
+                    <ui:VisualElement name="lab-terminal-analysis-progress-fill" class="lab-terminal-analysis-progress-fill" />
+                </ui:VisualElement>
+                <ui:Label text="Tipologia progetto (consigliata, non vincolante):" class="lab-terminal-analysis-subtitle" />
+                <ui:VisualElement class="lab-terminal-analysis-options">
+                    <ui:Button name="btn-project-type-replica" text="REPLICA" class="lab-terminal-project-type-btn" />
+                    <ui:Button name="btn-project-type-hybrid" text="IBRIDO" class="lab-terminal-project-type-btn" />
+                    <ui:Button name="btn-project-type-new-profile" text="NUOVO PROFILO" class="lab-terminal-project-type-btn" />
+                </ui:VisualElement>
+                <ui:Label name="lab-terminal-analysis-selected-title" text="SCHEDA PROGETTO" class="lab-terminal-analysis-selected-title" />
+                <ui:Label name="lab-terminal-analysis-selected-project" text="Progetto: --" class="lab-terminal-analysis-schema-line" />
+                <ui:Label name="lab-terminal-analysis-required-items" text="Item necessari: seleziona una tipologia." class="lab-terminal-analysis-schema-line" />
+                <ui:Label name="lab-terminal-analysis-execution-status" text="Status: in attesa selezione." class="lab-terminal-analysis-schema-line" />
+                <ui:Label name="lab-terminal-analysis-change-warning" text="" class="lab-terminal-analysis-change-warning" />
+                <ui:VisualElement class="lab-terminal-analysis-actions">
+                    <ui:Button name="btn-analysis-open-current-step" text="APRI STEP CORRENTE" class="lab-terminal-secondary-btn" />
+                    <ui:Button name="btn-analysis-cancel-selection" text="ANNULLA SCELTA" class="lab-terminal-secondary-btn lab-terminal-analysis-cancel-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
