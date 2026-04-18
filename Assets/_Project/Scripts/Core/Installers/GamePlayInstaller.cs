@@ -8,6 +8,7 @@ using Sporae.Core;
 using Sporae.Dome;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using _Project.UI.UIToolkit.VoOverlay;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -108,6 +109,23 @@ namespace _Project.Sporae.Core.Installers
 
             _missionManager = new MissionManager();
             ServiceContainer.Instance.Register(_missionManager);
+
+            var voGo = new GameObject("VoOverlay");
+            var voOverlay = voGo.AddComponent<VoOverlayController>();
+            ServiceContainer.Instance.Register(voOverlay);
+
+            var demoSession = new DemoSessionState();
+            if (DemoSessionState.StartNextSessionAsDemo)
+            {
+                demoSession.IsDemo = true;
+                DemoSessionState.StartNextSessionAsDemo = false;
+            }
+            ServiceContainer.Instance.Register(demoSession);
+            if (demoSession.IsDemo)
+            {
+                var demoGo = new GameObject("DemoStoryDirector");
+                demoGo.AddComponent<DemoStoryDirector>();
+            }
             
             // Registra AssetManager e precarica asset critici
             // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo

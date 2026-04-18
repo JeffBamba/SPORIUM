@@ -20,6 +20,7 @@ namespace Sporae.UI.UIToolkit.HUD
     /// Sostituisce BottomNavigationController.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
+    [DefaultExecutionOrder(40)]
     public class CompactBottomBarController : MonoBehaviour
     {
         [Header("UI Toolkit")]
@@ -495,6 +496,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
                 else
                 {
+                    DestroySpuriousInGameToolkitHost(_mainMenuUIToolkit);
                     return;
                 }
             }
@@ -522,6 +524,22 @@ namespace Sporae.UI.UIToolkit.HUD
                 _mainMenuScreens.SetEscapeHandlingEnabled(false);
         }
 
+        /// <summary>
+        /// Se la race MainMenu vs HUD ha creato <c>InGameMainMenu_UIToolkitHost</c> duplicato, elimina l’host.
+        /// </summary>
+        private static void DestroySpuriousInGameToolkitHost(MainMenuUIToolkitController keep)
+        {
+            if (keep == null) return;
+            var all = UnityEngine.Object.FindObjectsByType<MainMenuUIToolkitController>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var t in all)
+            {
+                if (t == null || t == keep) continue;
+                if (t.gameObject.name != "InGameMainMenu_UIToolkitHost") continue;
+                UnityEngine.Object.Destroy(t.gameObject);
+            }
+        }
+
         private void OnOptionsClicked()
         {
             EnsureInGameMainMenuController();
@@ -535,15 +553,19 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void OnSaveClicked()
         {
-            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            EnsureInGameMainMenuController();
+            if (_mainMenuUIToolkit != null && _mainMenuUIToolkit.IsRuntimeReady)
+            {
+                _mainMenuUIToolkit.ShowInGameMenu();
+                _mainMenuUIToolkit.OpenSaveSlotsOverlay();
+                return;
+            }
 
+            SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] MainMenuUIToolkit non pronto: fallback salva su slot default.");
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (_saveManager != null)
             {
                 bool ok = _saveManager.SaveGame("default");
-                if (_enableDebugLogs)
-                    SporiumLogger.LogInfo(LogCategory.UI, $"[CompactBottomBar] SaveGame result: {ok}");
-
-                // Toast Foundation con spec registrate (SAVE-RESULT non esisteva nel resolver)
                 if (ok)
                     foundation?.PostToastImmediate("SYS-003", null, NotificationSeverity.Success);
                 else
@@ -551,7 +573,6 @@ namespace Sporae.UI.UIToolkit.HUD
             }
             else
             {
-                SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] SaveManager non disponibile.");
                 foundation?.PostToastImmediate("SYS-004", null, NotificationSeverity.Warning);
             }
         }

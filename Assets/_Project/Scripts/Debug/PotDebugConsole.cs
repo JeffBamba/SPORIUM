@@ -7,6 +7,7 @@ using Sporae.Dome.PotSystem.Level;
 using Sporae.Dome.PotSystem.Botanical;
 using _Project;
 using _Project.Sporae.Core;
+using _Project.UI.UIToolkit.VoOverlay;
 
 namespace Sporae.DevTools
 {
@@ -76,6 +77,11 @@ namespace Sporae.DevTools
         private string _debugSeedTraitPowerString = "100";
         /// <summary>0=Fixed, 1=Stable, 2=Unstable — usato per semi +inv e piantatura diretta Task 4.</summary>
         private int _debugSeedGeneticToolbar = 1;
+
+        // VO Overlay (test visivo)
+        private string _voDebugText = "Linea di test VO dal Pot Debug Console.";
+        private int _voRegisterToolbar;
+        private string _voCpsString = "28";
         
         // Cache per sistemi
         private PhSystem _phSystem;
@@ -761,6 +767,36 @@ namespace Sporae.DevTools
                 _debugLog.RemoveAt(0);
             }
         }
+
+        private void TryShowVoFromDebugConsole()
+        {
+            var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
+            if (vo == null)
+            {
+                AddLog("VO: VoOverlayController non trovato (ServiceContainer).");
+                return;
+            }
+
+            var reg = _voRegisterToolbar == 0 ? VoRegister.RegisterA : VoRegister.RegisterB;
+            float cps = 28f;
+            float.TryParse(_voCpsString, out cps);
+            if (cps < 4f) cps = 28f;
+
+            vo.ShowLine(_voDebugText ?? string.Empty, reg, cps, () => AddLog("VO: linea completata (typing)."));
+            AddLog($"VO: mostra — registro {reg}, {cps:0.#} char/s");
+        }
+
+        private void TryHideVoFromDebugConsole()
+        {
+            var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
+            if (vo == null)
+            {
+                AddLog("VO: VoOverlayController non trovato.");
+                return;
+            }
+            vo.Hide();
+            AddLog("VO: nascosto.");
+        }
         
         private void OnGUI()
         {
@@ -936,6 +972,24 @@ namespace Sporae.DevTools
                 AddDebugLabSeedToInventory(BotanicalPlantCodes.GlasscapFungus);
             }
             currentY += 34f;
+
+            // ── VO Overlay (test visivo) ──
+            GUI.Label(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 22f),
+                "VO Overlay — testo + registro (VoOverlayController)", labelStyle);
+            currentY += 24f;
+            _voDebugText = GUI.TextArea(new Rect(consoleX + 10f, currentY, consoleWidth - 20f, 56f), _voDebugText);
+            currentY += 60f;
+            GUI.Label(new Rect(consoleX + 10f, currentY, 100f, 22f), "Registro:", labelStyle);
+            _voRegisterToolbar = GUI.Toolbar(new Rect(consoleX + 110f, currentY, 300f, 24f), _voRegisterToolbar,
+                new[] { "A (cyan)", "B (verde)" });
+            GUI.Label(new Rect(consoleX + 420f, currentY, 70f, 22f), "char/s:", labelStyle);
+            _voCpsString = GUI.TextField(new Rect(consoleX + 490f, currentY, 50f, 22f), _voCpsString, 4);
+            currentY += 30f;
+            if (GUI.Button(new Rect(consoleX + 10f, currentY, 200f, 28f), "Mostra VO", buttonStyle))
+                TryShowVoFromDebugConsole();
+            if (GUI.Button(new Rect(consoleX + 220f, currentY, 200f, 28f), "Nascondi VO", buttonStyle))
+                TryHideVoFromDebugConsole();
+            currentY += 36f;
             
             // Sezione editing POT selezionato - SCROLLABILE
             if (_selectedPot != null && _selectedPot.PotState != null)

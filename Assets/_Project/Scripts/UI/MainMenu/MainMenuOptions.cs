@@ -28,6 +28,12 @@ namespace _Project
         /// <summary>Espone il riferimento ai popup manager del menu.</summary>
         public MainMenuScreens MenuScreens => _menuScreens;
 
+        private void Awake()
+        {
+            // Prima di qualsiasi Start (es. CompactBottomBar): il Toolkit deve esistere e aver costruito l’UI.
+            EnsureMainMenuUiToolkitController();
+        }
+
         private void Start()
         {
             EnsureOptionsPopupController();
@@ -56,8 +62,40 @@ namespace _Project
                 _menuScreens.OptionsPopup.AddComponent<OptionsPopupController>();
         }
 
+        /// <summary>
+        /// Il menu Toolkit può stare sullo stesso GO del Menu o su un host creato da HUD (CompactBottomBar).
+        /// <see cref="GetComponent{T}"/> da solo punta solo al primo caso.
+        /// </summary>
+        private MainMenuUIToolkitController ResolveMainMenuToolkit()
+        {
+            var local = GetComponent<MainMenuUIToolkitController>();
+            if (local != null && local.IsRuntimeReady)
+                return local;
+
+            var all = UnityEngine.Object.FindObjectsByType<MainMenuUIToolkitController>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var t in all)
+            {
+                if (t != null && t.IsRuntimeReady && t.gameObject.activeInHierarchy)
+                    return t;
+            }
+            foreach (var t in all)
+            {
+                if (t != null && t.IsRuntimeReady)
+                    return t;
+            }
+            return local;
+        }
+
         private void HandleSave()
         {
+            var toolkit = ResolveMainMenuToolkit();
+            if (toolkit != null && toolkit.IsRuntimeReady)
+            {
+                toolkit.OpenSaveSlotsOverlay();
+                return;
+            }
+
             if (_menuScreens.IsSlotsOpen)
                 _menuScreens.HideActivePopup();
             else
@@ -71,6 +109,13 @@ namespace _Project
 
         private void HandleLoad()
         {
+            var toolkit = ResolveMainMenuToolkit();
+            if (toolkit != null && toolkit.IsRuntimeReady)
+            {
+                toolkit.OpenLoadSlotsOverlay();
+                return;
+            }
+
             if (_menuScreens.IsSlotsOpen)
                 _menuScreens.HideActivePopup();
             else

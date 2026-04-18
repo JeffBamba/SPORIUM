@@ -23,7 +23,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/_Project/Scenes/Lab/SCN_Lab_Main.unity
     guid: 3c79ce3e74961924891d2cddd807af1a
-  - enabled: 1
+  - enabled: 0
     path: Assets/_Project/Scenes/Intro/SCN_Intro.unity
     guid: b3c01b7807e5b314c8806f1a40992d08
   m_configObjects: {}

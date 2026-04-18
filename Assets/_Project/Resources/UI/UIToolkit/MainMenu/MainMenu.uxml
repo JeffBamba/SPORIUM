@@ -77,5 +77,47 @@
                 <ui:Label text="VAULT SYSTEMS ONLINE • ALL PROTOCOLS NOMINAL" name="footer-live-text" style="color: rgba(70, 141, 67, 0.9);" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="save-slots-overlay" class="save-slots-overlay">
+            <ui:VisualElement name="save-slots-panel" class="save-slots-panel">
+                <ui:VisualElement name="save-slots-header" class="save-slots-header">
+                    <ui:VisualElement name="save-slots-header-titles" class="save-slots-header-titles">
+                        <ui:Label text="SALVATAGGI VAULT" name="save-slots-title" class="save-slots-title" />
+                        <ui:Label text="Seleziona uno slot — stile terminale VLT-01" name="save-slots-subtitle" class="save-slots-subtitle" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-save-slots-close" class="save-slots-close" text="CHIUDI" />
+                </ui:VisualElement>
+                <ui:ScrollView name="save-slots-scroll" class="save-slots-scroll" mode="Vertical">
+                    <ui:VisualElement name="save-slots-rows" class="save-slots-rows">
+                        <ui:VisualElement name="save-slot-row-0" class="save-slot-row">
+                            <ui:Label text="Slot 1 — …" name="save-slot-summary-0" class="save-slot-summary" />
+                            <ui:VisualElement name="save-slot-actions-0" class="save-slot-actions">
+                                <ui:Button name="save-slot-primary-0" class="menu-action menu-action--blue save-slot-primary">
+                                    <ui:Label text="Carica" name="save-slot-primary-label-0" class="menu-action-label save-slot-primary-label" />
+                                </ui:Button>
+                                <ui:Button name="save-slot-delete-0" class="menu-action menu-action--red save-slot-delete" text="Elimina" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="save-slot-row-1" class="save-slot-row">
+                            <ui:Label text="Slot 2 — …" name="save-slot-summary-1" class="save-slot-summary" />
+                            <ui:VisualElement name="save-slot-actions-1" class="save-slot-actions">
+                                <ui:Button name="save-slot-primary-1" class="menu-action menu-action--blue save-slot-primary">
+                                    <ui:Label text="Carica" name="save-slot-primary-label-1" class="menu-action-label save-slot-primary-label" />
+                                </ui:Button>
+                                <ui:Button name="save-slot-delete-1" class="menu-action menu-action--red save-slot-delete" text="Elimina" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="save-slot-row-2" class="save-slot-row">
+                            <ui:Label text="Slot 3 — …" name="save-slot-summary-2" class="save-slot-summary" />
+                            <ui:VisualElement name="save-slot-actions-2" class="save-slot-actions">
+                                <ui:Button name="save-slot-primary-2" class="menu-action menu-action--blue save-slot-primary">
+                                    <ui:Label text="Carica" name="save-slot-primary-label-2" class="menu-action-label save-slot-primary-label" />
+                                </ui:Button>
+                                <ui:Button name="save-slot-delete-2" class="menu-action menu-action--red save-slot-delete" text="Elimina" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:ScrollView>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
