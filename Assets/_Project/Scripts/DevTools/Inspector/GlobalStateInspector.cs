@@ -34,7 +34,14 @@ namespace Sporae.DevTools
         
         // Input fields per modifica valori
         private string _cryInputValue = "250";
-        private string _actionsInputValue = "4";
+        private string _actionsLeftInputValue = "1";
+        private string _actionsMaxInputValue = "1";
+        private string _playerHydrationInputValue = "100";
+        private string _dehydrationStreakInputValue = "0";
+        private string _breakfastBudgetInputValue = "1";
+        private string _noMealStreakInputValue = "0";
+        private string _starvationMinCapStreakInputValue = "0";
+        private string _actionsAddInputValue = "1";
         private string _dayInputValue = "1";
         private string _phInputValue = "0";
         private string _potSearchFilter = "";
@@ -250,16 +257,96 @@ namespace Sporae.DevTools
             }
             GUILayout.EndHorizontal();
             
-            // Actions
+            GUILayout.Label("H→movimento | Azioni→cap alba da colazione (max 5). Mangiare resetta la fame; senza cibo il cap cala.", labelStyle);
+            var ph = _gameManager.PlayerHydrationSystem;
+            if (ph != null)
+            {
+                GUILayout.Label(
+                    $"H player: {ph.HydrationPercent:F1}% | vel.× {ph.GetMovementSpeedMultiplier():P0} | streak H≈0: {_gameManager.DehydrationZeroDayStreak} | budget colazione (base): {_gameManager.DailyBreakfastBudget}",
+                    labelStyle);
+            }
+            GUILayout.Label(
+                $"Fame: gg. senza pasto={_gameManager.ConsecutiveDaysWithoutMeal} | streak 1 az. senza cibo={_gameManager.StarvationDaysAtMinCapWithoutFood} | pasto da alba: {(_gameManager.AteMealSincePreviousDawn ? "sì" : "no")}",
+                labelStyle);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("H% (0–100):", labelStyle, GUILayout.Width(100));
+            _playerHydrationInputValue = GUILayout.TextField(_playerHydrationInputValue, GUILayout.Width(60));
+            if (GUILayout.Button("Set H", buttonStyle, GUILayout.Width(60)))
+            {
+                if (float.TryParse(_playerHydrationInputValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float hp))
+                    _gameManager.DebugSetPlayerHydrationPercent(hp);
+            }
+            if (GUILayout.Button("100", buttonStyle, GUILayout.Width(44))) _gameManager.DebugSetPlayerHydrationPercent(100f);
+            if (GUILayout.Button("50", buttonStyle, GUILayout.Width(44))) _gameManager.DebugSetPlayerHydrationPercent(50f);
+            if (GUILayout.Button("0", buttonStyle, GUILayout.Width(44))) _gameManager.DebugSetPlayerHydrationPercent(0f);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Streak disidr.:", labelStyle, GUILayout.Width(100));
+            _dehydrationStreakInputValue = GUILayout.TextField(_dehydrationStreakInputValue, GUILayout.Width(40));
+            if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(50)))
+            {
+                if (int.TryParse(_dehydrationStreakInputValue, out int st))
+                    _gameManager.DebugSetDehydrationZeroDayStreak(st);
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Budget colazione 1–5:", labelStyle, GUILayout.Width(140));
+            _breakfastBudgetInputValue = GUILayout.TextField(_breakfastBudgetInputValue, GUILayout.Width(40));
+            if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(50)))
+            {
+                if (int.TryParse(_breakfastBudgetInputValue, out int bb))
+                    _gameManager.DebugSetDailyBreakfastBudget(bb);
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Gg. senza pasto:", labelStyle, GUILayout.Width(140));
+            _noMealStreakInputValue = GUILayout.TextField(_noMealStreakInputValue, GUILayout.Width(40));
+            if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(50)))
+            {
+                if (int.TryParse(_noMealStreakInputValue, out int nm))
+                    _gameManager.DebugSetConsecutiveDaysWithoutMeal(nm);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Streak 1 az (fame):", labelStyle, GUILayout.Width(140));
+            _starvationMinCapStreakInputValue = GUILayout.TextField(_starvationMinCapStreakInputValue, GUILayout.Width(40));
+            if (GUILayout.Button("Set", buttonStyle, GUILayout.Width(50)))
+            {
+                if (int.TryParse(_starvationMinCapStreakInputValue, out int ss))
+                    _gameManager.DebugSetStarvationDaysAtMinCap(ss);
+            }
+            if (GUILayout.Button("Simula pasto", buttonStyle, GUILayout.Width(100)))
+                _gameManager.DebugNotifySolidFoodConsumed();
+            GUILayout.EndHorizontal();
+
+            // Actions (restore o add fino al max)
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Actions: {_gameManager.ActionsLeft} / {_gameManager.ActionSystem.MaxActions}", labelStyle, GUILayout.Width(200));
-            _actionsInputValue = GUILayout.TextField(_actionsInputValue, GUILayout.Width(100));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("left", labelStyle, GUILayout.Width(36));
+            _actionsLeftInputValue = GUILayout.TextField(_actionsLeftInputValue, GUILayout.Width(50));
+            GUILayout.Label("max", labelStyle, GUILayout.Width(36));
+            _actionsMaxInputValue = GUILayout.TextField(_actionsMaxInputValue, GUILayout.Width(50));
+            if (GUILayout.Button("Restore", buttonStyle, GUILayout.Width(80)))
+            {
+                if (int.TryParse(_actionsLeftInputValue, out int left) && int.TryParse(_actionsMaxInputValue, out int mx))
+                    _gameManager.DebugRestoreActions(left, mx);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Add (cap al max):", labelStyle, GUILayout.Width(120));
+            _actionsAddInputValue = GUILayout.TextField(_actionsAddInputValue, GUILayout.Width(50));
             if (GUILayout.Button("Add", buttonStyle, GUILayout.Width(80)))
             {
-                if (int.TryParse(_actionsInputValue, out int actions))
+                if (int.TryParse(_actionsAddInputValue, out int actions))
                 {
                     _gameManager.ActionSystem.AddActions(actions);
-                    SporiumLogger.LogInfo(LogCategory.Core, $"Aggiunte {actions} azioni");
+                    SporiumLogger.LogInfo(LogCategory.Core, $"Aggiunte {actions} azioni (rispetta MaxActions)");
                 }
             }
             GUILayout.EndHorizontal();

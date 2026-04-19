@@ -20,6 +20,7 @@
   [Component] PlayerDepthScaleAndSort
   [Component] PlayerMoverRouter2D
   [Component] PlayerShadowCaster2DAutoSetup
+  [Component] PlayerOutfitController
   - Sprite
     [Component] Transform
     [Component] SpriteRenderer
@@ -68,11 +69,11 @@
       [Component] Transform
       [Component] PanelEventHandler
       [Component] PanelRaycaster
-    - PlayerStatusPanelSettings(Clone)
+    - MainMenuPanelSettings(Clone)
       [Component] Transform
       [Component] PanelEventHandler
       [Component] PanelRaycaster
-    - PlayerStatusPanelSettings(Clone)
+    - MainMenuPanelSettings(Clone)
       [Component] Transform
       [Component] PanelEventHandler
       [Component] PanelRaycaster
@@ -2862,9 +2863,6 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] RoomLight2DZone
-  - Light_KitchenRoom_Right
-    [Component] Transform
-    [Component] Light2D
   - Light_KitchenRoom_Main
     [Component] Transform
     [Component] Light2D
@@ -3071,9 +3069,10 @@
 - WardrobePanel
   [Component] Transform
   [Component] WardrobePanelController
-- DemoStoryDirector
+  [Component] UIDocument
+- PlayerStatToastBridge
   [Component] Transform
-  [Component] DemoStoryDirector
+  [Component] PlayerStatToastBridge
 - pH_DebugConsole
   [Component] Transform
   [Component] PhSystemDebugConsole

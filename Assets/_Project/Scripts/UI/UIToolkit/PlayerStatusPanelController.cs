@@ -96,19 +96,7 @@ namespace Sporae.UI.UIToolkit
         private void UpdateHydrationFromSystem(PlayerHydrationSystem hydration)
         {
             UpdateHydration(hydration.HydrationPercent, 100f);
-            int mod = hydration.GetActionModifier();
-            if (_warningLabel != null)
-            {
-                _warningLabel.text = mod switch
-                {
-                    -2 => "Disidratato: -2 azioni domani",
-                    -1 => "Bassa idratazione: -1 azione domani",
-                    0 => "",
-                    2 => "Ben idratato: +2 azioni domani",
-                    _ => ""
-                };
-                _warningLabel.style.display = string.IsNullOrEmpty(_warningLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            }
+            ApplyHydrationMovementWarning(hydration);
         }
 
         private void OnHydrationChanged(float current, float max)
@@ -116,20 +104,21 @@ namespace Sporae.UI.UIToolkit
             UpdateHydration(current, max);
             var hydration = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true)?.PlayerHydrationSystem;
             if (hydration != null)
-                UpdateWarningTextFromModifier(hydration.GetActionModifier());
+                ApplyHydrationMovementWarning(hydration);
         }
 
-        private void UpdateWarningTextFromModifier(int modifier)
+        private void ApplyHydrationMovementWarning(PlayerHydrationSystem hydration)
         {
             if (_warningLabel == null) return;
-            _warningLabel.text = modifier switch
-            {
-                -2 => "Disidratato: -2 azioni domani",
-                -1 => "Bassa idratazione: -1 azione domani",
-                0 => "",
-                2 => "Ben idratato: +2 azioni domani",
-                _ => ""
-            };
+
+            float h = hydration.HydrationPercent;
+            if (h > 50f)
+                _warningLabel.text = "";
+            else if (h > 25f)
+                _warningLabel.text = "Sotto il 50% H: leggera riduzione velocità di movimento";
+            else
+                _warningLabel.text = "Sotto il 25% H: velocità molto ridotta; rischio game over se resti a 0% H";
+
             _warningLabel.style.display = string.IsNullOrEmpty(_warningLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
             if (_warningLabel.style.display == DisplayStyle.Flex)
             {

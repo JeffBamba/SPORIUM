@@ -40,7 +40,12 @@ namespace Sporae.DevTools
         private bool _isConsoleOpen = false;
         private string _phInputValue = "0";
         private string _cryInputValue = "250";
-        private string _actionsInputValue = "4";
+        private string _actionsLeftInputValue = "1";
+        private string _actionsMaxInputValue = "1";
+        private string _playerHydrationInputValue = "100";
+        private string _dehydrationStreakInputValue = "0";
+        private string _breakfastBudgetInputValue = "1";
+        private string _nextDawnActionsInputValue = "3";
         private string _dayInputValue = "1";
         private string _condensationInputValue = "0";
         private string _condensationDailyProductionInput = "0";
@@ -435,10 +440,17 @@ namespace Sporae.DevTools
             GUILayout.EndHorizontal();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)
             
-            // === SEZIONE GAME STATE ===
-            GUILayout.Label("=== Game State ===", labelStyle);
+            // === SEZIONE GAME STATE (H→movimento | colazione→azioni max 5) ===
+            GUILayout.Label("=== Game State (player H / azioni) ===", labelStyle);
             if (_gameManager != null)
             {
+                var ph = _gameManager.PlayerHydrationSystem;
+                float hPct = ph?.HydrationPercent ?? -1f;
+                float speedMul = ph?.GetMovementSpeedMultiplier() ?? 1f;
+                GUILayout.Label(
+                    "Modello: H → velocità | Azioni → cap all’alba (max 5) da colazione base; senza cibo per 2+ giorni il cap scende (min 1); 3 giorni a 1 az senza cibo → game over fame. Cibo consumato conta come pasto.",
+                    new GUIStyle(labelStyle) { wordWrap = true, fontSize = Mathf.Max(11, labelStyle.fontSize - 1) },
+                    GUILayout.Width(560f));
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"CRY: {_gameManager.CurrentCRY}", labelStyle, GUILayout.Width(130));
                 _cryInputValue = GUILayout.TextField(_cryInputValue, GUILayout.Width(100));
@@ -451,16 +463,88 @@ namespace Sporae.DevTools
                     }
                 }
                 GUILayout.EndHorizontal();
-                
+
+                GUILayout.Label($"H player: {hPct:F1}% | moltiplicatore velocità: {speedMul:P0} | streak H≈0: {_gameManager.DehydrationZeroDayStreak} | budget colazione (base): {_gameManager.DailyBreakfastBudget}",
+                    labelStyle);
+                GUILayout.Label(
+                    $"Fame: gg. senza pasto={_gameManager.ConsecutiveDaysWithoutMeal} | streak 1 az. senza cibo={_gameManager.StarvationDaysAtMinCapWithoutFood} | pasto da alba: {(_gameManager.AteMealSincePreviousDawn ? "sì" : "no")}",
+                    labelStyle);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"Actions: {_gameManager.ActionsLeft}", labelStyle, GUILayout.Width(130));
-                _actionsInputValue = GUILayout.TextField(_actionsInputValue, GUILayout.Width(100));
-                if (GUILayout.Button("Set Actions", buttonStyle, GUILayout.Width(104)))
+                GUILayout.Label("H% (0–100):", labelStyle, GUILayout.Width(130));
+                _playerHydrationInputValue = GUILayout.TextField(_playerHydrationInputValue, GUILayout.Width(60));
+                if (GUILayout.Button("Set H", buttonStyle, GUILayout.Width(72)))
                 {
-                    if (int.TryParse(_actionsInputValue, out int newActions))
+                    if (float.TryParse(_playerHydrationInputValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float hp))
                     {
-                        _gameManager.ActionSystem.RestoreState(newActions, _gameManager.ActionSystem.MaxActions);
-                        AddLog($"Actions impostate a {newActions}");
+                        _gameManager.DebugSetPlayerHydrationPercent(hp);
+                        AddLog($"H player impostata a {hp:F1}%");
+                    }
+                }
+                if (GUILayout.Button("H=100", buttonStyle, GUILayout.Width(56))) { _gameManager.DebugSetPlayerHydrationPercent(100f); AddLog("H=100%"); }
+                if (GUILayout.Button("H=50", buttonStyle, GUILayout.Width(56))) { _gameManager.DebugSetPlayerHydrationPercent(50f); AddLog("H=50%"); }
+                if (GUILayout.Button("H=25", buttonStyle, GUILayout.Width(56))) { _gameManager.DebugSetPlayerHydrationPercent(25f); AddLog("H=25%"); }
+                if (GUILayout.Button("H=0", buttonStyle, GUILayout.Width(56))) { _gameManager.DebugSetPlayerHydrationPercent(0f); AddLog("H=0%"); }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Streak disidr.:", labelStyle, GUILayout.Width(130));
+                _dehydrationStreakInputValue = GUILayout.TextField(_dehydrationStreakInputValue, GUILayout.Width(60));
+                if (GUILayout.Button("Set streak", buttonStyle, GUILayout.Width(104)))
+                {
+                    if (int.TryParse(_dehydrationStreakInputValue, out int st))
+                    {
+                        _gameManager.DebugSetDehydrationZeroDayStreak(st);
+                        AddLog($"Streak disidratazione = {st}");
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Budget colazione (1–5):", labelStyle, GUILayout.Width(160));
+                _breakfastBudgetInputValue = GUILayout.TextField(_breakfastBudgetInputValue, GUILayout.Width(40));
+                if (GUILayout.Button("Set budget", buttonStyle, GUILayout.Width(96)))
+                {
+                    if (int.TryParse(_breakfastBudgetInputValue, out int bb))
+                    {
+                        _gameManager.DebugSetDailyBreakfastBudget(bb);
+                        AddLog($"Budget colazione (prossime albe) = {Mathf.Clamp(bb, 1, 5)}");
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Simula pasto (cibo)", buttonStyle, GUILayout.Width(160)))
+                {
+                    _gameManager.DebugNotifySolidFoodConsumed();
+                    AddLog("Registrato pasto (come consumo cibo).");
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Prossima alba (override):", labelStyle, GUILayout.Width(160));
+                _nextDawnActionsInputValue = GUILayout.TextField(_nextDawnActionsInputValue, GUILayout.Width(40));
+                if (GUILayout.Button("Set override alba", buttonStyle, GUILayout.Width(140)))
+                {
+                    if (int.TryParse(_nextDawnActionsInputValue, out int nd))
+                    {
+                        _gameManager.SetNextDawnActionsFromBreakfast(nd);
+                        AddLog($"Prossimo cambio giorno userà {Mathf.Clamp(nd, 1, 5)} azioni (override consumato al HandleDayChanged).");
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label($"Azioni: {_gameManager.ActionsLeft} / {_gameManager.ActionSystem.MaxActions}", labelStyle);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("left", labelStyle, GUILayout.Width(40));
+                _actionsLeftInputValue = GUILayout.TextField(_actionsLeftInputValue, GUILayout.Width(50));
+                GUILayout.Label("max", labelStyle, GUILayout.Width(36));
+                _actionsMaxInputValue = GUILayout.TextField(_actionsMaxInputValue, GUILayout.Width(50));
+                if (GUILayout.Button("Restore azioni", buttonStyle, GUILayout.Width(120)))
+                {
+                    if (int.TryParse(_actionsLeftInputValue, out int left) && int.TryParse(_actionsMaxInputValue, out int mx))
+                    {
+                        _gameManager.DebugRestoreActions(left, mx);
+                        AddLog($"Azioni: {left}/{Mathf.Clamp(mx, 1, 5)}");
                     }
                 }
                 GUILayout.EndHorizontal();

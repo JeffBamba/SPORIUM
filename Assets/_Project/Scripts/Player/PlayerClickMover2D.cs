@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using _Project;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
 
@@ -199,8 +200,13 @@ public class PlayerClickMover2D : MonoBehaviour
             return;
         }
 
+        float hMul = 1f;
+        var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+        if (gm?.PlayerHydrationSystem != null)
+            hMul = Mathf.Max(0.05f, gm.PlayerHydrationSystem.GetMovementSpeedMultiplier());
+
         // Movimento con accelerazione
-        Vector2 targetVelocity = direction * moveSpeed;
+        Vector2 targetVelocity = direction * (moveSpeed * hMul);
         currentVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
         
         rb.velocity = currentVelocity;

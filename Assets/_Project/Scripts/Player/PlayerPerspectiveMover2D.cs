@@ -226,6 +226,11 @@ namespace _Project.Player
             if (GameplayUiModalLock.BlocksWorldInput)
                 return;
 
+            float hSpeedMul = 1f;
+            var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            if (gm?.PlayerHydrationSystem != null)
+                hSpeedMul = Mathf.Max(0.05f, gm.PlayerHydrationSystem.GetMovementSpeedMultiplier());
+
             Vector2 wasd = enableWASD ? new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) : Vector2.zero;
             bool hasWASD = wasd.sqrMagnitude > wasdDeadzone * wasdDeadzone;
 
@@ -276,8 +281,9 @@ namespace _Project.Player
                     // If basis degenerates, fallback to legacy UV mode.
                     if (metersPerU < 0.0001f || metersPerV < 0.0001f)
                     {
-                        _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvSpeed * dt);
-                        _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvSpeed * dt);
+                        float uvEff = uvSpeed * hSpeedMul;
+                        _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvEff * dt);
+                        _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvEff * dt);
                         desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
                     }
                     else
@@ -285,8 +291,9 @@ namespace _Project.Player
                         // Normalize input so diagonal doesn't exceed target speed.
                         Vector2 input = wasd.normalized;
 
-                        float duStep = (input.x * wasdWorldSpeed * dt) / metersPerU;
-                        float dvStep = (input.y * wasdWorldSpeed * dt) / metersPerV;
+                        float effWasd = wasdWorldSpeed * hSpeedMul;
+                        float duStep = (input.x * effWasd * dt) / metersPerU;
+                        float dvStep = (input.y * effWasd * dt) / metersPerV;
 
                         duStep_dbg = duStep;
                         dvStep_dbg = dvStep;
@@ -300,8 +307,9 @@ namespace _Project.Player
                 else
                 {
                     // Legacy UV speed mode
-                    _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvSpeed * dt);
-                    _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvSpeed * dt);
+                    float uvEff = uvSpeed * hSpeedMul;
+                    _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvEff * dt);
+                    _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvEff * dt);
                     desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
                 }
 
@@ -333,7 +341,8 @@ namespace _Project.Player
                     return;
                 }
 
-                Vector2 step = Vector2.MoveTowards(_rb.position, targetWorld, moveSpeed * Time.fixedDeltaTime);
+                float effMove = moveSpeed * hSpeedMul;
+                Vector2 step = Vector2.MoveTowards(_rb.position, targetWorld, effMove * Time.fixedDeltaTime);
                 Vector2 newPos = ResolveCollisionsWithSlide(_rb.position, step);
                 _rb.MovePosition(newPos);
 

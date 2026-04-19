@@ -109,6 +109,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _root.style.display = DisplayStyle.Flex;
             IsOpen = true;
             GameplayUiModalLock.SetBlockWorldInput(true);
+            WardrobeMission.NotifyWardrobeAccessed();
             RefreshOutfitLabel();
         }
 

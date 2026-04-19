@@ -1,23 +1,30 @@
 using System;
+using _Project;
 using _Project.Sporae.Core;
-using Sporae.Core;
 using Sporae.DevTools;
 
 namespace _Project.Sporae.Core
 {
-    /// <summary>Ascolta OnItemConsumed e applica effetti idratazione e bonus azioni.</summary>
+    /// <summary>Ascolta OnItemConsumed e applica effetti idratazione (le azioni giornaliere vengono dall’alba/colazione).</summary>
     public class ItemConsumptionHandler
     {
         private readonly Inventory _inventory;
         private readonly PlayerHydrationSystem _hydration;
-        private readonly ActionSystem _actionSystem;
+        private readonly GameManager _gameManager;
 
-        public ItemConsumptionHandler(Inventory inventory, PlayerHydrationSystem hydration, ActionSystem actionSystem)
+        public ItemConsumptionHandler(Inventory inventory, PlayerHydrationSystem hydration, GameManager gameManager = null)
         {
             _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             _hydration = hydration ?? throw new ArgumentNullException(nameof(hydration));
-            _actionSystem = actionSystem ?? throw new ArgumentNullException(nameof(actionSystem));
+            _gameManager = gameManager;
             _inventory.OnItemConsumed += OnItemConsumed;
+        }
+
+        private static bool IsSolidFood(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId)) return false;
+            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat) return true;
+            return Items.IsFruitType(typeId);
         }
 
         public void Unsubscribe()
@@ -29,22 +36,22 @@ namespace _Project.Sporae.Core
         {
             if (string.IsNullOrEmpty(typeId) || quantity <= 0) return;
 
+            if (IsSolidFood(typeId))
+                _gameManager?.NotifySolidFoodConsumed();
+
             if (typeId == Items.FoodVegetable)
             {
                 _hydration.RecoverFromFood(quantity);
-                _actionSystem.AddActions(1 * quantity);
                 return;
             }
             if (typeId == Items.FoodFungus)
             {
                 _hydration.RecoverFromFood(quantity);
-                _actionSystem.AddActions(2 * quantity);
                 return;
             }
             if (typeId == Items.FoodMeat)
             {
                 _hydration.RecoverFromFood(quantity);
-                _actionSystem.AddActions(3 * quantity);
                 return;
             }
             if (typeId == Items.WaterPotable)

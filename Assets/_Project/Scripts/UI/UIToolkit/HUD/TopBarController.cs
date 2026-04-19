@@ -52,6 +52,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         // UI Elements
         private VisualElement _root;
+        private VisualElement _actionsDisplay;
         private VisualElement _iconActions;
         private VisualElement _iconActionsGlyph;
         private Label _actionsLabel;
@@ -105,6 +106,17 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _condensationTooltipTip;
         private VisualElement _condensationTooltipTipSection;
         private Button _condensationCollectButton;
+
+        // Actions tooltip (foundation CRT, parity con ph/condensation/mutation)
+        private VisualElement _actionsTooltip;
+        private Label _actionsTooltipTitleStatus;
+        private Label _actionsTooltipCurrent;
+        private VisualElement _actionsTooltipBreakdownList;
+        private Label _actionsTooltipTotal;
+        private Label _actionsTooltipHydrationValue;
+        private Label _actionsTooltipHydrationSpeed;
+        private Label _actionsTooltipHydrationNote;
+        private Label _actionsTooltipTip;
         
         // pH Gradient Texture (creata runtime)
         private Texture2D _phGradientTexture;
@@ -143,6 +155,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private readonly Color _blueInfo = new Color(0.365f, 0.714f, 0.890f, 1f); // #5DB6E3
         private Color _actionsBaseColor = new Color(0.902f, 0.788f, 0.435f, 1f); // default giallo
         private const float ActionsPulseSeed = 17.73f;
+        private const int ActionsVisualSlots = 5;
         
         private void Awake()
         {
@@ -238,6 +251,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 if (_dayCycleSystem != null)
                     _dayCycleSystem.OnDayChanged += OnDayChangedRefreshBotanicalMutation;
                 PotEvents.OnPotStateChanged += OnPotStateChangedRefreshBotanicalMutation;
+
+                if (_gameManager.PlayerHydrationSystem != null)
+                    _gameManager.PlayerHydrationSystem.OnHydrationChanged += OnHydrationChangedForActionsTooltip;
+                if (_gameManager.ActionBudgetLedger != null)
+                    _gameManager.ActionBudgetLedger.OnChanged += UpdateActionsTooltipText;
+                UpdateActionsTooltipText();
             }
             else
             {
@@ -296,6 +315,43 @@ namespace Sporae.UI.UIToolkit.HUD
                 _maxActions = _actionSystem.MaxActions;
                 UpdateActions(_actionsLeft, _maxActions);
             }
+
+            UpdateActionsTooltipText();
+        }
+
+        private void OnHydrationChangedForActionsTooltip(float _, float __) => UpdateActionsTooltipText();
+
+        private void UpdateActionsTooltipText()
+        {
+            // Il tooltip ricco (foundation CRT) si aggiorna quando viene mostrato e a ogni
+            // evento rilevante (azioni/idratazione/ledger). Qui manteniamo solo un fallback
+            // OS-tooltip minimale per accessibilità prima che InitializeUI completi, così da
+            // non lasciare tooltip "fantasma" diversi dal contenuto vero.
+            if (_actionsTooltip != null)
+            {
+                // Tooltip ricco già montato: nessun tooltip OS, evita doppie etichette.
+                if (_iconActions != null)
+                    _iconActions.tooltip = string.Empty;
+                if (_actionsDisplay != null)
+                    _actionsDisplay.tooltip = string.Empty;
+
+                UpdateActionsTooltipContent();
+                return;
+            }
+
+            var gm = _gameManager;
+            float mul = gm?.PlayerHydrationSystem != null ? gm.PlayerHydrationSystem.GetMovementSpeedMultiplier() : 1f;
+            int max = _actionSystem != null ? _actionSystem.MaxActions : 0;
+            int left = _actionSystem != null ? _actionSystem.ActionsLeft : 0;
+            string text =
+                $"Azioni oggi: {left}/{max}.\n" +
+                "Cap all’alba dalla colazione (max 5); senza cibo il cap cala; 3 giorni a 1 az. senza cibo → game over.\n" +
+                $"Velocità di movimento da idratazione: circa {mul * 100f:0}% del normale.";
+
+            if (_iconActions != null)
+                _iconActions.tooltip = text;
+            if (_actionsDisplay != null)
+                _actionsDisplay.tooltip = text;
         }
         
         private void OnCRYChanged(int cryAmount)
@@ -812,6 +868,7 @@ namespace Sporae.UI.UIToolkit.HUD
             SetupGlowFrame();
             
             // Query UI elements
+            _actionsDisplay = _root.Q<VisualElement>("actions-display");
             _iconActions = _root.Q<VisualElement>("icon-actions");
             _iconActionsGlyph = _root.Q<VisualElement>("icon-actions-glyph");
             _actionsLabel = _root.Q<Label>("actions-label");
@@ -839,6 +896,8 @@ namespace Sporae.UI.UIToolkit.HUD
             SetupCondensationTooltip();
 
             SetupMutationTooltip();
+
+            SetupActionsTooltip();
             
             // Crea texture gradiente pH (0-14 scale)
             CreatePhGradientTexture();
@@ -854,7 +913,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 _actionsBar = new SegmentedBarUI(
                     actionsBarContainer,
-                    4,
+                    5,
                     _yellowWarning,
                     new Color(0.118f, 0.157f, 0.165f, 1f),
                     _yellowWarning
@@ -1061,17 +1120,18 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             _actionsLeft = current;
             _maxActions = max;
-            
+
+            int visibleCurrent = Mathf.Clamp(current, 0, ActionsVisualSlots);
+
             if (_actionsValueLabel != null)
-            {
-                _actionsValueLabel.text = $"{current}/{max}";
-            }
-            
-            // Determina colore basato su azioni disponibili: verde 4+, giallo 3-2, rosso 0-1
+                _actionsValueLabel.text = $"{visibleCurrent}/{ActionsVisualSlots}";
+
+            // Barra su scala fissa 0..5: il cap runtime può scendere (es. malnutrizione),
+            // ma la visualizzazione deve restare "X su 5" per evitare ambiguita'.
             Color fillColor;
-            if (current >= 4)
+            if (visibleCurrent >= 4)
                 fillColor = _greenStable;
-            else if (current >= 2)
+            else if (visibleCurrent >= 2)
                 fillColor = _yellowWarning;
             else
                 fillColor = _redCritical;
@@ -1086,7 +1146,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_actionsBar != null)
             {
                 _actionsBar.SetColors(fillColor, new Color(0.118f, 0.157f, 0.165f, 1f), fillColor);
-                _actionsBar.UpdateValue(current, max);
+                _actionsBar.UpdateValue(visibleCurrent, ActionsVisualSlots);
             }
         }
         
@@ -1494,6 +1554,19 @@ namespace Sporae.UI.UIToolkit.HUD
                 _dayCycleSystem.OnDayChanged -= OnDayChangedRefreshBotanicalMutation;
             PotEvents.OnPotStateChanged -= OnPotStateChangedRefreshBotanicalMutation;
 
+            if (_gameManager?.PlayerHydrationSystem != null)
+                _gameManager.PlayerHydrationSystem.OnHydrationChanged -= OnHydrationChangedForActionsTooltip;
+
+            if (_gameManager?.ActionBudgetLedger != null)
+                _gameManager.ActionBudgetLedger.OnChanged -= UpdateActionsTooltipText;
+
+            if (_actionsDisplay != null)
+            {
+                _actionsDisplay.UnregisterCallback<MouseEnterEvent>(OnActionsHoverEnter);
+                _actionsDisplay.UnregisterCallback<MouseLeaveEvent>(OnActionsHoverExit);
+                _actionsDisplay.UnregisterCallback<MouseMoveEvent>(OnActionsHoverMove);
+            }
+
             if (_mutationDisplay != null)
             {
                 _mutationDisplay.UnregisterCallback<MouseEnterEvent>(OnMutationHoverEnter);
@@ -1561,6 +1634,16 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_gameManager != null)
             {
                 _gameManager.OnCondensationChanged += OnCondensationChanged;
+                if (_gameManager.PlayerHydrationSystem != null)
+                {
+                    _gameManager.PlayerHydrationSystem.OnHydrationChanged -= OnHydrationChangedForActionsTooltip;
+                    _gameManager.PlayerHydrationSystem.OnHydrationChanged += OnHydrationChangedForActionsTooltip;
+                }
+                if (_gameManager.ActionBudgetLedger != null)
+                {
+                    _gameManager.ActionBudgetLedger.OnChanged -= UpdateActionsTooltipText;
+                    _gameManager.ActionBudgetLedger.OnChanged += UpdateActionsTooltipText;
+                }
             }
             
             // Re-subscribe to ServiceContainer event
@@ -1725,6 +1808,274 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_mutationTooltip != null && _mutationTooltip.style.display == DisplayStyle.Flex)
                 UpdateMutationTooltipContent();
+        }
+
+        // ---------------------------------------------------------------------
+        // Tooltip AZIONI (foundation CRT, parity con ph/condensation/mutation)
+        // Mostra: breakdown del cap giornaliero (chi ha dato le azioni — colazione,
+        // futuri moduli/ambiente/item) + stato idratazione (velocità di movimento).
+        // ---------------------------------------------------------------------
+        private void SetupActionsTooltip()
+        {
+            _actionsTooltip = _root?.Q<VisualElement>("actions-tooltip");
+            if (_actionsTooltip == null) return;
+
+            _actionsTooltip.pickingMode = PickingMode.Ignore;
+            _actionsTooltipTitleStatus = _actionsTooltip.Q<Label>("actions-tooltip-title-status");
+            _actionsTooltipCurrent = _actionsTooltip.Q<Label>("actions-tooltip-current");
+            _actionsTooltipBreakdownList = _actionsTooltip.Q<VisualElement>("actions-tooltip-breakdown-list");
+            _actionsTooltipTotal = _actionsTooltip.Q<Label>("actions-tooltip-total");
+            _actionsTooltipHydrationValue = _actionsTooltip.Q<Label>("actions-tooltip-hydration-value");
+            _actionsTooltipHydrationSpeed = _actionsTooltip.Q<Label>("actions-tooltip-hydration-speed");
+            _actionsTooltipHydrationNote = _actionsTooltip.Q<Label>("actions-tooltip-hydration-note");
+            _actionsTooltipTip = _actionsTooltip.Q<Label>("actions-tooltip-tip");
+
+            if (_actionsDisplay != null)
+            {
+                _actionsDisplay.RegisterCallback<MouseEnterEvent>(OnActionsHoverEnter);
+                _actionsDisplay.RegisterCallback<MouseLeaveEvent>(OnActionsHoverExit);
+                _actionsDisplay.RegisterCallback<MouseMoveEvent>(OnActionsHoverMove);
+            }
+
+            // Ora che il tooltip ricco è pronto, popola immediatamente con stato corrente.
+            UpdateActionsTooltipContent();
+        }
+
+        private void OnActionsHoverEnter(MouseEnterEvent evt)
+        {
+            if (_actionsTooltip == null) return;
+            UpdateActionsTooltipContent();
+            _actionsTooltip.style.display = DisplayStyle.Flex;
+            _actionsTooltip.BringToFront();
+            PositionActionsTooltipNearDisplay();
+        }
+
+        private void OnActionsHoverExit(MouseLeaveEvent evt)
+        {
+            if (_actionsTooltip != null)
+                _actionsTooltip.style.display = DisplayStyle.None;
+        }
+
+        private void OnActionsHoverMove(MouseMoveEvent evt)
+        {
+            PositionActionsTooltipNearDisplay();
+        }
+
+        private void PositionActionsTooltipNearDisplay()
+        {
+            if (_actionsTooltip == null || _actionsTooltip.style.display != DisplayStyle.Flex || _actionsDisplay == null || _root == null)
+                return;
+
+            var b = _actionsDisplay.worldBound;
+            var rootBounds = _root.worldBound;
+            float x = b.xMax + 10f;
+            float y = b.yMax - 20f;
+            const float tw = 480f;
+            float th = _actionsTooltip.resolvedStyle.height;
+            if (th < 1f) th = 220f;
+            if (x + tw > rootBounds.width)
+                x = Mathf.Max(0f, b.xMin - tw - 10f);
+            if (y + th > rootBounds.height)
+                y = Mathf.Max(0f, b.yMin - th - 10f);
+            _actionsTooltip.style.left = x;
+            _actionsTooltip.style.top = y;
+        }
+
+        private void UpdateActionsTooltipContent()
+        {
+            if (_actionsTooltip == null) return;
+
+            int left = _actionSystem != null ? _actionSystem.ActionsLeft : 0;
+            int max = _actionSystem != null ? _actionSystem.MaxActions : 0;
+
+            if (_actionsTooltipTitleStatus != null)
+                _actionsTooltipTitleStatus.text = $"{left}/{max}";
+
+            if (_actionsTooltipCurrent != null)
+                _actionsTooltipCurrent.text = $"<b>{left}</b>/<b>{max}</b> azioni rimanenti oggi";
+
+            // Breakdown dal ledger (colazione + futuri moduli/ambiente/item).
+            if (_actionsTooltipBreakdownList != null)
+            {
+                _actionsTooltipBreakdownList.Clear();
+                var ledger = _gameManager != null ? _gameManager.ActionBudgetLedger : null;
+                int ledgerSum = 0;
+
+                if (ledger != null && ledger.Entries.Count > 0)
+                {
+                    foreach (var e in ledger.Entries)
+                    {
+                        ledgerSum += e.Amount;
+                        _actionsTooltipBreakdownList.Add(BuildBreakdownRow(e));
+                    }
+                }
+                else
+                {
+                    _actionsTooltipBreakdownList.Add(BuildBreakdownRow(new ActionBudgetEntry
+                    {
+                        Source = ActionBudgetSource.Breakfast,
+                        Label = "Colazione (base)",
+                        Amount = max
+                    }));
+                }
+
+                // Se il cap effettivo diverge dal ledger (es. debug diretto su ActionSystem), mostra una riga "altro".
+                int clampedLedger = Mathf.Clamp(ledgerSum, 0, 5);
+                int delta = max - clampedLedger;
+                if (delta != 0)
+                {
+                    _actionsTooltipBreakdownList.Add(BuildBreakdownRow(new ActionBudgetEntry
+                    {
+                        Source = ActionBudgetSource.Other,
+                        Label = delta > 0 ? "Regolazione runtime" : "Limite runtime",
+                        Amount = delta
+                    }));
+                }
+            }
+
+            if (_actionsTooltipTotal != null)
+                _actionsTooltipTotal.text = $"<b>{max}</b> azioni  ({left} rimanenti)";
+
+            UpdateActionsTooltipHydrationSection();
+
+            if (_actionsTooltipTip != null)
+            {
+                _actionsTooltipTip.text =
+                    "Devi mangiare (cibo o frutta) almeno una volta ogni due giorni: dal terzo giorno " +
+                    "senza pasto il cap scende di 1 al giorno (minimo 1/5). " +
+                    "Tre giorni di fila a 1 azione senza cibo → game over per fame. " +
+                    "In futuro: moduli, bonus ambiente e item sul cap.";
+            }
+        }
+
+        private VisualElement BuildBreakdownRow(ActionBudgetEntry entry)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 2f;
+
+            var dot = new VisualElement();
+            dot.style.width = 6f;
+            dot.style.height = 6f;
+            dot.style.minWidth = 6f;
+            dot.style.minHeight = 6f;
+            dot.style.marginRight = 6f;
+            dot.style.borderTopLeftRadius = 3f;
+            dot.style.borderTopRightRadius = 3f;
+            dot.style.borderBottomLeftRadius = 3f;
+            dot.style.borderBottomRightRadius = 3f;
+            dot.style.backgroundColor = new StyleColor(GetBreakdownColor(entry.Source));
+            row.Add(dot);
+
+            var label = new Label($"{GetSourceIcon(entry.Source)}  {entry.Label}");
+            label.style.color = new StyleColor(new Color(0.78f, 0.80f, 0.78f, 1f));
+            label.style.fontSize = 11f;
+            label.enableRichText = true;
+            row.Add(label);
+
+            if (!string.IsNullOrEmpty(entry.Detail))
+            {
+                var detail = new Label($"— {entry.Detail}");
+                detail.style.color = new StyleColor(new Color(0.55f, 0.58f, 0.55f, 1f));
+                detail.style.fontSize = 10f;
+                detail.style.marginLeft = 6f;
+                detail.enableRichText = true;
+                row.Add(detail);
+            }
+
+            var value = new Label(entry.Amount > 0 ? $"+{entry.Amount}" : entry.Amount.ToString());
+            value.style.marginLeft = StyleKeyword.Auto;
+            value.style.marginRight = 8f;
+            value.style.color = new StyleColor(entry.Amount >= 0 ? _greenStable : _redCritical);
+            value.style.fontSize = 11f;
+            value.style.unityFontStyleAndWeight = FontStyle.Bold;
+            row.Add(value);
+
+            return row;
+        }
+
+        private Color GetBreakdownColor(ActionBudgetSource source)
+        {
+            switch (source)
+            {
+                case ActionBudgetSource.Breakfast: return new Color(0.498f, 1f, 0.478f, 1f); // verde stabile
+                case ActionBudgetSource.Module: return new Color(0.365f, 0.714f, 0.890f, 1f); // azzurro
+                case ActionBudgetSource.Environment: return new Color(0.902f, 0.788f, 0.435f, 1f); // giallo
+                case ActionBudgetSource.Item: return new Color(0.851f, 0.439f, 0.937f, 1f); // magenta
+                case ActionBudgetSource.Malnutrition: return new Color(0.827f, 0.373f, 0.373f, 1f); // rosso fame
+                case ActionBudgetSource.Override: return new Color(0.78f, 0.80f, 0.78f, 1f); // grigio
+                default: return new Color(0.55f, 0.58f, 0.55f, 1f);
+            }
+        }
+
+        private string GetSourceIcon(ActionBudgetSource source)
+        {
+            switch (source)
+            {
+                case ActionBudgetSource.Breakfast: return "▣"; // piatto / colazione
+                case ActionBudgetSource.Module: return "◫";
+                case ActionBudgetSource.Environment: return "◊";
+                case ActionBudgetSource.Item: return "◉";
+                case ActionBudgetSource.Malnutrition: return "−";
+                case ActionBudgetSource.Override: return "⚙";
+                default: return "·";
+            }
+        }
+
+        private void UpdateActionsTooltipHydrationSection()
+        {
+            var hyd = _gameManager != null ? _gameManager.PlayerHydrationSystem : null;
+            if (hyd == null)
+            {
+                if (_actionsTooltipHydrationValue != null) _actionsTooltipHydrationValue.text = "—";
+                if (_actionsTooltipHydrationSpeed != null) _actionsTooltipHydrationSpeed.text = "Velocità di movimento: —";
+                if (_actionsTooltipHydrationNote != null)
+                    _actionsTooltipHydrationNote.text = "L’idratazione non influenza le Azioni: regola solo la velocità di movimento.";
+                return;
+            }
+
+            float h = hyd.HydrationPercent;
+            float mul = hyd.GetMovementSpeedMultiplier();
+
+            if (_actionsTooltipHydrationValue != null)
+                _actionsTooltipHydrationValue.text = $"{Mathf.RoundToInt(h)}% H";
+
+            string speedLabel;
+            Color speedColor;
+            if (h > 50f)
+            {
+                speedLabel = $"Velocità di movimento: <b>100%</b> (H {Mathf.RoundToInt(h)}% — nessuna penalità)";
+                speedColor = _greenStable;
+            }
+            else if (h > 25f)
+            {
+                speedLabel = $"Velocità di movimento: <b>~{Mathf.RoundToInt(mul * 100f)}%</b> del normale (H {Mathf.RoundToInt(h)}% — leggera penalità sotto il 50%)";
+                speedColor = _yellowWarning;
+            }
+            else if (h > 0.01f)
+            {
+                speedLabel = $"Velocità di movimento: <b>~{Mathf.RoundToInt(mul * 100f)}%</b> del normale (H {Mathf.RoundToInt(h)}% — forte penalità sotto il 25%)";
+                speedColor = _redCritical;
+            }
+            else
+            {
+                speedLabel = "Velocità di movimento: <b>minima</b> (H ≈ 0% — rischio game over se resti a 0% per 2 giorni)";
+                speedColor = _redCritical;
+            }
+
+            if (_actionsTooltipHydrationSpeed != null)
+            {
+                _actionsTooltipHydrationSpeed.text = speedLabel;
+                _actionsTooltipHydrationSpeed.style.color = new StyleColor(speedColor);
+            }
+
+            if (_actionsTooltipHydrationNote != null)
+            {
+                _actionsTooltipHydrationNote.text =
+                    "L’idratazione non influenza le Azioni: regola solo la velocità. " +
+                    "Il cap azioni dipende dalla colazione e dalla fame (mangiare almeno ogni 2 giorni).";
+            }
         }
 
         /// <summary>

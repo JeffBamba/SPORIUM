@@ -1,0 +1,20 @@
+---
+description: Funzionalità “Both” — stesso codice per demo e Nuova partita; niente fork demo-only per queste feature
+alwaysApply: true
+---
+
+# Funzionalità **Both** (demo + gioco finale)
+
+Quando il team o il design parlano di una funzionalità **Both**, significa:
+
+- È **sviluppata una sola volta** nel binario unico (`SCN_VaultMap`, stesso prodotto di **Principio 0** nel piano Demo Alpha).
+- È **disponibile allo stesso modo** in **Gioca demo** e in **Nuova partita** (gioco completo), salvo **gating narrativo** o flag di sessione (`DemoSessionState`, `demo_completed`, ecc.) dove il piano lo richiede esplicitamente.
+- **Non** si crea una variante “solo demo” parallela (UI duplicate, sistemi fork, scena dedicata) per quella funzione: si estende il sistema esistente e si condiziona con flag/servizi come da `architecture-runtime-services` e piano Alpha.
+
+**Esempi:** armadio/skins, VO overlay, inventario — stesso comportamento base; la demo può **limitare** contenuti o ordine dei beat senza sostituire l’implementazione.
+
+---
+
+## Riferimento
+
+- Piano: `.cursor/plans/demo_alpha_1_0_gap_map.plan.md` — *Principio 0 — Un solo prodotto*.

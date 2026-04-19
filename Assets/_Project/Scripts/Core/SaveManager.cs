@@ -158,7 +158,17 @@ namespace Sporae.Core
                 if (saveData.gameState == null)
                 {
                     SporiumLogger.LogWarning(LogCategory.Save, "Salvataggio senza gameState: formato vecchio o corrotto. Ripristino parziale.");
-                    saveData.gameState = new GameStateData { currentDay = 1, currentCRY = 250, actionsLeft = 4, condensationAmount = 0f };
+                    saveData.gameState = new GameStateData
+                    {
+                        currentDay = 1,
+                        currentCRY = 250,
+                        actionsLeft = 4,
+                        condensationAmount = 0f,
+                        dehydrationZeroDayStreak = 0,
+                        consecutiveDaysWithoutMeal = 0,
+                        starvationDaysAtMinCapWithoutFood = 0,
+                        ateMealSincePreviousDawn = false
+                    };
                 }
                 if (saveData.inventoryVersion <= 0)
                     saveData.inventoryVersion = 1;
@@ -324,7 +334,11 @@ namespace Sporae.Core
                     currentCRY = gameManager.CurrentCRY,
                     actionsLeft = gameManager.ActionsLeft,
                     condensationAmount = gameManager.CondensationSystem?.CondensationAmount ?? 0f,
-                    hydrationPercent = gameManager.PlayerHydrationSystem?.HydrationPercent ?? 100f
+                    hydrationPercent = gameManager.PlayerHydrationSystem?.HydrationPercent ?? 100f,
+                    dehydrationZeroDayStreak = gameManager.DehydrationZeroDayStreak,
+                    consecutiveDaysWithoutMeal = gameManager.ConsecutiveDaysWithoutMeal,
+                    starvationDaysAtMinCapWithoutFood = gameManager.StarvationDaysAtMinCapWithoutFood,
+                    ateMealSincePreviousDawn = gameManager.AteMealSincePreviousDawn
                 };
             }
 
@@ -439,6 +453,12 @@ namespace Sporae.Core
                 {
                     gameManager.PlayerHydrationSystem.SetHydrationPercent(saveData.gameState.hydrationPercent);
                 }
+
+                gameManager.SetDehydrationZeroDayStreakForLoad(saveData.gameState.dehydrationZeroDayStreak);
+                gameManager.SetMealSurvivalStateForLoad(
+                    saveData.gameState.consecutiveDaysWithoutMeal,
+                    saveData.gameState.starvationDaysAtMinCapWithoutFood,
+                    saveData.gameState.ateMealSincePreviousDawn);
             }
 
             if (gameManager?.FoodRoomSystem != null && saveData.foodRoomData != null)
@@ -927,6 +947,10 @@ namespace Sporae.Core
             public int actionsLeft;
             public float condensationAmount;
             public float hydrationPercent = 100f;
+            public int dehydrationZeroDayStreak;
+            public int consecutiveDaysWithoutMeal;
+            public int starvationDaysAtMinCapWithoutFood;
+            public bool ateMealSincePreviousDawn;
         }
 
         [Serializable]

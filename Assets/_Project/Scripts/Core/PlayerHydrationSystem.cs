@@ -6,12 +6,16 @@ namespace _Project
 {
     public enum HydrationState
     {
-        Dehydrated,   // 0-25%: -2 Azioni
-        Low,          // 26-50%: -1 Azione
-        Normal,       // 51-75%: 0
-        WellHydrated  // 76-100%: +2 Azioni
+        Dehydrated,   // 0-25%
+        Low,          // 26-50%
+        Normal,       // 51-75%
+        WellHydrated  // 76-100%
     }
 
+    /// <summary>
+    /// Idratazione del player: influenza la <b>velocità di movimento</b> (piena sopra il 50% H; attenuata 26–50%;
+    /// severa 0–25%). Le <b>azioni giornaliere</b> non derivano dall’idratazione (vedi colazione / GameManager).
+    /// </summary>
     public class PlayerHydrationSystem
     {
         private float _hydrationPercent = 100f;
@@ -78,17 +82,37 @@ namespace _Project
             NotifyChanged();
         }
 
-        /// <summary>Ritorna il modificatore azioni per il giorno successivo: -2, -1, 0, +2.</summary>
-        public int GetActionModifier()
+        /// <summary>
+        /// Moltiplicatore velocità movimento (1 = normale). Sopra il 50% nessuna penalità; prima attenuazione
+        /// tra 26–50%; più severa da 25% in giù (rampa fino a minimo a H≈0).
+        /// </summary>
+        public float GetMovementSpeedMultiplier()
         {
-            switch (CurrentState)
-            {
-                case HydrationState.Dehydrated: return -2;
-                case HydrationState.Low: return -1;
-                case HydrationState.Normal: return 0;
-                case HydrationState.WellHydrated: return 2;
-                default: return 0;
-            }
+            float h = _hydrationPercent;
+            if (h <= 0.001f)
+                return 0.08f;
+
+            // Nessuna penalità finché resti sopra la metà barra
+            if (h > 50f)
+                return 1f;
+
+            // Penalità moderata: ancora giocabile ma si sente
+            if (h > 25f)
+                return 0.78f;
+
+            // Critico: da ~35% a ~8% della velocità piena tra 25% e 0% H
+            return Mathf.Lerp(0.08f, 0.35f, h / 25f);
+        }
+
+        /// <summary>
+        /// Fascia penalità movimento (allineata a <see cref="GetMovementSpeedMultiplier"/>): 0 = nessuna (&gt;50% H), 1 = moderata (26–50%), 2 = severa (≤25%).
+        /// </summary>
+        public static int GetMovementSpeedTierIndex(float hydrationPercent)
+        {
+            float h = hydrationPercent;
+            if (h > 50f) return 0;
+            if (h > 25f) return 1;
+            return 2;
         }
 
         /// <summary>Chiamato a fine giornata: consumo passivo e notifica.</summary>

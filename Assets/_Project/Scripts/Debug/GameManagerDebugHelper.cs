@@ -1,3 +1,4 @@
+using _Project;
 using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.DevTools;
@@ -80,8 +81,17 @@ public class GameManagerDebugHelper : MonoBehaviour
         if (_gameManager)
         {
             SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current CRY: {_gameManager.CurrentCRY}");
-            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current Actions: {_gameManager.ActionsLeft}");
-            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current Day: {_dayCycleSystem.CurrentDay}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Actions: {_gameManager.ActionsLeft}/{_gameManager.ActionSystem.MaxActions} (budget alba max 5)");
+            var ph = _gameManager.PlayerHydrationSystem;
+            if (ph != null)
+            {
+                SporiumLogger.LogDebug(LogCategory.Core,
+                    $"GameManager - H: {ph.HydrationPercent:F1}% | vel.× {ph.GetMovementSpeedMultiplier():P0} | streak H≈0: {_gameManager.DehydrationZeroDayStreak}");
+            }
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Budget colazione (config): {_gameManager.DailyBreakfastBudget}");
+            SporiumLogger.LogDebug(LogCategory.Core,
+                $"GameManager - Fame: gg. senza pasto={_gameManager.ConsecutiveDaysWithoutMeal} | streak 1 az. senza cibo={_gameManager.StarvationDaysAtMinCapWithoutFood} | pasto da alba={_gameManager.AteMealSincePreviousDawn}");
+            SporiumLogger.LogDebug(LogCategory.Core, $"GameManager - Current Day: {(_dayCycleSystem != null ? _dayCycleSystem.CurrentDay.ToString() : "n/a")}");
         }
         else
         {

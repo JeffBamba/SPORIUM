@@ -50,6 +50,8 @@ namespace Sporae.UI.UIToolkit.HUD
                     case "ph-display":
                     case "mutation-display":
                     case "condensation-display":
+                    case "actions-display":
+                    case "icon-actions":
                     case "ph-tooltip":
                     case "condensation-tooltip":
                     case "mutation-tooltip":

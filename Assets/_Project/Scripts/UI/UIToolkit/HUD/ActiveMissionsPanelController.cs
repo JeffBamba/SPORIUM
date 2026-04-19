@@ -11,6 +11,7 @@ namespace Sporae.UI.UIToolkit.HUD
 {
     /// <summary>
     /// Mission recap HUD (UI Toolkit): header collassabile, card missioni e tooltip contestuale.
+    /// Spec: 280px, verde ciano CRT, tooltip HoverCard a destra, sezioni OBJECTIVE/TASK/REWARD/DEADLINE.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-38)]
@@ -24,6 +25,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private const float WarningPulseDuration = 1.5f;
         private const float TooltipShowDelayMs = 200f;
         private const float TooltipHideDelayMs = 100f;
+        private const float TooltipHorizontalOffsetPx = 12f;
 
         private UIDocument _document;
         private VisualElement _root;
@@ -50,6 +52,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private MissionManager _missionManager;
         private DayCycleSystem _dayCycleSystem;
         private bool _collapsed;
+        private bool _uiBound;
 
         private IVisualElementScheduledItem _tooltipShowSchedule;
         private IVisualElementScheduledItem _tooltipHideSchedule;
@@ -93,7 +96,6 @@ namespace Sporae.UI.UIToolkit.HUD
         private void Awake()
         {
             BuildDocument();
-            BindUi();
 
             _missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
             _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
@@ -103,11 +105,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 _missionManager.OnMissionsChanged += HandleMissionsChanged;
                 _missionManager.OnMissionComplete += HandleMissionComplete;
                 _missionManager.OnMissionAdded += HandleMissionAdded;
-                HandleMissionsChanged();
-            }
-            else
-            {
-                HandleMissionsChanged();
             }
 
             ServiceContainer.Instance?.Register(this);
@@ -115,11 +112,48 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void Start()
         {
-            if (_root == null)
-                return;
+            StartCoroutine(InitializeUiWhenReady());
+        }
 
-            _root.AddToClassList("active-missions-root--enter");
-            _root.schedule.Execute(() => _root.RemoveFromClassList("active-missions-root--enter")).ExecuteLater(16);
+        private IEnumerator InitializeUiWhenReady()
+        {
+            int frames = 0;
+            const int maxFrames = 90;
+            while (frames < maxFrames &&
+                   (_document == null || _document.rootVisualElement == null))
+            {
+                frames++;
+                yield return null;
+            }
+
+            if (_document == null || _document.rootVisualElement == null)
+            {
+                SporiumLogger.LogError(LogCategory.UI,
+                    "[ActiveMissions] UIDocument.rootVisualElement non disponibile: bind UI saltato.");
+                yield break;
+            }
+
+            if (_uiBound)
+                yield break;
+
+            BindUi();
+            _uiBound = _root != null && _list != null;
+
+            if (!_uiBound)
+            {
+                SporiumLogger.LogError(LogCategory.UI,
+                    "[ActiveMissions] BindUi non ha popolato root/list (UXML mancante o nomi errati).");
+                yield break;
+            }
+
+            if (_missionManager != null)
+                HandleMissionsChanged();
+
+            if (_root != null)
+            {
+                _root.AddToClassList("active-missions-root--enter");
+                _root.schedule.Execute(() => _root.RemoveFromClassList("active-missions-root--enter")).ExecuteLater(16);
+            }
         }
 
         private void OnDestroy()
@@ -168,7 +202,6 @@ namespace Sporae.UI.UIToolkit.HUD
 
             string title = GetMissionTitle(mission);
 
-            // Toast (priorità: legacy ToastNotificationManager se presente, altrimenti Foundation service con messaggio custom)
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
@@ -187,7 +220,6 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
-            // VO di congratulazione (RegisterB = registro personale/caldo)
             var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
             if (vo != null)
             {
@@ -284,7 +316,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void HandleMissionsChanged()
         {
-            if (_root == null || _list == null || _titleLabel == null || _countLabel == null)
+            if (_root == null || _list == null || _titleLabel == null)
                 return;
 
             var missions = _missionManager?.CurrentMissions
@@ -293,12 +325,20 @@ namespace Sporae.UI.UIToolkit.HUD
 
             SyncMissionMeta(missions);
 
-            _titleLabel.text = "MISSIONS";
-            _countLabel.text = $"[{missions.Count}]";
+            if (_countLabel != null)
+            {
+                _titleLabel.text = "MISSIONS";
+                _countLabel.text = $"[{missions.Count}]";
+            }
+            else
+            {
+                _titleLabel.text = $"MISSIONS [{missions.Count}]";
+            }
 
             RebuildList(missions);
             bool hasMissions = missions.Count > 0;
-            _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_emptyLabel != null)
+                _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
 
             if (hasMissions)
                 StopEmptyPulse();
@@ -347,11 +387,13 @@ namespace Sporae.UI.UIToolkit.HUD
             int daysLeft = GetDaysRemaining(meta);
             var status = GetVisualStatus(meta, mission.IsCompleted);
             float progress = GetProgress(meta, mission.IsCompleted);
+            string statusClass = GetStatusClass(status);
+            string factionClass = GetFactionClass(meta.Faction);
 
             var card = new VisualElement();
             card.AddToClassList("active-mission-card");
-            card.AddToClassList(GetStatusClass(status));
-            card.AddToClassList(GetFactionClass(meta.Faction));
+            card.AddToClassList(statusClass);
+            card.AddToClassList(factionClass);
 
             var topRow = new VisualElement();
             topRow.AddToClassList("active-mission-card-top");
@@ -472,8 +514,10 @@ namespace Sporae.UI.UIToolkit.HUD
             if (showDeadline)
                 StartTooltipWarningPulse();
 
-            float left = card.worldBound.xMax - _root.worldBound.xMin + 12f;
-            float top = card.worldBound.yMin - _root.worldBound.yMin;
+            // Tooltip è figlio diretto di active-missions-root (position:absolute in USS).
+            // left = larghezza del root + offset; top = offset verticale della card dal root.
+            float left = _root.resolvedStyle.width + TooltipHorizontalOffsetPx;
+            float top = card.layout.yMin;
             _tooltip.style.left = left;
             _tooltip.style.top = top;
             _tooltip.style.display = DisplayStyle.Flex;

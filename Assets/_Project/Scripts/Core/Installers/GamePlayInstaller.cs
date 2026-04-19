@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using _Project;
 using _Project.Pot;
@@ -136,6 +135,9 @@ namespace _Project.Sporae.Core.Installers
                 var demoGo = new GameObject("DemoStoryDirector");
                 demoGo.AddComponent<DemoStoryDirector>();
             }
+
+            var playerStatToasts = new GameObject("PlayerStatToastBridge");
+            playerStatToasts.AddComponent<PlayerStatToastBridge>();
             
             // Registra AssetManager e precarica asset critici
             // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo

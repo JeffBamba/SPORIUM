@@ -12,8 +12,8 @@ namespace _Project
     [DefaultExecutionOrder(-5)]
     public sealed class WardrobeStation : MonoBehaviour
     {
-        [Tooltip("Raggio interazione consigliato per la camera da letto (world units).")]
-        [SerializeField] private float _interactDistanceMeters = 4f;
+        [Tooltip("Distanza massima dal pivot per usare l’armadio (world units). Valori troppo alti fanno risultare “in range” tutta la stanza e, con più Interactable, il click può sembrare assegnato all’armadio.")]
+        [SerializeField] private float _interactDistanceMeters = 2.5f;
 
         private Interactable _interactable;
 

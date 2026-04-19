@@ -324,7 +324,7 @@ namespace _Project
             var sb = new StringBuilder();
             if (_diaryStatistics != null)
             {
-                int max = _gameManager?.ActionSystem?.MaxActions ?? 4;
+                int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
                 sb.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent}/{max}");
                 sb.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
                 if (_gameManager != null)
@@ -616,7 +616,7 @@ namespace _Project
             var sbToday = new StringBuilder("[OGGI]\n");
             if (_diaryStatistics != null)
             {
-                int max = _gameManager?.ActionSystem?.MaxActions ?? 4;
+                int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
                 sbToday.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent} / {max}");
                 sbToday.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
             }
@@ -628,7 +628,7 @@ namespace _Project
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string predictedPhDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
 
-            int maxActionsForecast = _gameManager?.ActionSystem?.MaxActions ?? 4;
+            int maxActionsForecast = _gameManager?.ActionSystem?.MaxActions ?? 5;
             var sbTomorrow = new StringBuilder("[PREVISIONE DOMANI]\n");
             sbTomorrow.AppendLine($"Azioni disponibili: {maxActionsForecast}");
             sbTomorrow.AppendLine($"Deriva pH prevista: {predictedPhDriftStr}");

@@ -6,6 +6,7 @@ using _Project.Scripts.Core;
 using _Project.Sporae.Core;
 using _Project.Systems.FoodRoom;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Sporae.Core;
 using Sporae.DevTools;
 
@@ -19,8 +20,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool _showDebugLogs = true;
     
     [Header("Day & Actions")]
-    
-    [SerializeField] [Min(1)] private int _actionsPerDay = 4;
+    [Tooltip("Azioni assegnate all’alba (colazione / budget giornaliero). Cap progetto: 5. Demo: tipicamente 1 finché non c’è UI colazione.")]
+    [FormerlySerializedAs("_actionsPerDay")]
+    [SerializeField] [Range(1, 5)] private int _dailyActionsFromBreakfast = 5;
+    /// <summary>Override runtime per il prossimo cambio giorno (es. UI colazione). -1 = nessun override.</summary>
+    private int _overrideNextDawnActions = -1;
     [SerializeField] private int _startingCRY = 250;
     [SerializeField] private int _dailyPowerCost = 20;
     
@@ -40,12 +44,111 @@ public class GameManager : MonoBehaviour
     private FoodRoomSystem _foodRoomSystem;
     private ItemConsumptionHandler _itemConsumptionHandler;
 
+    /// <summary>Giorni consecutivi con H≈0% dopo il consumo passivo notturno. A 2 → game over disidratazione.</summary>
+    private int _dehydrationZeroDayStreak;
+
+    public event Action OnDehydrationGameOver;
+
+    /// <summary>True se il player ha consumato cibo solido (o frutta) dall’alba precedente.</summary>
+    private bool _ateMealSincePreviousDawn;
+    /// <summary>Giorni consecutivi senza pasto (cibo/frutta). All’alba: se ieri non hai mangiato, +1.</summary>
+    private int _consecutiveDaysWithoutMeal;
+    /// <summary>Giorni consecutivi con cap azioni = 1 e senza aver mangiato il giorno prima. A 3 → game over fame.</summary>
+    private int _starvationDaysAtMinCapWithoutFood;
+
+    public event Action OnStarvationGameOver;
+
     public EconomySystem EconomySystem => _economySystem;
     public ActionSystem ActionSystem => _actionSystem;
     public CondensationSystem CondensationSystem => _condensationSystem;
     public Inventory PlayerInventory => _playerInventory;
     public PlayerHydrationSystem PlayerHydrationSystem => _playerHydrationSystem;
     public FoodRoomSystem FoodRoomSystem => _foodRoomSystem;
+
+    public int DehydrationZeroDayStreak => _dehydrationZeroDayStreak;
+
+    public int ConsecutiveDaysWithoutMeal => _consecutiveDaysWithoutMeal;
+    public int StarvationDaysAtMinCapWithoutFood => _starvationDaysAtMinCapWithoutFood;
+    public bool AteMealSincePreviousDawn => _ateMealSincePreviousDawn;
+
+    /// <summary>Chiamato quando il player consuma cibo solido o frutta (non solo acqua).</summary>
+    public void NotifySolidFoodConsumed()
+    {
+        _ateMealSincePreviousDawn = true;
+
+        if (_actionSystem == null)
+            return;
+
+        int rawBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+        bool isStarvationPenalizedNow = _actionSystem.MaxActions < rawBreakfast;
+        if (!isStarvationPenalizedNow)
+            return;
+
+        // Recupero immediato: se mangi mentre sei penalizzato dalla fame, torni subito al cap pieno.
+        _consecutiveDaysWithoutMeal = 0;
+        _starvationDaysAtMinCapWithoutFood = 0;
+        _actionSystem.ResetActions(rawBreakfast);
+        SeedActionBudgetLedgerForDawn(rawBreakfast, penaltySteps: 0, wasOverrideBreakfast: false);
+    }
+
+    /// <summary>Imposta streak da save (solo load).</summary>
+    public void SetDehydrationZeroDayStreakForLoad(int streak)
+    {
+        _dehydrationZeroDayStreak = Mathf.Max(0, streak);
+    }
+
+    /// <summary>Stato fame/sopravvivenza da save (solo load).</summary>
+    public void SetMealSurvivalStateForLoad(int consecutiveDaysWithoutMeal, int starvationDaysAtMinCap, bool ateMealSincePreviousDawn)
+    {
+        _consecutiveDaysWithoutMeal = Mathf.Max(0, consecutiveDaysWithoutMeal);
+        _starvationDaysAtMinCapWithoutFood = Mathf.Max(0, starvationDaysAtMinCap);
+        _ateMealSincePreviousDawn = ateMealSincePreviousDawn;
+    }
+
+    /// <summary>Per UI colazione: quante azioni assegnare all’alba successiva (1–5).</summary>
+    public void SetNextDawnActionsFromBreakfast(int actions)
+    {
+        _overrideNextDawnActions = Mathf.Clamp(actions, 1, 5);
+    }
+
+    /// <summary>Budget colazione usato all’alba (Inspector), 1–5.</summary>
+    public int DailyBreakfastBudget => _dailyActionsFromBreakfast;
+
+    /// <summary>
+    /// Breakdown "di chi ha fornito le Azioni di oggi" (colazione, moduli, bonus ambiente, item).
+    /// Sorgente unica per il tooltip Azioni della TopBar e per eventuali view fine-giornata.
+    /// </summary>
+    private readonly DailyActionBudgetLedger _actionBudgetLedger = new();
+    public DailyActionBudgetLedger ActionBudgetLedger => _actionBudgetLedger;
+
+    /// <summary>Debug/test: imposta H% del player (0–100). L’H modifica solo la velocità di movimento.</summary>
+    public void DebugSetPlayerHydrationPercent(float percent) =>
+        _playerHydrationSystem?.SetHydrationPercent(Mathf.Clamp(percent, 0f, 100f));
+
+    /// <summary>Debug/test: giorni consecutivi con H≈0% (stesso effetto del load).</summary>
+    public void DebugSetDehydrationZeroDayStreak(int streak) => SetDehydrationZeroDayStreakForLoad(streak);
+
+    public void DebugSetConsecutiveDaysWithoutMeal(int days) => _consecutiveDaysWithoutMeal = Mathf.Max(0, days);
+
+    public void DebugSetStarvationDaysAtMinCap(int days) => _starvationDaysAtMinCapWithoutFood = Mathf.Max(0, days);
+
+    public void DebugNotifySolidFoodConsumed() => NotifySolidFoodConsumed();
+
+    /// <summary>Debug/test: budget colazione serializzato (1–5), effetto dal prossimo reset alba senza override.</summary>
+    public void DebugSetDailyBreakfastBudget(int value)
+    {
+        _dailyActionsFromBreakfast = Mathf.Clamp(value, 1, 5);
+        _actionBudgetLedger.AddOrReplace(ActionBudgetSource.Breakfast, "Colazione (base)", _dailyActionsFromBreakfast);
+    }
+
+    /// <summary>Debug/test: azioni rimanenti e massimo oggi (max 1–5).</summary>
+    public void DebugRestoreActions(int actionsLeft, int maxActions)
+    {
+        if (_actionSystem == null) return;
+        int m = Mathf.Clamp(maxActions, 1, 5);
+        int a = Mathf.Clamp(actionsLeft, 0, m);
+        _actionSystem.RestoreState(a, m);
+    }
 
     /// <summary>Modulo Cellule Staminali (Extractor) sbloccato acquistandolo dal Black Market.</summary>
     private bool _stemCellModuleUnlocked;
@@ -129,14 +232,19 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void InitializeSystems()
     {
+        // Nuovo baseline progetto: una nuova partita parte sempre da 5/5 azioni.
+        _dailyActionsFromBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+        if (_dailyActionsFromBreakfast < 5)
+            _dailyActionsFromBreakfast = 5;
+
         // Inizializza sistemi
-        _actionSystem = new ActionSystem(_actionsPerDay);
+        _actionSystem = new ActionSystem(Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5));
         _economySystem = new EconomySystem(_startingCRY);
         _condensationSystem = new CondensationSystem();
         _deteriorationSystem = new DeteriorationSystem(this);
         _playerHydrationSystem = new PlayerHydrationSystem();
         _foodRoomSystem = new FoodRoomSystem(_playerInventory, this);
-        _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, _actionSystem);
+        _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, this);
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
 
         if (ServiceContainer.Instance != null)
@@ -168,11 +276,32 @@ public class GameManager : MonoBehaviour
         foreach (string typeId in Items.StarterInventoryTypeIds)
             _playerInventory.Add(typeId, Items.IsSpecificFruitType(typeId) ? starterFruitQuantity : starterQuantity);
         
+        // Seed iniziale del ledger (nessuna penalità fame al primo frame).
+        SeedActionBudgetLedgerForDawn(rawBreakfast: Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5), penaltySteps: 0, wasOverrideBreakfast: false);
+
         // Sincronizza sistemi interni con valori esterni
 #if UNITY_EDITOR
         if (_showDebugLogs)
-            SporiumLogger.LogInfo(LogCategory.Core, $"Defaults set: Actions={_actionsPerDay}, CRY={_startingCRY}");
+            SporiumLogger.LogInfo(LogCategory.Core, $"Defaults set: DailyActions={_dailyActionsFromBreakfast}, CRY={_startingCRY}");
 #endif
+    }
+
+    /// <summary>Ledger tooltip: colazione base + eventuale penalità fame (importi negativi).</summary>
+    private void SeedActionBudgetLedgerForDawn(int rawBreakfast, int penaltySteps, bool wasOverrideBreakfast)
+    {
+        rawBreakfast = Mathf.Clamp(rawBreakfast, 1, 5);
+        penaltySteps = Mathf.Max(0, penaltySteps);
+        _actionBudgetLedger.Clear();
+        string breakfastLabel = wasOverrideBreakfast ? "Colazione (override)" : "Colazione (base)";
+        _actionBudgetLedger.AddOrReplace(ActionBudgetSource.Breakfast, breakfastLabel, rawBreakfast);
+        if (penaltySteps > 0)
+        {
+            _actionBudgetLedger.AddOrReplace(
+                ActionBudgetSource.Malnutrition,
+                "Penalità fame (giorni senza cibo)",
+                -penaltySteps,
+                $"{_consecutiveDaysWithoutMeal} gg. senza pasto");
+        }
     }
 
     private void HandleDayChanged(int day)
@@ -182,19 +311,87 @@ public class GameManager : MonoBehaviour
         if (_playerHydrationSystem != null)
         {
             _playerHydrationSystem.ProcessDailyConsumption();
-            int hydrationModifier = _playerHydrationSystem.GetActionModifier();
-            int totalActions = Mathf.Max(1, _actionsPerDay + hydrationModifier);
-            _actionSystem.ResetActions(totalActions);
+
+            const float zeroEpsilon = 0.02f;
+            if (_playerHydrationSystem.HydrationPercent <= zeroEpsilon)
+            {
+                _dehydrationZeroDayStreak++;
+                if (_dehydrationZeroDayStreak >= 2)
+                {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    SporiumLogger.LogError(LogCategory.Core,
+                        "[GameManager] Game over: disidratazione critica per 2 giorni consecutivi (H≈0%).");
+#endif
+                    OnDehydrationGameOver?.Invoke();
+                    return;
+                }
+            }
+            else
+                _dehydrationZeroDayStreak = 0;
         }
-        else
-        {
-            _actionSystem.ResetActions(_actionsPerDay);
-        }
+
+        if (!ProcessDawnMealAndActionBudget(out int daily))
+            return;
+
+        _actionSystem.ResetActions(daily);
 
 #if UNITY_EDITOR
         if (_showDebugLogs)
-            SporiumLogger.LogInfo(LogCategory.Core, $"EndDay -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}");
+            SporiumLogger.LogInfo(LogCategory.Core,
+                $"DayChanged -> Day={day}, CRY={CurrentCRY}, Actions={ActionsLeft}/{_actionSystem.MaxActions}, H={_playerHydrationSystem?.HydrationPercent ?? -1f}, dehydrStreak={_dehydrationZeroDayStreak}, noMealStreak={_consecutiveDaysWithoutMeal}, starvationMinCap={_starvationDaysAtMinCapWithoutFood}");
 #endif
+    }
+
+    /// <summary>
+    /// All’alba: aggiorna streak “senza pasto”, applica penalità sul cap (min 1/5), controlla game over fame.
+    /// </summary>
+    private bool ProcessDawnMealAndActionBudget(out int daily)
+    {
+        daily = 1;
+        bool ateYesterday = _ateMealSincePreviousDawn;
+
+        if (!ateYesterday)
+            _consecutiveDaysWithoutMeal++;
+        else
+            _consecutiveDaysWithoutMeal = 0;
+
+        int raw = GetRawBreakfastBudgetForDawn(out bool wasOverrideBreakfast);
+        int penalty = Mathf.Max(0, _consecutiveDaysWithoutMeal - 2);
+        daily = Mathf.Max(1, Mathf.Min(5, raw - penalty));
+
+        if (daily == 1 && !ateYesterday)
+            _starvationDaysAtMinCapWithoutFood++;
+        else
+            _starvationDaysAtMinCapWithoutFood = 0;
+
+        if (_starvationDaysAtMinCapWithoutFood >= 3)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            SporiumLogger.LogError(LogCategory.Core,
+                "[GameManager] Game over: fame — 3 giorni consecutivi a 1 azione senza cibo.");
+#endif
+            OnStarvationGameOver?.Invoke();
+            return false;
+        }
+
+        _ateMealSincePreviousDawn = false;
+
+        SeedActionBudgetLedgerForDawn(raw, penalty, wasOverrideBreakfast);
+        return true;
+    }
+
+    private int GetRawBreakfastBudgetForDawn(out bool wasOverrideBreakfast)
+    {
+        wasOverrideBreakfast = false;
+        if (_overrideNextDawnActions >= 1 && _overrideNextDawnActions <= 5)
+        {
+            wasOverrideBreakfast = true;
+            int v = _overrideNextDawnActions;
+            _overrideNextDawnActions = -1;
+            return v;
+        }
+
+        return Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
     }
 
     public bool TrySpendCry(int amount)

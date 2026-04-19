@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Sporae.UI.UIToolkit.HUD
 {
     /// <summary>
-    /// Componente riutilizzabile per barre segmentate (es. ACTIONS bar con 4 segmenti).
+    /// Componente riutilizzabile per barre segmentate (es. ACTIONS bar con fino a 5 segmenti).
     /// </summary>
     public class SegmentedBarUI
     {
@@ -57,7 +57,9 @@ namespace Sporae.UI.UIToolkit.HUD
             Value = current;
             MaxValue = max;
             
-            int filledCount = Mathf.CeilToInt((current / (float)max) * _segmentCount);
+            int filledCount = 0;
+            if (max > 0)
+                filledCount = Mathf.CeilToInt((current / (float)max) * _segmentCount);
             filledCount = Mathf.Clamp(filledCount, 0, _segmentCount);
             
             for (int i = 0; i < _segments.Count; i++)

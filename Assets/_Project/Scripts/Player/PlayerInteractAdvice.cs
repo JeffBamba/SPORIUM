@@ -10,6 +10,7 @@ namespace _Project
         [SerializeField] private TextMeshProUGUI _adviceLabel;
 
         private int _interactablesInRange = 0;
+        private string _lastSuggestedTarget = string.Empty;
 
         private void Awake()
         {
@@ -19,11 +20,13 @@ namespace _Project
             ServiceContainer.Instance.Register(this);
         }
         
-        public void AddInteractable()
+        public void AddInteractable(string suggestedTargetName = null)
         {
             if (_adviceLabel == null)
                 return;
             _interactablesInRange++;
+            if (!string.IsNullOrWhiteSpace(suggestedTargetName))
+                _lastSuggestedTarget = suggestedTargetName;
         }
 
         private void LateUpdate()
@@ -34,8 +37,17 @@ namespace _Project
                 return;
             }
 
-            _adviceLabel.gameObject.SetActive(_interactablesInRange > 0);
+            bool isVisible = _interactablesInRange > 0;
+            _adviceLabel.gameObject.SetActive(isVisible);
+            if (isVisible)
+            {
+                if (!string.IsNullOrWhiteSpace(_lastSuggestedTarget))
+                    _adviceLabel.text = $"Premi 'E' per interagire con \"{_lastSuggestedTarget}\"";
+                else
+                    _adviceLabel.text = "Premi 'E' per interagire";
+            }
             _interactablesInRange = 0;
+            _lastSuggestedTarget = string.Empty;
         }
     }
 }
