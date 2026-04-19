@@ -62,6 +62,8 @@ namespace Sporae.UI.UIToolkit.HUD.Components
         {
             if (_rt != null)
             {
+                if (RenderTexture.active == _rt)
+                    RenderTexture.active = null;
                 _rt.Release();
                 UnityEngine.Object.Destroy(_rt);
                 _rt = null;

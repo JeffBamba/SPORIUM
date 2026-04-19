@@ -13,10 +13,13 @@ namespace _Project.Sporae.Core
         public ReadOnlyCollection<MissionChecker> CurrentMissions => _currentMissions.AsReadOnly();
         public event Action OnMissionsChanged;
         public event Action<MissionChecker> OnMissionComplete;
-        
+        public event Action<MissionChecker> OnMissionAdded;
+
         public void Append(MissionConfig config)
         {
-            _currentMissions.Add(new MissionChecker(config));
+            var checker = new MissionChecker(config);
+            _currentMissions.Add(checker);
+            OnMissionAdded?.Invoke(checker);
             OnMissionsChanged?.Invoke();
         }
 
@@ -54,14 +57,22 @@ namespace _Project.Sporae.Core
         
         public void Check()
         {
-            foreach (
-                var mission in 
-                    _currentMissions
-                        .Where(mission => !mission.IsCompleted && mission.Check()))
+            var snapshot = _currentMissions.ToList();
+            var anyRemoved = false;
+            foreach (var mission in snapshot)
             {
+                if (mission.IsCompleted)
+                    continue;
+                if (!mission.Check())
+                    continue;
                 mission.IsCompleted = true;
                 OnMissionComplete?.Invoke(mission);
+                _currentMissions.Remove(mission);
+                anyRemoved = true;
             }
+
+            if (anyRemoved)
+                OnMissionsChanged?.Invoke();
         }
     }
 }

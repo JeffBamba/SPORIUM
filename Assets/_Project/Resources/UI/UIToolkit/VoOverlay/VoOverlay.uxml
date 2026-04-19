@@ -3,7 +3,9 @@
     <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/VoOverlay/VoOverlay.uss?fileID=7433441132597879392&amp;guid=c4e8f2a91d5b4c3e9f0a1b2c3d4e5f60&amp;type=3#VoOverlay" />
     <ui:VisualElement name="vo-overlay-root" class="vo-overlay-root">
         <ui:VisualElement name="vo-text-wrap" class="vo-text-wrap">
+            <ui:VisualElement name="vo-sentences-host" class="vo-sentences-host" style="display: none;" />
             <ui:Label name="vo-body" class="vo-body vo-body--register-a" text="[VO] Esempio in UI Builder — a runtime il testo è vuoto finché non parte ShowLine." />
+            <ui:Label name="vo-continue-hint" class="vo-continue-hint" text="" style="display: none;" />
             <ui:VisualElement name="vo-organic-host" class="vo-organic-host" style="display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>

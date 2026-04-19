@@ -60,6 +60,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "Exiting SPORIUM...",
                     "Stai uscendo dal gioco.\nAssicurati di aver salvato se necessario."),
 
+                // ===== MISSIONS =====
+                Spec("MIS-DONE", NotificationCategory.System, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 2f,
+                    "notif.mis_done",
+                    "Missione completata: {title}",
+                    "Mission completed: {title}",
+                    "La missione è stata completata.\nRicompensa assegnata."),
+                Spec("MIS-NEW", NotificationCategory.System, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 2f,
+                    "notif.mis_new",
+                    "Nuova missione: {title}",
+                    "New mission: {title}",
+                    "Una nuova missione è stata assegnata.\nControlla il pannello missioni per i dettagli."),
+
                 // ===== DOME — Indice mutazione (Task 7, soglie HUD) =====
                 Spec("DOME-IM-MID", NotificationCategory.Ecosystem, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 48f,
                     "notif.dome_im_mid",

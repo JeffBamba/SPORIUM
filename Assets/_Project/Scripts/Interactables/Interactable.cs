@@ -11,11 +11,15 @@ namespace _Project
         [Tooltip("Raggio (in unità mondo) entro cui un click conta come \"sul\" questo Interactable. Aumenta se il click funziona solo in un punto.")]
         [SerializeField] private float _clickRadius = 0.35f;
 
+        [Tooltip("Se true, il prompt [E] resta attivo e si può riaprire l'interazione senza uscire dalla zona (es. Armadio).")]
+        [SerializeField] private bool _repeatInteractionWhileInRange;
+
         [SerializeField] private Color _normalColor;
         [SerializeField] private Color _highlightColor;
         
         private SpriteRenderer _spriteRenderer;
         private Transform _playerTransform;
+        private Rigidbody2D _playerRigidbody;
         private PlayerInteractAdvice _playerInteractAdvice;
         private Collider2D _collider2D;
         
@@ -25,8 +29,20 @@ namespace _Project
 
         private float EffectiveInteractDistance => _interactDistance > 0f ? _interactDistance : 2f;
         
-        public bool PlayerInRange =>
-            _playerTransform != null && Vector2.Distance(_playerTransform.position, transform.position) <= EffectiveInteractDistance;
+        public bool PlayerInRange
+        {
+            get
+            {
+                if (_playerTransform == null)
+                    return false;
+                Vector2 pp = _playerRigidbody != null ? _playerRigidbody.position : (Vector2)_playerTransform.position;
+                return Vector2.Distance(pp, transform.position) <= EffectiveInteractDistance;
+            }
+        }
+
+        public void SetRepeatInteractionWhileInRange(bool value) => _repeatInteractionWhileInRange = value;
+
+        public void SetInteractDistance(float meters) => _interactDistance = Mathf.Max(0.25f, meters);
         
         private void Awake()
         {
@@ -38,19 +54,26 @@ namespace _Project
             
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
+            {
                 _playerTransform = player.transform;
+                _playerRigidbody = player.GetComponent<Rigidbody2D>();
+            }
+
+            if (GetComponent<WardrobeStation>() != null)
+                _repeatInteractionWhileInRange = true;
         }
 
         private void Update()
         {
             if (PlayerInRange)
             {
-                if (!_interacted)
+                if (_playerInteractAdvice != null && (!_interacted || _repeatInteractionWhileInRange))
                     _playerInteractAdvice.AddInteractable();
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    _interacted = true;
+                    if (!_repeatInteractionWhileInRange)
+                        _interacted = true;
                     OnInteract?.Invoke();
                     return;
                 }
@@ -82,7 +105,8 @@ namespace _Project
                     }
                     if (hit)
                     {
-                        _interacted = true;
+                        if (!_repeatInteractionWhileInRange)
+                            _interacted = true;
                         OnInteract?.Invoke();
                     }
                 }
@@ -101,13 +125,15 @@ namespace _Project
             if (!PlayerInRange)
                 return;
             
-            _interacted = true;
+            if (!_repeatInteractionWhileInRange)
+                _interacted = true;
             OnInteract?.Invoke();
         }
         
         private void OnMouseEnter()
         {
-            _spriteRenderer.color = _highlightColor;
+            if (_spriteRenderer != null)
+                _spriteRenderer.color = _highlightColor;
         }
     
         private void OnMouseExit()
@@ -117,8 +143,8 @@ namespace _Project
 
         public void Deselect()
         {
-            
-            _spriteRenderer.color = _normalColor;
+            if (_spriteRenderer != null)
+                _spriteRenderer.color = _normalColor;
         }
         
 #if UNITY_EDITOR

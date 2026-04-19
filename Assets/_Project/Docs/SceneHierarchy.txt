@@ -24,6 +24,7 @@
     [Component] Transform
     [Component] SpriteRenderer
     [Component] Animator
+    [Component] ShadowCaster2D
   - Canvas
     [Component] RectTransform
     [Component] Canvas
@@ -41,6 +42,11 @@
   [Component] Canvas
   [Component] CanvasScaler
   [Component] GraphicRaycaster
+  - InventoryBackgroundBlocker
+    [Component] RectTransform
+    [Component] CanvasRenderer
+    [Component] Image
+    [Component] Button
   - HUD_GameViewportBackground
     [Component] RectTransform
     [Component] UIDocument
@@ -49,6 +55,27 @@
     [Component] Transform
     [Component] EventSystem
     [Component] StandaloneInputModule
+    [Component] BaseInput
+    - BackgroundSettingsPanel
+      [Component] Transform
+      [Component] PanelEventHandler
+      [Component] PanelRaycaster
+    - MainMenuPanelSettings
+      [Component] Transform
+      [Component] PanelEventHandler
+      [Component] PanelRaycaster
+    - PlayerStatusPanelSettings
+      [Component] Transform
+      [Component] PanelEventHandler
+      [Component] PanelRaycaster
+    - PlayerStatusPanelSettings(Clone)
+      [Component] Transform
+      [Component] PanelEventHandler
+      [Component] PanelRaycaster
+    - PlayerStatusPanelSettings(Clone)
+      [Component] Transform
+      [Component] PanelEventHandler
+      [Component] PanelRaycaster
   - BTN_EndDay
     [Component] RectTransform
     [Component] CanvasRenderer
@@ -2069,14 +2096,14 @@
     [Component] UIDocument
     [Component] CompactBottomBarController
     [Component] CollectionBoxStackController
-  - PlayerStatusPanel
-    [Component] RectTransform
-    [Component] PlayerStatusPanelController
-    [Component] UIDocument
   - PlantCardV3
     [Component] RectTransform
     [Component] UIDocument
     [Component] PlantCardV3TerminalController
+  - PlayerStatusPanel
+    [Component] RectTransform
+    [Component] PlayerStatusPanelController
+    [Component] UIDocument
   - UI_LabExtractorPanel
     [Component] RectTransform
     [Component] UIDocument
@@ -2101,6 +2128,10 @@
     [Component] RectTransform
     [Component] UIDocument
     [Component] CryoMachinePanelController
+  - UI_LabTerminalPanel
+    [Component] RectTransform
+    [Component] UIDocument
+    [Component] LabTerminalPanelController
 - Menu
   [Component] RectTransform
   [Component] Canvas
@@ -2350,15 +2381,24 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
+        - SR_ConditionTintOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_InfestedOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_FruitOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
       - PotArmRig 
         [Component] Transform
         [Component] PotAutomationArmAnimator
-        - Arm_Small 
-          [Component] Transform
-          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
+          - Arm_Small 
+            [Component] Transform
+            [Component] SpriteRenderer
     - Pot_POT-002
       [Component] Transform
       [Component] SpriteRenderer
@@ -2388,15 +2428,24 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
+        - SR_ConditionTintOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_InfestedOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_FruitOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
       - PotArmRig 
         [Component] Transform
         [Component] PotAutomationArmAnimator
-        - Arm_Small 
-          [Component] Transform
-          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
+          - Arm_Small 
+            [Component] Transform
+            [Component] SpriteRenderer
     - Pot_POT-003
       [Component] Transform
       [Component] SpriteRenderer
@@ -2424,15 +2473,24 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
+        - SR_ConditionTintOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_InfestedOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_FruitOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
       - PotArmRig
         [Component] Transform
         [Component] PotAutomationArmAnimator
-        - Arm_Small 
-          [Component] Transform
-          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
+          - Arm_Small 
+            [Component] Transform
+            [Component] SpriteRenderer
     - Pot_POT-004
       [Component] Transform
       [Component] SpriteRenderer
@@ -2460,15 +2518,24 @@
       - WindowContent
         [Component] Transform
         [Component] SpriteRenderer
+        - SR_ConditionTintOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_InfestedOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
+        - SR_FruitOverlay
+          [Component] Transform
+          [Component] SpriteRenderer
       - PotArmRig
         [Component] Transform
         [Component] PotAutomationArmAnimator
-        - Arm_Small 
-          [Component] Transform
-          [Component] SpriteRenderer
         - Arm_Large 
           [Component] Transform
           [Component] SpriteRenderer
+          - Arm_Small 
+            [Component] Transform
+            [Component] SpriteRenderer
   - Extractor
     [Component] Transform
     [Component] SpriteRenderer
@@ -2489,8 +2556,34 @@
     - ExtractorDisplayAnchor
       [Component] Transform
       [Component] Light2D
+      - ExtractorDisplayCanvas
+        [Component] RectTransform
+        [Component] Canvas
+        [Component] CanvasScaler
+        [Component] GraphicRaycaster
+        [Component] CanvasGroup
+        - ExtractorDisplaySurface
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] RawImage
     - ExtractorDisplayAnchor_ProtoSpore
       [Component] Transform
+      - ExtractorSporeProtoCanvas
+        [Component] RectTransform
+        [Component] Canvas
+        [Component] CanvasScaler
+        [Component] GraphicRaycaster
+        [Component] CanvasGroup
+        - ExtractorSporeProtoSurface
+          [Component] RectTransform
+          [Component] CanvasRenderer
+          [Component] RawImage
+    - ExtractorDisplayUI_Runtime
+      [Component] Transform
+      [Component] UIDocument
+    - ExtractorSporeProtoUI_Runtime
+      [Component] Transform
+      [Component] UIDocument
   - Catallizatore
     [Component] Transform
     [Component] SpriteRenderer
@@ -2604,6 +2697,7 @@
     - Light Monitor (3)
       [Component] Transform
       [Component] Light2D
+      [Component] Light2DFlicker
     - Light Monitor (5)
       [Component] Transform
       [Component] Light2D
@@ -2621,6 +2715,12 @@
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
+  - LabTerminal
+    [Component] Transform
+    [Component] SpriteRenderer
+    [Component] BoxCollider2D
+    [Component] Interactable
+    [Component] LabTerminalOpener
 - ROOM_Refrigerated 
   [Component] Transform
   - SeedStorage
@@ -2734,9 +2834,6 @@
     - WALL_Left
       [Component] Transform
       [Component] EdgeCollider2D
-    - WALL_profondo
-      [Component] Transform
-      [Component] EdgeCollider2D
     - WALL_railing_esterno
       [Component] Transform
       [Component] EdgeCollider2D
@@ -2744,9 +2841,6 @@
       [Component] Transform
       [Component] EdgeCollider2D
     - WALL_Right
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right Interno
       [Component] Transform
       [Component] EdgeCollider2D
 - ROOM_Kitchen
@@ -2855,12 +2949,24 @@
   - Light_BedRoom_Main (1)
     [Component] Transform
     [Component] Light2D
+    [Component] Light2DFlicker
+  - Light_BedRoom_Main (3)
+    [Component] Transform
+    [Component] Light2D
+  - Light_BedRoom_Main (4)
+    [Component] Transform
+    [Component] Light2D
   - Light_BedRoom_side
     [Component] Transform
     [Component] Light2D
   - Mask_BedRoom_Floor
     [Component] Transform
     [Component] SpriteMask
+  - Wardrobe
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] Interactable
+    [Component] WardrobeStation
 - GameManager
   [Component] Transform
   [Component] GameManager
@@ -2925,6 +3031,9 @@
 - railing_left (5)
   [Component] Transform
   [Component] SpriteRenderer
+- railing_left (6)
+  [Component] Transform
+  [Component] SpriteRenderer
 - railing_left (2)
   [Component] Transform
   [Component] SpriteRenderer
@@ -2940,3 +3049,43 @@
 - opsMenu
   [Component] Transform
   [Component] SpriteRenderer
+- SceneServicesContainer
+  [Component] Transform
+  [Component] ServiceContainer
+- FoundationNotificationsRuntime
+  [Component] Transform
+  [Component] FoundationNotificationsRunner
+  [Component] FoundationNotificationsWatchersRunner
+  [Component] FoundationMutationImWatcher
+  [Component] FoundationLoreSchedulerRunner
+  [Component] FoundationNotificationsDebugConsole
+- VoOverlay
+  [Component] Transform
+  [Component] VoOverlayController
+  [Component] AudioSource
+  [Component] UIDocument
+- ActiveMissions
+  [Component] Transform
+  [Component] ActiveMissionsPanelController
+  [Component] UIDocument
+- WardrobePanel
+  [Component] Transform
+  [Component] WardrobePanelController
+- DemoStoryDirector
+  [Component] Transform
+  [Component] DemoStoryDirector
+- pH_DebugConsole
+  [Component] Transform
+  [Component] PhSystemDebugConsole
+- pH_HUDDisplay
+  [Component] Transform
+  [Component] HUDPhDisplay
+- pH_IdleOscillation
+  [Component] Transform
+  [Component] PhSystemIdleOscillation
+- InGameMainMenu_UIToolkitHost
+  [Component] Transform
+  [Component] MainMenuUIToolkitController
+  - MainMenu_UIToolkit
+    [Component] Transform
+    [Component] UIDocument

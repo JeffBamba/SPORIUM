@@ -223,6 +223,9 @@ namespace _Project.Player
             if (currentWalkArea == null)
                 return;
 
+            if (GameplayUiModalLock.BlocksWorldInput)
+                return;
+
             Vector2 wasd = enableWASD ? new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) : Vector2.zero;
             bool hasWASD = wasd.sqrMagnitude > wasdDeadzone * wasdDeadzone;
 
@@ -342,6 +345,9 @@ namespace _Project.Player
         private void HandleClickInput()
         {
             if (!Input.GetMouseButtonDown(0))
+                return;
+
+            if (GameplayUiModalLock.BlocksWorldInput)
                 return;
 
             Vector2 clickWorld = GetMouseWorldPosition();

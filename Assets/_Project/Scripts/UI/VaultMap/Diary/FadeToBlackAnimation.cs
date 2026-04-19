@@ -20,6 +20,9 @@ namespace _Project
         
         public void Show()
         {
+            if (_image == null)
+                return;
+            DOTween.Kill(_image, false);
             DOTween.To(
                 () => _image.color,
                 x => _image.color = x,
@@ -32,6 +35,9 @@ namespace _Project
 
         public void Hide()
         {
+            if (_image == null)
+                return;
+            DOTween.Kill(_image, false);
             DOTween.To(
                 () => _image.color,
                 x => _image.color = x,
@@ -40,14 +46,32 @@ namespace _Project
             );   
         }
 
+        /// <summary>Schermo nero immediato poi dissolvenza verso trasparente (ingresso da menu).</summary>
+        public void PlayEntryFadeInFromBlack()
+        {
+            if (_image == null)
+                return;
+            DOTween.Kill(_image, false);
+            _image.color = k_blackColor;
+            Hide();
+        }
+
         private void Awake()
         {
+            if (VaultMapEntryFade.RequestFadeInOnNextLoad && _image != null)
+                _image.color = k_blackColor;
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
         }
 
         private void Start()
         {
             _dayCycleSystem.OnDayChanged += HandleDayChanged;
+
+            if (VaultMapEntryFade.RequestFadeInOnNextLoad)
+            {
+                VaultMapEntryFade.RequestFadeInOnNextLoad = false;
+                PlayEntryFadeInFromBlack();
+            }
         }
         
         private void HandleDayChanged(int d)

@@ -1,5 +1,6 @@
 /* VO overlay — solo testo (nessun box/bordo); leggibilità via glow leggero. */
 
+/* Fascia centrale tra PlayerStatus/Biologo (~28+242) e DomeStatusHUD (~380 da destra). */
 .vo-overlay-root {
     position: absolute;
     left: 0;
@@ -9,13 +10,14 @@
     justify-content: flex-end;
     align-items: center;
     padding-bottom: 80px;
-    padding-left: 32px;
-    padding-right: 32px;
+    padding-left: 276px;
+    padding-right: 392px;
 }
 
 .vo-text-wrap {
-    width: 92%;
-    max-width: 920px;
+    width: 100%;
+    max-width: 680px;
+    align-self: center;
     flex-direction: column;
     align-items: stretch;
     background-color: rgba(0, 0, 0, 0);
@@ -23,6 +25,31 @@
     border-right-width: 0;
     border-bottom-width: 0;
     border-left-width: 0;
+}
+
+.vo-sentences-host {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.vo-sentence-line {
+    margin-bottom: 10px;
+    -unity-text-align: middle-center;
+    width: 100%;
+}
+
+.vo-continue-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    font-size: 11px;
+    letter-spacing: 0.35px;
+    color: rgba(200, 200, 200, 0.72);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
 }
 
 .vo-organic-host {

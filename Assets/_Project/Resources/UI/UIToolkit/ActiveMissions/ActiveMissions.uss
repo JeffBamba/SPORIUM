@@ -1,0 +1,478 @@
+/* Mission recap panel: layout terminal/CRT, varianti stato e tooltip hover */
+
+.active-missions-root {
+    position: absolute;
+    left: 24px;
+    top: 136px;
+    width: 300px;
+    flex-direction: column;
+    padding: 0;
+    transition-property: opacity, translate;
+    transition-duration: 400ms;
+    transition-timing-function: ease-out;
+}
+
+.active-missions-root--enter {
+    opacity: 0;
+    translate: -20px 0;
+}
+
+.active-missions-header {
+    min-height: 32px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    cursor: link;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: rgba(8, 13, 16, 0.94);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(0, 255, 198, 0.45);
+    border-right-color: rgba(0, 255, 198, 0.45);
+    border-top-color: rgba(0, 255, 198, 0.45);
+    border-bottom-color: rgba(0, 255, 198, 0.45);
+}
+
+.active-missions-header:hover {
+    background-color: rgba(12, 18, 22, 0.96);
+    border-left-color: rgba(0, 255, 198, 0.7);
+    border-right-color: rgba(0, 255, 198, 0.7);
+    border-top-color: rgba(0, 255, 198, 0.7);
+    border-bottom-color: rgba(0, 255, 198, 0.7);
+}
+
+.active-missions-header-left {
+    flex-direction: row;
+    align-items: center;
+}
+
+.active-missions-title {
+    font-size: 11px;
+    letter-spacing: 2.2px;
+    -unity-font-style: bold;
+    color: rgba(0, 255, 198, 1);
+    text-shadow: 0 0 8px rgba(0, 255, 198, 0.55);
+}
+
+.active-missions-count {
+    margin-left: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(0, 255, 198, 0.85);
+    text-shadow: 0 0 4px rgba(0, 255, 198, 0.4);
+}
+
+.active-missions-toggle-chevron {
+    width: 12px;
+    height: 12px;
+    border-left-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(0, 255, 198, 0.6);
+    border-bottom-color: rgba(0, 255, 198, 0.6);
+    rotate: 45deg;
+    transition-property: rotate;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+}
+
+.active-missions-toggle-chevron--collapsed {
+    rotate: -135deg;
+}
+
+.active-missions-content {
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 560px;
+    opacity: 1;
+    padding-top: 10px;
+    transition-property: max-height, opacity, padding-top;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+}
+
+.active-missions--collapsed .active-missions-content {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+}
+
+.active-missions-list {
+    flex-direction: column;
+}
+
+.active-missions-empty {
+    display: flex;
+    margin-top: 6px;
+    padding-left: 10px;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: rgba(93, 182, 227, 0.5);
+    -unity-font-style: italic;
+}
+
+.active-mission-card {
+    width: 100%;
+    flex-direction: column;
+    margin-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 9px;
+    padding-bottom: 10px;
+    cursor: link;
+    background-color: rgba(8, 12, 14, 0.82);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    transition-property: background-color, border-color;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
+}
+
+.active-mission-card:hover {
+    background-color: rgba(14, 22, 24, 0.96);
+}
+
+.active-mission-card-top {
+    flex-direction: row;
+    align-items: center;
+}
+
+.active-mission-card-emoji {
+    font-size: 16px;
+    margin-right: 8px;
+}
+
+.active-mission-card-title {
+    flex-grow: 1;
+    font-size: 12px;
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+}
+
+.active-mission-card-timer-wrap {
+    flex-direction: row;
+    align-items: center;
+}
+
+.active-mission-card-timer-icon {
+    margin-right: 3px;
+    font-size: 9px;
+    color: rgba(192, 200, 197, 0.72);
+}
+
+.active-mission-card-timer {
+    font-size: 9px;
+    color: rgba(192, 200, 197, 0.85);
+}
+
+.active-mission-card-timer--warn {
+    color: rgba(230, 201, 111, 1);
+}
+
+.active-mission-card-progress {
+    position: relative;
+    margin-top: 8px;
+    height: 14px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    background-color: rgba(4, 6, 8, 0.6);
+}
+
+.active-mission-card-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+}
+
+.active-mission-card-progress-percent {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    font-size: 9px;
+    -unity-font-style: bold;
+    color: rgba(220, 228, 225, 1);
+    -unity-text-align: middle-center;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+}
+
+.am-status-active.active-mission-card {
+    border-left-color: rgba(0, 255, 198, 0.45);
+    border-right-color: rgba(0, 255, 198, 0.45);
+    border-top-color: rgba(0, 255, 198, 0.45);
+    border-bottom-color: rgba(0, 255, 198, 0.45);
+}
+
+.am-status-active.active-mission-card:hover {
+    border-left-color: rgba(0, 255, 198, 0.8);
+    border-right-color: rgba(0, 255, 198, 0.8);
+    border-top-color: rgba(0, 255, 198, 0.8);
+    border-bottom-color: rgba(0, 255, 198, 0.8);
+}
+
+.am-status-expiring.active-mission-card {
+    border-left-color: rgba(230, 201, 111, 0.48);
+    border-right-color: rgba(230, 201, 111, 0.48);
+    border-top-color: rgba(230, 201, 111, 0.48);
+    border-bottom-color: rgba(230, 201, 111, 0.48);
+}
+
+.am-status-expiring.active-mission-card:hover {
+    border-left-color: rgba(230, 201, 111, 0.85);
+    border-right-color: rgba(230, 201, 111, 0.85);
+    border-top-color: rgba(230, 201, 111, 0.85);
+    border-bottom-color: rgba(230, 201, 111, 0.85);
+}
+
+.am-status-failed.active-mission-card {
+    border-left-color: rgba(211, 95, 95, 0.48);
+    border-right-color: rgba(211, 95, 95, 0.48);
+    border-top-color: rgba(211, 95, 95, 0.48);
+    border-bottom-color: rgba(211, 95, 95, 0.48);
+}
+
+.am-status-failed.active-mission-card:hover {
+    border-left-color: rgba(211, 95, 95, 0.85);
+    border-right-color: rgba(211, 95, 95, 0.85);
+    border-top-color: rgba(211, 95, 95, 0.85);
+    border-bottom-color: rgba(211, 95, 95, 0.85);
+}
+
+.am-status-active .active-mission-card-title {
+    color: rgba(0, 255, 198, 1);
+    text-shadow: 0 0 6px rgba(0, 255, 198, 0.55);
+}
+
+.am-status-expiring .active-mission-card-title {
+    color: rgba(230, 201, 111, 1);
+    text-shadow: 0 0 6px rgba(230, 201, 111, 0.55);
+}
+
+.am-status-failed .active-mission-card-title {
+    color: rgba(211, 95, 95, 1);
+    text-shadow: 0 0 6px rgba(211, 95, 95, 0.55);
+}
+
+.am-status-active .active-mission-card-progress {
+    border-left-color: rgba(0, 255, 198, 0.5);
+    border-right-color: rgba(0, 255, 198, 0.5);
+    border-top-color: rgba(0, 255, 198, 0.5);
+    border-bottom-color: rgba(0, 255, 198, 0.5);
+}
+
+.am-status-expiring .active-mission-card-progress {
+    border-left-color: rgba(230, 201, 111, 0.5);
+    border-right-color: rgba(230, 201, 111, 0.5);
+    border-top-color: rgba(230, 201, 111, 0.5);
+    border-bottom-color: rgba(230, 201, 111, 0.5);
+}
+
+.am-status-failed .active-mission-card-progress {
+    border-left-color: rgba(211, 95, 95, 0.5);
+    border-right-color: rgba(211, 95, 95, 0.5);
+    border-top-color: rgba(211, 95, 95, 0.5);
+    border-bottom-color: rgba(211, 95, 95, 0.5);
+}
+
+.am-status-active .active-mission-card-progress-fill {
+    background-color: rgba(0, 255, 198, 0.85);
+}
+
+.am-status-expiring .active-mission-card-progress-fill {
+    background-color: rgba(230, 201, 111, 0.85);
+}
+
+.am-status-failed .active-mission-card-progress-fill {
+    background-color: rgba(211, 95, 95, 0.85);
+}
+
+.am-faction-custodi .active-mission-card-emoji {
+    text-shadow: 0 0 7px rgba(127, 255, 122, 0.7);
+}
+
+.am-faction-mercanti .active-mission-card-emoji {
+    text-shadow: 0 0 7px rgba(230, 201, 111, 0.7);
+}
+
+.am-faction-cult .active-mission-card-emoji {
+    text-shadow: 0 0 7px rgba(211, 95, 95, 0.72);
+}
+
+.active-mission-tooltip {
+    position: absolute;
+    width: 320px;
+    flex-direction: column;
+    padding: 10px;
+    background-color: rgba(11, 13, 16, 0.95);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+}
+
+.active-mission-tooltip.am-status-active {
+    border-left-color: rgba(0, 255, 198, 1);
+    border-right-color: rgba(0, 255, 198, 1);
+    border-top-color: rgba(0, 255, 198, 1);
+    border-bottom-color: rgba(0, 255, 198, 1);
+}
+
+.active-mission-tooltip.am-status-expiring {
+    border-left-color: rgba(230, 201, 111, 1);
+    border-right-color: rgba(230, 201, 111, 1);
+    border-top-color: rgba(230, 201, 111, 1);
+    border-bottom-color: rgba(230, 201, 111, 1);
+}
+
+.active-mission-tooltip.am-status-failed {
+    border-left-color: rgba(211, 95, 95, 1);
+    border-right-color: rgba(211, 95, 95, 1);
+    border-top-color: rgba(211, 95, 95, 1);
+    border-bottom-color: rgba(211, 95, 95, 1);
+}
+
+.am-tooltip-scanline {
+    height: 2px;
+    width: 100%;
+    margin-bottom: 4px;
+    background-color: rgba(0, 255, 198, 0.05);
+}
+
+.am-tooltip-header {
+    flex-direction: row;
+    align-items: center;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 255, 198, 0.3);
+    padding-bottom: 6px;
+}
+
+.am-tooltip-emoji {
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.am-tooltip-header-texts {
+    flex-direction: column;
+}
+
+.am-tooltip-title {
+    font-size: 12px;
+    -unity-font-style: bold;
+    letter-spacing: 0.8px;
+}
+
+.active-mission-tooltip.am-status-active .am-tooltip-title {
+    color: rgba(0, 255, 198, 1);
+    text-shadow: 0 0 8px rgba(0, 255, 198, 0.45);
+}
+
+.active-mission-tooltip.am-status-expiring .am-tooltip-title {
+    color: rgba(230, 201, 111, 1);
+    text-shadow: 0 0 8px rgba(230, 201, 111, 0.45);
+}
+
+.active-mission-tooltip.am-status-failed .am-tooltip-title {
+    color: rgba(211, 95, 95, 1);
+    text-shadow: 0 0 8px rgba(211, 95, 95, 0.45);
+}
+
+.am-tooltip-faction {
+    margin-top: 2px;
+    font-size: 9px;
+    color: rgba(192, 200, 197, 0.8);
+}
+
+.am-tooltip-section {
+    flex-direction: column;
+    margin-top: 8px;
+}
+
+.am-tooltip-section-label {
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    -unity-font-style: bold;
+    color: rgba(0, 255, 198, 1);
+}
+
+.am-tooltip-objective {
+    margin-top: 4px;
+    margin-left: 16px;
+    font-size: 10px;
+    color: rgba(192, 200, 197, 1);
+    white-space: normal;
+}
+
+.am-tooltip-task-section {
+    margin-top: 8px;
+}
+
+.am-tooltip-task-summary {
+    margin-left: 16px;
+    font-size: 10px;
+    color: rgba(230, 201, 111, 1);
+}
+
+.am-tooltip-reward-section {
+    margin-top: 8px;
+    border-top-width: 2px;
+    border-top-color: rgba(0, 255, 198, 0.3);
+    padding-top: 6px;
+}
+
+.am-tooltip-reward-label {
+    color: rgba(127, 255, 122, 1);
+}
+
+.am-tooltip-reward {
+    margin-top: 4px;
+    margin-left: 16px;
+    font-size: 11px;
+    white-space: normal;
+}
+
+.active-mission-tooltip.am-status-active .am-tooltip-reward {
+    color: rgba(0, 255, 198, 1);
+}
+
+.active-mission-tooltip.am-status-expiring .am-tooltip-reward {
+    color: rgba(230, 201, 111, 1);
+}
+
+.active-mission-tooltip.am-status-failed .am-tooltip-reward {
+    color: rgba(211, 95, 95, 1);
+}
+
+.am-tooltip-rep-row {
+    margin-top: 4px;
+    margin-left: 16px;
+}
+
+.am-tooltip-rep {
+    font-size: 10px;
+    color: rgba(127, 255, 122, 1);
+}
+
+.am-tooltip-deadline {
+    margin-top: 8px;
+    border-top-width: 2px;
+    border-top-color: rgba(230, 201, 111, 0.3);
+    padding-top: 6px;
+}
+
+.am-tooltip-deadline-text {
+    font-size: 9px;
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+    color: rgba(230, 201, 111, 1);
+}

@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/Foundation/SP-Foundation.uss?fileID=7433441132597879392&amp;guid=41a5d4aa05ca1f9409da757ce7607bf4&amp;type=3#SP-Foundation" />
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/Wardrobe/WardrobePanel.uss?fileID=7433441132597879392&amp;guid=c3d4e5f60718293a4b5c6d7e8f901abc&amp;type=3" />
+    <ui:VisualElement name="wardrobe-root" class="wardrobe-root" picking-mode="Position" focusable="true">
+        <ui:VisualElement name="wardrobe-dim" class="wardrobe-dim" picking-mode="Position" />
+        <ui:VisualElement name="wardrobe-panel" class="wardrobe-panel" picking-mode="Position">
+            <ui:Label name="wardrobe-title" class="wardrobe-title" text="ARMADIO" />
+            <ui:Label name="wardrobe-outfit-label" class="wardrobe-outfit-label" text="Outfit 1/3" />
+            <ui:Label class="wardrobe-hint" text="Rotella mouse / ↑↓ / W S — cambia outfit · ESC — chiudi" />
+            <ui:Button name="wardrobe-close" class="wardrobe-close" text="Chiudi" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

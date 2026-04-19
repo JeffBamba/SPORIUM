@@ -423,6 +423,7 @@ namespace _Project.UI.UIToolkit.MainMenu
                 : _mainMenuOptions.GameSceneName;
 
             GamePlayInstaller.SkipAutoLoad = true;
+            VaultMapEntryFade.RequestFadeInOnNextLoad = true;
             var operation = SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Single);
 
             while (!operation.isDone)

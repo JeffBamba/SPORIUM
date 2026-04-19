@@ -1,0 +1,729 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UIElements;
+using _Project.Sporae.Core;
+using Sporae.DevTools;
+using _Project.UI.UIToolkit.VoOverlay;
+
+namespace Sporae.UI.UIToolkit.HUD
+{
+    /// <summary>
+    /// Mission recap HUD (UI Toolkit): header collassabile, card missioni e tooltip contestuale.
+    /// </summary>
+    [DisallowMultipleComponent]
+    [DefaultExecutionOrder(-38)]
+    public sealed class ActiveMissionsPanelController : MonoBehaviour
+    {
+        private const string VisualTreeResourcePath = "UI/UIToolkit/ActiveMissions/ActiveMissions";
+        private const string PanelSettingsResourcePath = "UI/UIToolkit/MainMenu/MainMenuPanelSettings";
+        private const int SortingOrder = 210;
+        private const float ProgressAnimDuration = 0.6f;
+        private const float EmptyPulseDuration = 2f;
+        private const float WarningPulseDuration = 1.5f;
+        private const float TooltipShowDelayMs = 200f;
+        private const float TooltipHideDelayMs = 100f;
+
+        private UIDocument _document;
+        private VisualElement _root;
+        private VisualElement _header;
+        private Label _titleLabel;
+        private Label _countLabel;
+        private VisualElement _toggleChevron;
+        private VisualElement _content;
+        private VisualElement _list;
+        private Label _emptyLabel;
+
+        private VisualElement _tooltip;
+        private Label _tooltipEmoji;
+        private Label _tooltipTitle;
+        private Label _tooltipFaction;
+        private Label _tooltipObjective;
+        private Label _tooltipTaskSummary;
+        private Label _tooltipReward;
+        private Label _tooltipRep;
+        private VisualElement _tooltipRepRow;
+        private VisualElement _tooltipDeadline;
+        private Label _tooltipDeadlineText;
+
+        private MissionManager _missionManager;
+        private DayCycleSystem _dayCycleSystem;
+        private bool _collapsed;
+
+        private IVisualElementScheduledItem _tooltipShowSchedule;
+        private IVisualElementScheduledItem _tooltipHideSchedule;
+        private VisualElement _pendingTooltipCard;
+        private MissionChecker _pendingTooltipMission;
+        private MissionMeta _pendingTooltipMeta;
+        private MissionVisualStatus _pendingTooltipStatus;
+
+        private readonly Dictionary<MissionChecker, MissionMeta> _missionMeta = new Dictionary<MissionChecker, MissionMeta>();
+        private Coroutine _emptyPulseRoutine;
+        private Coroutine _tooltipWarningPulseRoutine;
+
+        private enum MissionVisualStatus
+        {
+            Active,
+            Expiring,
+            Failed
+        }
+
+        private enum MissionFaction
+        {
+            Custodi,
+            Mercanti,
+            Cult
+        }
+
+        private readonly struct MissionMeta
+        {
+            public MissionMeta(int startDay, int plannedDays, MissionFaction faction)
+            {
+                StartDay = startDay;
+                PlannedDays = plannedDays;
+                Faction = faction;
+            }
+
+            public int StartDay { get; }
+            public int PlannedDays { get; }
+            public MissionFaction Faction { get; }
+        }
+
+        private void Awake()
+        {
+            BuildDocument();
+            BindUi();
+
+            _missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+
+            if (_missionManager != null)
+            {
+                _missionManager.OnMissionsChanged += HandleMissionsChanged;
+                _missionManager.OnMissionComplete += HandleMissionComplete;
+                _missionManager.OnMissionAdded += HandleMissionAdded;
+                HandleMissionsChanged();
+            }
+            else
+            {
+                HandleMissionsChanged();
+            }
+
+            ServiceContainer.Instance?.Register(this);
+        }
+
+        private void Start()
+        {
+            if (_root == null)
+                return;
+
+            _root.AddToClassList("active-missions-root--enter");
+            _root.schedule.Execute(() => _root.RemoveFromClassList("active-missions-root--enter")).ExecuteLater(16);
+        }
+
+        private void OnDestroy()
+        {
+            if (_missionManager != null)
+            {
+                _missionManager.OnMissionsChanged -= HandleMissionsChanged;
+                _missionManager.OnMissionComplete -= HandleMissionComplete;
+                _missionManager.OnMissionAdded -= HandleMissionAdded;
+            }
+
+            StopEmptyPulse();
+            StopTooltipWarningPulse();
+            CancelTooltipSchedules();
+        }
+
+        private void HandleMissionAdded(MissionChecker mission)
+        {
+            if (mission?.Config == null)
+                return;
+
+            string title = GetMissionTitle(mission);
+
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
+            {
+                toastManager.ShowInfo($"Nuova missione: {title}", "MIS-NEW");
+                return;
+            }
+
+            var foundation = Sporae.UI.UIToolkit.NotificationsFoundation.FoundationNotificationServiceAccessor.Get();
+            if (foundation != null)
+            {
+                var payload = new Sporae.UI.UIToolkit.NotificationsFoundation.NotificationPayload()
+                    .With("title", title);
+                foundation.PostToast("MIS-NEW",
+                    payload,
+                    Sporae.UI.UIToolkit.NotificationsFoundation.NotificationSeverity.Info);
+            }
+        }
+
+        private void HandleMissionComplete(MissionChecker mission)
+        {
+            if (mission?.Config == null)
+                return;
+
+            string title = GetMissionTitle(mission);
+
+            // Toast (priorità: legacy ToastNotificationManager se presente, altrimenti Foundation service con messaggio custom)
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
+            {
+                toastManager.ShowSuccess($"Missione completata: {title}", "MIS-DONE");
+            }
+            else
+            {
+                var foundation = Sporae.UI.UIToolkit.NotificationsFoundation.FoundationNotificationServiceAccessor.Get();
+                if (foundation != null)
+                {
+                    var payload = new Sporae.UI.UIToolkit.NotificationsFoundation.NotificationPayload()
+                        .With("title", title);
+                    foundation.PostToast("MIS-DONE",
+                        payload,
+                        Sporae.UI.UIToolkit.NotificationsFoundation.NotificationSeverity.Success);
+                }
+            }
+
+            // VO di congratulazione (RegisterB = registro personale/caldo)
+            var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
+            if (vo != null)
+            {
+                string line = $"Ottimo lavoro. Missione completata: {title}.";
+                var presentation = new VoLinePresentationOptions(
+                    useMultiSentenceWhenSplit: true,
+                    advanceMode: VoSentenceAdvanceMode.AutoReadingPause,
+                    minReadSeconds: 0.7f,
+                    readSecondsPerChar: 0.048f,
+                    continueHintText: string.Empty);
+                vo.ShowLine(line, VoRegister.RegisterB, null, null, false, presentation);
+            }
+        }
+
+        private void BuildDocument()
+        {
+            var vta = Resources.Load<VisualTreeAsset>(VisualTreeResourcePath);
+            if (vta == null)
+            {
+                Debug.LogError($"[ActiveMissions] VisualTreeAsset non trovato: {VisualTreeResourcePath}");
+                return;
+            }
+
+            var panelSettings = Resources.Load<PanelSettings>(PanelSettingsResourcePath);
+            if (panelSettings == null)
+            {
+                Debug.LogError($"[ActiveMissions] PanelSettings non trovato: {PanelSettingsResourcePath}");
+                return;
+            }
+
+            _document = GetComponent<UIDocument>();
+            if (_document == null)
+                _document = gameObject.AddComponent<UIDocument>();
+
+            _document.panelSettings = panelSettings;
+            _document.visualTreeAsset = vta;
+            _document.sortingOrder = SortingOrder;
+        }
+
+        private void BindUi()
+        {
+            if (_document == null || _document.rootVisualElement == null)
+                return;
+
+            var rootVe = _document.rootVisualElement;
+            _root = rootVe.Q<VisualElement>("active-missions-root");
+            _header = rootVe.Q<VisualElement>("active-missions-header");
+            _titleLabel = rootVe.Q<Label>("active-missions-title");
+            _countLabel = rootVe.Q<Label>("active-missions-count");
+            _toggleChevron = rootVe.Q<VisualElement>("active-missions-toggle-chevron");
+            _content = rootVe.Q<VisualElement>("active-missions-content");
+            _list = rootVe.Q<VisualElement>("active-missions-list");
+            _emptyLabel = rootVe.Q<Label>("active-missions-empty");
+
+            _tooltip = rootVe.Q<VisualElement>("active-mission-tooltip");
+            _tooltipEmoji = rootVe.Q<Label>("am-tooltip-emoji");
+            _tooltipTitle = rootVe.Q<Label>("am-tooltip-title");
+            _tooltipFaction = rootVe.Q<Label>("am-tooltip-faction");
+            _tooltipObjective = rootVe.Q<Label>("am-tooltip-objective");
+            _tooltipTaskSummary = rootVe.Q<Label>("am-tooltip-task-summary");
+            _tooltipReward = rootVe.Q<Label>("am-tooltip-reward");
+            _tooltipRep = rootVe.Q<Label>("am-tooltip-rep");
+            _tooltipRepRow = rootVe.Q<VisualElement>("am-tooltip-rep-row");
+            _tooltipDeadline = rootVe.Q<VisualElement>("am-tooltip-deadline");
+            _tooltipDeadlineText = rootVe.Q<Label>("am-tooltip-deadline-text");
+
+            if (_root != null)
+                _root.style.display = DisplayStyle.Flex;
+
+            if (_tooltip != null)
+                _tooltip.style.display = DisplayStyle.None;
+
+            if (_header != null)
+                _header.RegisterCallback<ClickEvent>(_ => ToggleCollapsed());
+        }
+
+        private void ToggleCollapsed()
+        {
+            _collapsed = !_collapsed;
+            if (_root == null)
+                return;
+
+            if (_collapsed)
+            {
+                _root.AddToClassList("active-missions--collapsed");
+                _toggleChevron?.AddToClassList("active-missions-toggle-chevron--collapsed");
+            }
+            else
+            {
+                _root.RemoveFromClassList("active-missions--collapsed");
+                _toggleChevron?.RemoveFromClassList("active-missions-toggle-chevron--collapsed");
+            }
+        }
+
+        private void HandleMissionsChanged()
+        {
+            if (_root == null || _list == null || _titleLabel == null || _countLabel == null)
+                return;
+
+            var missions = _missionManager?.CurrentMissions
+                .Where(m => m != null && m.Config != null)
+                .ToList() ?? new List<MissionChecker>();
+
+            SyncMissionMeta(missions);
+
+            _titleLabel.text = "MISSIONS";
+            _countLabel.text = $"[{missions.Count}]";
+
+            RebuildList(missions);
+            bool hasMissions = missions.Count > 0;
+            _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
+
+            if (hasMissions)
+                StopEmptyPulse();
+            else
+                StartEmptyPulse();
+
+            if (!hasMissions)
+                HideTooltipImmediate();
+        }
+
+        private void SyncMissionMeta(List<MissionChecker> missions)
+        {
+            var liveSet = new HashSet<MissionChecker>(missions);
+            var toRemove = _missionMeta.Keys.Where(k => !liveSet.Contains(k)).ToList();
+            foreach (var k in toRemove)
+                _missionMeta.Remove(k);
+
+            int currentDay = Mathf.Max(1, _dayCycleSystem?.CurrentDay ?? 1);
+            foreach (var mission in missions)
+            {
+                if (_missionMeta.ContainsKey(mission))
+                    continue;
+
+                var cfg = mission.Config;
+                var faction = GuessFaction(cfg);
+                int plannedDays = GuessPlannedDays(cfg);
+                _missionMeta[mission] = new MissionMeta(currentDay, plannedDays, faction);
+            }
+        }
+
+        private void RebuildList(List<MissionChecker> missions)
+        {
+            _list.Clear();
+
+            foreach (var mission in missions)
+            {
+                if (!_missionMeta.TryGetValue(mission, out var meta))
+                    continue;
+
+                BuildMissionCard(mission, meta);
+            }
+        }
+
+        private void BuildMissionCard(MissionChecker mission, MissionMeta meta)
+        {
+            int daysLeft = GetDaysRemaining(meta);
+            var status = GetVisualStatus(meta, mission.IsCompleted);
+            float progress = GetProgress(meta, mission.IsCompleted);
+
+            var card = new VisualElement();
+            card.AddToClassList("active-mission-card");
+            card.AddToClassList(GetStatusClass(status));
+            card.AddToClassList(GetFactionClass(meta.Faction));
+
+            var topRow = new VisualElement();
+            topRow.AddToClassList("active-mission-card-top");
+
+            var emoji = new Label(GetFactionEmoji(meta.Faction));
+            emoji.AddToClassList("active-mission-card-emoji");
+            topRow.Add(emoji);
+
+            var title = new Label(GetMissionTitle(mission));
+            title.AddToClassList("active-mission-card-title");
+            topRow.Add(title);
+
+            var timerWrap = new VisualElement();
+            timerWrap.AddToClassList("active-mission-card-timer-wrap");
+            var timerIcon = new Label("o");
+            timerIcon.AddToClassList("active-mission-card-timer-icon");
+            var timerText = new Label($"{Mathf.Max(0, daysLeft)}d");
+            timerText.AddToClassList("active-mission-card-timer");
+            if (daysLeft <= 2)
+                timerText.AddToClassList("active-mission-card-timer--warn");
+            timerWrap.Add(timerIcon);
+            timerWrap.Add(timerText);
+            topRow.Add(timerWrap);
+
+            card.Add(topRow);
+
+            var progressWrap = new VisualElement();
+            progressWrap.AddToClassList("active-mission-card-progress");
+            var progressFill = new VisualElement();
+            progressFill.AddToClassList("active-mission-card-progress-fill");
+            progressFill.style.width = Length.Percent(0f);
+
+            var percentLabel = new Label($"{Mathf.RoundToInt(progress * 100f)}%");
+            percentLabel.AddToClassList("active-mission-card-progress-percent");
+            progressWrap.Add(progressFill);
+            progressWrap.Add(percentLabel);
+            card.Add(progressWrap);
+
+            _list.Add(card);
+
+            StartCoroutine(AnimateProgress(progressFill, progress));
+
+            card.RegisterCallback<PointerEnterEvent>(_ => QueueShowTooltip(card, mission, meta, status));
+            card.RegisterCallback<PointerLeaveEvent>(_ => QueueHideTooltip());
+        }
+
+        private void QueueShowTooltip(VisualElement card, MissionChecker mission, MissionMeta meta, MissionVisualStatus status)
+        {
+            _pendingTooltipCard = card;
+            _pendingTooltipMission = mission;
+            _pendingTooltipMeta = meta;
+            _pendingTooltipStatus = status;
+
+            _tooltipHideSchedule?.Pause();
+            _tooltipHideSchedule = null;
+
+            _tooltipShowSchedule?.Pause();
+            _tooltipShowSchedule = _root?.schedule.Execute(() =>
+            {
+                _tooltipShowSchedule = null;
+                ShowTooltipNow(_pendingTooltipCard, _pendingTooltipMission, _pendingTooltipMeta, _pendingTooltipStatus);
+            });
+            _tooltipShowSchedule?.ExecuteLater((long)TooltipShowDelayMs);
+        }
+
+        private void QueueHideTooltip()
+        {
+            _tooltipShowSchedule?.Pause();
+            _tooltipShowSchedule = null;
+
+            _tooltipHideSchedule?.Pause();
+            _tooltipHideSchedule = _root?.schedule.Execute(() =>
+            {
+                _tooltipHideSchedule = null;
+                HideTooltipImmediate();
+            });
+            _tooltipHideSchedule?.ExecuteLater((long)TooltipHideDelayMs);
+        }
+
+        private void CancelTooltipSchedules()
+        {
+            _tooltipShowSchedule?.Pause();
+            _tooltipShowSchedule = null;
+            _tooltipHideSchedule?.Pause();
+            _tooltipHideSchedule = null;
+        }
+
+        private void ShowTooltipNow(VisualElement card, MissionChecker mission, MissionMeta meta, MissionVisualStatus status)
+        {
+            if (_tooltip == null || _root == null || card == null || mission == null || mission.Config == null)
+                return;
+
+            _tooltip.RemoveFromClassList("am-status-active");
+            _tooltip.RemoveFromClassList("am-status-expiring");
+            _tooltip.RemoveFromClassList("am-status-failed");
+            _tooltip.AddToClassList(GetStatusClass(status));
+
+            _tooltipEmoji.text = GetFactionEmoji(meta.Faction);
+            _tooltipTitle.text = GetMissionTitle(mission);
+            _tooltipFaction.text = GetFactionName(meta.Faction);
+            _tooltipObjective.text = string.IsNullOrWhiteSpace(mission.Config.Description)
+                ? "No detailed description."
+                : mission.Config.Description.Trim();
+            _tooltipTaskSummary.text = $"-> {GetPrimaryObjectiveLine(mission)}";
+            _tooltipReward.text = BuildRewardLine(mission.Config);
+
+            string rep = BuildRepLine(mission.Config);
+            bool hasRep = !string.IsNullOrEmpty(rep);
+            _tooltipRepRow.style.display = hasRep ? DisplayStyle.Flex : DisplayStyle.None;
+            _tooltipRep.text = rep;
+
+            int daysLeft = Mathf.Max(0, GetDaysRemaining(meta));
+            bool showDeadline = daysLeft <= 2;
+            _tooltipDeadline.style.display = showDeadline ? DisplayStyle.Flex : DisplayStyle.None;
+            _tooltipDeadlineText.text = $"EXPIRES IN {daysLeft} DAYS";
+
+            StopTooltipWarningPulse();
+            if (showDeadline)
+                StartTooltipWarningPulse();
+
+            float left = card.worldBound.xMax - _root.worldBound.xMin + 12f;
+            float top = card.worldBound.yMin - _root.worldBound.yMin;
+            _tooltip.style.left = left;
+            _tooltip.style.top = top;
+            _tooltip.style.display = DisplayStyle.Flex;
+        }
+
+        private void HideTooltipImmediate()
+        {
+            if (_tooltip != null)
+                _tooltip.style.display = DisplayStyle.None;
+            StopTooltipWarningPulse();
+        }
+
+        private static string GetMissionTitle(MissionChecker mission)
+        {
+            if (mission?.Config == null || string.IsNullOrWhiteSpace(mission.Config.Title))
+                return "Untitled mission";
+            return mission.Config.Title.Trim();
+        }
+
+        private static string GetPrimaryObjectiveLine(MissionChecker mission)
+        {
+            if (mission?.Config == null || mission.Config.Goals == null)
+                return "No objective";
+
+            foreach (var goal in mission.Config.Goals)
+            {
+                if (goal.Options == null)
+                    continue;
+
+                foreach (var option in goal.Options)
+                {
+                    if (option == null || string.IsNullOrWhiteSpace(option.Title))
+                        continue;
+                    return option.Title.Trim();
+                }
+            }
+
+            return "No objective";
+        }
+
+        private static string BuildRewardLine(MissionConfig cfg)
+        {
+            if (cfg == null)
+                return "-";
+
+            var reward = cfg.QuickPathReward;
+            string cry = reward.CryReward > 0 ? $"+{reward.CryReward} CRY" : string.Empty;
+
+            string item = string.Empty;
+            if (reward.Rewards != null && reward.Rewards.Count > 0 && reward.Rewards[0].Item != null)
+            {
+                var slot = reward.Rewards[0];
+                item = $"{slot.Quantity}x {slot.Item.TypeId}";
+            }
+
+            if (!string.IsNullOrEmpty(cry) && !string.IsNullOrEmpty(item))
+                return $"{cry} + {item}";
+            if (!string.IsNullOrEmpty(cry))
+                return cry;
+            if (!string.IsNullOrEmpty(item))
+                return item;
+
+            return "No reward data";
+        }
+
+        private static string BuildRepLine(MissionConfig cfg)
+        {
+            if (cfg == null || cfg.Title == null)
+                return string.Empty;
+
+            string title = cfg.Title.ToLowerInvariant();
+            if (title.Contains("rep+") || title.Contains("reputation+"))
+                return "+REP";
+            if (title.Contains("rep-") || title.Contains("reputation-"))
+                return "-REP";
+            return string.Empty;
+        }
+
+        private MissionFaction GuessFaction(MissionConfig cfg)
+        {
+            string key = $"{cfg?.Title} {cfg?.Description}".ToLowerInvariant();
+            if (key.Contains("merc") || key.Contains("cry") || key.Contains("trade"))
+                return MissionFaction.Mercanti;
+            if (key.Contains("cult") || key.Contains("ritual") || key.Contains("fire"))
+                return MissionFaction.Cult;
+            return MissionFaction.Custodi;
+        }
+
+        private static int GuessPlannedDays(MissionConfig cfg)
+        {
+            string key = $"{cfg?.Title} {cfg?.Description}".ToLowerInvariant();
+            if (key.Contains("urgent") || key.Contains("now") || key.Contains("subito"))
+                return 2;
+            if (key.Contains("long") || key.Contains("extended"))
+                return 6;
+            return 4;
+        }
+
+        private int GetDaysRemaining(MissionMeta meta)
+        {
+            int day = Mathf.Max(1, _dayCycleSystem?.CurrentDay ?? 1);
+            int elapsed = Mathf.Max(0, day - meta.StartDay);
+            return Mathf.Max(0, meta.PlannedDays - elapsed);
+        }
+
+        private int GetElapsedDays(MissionMeta meta)
+        {
+            int day = Mathf.Max(1, _dayCycleSystem?.CurrentDay ?? 1);
+            return Mathf.Max(0, day - meta.StartDay);
+        }
+
+        private MissionVisualStatus GetVisualStatus(MissionMeta meta, bool isCompleted)
+        {
+            if (isCompleted)
+                return MissionVisualStatus.Active;
+
+            int remaining = GetDaysRemaining(meta);
+            if (remaining <= 0)
+                return MissionVisualStatus.Failed;
+            if (remaining <= 2)
+                return MissionVisualStatus.Expiring;
+            return MissionVisualStatus.Active;
+        }
+
+        private float GetProgress(MissionMeta meta, bool isCompleted)
+        {
+            if (isCompleted)
+                return 1f;
+
+            int elapsed = GetElapsedDays(meta);
+            float ratio = meta.PlannedDays <= 0 ? 0f : elapsed / (float)meta.PlannedDays;
+            return Mathf.Clamp01(ratio);
+        }
+
+        private static string GetStatusClass(MissionVisualStatus status)
+        {
+            return status switch
+            {
+                MissionVisualStatus.Expiring => "am-status-expiring",
+                MissionVisualStatus.Failed => "am-status-failed",
+                _ => "am-status-active"
+            };
+        }
+
+        private static string GetFactionClass(MissionFaction faction)
+        {
+            return faction switch
+            {
+                MissionFaction.Mercanti => "am-faction-mercanti",
+                MissionFaction.Cult => "am-faction-cult",
+                _ => "am-faction-custodi"
+            };
+        }
+
+        private static string GetFactionEmoji(MissionFaction faction)
+        {
+            return faction switch
+            {
+                MissionFaction.Mercanti => "\uD83D\uDCB0",
+                MissionFaction.Cult => "\uD83D\uDD25",
+                _ => "\uD83C\uDF3F"
+            };
+        }
+
+        private static string GetFactionName(MissionFaction faction)
+        {
+            return faction switch
+            {
+                MissionFaction.Mercanti => "Mercanti",
+                MissionFaction.Cult => "Cult",
+                _ => "Custodi"
+            };
+        }
+
+        private IEnumerator AnimateProgress(VisualElement fill, float target)
+        {
+            if (fill == null)
+                yield break;
+
+            float t = 0f;
+            while (t < ProgressAnimDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Mathf.Clamp01(t / ProgressAnimDuration);
+                k = 1f - Mathf.Pow(1f - k, 3f);
+                fill.style.width = Length.Percent(target * 100f * k);
+                yield return null;
+            }
+
+            fill.style.width = Length.Percent(target * 100f);
+        }
+
+        private void StartEmptyPulse()
+        {
+            if (_emptyPulseRoutine != null || _emptyLabel == null)
+                return;
+            _emptyPulseRoutine = StartCoroutine(EmptyPulseRoutine());
+        }
+
+        private void StopEmptyPulse()
+        {
+            if (_emptyPulseRoutine == null)
+                return;
+            StopCoroutine(_emptyPulseRoutine);
+            _emptyPulseRoutine = null;
+            if (_emptyLabel != null)
+                _emptyLabel.style.opacity = 0.4f;
+        }
+
+        private IEnumerator EmptyPulseRoutine()
+        {
+            float t = 0f;
+            while (_emptyLabel != null && _emptyLabel.style.display != DisplayStyle.None)
+            {
+                t += Time.unscaledDeltaTime;
+                float phase = Mathf.PingPong(t / EmptyPulseDuration * 2f, 1f);
+                _emptyLabel.style.opacity = Mathf.Lerp(0.4f, 0.7f, phase);
+                yield return null;
+            }
+            _emptyPulseRoutine = null;
+        }
+
+        private void StartTooltipWarningPulse()
+        {
+            if (_tooltipWarningPulseRoutine != null || _tooltipDeadline == null)
+                return;
+            _tooltipWarningPulseRoutine = StartCoroutine(TooltipWarningPulseRoutine());
+        }
+
+        private void StopTooltipWarningPulse()
+        {
+            if (_tooltipWarningPulseRoutine == null)
+                return;
+            StopCoroutine(_tooltipWarningPulseRoutine);
+            _tooltipWarningPulseRoutine = null;
+            if (_tooltipDeadline != null)
+                _tooltipDeadline.style.opacity = 1f;
+        }
+
+        private IEnumerator TooltipWarningPulseRoutine()
+        {
+            float t = 0f;
+            while (_tooltipDeadline != null && _tooltip.style.display == DisplayStyle.Flex)
+            {
+                t += Time.unscaledDeltaTime;
+                float phase = Mathf.PingPong(t / WarningPulseDuration * 2f, 1f);
+                _tooltipDeadline.style.opacity = Mathf.Lerp(0.6f, 1f, phase);
+                yield return null;
+            }
+            _tooltipWarningPulseRoutine = null;
+        }
+    }
+}

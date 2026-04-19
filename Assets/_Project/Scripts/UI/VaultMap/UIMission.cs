@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using _Project.Sporae.Core;
+using Sporae.UI.UIToolkit.HUD;
 
 namespace _Project
 {
@@ -15,8 +16,23 @@ namespace _Project
         
         private MissionManager _missionManager;
 
+        private void Awake()
+        {
+            var sc = ServiceContainer.Instance;
+            if (sc != null && sc.Contains(typeof(ActiveMissionsPanelController)))
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+
+            _missionManager = ServiceContainer.Instance.Get<MissionManager>();
+        }
+
         private void HandleMissionsChanged()
         {
+            if (_missionManager == null || _missionLabel == null)
+                return;
+
             string text = "";
 
             foreach (var mission in _missionManager.CurrentMissions)
@@ -27,14 +43,12 @@ namespace _Project
             
             _missionLabel.text = text;
         }
-        
-        private void Awake()
-        {
-            _missionManager = ServiceContainer.Instance.Get<MissionManager>();
-        }
 
         private void Start()
         {
+            if (!isActiveAndEnabled)
+                return;
+
             if (_callButton != null)
                 _callButton.onClick.AddListener(HandleCall);
             

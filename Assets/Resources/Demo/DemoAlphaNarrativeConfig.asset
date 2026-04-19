@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f77a4d38197c3fe4282b741843e0fda6, type: 3}
+  m_Name: DemoAlphaNarrativeConfig
+  m_EditorClassIdentifier: 
+  Beat1WakeLine: "\u201CProtocollo 01 riattivato.\u201D\r\nBuongiorno, Biologo. \xC8
+    trascorso un periodo di inattivit\xE0 indefinito, ma non preoccuparti: la natura
+    non ha fretta.\r\nOra, vestiti, idratati e mangia, Gli umani funzionano meglio
+    quando non sono polvere."
+  Beat1WakeRegister: 0
+  Beat1WakeSentenceAdvance: 0
+  Beat1MissionHighlightWords:
+  - Ora vestiti cambia outfit armadio
+  MissionHighlightColorHex: '#E6C96F'

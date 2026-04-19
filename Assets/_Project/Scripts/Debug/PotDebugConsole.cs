@@ -782,7 +782,8 @@ namespace Sporae.DevTools
             float.TryParse(_voCpsString, out cps);
             if (cps < 4f) cps = 28f;
 
-            vo.ShowLine(_voDebugText ?? string.Empty, reg, cps, () => AddLog("VO: linea completata (typing)."));
+            vo.ShowLine(_voDebugText ?? string.Empty, reg, cps, () => AddLog("VO: linea completata (typing)."),
+                hideAfterTypingWithoutIdle: false, VoLinePresentationOptions.LegacySingleBlock);
             AddLog($"VO: mostra — registro {reg}, {cps:0.#} char/s");
         }
 

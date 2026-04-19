@@ -57,6 +57,13 @@ public class PlayerClickMover2D : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (GameplayUiModalLock.BlocksWorldInput)
+        {
+            if (hasTarget || isMoving)
+                StopMovement();
+            return;
+        }
+
         // BUG FIX: Se il movimento è sospeso, ferma immediatamente il player
         if (suspendMovement)
         {
@@ -88,6 +95,9 @@ public class PlayerClickMover2D : MonoBehaviour
 
     private void HandleInput()
     {
+        if (GameplayUiModalLock.BlocksWorldInput)
+            return;
+
         // IMPORTANTE: Blocca movimento se la console di debug POT è aperta
         if (Sporae.DevTools.PotDebugConsole.IsConsoleOpen)
         {

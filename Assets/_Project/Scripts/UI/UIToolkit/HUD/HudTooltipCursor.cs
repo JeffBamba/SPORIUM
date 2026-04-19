@@ -110,7 +110,8 @@ namespace Sporae.UI.UIToolkit.HUD
             var q = new Color(1f, 0.92f, 0.45f, 1f);
             DrawQuestionMark5x7(tex, 13, 3, q);
 
-            tex.Apply(false, true);
+            // Keep texture readable: Cursor.SetCursor rejects non-readable textures.
+            tex.Apply(false, false);
             _generatedTexture = tex;
             return _generatedTexture;
         }

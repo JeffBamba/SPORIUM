@@ -9,6 +9,7 @@ using Sporae.Dome;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project.UI.UIToolkit.VoOverlay;
+using Sporae.UI.UIToolkit.HUD;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -107,12 +108,21 @@ namespace _Project.Sporae.Core.Installers
 #endif
             }
 
+            if (!ServiceContainer.Instance.Contains(typeof(MissionFlagTracker)))
+                ServiceContainer.Instance.Register(new MissionFlagTracker());
+
             _missionManager = new MissionManager();
             ServiceContainer.Instance.Register(_missionManager);
 
             var voGo = new GameObject("VoOverlay");
             var voOverlay = voGo.AddComponent<VoOverlayController>();
             ServiceContainer.Instance.Register(voOverlay);
+
+            var activeMissionsGo = new GameObject("ActiveMissions");
+            activeMissionsGo.AddComponent<ActiveMissionsPanelController>();
+
+            var wardrobeGo = new GameObject("WardrobePanel");
+            wardrobeGo.AddComponent<WardrobePanelController>();
 
             var demoSession = new DemoSessionState();
             if (DemoSessionState.StartNextSessionAsDemo)

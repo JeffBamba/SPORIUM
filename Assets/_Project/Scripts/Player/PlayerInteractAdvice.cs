@@ -21,11 +21,19 @@ namespace _Project
         
         public void AddInteractable()
         {
+            if (_adviceLabel == null)
+                return;
             _interactablesInRange++;
         }
 
         private void LateUpdate()
         {
+            if (_adviceLabel == null)
+            {
+                _interactablesInRange = 0;
+                return;
+            }
+
             _adviceLabel.gameObject.SetActive(_interactablesInRange > 0);
             _interactablesInRange = 0;
         }

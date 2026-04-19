@@ -386,8 +386,18 @@ namespace Sporae.Core
             saveData.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             saveData.gameVersion = Application.version;
             saveData.inventoryVersion = INVENTORY_VERSION_WITH_METADATA;
-            
+
+            saveData.playerOutfitIndex = CollectPlayerOutfitIndex();
+
             return saveData;
+        }
+
+        private int CollectPlayerOutfitIndex()
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) return -1;
+            var outfit = player.GetComponent<_Project.Player.PlayerOutfitController>();
+            return outfit != null ? outfit.CurrentIndex : -1;
         }
         
         /// <summary>
@@ -484,6 +494,8 @@ namespace Sporae.Core
                 }
             }
 
+            ApplyPlayerOutfitIndex(saveData.playerOutfitIndex);
+
             // Missioni
             if (saveData.missions?.entries != null && saveData.missions.entries.Count > 0)
             {
@@ -501,6 +513,17 @@ namespace Sporae.Core
             }
         }
         
+        private void ApplyPlayerOutfitIndex(int savedIndex)
+        {
+            if (savedIndex < 0) return;
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) return;
+            var outfit = player.GetComponent<_Project.Player.PlayerOutfitController>();
+            if (outfit == null)
+                outfit = player.AddComponent<_Project.Player.PlayerOutfitController>();
+            outfit.Apply(savedIndex);
+        }
+
         private FoodRoomSaveData SerializeFoodRoom(FoodRoomSystem foodRoom)
         {
             if (foodRoom == null) return null;
@@ -892,6 +915,8 @@ namespace Sporae.Core
             public FoodRoomSaveData foodRoomData;
             public List<string> discoveredPlantCodes;
             public List<string> wikiUnlockedIds;
+            /// <summary>Indice outfit selezionato dall'armadio (-1 = non impostato, usa default).</summary>
+            public int playerOutfitIndex = -1;
         }
         
         [Serializable]

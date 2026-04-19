@@ -1,0 +1,83 @@
+/* Armadio — modale sopra gameplay */
+
+.wardrobe-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding-left: 32px;
+}
+
+.wardrobe-dim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 8, 10, 0.55);
+}
+
+.wardrobe-panel {
+    position: relative;
+    width: 340px;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 12px;
+    padding-bottom: 14px;
+    background-color: rgba(6, 18, 16, 0.94);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(0, 220, 180, 0.55);
+    border-right-color: rgba(0, 220, 180, 0.55);
+    border-bottom-color: rgba(0, 220, 180, 0.55);
+    border-left-color: rgba(0, 220, 180, 0.55);
+    flex-direction: column;
+}
+
+.wardrobe-title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    color: rgba(0, 255, 210, 0.95);
+    margin-bottom: 8px;
+}
+
+.wardrobe-outfit-label {
+    font-size: 18px;
+    color: rgba(200, 255, 235, 0.95);
+    margin-bottom: 6px;
+}
+
+.wardrobe-hint {
+    font-size: 13px;
+    color: rgba(160, 200, 190, 0.85);
+    white-space: normal;
+    margin-bottom: 12px;
+}
+
+.wardrobe-close {
+    align-self: flex-end;
+    min-width: 120px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: rgba(0, 80, 70, 0.85);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(0, 220, 180, 0.45);
+    border-right-color: rgba(0, 220, 180, 0.45);
+    border-bottom-color: rgba(0, 220, 180, 0.45);
+    border-left-color: rgba(0, 220, 180, 0.45);
+    color: rgba(220, 255, 250, 0.95);
+}
+
+.wardrobe-close:hover {
+    background-color: rgba(0, 120, 100, 0.9);
+}
