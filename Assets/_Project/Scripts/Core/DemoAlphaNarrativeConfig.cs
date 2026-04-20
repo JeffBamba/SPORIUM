@@ -20,11 +20,30 @@ namespace _Project.Sporae.Core
         [Tooltip("Tra una frase e l’altra: pausa lettura automatica oppure input (consigliato per testi impersonali / missione, registro A).")]
         public VoSentenceAdvanceMode Beat1WakeSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
 
-        [Header("Highlight parole missione (VO)")]
-        [Tooltip("Elenco di parole o frasi da evidenziare nel testo VO del beat 1 (case-insensitive, match letterale). Esempio: \"Ora vestiti\", \"cambia outfit\".")]
+        [Header("Highlight parole missione Beat 1 (VO)")]
+        [Tooltip("Parole o frasi da evidenziare nel VO beat 1 (case-insensitive). Esempio: \"apri l'armadio e vestiti\".")]
         public List<string> Beat1MissionHighlightWords = new List<string>();
 
-        [Tooltip("Colore esadecimale (#RRGGBB) delle parole evidenziate. Default: giallo ambra stile HUD missioni.")]
+        // ─── Beat 2 — Cucina / Colazione ───────────────────────────────────
+
+        [Header("Beat 2 — Cucina (Fai Colazione)")]
+        [TextArea(2, 8)]
+        [Tooltip("Testo VO del beat 2 (trigger cucina). Lasciare vuoto per usare il default.")]
+        public string Beat2KitchenLine;
+
+        [Tooltip("Registro colore per il VO beat 2.")]
+        public VoRegister Beat2KitchenRegister = VoRegister.RegisterA;
+
+        [Tooltip("Modalità avanzamento frasi per il VO beat 2.")]
+        public VoSentenceAdvanceMode Beat2KitchenSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
+
+        [Tooltip("Parole o frasi da evidenziare nel VO beat 2. Esempio: \"Apri l'Inventario\", \"mangia\", \"bevi\".")]
+        public List<string> Beat2MissionHighlightWords = new List<string>();
+
+        // ─── Colore highlight condiviso ─────────────────────────────────────
+
+        [Header("Highlight — colore condiviso")]
+        [Tooltip("Colore esadecimale (#RRGGBB) delle parole evidenziate in tutti i beat VO.")]
         public string MissionHighlightColorHex = "#E6C96F";
     }
 }

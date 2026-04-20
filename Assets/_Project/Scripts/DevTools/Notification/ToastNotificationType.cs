@@ -17,6 +17,7 @@ namespace Sporae.DevTools
         StageUp,
         ConditionImproved,
         SystemEnabled,
+        Mission,       // Missioni assegnate / completate — colore cyan mission recap #00FFC6
         
         // Warning (Severity: 2)
         Warning,
@@ -51,8 +52,9 @@ namespace Sporae.DevTools
             {
                 ToastNotificationType.Success or ToastNotificationType.ActionSuccess 
                     or ToastNotificationType.ItemCollected or ToastNotificationType.ResourceGained => 0,
-                ToastNotificationType.Info or ToastNotificationType.StageUp 
-                    or ToastNotificationType.ConditionImproved or ToastNotificationType.SystemEnabled => 1,
+                ToastNotificationType.Info or ToastNotificationType.StageUp
+                    or ToastNotificationType.ConditionImproved or ToastNotificationType.SystemEnabled
+                    or ToastNotificationType.Mission => 1,
                 ToastNotificationType.Warning or ToastNotificationType.ConditionDegraded 
                     or ToastNotificationType.SystemDisabled or ToastNotificationType.CountdownAlert => 2,
                 ToastNotificationType.Error or ToastNotificationType.ActionFailed 

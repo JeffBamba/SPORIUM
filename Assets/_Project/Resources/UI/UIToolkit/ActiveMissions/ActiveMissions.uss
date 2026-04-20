@@ -11,7 +11,7 @@
 .active-missions-root {
     position: absolute;
     left: 24px;
-    top: 96px;
+    top: 136px;
     width: 280px;
     flex-direction: column;
     transition-property: opacity, translate;
@@ -29,11 +29,12 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    min-height: 28px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    height: 40px;
+    min-height: 40px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     background-color: rgba(4, 12, 10, 0.65);
     border-left-width: 2px;
     border-right-width: 2px;
@@ -56,6 +57,59 @@
 .active-missions-header-left {
     flex-direction: row;
     align-items: center;
+}
+
+.active-missions-header-right {
+    flex-direction: row;
+    align-items: center;
+}
+
+.active-missions-filter-button {
+    min-width: 44px;
+    height: 22px;
+    margin-right: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    background-color: rgba(8, 14, 16, 0.65);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(0, 255, 198, 0.3);
+    border-right-color: rgba(0, 255, 198, 0.3);
+    border-top-color: rgba(0, 255, 198, 0.3);
+    border-bottom-color: rgba(0, 255, 198, 0.3);
+    color: rgba(0, 255, 198, 0.7);
+    font-size: 8px;
+    letter-spacing: 1.4px;
+    -unity-font-style: bold;
+}
+
+.active-missions-filter-button:hover {
+    border-left-color: rgba(0, 255, 198, 0.6);
+    border-right-color: rgba(0, 255, 198, 0.6);
+    border-top-color: rgba(0, 255, 198, 0.6);
+    border-bottom-color: rgba(0, 255, 198, 0.6);
+}
+
+.active-missions-filter-button--selected {
+    background-color: rgba(0, 255, 198, 0.15);
+    border-left-color: rgba(0, 255, 198, 0.85);
+    border-right-color: rgba(0, 255, 198, 0.85);
+    border-top-color: rgba(0, 255, 198, 0.85);
+    border-bottom-color: rgba(0, 255, 198, 0.85);
+    color: rgb(0, 255, 198);
+}
+
+.active-missions-filter-button--selected-done {
+    background-color: rgba(127, 255, 122, 0.1);
+    border-left-color: rgba(127, 255, 122, 0.68);
+    border-right-color: rgba(127, 255, 122, 0.68);
+    border-top-color: rgba(127, 255, 122, 0.68);
+    border-bottom-color: rgba(127, 255, 122, 0.68);
+    color: rgba(127, 255, 122, 0.78);
 }
 
 .active-missions-title {
@@ -187,12 +241,17 @@
 .active-mission-card-progress {
     position: relative;
     margin-top: 8px;
-    height: 12px;
+    min-height: 16px;
+    height: 16px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     border-left-width: 2px;
     border-right-width: 2px;
     border-top-width: 2px;
     border-bottom-width: 2px;
     background-color: rgba(4, 6, 8, 0.5);
+    overflow: hidden;
 }
 
 .active-mission-card-progress-fill {
@@ -204,16 +263,15 @@
 }
 
 .active-mission-card-progress-percent {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
     font-size: 9px;
     -unity-font-style: bold;
-    color: rgb(192, 200, 197);
+    color: rgb(240, 245, 243);
     -unity-text-align: middle-center;
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 /* ================= STATUS VARIANTS ================= */
@@ -299,6 +357,36 @@
     background-color: rgba(0, 255, 198, 0.8);
 }
 
+.am-status-completed.active-mission-card {
+    border-left-color: rgba(127, 255, 122, 0.33);
+    border-right-color: rgba(127, 255, 122, 0.33);
+    border-top-color: rgba(127, 255, 122, 0.33);
+    border-bottom-color: rgba(127, 255, 122, 0.33);
+}
+
+.am-status-completed.active-mission-card:hover {
+    border-left-color: rgba(127, 255, 122, 0.62);
+    border-right-color: rgba(127, 255, 122, 0.62);
+    border-top-color: rgba(127, 255, 122, 0.62);
+    border-bottom-color: rgba(127, 255, 122, 0.62);
+}
+
+.am-status-completed .active-mission-card-title {
+    color: rgba(127, 255, 122, 0.78);
+    text-shadow: 0 0 4px rgba(127, 255, 122, 0.3);
+}
+
+.am-status-completed .active-mission-card-progress {
+    border-left-color: rgba(127, 255, 122, 0.24);
+    border-right-color: rgba(127, 255, 122, 0.24);
+    border-top-color: rgba(127, 255, 122, 0.24);
+    border-bottom-color: rgba(127, 255, 122, 0.24);
+}
+
+.am-status-completed .active-mission-card-progress-fill {
+    background-color: rgba(127, 255, 122, 0.58);
+}
+
 .am-status-expiring .active-mission-card-progress-fill {
     background-color: rgba(230, 201, 111, 0.8);
 }
@@ -341,6 +429,13 @@
     border-right-color: rgb(0, 255, 198);
     border-top-color: rgb(0, 255, 198);
     border-bottom-color: rgb(0, 255, 198);
+}
+
+.active-mission-tooltip.am-status-completed {
+    border-left-color: rgba(127, 255, 122, 0.72);
+    border-right-color: rgba(127, 255, 122, 0.72);
+    border-top-color: rgba(127, 255, 122, 0.72);
+    border-bottom-color: rgba(127, 255, 122, 0.72);
 }
 
 .active-mission-tooltip.am-status-expiring {
@@ -392,6 +487,11 @@
 .active-mission-tooltip.am-status-active .am-tooltip-title {
     color: rgb(0, 255, 198);
     text-shadow: 0 0 8px rgba(0, 255, 198, 0.55);
+}
+
+.active-mission-tooltip.am-status-completed .am-tooltip-title {
+    color: rgba(127, 255, 122, 0.82);
+    text-shadow: 0 0 6px rgba(127, 255, 122, 0.35);
 }
 
 .active-mission-tooltip.am-status-expiring .am-tooltip-title {
@@ -461,6 +561,10 @@
 
 .active-mission-tooltip.am-status-active .am-tooltip-reward {
     color: rgb(0, 255, 198);
+}
+
+.active-mission-tooltip.am-status-completed .am-tooltip-reward {
+    color: rgba(127, 255, 122, 0.8);
 }
 
 .active-mission-tooltip.am-status-expiring .am-tooltip-reward {

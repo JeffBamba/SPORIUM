@@ -39,17 +39,20 @@
     width: 100%;
 }
 
+/* Hint posizionato nel root (fuori da text-wrap) — non perturba il layout del blocco testo. */
 .vo-continue-hint {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: 6px;
+    left: 276px;
+    right: 392px;
+    bottom: 138px;
     font-size: 11px;
     letter-spacing: 0.35px;
     color: rgba(200, 200, 200, 0.72);
     -unity-font-style: italic;
     -unity-text-align: middle-center;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .vo-organic-host {

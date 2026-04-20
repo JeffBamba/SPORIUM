@@ -14,10 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Beat1WakeLine: "\u201CProtocollo 01 riattivato.\u201D\r\nBuongiorno, Biologo. \xC8
     trascorso un periodo di inattivit\xE0 indefinito, ma non preoccuparti: la natura
-    non ha fretta.\r\nOra, vestiti, idratati e mangia, Gli umani funzionano meglio
-    quando non sono polvere."
+    non ha fretta.\r\nOra, apri l'armadio e vestiti, Gli umani funzionano meglio
+    quando non vanno in giro nudi."
   Beat1WakeRegister: 0
   Beat1WakeSentenceAdvance: 0
   Beat1MissionHighlightWords:
-  - Ora vestiti cambia outfit armadio
+  - apri l'armadio e vestiti
+  Beat2KitchenLine: "Questa \xE8 la Cucina: qui trasformi scorte e acqua potabile in energia
+    per affrontare la giornata.\nApri l'Inventario, mangia un item e poi bevi un po'
+    di acqua."
+  Beat2KitchenRegister: 0
+  Beat2KitchenSentenceAdvance: 0
+  Beat2MissionHighlightWords:
+  - Apri l'Inventario
+  - mangia
+  - bevi
   MissionHighlightColorHex: '#E6C96F'

@@ -20,6 +20,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private PlayerHydrationSystem _hydration;
         private float _toastReadyRealtime;
         private int _lastWalkTier;
+        private float _lastHydrationPercent;
         private bool _subscribed;
 
         private void Start()
@@ -41,7 +42,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             _hydration = gm.PlayerHydrationSystem;
 
             if (_hydration != null)
-                _lastWalkTier = PlayerHydrationSystem.GetMovementSpeedTierIndex(_hydration.HydrationPercent);
+            {
+                _lastWalkTier         = PlayerHydrationSystem.GetMovementSpeedTierIndex(_hydration.HydrationPercent);
+                _lastHydrationPercent = _hydration.HydrationPercent;
+            }
 
             if (_actionSystem != null)
                 _actionSystem.OnDailyCapChanged += OnDailyCapChanged;
@@ -78,8 +82,29 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private void OnHydrationChanged(float currentPercent, float _)
         {
             if (!CanEmit)
+            {
+                _lastHydrationPercent = currentPercent;
                 return;
+            }
 
+            // Toast guadagno idratazione (bere/mangiare)
+            float delta = currentPercent - _lastHydrationPercent;
+            if (delta >= 0.5f)
+            {
+                int deltaInt   = Mathf.RoundToInt(delta);
+                int currentInt = Mathf.RoundToInt(currentPercent);
+                var gainPayload = new NotificationPayload()
+                    .With("delta", deltaInt.ToString())
+                    .With("h", currentInt.ToString());
+                PostFoundationOrFallback(
+                    "PLY-HYD-GAIN",
+                    gainPayload,
+                    $"H +{deltaInt}% (→ {currentInt}%)",
+                    ToastNotificationType.ConditionImproved);
+            }
+            _lastHydrationPercent = currentPercent;
+
+            // Toast cambio fascia velocità movimento
             int newTier = PlayerHydrationSystem.GetMovementSpeedTierIndex(currentPercent);
             if (newTier == _lastWalkTier)
                 return;

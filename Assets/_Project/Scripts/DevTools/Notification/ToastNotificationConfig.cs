@@ -11,10 +11,11 @@ namespace Sporae.DevTools
     public class ToastNotificationConfig : ScriptableObject
     {
         // Palette Severità (Color32)
-        public static readonly Color32 COLOR_INFO = new Color32(127, 255, 122, 255);      // #7FFF7A Verde LED
-        public static readonly Color32 COLOR_WARNING = new Color32(230, 201, 111, 255);   // #E6C96F Giallo
-        public static readonly Color32 COLOR_DANGER = new Color32(211, 95, 95, 255);     // #D35F5F Rosso
+        public static readonly Color32 COLOR_INFO = new Color32(127, 255, 122, 255);        // #7FFF7A Verde LED
+        public static readonly Color32 COLOR_WARNING = new Color32(230, 201, 111, 255);     // #E6C96F Giallo
+        public static readonly Color32 COLOR_DANGER = new Color32(211, 95, 95, 255);        // #D35F5F Rosso
         public static readonly Color32 COLOR_BLUE_NEUTRAL = new Color32(93, 182, 227, 255); // #5DB6E3 Blu header neutro
+        public static readonly Color32 COLOR_MISSION = new Color32(0, 255, 198, 255);       // #00FFC6 Cyan — uguale al mission recap panel
         
         // Background
         public static readonly Color BACKGROUND_COLOR = new Color(0.11f, 0.16f, 0.16f, 0.9f); // #1E282A alpha 0.9
@@ -70,6 +71,10 @@ namespace Sporae.DevTools
             if (setting != null)
                 return setting.Color;
             
+            // Tipo mission ha colore dedicato
+            if (type == ToastNotificationType.Mission)
+                return COLOR_MISSION;
+
             // Fallback basato su severità
             int severity = type.GetSeverity();
             return severity switch

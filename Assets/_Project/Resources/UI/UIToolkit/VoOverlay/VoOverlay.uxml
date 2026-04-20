@@ -5,8 +5,8 @@
         <ui:VisualElement name="vo-text-wrap" class="vo-text-wrap">
             <ui:VisualElement name="vo-sentences-host" class="vo-sentences-host" style="display: none;" />
             <ui:Label name="vo-body" class="vo-body vo-body--register-a" text="[VO] Esempio in UI Builder — a runtime il testo è vuoto finché non parte ShowLine." />
-            <ui:Label name="vo-continue-hint" class="vo-continue-hint" text="" style="display: none;" />
             <ui:VisualElement name="vo-organic-host" class="vo-organic-host" style="display: none;" />
         </ui:VisualElement>
+        <ui:Label name="vo-continue-hint" class="vo-continue-hint" text="" />
     </ui:VisualElement>
 </ui:UXML>

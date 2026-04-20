@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using _Project;
@@ -49,6 +49,9 @@ public class GameManager : MonoBehaviour
 
     public event Action OnDehydrationGameOver;
 
+    /// <summary>True solo nel Giorno 1 della Demo (tutorial mangia/bevi). Dal Giorno 2 in poi il sistema torna identico al Full Game.</summary>
+    private bool _demoTutorialDayActive;
+
     /// <summary>True se il player ha consumato cibo solido (o frutta) dall’alba precedente.</summary>
     private bool _ateMealSincePreviousDawn;
     /// <summary>Giorni consecutivi senza pasto (cibo/frutta). All’alba: se ieri non hai mangiato, +1.</summary>
@@ -78,6 +81,23 @@ public class GameManager : MonoBehaviour
 
         if (_actionSystem == null)
             return;
+
+        // Boost immediato azioni solo nel Giorno 1 della Demo (tutorial mangia/bevi).
+        // Dal Giorno 2 in poi si usa la logica standard (alba del giorno successivo).
+        if (_demoTutorialDayActive)
+        {
+            const int demoBoostCap = 5;
+            int breakfastBase = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+            if (_actionSystem.MaxActions < demoBoostCap || _actionSystem.ActionsLeft < demoBoostCap)
+                _actionSystem.ResetActions(demoBoostCap);
+
+            _actionBudgetLedger.AddOrReplace(
+                ActionBudgetSource.Item,
+                "Pasto (bonus demo)",
+                Mathf.Max(0, demoBoostCap - breakfastBase),
+                "Boost immediato dopo aver mangiato.");
+            return;
+        }
 
         int rawBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
         bool isStarvationPenalizedNow = _actionSystem.MaxActions < rawBreakfast;
@@ -232,10 +252,22 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void InitializeSystems()
     {
-        // Nuovo baseline progetto: una nuova partita parte sempre da 5/5 azioni.
+        // Baseline azioni:
+        // - Demo: 1/5 (tutorial "mangia e bevi").
+        // - Full game: 5/5 come comportamento standard.
         _dailyActionsFromBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
-        if (_dailyActionsFromBreakfast < 5)
-            _dailyActionsFromBreakfast = 5;
+        var demoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
+        bool isDemo = demoSession != null && demoSession.IsDemo;
+        if (isDemo)
+        {
+            _demoTutorialDayActive = true;
+            _dailyActionsFromBreakfast = 1; // Giorno 1 tutorial: impara a mangiare/bere
+        }
+        else
+        {
+            _demoTutorialDayActive = false;
+            _dailyActionsFromBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+        }
 
         // Inizializza sistemi
         _actionSystem = new ActionSystem(Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5));
@@ -243,6 +275,8 @@ public class GameManager : MonoBehaviour
         _condensationSystem = new CondensationSystem();
         _deteriorationSystem = new DeteriorationSystem(this);
         _playerHydrationSystem = new PlayerHydrationSystem();
+        if (isDemo)
+            _playerHydrationSystem.SetHydrationPercent(75f);
         _foodRoomSystem = new FoodRoomSystem(_playerInventory, this);
         _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, this);
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
@@ -306,6 +340,13 @@ public class GameManager : MonoBehaviour
 
     private void HandleDayChanged(int day)
     {
+        // Dal Giorno 2 in poi la Demo usa esattamente le stesse regole del Full Game.
+        if (_demoTutorialDayActive && day >= 2)
+        {
+            _demoTutorialDayActive = false;
+            _dailyActionsFromBreakfast = 5;
+        }
+
         _economySystem.Spend(_dailyPowerCost);
 
         if (_playerHydrationSystem != null)

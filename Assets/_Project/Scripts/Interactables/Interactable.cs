@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using _Project.Sporae.Core;
 using UnityEngine;
 
 namespace _Project
@@ -273,6 +274,9 @@ namespace _Project
 
         private void Update()
         {
+            if (GameplayUiModalLock.BlocksWorldInput)
+                return;
+
             bool currentlyInRange = PlayerInRange;
             if (currentlyInRange)
             {
@@ -333,6 +337,9 @@ namespace _Project
         
         public void OnMouseDown()
         {
+            if (GameplayUiModalLock.BlocksWorldInput)
+                return;
+
             bool isOverUI = UIBlocker.IsPointerOverUI();
 
             if (isOverUI)

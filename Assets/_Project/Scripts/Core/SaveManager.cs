@@ -890,12 +890,30 @@ namespace Sporae.Core
         {
             var data = new MissionsData();
             data.entries = new List<MissionEntryData>();
-            if (missionManager?.CurrentMissions == null) return data;
-            foreach (var m in missionManager.CurrentMissions)
+            if (missionManager == null) return data;
+
+            var seen = new HashSet<string>();
+
+            if (missionManager.CurrentMissions != null)
             {
-                if (m?.Config == null) continue;
-                data.entries.Add(new MissionEntryData { configName = m.Config.name, isCompleted = m.IsCompleted });
+                foreach (var m in missionManager.CurrentMissions)
+                {
+                    if (m?.Config == null) continue;
+                    if (!seen.Add(m.Config.name)) continue;
+                    data.entries.Add(new MissionEntryData { configName = m.Config.name, isCompleted = false });
+                }
             }
+
+            if (missionManager.CompletedMissions != null)
+            {
+                foreach (var m in missionManager.CompletedMissions)
+                {
+                    if (m?.Config == null) continue;
+                    if (!seen.Add(m.Config.name)) continue;
+                    data.entries.Add(new MissionEntryData { configName = m.Config.name, isCompleted = true });
+                }
+            }
+
             return data;
         }
         

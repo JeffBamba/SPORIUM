@@ -33,6 +33,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _titleLabel;
         private Label _countLabel;
         private VisualElement _toggleChevron;
+        private Button _filterActiveButton;
+        private Button _filterCompletedButton;
         private VisualElement _content;
         private VisualElement _list;
         private Label _emptyLabel;
@@ -53,6 +55,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private DayCycleSystem _dayCycleSystem;
         private bool _collapsed;
         private bool _uiBound;
+        private MissionFilterMode _filterMode = MissionFilterMode.Active;
 
         private IVisualElementScheduledItem _tooltipShowSchedule;
         private IVisualElementScheduledItem _tooltipHideSchedule;
@@ -62,12 +65,20 @@ namespace Sporae.UI.UIToolkit.HUD
         private MissionVisualStatus _pendingTooltipStatus;
 
         private readonly Dictionary<MissionChecker, MissionMeta> _missionMeta = new Dictionary<MissionChecker, MissionMeta>();
+        private readonly List<MissionChecker> _completedMissions = new List<MissionChecker>();
         private Coroutine _emptyPulseRoutine;
         private Coroutine _tooltipWarningPulseRoutine;
+
+        private enum MissionFilterMode
+        {
+            Active,
+            Completed
+        }
 
         private enum MissionVisualStatus
         {
             Active,
+            Completed,
             Expiring,
             Failed
         }
@@ -165,6 +176,11 @@ namespace Sporae.UI.UIToolkit.HUD
                 _missionManager.OnMissionAdded -= HandleMissionAdded;
             }
 
+            if (_filterActiveButton != null)
+                _filterActiveButton.UnregisterCallback<ClickEvent>(HandleFilterActiveClicked);
+            if (_filterCompletedButton != null)
+                _filterCompletedButton.UnregisterCallback<ClickEvent>(HandleFilterCompletedClicked);
+
             StopEmptyPulse();
             StopTooltipWarningPulse();
             CancelTooltipSchedules();
@@ -180,7 +196,7 @@ namespace Sporae.UI.UIToolkit.HUD
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
-                toastManager.ShowInfo($"Nuova missione: {title}", "MIS-NEW");
+                toastManager.ShowMission($"Nuova missione: {title}", "MIS-NEW");
                 return;
             }
 
@@ -200,12 +216,15 @@ namespace Sporae.UI.UIToolkit.HUD
             if (mission?.Config == null)
                 return;
 
+            if (!_completedMissions.Contains(mission))
+                _completedMissions.Add(mission);
+
             string title = GetMissionTitle(mission);
 
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
-                toastManager.ShowSuccess($"Missione completata: {title}", "MIS-DONE");
+                toastManager.ShowMission($"Missione completata: {title}", "MIS-DONE");
             }
             else
             {
@@ -232,6 +251,9 @@ namespace Sporae.UI.UIToolkit.HUD
                     continueHintText: string.Empty);
                 vo.ShowLine(line, VoRegister.RegisterB, null, null, false, presentation);
             }
+
+            if (_filterMode == MissionFilterMode.Completed)
+                HandleMissionsChanged();
         }
 
         private void BuildDocument()
@@ -270,6 +292,8 @@ namespace Sporae.UI.UIToolkit.HUD
             _titleLabel = rootVe.Q<Label>("active-missions-title");
             _countLabel = rootVe.Q<Label>("active-missions-count");
             _toggleChevron = rootVe.Q<VisualElement>("active-missions-toggle-chevron");
+            _filterActiveButton = rootVe.Q<Button>("active-missions-filter-active");
+            _filterCompletedButton = rootVe.Q<Button>("active-missions-filter-completed");
             _content = rootVe.Q<VisualElement>("active-missions-content");
             _list = rootVe.Q<VisualElement>("active-missions-list");
             _emptyLabel = rootVe.Q<Label>("active-missions-empty");
@@ -294,6 +318,12 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (_header != null)
                 _header.RegisterCallback<ClickEvent>(_ => ToggleCollapsed());
+            if (_filterActiveButton != null)
+                _filterActiveButton.RegisterCallback<ClickEvent>(HandleFilterActiveClicked);
+            if (_filterCompletedButton != null)
+                _filterCompletedButton.RegisterCallback<ClickEvent>(HandleFilterCompletedClicked);
+
+            ApplyFilterButtonState();
         }
 
         private void ToggleCollapsed()
@@ -314,31 +344,111 @@ namespace Sporae.UI.UIToolkit.HUD
             }
         }
 
+        private void HandleFilterActiveClicked(ClickEvent evt)
+        {
+            evt.StopPropagation();
+            SetFilterMode(MissionFilterMode.Active);
+        }
+
+        private void HandleFilterCompletedClicked(ClickEvent evt)
+        {
+            evt.StopPropagation();
+            SetFilterMode(MissionFilterMode.Completed);
+        }
+
+        private void SetFilterMode(MissionFilterMode mode)
+        {
+            if (_filterMode == mode)
+                return;
+
+            _filterMode = mode;
+            ApplyFilterButtonState();
+            HandleMissionsChanged();
+        }
+
+        private void ApplyFilterButtonState()
+        {
+            ToggleSelectedClass(_filterActiveButton, _filterMode == MissionFilterMode.Active);
+            ToggleSelectedClass(_filterCompletedButton, _filterMode == MissionFilterMode.Completed);
+            ToggleCompletedSelectedClass(_filterCompletedButton, _filterMode == MissionFilterMode.Completed);
+        }
+
+        private static void ToggleSelectedClass(VisualElement element, bool selected)
+        {
+            if (element == null)
+                return;
+
+            const string selectedClass = "active-missions-filter-button--selected";
+            if (selected)
+                element.AddToClassList(selectedClass);
+            else
+                element.RemoveFromClassList(selectedClass);
+        }
+
+        private static void ToggleCompletedSelectedClass(VisualElement element, bool selected)
+        {
+            if (element == null)
+                return;
+
+            const string selectedDoneClass = "active-missions-filter-button--selected-done";
+            if (selected)
+                element.AddToClassList(selectedDoneClass);
+            else
+                element.RemoveFromClassList(selectedDoneClass);
+        }
+
         private void HandleMissionsChanged()
         {
             if (_root == null || _list == null || _titleLabel == null)
                 return;
 
-            var missions = _missionManager?.CurrentMissions
+            var activeMissions = _missionManager?.CurrentMissions
                 .Where(m => m != null && m.Config != null)
                 .ToList() ?? new List<MissionChecker>();
 
-            SyncMissionMeta(missions);
+            var completedMissions = _completedMissions
+                .Where(m => m != null && m.Config != null && m.IsCompleted)
+                .ToList();
+
+            if (_missionManager?.CompletedMissions != null)
+            {
+                foreach (var completed in _missionManager.CompletedMissions)
+                {
+                    if (completed == null || completed.Config == null || !completed.IsCompleted)
+                        continue;
+                    if (!completedMissions.Contains(completed))
+                        completedMissions.Add(completed);
+                }
+            }
+
+            var missions = _filterMode == MissionFilterMode.Completed
+                ? completedMissions
+                : activeMissions;
+
+            var allKnownMissions = activeMissions
+                .Concat(completedMissions)
+                .Distinct()
+                .ToList();
+            SyncMissionMeta(allKnownMissions);
 
             if (_countLabel != null)
             {
-                _titleLabel.text = "MISSIONS";
+                _titleLabel.text = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
                 _countLabel.text = $"[{missions.Count}]";
             }
             else
             {
-                _titleLabel.text = $"MISSIONS [{missions.Count}]";
+                string title = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
+                _titleLabel.text = $"{title} [{missions.Count}]";
             }
 
             RebuildList(missions);
             bool hasMissions = missions.Count > 0;
             if (_emptyLabel != null)
+            {
+                _emptyLabel.text = _filterMode == MissionFilterMode.Completed ? "No completed missions_" : "No missions_";
                 _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
+            }
 
             if (hasMissions)
                 StopEmptyPulse();
@@ -410,9 +520,10 @@ namespace Sporae.UI.UIToolkit.HUD
             timerWrap.AddToClassList("active-mission-card-timer-wrap");
             var timerIcon = new Label("o");
             timerIcon.AddToClassList("active-mission-card-timer-icon");
-            var timerText = new Label($"{Mathf.Max(0, daysLeft)}d");
+            string timerValue = mission.IsCompleted ? "DONE" : $"{Mathf.Max(0, daysLeft)}d";
+            var timerText = new Label(timerValue);
             timerText.AddToClassList("active-mission-card-timer");
-            if (daysLeft <= 2)
+            if (!mission.IsCompleted && daysLeft <= 2)
                 timerText.AddToClassList("active-mission-card-timer--warn");
             timerWrap.Add(timerIcon);
             timerWrap.Add(timerText);
@@ -487,6 +598,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 return;
 
             _tooltip.RemoveFromClassList("am-status-active");
+            _tooltip.RemoveFromClassList("am-status-completed");
             _tooltip.RemoveFromClassList("am-status-expiring");
             _tooltip.RemoveFromClassList("am-status-failed");
             _tooltip.AddToClassList(GetStatusClass(status));
@@ -506,7 +618,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _tooltipRep.text = rep;
 
             int daysLeft = Mathf.Max(0, GetDaysRemaining(meta));
-            bool showDeadline = daysLeft <= 2;
+            bool showDeadline = status != MissionVisualStatus.Completed && daysLeft <= 2;
             _tooltipDeadline.style.display = showDeadline ? DisplayStyle.Flex : DisplayStyle.None;
             _tooltipDeadlineText.text = $"EXPIRES IN {daysLeft} DAYS";
 
@@ -632,7 +744,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private MissionVisualStatus GetVisualStatus(MissionMeta meta, bool isCompleted)
         {
             if (isCompleted)
-                return MissionVisualStatus.Active;
+                return MissionVisualStatus.Completed;
 
             int remaining = GetDaysRemaining(meta);
             if (remaining <= 0)
@@ -656,6 +768,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             return status switch
             {
+                MissionVisualStatus.Completed => "am-status-completed",
                 MissionVisualStatus.Expiring => "am-status-expiring",
                 MissionVisualStatus.Failed => "am-status-failed",
                 _ => "am-status-active"

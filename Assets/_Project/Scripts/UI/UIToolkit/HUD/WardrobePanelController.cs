@@ -7,7 +7,8 @@ using Sporae.DevTools;
 namespace Sporae.UI.UIToolkit.HUD
 {
     /// <summary>
-    /// Pannello Armadio (Task 3): ciclo outfit con rotella / frecce, chiusura ESC; notifica missione alla prima apertura.
+    /// Pannello Armadio (Task 3): ciclo outfit con rotella / frecce, chiusura ESC;
+    /// notifica missione quando il player chiude il pannello.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-37)]
@@ -109,7 +110,6 @@ namespace Sporae.UI.UIToolkit.HUD
             _root.style.display = DisplayStyle.Flex;
             IsOpen = true;
             GameplayUiModalLock.SetBlockWorldInput(true);
-            WardrobeMission.NotifyWardrobeAccessed();
             RefreshOutfitLabel();
         }
 
@@ -125,7 +125,11 @@ namespace Sporae.UI.UIToolkit.HUD
             GameplayUiModalLock.SetBlockWorldInput(false);
 
             if (wasOpen)
+            {
+                // UX: considera la missione armadio completata solo dopo
+                // che il player esce dal pannello, non mentre lo sta usando.
                 WardrobeMission.NotifyWardrobeClosed();
+            }
         }
 
         private void EnsureOutfitController()

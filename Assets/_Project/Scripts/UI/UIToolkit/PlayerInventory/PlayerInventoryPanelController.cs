@@ -60,6 +60,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (_root != null)
                 TryBindUI();
             TryBindInventory();
+            ServiceContainer.Instance?.Register(this);
         }
 
         /// <summary>Binding ritardato: dopo Hide() il GameObject è disattivato e l'albero viene ricreato; in ShowInternal() si fa SetActive(true) e poi TryBindUI() per aggiornare i riferimenti.</summary>

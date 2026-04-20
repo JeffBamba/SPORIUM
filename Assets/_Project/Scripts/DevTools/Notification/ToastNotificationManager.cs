@@ -340,6 +340,9 @@ namespace Sporae.DevTools
         
         public void ShowInfo(string message, string code = null)
             => ShowToast(ToastNotificationType.Info, message, code);
+
+        public void ShowMission(string message, string code = null)
+            => ShowToast(ToastNotificationType.Mission, message, code);
         
         /// <summary>
         /// Mostra toast Item Notification con layout speciale

@@ -78,6 +78,12 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "Budget azioni: {prev} → {max}",
                     "Action budget: {prev} → {max}",
                     "Il numero massimo di azioni giornaliere è cambiato (colazione, fame o nuovo giorno).\nControlla la barra AZIONI in alto."),
+                Spec("PLY-HYD-GAIN", NotificationCategory.Player, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 1f,
+                    "notif.ply_hyd_gain",
+                    "H +{delta}% (→ {h}%)",
+                    "H +{delta}% (→ {h}%)",
+                    "Hai bevuto o mangiato un alimento idratante: idratazione recuperata."),
+
                 Spec("PLY-HYD-WALK-OK", NotificationCategory.TopBar, NotificationSeverity.Success, NotificationChannel.Gameplay, false, false, false, 28f,
                     "notif.ply_hyd_ok",
                     "Velocità movimento: normale (H {h}%)",

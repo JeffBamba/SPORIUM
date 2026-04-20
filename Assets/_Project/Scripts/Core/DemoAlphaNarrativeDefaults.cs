@@ -17,5 +17,19 @@ namespace _Project.Sporae.Core
         public const string MissionHighlightColorHex = "#E6C96F";
 
         public static IReadOnlyList<string> Beat1MissionHighlightWords { get; } = new List<string>();
+
+        // Beat 2 — Cucina
+        public const string Beat2KitchenLine =
+            "Questa è la Cucina: qui trasformi scorte e acqua potabile in energia per affrontare la giornata.\n" +
+            "Apri l'Inventario, mangia un item e poi bevi un po' di acqua.";
+
+        public const VoRegister Beat2KitchenRegister = VoRegister.RegisterA;
+
+        public const VoSentenceAdvanceMode Beat2KitchenSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
+
+        public static IReadOnlyList<string> Beat2MissionHighlightWords { get; } = new List<string>
+        {
+            "Apri l'Inventario", "mangia", "bevi"
+        };
     }
 }
