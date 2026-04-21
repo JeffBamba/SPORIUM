@@ -15,14 +15,24 @@ namespace _Project.Systems.FoodRoom
         private FoodRoomConfig _config;
         private readonly List<FoodProductionSlot> _productionSlots = new List<FoodProductionSlot>();
         private readonly WaterProductionSlot _waterSlot = new WaterProductionSlot();
+        private readonly Dictionary<FoodProductionType, List<Item>> _pantryByType = new Dictionary<FoodProductionType, List<Item>>
+        {
+            { FoodProductionType.Vegetable, new List<Item>() },
+            { FoodProductionType.Fungus, new List<Item>() },
+            { FoodProductionType.Meat, new List<Item>() }
+        };
+        private bool _pantryIsOn = true;
 
         private const string ToastKeyFoodProgress = "food-room-progress";
         private const string ToastKeyFoodDone = "food-room-done";
         private const string ToastKeyWaterProgress = "water-room-progress";
         private const string ToastKeyWaterDone = "water-room-done";
+        private const int PantryDailyCryCost = 5;
 
         public IReadOnlyList<FoodProductionSlot> ProductionSlots => _productionSlots;
         public WaterProductionSlot WaterSlot => _waterSlot;
+        public bool PantryIsOn => _pantryIsOn;
+        public int PantryDailyCost => PantryDailyCryCost;
 
         public FoodRoomSystem(Inventory inventory, GameManager gameManager)
         {
@@ -44,6 +54,127 @@ namespace _Project.Systems.FoodRoom
             while (_productionSlots.Count > max)
             {
                 _productionSlots.RemoveAt(_productionSlots.Count - 1);
+            }
+        }
+
+        public int GetPantryQuantity(FoodProductionType type)
+        {
+            if (!_pantryByType.TryGetValue(type, out var list))
+                return 0;
+            return list.Count;
+        }
+
+        public bool SetPantryPower(bool isOn)
+        {
+            if (_pantryIsOn == isOn)
+                return false;
+
+            _pantryIsOn = isOn;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.PostToastImmediate(isOn ? "KTCH-PTRY-ON" : "KTCH-PTRY-OFF");
+            }
+
+            return true;
+        }
+
+        public bool TryTransferToPantry(FoodProductionType type, int amount, out int moved)
+        {
+            moved = 0;
+            if (amount <= 0)
+                return false;
+            if (!_pantryByType.TryGetValue(type, out var pantryBucket))
+                return false;
+
+            string foodTypeId = GetFoodTypeIdByPantryType(type);
+            if (string.IsNullOrEmpty(foodTypeId))
+                return false;
+
+            for (int i = 0; i < amount; i++)
+            {
+                if (!_inventory.TryRemoveFirst(foodTypeId, out var removedItem) || removedItem == null)
+                    break;
+                pantryBucket.Add(removedItem);
+                moved++;
+            }
+
+            if (moved > 0)
+            {
+                PostPantryTransferToast("KTCH-PTRY-IN", type, moved);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryTransferFromPantry(FoodProductionType type, int amount, out int moved)
+        {
+            moved = 0;
+            if (amount <= 0)
+                return false;
+            if (!_pantryByType.TryGetValue(type, out var pantryBucket) || pantryBucket.Count <= 0)
+                return false;
+
+            for (int i = 0; i < amount; i++)
+            {
+                if (pantryBucket.Count <= 0)
+                    break;
+                var item = pantryBucket[0];
+                pantryBucket.RemoveAt(0);
+                _inventory.Add(item);
+                moved++;
+            }
+
+            if (moved > 0)
+            {
+                PostPantryTransferToast("KTCH-PTRY-OUT", type, moved);
+                return true;
+            }
+
+            return false;
+        }
+
+        public void ExportPantryState(out bool pantryIsOn, out List<(int typeInt, float quality)> pantryItems)
+        {
+            pantryIsOn = _pantryIsOn;
+            pantryItems = new List<(int typeInt, float quality)>();
+
+            foreach (var kvp in _pantryByType)
+            {
+                int typeInt = (int)kvp.Key;
+                var list = kvp.Value;
+                if (list == null) continue;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i];
+                    if (item == null) continue;
+                    pantryItems.Add((typeInt, item.Quality));
+                }
+            }
+        }
+
+        private void PostPantryTransferToast(string code, FoodProductionType type, int moved)
+        {
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation == null || !foundation.Enabled || moved <= 0)
+                return;
+
+            foundation.PostToastImmediate(
+                code,
+                new NotificationPayload()
+                    .With("count", moved.ToString())
+                    .With("itemName", GetFoodTypeDisplayName(type)));
+        }
+
+        private static string GetFoodTypeIdByPantryType(FoodProductionType type)
+        {
+            switch (type)
+            {
+                case FoodProductionType.Vegetable: return Items.FoodVegetable;
+                case FoodProductionType.Fungus: return Items.FoodFungus;
+                case FoodProductionType.Meat: return Items.FoodMeat;
+                default: return null;
             }
         }
 
@@ -208,6 +339,8 @@ namespace _Project.Systems.FoodRoom
                 if (slot.State == SlotState.Growing || slot.State == SlotState.Ready)
                     totalCry += _config != null ? _config.GetCryPerDayFor(slot.Type) : 1;
             }
+            if (_pantryIsOn)
+                totalCry += PantryDailyCryCost;
             if (totalCry > 0 && _gameManager != null && _gameManager.EconomySystem != null && _gameManager.EconomySystem.CanAfford(totalCry))
                 _gameManager.EconomySystem.Spend(totalCry);
         }
@@ -254,9 +387,9 @@ namespace _Project.Systems.FoodRoom
         {
             switch (type)
             {
-                case FoodProductionType.Vegetable: return "Sintetico vegetale";
-                case FoodProductionType.Fungus: return "Sintetico fungino";
-                case FoodProductionType.Meat: return "Sintetico carnoso";
+                case FoodProductionType.Vegetable: return "Vegetal Synthesis";
+                case FoodProductionType.Fungus: return "Fungal Synthesis";
+                case FoodProductionType.Meat: return "Meat Synthesis";
                 default: return "Cibo";
             }
         }
@@ -282,7 +415,14 @@ namespace _Project.Systems.FoodRoom
         }
 
         /// <summary>Ripristina stato da save. typeInt/stateInt sono valori enum come int.</summary>
-        public void RestoreState(List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)> slots, int waterRawInput, int waterPotableOutput, float waterCurrentProgress, bool waterActive)
+        public void RestoreState(
+            List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)> slots,
+            int waterRawInput,
+            int waterPotableOutput,
+            float waterCurrentProgress,
+            bool waterActive,
+            bool pantryIsOn,
+            List<(int typeInt, float quality)> pantryItems)
         {
             _productionSlots.Clear();
             int max = _config != null ? _config.MaxSlots : 3;
@@ -305,6 +445,29 @@ namespace _Project.Systems.FoodRoom
             _waterSlot.PotableWaterOutput = waterPotableOutput;
             _waterSlot.CurrentUnitProgress = waterCurrentProgress;
             _waterSlot.IsActive = waterActive;
+
+            _pantryIsOn = pantryIsOn;
+            foreach (var key in _pantryByType.Keys)
+                _pantryByType[key].Clear();
+
+            if (pantryItems == null)
+                return;
+
+            for (int i = 0; i < pantryItems.Count; i++)
+            {
+                var entry = pantryItems[i];
+                var type = (FoodProductionType)entry.typeInt;
+                if (!_pantryByType.TryGetValue(type, out var bucket))
+                    continue;
+
+                string typeId = GetFoodTypeIdByPantryType(type);
+                if (string.IsNullOrWhiteSpace(typeId))
+                    continue;
+
+                var item = ItemFabric.CreateItemWithQuality(typeId, Mathf.Max(0.1f, entry.quality));
+                if (item != null)
+                    bucket.Add(item);
+            }
         }
     }
 }

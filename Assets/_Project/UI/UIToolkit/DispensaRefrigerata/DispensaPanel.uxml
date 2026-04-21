@@ -1,0 +1,124 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="DispensaPanel.uss" />
+
+    <ui:VisualElement name="dispensa-root" class="dispensa-root">
+        <ui:VisualElement name="dispensa-overlay" class="dispensa-overlay">
+            <ui:VisualElement name="dispensa-panel" class="dispensa-panel">
+
+                <ui:VisualElement name="dispensa-header" class="dispensa-header">
+                    <ui:VisualElement name="dispensa-header-top" class="dispensa-header-top">
+                        <ui:VisualElement name="dispensa-status-row" class="dispensa-status-row">
+                            <ui:Label name="dispensa-code" text="KTCH-REFR-001" class="dispensa-code" />
+                            <ui:VisualElement name="dispensa-power-indicator" class="dispensa-power-indicator dispensa-power-indicator--on" />
+                            <ui:Label name="dispensa-status-text" text="REFRIGERATION ONLINE" class="dispensa-status-text dispensa-status-text--on" />
+                            <ui:Button name="btn-dispensa-power" text="TURN OFF" class="dispensa-power-button" />
+                        </ui:VisualElement>
+                        <ui:Button name="btn-close" text="×" class="dispensa-close-btn" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="dispensa-title-row" class="dispensa-title-row">
+                        <ui:Label text="❄" class="dispensa-title-icon" />
+                        <ui:Label text="DISPENSA REFRIGERATA" class="dispensa-title" />
+                    </ui:VisualElement>
+
+                    <ui:Label text="▸ 3 STORAGE CHAMBERS · CRYO PRESERVATION · FOOD CONSUMPTION TERMINAL" class="dispensa-subtitle" />
+
+                    <ui:VisualElement name="dispensa-info-bar" class="dispensa-info-bar">
+                        <ui:VisualElement class="dispensa-info-item">
+                            <ui:Label text="🌡" class="dispensa-info-icon" />
+                            <ui:Label name="dispensa-info-temp" text="TEMP: -5°C" class="dispensa-info-text" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="dispensa-info-item">
+                            <ui:Label text="❄" class="dispensa-info-icon" />
+                            <ui:Label name="dispensa-info-humidity" text="HUMIDITY: 65%" class="dispensa-info-text" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="dispensa-info-item">
+                            <ui:VisualElement name="dispensa-info-dot" class="dispensa-info-dot dispensa-info-dot--ok" />
+                            <ui:Label name="dispensa-info-preservation" text="PRESERVATION OPTIMAL" class="dispensa-info-text dispensa-info-text--ok" />
+                        </ui:VisualElement>
+                        <ui:Label name="dispensa-info-cost" text="MANTENIMENTO: 5 CRY/giorno" class="dispensa-info-cost" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="dispensa-body" class="dispensa-body">
+                    <ui:VisualElement name="dispensa-chambers-column" class="dispensa-chambers-column">
+                        <ui:VisualElement class="dispensa-section-title-row">
+                            <ui:Label text="🍽" class="dispensa-section-icon" />
+                            <ui:Label text="STORAGE CHAMBERS (3)" class="dispensa-section-title" />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement name="dispensa-chambers-list" class="dispensa-chambers-list">
+                            <ui:VisualElement name="chamber-fungal" class="dispensa-chamber-card dispensa-chamber-card--fungal">
+                                <ui:Label text="🍄" class="dispensa-chamber-icon dispensa-chamber-icon--fungal" />
+                                <ui:VisualElement class="dispensa-chamber-body">
+                                    <ui:Label text="FUNGAL STORAGE" class="dispensa-chamber-name dispensa-chamber-name--fungal" />
+                                    <ui:Label name="chamber-fungal-qty" text="EMPTY CHAMBER" class="dispensa-chamber-qty" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="chamber-fungal-dot" class="dispensa-chamber-dot" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="chamber-meat" class="dispensa-chamber-card dispensa-chamber-card--meat">
+                                <ui:Label text="🥩" class="dispensa-chamber-icon dispensa-chamber-icon--meat" />
+                                <ui:VisualElement class="dispensa-chamber-body">
+                                    <ui:Label text="SYNTHETIC MEAT" class="dispensa-chamber-name dispensa-chamber-name--meat" />
+                                    <ui:Label name="chamber-meat-qty" text="EMPTY CHAMBER" class="dispensa-chamber-qty" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="chamber-meat-dot" class="dispensa-chamber-dot" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="chamber-vegetal" class="dispensa-chamber-card dispensa-chamber-card--vegetal">
+                                <ui:Label text="🌿" class="dispensa-chamber-icon dispensa-chamber-icon--vegetal" />
+                                <ui:VisualElement class="dispensa-chamber-body">
+                                    <ui:Label text="VEGETAL STORAGE" class="dispensa-chamber-name dispensa-chamber-name--vegetal" />
+                                    <ui:Label name="chamber-vegetal-qty" text="EMPTY CHAMBER" class="dispensa-chamber-qty" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="chamber-vegetal-dot" class="dispensa-chamber-dot" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="dispensa-side-column" class="dispensa-side-column">
+                        <ui:VisualElement name="dispensa-inventory-box" class="dispensa-inventory-box">
+                            <ui:Label text="INVENTORY FOOD" class="dispensa-inventory-title" />
+
+                            <ui:VisualElement name="inv-fungal" class="dispensa-inv-row">
+                                <ui:Label text="🍄" class="dispensa-inv-icon dispensa-inv-icon--fungal" />
+                                <ui:VisualElement class="dispensa-inv-body">
+                                    <ui:Label text="Fungal Synthesis" class="dispensa-inv-name" />
+                                    <ui:Label name="inv-fungal-qty" text="QTY: 0" class="dispensa-inv-qty" />
+                                </ui:VisualElement>
+                                <ui:Label name="inv-fungal-time" text="+20H" class="dispensa-inv-time" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="inv-vegetal" class="dispensa-inv-row">
+                                <ui:Label text="🌿" class="dispensa-inv-icon dispensa-inv-icon--vegetal" />
+                                <ui:VisualElement class="dispensa-inv-body">
+                                    <ui:Label text="Vegetal Synthesis" class="dispensa-inv-name" />
+                                    <ui:Label name="inv-vegetal-qty" text="QTY: 0" class="dispensa-inv-qty" />
+                                </ui:VisualElement>
+                                <ui:Label name="inv-vegetal-time" text="+15H" class="dispensa-inv-time" />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="inv-meat" class="dispensa-inv-row">
+                                <ui:Label text="🥩" class="dispensa-inv-icon dispensa-inv-icon--meat" />
+                                <ui:VisualElement class="dispensa-inv-body">
+                                    <ui:Label text="Meat Synthesis" class="dispensa-inv-name" />
+                                    <ui:Label name="inv-meat-qty" text="QTY: 0" class="dispensa-inv-qty" />
+                                </ui:VisualElement>
+                                <ui:Label name="inv-meat-time" text="+30H" class="dispensa-inv-time" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:VisualElement name="dispensa-log-box" class="dispensa-log-box">
+                            <ui:Label text="SYSTEM LOG" class="dispensa-log-title" />
+                            <ui:VisualElement name="dispensa-log-list" class="dispensa-log-list">
+                                <ui:Label name="log-line-1" text="› Refrigeration system online" class="dispensa-log-line" />
+                                <ui:Label name="log-line-2" text="› Storage chambers ready" class="dispensa-log-line" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

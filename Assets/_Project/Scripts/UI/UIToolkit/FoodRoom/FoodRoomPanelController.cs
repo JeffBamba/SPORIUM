@@ -145,7 +145,6 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             _waterProgressFill = _root.Q<VisualElement>("water-progress-fill");
             _waterProgressTrack = _root.Q<VisualElement>("water-progress-track");
             _waterProgressShine = _root.Q<VisualElement>("water-progress-shine");
-
             if (_btnAdvanceDay != null) _btnAdvanceDay.clicked += OnAdvanceDayDebug;
             if (_btnStartGrowth != null) _btnStartGrowth.clicked += OnStartGrowth;
             if (_btnPurify != null) _btnPurify.clicked += OnPurify;

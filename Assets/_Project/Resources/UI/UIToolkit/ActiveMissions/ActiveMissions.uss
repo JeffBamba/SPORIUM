@@ -216,7 +216,7 @@
 .active-mission-card--fade-out {
     opacity: 0.05;
     transition-property: opacity;
-    transition-duration: 1800ms;
+    transition-duration: 2500ms;
     transition-timing-function: ease-out;
 }
 
@@ -409,6 +409,10 @@
     text-shadow: 0 0 6px rgba(127, 255, 122, 0.7);
 }
 
+.am-faction-routine .active-mission-card-emoji {
+    text-shadow: 0 0 6px rgba(0, 255, 198, 0.7);
+}
+
 .am-faction-mercanti .active-mission-card-emoji {
     text-shadow: 0 0 6px rgba(230, 201, 111, 0.7);
 }
@@ -515,7 +519,7 @@
 
 .am-tooltip-faction {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.6px;
     color: rgba(192, 200, 197, 0.8);
 }

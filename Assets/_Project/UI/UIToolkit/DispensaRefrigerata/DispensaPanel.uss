@@ -1,0 +1,422 @@
+/* DISPENSA REFRIGERATA - refined visual pass */
+
+.dispensa-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+}
+
+.dispensa-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.66);
+    display: none;
+}
+
+.dispensa-panel {
+    width: 1024px;
+    height: 700px;
+    flex-direction: column;
+    padding: 0;
+    background-color: rgba(4, 11, 17, 0.985);
+    border-width: 1px;
+    border-color: rgba(74, 180, 228, 0.72);
+    border-radius: 1px;
+}
+
+/* HEADER */
+
+.dispensa-header {
+    flex-direction: column;
+    padding: 12px 16px 10px 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(74, 180, 228, 0.45);
+    background-color: rgba(9, 22, 33, 0.55);
+}
+
+.dispensa-header-top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dispensa-status-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.dispensa-code {
+    margin-right: 10px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(127, 178, 204, 0.92);
+    -unity-font-style: bold;
+}
+
+.dispensa-power-indicator {
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    background-color: rgba(93, 120, 137, 0.5);
+}
+
+.dispensa-power-indicator--on {
+    background-color: rgb(94, 224, 133);
+}
+
+.dispensa-power-indicator--off {
+    background-color: rgb(210, 88, 88);
+}
+
+.dispensa-status-text {
+    margin-right: 12px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(127, 178, 204, 0.9);
+    -unity-font-style: bold;
+}
+
+.dispensa-status-text--on {
+    color: rgba(114, 214, 247, 0.96);
+}
+
+.dispensa-status-text--off {
+    color: rgba(232, 128, 128, 0.96);
+}
+
+.dispensa-power-button {
+    min-width: 84px;
+    height: 22px;
+    padding: 0 8px;
+    margin-left: 0;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(183, 223, 238, 0.88);
+    background-color: rgba(11, 31, 44, 0.85);
+    border-width: 1px;
+    border-color: rgba(85, 190, 240, 0.5);
+    border-radius: 1px;
+}
+
+.dispensa-power-button:hover {
+    background-color: rgba(24, 51, 68, 0.92);
+    border-color: rgba(113, 208, 248, 0.92);
+}
+
+.dispensa-close-btn {
+    width: 38px;
+    height: 34px;
+    padding: 0;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: rgba(232, 96, 96, 0.85);
+    border-radius: 1px;
+    font-size: 20px;
+    color: rgba(232, 126, 126, 0.96);
+    -unity-text-align: middle-center;
+}
+
+.dispensa-close-btn:hover {
+    background-color: rgba(219, 74, 74, 0.22);
+    border-color: rgba(255, 120, 120, 1);
+}
+
+.dispensa-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.dispensa-title-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    color: rgba(120, 206, 243, 0.95);
+}
+
+.dispensa-title {
+    font-size: 38px;
+    letter-spacing: 2px;
+    color: rgba(120, 206, 243, 0.95);
+}
+
+.dispensa-subtitle {
+    margin-top: 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(111, 158, 180, 0.86);
+}
+
+.dispensa-info-bar {
+    margin-top: 8px;
+    padding: 6px 0 0 0;
+    flex-direction: row;
+    align-items: center;
+    border-top-width: 1px;
+    border-top-color: rgba(75, 160, 197, 0.28);
+}
+
+.dispensa-info-item {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 22px;
+}
+
+.dispensa-info-icon {
+    margin-right: 6px;
+    font-size: 11px;
+    color: rgba(138, 188, 209, 0.85);
+}
+
+.dispensa-info-text {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(138, 188, 209, 0.82);
+}
+
+.dispensa-info-text--ok {
+    color: rgba(134, 229, 149, 0.95);
+}
+
+.dispensa-info-dot {
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    background-color: rgba(103, 208, 123, 0.95);
+}
+
+.dispensa-info-dot--ok {
+    background-color: rgba(103, 208, 123, 0.95);
+}
+
+.dispensa-info-dot--off {
+    background-color: rgba(232, 96, 96, 0.95);
+}
+
+.dispensa-info-cost {
+    margin-left: auto;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(234, 212, 110, 0.93);
+}
+
+/* BODY */
+
+.dispensa-body {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 16px;
+    border-top-width: 1px;
+    border-top-color: rgba(74, 180, 228, 0.36);
+}
+
+.dispensa-chambers-column {
+    flex-grow: 1;
+    margin-right: 16px;
+    flex-direction: column;
+}
+
+.dispensa-side-column {
+    width: 380px;
+    flex-direction: column;
+}
+
+.dispensa-section-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.dispensa-section-icon {
+    margin-right: 8px;
+    font-size: 14px;
+    color: rgba(117, 198, 236, 0.95);
+}
+
+.dispensa-section-title {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(117, 198, 236, 0.95);
+    -unity-font-style: bold;
+}
+
+.dispensa-chambers-list {
+    flex-direction: column;
+}
+
+.dispensa-chamber-card {
+    height: 74px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background-color: rgba(8, 18, 27, 0.78);
+    border-width: 1px;
+    border-color: rgba(78, 166, 205, 0.34);
+    border-radius: 1px;
+}
+
+.dispensa-chamber-card:hover {
+    background-color: rgba(12, 30, 42, 0.9);
+    border-color: rgba(95, 201, 247, 0.72);
+}
+
+.dispensa-chamber-card.selected {
+    background-color: rgba(13, 33, 47, 0.94);
+    border-color: rgba(102, 208, 250, 0.95);
+}
+
+.dispensa-chamber-icon {
+    width: 28px;
+    margin-right: 12px;
+    font-size: 26px;
+}
+
+.dispensa-chamber-icon--fungal { color: rgba(238, 112, 160, 0.98); }
+.dispensa-chamber-icon--meat { color: rgba(236, 126, 126, 0.98); }
+.dispensa-chamber-icon--vegetal { color: rgba(152, 224, 120, 0.98); }
+
+.dispensa-chamber-body {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.dispensa-chamber-name {
+    font-size: 19px;
+    letter-spacing: 1px;
+}
+
+.dispensa-chamber-name--fungal { color: rgba(218, 116, 163, 0.96); }
+.dispensa-chamber-name--meat { color: rgba(216, 114, 114, 0.96); }
+.dispensa-chamber-name--vegetal { color: rgba(126, 210, 102, 0.96); }
+
+.dispensa-chamber-qty {
+    margin-top: 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(124, 163, 182, 0.72);
+    -unity-font-style: italic;
+}
+
+.dispensa-chamber-dot {
+    width: 8px;
+    height: 8px;
+    background-color: rgba(113, 176, 207, 0.44);
+}
+
+.dispensa-chamber-dot.filled {
+    background-color: rgba(103, 208, 123, 0.97);
+}
+
+/* INVENTORY */
+
+.dispensa-inventory-box {
+    flex-direction: column;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background-color: rgba(8, 18, 27, 0.78);
+    border-width: 1px;
+    border-color: rgba(78, 166, 205, 0.42);
+    border-radius: 1px;
+}
+
+.dispensa-inventory-title {
+    margin-bottom: 8px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(117, 198, 236, 0.95);
+    -unity-font-style: bold;
+}
+
+.dispensa-inv-row {
+    height: 60px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background-color: rgba(6, 14, 22, 0.84);
+    border-width: 1px;
+    border-color: rgba(78, 166, 205, 0.28);
+    border-radius: 1px;
+}
+
+.dispensa-inv-row:hover {
+    background-color: rgba(12, 30, 42, 0.92);
+    border-color: rgba(95, 201, 247, 0.7);
+}
+
+.dispensa-inv-row--disabled {
+    opacity: 0.46;
+}
+
+.dispensa-inv-icon {
+    width: 24px;
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.dispensa-inv-icon--fungal { color: rgba(238, 112, 160, 0.98); }
+.dispensa-inv-icon--meat { color: rgba(236, 126, 126, 0.98); }
+.dispensa-inv-icon--vegetal { color: rgba(152, 224, 120, 0.98); }
+
+.dispensa-inv-body {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.dispensa-inv-name {
+    font-size: 16px;
+    color: rgba(204, 229, 238, 0.95);
+}
+
+.dispensa-inv-qty {
+    margin-top: 1px;
+    font-size: 10px;
+    color: rgba(126, 173, 196, 0.9);
+    -unity-font-style: bold;
+}
+
+.dispensa-inv-time {
+    font-size: 14px;
+    color: rgba(234, 212, 110, 0.93);
+    -unity-font-style: bold;
+}
+
+/* LOG */
+
+.dispensa-log-box {
+    flex-direction: column;
+    min-height: 100px;
+    padding: 10px 12px;
+    background-color: rgba(8, 18, 27, 0.66);
+    border-width: 1px;
+    border-color: rgba(78, 166, 205, 0.35);
+    border-radius: 1px;
+}
+
+.dispensa-log-title {
+    margin-bottom: 6px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(117, 198, 236, 0.8);
+    -unity-font-style: bold;
+}
+
+.dispensa-log-list {
+    flex-direction: column;
+}
+
+.dispensa-log-line {
+    margin-bottom: 2px;
+    font-size: 11px;
+    color: rgba(133, 185, 208, 0.92);
+}

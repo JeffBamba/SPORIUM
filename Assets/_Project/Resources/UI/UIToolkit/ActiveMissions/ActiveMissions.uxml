@@ -4,17 +4,17 @@
     <ui:VisualElement name="active-missions-root" picking-mode="Ignore" class="active-missions-root">
         <ui:VisualElement name="active-missions-header" class="active-missions-header">
             <ui:VisualElement name="active-missions-header-left" picking-mode="Ignore" class="active-missions-header-left">
-                <ui:Label name="active-missions-title" text="MISSIONS" picking-mode="Ignore" class="active-missions-title" />
+                <ui:Label name="active-missions-title" text="MISSIONI" picking-mode="Ignore" class="active-missions-title" />
                 <ui:Label name="active-missions-count" text="[0]" picking-mode="Ignore" class="active-missions-count" />
             </ui:VisualElement>
             <ui:VisualElement name="active-missions-header-right" class="active-missions-header-right">
-                <ui:Button name="active-missions-filter-active" text="ACTIVE" class="active-missions-filter-button active-missions-filter-button--selected" />
-                <ui:Button name="active-missions-filter-completed" text="DONE" class="active-missions-filter-button" />
+                <ui:Button name="active-missions-filter-active" text="ATTIVE" class="active-missions-filter-button active-missions-filter-button--selected" />
+                <ui:Button name="active-missions-filter-completed" text="FATTE" class="active-missions-filter-button" />
                 <ui:VisualElement name="active-missions-toggle-chevron" picking-mode="Ignore" class="active-missions-toggle-chevron" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="active-missions-content" picking-mode="Ignore" class="active-missions-content">
-            <ui:Label name="active-missions-empty" text="No missions_" picking-mode="Ignore" class="active-missions-empty" style="font-size: 11px;" />
+            <ui:Label name="active-missions-empty" text="Nessuna missione_" picking-mode="Ignore" class="active-missions-empty" style="font-size: 11px; color: rgba(182, 230, 255, 0.6);" />
             <ui:VisualElement name="active-missions-list" picking-mode="Ignore" class="active-missions-list" />
         </ui:VisualElement>
         <ui:VisualElement name="active-mission-tooltip" picking-mode="Ignore" class="active-mission-tooltip am-status-active" style="display: none;">
@@ -27,21 +27,21 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="am-tooltip-objective-section" picking-mode="Ignore" class="am-tooltip-section am-tooltip-objective-section">
-                <ui:Label name="am-tooltip-objective-label" text="OBJECTIVE" picking-mode="Ignore" class="am-tooltip-section-label" />
+                <ui:Label name="am-tooltip-objective-label" text="OBIETTIVO" picking-mode="Ignore" class="am-tooltip-section-label" style="font-size: 10px;" />
                 <ui:Label name="am-tooltip-objective" picking-mode="Ignore" class="am-tooltip-objective" />
             </ui:VisualElement>
             <ui:VisualElement name="am-tooltip-task-section" picking-mode="Ignore" class="am-tooltip-section am-tooltip-task-section">
                 <ui:Label name="am-tooltip-task-summary" picking-mode="Ignore" class="am-tooltip-task-summary" />
             </ui:VisualElement>
             <ui:VisualElement name="am-tooltip-reward-section" picking-mode="Ignore" class="am-tooltip-section am-tooltip-reward-section">
-                <ui:Label name="am-tooltip-reward-label" text="REWARD" picking-mode="Ignore" class="am-tooltip-section-label am-tooltip-reward-label" />
+                <ui:Label name="am-tooltip-reward-label" text="RICOMPENSA" picking-mode="Ignore" class="am-tooltip-section-label am-tooltip-reward-label" style="font-size: 10px;" />
                 <ui:Label name="am-tooltip-reward" picking-mode="Ignore" class="am-tooltip-reward" />
                 <ui:VisualElement name="am-tooltip-rep-row" picking-mode="Ignore" class="am-tooltip-rep-row" style="display: none;">
                     <ui:Label name="am-tooltip-rep" picking-mode="Ignore" class="am-tooltip-rep" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="am-tooltip-deadline" picking-mode="Ignore" class="am-tooltip-deadline" style="display: none;">
-                <ui:Label name="am-tooltip-deadline-text" picking-mode="Ignore" class="am-tooltip-deadline-text" />
+                <ui:Label name="am-tooltip-deadline-text" picking-mode="Ignore" class="am-tooltip-deadline-text" style="font-size: 10px;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

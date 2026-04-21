@@ -20,7 +20,7 @@
         <ui:VisualElement name="nf-list" class="nf-list">
             <ui:VisualElement name="nf-row-0" class="nf-row" style="display: none; visibility: visible; overflow: visible;">
                 <ui:VisualElement name="nf-row-0-iconbox" class="nf-iconbox nf-row-iconbox" style="display: none;">
-                    <ui:Label name="nf-row-0-icon" text="!" class="nf-row-icon" style="-unity-text-align: middle-left; white-space: normal; justify-content: flex-start; align-items: stretch; margin-right: -6px;" />
+                    <ui:Label name="nf-row-0-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-0-text" class="nf-row-text" style="display: none;">
                     <ui:Label name="nf-row-0-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
@@ -41,7 +41,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="nf-row-1" class="nf-row">
                 <ui:VisualElement name="nf-row-1-iconbox" class="nf-iconbox nf-row-iconbox">
-                    <ui:Label name="nf-row-1-icon" text="!" class="nf-row-icon" style="margin-right: -6px; -unity-text-align: middle-left;" />
+                    <ui:Label name="nf-row-1-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-1-text" class="nf-row-text">
                     <ui:Label name="nf-row-1-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
@@ -62,7 +62,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="nf-row-2" class="nf-row">
                 <ui:VisualElement name="nf-row-2-iconbox" class="nf-iconbox nf-row-iconbox">
-                    <ui:Label name="nf-row-2-icon" text="!" class="nf-row-icon" style="margin-right: -6px; -unity-text-align: middle-left;" />
+                    <ui:Label name="nf-row-2-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-2-text" class="nf-row-text">
                     <ui:Label name="nf-row-2-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
@@ -83,7 +83,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="nf-row-3" class="nf-row">
                 <ui:VisualElement name="nf-row-3-iconbox" class="nf-iconbox nf-row-iconbox">
-                    <ui:Label name="nf-row-3-icon" text="!" class="nf-row-icon" style="margin-right: -6px; -unity-text-align: middle-left;" />
+                    <ui:Label name="nf-row-3-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-3-text" class="nf-row-text">
                     <ui:Label name="nf-row-3-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />
@@ -104,7 +104,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="nf-row-4" class="nf-row">
                 <ui:VisualElement name="nf-row-4-iconbox" class="nf-iconbox nf-row-iconbox">
-                    <ui:Label name="nf-row-4-icon" text="!" class="nf-row-icon" style="margin-right: -6px; -unity-text-align: middle-left;" />
+                    <ui:Label name="nf-row-4-icon" text="!" class="nf-row-icon" />
                 </ui:VisualElement>
                 <ui:VisualElement name="nf-row-4-text" class="nf-row-text">
                     <ui:Label name="nf-row-4-code" text="CODE-000" class="nf-row-code" style="top: -4px;" />

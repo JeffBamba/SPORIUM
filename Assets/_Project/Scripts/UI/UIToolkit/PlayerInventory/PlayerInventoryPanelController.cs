@@ -674,7 +674,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 if (IsOrganicDeterioratingType(typeId))
                 {
                     int days = Mathf.Max(0, Mathf.CeilToInt(firstItem.Quality));
-                    lines.Add($"SI DETERIORA IN: {Tv(days.ToString() + " giorni. Mettilo in Seed Storage per freezarlo")}");
+                    lines.Add($"SI DETERIORA IN: {Tv(days.ToString() + " giorni. Mettilo in Seed Storage o Dispensa Refrigerata per freezarlo")}");
                 }
             }
             return string.Join("\n", lines);
@@ -683,7 +683,12 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private static bool IsOrganicDeterioratingType(string typeId)
         {
             if (string.IsNullOrWhiteSpace(typeId)) return false;
-            if (typeId == Items.SporeGeneric || typeId == Items.WholePlant) return true;
+            if (typeId == Items.SporeGeneric
+                || typeId == Items.WholePlant
+                || typeId == Items.FoodVegetable
+                || typeId == Items.FoodFungus
+                || typeId == Items.FoodMeat)
+                return true;
             return PlantDatabase.Instance != null && PlantDatabase.Instance.IsRegisteredSeedTypeId(typeId);
         }
 

@@ -14,7 +14,10 @@ namespace _Project.Scripts.Core
         private static readonly List<string> k_itemsToDeterioration = new()
         {
             Items.SporeGeneric,
-            Items.WholePlant
+            Items.WholePlant,
+            Items.FoodVegetable,
+            Items.FoodFungus,
+            Items.FoodMeat
         };
         
         public DeteriorationSystem(GameManager gameManager)
@@ -51,7 +54,8 @@ namespace _Project.Scripts.Core
                 if (item.Quality > 0)
                     continue;
 
-                _inventory.Add(Items.OrganicScrap001);
+                // Food in inventory now deteriorates into organic residue like other kitchen organics.
+                _inventory.Add(Items.OrganicResidue);
                 _inventory.Consume(item.TypeId);
             }
         }

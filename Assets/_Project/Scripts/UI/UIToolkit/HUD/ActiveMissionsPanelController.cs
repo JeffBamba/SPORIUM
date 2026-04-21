@@ -27,7 +27,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private const float TooltipHideDelayMs = 100f;
         private const float TooltipHorizontalOffsetPx = 12f;
         private const float CompletedLingerSeconds = 10f;
-        private const float CompletedFadeSeconds = 1.8f;
+        private const float CompletedFadeSeconds = 2.5f;
 
         private UIDocument _document;
         private VisualElement _root;
@@ -102,6 +102,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private enum MissionFaction
         {
+            Routine,
             Custodi,
             Mercanti,
             Cult
@@ -474,12 +475,12 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (_countLabel != null)
             {
-                _titleLabel.text = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
+                _titleLabel.text = _filterMode == MissionFilterMode.Completed ? "MISSIONI COMPLETATE" : "MISSIONI";
                 _countLabel.text = $"[{missionRows.Count}]";
             }
             else
             {
-                string title = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
+                string title = _filterMode == MissionFilterMode.Completed ? "MISSIONI COMPLETATE" : "MISSIONI";
                 _titleLabel.text = $"{title} [{missionRows.Count}]";
             }
 
@@ -487,7 +488,7 @@ namespace Sporae.UI.UIToolkit.HUD
             bool hasMissions = missionRows.Count > 0;
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _filterMode == MissionFilterMode.Completed ? "No completed missions_" : "No missions_";
+                _emptyLabel.text = _filterMode == MissionFilterMode.Completed ? "Nessuna missione completata_" : "Nessuna missione_";
                 _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
             }
 
@@ -599,7 +600,7 @@ namespace Sporae.UI.UIToolkit.HUD
             timerWrap.AddToClassList("active-mission-card-timer-wrap");
             var timerIcon = new Label("o");
             timerIcon.AddToClassList("active-mission-card-timer-icon");
-            string timerValue = mission.IsCompleted ? "DONE" : $"{Mathf.Max(0, daysLeft)}d";
+            string timerValue = mission.IsCompleted ? "FATTA" : $"{Mathf.Max(0, daysLeft)}g";
             var timerText = new Label(timerValue);
             timerText.AddToClassList("active-mission-card-timer");
             if (!mission.IsCompleted && daysLeft <= 2)
@@ -700,7 +701,7 @@ namespace Sporae.UI.UIToolkit.HUD
             _tooltipTitle.text = GetMissionTitle(mission);
             _tooltipFaction.text = GetFactionName(meta.Faction);
             _tooltipObjective.text = string.IsNullOrWhiteSpace(mission.Config.Description)
-                ? "No detailed description."
+                ? "Nessuna descrizione dettagliata."
                 : mission.Config.Description.Trim();
             _tooltipTaskSummary.text = $"-> {GetPrimaryObjectiveLine(mission)}";
             _tooltipReward.text = BuildRewardLine(mission.Config);
@@ -713,7 +714,7 @@ namespace Sporae.UI.UIToolkit.HUD
             int daysLeft = Mathf.Max(0, GetDaysRemaining(meta));
             bool showDeadline = status != MissionVisualStatus.Completed && daysLeft <= 2;
             _tooltipDeadline.style.display = showDeadline ? DisplayStyle.Flex : DisplayStyle.None;
-            _tooltipDeadlineText.text = $"EXPIRES IN {daysLeft} DAYS";
+            _tooltipDeadlineText.text = $"SCADE TRA {daysLeft} GIORNI";
 
             StopTooltipWarningPulse();
             if (showDeadline)
@@ -783,14 +784,14 @@ namespace Sporae.UI.UIToolkit.HUD
         private static string GetMissionTitle(MissionChecker mission)
         {
             if (mission?.Config == null || string.IsNullOrWhiteSpace(mission.Config.Title))
-                return "Untitled mission";
+                return "Missione senza titolo";
             return mission.Config.Title.Trim();
         }
 
         private static string GetPrimaryObjectiveLine(MissionChecker mission)
         {
             if (mission?.Config == null || mission.Config.Goals == null)
-                return "No objective";
+                return "Nessun obiettivo";
 
             foreach (var goal in mission.Config.Goals)
             {
@@ -805,7 +806,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
-            return "No objective";
+            return "Nessun obiettivo";
         }
 
         private static string BuildRewardLine(MissionConfig cfg)
@@ -830,7 +831,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (!string.IsNullOrEmpty(item))
                 return item;
 
-            return "No reward data";
+            return "Nessuna ricompensa";
         }
 
         private static string BuildRepLine(MissionConfig cfg)
@@ -848,6 +849,9 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private MissionFaction GuessFaction(MissionConfig cfg)
         {
+            if (cfg != null && (WardrobeMission.IsDemoWardrobeConfig(cfg) || DemoBreakfastMission.IsDemoBreakfastConfig(cfg)))
+                return MissionFaction.Routine;
+
             string key = $"{cfg?.Title} {cfg?.Description}".ToLowerInvariant();
             if (key.Contains("merc") || key.Contains("cry") || key.Contains("trade"))
                 return MissionFaction.Mercanti;
@@ -930,6 +934,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             return faction switch
             {
+                MissionFaction.Routine => "am-faction-routine",
                 MissionFaction.Mercanti => "am-faction-mercanti",
                 MissionFaction.Cult => "am-faction-cult",
                 _ => "am-faction-custodi"
@@ -940,6 +945,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             return faction switch
             {
+                MissionFaction.Routine => "★",
                 MissionFaction.Mercanti => "\uD83D\uDCB0",
                 MissionFaction.Cult => "\uD83D\uDD25",
                 _ => "\uD83C\uDF3F"
@@ -950,6 +956,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             return faction switch
             {
+                MissionFaction.Routine => "Routine",
                 MissionFaction.Mercanti => "Mercanti",
                 MissionFaction.Cult => "Cult",
                 _ => "Custodi"
@@ -976,19 +983,26 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void StartEmptyPulse()
         {
-            if (_emptyPulseRoutine != null || _emptyLabel == null)
+            if (_emptyLabel == null)
                 return;
-            _emptyPulseRoutine = StartCoroutine(EmptyPulseRoutine());
+            if (_emptyPulseRoutine != null)
+            {
+                StopCoroutine(_emptyPulseRoutine);
+                _emptyPulseRoutine = null;
+            }
+            // Nessun tint runtime: rispetta il colore impostato in USS/UI Builder.
+            _emptyLabel.style.opacity = 1f;
         }
 
         private void StopEmptyPulse()
         {
-            if (_emptyPulseRoutine == null)
-                return;
-            StopCoroutine(_emptyPulseRoutine);
-            _emptyPulseRoutine = null;
+            if (_emptyPulseRoutine != null)
+            {
+                StopCoroutine(_emptyPulseRoutine);
+                _emptyPulseRoutine = null;
+            }
             if (_emptyLabel != null)
-                _emptyLabel.style.opacity = 0.4f;
+                _emptyLabel.style.opacity = 1f;
         }
 
         private IEnumerator EmptyPulseRoutine()

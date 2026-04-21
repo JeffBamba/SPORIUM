@@ -2756,19 +2756,6 @@
       [Component] EdgeCollider2D
 - ROOM_Kitchen
   [Component] Transform
-  - WalkAreaPerspective (1)
-    [Component] Transform
-    [Component] PerspectiveWalkArea2D
-    [Component] BoxCollider2D
-    [Component] RoomAreaTag
-    - NearLeft
-      [Component] Transform
-    - NearRight
-      [Component] Transform
-    - FarLeft
-      [Component] Transform
-    - FarRight
-      [Component] Transform
   - RoomZone_Kitchen
     [Component] Transform
     [Component] BoxCollider2D
@@ -2784,12 +2771,6 @@
     - WALL_railing_esterno
       [Component] Transform
       [Component] EdgeCollider2D
-    - WALL_Left Interno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right Interno
-      [Component] Transform
-      [Component] EdgeCollider2D
     - BLK_Bed
       [Component] Transform
       [Component] PolygonCollider2D
@@ -2802,11 +2783,29 @@
     [Component] Interactable
     [Component] FoodSynthMachine
     [Component] BoxCollider2D
+  - DispensaRefrigerata
+    [Component] Transform
+    [Component] Interactable
+    [Component] FoodSynthMachine
+    [Component] BoxCollider2D
   - KitchenCondensationCollectPoint
     [Component] Transform
     [Component] BoxCollider2D
     [Component] Interactable
     [Component] KitchenCondensationCollectPoint
+  - WalkAreaPerspective_cucina
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    [Component] RoomAreaTag
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
 - ROOM_Bed
   [Component] Transform
   - BlackMarket
@@ -2876,6 +2875,19 @@
     [Component] BoxCollider2D
     [Component] Interactable
     [Component] WardrobeStation
+  - WalkAreaPerspective_Bed
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    [Component] RoomAreaTag
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
 - GameManager
   [Component] Transform
   [Component] GameManager

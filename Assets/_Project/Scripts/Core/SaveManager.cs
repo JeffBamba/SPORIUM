@@ -614,13 +614,16 @@ namespace Sporae.Core
         private FoodRoomSaveData SerializeFoodRoom(FoodRoomSystem foodRoom)
         {
             if (foodRoom == null) return null;
+            foodRoom.ExportPantryState(out bool pantryIsOn, out var pantryItems);
             var data = new FoodRoomSaveData
             {
                 slots = new List<FoodRoomSlotSaveData>(),
                 waterRawInput = foodRoom.WaterSlot.RawWaterInput,
                 waterPotableOutput = foodRoom.WaterSlot.PotableWaterOutput,
                 waterCurrentProgress = foodRoom.WaterSlot.CurrentUnitProgress,
-                waterIsActive = foodRoom.WaterSlot.IsActive
+                waterIsActive = foodRoom.WaterSlot.IsActive,
+                pantryIsOn = pantryIsOn,
+                pantryItems = new List<FoodRoomPantryItemSaveData>()
             };
             foreach (var slot in foodRoom.ProductionSlots)
             {
@@ -634,6 +637,17 @@ namespace Sporae.Core
                     state = (int)slot.State
                 });
             }
+            if (pantryItems != null)
+            {
+                foreach (var p in pantryItems)
+                {
+                    data.pantryItems.Add(new FoodRoomPantryItemSaveData
+                    {
+                        type = p.typeInt,
+                        quality = p.quality
+                    });
+                }
+            }
             return data;
         }
 
@@ -641,6 +655,7 @@ namespace Sporae.Core
         {
             if (foodRoom == null || data == null) return;
             var slots = new List<(int typeInt, int daysRemaining, int startDay, bool hasStemCell, string stemCellTypeId, int stateInt)>();
+            var pantryItems = new List<(int typeInt, float quality)>();
             if (data.slots != null)
             {
                 foreach (var s in data.slots)
@@ -648,7 +663,21 @@ namespace Sporae.Core
                     slots.Add((s.type, s.daysRemaining, s.startDay, s.hasStemCell, s.stemCellTypeId ?? "", s.state));
                 }
             }
-            foodRoom.RestoreState(slots, data.waterRawInput, data.waterPotableOutput, data.waterCurrentProgress, data.waterIsActive);
+            if (data.pantryItems != null)
+            {
+                foreach (var p in data.pantryItems)
+                {
+                    pantryItems.Add((p.type, p.quality));
+                }
+            }
+            foodRoom.RestoreState(
+                slots,
+                data.waterRawInput,
+                data.waterPotableOutput,
+                data.waterCurrentProgress,
+                data.waterIsActive,
+                data.pantryIsOn,
+                pantryItems);
         }
 
         /// <summary>
@@ -1052,6 +1081,8 @@ namespace Sporae.Core
             public int waterPotableOutput;
             public float waterCurrentProgress;
             public bool waterIsActive;
+            public bool pantryIsOn = true;
+            public List<FoodRoomPantryItemSaveData> pantryItems;
         }
 
         [Serializable]
@@ -1063,6 +1094,13 @@ namespace Sporae.Core
             public bool hasStemCell;
             public string stemCellTypeId;
             public int state;
+        }
+
+        [Serializable]
+        private class FoodRoomPantryItemSaveData
+        {
+            public int type;
+            public float quality;
         }
         
         [Serializable]

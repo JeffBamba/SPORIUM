@@ -20,9 +20,9 @@ MonoBehaviour:
   Beat1WakeSentenceAdvance: 0
   Beat1MissionHighlightWords:
   - apri l'armadio e vestiti
-  Beat2KitchenLine: "Questa \xE8 la Cucina: qui trasformi scorte e acqua potabile in energia
-    per affrontare la giornata.\nApri l'Inventario, mangia un item e poi bevi un po'
-    di acqua."
+  Beat2KitchenLine: "Questa \xE8 la Cucina: qui trasformi scorte e acqua potabile
+    in energia per affrontare la giornata.\nHai poca energia e sei un p\xF2 disidratato.
+    Apri l'Inventario, mangia un item e poi bevi un po' di acqua."
   Beat2KitchenRegister: 0
   Beat2KitchenSentenceAdvance: 0
   Beat2MissionHighlightWords:
