@@ -26,6 +26,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private const float TooltipShowDelayMs = 200f;
         private const float TooltipHideDelayMs = 100f;
         private const float TooltipHorizontalOffsetPx = 12f;
+        private const float CompletedLingerSeconds = 10f;
+        private const float CompletedFadeSeconds = 1.8f;
 
         private UIDocument _document;
         private VisualElement _root;
@@ -66,8 +68,23 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private readonly Dictionary<MissionChecker, MissionMeta> _missionMeta = new Dictionary<MissionChecker, MissionMeta>();
         private readonly List<MissionChecker> _completedMissions = new List<MissionChecker>();
+        private readonly Dictionary<MissionChecker, float> _activeCompletedLingerUntil = new Dictionary<MissionChecker, float>();
+        private readonly Dictionary<MissionChecker, Coroutine> _completedLingerCoroutines = new Dictionary<MissionChecker, Coroutine>();
+        private readonly HashSet<MissionChecker> _completedProgressAnimationPlayed = new HashSet<MissionChecker>();
         private Coroutine _emptyPulseRoutine;
         private Coroutine _tooltipWarningPulseRoutine;
+
+        private readonly struct MissionCardRow
+        {
+            public MissionCardRow(MissionChecker mission, bool isLingeredCompletion)
+            {
+                Mission = mission;
+                IsLingeredCompletion = isLingeredCompletion;
+            }
+
+            public MissionChecker Mission { get; }
+            public bool IsLingeredCompletion { get; }
+        }
 
         private enum MissionFilterMode
         {
@@ -117,6 +134,9 @@ namespace Sporae.UI.UIToolkit.HUD
                 _missionManager.OnMissionComplete += HandleMissionComplete;
                 _missionManager.OnMissionAdded += HandleMissionAdded;
             }
+
+            DemoBreakfastMission.ProgressChanged += OnDemoBreakfastProgressChanged;
+            WardrobeMission.ProgressChanged += OnWardrobeMissionProgressChanged;
 
             ServiceContainer.Instance?.Register(this);
         }
@@ -176,6 +196,9 @@ namespace Sporae.UI.UIToolkit.HUD
                 _missionManager.OnMissionAdded -= HandleMissionAdded;
             }
 
+            DemoBreakfastMission.ProgressChanged -= OnDemoBreakfastProgressChanged;
+            WardrobeMission.ProgressChanged -= OnWardrobeMissionProgressChanged;
+
             if (_filterActiveButton != null)
                 _filterActiveButton.UnregisterCallback<ClickEvent>(HandleFilterActiveClicked);
             if (_filterCompletedButton != null)
@@ -183,7 +206,23 @@ namespace Sporae.UI.UIToolkit.HUD
 
             StopEmptyPulse();
             StopTooltipWarningPulse();
+            foreach (var kv in _completedLingerCoroutines.ToList())
+            {
+                if (kv.Value != null)
+                    StopCoroutine(kv.Value);
+            }
+            _completedLingerCoroutines.Clear();
             CancelTooltipSchedules();
+        }
+
+        private void OnDemoBreakfastProgressChanged()
+        {
+            HandleMissionsChanged();
+        }
+
+        private void OnWardrobeMissionProgressChanged()
+        {
+            HandleMissionsChanged();
         }
 
         private void HandleMissionAdded(MissionChecker mission)
@@ -218,6 +257,9 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (!_completedMissions.Contains(mission))
                 _completedMissions.Add(mission);
+            _activeCompletedLingerUntil[mission] = Time.unscaledTime + CompletedLingerSeconds;
+            _completedProgressAnimationPlayed.Remove(mission);
+            StartCompletedLingerSequence(mission);
 
             string title = GetMissionTitle(mission);
 
@@ -252,8 +294,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 vo.ShowLine(line, VoRegister.RegisterB, null, null, false, presentation);
             }
 
-            if (_filterMode == MissionFilterMode.Completed)
-                HandleMissionsChanged();
+            HandleMissionsChanged();
         }
 
         private void BuildDocument()
@@ -402,6 +443,8 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_root == null || _list == null || _titleLabel == null)
                 return;
 
+            PruneExpiredCompletedLinger();
+
             var activeMissions = _missionManager?.CurrentMissions
                 .Where(m => m != null && m.Config != null)
                 .ToList() ?? new List<MissionChecker>();
@@ -421,9 +464,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
-            var missions = _filterMode == MissionFilterMode.Completed
-                ? completedMissions
-                : activeMissions;
+            var missionRows = BuildRowsForFilter(activeMissions, completedMissions);
 
             var allKnownMissions = activeMissions
                 .Concat(completedMissions)
@@ -434,16 +475,16 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_countLabel != null)
             {
                 _titleLabel.text = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
-                _countLabel.text = $"[{missions.Count}]";
+                _countLabel.text = $"[{missionRows.Count}]";
             }
             else
             {
                 string title = _filterMode == MissionFilterMode.Completed ? "MISSIONS DONE" : "MISSIONS";
-                _titleLabel.text = $"{title} [{missions.Count}]";
+                _titleLabel.text = $"{title} [{missionRows.Count}]";
             }
 
-            RebuildList(missions);
-            bool hasMissions = missions.Count > 0;
+            RebuildList(missionRows);
+            bool hasMissions = missionRows.Count > 0;
             if (_emptyLabel != null)
             {
                 _emptyLabel.text = _filterMode == MissionFilterMode.Completed ? "No completed missions_" : "No missions_";
@@ -465,6 +506,8 @@ namespace Sporae.UI.UIToolkit.HUD
             var toRemove = _missionMeta.Keys.Where(k => !liveSet.Contains(k)).ToList();
             foreach (var k in toRemove)
                 _missionMeta.Remove(k);
+            foreach (var k in toRemove)
+                _completedProgressAnimationPlayed.Remove(k);
 
             int currentDay = Mathf.Max(1, _dayCycleSystem?.CurrentDay ?? 1);
             foreach (var mission in missions)
@@ -479,24 +522,54 @@ namespace Sporae.UI.UIToolkit.HUD
             }
         }
 
-        private void RebuildList(List<MissionChecker> missions)
+        private List<MissionCardRow> BuildRowsForFilter(List<MissionChecker> activeMissions, List<MissionChecker> completedMissions)
+        {
+            var rows = new List<MissionCardRow>();
+            if (_filterMode == MissionFilterMode.Completed)
+            {
+                foreach (var mission in completedMissions)
+                    rows.Add(new MissionCardRow(mission, false));
+                return rows;
+            }
+
+            var activeSet = new HashSet<MissionChecker>(activeMissions);
+            foreach (var mission in activeMissions)
+                rows.Add(new MissionCardRow(mission, false));
+
+            foreach (var mission in completedMissions)
+            {
+                if (mission == null || !mission.IsCompleted)
+                    continue;
+                if (activeSet.Contains(mission))
+                    continue;
+                if (!_activeCompletedLingerUntil.TryGetValue(mission, out var until))
+                    continue;
+                if (Time.unscaledTime >= until)
+                    continue;
+                rows.Add(new MissionCardRow(mission, true));
+            }
+            return rows;
+        }
+
+        private void RebuildList(List<MissionCardRow> rows)
         {
             _list.Clear();
 
-            foreach (var mission in missions)
+            foreach (var row in rows)
             {
+                var mission = row.Mission;
                 if (!_missionMeta.TryGetValue(mission, out var meta))
                     continue;
 
-                BuildMissionCard(mission, meta);
+                BuildMissionCard(mission, meta, row.IsLingeredCompletion);
             }
         }
 
-        private void BuildMissionCard(MissionChecker mission, MissionMeta meta)
+        private void BuildMissionCard(MissionChecker mission, MissionMeta meta, bool isLingeredCompletion)
         {
             int daysLeft = GetDaysRemaining(meta);
             var status = GetVisualStatus(meta, mission.IsCompleted);
-            float progress = GetProgress(meta, mission.IsCompleted);
+            float progress = GetProgress(mission, meta, mission.IsCompleted);
             string statusClass = GetStatusClass(status);
             string factionClass = GetFactionClass(meta.Faction);
 
@@ -504,11 +577,17 @@ namespace Sporae.UI.UIToolkit.HUD
             card.AddToClassList("active-mission-card");
             card.AddToClassList(statusClass);
             card.AddToClassList(factionClass);
+            if (isLingeredCompletion && _activeCompletedLingerUntil.TryGetValue(mission, out var lingerUntil))
+            {
+                float remain = lingerUntil - Time.unscaledTime;
+                if (remain <= CompletedFadeSeconds)
+                    card.AddToClassList("active-mission-card--fade-out");
+            }
 
             var topRow = new VisualElement();
             topRow.AddToClassList("active-mission-card-top");
 
-            var emoji = new Label(GetFactionEmoji(meta.Faction));
+            var emoji = new Label("★");
             emoji.AddToClassList("active-mission-card-emoji");
             topRow.Add(emoji);
 
@@ -545,7 +624,21 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _list.Add(card);
 
-            StartCoroutine(AnimateProgress(progressFill, progress));
+            bool shouldAnimateCompletedProgress = mission.IsCompleted &&
+                !_completedProgressAnimationPlayed.Contains(mission);
+            if (shouldAnimateCompletedProgress)
+            {
+                _completedProgressAnimationPlayed.Add(mission);
+                StartCoroutine(AnimateProgress(progressFill, progress));
+            }
+            else if (mission.IsCompleted)
+            {
+                progressFill.style.width = Length.Percent(progress * 100f);
+            }
+            else
+            {
+                StartCoroutine(AnimateProgress(progressFill, progress));
+            }
 
             card.RegisterCallback<PointerEnterEvent>(_ => QueueShowTooltip(card, mission, meta, status));
             card.RegisterCallback<PointerLeaveEvent>(_ => QueueHideTooltip());
@@ -640,6 +733,51 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_tooltip != null)
                 _tooltip.style.display = DisplayStyle.None;
             StopTooltipWarningPulse();
+        }
+
+        private void PruneExpiredCompletedLinger()
+        {
+            if (_activeCompletedLingerUntil.Count == 0)
+                return;
+
+            float now = Time.unscaledTime;
+            var expired = _activeCompletedLingerUntil
+                .Where(kv => now >= kv.Value)
+                .Select(kv => kv.Key)
+                .ToList();
+            foreach (var mission in expired)
+            {
+                _activeCompletedLingerUntil.Remove(mission);
+                if (_completedLingerCoroutines.TryGetValue(mission, out var co) && co != null)
+                    StopCoroutine(co);
+                _completedLingerCoroutines.Remove(mission);
+            }
+        }
+
+        private void StartCompletedLingerSequence(MissionChecker mission)
+        {
+            if (mission == null)
+                return;
+            if (_completedLingerCoroutines.TryGetValue(mission, out var running) && running != null)
+                StopCoroutine(running);
+            _completedLingerCoroutines[mission] = StartCoroutine(CompletedLingerSequence(mission));
+        }
+
+        private IEnumerator CompletedLingerSequence(MissionChecker mission)
+        {
+            float waitBeforeFade = Mathf.Max(0f, CompletedLingerSeconds - CompletedFadeSeconds);
+            if (waitBeforeFade > 0f)
+                yield return new WaitForSecondsRealtime(waitBeforeFade);
+
+            // Trigger singolo redraw per applicare la classe fade-out quando manca poco alla scadenza.
+            HandleMissionsChanged();
+
+            if (CompletedFadeSeconds > 0f)
+                yield return new WaitForSecondsRealtime(CompletedFadeSeconds);
+
+            _activeCompletedLingerUntil.Remove(mission);
+            _completedLingerCoroutines.Remove(mission);
+            HandleMissionsChanged();
         }
 
         private static string GetMissionTitle(MissionChecker mission)
@@ -754,10 +892,23 @@ namespace Sporae.UI.UIToolkit.HUD
             return MissionVisualStatus.Active;
         }
 
-        private float GetProgress(MissionMeta meta, bool isCompleted)
+        private float GetProgress(MissionChecker mission, MissionMeta meta, bool isCompleted)
         {
             if (isCompleted)
                 return 1f;
+
+            if (mission?.Config != null && DemoBreakfastMission.IsDemoBreakfastConfig(mission.Config))
+            {
+                float p = DemoBreakfastMission.GetObjectiveProgress01(mission.Config);
+                if (p >= 0f)
+                    return Mathf.Clamp01(p);
+            }
+            if (mission?.Config != null && WardrobeMission.IsDemoWardrobeConfig(mission.Config))
+            {
+                float p = WardrobeMission.GetObjectiveProgress01(mission.Config);
+                if (p >= 0f)
+                    return Mathf.Clamp01(p);
+            }
 
             int elapsed = GetElapsedDays(meta);
             float ratio = meta.PlannedDays <= 0 ? 0f : elapsed / (float)meta.PlannedDays;

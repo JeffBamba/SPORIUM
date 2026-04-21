@@ -209,6 +209,15 @@
 .active-mission-card-emoji {
     font-size: 15px;
     margin-right: 8px;
+    -unity-font-style: bold;
+    color: rgba(0, 255, 198, 0.95);
+}
+
+.active-mission-card--fade-out {
+    opacity: 0.05;
+    transition-property: opacity;
+    transition-duration: 1800ms;
+    transition-timing-function: ease-out;
 }
 
 .active-mission-card-title {

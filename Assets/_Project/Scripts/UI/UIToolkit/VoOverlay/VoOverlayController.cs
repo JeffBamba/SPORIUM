@@ -416,7 +416,8 @@ namespace _Project.UI.UIToolkit.VoOverlay
         private void RefreshCursorOnLabel()
         {
             if (_currentTypingLabel == null) return;
-            string cursor = _cursorVisible ? "<color=#FFFFFF>" + CursorChar + "</color>" : string.Empty;
+            string cursorColorHex = ColorUtility.ToHtmlStringRGB(_currentTypingLabel.resolvedStyle.color);
+            string cursor = _cursorVisible ? $"<color=#{cursorColorHex}>{CursorChar}</color>" : string.Empty;
             _currentTypingLabel.text = ApplyHighlight(_currentTypingBasePlain, _currentTypingHighlightWords, _currentTypingHighlightHex) + cursor;
         }
 

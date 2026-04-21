@@ -279,19 +279,17 @@ namespace Sporae.DevTools
             
             // Trova severità più alta tra toast attivi
             int maxSeverity = _activeToasts.Max(t => t.Severity);
-            var highestSeverityType = _activeToasts
-                .First(t => t.Severity == maxSeverity)
-                .Type;
-            
-            // Mappa severità a colore palette
-            Color32 headerColor = maxSeverity switch
-            {
-                0 or 1 => ToastNotificationConfig.COLOR_INFO,      // Success/Info → Verde LED
-                2 => ToastNotificationConfig.COLOR_WARNING,        // Warning → Giallo
-                3 or 4 => ToastNotificationConfig.COLOR_DANGER,    // Error/Critical → Rosso
-                _ => ToastNotificationConfig.COLOR_BLUE_NEUTRAL    // Default → Blu neutro
-            };
-            
+
+            Color32 headerColor;
+            if (maxSeverity >= 3)
+                headerColor = ToastNotificationConfig.COLOR_DANGER;
+            else if (maxSeverity == 2)
+                headerColor = ToastNotificationConfig.COLOR_WARNING;
+            else if (_activeToasts.Exists(t => t.Type == ToastNotificationType.Mission))
+                headerColor = ToastNotificationConfig.COLOR_MISSION;
+            else
+                headerColor = ToastNotificationConfig.COLOR_INFO;
+
             _header.UpdateColor(headerColor);
             _header.UpdateBadge(_activeToasts.Count);
         }

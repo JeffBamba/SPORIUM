@@ -614,7 +614,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                     var iconBox = new VisualElement { name = "ph-modifier-icon", style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f) } };
-                    var nameLabel = new Label { text = "Nessun modificatore attivo", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
+                    var nameLabel = new Label { text = "Nessun modificatore attivo", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
                     row.Add(iconBox);
                     row.Add(nameLabel);
                     _phTooltipModifiersList.Add(row);
@@ -699,7 +699,7 @@ namespace Sporae.UI.UIToolkit.HUD
                     {
                         var emptyRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                         var emptyIcon = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.1f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.3f) } };
-                        var emptyLabel = new Label { text = "Nessun slot cryo attivo", enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 10 } };
+                        var emptyLabel = new Label { text = "Nessun slot cryo attivo", enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
                         emptyRow.Add(emptyIcon);
                         emptyRow.Add(emptyLabel);
                         _phTooltipPassiveList.Add(emptyRow);
@@ -842,7 +842,7 @@ namespace Sporae.UI.UIToolkit.HUD
             nameLabel.style.flexGrow = 1;
             var valueLabel = new Label { text = powerLabel, enableRichText = false };
             valueLabel.style.color = new Color(0.31f, 0.78f, 0.86f);
-            valueLabel.style.fontSize = 10;
+            valueLabel.style.fontSize = 11;
             row.Add(iconBox);
             row.Add(nameLabel);
             row.Add(valueLabel);
@@ -1683,8 +1683,8 @@ namespace Sporae.UI.UIToolkit.HUD
             public const float Title = 13f;
             public const float Caption = 12f;
             public const float Level = 12f;
-            public const float Body = 10f;
-            public const float Tip = 10f;
+            public const float Body = 11f;
+            public const float Tip = 11f;
             public const float Button = 11f;
         }
 
@@ -1970,7 +1970,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             var label = new Label($"{GetSourceIcon(entry.Source)}  {entry.Label}");
             label.style.color = new StyleColor(new Color(0.78f, 0.80f, 0.78f, 1f));
-            label.style.fontSize = 11f;
+            label.style.fontSize = 12f;
             label.enableRichText = true;
             row.Add(label);
 
@@ -1978,7 +1978,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 var detail = new Label($"— {entry.Detail}");
                 detail.style.color = new StyleColor(new Color(0.55f, 0.58f, 0.55f, 1f));
-                detail.style.fontSize = 10f;
+                detail.style.fontSize = 11f;
                 detail.style.marginLeft = 6f;
                 detail.enableRichText = true;
                 row.Add(detail);
@@ -1988,7 +1988,7 @@ namespace Sporae.UI.UIToolkit.HUD
             value.style.marginLeft = StyleKeyword.Auto;
             value.style.marginRight = 8f;
             value.style.color = new StyleColor(entry.Amount >= 0 ? _greenStable : _redCritical);
-            value.style.fontSize = 11f;
+            value.style.fontSize = 12f;
             value.style.unityFontStyleAndWeight = FontStyle.Bold;
             row.Add(value);
 

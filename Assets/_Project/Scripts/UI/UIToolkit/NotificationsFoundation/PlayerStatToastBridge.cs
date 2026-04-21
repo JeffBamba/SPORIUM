@@ -51,7 +51,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 _actionSystem.OnDailyCapChanged += OnDailyCapChanged;
 
             if (_hydration != null)
-                _hydration.OnHydrationChanged += OnHydrationChanged;
+                _hydration.OnHydrationChangedDetailed += OnHydrationChangedDetailed;
 
             _subscribed = true;
         }
@@ -61,7 +61,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (_actionSystem != null)
                 _actionSystem.OnDailyCapChanged -= OnDailyCapChanged;
             if (_hydration != null)
-                _hydration.OnHydrationChanged -= OnHydrationChanged;
+                _hydration.OnHydrationChangedDetailed -= OnHydrationChangedDetailed;
         }
 
         private bool CanEmit => _subscribed && Time.realtimeSinceStartup >= _toastReadyRealtime;
@@ -79,7 +79,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             PostFoundationOrFallback("PLY-ACT-CAP-CHG", payload, fallback, ToastNotificationType.Info);
         }
 
-        private void OnHydrationChanged(float currentPercent, float _)
+        private void OnHydrationChangedDetailed(float currentPercent, float _, HydrationChangeSource source)
         {
             if (!CanEmit)
             {
@@ -87,9 +87,9 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 return;
             }
 
-            // Toast guadagno idratazione (bere/mangiare)
+            // Toast guadagno idratazione: solo quando si beve (acqua). Cibo/frutta aumentano H ma non questo messaggio.
             float delta = currentPercent - _lastHydrationPercent;
-            if (delta >= 0.5f)
+            if (delta >= 0.5f && source == HydrationChangeSource.Water)
             {
                 int deltaInt   = Mathf.RoundToInt(delta);
                 int currentInt = Mathf.RoundToInt(currentPercent);

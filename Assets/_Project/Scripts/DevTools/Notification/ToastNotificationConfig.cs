@@ -67,13 +67,13 @@ namespace Sporae.DevTools
         /// </summary>
         public Color32 GetColor32(ToastNotificationType type)
         {
+            // Sempre cyan mission recap — non usare override da TypeSettings (asset spesso clonato da Info).
+            if (type == ToastNotificationType.Mission)
+                return COLOR_MISSION;
+
             var setting = TypeSettings?.FirstOrDefault(s => s.Type == type);
             if (setting != null)
                 return setting.Color;
-            
-            // Tipo mission ha colore dedicato
-            if (type == ToastNotificationType.Mission)
-                return COLOR_MISSION;
 
             // Fallback basato su severità
             int severity = type.GetSeverity();
@@ -99,6 +99,14 @@ namespace Sporae.DevTools
         /// </summary>
         public Sprite GetSeverityIcon(ToastNotificationType type)
         {
+            if (type == ToastNotificationType.Mission)
+            {
+                var missionSetting = TypeSettings?.FirstOrDefault(s => s.Type == type);
+                if (missionSetting != null && missionSetting.SeverityIcon != null)
+                    return missionSetting.SeverityIcon;
+                return InfoIcon;
+            }
+
             var setting = TypeSettings?.FirstOrDefault(s => s.Type == type);
             if (setting != null && setting.SeverityIcon != null)
                 return setting.SeverityIcon;

@@ -683,3 +683,52 @@
     white-space: normal;
     -unity-font-style: normal;
 }
+
+/* Mission (codici MIS-*) — cyan #00FFC6 come Active Missions / toast ShowMission */
+.nf-sev-mission {
+    --nf-color: rgb(0, 255, 198);
+    --nf-bg: rgba(6, 28, 32, 0.94);
+}
+
+.nf-header.nf-sev-mission {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-mission {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+    background-color: var(--nf-bg);
+}
+
+.nf-row.nf-sev-mission .nf-iconbox {
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}
+
+.nf-row.nf-sev-mission .nf-row-icon {
+    color: var(--nf-color);
+}
+
+.nf-row.nf-sev-mission .nf-row-code {
+    color: var(--nf-color);
+}
+
+.nf-header.nf-sev-mission .nf-header-icon,
+.nf-header.nf-sev-mission .nf-header-title,
+.nf-header.nf-sev-mission .nf-chevron,
+.nf-header.nf-sev-mission .nf-badge-text,
+.nf-header.nf-sev-mission .nf-badge,
+.nf-header.nf-sev-mission .nf-iconbox {
+    color: var(--nf-color);
+    border-left-color: var(--nf-color);
+    border-right-color: var(--nf-color);
+    border-top-color: var(--nf-color);
+    border-bottom-color: var(--nf-color);
+}

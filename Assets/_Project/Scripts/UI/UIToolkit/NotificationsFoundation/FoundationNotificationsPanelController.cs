@@ -148,8 +148,14 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (_chevron != null)
                 _chevron.style.display = badgeCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // Header severity
-            ApplySeverityClass(_headerButton, _service.GetHeaderSeverity());
+            // Header: danger/warning vincono; altrimenti se c’è almeno un toast codice MIS-* usa cyan mission recap.
+            var headerSev = _service.GetHeaderSeverity();
+            if ((int)headerSev >= (int)NotificationSeverity.Warning)
+                ApplySeverityClass(_headerButton, headerSev);
+            else if (AnyVisibleMissionCode())
+                ApplyMissionPanelClass(_headerButton);
+            else
+                ApplySeverityClass(_headerButton, headerSev);
 
             // Visible rows (max 5, danger pinned)
             var rows = _service.GetVisibleRows();
@@ -166,9 +172,31 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             }
         }
 
+        private bool AnyVisibleMissionCode()
+        {
+            if (_service == null) return false;
+            foreach (var e in _service.GetVisibleRows())
+            {
+                if (!string.IsNullOrEmpty(e.Code) && e.Code.StartsWith("MIS-", StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        private static void ApplyMissionPanelClass(VisualElement el)
+        {
+            if (el == null) return;
+            el.EnableInClassList("nf-sev-info", false);
+            el.EnableInClassList("nf-sev-success", false);
+            el.EnableInClassList("nf-sev-warning", false);
+            el.EnableInClassList("nf-sev-danger", false);
+            el.EnableInClassList("nf-sev-mission", true);
+        }
+
         private static void ApplySeverityClass(VisualElement el, NotificationSeverity severity)
         {
             if (el == null) return;
+            el.EnableInClassList("nf-sev-mission", false);
             el.EnableInClassList("nf-sev-info", severity == NotificationSeverity.Info);
             el.EnableInClassList("nf-sev-success", severity == NotificationSeverity.Success);
             el.EnableInClassList("nf-sev-warning", severity == NotificationSeverity.Warning);
@@ -312,12 +340,15 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     if (Code != null && Code.parent != null) Code.parent.style.display = DisplayStyle.Flex;
                     if (ItemLayout != null) ItemLayout.style.display = DisplayStyle.None;
 
-                    ApplySeverityClass(Root, entry.Severity);
+                    if (IsMissionNotificationCode(entry.Code))
+                        ApplyMissionRowClass(Root);
+                    else
+                        ApplySeverityClass(Root, entry.Severity);
                     ApplyCodeClass(Root, entry.Code);
 
                     if (Code != null) Code.text = entry.Code ?? "N/A";
                     if (Msg != null) Msg.text = entry.Message ?? string.Empty;
-                    if (Icon != null) Icon.text = IconFor(entry.Severity);
+                    if (Icon != null) Icon.text = IconFor(entry.Severity, entry.Code);
                 }
 
                 var isNew = !HasCurrent || CurrentEntryId != entry.Id;
@@ -358,6 +389,19 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     ToastTooltip.style.display = DisplayStyle.None;
             }
             
+            private static bool IsMissionNotificationCode(string code) =>
+                !string.IsNullOrEmpty(code) && code.StartsWith("MIS-", StringComparison.Ordinal);
+
+            private static void ApplyMissionRowClass(VisualElement root)
+            {
+                if (root == null) return;
+                root.EnableInClassList("nf-sev-info", false);
+                root.EnableInClassList("nf-sev-success", false);
+                root.EnableInClassList("nf-sev-warning", false);
+                root.EnableInClassList("nf-sev-danger", false);
+                root.EnableInClassList("nf-sev-mission", true);
+            }
+
             private static void ApplyCodeClass(VisualElement el, string code)
             {
                 if (el == null) return;
@@ -365,8 +409,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 el.EnableInClassList("nf-code-vis", isVisitor);
             }
 
-            private static string IconFor(NotificationSeverity severity)
+            private static string IconFor(NotificationSeverity severity, string code)
             {
+                if (IsMissionNotificationCode(code))
+                    return "★";
                 return severity switch
                 {
                     NotificationSeverity.Info => "i",

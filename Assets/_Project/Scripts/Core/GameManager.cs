@@ -69,6 +69,7 @@ public class GameManager : MonoBehaviour
     public FoodRoomSystem FoodRoomSystem => _foodRoomSystem;
 
     public int DehydrationZeroDayStreak => _dehydrationZeroDayStreak;
+    public bool IsDemoTutorialDayActive => _demoTutorialDayActive;
 
     public int ConsecutiveDaysWithoutMeal => _consecutiveDaysWithoutMeal;
     public int StarvationDaysAtMinCapWithoutFood => _starvationDaysAtMinCapWithoutFood;
@@ -123,6 +124,22 @@ public class GameManager : MonoBehaviour
         _consecutiveDaysWithoutMeal = Mathf.Max(0, consecutiveDaysWithoutMeal);
         _starvationDaysAtMinCapWithoutFood = Mathf.Max(0, starvationDaysAtMinCap);
         _ateMealSincePreviousDawn = ateMealSincePreviousDawn;
+    }
+
+    /// <summary>
+    /// Ripristina lo stato tutorial demo dopo load.
+    /// Mantiene il flow: Giorno 1 demo = cap base 1 (boost su pasto), Giorno 2+ = comportamento full.
+    /// </summary>
+    public void SetDemoTutorialStateForLoad(bool demoSession, bool tutorialDayActive)
+    {
+        if (!demoSession)
+        {
+            _demoTutorialDayActive = false;
+            return;
+        }
+
+        _demoTutorialDayActive = tutorialDayActive;
+        _dailyActionsFromBreakfast = _demoTutorialDayActive ? 1 : 5;
     }
 
     /// <summary>Per UI colazione: quante azioni assegnare all’alba successiva (1–5).</summary>

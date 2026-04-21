@@ -9,6 +9,7 @@ using _Project.Systems.FoodRoom;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Components;
+using Sporae.UI.UIToolkit.PlayerInventory;
 
 namespace Sporae.Core
 {
@@ -163,11 +164,17 @@ namespace Sporae.Core
                         currentDay = 1,
                         currentCRY = 250,
                         actionsLeft = 4,
+                        maxActions = 5,
                         condensationAmount = 0f,
                         dehydrationZeroDayStreak = 0,
                         consecutiveDaysWithoutMeal = 0,
                         starvationDaysAtMinCapWithoutFood = 0,
-                        ateMealSincePreviousDawn = false
+                        ateMealSincePreviousDawn = false,
+                        isDemoSession = false,
+                        demoTutorialDayActive = false,
+                        demoBreakfastTrackingActive = false,
+                        demoBreakfastAteFood = false,
+                        demoBreakfastDrankWater = false
                     };
                 }
                 if (saveData.inventoryVersion <= 0)
@@ -333,13 +340,21 @@ namespace Sporae.Core
                     currentDay = dayCycleSystem?.CurrentDay ?? 1,
                     currentCRY = gameManager.CurrentCRY,
                     actionsLeft = gameManager.ActionsLeft,
+                    maxActions = gameManager.ActionSystem?.MaxActions ?? 5,
                     condensationAmount = gameManager.CondensationSystem?.CondensationAmount ?? 0f,
                     hydrationPercent = gameManager.PlayerHydrationSystem?.HydrationPercent ?? 100f,
                     dehydrationZeroDayStreak = gameManager.DehydrationZeroDayStreak,
                     consecutiveDaysWithoutMeal = gameManager.ConsecutiveDaysWithoutMeal,
                     starvationDaysAtMinCapWithoutFood = gameManager.StarvationDaysAtMinCapWithoutFood,
-                    ateMealSincePreviousDawn = gameManager.AteMealSincePreviousDawn
+                    ateMealSincePreviousDawn = gameManager.AteMealSincePreviousDawn,
+                    isDemoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true)?.IsDemo ?? false,
+                    demoTutorialDayActive = gameManager.IsDemoTutorialDayActive
                 };
+
+                DemoBreakfastMission.ExportTrackingState(
+                    out saveData.gameState.demoBreakfastTrackingActive,
+                    out saveData.gameState.demoBreakfastAteFood,
+                    out saveData.gameState.demoBreakfastDrankWater);
             }
 
             if (gameManager?.FoodRoomSystem != null)
@@ -440,8 +455,9 @@ namespace Sporae.Core
                 // Ripristina azioni usando ActionSystem
                 if (gameManager.ActionSystem != null)
                 {
-                    // Usa maxActions dal sistema attuale se non salvato
-                    int maxActions = gameManager.ActionSystem.MaxActions;
+                    int maxActions = saveData.gameState.maxActions > 0
+                        ? Mathf.Clamp(saveData.gameState.maxActions, 1, 5)
+                        : gameManager.ActionSystem.MaxActions;
                     gameManager.ActionSystem.RestoreState(saveData.gameState.actionsLeft, maxActions);
                 }
 
@@ -459,6 +475,18 @@ namespace Sporae.Core
                     saveData.gameState.consecutiveDaysWithoutMeal,
                     saveData.gameState.starvationDaysAtMinCapWithoutFood,
                     saveData.gameState.ateMealSincePreviousDawn);
+
+                bool inferredDemoFromMissions = saveData.missions?.entries != null &&
+                    saveData.missions.entries.Exists(e =>
+                        string.Equals(e.configName, DemoBreakfastMission.DemoBreakfastMissionConfigName, StringComparison.Ordinal));
+                var demoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
+                bool isDemoSession = saveData.gameState.isDemoSession || inferredDemoFromMissions || (demoSession?.IsDemo ?? false);
+                if (demoSession != null)
+                    demoSession.IsDemo = isDemoSession;
+                bool tutorialDayActive = saveData.gameState.demoTutorialDayActive;
+                if (!tutorialDayActive && isDemoSession && inferredDemoFromMissions && saveData.gameState.currentDay <= 1)
+                    tutorialDayActive = true;
+                gameManager.SetDemoTutorialStateForLoad(isDemoSession, tutorialDayActive);
             }
 
             if (gameManager?.FoodRoomSystem != null && saveData.foodRoomData != null)
@@ -531,6 +559,45 @@ namespace Sporae.Core
                     missionManager.RestoreFromSave(entries);
                 }
             }
+
+            // Ripristino tracking missione colazione demo dopo mission restore.
+            // Evita lo stato "bloccato" post-load (progress 0% fisso / no avanzamento su mangia-bevi).
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            var panel = ServiceContainer.Instance?.Get<PlayerInventoryPanelController>(suppressWarning: true);
+            if (gameManager?.PlayerInventory != null && panel != null)
+            {
+                bool hasDemoBreakfast = DemoBreakfastMission.HasActiveDemoBreakfastMission(mm);
+                if (hasDemoBreakfast)
+                {
+                    bool trackingActive = (saveData.gameState?.demoBreakfastTrackingActive ?? false)
+                        || (saveData.gameState?.demoBreakfastAteFood ?? false)
+                        || (saveData.gameState?.demoBreakfastDrankWater ?? false);
+                    if (!trackingActive)
+                        trackingActive = true;
+                    DemoBreakfastMission.RestoreTrackingState(
+                        gameManager.PlayerInventory,
+                        panel,
+                        trackingActive,
+                        saveData.gameState?.demoBreakfastAteFood ?? false,
+                        saveData.gameState?.demoBreakfastDrankWater ?? false);
+                }
+                else
+                {
+                    DemoBreakfastMission.RestoreTrackingState(
+                        gameManager.PlayerInventory,
+                        panel,
+                        false,
+                        false,
+                        false);
+                }
+            }
+
+            bool wardrobeCompleted = mm?.CompletedMissions != null &&
+                mm.CompletedMissions.Any(m =>
+                    m != null &&
+                    m.IsCompleted &&
+                    WardrobeMission.IsDemoWardrobeConfig(m.Config));
+            WardrobeMission.RestoreProgressState(wardrobeCompleted);
         }
         
         private void ApplyPlayerOutfitIndex(int savedIndex)
@@ -963,12 +1030,18 @@ namespace Sporae.Core
             public int currentDay;
             public int currentCRY;
             public int actionsLeft;
+            public int maxActions = 5;
             public float condensationAmount;
             public float hydrationPercent = 100f;
             public int dehydrationZeroDayStreak;
             public int consecutiveDaysWithoutMeal;
             public int starvationDaysAtMinCapWithoutFood;
             public bool ateMealSincePreviousDawn;
+            public bool isDemoSession;
+            public bool demoTutorialDayActive;
+            public bool demoBreakfastTrackingActive;
+            public bool demoBreakfastAteFood;
+            public bool demoBreakfastDrankWater;
         }
 
         [Serializable]

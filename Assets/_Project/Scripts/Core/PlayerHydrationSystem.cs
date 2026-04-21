@@ -12,6 +12,17 @@ namespace _Project
         WellHydrated  // 76-100%
     }
 
+    /// <summary>Origine dell'ultimo aggiornamento idratazione (toast/UI: bere vs cibo).</summary>
+    public enum HydrationChangeSource
+    {
+        Water,
+        Food,
+        Fruit,
+        PassiveDaily,
+        ActiveActions,
+        SetExplicit
+    }
+
     /// <summary>
     /// Idratazione del player: influenza la <b>velocità di movimento</b> (piena sopra il 50% H; attenuata 26–50%;
     /// severa 0–25%). Le <b>azioni giornaliere</b> non derivano dall’idratazione (vedi colazione / GameManager).
@@ -34,9 +45,13 @@ namespace _Project
 
         public event Action<float, float> OnHydrationChanged;
 
-        private void NotifyChanged()
+        /// <summary>Incluso <see cref="HydrationChangeSource"/> — usare per logica che dipende da bere vs mangiare.</summary>
+        public event Action<float, float, HydrationChangeSource> OnHydrationChangedDetailed;
+
+        private void NotifyChanged(HydrationChangeSource source)
         {
             OnHydrationChanged?.Invoke(_hydrationPercent, MaxHydration);
+            OnHydrationChangedDetailed?.Invoke(_hydrationPercent, MaxHydration, source);
         }
 
         private static HydrationState GetStateFor(float percent)
@@ -50,28 +65,28 @@ namespace _Project
         public void ConsumePassive()
         {
             _hydrationPercent = Mathf.Max(0f, _hydrationPercent - PassiveConsumptionPerDay);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.PassiveDaily);
         }
 
         public void ConsumeActive(int actionCount)
         {
             float consumed = actionCount * ActiveConsumptionPerAction;
             _hydrationPercent = Mathf.Max(0f, _hydrationPercent - consumed);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.ActiveActions);
         }
 
         public void RecoverFromWater(int amount, bool isPotable)
         {
             float recovery = amount * (isPotable ? RecoverWaterPotable : RecoverWaterRaw);
             _hydrationPercent = Mathf.Min(MaxHydration, _hydrationPercent + recovery);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.Water);
         }
 
         public void RecoverFromFood(int amount)
         {
             float recovery = amount * RecoverFood;
             _hydrationPercent = Mathf.Min(MaxHydration, _hydrationPercent + recovery);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.Food);
         }
 
         public void RecoverFromFruit(int amount, bool isPure)
@@ -79,7 +94,7 @@ namespace _Project
             float perUnit = isPure ? RecoverFruitPure : RecoverFruit;
             float recovery = amount * perUnit;
             _hydrationPercent = Mathf.Min(MaxHydration, _hydrationPercent + recovery);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.Fruit);
         }
 
         /// <summary>
@@ -125,7 +140,7 @@ namespace _Project
         public void SetHydrationPercent(float percent)
         {
             _hydrationPercent = Mathf.Clamp(percent, 0f, MaxHydration);
-            NotifyChanged();
+            NotifyChanged(HydrationChangeSource.SetExplicit);
         }
     }
 }
