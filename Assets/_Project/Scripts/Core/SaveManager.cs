@@ -598,6 +598,13 @@ namespace Sporae.Core
                     m.IsCompleted &&
                     WardrobeMission.IsDemoWardrobeConfig(m.Config));
             WardrobeMission.RestoreProgressState(wardrobeCompleted);
+
+            bool seedStorageCompleted = mm?.CompletedMissions != null &&
+                mm.CompletedMissions.Any(m =>
+                    m != null &&
+                    m.IsCompleted &&
+                    DemoSeedStorageMission.IsDemoSeedStorageConfig(m.Config));
+            DemoSeedStorageMission.RestoreProgressState(seedStorageCompleted);
         }
         
         private void ApplyPlayerOutfitIndex(int savedIndex)

@@ -40,6 +40,47 @@ namespace _Project.Sporae.Core
         [Tooltip("Parole o frasi da evidenziare nel VO beat 2. Esempio: \"Apri l'Inventario\", \"mangia\", \"bevi\".")]
         public List<string> Beat2MissionHighlightWords = new List<string>();
 
+        [Header("Beat 2 — VO dopo missione «Fai Colazione» (due blocchi: click tra blocco 1 e 2)")]
+        [TextArea(3, 8)]
+        [Tooltip("Primo blocco VO post-colazione. Vuoto = default codice.")]
+        public string Beat2PostBreakfastPart1Line;
+
+        [TextArea(3, 8)]
+        [Tooltip("Secondo blocco VO post-colazione (dopo click «continua» sul primo). Vuoto = default codice.")]
+        public string Beat2PostBreakfastPart2Line;
+
+        [Tooltip("Registro colore per i VO post-colazione.")]
+        public VoRegister Beat2PostBreakfastRegister = VoRegister.RegisterA;
+
+        [Tooltip("Modalità avanzamento frasi interne a ogni blocco (consigliato: blocco unico senza split frasi).")]
+        public VoSentenceAdvanceMode Beat2PostBreakfastSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
+
+        [Tooltip("Highlight blocco 1. Ordine allineato a Beat2PostBreakfastPart1HighlightColorHexes.")]
+        public List<string> Beat2PostBreakfastPart1HighlightWords = new List<string>();
+
+        [Tooltip("Un #RRGGBB per voce di Part1 (stesso numero di righe).")]
+        public List<string> Beat2PostBreakfastPart1HighlightColorHexes = new List<string>();
+
+        [Tooltip("Highlight blocco 2. Ordine allineato a Beat2PostBreakfastPart2HighlightColorHexes.")]
+        public List<string> Beat2PostBreakfastPart2HighlightWords = new List<string>();
+
+        [Tooltip("Un #RRGGBB per voce di Part2 (stesso numero di righe).")]
+        public List<string> Beat2PostBreakfastPart2HighlightColorHexes = new List<string>();
+
+        [Header("Beat 3 — Avvio Seed Storage (dopo VO post-colazione)")]
+        [TextArea(3, 12)]
+        [Tooltip("VO che lancia il beat 3 (direzioni verso Seed Storage). Vuoto = default codice.")]
+        public string Beat3SeedStorageIntroLine;
+
+        [Tooltip("Registro colore per il VO beat 3 intro.")]
+        public VoRegister Beat3SeedStorageIntroRegister = VoRegister.RegisterA;
+
+        [Tooltip("Modalità avanzamento frasi beat 3 intro.")]
+        public VoSentenceAdvanceMode Beat3SeedStorageIntroSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
+
+        [Tooltip("Opzionale: highlight nel VO beat 3 (es. «Seed Storage»).")]
+        public List<string> Beat3SeedStorageIntroHighlightWords = new List<string>();
+
         // ─── Colore highlight condiviso ─────────────────────────────────────
 
         [Header("Highlight — colore condiviso")]

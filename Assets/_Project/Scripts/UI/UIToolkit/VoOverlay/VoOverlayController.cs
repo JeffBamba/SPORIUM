@@ -32,7 +32,8 @@ namespace _Project.UI.UIToolkit.VoOverlay
             readSecondsPerChar: 0.042f,
             continueHintText: "Clicca o Spazio per continuare",
             highlightWords: null,
-            highlightColorHex: null);
+            highlightColorHex: null,
+            highlightColorHexes: null);
 
         public static VoLinePresentationOptions LegacySingleBlock => new VoLinePresentationOptions(
             useMultiSentenceWhenSplit: false,
@@ -41,7 +42,8 @@ namespace _Project.UI.UIToolkit.VoOverlay
             readSecondsPerChar: 0.042f,
             continueHintText: "Clicca o Spazio per continuare",
             highlightWords: null,
-            highlightColorHex: null);
+            highlightColorHex: null,
+            highlightColorHexes: null);
 
         public VoLinePresentationOptions(
             bool useMultiSentenceWhenSplit,
@@ -54,7 +56,8 @@ namespace _Project.UI.UIToolkit.VoOverlay
             bool forceContinueAtEnd = true,
             bool lockWorldInputWhileVisible = false,
             bool enableCameraFocus = false,
-            float cameraFocusOrthographicSize = 0f)
+            float cameraFocusOrthographicSize = 0f,
+            IReadOnlyList<string> highlightColorHexes = null)
         {
             UseMultiSentenceWhenSplit = useMultiSentenceWhenSplit;
             AdvanceMode = advanceMode;
@@ -65,6 +68,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
                 : continueHintText;
             HighlightWords = highlightWords;
             HighlightColorHex = string.IsNullOrWhiteSpace(highlightColorHex) ? null : highlightColorHex;
+            HighlightColorHexes = highlightColorHexes;
             ForceContinueAtEnd = forceContinueAtEnd;
             LockWorldInputWhileVisible = lockWorldInputWhileVisible;
             EnableCameraFocus = enableCameraFocus;
@@ -78,19 +82,28 @@ namespace _Project.UI.UIToolkit.VoOverlay
         public string ContinueHintText { get; }
         public IReadOnlyList<string> HighlightWords { get; }
         public string HighlightColorHex { get; }
+        /// <summary>
+        /// Opzionale: un colore esadecimale per voce di <see cref="HighlightWords"/> (stesso ordine e conteggio).
+        /// Se null o lunghezza diversa, si usa solo <see cref="HighlightColorHex"/> per tutte le frasi.
+        /// </summary>
+        public IReadOnlyList<string> HighlightColorHexes { get; }
         public bool ForceContinueAtEnd { get; }
         public bool LockWorldInputWhileVisible { get; }
         public bool EnableCameraFocus { get; }
         public float CameraFocusOrthographicSize { get; }
 
+        /// <summary>Blocco unico (nessun click tra frasi); un solo «continua» a fine blocco se <see cref="ForceContinueAtEnd"/>.</summary>
         public static VoLinePresentationOptions ForDemoBeat(VoSentenceAdvanceMode advanceMode) =>
-            new VoLinePresentationOptions(true, advanceMode, 0.55f, 0.042f,
+            new VoLinePresentationOptions(false, advanceMode, 0.55f, 0.042f,
                 "Clicca o Spazio per continuare", null, null);
 
         public static VoLinePresentationOptions ForDemoBeat(VoSentenceAdvanceMode advanceMode,
-            IReadOnlyList<string> highlightWords, string highlightColorHex) =>
-            new VoLinePresentationOptions(true, advanceMode, 0.55f, 0.042f,
-                "Clicca o Spazio per continuare", highlightWords, highlightColorHex);
+            IReadOnlyList<string> highlightWords, string highlightColorHex,
+            IReadOnlyList<string> highlightColorHexes = null) =>
+            new VoLinePresentationOptions(false, advanceMode, 0.55f, 0.042f,
+                "Clicca o Spazio per continuare", highlightWords, highlightColorHex,
+                forceContinueAtEnd: true, lockWorldInputWhileVisible: false, enableCameraFocus: false,
+                cameraFocusOrthographicSize: 0f, highlightColorHexes: highlightColorHexes);
     }
 
     [DisallowMultipleComponent]
@@ -163,6 +176,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
         private string               _currentTypingBasePlain = string.Empty;
         private IReadOnlyList<string> _currentTypingHighlightWords;
         private string               _currentTypingHighlightHex;
+        private IReadOnlyList<string> _currentTypingHighlightHexes;
 
         private float _glitchStepTimer;
         private float _glitchOffX;
@@ -182,8 +196,14 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
         private string _lastPlainTypedText = string.Empty;
 
+        /// <summary>True mentre il testo si sta ancora mostrando col typewriter (carattere per carattere).</summary>
+        private bool _textRevealInProgress;
+
         public bool IsShowing { get; private set; }
         public bool IsTyping  => _typingRoutine != null;
+
+        /// <summary>Indica se il VO sta ancora rivelando caratteri (nessun «continua» valido finché è true).</summary>
+        public bool IsTextRevealInProgress => _textRevealInProgress;
 
         private struct FragmentGlitch
         {
@@ -381,12 +401,13 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
         // ─── Cursore lampeggiante ─────────────────────────────────────────────
 
-        private void StartCursorBlink(Label targetLabel, IReadOnlyList<string> highlightWords, string highlightHex)
+        private void StartCursorBlink(Label targetLabel, in VoLinePresentationOptions presentation)
         {
             StopCursorBlink();
             _currentTypingLabel          = targetLabel;
-            _currentTypingHighlightWords = highlightWords;
-            _currentTypingHighlightHex   = highlightHex;
+            _currentTypingHighlightWords = presentation.HighlightWords;
+            _currentTypingHighlightHex   = presentation.HighlightColorHex;
+            _currentTypingHighlightHexes = presentation.HighlightColorHexes;
             _currentTypingBasePlain      = string.Empty;
             _cursorVisible               = true;
             _cursorBlinkRoutine          = StartCoroutine(CursorBlinkRoutine());
@@ -398,8 +419,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
             _cursorVisible = false;
             // Rimuovi il cursore dalla label
             if (_currentTypingLabel != null)
-                _currentTypingLabel.text = ApplyHighlight(_currentTypingBasePlain, _currentTypingHighlightWords, _currentTypingHighlightHex);
-            _currentTypingLabel = null;
+                _currentTypingLabel.text = ApplyHighlight(_currentTypingBasePlain, _currentTypingHighlightWords, _currentTypingHighlightHex, _currentTypingHighlightHexes);
+            _currentTypingLabel          = null;
+            _currentTypingHighlightHexes = null;
         }
 
         private IEnumerator CursorBlinkRoutine()
@@ -418,7 +440,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
             if (_currentTypingLabel == null) return;
             string cursorColorHex = ColorUtility.ToHtmlStringRGB(_currentTypingLabel.resolvedStyle.color);
             string cursor = _cursorVisible ? $"<color=#{cursorColorHex}>{CursorChar}</color>" : string.Empty;
-            _currentTypingLabel.text = ApplyHighlight(_currentTypingBasePlain, _currentTypingHighlightWords, _currentTypingHighlightHex) + cursor;
+            _currentTypingLabel.text = ApplyHighlight(_currentTypingBasePlain, _currentTypingHighlightWords, _currentTypingHighlightHex, _currentTypingHighlightHexes) + cursor;
         }
 
         /// <summary>Chiamato ad ogni carattere digitato: aggiorna il testo base e ridisegna con cursore.</summary>
@@ -515,8 +537,10 @@ namespace _Project.UI.UIToolkit.VoOverlay
             if (_cursorBlinkRoutine != null) { StopCoroutine(_cursorBlinkRoutine); _cursorBlinkRoutine = null; }
             if (_enterAnimRoutine   != null) { StopCoroutine(_enterAnimRoutine);   _enterAnimRoutine   = null; }
             if (_focusTweenRoutine  != null) { StopCoroutine(_focusTweenRoutine);  _focusTweenRoutine  = null; }
-            _currentTypingLabel     = null;
-            _currentTypingBasePlain = string.Empty;
+            _textRevealInProgress        = false;
+            _currentTypingLabel          = null;
+            _currentTypingBasePlain      = string.Empty;
+            _currentTypingHighlightHexes = null;
         }
 
         // ─── Presentation runtime (lock input + camera) ──────────────────────
@@ -625,8 +649,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
             float tickAccum = 0f;
             var   plain    = new StringBuilder(text.Length);
 
-            StartCursorBlink(_bodyLabel, opt.HighlightWords, opt.HighlightColorHex);
+            StartCursorBlink(_bodyLabel, in opt);
 
+            _textRevealInProgress = true;
             for (var i = 0; i < text.Length; i++)
             {
                 plain.Append(text[i]);
@@ -640,6 +665,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
                 yield return new WaitForSeconds(delay);
             }
 
+            _textRevealInProgress = false;
             _lastPlainTypedText = plain.ToString();
             StopCursorBlink();
             _typingRoutine = null;
@@ -663,18 +689,18 @@ namespace _Project.UI.UIToolkit.VoOverlay
                 SetContinueHint(opt.ContinueHintText);
                 yield return StartCoroutine(WaitForContinueInput());
                 HideContinueHint();
-                onComplete?.Invoke();
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();
+                onComplete?.Invoke();
             }
             else
             {
                 float typingTime = Time.realtimeSinceStartup - messageStartTime;
                 float remaining  = Mathf.Max(0f, _totalMessageDuration - typingTime - _enterExitDuration);
                 yield return new WaitForSecondsRealtime(remaining);
-                onComplete?.Invoke();
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();
+                onComplete?.Invoke();
             }
         }
 
@@ -692,7 +718,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
             var plain = new StringBuilder();
 
-            StartCursorBlink(line, opt.HighlightWords, opt.HighlightColorHex);
+            StartCursorBlink(line, in opt);
 
             for (var i = 0; i < sentences.Count; i++)
             {
@@ -740,18 +766,18 @@ namespace _Project.UI.UIToolkit.VoOverlay
                 SetContinueHint(opt.ContinueHintText);
                 yield return StartCoroutine(WaitForContinueInput());
                 HideContinueHint();
-                onComplete?.Invoke();
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();
+                onComplete?.Invoke();
             }
             else
             {
                 float typingTime = Time.realtimeSinceStartup - messageStartTime;
                 float remaining  = Mathf.Max(0f, _totalMessageDuration - typingTime - _enterExitDuration);
                 yield return new WaitForSecondsRealtime(remaining);
-                onComplete?.Invoke();
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();
+                onComplete?.Invoke();
             }
         }
 
@@ -765,6 +791,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
             float delay    = 1f / Mathf.Max(4f, charsPerSecond);
             float tickAccum = 0f;
 
+            _textRevealInProgress = true;
             for (var i = 0; i < text.Length; i++)
             {
                 plain.Append(text[i]);
@@ -777,30 +804,82 @@ namespace _Project.UI.UIToolkit.VoOverlay
                 }
                 yield return new WaitForSeconds(delay);
             }
+
+            _textRevealInProgress = false;
         }
 
         // ─── Highlight ───────────────────────────────────────────────────────
 
-        private static string ApplyHighlight(string input, IReadOnlyList<string> phrases, string colorHex)
+        private static string ApplyHighlight(string input, IReadOnlyList<string> phrases, string uniformColorHex,
+            IReadOnlyList<string> perPhraseColorHexes)
         {
-            if (string.IsNullOrEmpty(input) || phrases == null || phrases.Count == 0 || string.IsNullOrWhiteSpace(colorHex))
+            if (string.IsNullOrEmpty(input) || phrases == null || phrases.Count == 0)
                 return input;
 
-            var ordered = phrases.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()).ToList();
-            if (ordered.Count == 0) return input;
-            ordered = ordered.OrderByDescending(s => s.Length).ToList();
+            bool usePerPhrase = perPhraseColorHexes != null && perPhraseColorHexes.Count == phrases.Count;
+            var pairs = new List<(string phrase, string hex)>();
+            for (var i = 0; i < phrases.Count; i++)
+            {
+                var phrase = phrases[i]?.Trim();
+                if (string.IsNullOrEmpty(phrase))
+                    continue;
+                string rawHex = usePerPhrase ? perPhraseColorHexes[i] : uniformColorHex;
+                if (string.IsNullOrWhiteSpace(rawHex))
+                    rawHex = uniformColorHex;
+                string hex = NormalizeColorHexForRichText(rawHex);
+                if (string.IsNullOrEmpty(hex))
+                    continue;
+                pairs.Add((phrase, hex));
+            }
 
-            string pattern = "(" + string.Join("|", ordered.Select(Regex.Escape)) + ")";
-            string open    = $"<color={colorHex}>";
-            try { return Regex.Replace(input, pattern, m => $"{open}{m.Value}</color>", RegexOptions.IgnoreCase); }
-            catch { return input; }
+            if (pairs.Count == 0)
+                return input;
+
+            pairs.Sort((a, b) => b.phrase.Length.CompareTo(a.phrase.Length));
+            var result = input;
+            foreach (var (phrase, hex) in pairs)
+            {
+                string open = $"<color={hex}>";
+                try
+                {
+                    result = Regex.Replace(result, Regex.Escape(phrase), m => $"{open}{m.Value}</color>", RegexOptions.IgnoreCase);
+                }
+                catch
+                {
+                    return input;
+                }
+            }
+
+            return result;
+        }
+
+        private static string NormalizeColorHexForRichText(string hex)
+        {
+            if (string.IsNullOrWhiteSpace(hex))
+                return null;
+            var t = hex.Trim();
+            if (!t.StartsWith("#", StringComparison.Ordinal))
+                t = "#" + t;
+            return t;
         }
 
         // ─── Continue hint ───────────────────────────────────────────────────
 
         private IEnumerator WaitForContinueInput()
         {
+            while (_textRevealInProgress)
+                yield return null;
+
             yield return null;
+
+            // Evita che un click/tasto tenuto durante l’ultimo carattere conti come «continua» immediato
+            int guard = 0;
+            while ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.E)) && guard < 180)
+            {
+                guard++;
+                yield return null;
+            }
+
             while (!Input.GetMouseButtonDown(0) && !Input.GetKeyDown(KeyCode.Space) && !Input.GetKeyDown(KeyCode.E))
                 yield return null;
         }

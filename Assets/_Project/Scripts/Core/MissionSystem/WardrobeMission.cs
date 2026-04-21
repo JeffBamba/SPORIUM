@@ -1,3 +1,5 @@
+using System;
+
 namespace _Project.Sporae.Core
 {
     /// <summary>
@@ -41,6 +43,67 @@ namespace _Project.Sporae.Core
         public static void RestoreProgressState(bool accessed)
         {
             _wardrobeAccessed = accessed;
+            ProgressChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Missione demo «Vai al Seed Storage»: completata entrando nella stanza con room id <c>storage</c>.
+    /// </summary>
+    public static class DemoSeedStorageMission
+    {
+        public const string DemoSeedStorageFlagKey = "demo_seed_storage_visited";
+        public const string DemoSeedStorageMissionConfigName = "M_Demo_SeedStorage";
+
+        public static event Action ProgressChanged;
+
+        private static bool _enteredStorage;
+
+        public static bool HasActiveDemoSeedStorageMission(MissionManager missionManager)
+        {
+            if (missionManager?.CurrentMissions == null)
+                return false;
+            foreach (var m in missionManager.CurrentMissions)
+            {
+                if (m?.Config == null || m.IsCompleted)
+                    continue;
+                if (IsDemoSeedStorageConfig(m.Config))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Chiamato quando il player entra nell’area Seed Storage (RoomTracker room id <c>storage</c>).
+        /// </summary>
+        public static void NotifyEnteredStorageRoom()
+        {
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            if (mm == null || !HasActiveDemoSeedStorageMission(mm))
+                return;
+            if (_enteredStorage)
+                return;
+
+            _enteredStorage = true;
+            ProgressChanged?.Invoke();
+            ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true)
+                ?.SetFlag(DemoSeedStorageFlagKey);
+        }
+
+        public static bool IsDemoSeedStorageConfig(MissionConfig cfg) =>
+            cfg != null && string.Equals(cfg.name, DemoSeedStorageMissionConfigName, StringComparison.Ordinal);
+
+        public static float GetObjectiveProgress01(MissionConfig cfg)
+        {
+            if (!IsDemoSeedStorageConfig(cfg))
+                return -1f;
+            return _enteredStorage ? 1f : 0f;
+        }
+
+        public static void RestoreProgressState(bool completed)
+        {
+            _enteredStorage = completed;
             ProgressChanged?.Invoke();
         }
     }

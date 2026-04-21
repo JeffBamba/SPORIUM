@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using _Project.UI.UIToolkit.VoOverlay;
 using Sporae.DevTools;
@@ -16,14 +17,18 @@ namespace _Project.Sporae.Core
         private const string NarrativeConfigResourcePath = "Demo/DemoAlphaNarrativeConfig";
         private const string WardrobeMissionResourcePath = "Missions/M_Demo_Wardrobe";
         private const string BreakfastMissionResourcePath = "Missions/M_Demo_Breakfast";
+        private const string SeedStorageMissionResourcePath = "Missions/M_Demo_SeedStorage";
         private const float Beat1VoStartDelaySeconds = 5f;
         private const float KitchenMissionTriggerDelaySeconds = 2f;
         private const string KitchenRoomId = "kitchen";
+        private const string StorageRoomId = "storage";
 
         private DemoSessionState _session;
         private RoomTracker _roomTracker;
         private bool _kitchenBeatTriggered;
         private Coroutine _kitchenDelayRoutine;
+        private MissionManager _missionManagerSubscribed;
+        private bool _postBreakfastNarrativeLaunched;
 
         private void Awake()
         {
@@ -40,10 +45,18 @@ namespace _Project.Sporae.Core
 #endif
             StartCoroutine(BindRoomTrackerRoutine());
             StartCoroutine(RunBeat1WakeIntro());
+            StartCoroutine(BindMissionManagerForPostBreakfastRoutine());
+            StartCoroutine(DeferredResolveSeedStorageIfAlreadyInRoomRoutine());
         }
 
         private void OnDestroy()
         {
+            if (_missionManagerSubscribed != null)
+            {
+                _missionManagerSubscribed.OnMissionComplete -= HandleMissionCompletePostBreakfast;
+                _missionManagerSubscribed = null;
+            }
+
             if (_roomTracker != null)
                 _roomTracker.OnRoomChanged -= HandleRoomChanged;
             if (_kitchenDelayRoutine != null)
@@ -85,7 +98,7 @@ namespace _Project.Sporae.Core
                 ? config.MissionHighlightColorHex
                 : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
             var presentation = new VoLinePresentationOptions(
-                useMultiSentenceWhenSplit: true,
+                useMultiSentenceWhenSplit: false,
                 advanceMode: advance,
                 minReadSeconds: 0.55f,
                 readSecondsPerChar: 0.042f,
@@ -95,7 +108,8 @@ namespace _Project.Sporae.Core
                 forceContinueAtEnd: true,
                 lockWorldInputWhileVisible: true,
                 enableCameraFocus: true,
-                cameraFocusOrthographicSize: 0f);
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: null);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             SporiumLogger.LogInfo(LogCategory.Core, "[Demo] Beat 1 — VO Wake (prima riga).");
@@ -147,6 +161,10 @@ namespace _Project.Sporae.Core
         {
             if (_session == null || !_session.IsDemo)
                 return;
+
+            if (string.Equals(roomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
+                DemoSeedStorageMission.NotifyEnteredStorageRoom();
+
             if (_kitchenBeatTriggered)
                 return;
 
@@ -212,7 +230,7 @@ namespace _Project.Sporae.Core
                 : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
 
             var presentation = new VoLinePresentationOptions(
-                useMultiSentenceWhenSplit: true,
+                useMultiSentenceWhenSplit: false,
                 advanceMode: kitchenAdvance,
                 minReadSeconds: 0.55f,
                 readSecondsPerChar: 0.042f,
@@ -222,7 +240,8 @@ namespace _Project.Sporae.Core
                 forceContinueAtEnd: true,
                 lockWorldInputWhileVisible: true,
                 enableCameraFocus: false,
-                cameraFocusOrthographicSize: 0f);
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: null);
 
             bool voCompleted = false;
             vo.ShowLine(kitchenLine, kitchenReg, null, () => voCompleted = true, false, presentation);
@@ -230,6 +249,7 @@ namespace _Project.Sporae.Core
                 yield return null;
 
             AppendDemoBreakfastMissionIfPossible();
+            _session.SetBeat(2);
         }
 
         private void AppendDemoBreakfastMissionIfPossible()
@@ -247,6 +267,226 @@ namespace _Project.Sporae.Core
                 return;
 
             DemoBreakfastMission.BeginTracking(gm.PlayerInventory, panel);
+        }
+
+        private IEnumerator BindMissionManagerForPostBreakfastRoutine()
+        {
+            while (_session != null && _session.IsDemo)
+            {
+                var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+                if (mm != null)
+                {
+                    _missionManagerSubscribed = mm;
+                    mm.OnMissionComplete += HandleMissionCompletePostBreakfast;
+                    yield break;
+                }
+
+                yield return null;
+            }
+        }
+
+        private void HandleMissionCompletePostBreakfast(MissionChecker checker)
+        {
+            if (_session == null || !_session.IsDemo)
+                return;
+            if (checker?.Config == null || !DemoBreakfastMission.IsDemoBreakfastConfig(checker.Config))
+                return;
+            if (_postBreakfastNarrativeLaunched)
+                return;
+            _postBreakfastNarrativeLaunched = true;
+            StartCoroutine(RunPostBreakfastTutorialAndBeat3Vo());
+        }
+
+        private IEnumerator RunPostBreakfastTutorialAndBeat3Vo()
+        {
+            var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
+            if (vo == null)
+            {
+                _session?.SetBeat(3);
+                AppendDemoSeedStorageMissionIfPossible();
+                yield break;
+            }
+
+            var config = Resources.Load<DemoAlphaNarrativeConfig>(NarrativeConfigResourcePath);
+
+            VoRegister postReg = config != null
+                ? config.Beat2PostBreakfastRegister
+                : DemoAlphaNarrativeDefaults.Beat2PostBreakfastRegister;
+            var postAdvance = config != null
+                ? config.Beat2PostBreakfastSentenceAdvance
+                : DemoAlphaNarrativeDefaults.Beat2PostBreakfastSentenceAdvance;
+            string postFallbackHex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
+                ? config.MissionHighlightColorHex
+                : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
+
+            string part1 = config != null && !string.IsNullOrWhiteSpace(config.Beat2PostBreakfastPart1Line)
+                ? config.Beat2PostBreakfastPart1Line
+                : DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart1Line;
+            var w1 = ResolvePostBreakfastPart1HighlightWords(config);
+            var h1 = ResolvePostBreakfastPart1HighlightHexes(config, w1);
+
+            var presentation1 = new VoLinePresentationOptions(
+                useMultiSentenceWhenSplit: false,
+                advanceMode: postAdvance,
+                minReadSeconds: 0.55f,
+                readSecondsPerChar: 0.042f,
+                continueHintText: "Clicca o Spazio per continuare",
+                highlightWords: w1,
+                highlightColorHex: postFallbackHex,
+                forceContinueAtEnd: true,
+                lockWorldInputWhileVisible: true,
+                enableCameraFocus: false,
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: h1);
+
+            bool part1Done = false;
+            vo.ShowLine(part1, postReg, null, () => part1Done = true, false, presentation1);
+            while (!part1Done)
+                yield return null;
+
+            string part2 = config != null && !string.IsNullOrWhiteSpace(config.Beat2PostBreakfastPart2Line)
+                ? config.Beat2PostBreakfastPart2Line
+                : DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart2Line;
+            var w2 = ResolvePostBreakfastPart2HighlightWords(config);
+            var h2 = ResolvePostBreakfastPart2HighlightHexes(config, w2);
+
+            var presentation2 = new VoLinePresentationOptions(
+                useMultiSentenceWhenSplit: false,
+                advanceMode: postAdvance,
+                minReadSeconds: 0.55f,
+                readSecondsPerChar: 0.042f,
+                continueHintText: "Clicca o Spazio per continuare",
+                highlightWords: w2,
+                highlightColorHex: postFallbackHex,
+                forceContinueAtEnd: true,
+                lockWorldInputWhileVisible: true,
+                enableCameraFocus: false,
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: h2);
+
+            bool part2Done = false;
+            vo.ShowLine(part2, postReg, null, () => part2Done = true, false, presentation2);
+            while (!part2Done)
+                yield return null;
+
+            _session.SetBeat(3);
+
+            string b3Line = config != null && !string.IsNullOrWhiteSpace(config.Beat3SeedStorageIntroLine)
+                ? config.Beat3SeedStorageIntroLine
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroLine;
+            VoRegister b3Reg = config != null
+                ? config.Beat3SeedStorageIntroRegister
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroRegister;
+            var b3Advance = config != null
+                ? config.Beat3SeedStorageIntroSentenceAdvance
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroSentenceAdvance;
+            var b3Words = ResolveBeat3IntroHighlightWords(config);
+            string b3Hex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
+                ? config.MissionHighlightColorHex
+                : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
+
+            var b3Presentation = new VoLinePresentationOptions(
+                useMultiSentenceWhenSplit: false,
+                advanceMode: b3Advance,
+                minReadSeconds: 0.55f,
+                readSecondsPerChar: 0.042f,
+                continueHintText: "Clicca o Spazio per continuare",
+                highlightWords: b3Words,
+                highlightColorHex: b3Hex,
+                forceContinueAtEnd: true,
+                lockWorldInputWhileVisible: true,
+                enableCameraFocus: false,
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: null);
+
+            bool b3Done = false;
+            vo.ShowLine(b3Line, b3Reg, null, () => b3Done = true, false, b3Presentation);
+            while (!b3Done)
+                yield return null;
+
+            AppendDemoSeedStorageMissionIfPossible();
+        }
+
+        private void AppendDemoSeedStorageMissionIfPossible()
+        {
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            var cfg = Resources.Load<MissionConfig>(SeedStorageMissionResourcePath);
+            if (mm == null || cfg == null)
+                return;
+
+            if (!mm.AppendIfMissing(cfg))
+                return;
+
+            var rt = ServiceContainer.Instance?.Get<RoomTracker>(suppressWarning: true);
+            if (rt != null && string.Equals(rt.CurrentRoomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
+                DemoSeedStorageMission.NotifyEnteredStorageRoom();
+        }
+
+        private IEnumerator DeferredResolveSeedStorageIfAlreadyInRoomRoutine()
+        {
+            for (var i = 0; i < 90; i++)
+            {
+                yield return null;
+                if (_session == null || !_session.IsDemo)
+                    yield break;
+
+                var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+                var rt = ServiceContainer.Instance?.Get<RoomTracker>(suppressWarning: true);
+                if (mm != null && rt != null &&
+                    DemoSeedStorageMission.HasActiveDemoSeedStorageMission(mm) &&
+                    string.Equals(rt.CurrentRoomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    DemoSeedStorageMission.NotifyEnteredStorageRoom();
+                    yield break;
+                }
+            }
+        }
+
+        private static IReadOnlyList<string> ResolvePostBreakfastPart1HighlightWords(DemoAlphaNarrativeConfig config)
+        {
+            if (config?.Beat2PostBreakfastPart1HighlightWords != null && config.Beat2PostBreakfastPart1HighlightWords.Count > 0)
+                return config.Beat2PostBreakfastPart1HighlightWords;
+            return DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart1HighlightWords;
+        }
+
+        private static IReadOnlyList<string> ResolvePostBreakfastPart1HighlightHexes(
+            DemoAlphaNarrativeConfig config, IReadOnlyList<string> words)
+        {
+            if (words == null || words.Count == 0)
+                return null;
+            if (config?.Beat2PostBreakfastPart1HighlightColorHexes != null &&
+                config.Beat2PostBreakfastPart1HighlightColorHexes.Count == words.Count)
+                return config.Beat2PostBreakfastPart1HighlightColorHexes;
+            if (words.Count == DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart1HighlightWords.Count)
+                return DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart1HighlightColorHexes;
+            return null;
+        }
+
+        private static IReadOnlyList<string> ResolvePostBreakfastPart2HighlightWords(DemoAlphaNarrativeConfig config)
+        {
+            if (config?.Beat2PostBreakfastPart2HighlightWords != null && config.Beat2PostBreakfastPart2HighlightWords.Count > 0)
+                return config.Beat2PostBreakfastPart2HighlightWords;
+            return DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart2HighlightWords;
+        }
+
+        private static IReadOnlyList<string> ResolvePostBreakfastPart2HighlightHexes(
+            DemoAlphaNarrativeConfig config, IReadOnlyList<string> words)
+        {
+            if (words == null || words.Count == 0)
+                return null;
+            if (config?.Beat2PostBreakfastPart2HighlightColorHexes != null &&
+                config.Beat2PostBreakfastPart2HighlightColorHexes.Count == words.Count)
+                return config.Beat2PostBreakfastPart2HighlightColorHexes;
+            if (words.Count == DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart2HighlightWords.Count)
+                return DemoAlphaNarrativeDefaults.Beat2PostBreakfastPart2HighlightColorHexes;
+            return null;
+        }
+
+        private static IReadOnlyList<string> ResolveBeat3IntroHighlightWords(DemoAlphaNarrativeConfig config)
+        {
+            if (config?.Beat3SeedStorageIntroHighlightWords != null && config.Beat3SeedStorageIntroHighlightWords.Count > 0)
+                return config.Beat3SeedStorageIntroHighlightWords;
+            return DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroHighlightWords;
         }
     }
 }

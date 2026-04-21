@@ -138,6 +138,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             DemoBreakfastMission.ProgressChanged += OnDemoBreakfastProgressChanged;
             WardrobeMission.ProgressChanged += OnWardrobeMissionProgressChanged;
+            DemoSeedStorageMission.ProgressChanged += OnDemoSeedStorageProgressChanged;
 
             ServiceContainer.Instance?.Register(this);
         }
@@ -199,6 +200,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             DemoBreakfastMission.ProgressChanged -= OnDemoBreakfastProgressChanged;
             WardrobeMission.ProgressChanged -= OnWardrobeMissionProgressChanged;
+            DemoSeedStorageMission.ProgressChanged -= OnDemoSeedStorageProgressChanged;
 
             if (_filterActiveButton != null)
                 _filterActiveButton.UnregisterCallback<ClickEvent>(HandleFilterActiveClicked);
@@ -222,6 +224,11 @@ namespace Sporae.UI.UIToolkit.HUD
         }
 
         private void OnWardrobeMissionProgressChanged()
+        {
+            HandleMissionsChanged();
+        }
+
+        private void OnDemoSeedStorageProgressChanged()
         {
             HandleMissionsChanged();
         }
@@ -282,8 +289,12 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
+            var demoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
+            bool skipGenericCompletionVo = demoSession != null && demoSession.IsDemo
+                && DemoBreakfastMission.IsDemoBreakfastConfig(mission.Config);
+
             var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
-            if (vo != null)
+            if (vo != null && !skipGenericCompletionVo)
             {
                 string line = $"Ottimo lavoro. Missione completata: {title}.";
                 var presentation = new VoLinePresentationOptions(
@@ -849,7 +860,8 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private MissionFaction GuessFaction(MissionConfig cfg)
         {
-            if (cfg != null && (WardrobeMission.IsDemoWardrobeConfig(cfg) || DemoBreakfastMission.IsDemoBreakfastConfig(cfg)))
+            if (cfg != null && (WardrobeMission.IsDemoWardrobeConfig(cfg) || DemoBreakfastMission.IsDemoBreakfastConfig(cfg) ||
+                                DemoSeedStorageMission.IsDemoSeedStorageConfig(cfg)))
                 return MissionFaction.Routine;
 
             string key = $"{cfg?.Title} {cfg?.Description}".ToLowerInvariant();
@@ -910,6 +922,12 @@ namespace Sporae.UI.UIToolkit.HUD
             if (mission?.Config != null && WardrobeMission.IsDemoWardrobeConfig(mission.Config))
             {
                 float p = WardrobeMission.GetObjectiveProgress01(mission.Config);
+                if (p >= 0f)
+                    return Mathf.Clamp01(p);
+            }
+            if (mission?.Config != null && DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config))
+            {
+                float p = DemoSeedStorageMission.GetObjectiveProgress01(mission.Config);
                 if (p >= 0f)
                     return Mathf.Clamp01(p);
             }

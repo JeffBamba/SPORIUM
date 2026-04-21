@@ -29,4 +29,27 @@ MonoBehaviour:
   - Apri l'Inventario
   - mangia
   - bevi
+  Beat2PostBreakfastPart1Line: "Molto meglio. Hai di nuovo un colorito\u2026 quasi umano.\nVedi quel serbatoio al centro? \xC8 la condensa della Dome: qui la ripuliamo e la chiamiamo acqua potabile."
+  Beat2PostBreakfastPart2Line: "E la Cucina fa l'altro miracolo: fibre e cellule dentro, cibo fuori\u2014carburante per le tue azioni.\nSe non vuoi ritrovarti l'inventario pieno di compost, metti tutto nella Dispensa Refrigerata. Te lo ricordi, s\xEC?"
+  Beat2PostBreakfastRegister: 0
+  Beat2PostBreakfastSentenceAdvance: 0
+  Beat2PostBreakfastPart1HighlightWords:
+  - condensa
+  - acqua potabile
+  Beat2PostBreakfastPart1HighlightColorHexes:
+  - '#FFB86B'
+  - '#6BCBFF'
+  Beat2PostBreakfastPart2HighlightWords:
+  - cibo
+  - azioni
+  - Dispensa Refrigerata
+  Beat2PostBreakfastPart2HighlightColorHexes:
+  - '#A8FF98'
+  - '#E6C96F'
+  - '#D4A5FF'
+  Beat3SeedStorageIntroLine: "Bene. Adesso puoi fare l'unica cosa che ti rende pi\xF9 utile di un sacco di carne: lavorare.\nSali al piano +1. Stanza di destra: Seed Storage.\nVai a controllare le promesse congelate\u2026 e prova a trovare un motivo decente per la tua esistenza mentre ci sei."
+  Beat3SeedStorageIntroRegister: 0
+  Beat3SeedStorageIntroSentenceAdvance: 0
+  Beat3SeedStorageIntroHighlightWords:
+  - Seed Storage
   MissionHighlightColorHex: '#E6C96F'
