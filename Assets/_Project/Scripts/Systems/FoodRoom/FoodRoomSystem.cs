@@ -345,6 +345,53 @@ namespace _Project.Systems.FoodRoom
                 _gameManager.EconomySystem.Spend(totalCry);
         }
 
+        /// <summary>
+        /// Chiamare all'alba se la dispensa è spenta: il cibo nel pantry deperisce come in inventario (-1 Quality, 0 → residuo organico in inventario).
+        /// </summary>
+        public void ProcessDailyDecayIfPantryOff()
+        {
+            if (_pantryIsOn)
+                return;
+
+            int count = 0;
+            foreach (var kvp in _pantryByType)
+            {
+                if (kvp.Value != null)
+                    count += kvp.Value.Count;
+            }
+            if (count <= 0)
+                return;
+
+            foreach (var kvp in _pantryByType)
+            {
+                var list = kvp.Value;
+                if (list == null)
+                    continue;
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    var item = list[i];
+                    if (item == null)
+                    {
+                        list.RemoveAt(i);
+                        continue;
+                    }
+                    item.Quality -= 1f;
+                    if (item.Quality > 0f)
+                        continue;
+                    _inventory.Add(Items.OrganicResidue);
+                    list.RemoveAt(i);
+                }
+            }
+
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.PostToastImmediate(
+                    "KTCH-PTRY-DECAY-TICK",
+                    new NotificationPayload().With("count", count.ToString()));
+            }
+        }
+
         private FoodProductionSlot GetFirstFreeSlot()
         {
             foreach (var s in _productionSlots)

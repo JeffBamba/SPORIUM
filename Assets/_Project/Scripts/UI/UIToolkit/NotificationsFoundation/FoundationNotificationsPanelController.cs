@@ -74,6 +74,15 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 _service.OnChanged -= Refresh;
         }
 
+        private void Update()
+        {
+            bool hideFixedHud = GameplayUiModalLock.BlocksWorldInput;
+            if (_root != null)
+                _root.style.display = hideFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
+            if (hideFixedHud && _toastTooltip != null)
+                _toastTooltip.style.display = DisplayStyle.None;
+        }
+
         private void SetupUI()
         {
             if (_uiDocument == null) return;

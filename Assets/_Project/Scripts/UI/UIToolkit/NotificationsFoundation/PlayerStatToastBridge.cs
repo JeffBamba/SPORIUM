@@ -76,7 +76,24 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 .With("max", newMax.ToString());
 
             string fallback = $"Budget azioni giornaliere: {oldMax} → {newMax}.";
-            PostFoundationOrFallback("PLY-ACT-CAP-CHG", payload, fallback, ToastNotificationType.Info);
+            bool lostCap = newMax < oldMax;
+
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.PostToast(
+                    "PLY-ACT-CAP-CHG",
+                    payload,
+                    lostCap ? NotificationSeverity.Warning : NotificationSeverity.Success);
+                return;
+            }
+
+            var toast = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toast != null)
+            {
+                var legacy = lostCap ? ToastNotificationType.Warning : ToastNotificationType.Success;
+                toast.ShowToast(legacy, fallback, "PLY-ACT-CAP-CHG");
+            }
         }
 
         private void OnHydrationChangedDetailed(float currentPercent, float _, HydrationChangeSource source)
@@ -100,7 +117,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "PLY-HYD-GAIN",
                     gainPayload,
                     $"H +{deltaInt}% (→ {currentInt}%)",
-                    ToastNotificationType.ConditionImproved);
+                    ToastNotificationType.Success);
             }
             _lastHydrationPercent = currentPercent;
 

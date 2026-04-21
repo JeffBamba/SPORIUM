@@ -274,6 +274,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_root == null) _root = _uiDocument?.rootVisualElement;
             if (_root != null && _overlay == null) BindAndSubscribe();
             EnsureGameManagerAndFoodRoom();
+            GameplayUiModalLock.SetBlockWorldInput(true);
             if (_uiDocument != null) _uiDocument.sortingOrder = 1000;
             if (_overlay != null) _overlay.style.display = DisplayStyle.Flex;
             _selectedChamberType = FoodProductionType.None;
@@ -288,6 +289,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
         public void Hide()
         {
+            GameplayUiModalLock.SetBlockWorldInput(false);
             if (_overlay != null) _overlay.style.display = DisplayStyle.None;
             if (_uiDocument != null) _uiDocument.sortingOrder = 420;
         }

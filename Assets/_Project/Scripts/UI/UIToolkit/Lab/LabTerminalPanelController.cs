@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using _Project;
 using _Project.Sporae.Core;
+using _Project.Systems.SeedStorage;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.PlayerInventory;
 using UnityEngine;
@@ -276,6 +277,7 @@ namespace Sporae.UI.UIToolkit.Lab
         public void Show()
         {
             gameObject.SetActive(true);
+            GameplayUiModalLock.SetBlockWorldInput(true);
             TryBindUI();
             if (_overlay != null)
             {
@@ -291,6 +293,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         public void Hide()
         {
+            GameplayUiModalLock.SetBlockWorldInput(false);
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.None;
@@ -1394,11 +1397,29 @@ namespace Sporae.UI.UIToolkit.Lab
             var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             AddFruitCountsFromInventory(_gameManager?.PlayerInventory, counts);
 
-            SeedStorage[] storages = FindObjectsByType<SeedStorage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < storages.Length; i++)
-                AddFruitCountsFromInventory(storages[i]?.Storage, counts);
+            AddFruitCountsFromSeedStorage(_gameManager?.SeedStorageSystem, counts);
 
             return counts;
+        }
+
+        private static void AddFruitCountsFromSeedStorage(SeedStorageSystem seedStorage, Dictionary<string, int> counts)
+        {
+            if (seedStorage == null || counts == null)
+                return;
+            for (int s = 0; s < SeedStorageSystem.SlotCount; s++)
+            {
+                foreach (var u in seedStorage.GetSlotUnits(s))
+                {
+                    if (u?.Item == null)
+                        continue;
+                    var id = u.Item.TypeId;
+                    if (!Items.IsFruitType(id, includeLegacy: true))
+                        continue;
+                    if (!counts.TryGetValue(id, out int current))
+                        current = 0;
+                    counts[id] = current + 1;
+                }
+            }
         }
 
         private static void AddFruitCountsFromInventory(Inventory inventory, Dictionary<string, int> counts)
@@ -1444,28 +1465,31 @@ namespace Sporae.UI.UIToolkit.Lab
             return total;
         }
 
-        private static int CountStorageFruitTotal()
+        private int CountStorageFruitTotal()
         {
+            var ss = _gameManager?.SeedStorageSystem;
+            if (ss == null)
+                return 0;
             int total = 0;
-            SeedStorage[] storages = FindObjectsByType<SeedStorage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < storages.Length; i++)
-                total += CountFruitInInventory(storages[i]?.Storage);
+            for (int s = 0; s < SeedStorageSystem.SlotCount; s++)
+            {
+                foreach (var u in ss.GetSlotUnits(s))
+                {
+                    if (u?.Item == null)
+                        continue;
+                    if (Items.IsFruitType(u.Item.TypeId, includeLegacy: true))
+                        total++;
+                }
+            }
             return total;
         }
 
         private int CountAccessibleType(string typeId)
         {
             int total = CountPlayerType(typeId);
-            SeedStorage[] storages = FindObjectsByType<SeedStorage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < storages.Length; i++)
-            {
-                var storage = storages[i]?.Storage;
-                if (storage == null)
-                    continue;
-                var slot = storage.Items.FirstOrDefault(s => string.Equals(s.TypeId, typeId, StringComparison.OrdinalIgnoreCase));
-                total += slot?.Quantity ?? 0;
-            }
-
+            var ss = _gameManager?.SeedStorageSystem;
+            if (ss != null)
+                total += ss.CountTypeInStorage(typeId);
             return total;
         }
 

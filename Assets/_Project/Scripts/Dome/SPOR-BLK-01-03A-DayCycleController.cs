@@ -518,13 +518,20 @@ public class DayCycleController : MonoBehaviour
         // 7. FASE 3: Calcola condensazione basata su piante attive e LED
         ApplyCondensationSystem(dayIndex);
 
-        // 8. Processa Food Room (produzione, costi, harvest disponibili)
+        // 8. Processa Food Room (decay dispensa se spenta, produzione, costi) + Seed Storage (decay se spento, costi)
         var foodRoom = _gameManager?.FoodRoomSystem;
+        if (foodRoom != null)
+            foodRoom.ProcessDailyDecayIfPantryOff();
+
+        _gameManager?.SeedStorageSystem?.ProcessDailyDecayIfPoweredOff();
+
         if (foodRoom != null)
         {
             foodRoom.ProcessDailyProduction(dayIndex);
             foodRoom.ProcessDailyCosts();
         }
+
+        _gameManager?.SeedStorageSystem?.ProcessDailyCosts();
 
         // 9. ApplyPassivePowers — Task 3: registra drift pH passivo dei CryoSlot e applica cap.
         //    Chiamato DOPO ApplyQueuedDrifts così i cap agiscono sul pH già aggiornato.

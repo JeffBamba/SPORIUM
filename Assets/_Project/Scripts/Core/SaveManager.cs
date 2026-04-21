@@ -6,6 +6,7 @@ using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
 using _Project.Systems.FoodRoom;
+using _Project.Systems.SeedStorage;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Components;
@@ -359,6 +360,9 @@ namespace Sporae.Core
 
             if (gameManager?.FoodRoomSystem != null)
                 saveData.foodRoomData = SerializeFoodRoom(gameManager.FoodRoomSystem);
+
+            if (gameManager?.SeedStorageSystem != null)
+                saveData.seedStorageData = SerializeSeedStorage(gameManager.SeedStorageSystem);
             
             // Inventario del giocatore
             if (gameManager != null && gameManager.PlayerInventory != null)
@@ -498,6 +502,9 @@ namespace Sporae.Core
                 int invVersion = saveData.inventoryVersion;
                 DeserializeInventory(gameManager.PlayerInventory, saveData.inventory, invVersion);
             }
+
+            if (gameManager?.SeedStorageSystem != null && saveData.seedStorageData != null)
+                DeserializeSeedStorage(gameManager.SeedStorageSystem, saveData.seedStorageData, saveData.inventoryVersion);
             
             // Vasi
             if (saveData.pots != null && saveData.pots.Count > 0)
@@ -855,36 +862,95 @@ namespace Sporae.Core
             foreach (var slot in inventory.Items)
             {
                 foreach (var item in slot.Items)
-                {
-                    inventoryData.items.Add(new InventoryItemData
-                    {
-                        typeId = slot.TypeId,
-                        quantity = 1,
-                        quality = item.Quality,
-                        hasGeneticType = item.GeneticTypeValue.HasValue,
-                        geneticType = item.GeneticTypeValue.HasValue ? (int)item.GeneticTypeValue.Value : 0,
-                        hasSporeStage = item.SporeStageValue.HasValue,
-                        sporeStage = item.SporeStageValue.HasValue ? (int)item.SporeStageValue.Value : 0,
-                        familyMetadata = item.FamilyMetadata,
-                        sourcePlantCodeMetadata = item.SourcePlantCodeMetadata,
-                        sourcePlantDisplayName = item.SourcePlantDisplayName,
-                        activePowerLabel = item.ActivePowerLabel,
-                        passivePowerLabel = item.PassivePowerLabel,
-                        parentFamilyA = item.ParentFamilyA,
-                        parentFamilyB = item.ParentFamilyB,
-                        plantLevelMetadata = item.PlantLevelMetadata,
-                        candidateTraitsCsv = item.CandidateTraitsCsv,
-                        selectedTraitsCsv = item.SelectedTraitsCsv,
-                        traitPowerPercent = item.TraitPowerPercent,
-                        reagentUsedMetadata = item.ReagentUsedMetadata,
-                        labCareProfileMetadata = item.LabCareProfileMetadata,
-                        customPlantName = item.CustomPlantName,
-                        resolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata
-                    });
-                }
+                    inventoryData.items.Add(SerializeOneInventoryItem(slot.TypeId, item));
             }
             
             return inventoryData;
+        }
+
+        private static InventoryItemData SerializeOneInventoryItem(string typeId, _Project.Sporae.Core.Item item)
+        {
+            return new InventoryItemData
+            {
+                typeId = typeId,
+                quantity = 1,
+                quality = item.Quality,
+                hasGeneticType = item.GeneticTypeValue.HasValue,
+                geneticType = item.GeneticTypeValue.HasValue ? (int)item.GeneticTypeValue.Value : 0,
+                hasSporeStage = item.SporeStageValue.HasValue,
+                sporeStage = item.SporeStageValue.HasValue ? (int)item.SporeStageValue.Value : 0,
+                familyMetadata = item.FamilyMetadata,
+                sourcePlantCodeMetadata = item.SourcePlantCodeMetadata,
+                sourcePlantDisplayName = item.SourcePlantDisplayName,
+                activePowerLabel = item.ActivePowerLabel,
+                passivePowerLabel = item.PassivePowerLabel,
+                parentFamilyA = item.ParentFamilyA,
+                parentFamilyB = item.ParentFamilyB,
+                plantLevelMetadata = item.PlantLevelMetadata,
+                candidateTraitsCsv = item.CandidateTraitsCsv,
+                selectedTraitsCsv = item.SelectedTraitsCsv,
+                traitPowerPercent = item.TraitPowerPercent,
+                reagentUsedMetadata = item.ReagentUsedMetadata,
+                labCareProfileMetadata = item.LabCareProfileMetadata,
+                customPlantName = item.CustomPlantName,
+                resolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata
+            };
+        }
+
+        private SeedStorageSaveData SerializeSeedStorage(SeedStorageSystem sys)
+        {
+            var data = new SeedStorageSaveData
+            {
+                isOn = sys.IsOn,
+                extendedUnlocked = sys.ExtendedSlotsUnlocked,
+                slots = new List<SeedStorageSlotSaveData>()
+            };
+            for (int i = 0; i < SeedStorageSystem.SlotCount; i++)
+            {
+                var slotSave = new SeedStorageSlotSaveData { items = new List<SeedStorageItemRow>() };
+                foreach (var u in sys.GetSlotUnits(i))
+                {
+                    if (u.Item == null)
+                        continue;
+                    slotSave.items.Add(new SeedStorageItemRow
+                    {
+                        core = SerializeOneInventoryItem(u.Item.TypeId, u.Item),
+                        hasFrozenUi = u.FrozenQualityUi.HasValue,
+                        frozenUi = u.FrozenQualityUi ?? 0f
+                    });
+                }
+                data.slots.Add(slotSave);
+            }
+            return data;
+        }
+
+        private void DeserializeSeedStorage(SeedStorageSystem sys, SeedStorageSaveData data, int inventoryVersion)
+        {
+            if (sys == null || data == null || data.slots == null)
+                return;
+
+            var slots = new List<SeedStorageSystem.StoredUnit>[SeedStorageSystem.SlotCount];
+            int n = Mathf.Min(data.slots.Count, SeedStorageSystem.SlotCount);
+            for (int i = 0; i < n; i++)
+            {
+                var rowList = data.slots[i]?.items;
+                if (rowList == null || rowList.Count == 0)
+                    continue;
+                var list = new List<SeedStorageSystem.StoredUnit>();
+                foreach (var row in rowList)
+                {
+                    if (row.core == null || string.IsNullOrEmpty(row.core.typeId))
+                        continue;
+                    var item = BuildItemFromInventoryItemData(row.core, inventoryVersion);
+                    if (item == null)
+                        continue;
+                    float? frozen = row.hasFrozenUi ? row.frozenUi : (float?)null;
+                    list.Add(new SeedStorageSystem.StoredUnit(item, frozen));
+                }
+                if (list.Count > 0)
+                    slots[i] = list;
+            }
+            sys.LoadState(data.isOn, data.extendedUnlocked, slots);
         }
         
         /// <summary>
@@ -901,80 +967,86 @@ namespace Sporae.Core
                 if (string.IsNullOrEmpty(itemData.typeId) || itemData.quantity <= 0) continue;
                 for (int q = 0; q < itemData.quantity; q++)
                 {
-                    var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(itemData.typeId);
-                    if (item == null)
-                        continue;
-
-                    if (inventoryVersion < INVENTORY_VERSION_WITH_METADATA)
-                    {
-                        // Legacy fallback: spore vecchie restano Raw + Stable.
-                        if (item.TypeId == _Project.Sporae.Core.Items.SporeGeneric)
-                        {
-                            item.SporeStageValue = _Project.Sporae.Core.SporeStage.Raw;
-                            item.GeneticTypeValue = _Project.Sporae.Core.GeneticType.Stable;
-                        }
-                    }
-                    else
-                    {
-                        item.Quality = itemData.quality > 0f ? itemData.quality : item.Quality;
-                        if (itemData.hasGeneticType)
-                            item.GeneticTypeValue = (_Project.Sporae.Core.GeneticType)itemData.geneticType;
-                        if (itemData.hasSporeStage)
-                            item.SporeStageValue = (_Project.Sporae.Core.SporeStage)itemData.sporeStage;
-                        item.FamilyMetadata = itemData.familyMetadata;
-                        item.SourcePlantCodeMetadata = itemData.sourcePlantCodeMetadata;
-                        item.SourcePlantDisplayName = itemData.sourcePlantDisplayName;
-                        item.ActivePowerLabel = itemData.activePowerLabel;
-                        item.PassivePowerLabel = itemData.passivePowerLabel;
-                        item.ParentFamilyA = itemData.parentFamilyA;
-                        item.ParentFamilyB = itemData.parentFamilyB;
-                        item.PlantLevelMetadata = itemData.plantLevelMetadata;
-                        item.CandidateTraitsCsv = itemData.candidateTraitsCsv;
-                        item.SelectedTraitsCsv = itemData.selectedTraitsCsv;
-                        item.TraitPowerPercent = itemData.traitPowerPercent > 0 ? itemData.traitPowerPercent : 100;
-                        item.ReagentUsedMetadata = itemData.reagentUsedMetadata;
-                        item.LabCareProfileMetadata = itemData.labCareProfileMetadata;
-                        item.CustomPlantName = itemData.customPlantName;
-                        item.ResolvedPlantCodeMetadata = itemData.resolvedPlantCodeMetadata;
-                        if (string.IsNullOrWhiteSpace(item.ResolvedPlantCodeMetadata))
-                        {
-                            var pdSeed = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(item.TypeId);
-                            item.ResolvedPlantCodeMetadata = pdSeed?.PlantCode;
-                        }
-                    }
-
-                    if (_Project.Sporae.Core.Items.IsLegacyFruitType(item.TypeId)
-                        && (!string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata) || !string.IsNullOrWhiteSpace(item.FamilyMetadata)))
-                    {
-                        string migratedTypeId = _Project.Sporae.Core.ItemFabric.ResolveFruitTypeIdForPlant(item.SourcePlantCodeMetadata, item.FamilyMetadata);
-                        var migratedItem = _Project.Sporae.Core.ItemFabric.CreateItemWithMetadata(
-                            migratedTypeId,
-                            item.Quality,
-                            item.GeneticTypeValue,
-                            item.FamilyMetadata,
-                            item.SourcePlantCodeMetadata,
-                            item.PlantLevelMetadata,
-                            item.SourcePlantDisplayName,
-                            item.ActivePowerLabel,
-                            item.PassivePowerLabel);
-                        if (migratedItem != null)
-                        {
-                            migratedItem.ParentFamilyA = item.ParentFamilyA;
-                            migratedItem.ParentFamilyB = item.ParentFamilyB;
-                            migratedItem.CandidateTraitsCsv = item.CandidateTraitsCsv;
-                            migratedItem.SelectedTraitsCsv = item.SelectedTraitsCsv;
-                            migratedItem.TraitPowerPercent = item.TraitPowerPercent;
-                            migratedItem.ReagentUsedMetadata = item.ReagentUsedMetadata;
-                            migratedItem.CustomPlantName = item.CustomPlantName;
-                            migratedItem.LabCareProfileMetadata = item.LabCareProfileMetadata;
-                            migratedItem.ResolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata;
-                            item = migratedItem;
-                        }
-                    }
-
-                    inventory.Add(item);
+                    var item = BuildItemFromInventoryItemData(itemData, inventoryVersion);
+                    if (item != null)
+                        inventory.Add(item);
                 }
             }
+        }
+
+        private _Project.Sporae.Core.Item BuildItemFromInventoryItemData(InventoryItemData itemData, int inventoryVersion)
+        {
+            var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(itemData.typeId);
+            if (item == null)
+                return null;
+
+            if (inventoryVersion < INVENTORY_VERSION_WITH_METADATA)
+            {
+                if (item.TypeId == _Project.Sporae.Core.Items.SporeGeneric)
+                {
+                    item.SporeStageValue = _Project.Sporae.Core.SporeStage.Raw;
+                    item.GeneticTypeValue = _Project.Sporae.Core.GeneticType.Stable;
+                }
+            }
+            else
+            {
+                item.Quality = itemData.quality > 0f ? itemData.quality : item.Quality;
+                if (itemData.hasGeneticType)
+                    item.GeneticTypeValue = (_Project.Sporae.Core.GeneticType)itemData.geneticType;
+                if (itemData.hasSporeStage)
+                    item.SporeStageValue = (_Project.Sporae.Core.SporeStage)itemData.sporeStage;
+                item.FamilyMetadata = itemData.familyMetadata;
+                item.SourcePlantCodeMetadata = itemData.sourcePlantCodeMetadata;
+                item.SourcePlantDisplayName = itemData.sourcePlantDisplayName;
+                item.ActivePowerLabel = itemData.activePowerLabel;
+                item.PassivePowerLabel = itemData.passivePowerLabel;
+                item.ParentFamilyA = itemData.parentFamilyA;
+                item.ParentFamilyB = itemData.parentFamilyB;
+                item.PlantLevelMetadata = itemData.plantLevelMetadata;
+                item.CandidateTraitsCsv = itemData.candidateTraitsCsv;
+                item.SelectedTraitsCsv = itemData.selectedTraitsCsv;
+                item.TraitPowerPercent = itemData.traitPowerPercent > 0 ? itemData.traitPowerPercent : 100;
+                item.ReagentUsedMetadata = itemData.reagentUsedMetadata;
+                item.LabCareProfileMetadata = itemData.labCareProfileMetadata;
+                item.CustomPlantName = itemData.customPlantName;
+                item.ResolvedPlantCodeMetadata = itemData.resolvedPlantCodeMetadata;
+                if (string.IsNullOrWhiteSpace(item.ResolvedPlantCodeMetadata))
+                {
+                    var pdSeed = PlantDatabase.Instance?.GetPlantDataBySeedTypeId(item.TypeId);
+                    item.ResolvedPlantCodeMetadata = pdSeed?.PlantCode;
+                }
+            }
+
+            if (_Project.Sporae.Core.Items.IsLegacyFruitType(item.TypeId)
+                && (!string.IsNullOrWhiteSpace(item.SourcePlantCodeMetadata) || !string.IsNullOrWhiteSpace(item.FamilyMetadata)))
+            {
+                string migratedTypeId = _Project.Sporae.Core.ItemFabric.ResolveFruitTypeIdForPlant(item.SourcePlantCodeMetadata, item.FamilyMetadata);
+                var migratedItem = _Project.Sporae.Core.ItemFabric.CreateItemWithMetadata(
+                    migratedTypeId,
+                    item.Quality,
+                    item.GeneticTypeValue,
+                    item.FamilyMetadata,
+                    item.SourcePlantCodeMetadata,
+                    item.PlantLevelMetadata,
+                    item.SourcePlantDisplayName,
+                    item.ActivePowerLabel,
+                    item.PassivePowerLabel);
+                if (migratedItem != null)
+                {
+                    migratedItem.ParentFamilyA = item.ParentFamilyA;
+                    migratedItem.ParentFamilyB = item.ParentFamilyB;
+                    migratedItem.CandidateTraitsCsv = item.CandidateTraitsCsv;
+                    migratedItem.SelectedTraitsCsv = item.SelectedTraitsCsv;
+                    migratedItem.TraitPowerPercent = item.TraitPowerPercent;
+                    migratedItem.ReagentUsedMetadata = item.ReagentUsedMetadata;
+                    migratedItem.CustomPlantName = item.CustomPlantName;
+                    migratedItem.LabCareProfileMetadata = item.LabCareProfileMetadata;
+                    migratedItem.ResolvedPlantCodeMetadata = item.ResolvedPlantCodeMetadata;
+                    item = migratedItem;
+                }
+            }
+
+            return item;
         }
         
         /// <summary>
@@ -1054,6 +1126,7 @@ namespace Sporae.Core
             public string gameVersion;
             public int inventoryVersion;
             public FoodRoomSaveData foodRoomData;
+            public SeedStorageSaveData seedStorageData;
             public List<string> discoveredPlantCodes;
             public List<string> wikiUnlockedIds;
             /// <summary>Indice outfit selezionato dall'armadio (-1 = non impostato, usa default).</summary>
@@ -1108,6 +1181,28 @@ namespace Sporae.Core
         {
             public int type;
             public float quality;
+        }
+
+        [Serializable]
+        private class SeedStorageSaveData
+        {
+            public bool isOn = true;
+            public bool extendedUnlocked;
+            public List<SeedStorageSlotSaveData> slots;
+        }
+
+        [Serializable]
+        private class SeedStorageSlotSaveData
+        {
+            public List<SeedStorageItemRow> items;
+        }
+
+        [Serializable]
+        private class SeedStorageItemRow
+        {
+            public InventoryItemData core;
+            public bool hasFrozenUi;
+            public float frozenUi;
         }
         
         [Serializable]

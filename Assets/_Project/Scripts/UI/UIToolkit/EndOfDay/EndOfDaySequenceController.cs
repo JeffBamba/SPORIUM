@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Sporae.Core;
+using _Project.Systems.SeedStorage;
 using _Project.Systems.FoodRoom;
 using Sporae.Core;
 using Sporae.DevTools;
@@ -522,27 +523,47 @@ namespace _Project
 
         private string BuildSeedStorageSummary()
         {
-            var inv = _gameManager?.PlayerInventory;
-            if (inv == null) return "—";
             var seedParts = new List<string>();
             int preSeed = 0;
             var seedByTypeId = new Dictionary<string, int>();
             var pdb = PlantDatabase.Instance;
-            foreach (var slot in inv.Items)
+
+            void AccumulateFromInventory(Inventory inv)
             {
-                if (slot == null) continue;
-                foreach (var item in slot.Items)
+                if (inv == null) return;
+                foreach (var slot in inv.Items)
                 {
-                    if (slot.TypeId == Items.PreSeed) preSeed++;
-                    else if (pdb != null && pdb.IsRegisteredSeedTypeId(slot.TypeId))
+                    if (slot == null) continue;
+                    foreach (var item in slot.Items)
                     {
-                        if (seedByTypeId.TryGetValue(slot.TypeId, out int c))
-                            seedByTypeId[slot.TypeId] = c + 1;
-                        else
-                            seedByTypeId[slot.TypeId] = 1;
+                        if (slot.TypeId == Items.PreSeed) preSeed++;
+                        else if (pdb != null && pdb.IsRegisteredSeedTypeId(slot.TypeId))
+                        {
+                            if (seedByTypeId.TryGetValue(slot.TypeId, out int c))
+                                seedByTypeId[slot.TypeId] = c + 1;
+                            else
+                                seedByTypeId[slot.TypeId] = 1;
+                        }
                     }
                 }
             }
+
+            AccumulateFromInventory(_gameManager?.PlayerInventory);
+
+            var ss = _gameManager?.SeedStorageSystem;
+            if (ss != null)
+            {
+                ss.GetSeedSummaryCounts(out int preInVault, out var seedInVault);
+                preSeed += preInVault;
+                foreach (var kv in seedInVault)
+                {
+                    if (seedByTypeId.TryGetValue(kv.Key, out int c))
+                        seedByTypeId[kv.Key] = c + kv.Value;
+                    else
+                        seedByTypeId[kv.Key] = kv.Value;
+                }
+            }
+
             if (preSeed > 0) seedParts.Add($"{preSeed} Pre-Seed");
             foreach (var kv in seedByTypeId.OrderBy(k => k.Key))
                 seedParts.Add($"{kv.Value} {kv.Key}");

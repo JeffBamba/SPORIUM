@@ -1,0 +1,711 @@
+/* ============================================================
+   SEED STORAGE PANEL — EXT-002
+   Color palette:
+     bg-base:       rgb(6,  12, 18)
+     bg-panel:      rgb(10, 16, 26)
+     bg-left:       rgb(8,  14, 22)
+     border-cyan:   rgb(0,  185, 200)
+     border-muted:  rgb(22, 55, 70)
+     border-locked: rgb(85, 65, 30)
+     text-primary:  rgb(215, 238, 245)
+     text-cyan:     rgb(0,  220, 200)
+     text-muted:    rgb(120, 155, 170)
+     text-amber:    rgb(230, 195, 90)
+     green-vib:     rgb(70, 215, 90)
+   ============================================================ */
+
+/* ROOT / OVERLAY */
+
+.seedstorage-root {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
+
+.seedstorage-overlay {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+    justify-content: center;
+    align-items: center;
+}
+
+/* MAIN PANEL */
+
+.seedstorage-panel {
+    width: 95%;
+    max-width: 1200px;
+    min-height: 640px;
+    background-color: rgb(6, 12, 18);
+    border-width: 1px;
+    border-color: rgb(0, 185, 200);
+    border-radius: 4px;
+}
+
+/* BODY */
+
+.seedstorage-body {
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 640px;
+}
+
+/* ======================== LEFT COLUMN ======================== */
+
+.seedstorage-col-left {
+    width: 30%;
+    min-width: 260px;
+    max-width: 320px;
+    background-color: rgb(8, 14, 22);
+    border-right-width: 1px;
+    border-right-color: rgb(0, 185, 200);
+    padding: 16px 14px 14px 14px;
+    flex-shrink: 0;
+}
+
+.seedstorage-left-header {
+    margin-bottom: 14px;
+}
+
+.seedstorage-left-title {
+    font-size: 14px;
+    color: rgb(215, 238, 245);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.seedstorage-left-subtitle {
+    font-size: 10px;
+    color: rgb(100, 160, 175);
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+/* INVENTORY SCROLL */
+
+.seedstorage-inv-scroll {
+    flex-grow: 1;
+    min-height: 360px;
+    max-height: 460px;
+    background-color: rgb(6, 10, 16);
+    border-width: 1px;
+    border-color: rgb(22, 55, 70);
+    border-radius: 2px;
+    padding: 8px 4px;
+}
+
+/* CATEGORY LABELS */
+
+.seedstorage-category-label {
+    font-size: 11px;
+    color: rgb(0, 220, 200);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    padding-left: 8px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    border-left-width: 3px;
+    border-left-color: rgb(0, 185, 200);
+}
+
+.seedstorage-category {
+    padding-left: 8px;
+    margin-bottom: 4px;
+}
+
+/* INV ITEMS */
+
+.seedstorage-inv-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 8px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+    background-color: rgb(12, 18, 28);
+    cursor: link;
+}
+
+.seedstorage-inv-row:hover {
+    background-color: rgb(18, 30, 44);
+}
+
+.seedstorage-inv-row--selected {
+    background-color: rgb(10, 34, 48);
+    border-width: 1px;
+    border-color: rgb(0, 185, 200);
+    border-radius: 2px;
+}
+
+/* Icon box placeholder for inventory items (replaces colored dot) */
+.seedstorage-icon-box {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    background-color: rgb(18, 28, 40);
+    border-width: 1px;
+    border-color: rgb(45, 65, 80);
+    border-radius: 3px;
+}
+
+/* Item display name */
+.seedstorage-inv-name {
+    flex-grow: 1;
+    font-size: 12px;
+    color: rgb(210, 232, 240);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Quantity "(x4)" on right */
+.seedstorage-inv-qty {
+    font-size: 11px;
+    color: rgb(0, 200, 185);
+    -unity-font-style: bold;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.seedstorage-inv-empty {
+    font-size: 10px;
+    color: rgb(80, 110, 125);
+    -unity-font-style: italic;
+    padding-left: 4px;
+}
+
+.seedstorage-inv-placeholder {
+    font-size: 11px;
+    color: rgb(100, 140, 155);
+    -unity-font-style: italic;
+    padding: 2px 4px;
+}
+
+/* TIP + BUTTONS */
+
+.seedstorage-tip {
+    font-size: 10px;
+    color: rgb(90, 120, 135);
+    -unity-font-style: italic;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    white-space: normal;
+}
+
+/* BUTTONS — base (inactive/disabled look) */
+.seedstorage-transfer-btn {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background-color: rgb(10, 20, 28);
+    color: rgb(70, 105, 120);
+    border-width: 1px;
+    border-color: rgb(30, 55, 68);
+    border-radius: 2px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    opacity: 0.55;
+}
+
+.seedstorage-retrieve-btn {
+    margin-top: 6px;
+    padding: 7px 10px;
+    background-color: rgb(10, 20, 28);
+    color: rgb(70, 105, 120);
+    border-width: 1px;
+    border-color: rgb(30, 55, 68);
+    border-radius: 2px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    opacity: 0.55;
+}
+
+/* BUTTONS — active (items/slots selected) */
+.seedstorage-transfer-btn--active {
+    background-color: rgb(12, 40, 56);
+    color: rgb(200, 235, 245);
+    border-color: rgb(0, 175, 195);
+    opacity: 1;
+}
+
+.seedstorage-retrieve-btn--active {
+    background-color: rgb(10, 30, 40);
+    color: rgb(175, 215, 225);
+    border-color: rgb(0, 145, 165);
+    opacity: 1;
+}
+
+/* ======================== RIGHT COLUMN ======================== */
+
+.seedstorage-col-right {
+    flex-grow: 1;
+    padding: 16px 18px 16px 18px;
+    background-color: rgb(10, 16, 26);
+}
+
+/* RIGHT HEADER */
+
+.seedstorage-right-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(22, 55, 70);
+}
+
+.seedstorage-right-title-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.seedstorage-right-title-group {
+    flex-grow: 1;
+}
+
+.seedstorage-right-title {
+    font-size: 20px;
+    color: rgb(215, 238, 245);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.seedstorage-right-subtitle {
+    font-size: 11px;
+    color: rgb(100, 160, 175);
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.seedstorage-right-title-actions {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* STATUS BAR */
+
+.seedstorage-status-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.seedstorage-power-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.seedstorage-power-indicator--on {
+    background-color: rgb(70, 215, 90);
+}
+
+.seedstorage-power-indicator--off {
+    background-color: rgb(215, 70, 70);
+}
+
+.seedstorage-status-text {
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.seedstorage-status-text--on {
+    color: rgb(70, 215, 90);
+}
+
+.seedstorage-status-text--off {
+    color: rgb(215, 100, 100);
+}
+
+.seedstorage-status-sep {
+    color: rgb(50, 80, 90);
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 11px;
+}
+
+.seedstorage-status-metric {
+    font-size: 11px;
+    color: rgb(160, 195, 210);
+    letter-spacing: 1px;
+}
+
+.seedstorage-status-system {
+    font-size: 11px;
+    color: rgb(120, 160, 175);
+    letter-spacing: 1px;
+}
+
+/* METRICS BAR */
+
+.seedstorage-metrics-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.seedstorage-metric-item {
+    font-size: 12px;
+    color: rgb(180, 210, 220);
+    letter-spacing: 1px;
+}
+
+.seedstorage-metric-cost {
+    color: rgb(215, 238, 245);
+    -unity-font-style: bold;
+}
+
+.seedstorage-metric-ap {
+    color: rgb(0, 220, 200);
+    -unity-font-style: bold;
+}
+
+.seedstorage-metrics-sep {
+    color: rgb(50, 80, 90);
+    margin-left: 12px;
+    margin-right: 12px;
+    font-size: 14px;
+}
+
+.seedstorage-metrics-spacer {
+    flex-grow: 1;
+}
+
+/* POWER BUTTON + CLOSE */
+
+.seedstorage-power-button {
+    margin-right: 8px;
+    padding: 5px 12px;
+    background-color: rgb(16, 36, 46);
+    color: rgb(180, 215, 225);
+    border-width: 1px;
+    border-color: rgb(0, 140, 155);
+    border-radius: 2px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.seedstorage-close-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+    background-color: rgb(30, 16, 16);
+    color: rgb(200, 160, 160);
+    border-width: 1px;
+    border-color: rgb(100, 50, 50);
+    border-radius: 2px;
+    -unity-font-style: bold;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ======================== SLOT GRID ======================== */
+
+.seedstorage-slots-grid {
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.seedstorage-slots-row {
+    flex-direction: row;
+    margin-bottom: 8px;
+}
+
+.seedstorage-slot {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 110px;
+    margin-right: 8px;
+    padding: 10px;
+    border-width: 1px;
+    border-radius: 2px;
+    background-color: rgb(8, 14, 22);
+}
+
+.seedstorage-slot--empty {
+    border-color: rgb(22, 55, 70);
+}
+
+.seedstorage-slot--locked {
+    border-color: rgb(85, 65, 30);
+    background-color: rgb(12, 10, 6);
+    opacity: 0.8;
+}
+
+.seedstorage-slot--occupied {
+    border-color: rgb(0, 160, 175);
+    background-color: rgb(8, 18, 26);
+}
+
+.seedstorage-slot--selected {
+    border-color: rgb(80, 200, 255);
+    background-color: rgb(10, 28, 46);
+}
+
+/* SLOT TAG (top-left label) */
+
+.seedstorage-slot-tag {
+    font-size: 10px;
+    color: rgb(0, 220, 200);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    background-color: rgb(0, 40, 48);
+    padding: 2px 6px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+    align-self: flex-start;
+}
+
+.seedstorage-slot-tag--locked {
+    color: rgb(180, 145, 60);
+    background-color: rgb(40, 30, 10);
+}
+
+.seedstorage-slot-lock-icon {
+    font-size: 22px;
+    color: rgb(120, 95, 45);
+    align-self: center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    -unity-text-align: middle-center;
+}
+
+/* Slot content: icon + text side by side */
+.seedstorage-slot-content-row {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.seedstorage-slot-text-col {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+/* Icon box inside slot (placeholder, replaced with actual icon later) */
+.seedstorage-slot-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    border-radius: 3px;
+    border-width: 1px;
+}
+
+.seedstorage-slot-icon--empty {
+    background-color: rgb(14, 20, 28);
+    border-color: rgb(35, 50, 60);
+    opacity: 0.4;
+}
+
+.seedstorage-slot-icon--locked {
+    background-color: rgb(20, 16, 10);
+    border-color: rgb(70, 55, 25);
+    opacity: 0.35;
+}
+
+.seedstorage-slot-icon--occupied {
+    background-color: rgb(16, 28, 36);
+    border-color: rgb(0, 140, 155);
+}
+
+.seedstorage-slot-body {
+    font-size: 12px;
+    color: rgb(215, 238, 245);
+    white-space: normal;
+}
+
+.seedstorage-slot-sub {
+    font-size: 11px;
+    color: rgb(100, 140, 155);
+    white-space: normal;
+    margin-top: 2px;
+    margin-bottom: 4px;
+}
+
+/* VIABILITY ROW */
+
+.seedstorage-via-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.seedstorage-via-label {
+    font-size: 9px;
+    color: rgb(100, 140, 155);
+    letter-spacing: 1px;
+    min-width: 58px;
+    margin-right: 6px;
+}
+
+.seedstorage-viability {
+    flex-grow: 1;
+    height: 6px;
+    background-color: rgb(20, 35, 42);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.seedstorage-viability-fill {
+    height: 100%;
+    background-color: rgb(70, 215, 90);
+}
+
+.seedstorage-via-pct {
+    font-size: 10px;
+    color: rgb(70, 215, 90);
+    -unity-font-style: bold;
+    min-width: 32px;
+    margin-left: 6px;
+    -unity-text-align: upper-right;
+}
+
+/* SLOT UNLOCK BUTTON */
+
+.seedstorage-slot-unlock-btn {
+    margin-top: 10px;
+    padding: 5px 8px;
+    background-color: rgb(34, 24, 8);
+    color: rgb(230, 195, 90);
+    border-width: 1px;
+    border-color: rgb(140, 110, 35);
+    border-radius: 2px;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+/* ======================== SYSTEM LOG ======================== */
+
+.seedstorage-log {
+    padding: 10px 12px;
+    background-color: rgb(6, 10, 16);
+    border-width: 1px;
+    border-color: rgb(22, 55, 70);
+    border-radius: 2px;
+}
+
+.seedstorage-log-title {
+    font-size: 10px;
+    color: rgb(0, 185, 200);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.seedstorage-log-scroll {
+    max-height: 72px;
+}
+
+.seedstorage-log-line {
+    font-size: 11px;
+    color: rgb(110, 160, 145);
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+/* ======================== SCROLLBAR — grey (stile terminal pot) ======================== */
+
+/* Hide horizontal scroller entirely */
+.seedstorage-inv-scroll .unity-scroll-view__horizontal-scroller {
+    display: none;
+}
+
+/* Vertical scroller track */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller {
+    width: 12px;
+    min-width: 12px;
+    background-color: rgb(22, 30, 38);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(40, 52, 62);
+    border-right-color: rgb(40, 52, 62);
+    border-top-color: rgb(40, 52, 62);
+    border-bottom-color: rgb(40, 52, 62);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Hide the slider track line */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__track {
+    display: none;
+}
+
+/* Slider container */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-scroller__slider {
+    width: 100%;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+/* Drag container */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__drag-container {
+    align-self: center;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+/* Arrow buttons — hidden */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-scroller__high-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    min-height: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-scroller__low-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    min-height: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Thumb — grey pill */
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb {
+    align-self: center;
+    width: 6px;
+    min-width: 6px;
+    background-color: rgb(88, 100, 115);
+    background-image: none;
+    border-width: 0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    min-height: 24px;
+}
+
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
+    align-self: center;
+    width: 6px;
+    min-width: 6px;
+    background-color: rgb(88, 100, 115);
+    background-image: none;
+    border-width: 0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    min-height: 24px;
+}
+
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-scroller__thumb:hover {
+    background-color: rgb(115, 130, 148);
+}
+
+.seedstorage-inv-scroll .unity-scroll-view__vertical-scroller .unity-base-slider__dragger:hover {
+    background-color: rgb(115, 130, 148);
+}
+

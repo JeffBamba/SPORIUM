@@ -5,6 +5,7 @@ using _Project;
 using _Project.Scripts.Core;
 using _Project.Sporae.Core;
 using _Project.Systems.FoodRoom;
+using _Project.Systems.SeedStorage;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Sporae.Core;
@@ -42,6 +43,7 @@ public class GameManager : MonoBehaviour
     private DayCycleSystem _dayCycleSystem;
     private PlayerHydrationSystem _playerHydrationSystem;
     private FoodRoomSystem _foodRoomSystem;
+    private SeedStorageSystem _seedStorageSystem;
     private ItemConsumptionHandler _itemConsumptionHandler;
 
     /// <summary>Giorni consecutivi con H≈0% dopo il consumo passivo notturno. A 2 → game over disidratazione.</summary>
@@ -67,6 +69,7 @@ public class GameManager : MonoBehaviour
     public Inventory PlayerInventory => _playerInventory;
     public PlayerHydrationSystem PlayerHydrationSystem => _playerHydrationSystem;
     public FoodRoomSystem FoodRoomSystem => _foodRoomSystem;
+    public SeedStorageSystem SeedStorageSystem => _seedStorageSystem;
 
     public int DehydrationZeroDayStreak => _dehydrationZeroDayStreak;
     public bool IsDemoTutorialDayActive => _demoTutorialDayActive;
@@ -295,6 +298,7 @@ public class GameManager : MonoBehaviour
         if (isDemo)
             _playerHydrationSystem.SetHydrationPercent(75f);
         _foodRoomSystem = new FoodRoomSystem(_playerInventory, this);
+        _seedStorageSystem = new SeedStorageSystem(this);
         _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, this);
         _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
 
@@ -304,6 +308,8 @@ public class GameManager : MonoBehaviour
                 ServiceContainer.Instance.Register(_playerHydrationSystem);
             if (!ServiceContainer.Instance.Contains(typeof(FoodRoomSystem)))
                 ServiceContainer.Instance.Register(_foodRoomSystem);
+            if (!ServiceContainer.Instance.Contains(typeof(SeedStorageSystem)))
+                ServiceContainer.Instance.Register(_seedStorageSystem);
         }
 
         if (_dayCycleSystem != null)

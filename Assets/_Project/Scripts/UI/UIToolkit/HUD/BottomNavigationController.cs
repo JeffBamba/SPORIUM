@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
+using _Project.Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.HUD.Components;
 
@@ -120,6 +121,11 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void Update()
         {
+            if (_root != null)
+                _root.style.display = GameplayUiModalLock.BlocksWorldInput
+                    ? DisplayStyle.None
+                    : DisplayStyle.Flex;
+
             if (_glowFrameLiveUpdate && _glowFrameGenerator != null)
             {
                 if (_glowFrameMaterialRuntime != null && _glowFrameMaterial != null)

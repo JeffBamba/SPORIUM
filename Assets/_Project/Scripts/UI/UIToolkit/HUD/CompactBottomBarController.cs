@@ -140,6 +140,19 @@ namespace Sporae.UI.UIToolkit.HUD
             UnsubscribeFromServices();
         }
 
+        private void Update()
+        {
+            bool hideFixedHud = GameplayUiModalLock.BlocksWorldInput;
+            if (_root != null)
+                _root.style.display = hideFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
+
+            if (hideFixedHud)
+            {
+                if (_cryTooltip != null) _cryTooltip.style.display = DisplayStyle.None;
+                if (_roomTooltip != null) _roomTooltip.style.display = DisplayStyle.None;
+            }
+        }
+
         // ── Service resolution ──
 
         private void ResolveServices()

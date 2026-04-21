@@ -146,6 +146,12 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         private void Update()
         {
+            // Nasconde l'HUD quando un pannello modale è aperto (es. SeedStorage, TerminalPot).
+            if (_hudRoot != null)
+                _hudRoot.style.display = GameplayUiModalLock.BlocksWorldInput
+                    ? DisplayStyle.None
+                    : DisplayStyle.Flex;
+
             _refreshTimer += Time.deltaTime;
             if (_refreshTimer >= RefreshInterval)
             {

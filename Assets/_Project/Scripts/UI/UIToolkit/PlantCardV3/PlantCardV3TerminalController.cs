@@ -94,7 +94,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         [Header("Backdrop Blur")]
         [SerializeField] private bool _useBlurredBackdrop = true;
         [SerializeField] private bool _outsideShowsGameView = true;
-        [SerializeField, Range(0.5f, 0.99f)] private float _backdropDimAlpha = 0.95f;
+        private const float UnifiedModalDimAlpha = 0.65f;
         [SerializeField, Range(2, 16)] private int _backdropDownsample = 8;
         [SerializeField, Range(1, 6)] private int _backdropBlurRadius = 2;
         [SerializeField, Range(1, 4)] private int _backdropBlurIterations = 2;
@@ -1319,7 +1319,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             // Allow runtime tweaking of dim alpha in Inspector.
             if (_dimOverlay != null)
             {
-                float dimAlpha = _outsideShowsGameView ? 0f : Mathf.Clamp01(_backdropDimAlpha);
+                // Keep a consistent translucent black layer across all modal panels.
+                float dimAlpha = UnifiedModalDimAlpha;
                 _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, dimAlpha);
             }
 
@@ -1382,6 +1383,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void SetVisible(bool visible)
         {
             _isVisible = visible;
+            GameplayUiModalLock.SetBlockWorldInput(visible);
 
             if (_root == null) return;
 
@@ -1436,7 +1438,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (_outsideShowsGameView)
             {
-                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
+                _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, UnifiedModalDimAlpha);
                 _backdrop.style.backgroundImage = new StyleBackground();
                 _backdrop.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
                 return;
@@ -1444,7 +1446,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             if (!_useBlurredBackdrop) return;
 
-            _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(_backdropDimAlpha));
+            _dimOverlay.style.backgroundColor = new Color(0f, 0f, 0f, UnifiedModalDimAlpha);
             if (Screen.width < 64 || Screen.height < 64)
             {
                 // Render target too small (minimized or not ready) -> skip capture.
@@ -1559,12 +1561,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_suppressedUiDocuments.Count > 0) return;
 
-            // Nomi GO UI da nascondere quando il terminale è aperto (Pot Ops / IrrigationDialog / SeedInventory / AdditiveSelector rimossi).
+            // Nomi GO UI da nascondere quando il terminale è aperto.
+            // PlayerStatusPanel resta visibile per allineamento con gli altri pannelli modali.
             string[] goNames =
             {
                 "HUD_TopBar",
                 "HUD_BottomNavigation",
-                "PlayerStatusPanel",
                 "Notifications Foundation",
                 "HUD_GameViewportBackground"
             };

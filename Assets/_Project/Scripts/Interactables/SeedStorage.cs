@@ -1,18 +1,15 @@
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.UI.UIToolkit.SeedStorage;
 using UnityEngine;
 
 namespace _Project
 {
+    /// <summary>Interactable Seed Storage Vault — stato in <see cref="_Project.Systems.SeedStorage.SeedStorageSystem"/>.</summary>
     public class SeedStorage : Storage
     {
-        [SerializeField] private HUDInventory _inventoryUI;
-        [SerializeField] private SeedStorageUI _seedStorageUI;
-       
-        private readonly Inventory _inventory = new();
+        private readonly Inventory _legacyEmptyInventory = new();
         private Interactable _interactable;
-        
-        public Inventory Storage => _inventory;
 
         private void Awake()
         {
@@ -22,17 +19,16 @@ namespace _Project
 
         private void OnDestroy()
         {
-            _interactable.OnInteract -= HandleInteract;
+            if (_interactable != null)
+                _interactable.OnInteract -= HandleInteract;
         }
-        
-        private void HandleInteract() {
-            _inventoryUI.Show();
-            _seedStorageUI.Show();
-        }
-        
-        public override Inventory GetInventory()
+
+        private void HandleInteract()
         {
-            return _inventory;
+            SeedStoragePanelController.EnsureInstance()?.Show();
         }
+
+        /// <summary>Legacy API — contenuto reale è in SeedStorageSystem.</summary>
+        public override Inventory GetInventory() => _legacyEmptyInventory;
     }
 }
