@@ -1383,7 +1383,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         private void SetVisible(bool visible)
         {
             _isVisible = visible;
-            GameplayUiModalLock.SetBlockWorldInput(visible);
+            GameplayUiModalLock.SetMachineModalState(visible);
 
             if (_root == null) return;
 

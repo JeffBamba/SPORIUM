@@ -262,7 +262,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             EnsureSystems();
             _root.style.display = DisplayStyle.Flex;
             IsOpen = true;
-            GameplayUiModalLock.SetBlockWorldInput(true);
+            GameplayUiModalLock.SetMachineModalState(true);
             Refresh();
         }
 
@@ -270,7 +270,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         {
             if (_root != null) _root.style.display = DisplayStyle.None;
             IsOpen = false;
-            GameplayUiModalLock.SetBlockWorldInput(false);
+            GameplayUiModalLock.SetMachineModalState(false);
         }
 
         // ─── Actions ─────────────────────────────────────────────────────────────

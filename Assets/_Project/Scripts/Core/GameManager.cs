@@ -326,12 +326,21 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        // Inventario iniziale pulito per il loop reale: frutti specifici e materiali base,
-        // ma niente semi/spore/pre-seed placeholder.
-        const int starterQuantity = 10;
-        const int starterFruitQuantity = 3;
-        foreach (string typeId in Items.StarterInventoryTypeIds)
-            _playerInventory.Add(typeId, Items.IsSpecificFruitType(typeId) ? starterFruitQuantity : starterQuantity);
+        // Inventario iniziale:
+        // - Demo: lock UX richiesto (solo acqua potabile + vegetali sintetici).
+        // - Full game: starter inventory completo.
+        if (isDemo)
+        {
+            _playerInventory.Add(Items.WaterPotable, 5);
+            _playerInventory.Add(Items.FoodVegetable, 2);
+        }
+        else
+        {
+            const int starterQuantity = 10;
+            const int starterFruitQuantity = 3;
+            foreach (string typeId in Items.StarterInventoryTypeIds)
+                _playerInventory.Add(typeId, Items.IsSpecificFruitType(typeId) ? starterFruitQuantity : starterQuantity);
+        }
         
         // Seed iniziale del ledger (nessuna penalità fame al primo frame).
         SeedActionBudgetLedgerForDawn(rawBreakfast: Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5), penaltySteps: 0, wasOverrideBreakfast: false);

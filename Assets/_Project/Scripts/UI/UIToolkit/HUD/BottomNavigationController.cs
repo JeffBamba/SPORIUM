@@ -122,7 +122,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private void Update()
         {
             if (_root != null)
-                _root.style.display = GameplayUiModalLock.BlocksWorldInput
+                _root.style.display = GameplayUiModalLock.HidesFixedHud
                     ? DisplayStyle.None
                     : DisplayStyle.Flex;
 

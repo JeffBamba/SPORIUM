@@ -277,7 +277,7 @@ namespace Sporae.UI.UIToolkit.Lab
         public void Show()
         {
             gameObject.SetActive(true);
-            GameplayUiModalLock.SetBlockWorldInput(true);
+            GameplayUiModalLock.SetMachineModalState(true);
             TryBindUI();
             if (_overlay != null)
             {
@@ -293,7 +293,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         public void Hide()
         {
-            GameplayUiModalLock.SetBlockWorldInput(false);
+            GameplayUiModalLock.SetMachineModalState(false);
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.None;

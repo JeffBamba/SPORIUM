@@ -6,7 +6,15 @@ namespace _Project.Sporae.Core
     public static class GameplayUiModalLock
     {
         public static bool BlocksWorldInput { get; private set; }
+        public static bool HidesFixedHud { get; private set; }
 
         public static void SetBlockWorldInput(bool block) => BlocksWorldInput = block;
+        public static void SetHideFixedHud(bool hide) => HidesFixedHud = hide;
+
+        public static void SetMachineModalState(bool isOpen)
+        {
+            BlocksWorldInput = isOpen;
+            HidesFixedHud = isOpen;
+        }
     }
 }

@@ -968,7 +968,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void Update()
         {
-            bool hideFixedHud = GameplayUiModalLock.BlocksWorldInput;
+            bool hideFixedHud = GameplayUiModalLock.HidesFixedHud;
             if (_root != null)
                 _root.style.display = hideFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
             if (hideFixedHud && _phTooltip != null)
