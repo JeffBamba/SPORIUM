@@ -7,6 +7,7 @@ using _Project.Systems.SeedStorage;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.UI.Icons;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -461,6 +462,26 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             }
         }
 
+        /// <summary>Icona item coerente con inventario player (<see cref="GlobalIconResolver"/>).</summary>
+        private static VisualElement BuildInvRowIcon(string typeId)
+        {
+            var iconBox = new VisualElement();
+            iconBox.AddToClassList("seedstorage-icon-box");
+
+            var iconGlyph = new VisualElement();
+            iconGlyph.AddToClassList("seedstorage-inv-iconglyph");
+
+            var spr = GlobalIconResolver.GetItemIcon(typeId);
+            if (spr != null)
+            {
+                iconGlyph.style.backgroundImage = new StyleBackground(spr);
+                iconGlyph.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            }
+
+            iconBox.Add(iconGlyph);
+            return iconBox;
+        }
+
         private VisualElement BuildInvGroupRow(string typeId, int count)
         {
             var row = new VisualElement();
@@ -468,10 +489,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             if (_depositSelectionTypeIds.Contains(typeId))
                 row.AddToClassList("seedstorage-inv-row--selected");
 
-            // Icon box placeholder
-            var icon = new VisualElement();
-            icon.AddToClassList("seedstorage-icon-box");
-            row.Add(icon);
+            row.Add(BuildInvRowIcon(typeId));
 
             // Item name
             var nameLabel = new Label(FormatItemName(typeId));

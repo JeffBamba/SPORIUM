@@ -24,16 +24,6 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   - TypeId: pre-seed
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
-  - TypeId: WAT-RAW
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
-  - TypeId: WAT-POT
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
-  - TypeId: fertilizer-standard
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
-  - TypeId: fertilizer-pure
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
-  - TypeId: fertilizer-prohibited
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   _categoryIcons:
   - CategoryKey: plant
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
@@ -62,6 +52,46 @@ MonoBehaviour:
   - CategoryKey: misc
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   - CategoryKey: action
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  _categoryVariantIcons:
+  - CategoryKey: water
+    VariantKey: potable
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: water
+    VariantKey: raw
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: fertilizer
+    VariantKey: standard
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: fertilizer
+    VariantKey: pure
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: fertilizer
+    VariantKey: prohibited
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: additive
+    VariantKey: spray
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: additive
+    VariantKey: basic
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: additive
+    VariantKey: acid
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: reagent
+    VariantKey: x
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: reagent
+    VariantKey: y
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: stemcell
+    VariantKey: vegetable
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: stemcell
+    VariantKey: fungus
+    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+  - CategoryKey: stemcell
+    VariantKey: animal
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   _actionIcons:
   - ActionKey: overwatering

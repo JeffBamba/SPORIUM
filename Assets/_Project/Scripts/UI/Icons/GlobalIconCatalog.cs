@@ -21,6 +21,15 @@ namespace Sporae.UI.Icons
             public Sprite Icon;
         }
 
+        /// <summary>Esempio: CategoryKey=fertilizer, VariantKey=pure → flacone verde; VariantKey=prohibited → variante "evil".</summary>
+        [Serializable]
+        public struct CategoryVariantIconEntry
+        {
+            public string CategoryKey;
+            public string VariantKey;
+            public Sprite Icon;
+        }
+
         [Serializable]
         public struct ActionIconEntry
         {
@@ -45,6 +54,9 @@ namespace Sporae.UI.Icons
 
         [Header("Overrides by Category Key")]
         [SerializeField] private List<CategoryIconEntry> _categoryIcons = new();
+
+        [Header("Overrides by Category + Variant (sotto-famiglia stesso asset visivo)")]
+        [SerializeField] private List<CategoryVariantIconEntry> _categoryVariantIcons = new();
 
         [Header("Overrides by Action Key")]
         [SerializeField] private List<ActionIconEntry> _actionIcons = new();
@@ -80,6 +92,24 @@ namespace Sporae.UI.Icons
             {
                 var e = _categoryIcons[i];
                 if (string.Equals(e.CategoryKey, categoryKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    icon = e.Icon;
+                    return icon != null;
+                }
+            }
+            return false;
+        }
+
+        public bool TryGetCategoryVariantIcon(string categoryKey, string variantKey, out Sprite icon)
+        {
+            icon = null;
+            if (string.IsNullOrWhiteSpace(categoryKey) || string.IsNullOrWhiteSpace(variantKey))
+                return false;
+            for (int i = 0; i < _categoryVariantIcons.Count; i++)
+            {
+                var e = _categoryVariantIcons[i];
+                if (string.Equals(e.CategoryKey, categoryKey, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(e.VariantKey, variantKey, StringComparison.OrdinalIgnoreCase))
                 {
                     icon = e.Icon;
                     return icon != null;

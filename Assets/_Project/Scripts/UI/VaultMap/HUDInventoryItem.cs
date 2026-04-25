@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sporae.DevTools;
+using Sporae.UI.Icons;
 
 namespace _Project
 {
@@ -11,12 +12,14 @@ namespace _Project
     {
         [SerializeField] private TextMeshProUGUI _nameLabel;
         [SerializeField] private TextMeshProUGUI _scoreLabel;
+        [Tooltip("Opzionale: se null, viene creato un figlio ItemIcon a runtime (Black Market / HUD item row).")]
+        [SerializeField] private Image _itemIconImage;
 
         [SerializeField] private Color _normalColor = new Color(0.15f, 0.15f, 0.15f, 0.95f); // Sfondo scuro opaco di default
         [SerializeField] private Color _selectedColor = new Color(0.3f, 0.6f, 0.3f, 0.95f); // Verde più chiaro quando selezionato
 
         private string _itemName;
-        
+
         public string ItemName => _itemName;
         
         private Image _image;
@@ -26,9 +29,59 @@ namespace _Project
         private void Awake()
         {
             _image = GetComponent<Image>();
-            
+
             // Migliora leggibilità all'avvio
             ImproveReadability();
+        }
+
+        private void EnsureItemIconImage()
+        {
+            if (_itemIconImage != null)
+                return;
+
+            var existing = transform.Find("ItemIcon");
+            if (existing != null)
+            {
+                _itemIconImage = existing.GetComponent<Image>();
+                if (_itemIconImage != null)
+                    return;
+            }
+
+            var go = new GameObject("ItemIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            go.transform.SetParent(transform, false);
+            go.transform.SetAsFirstSibling();
+
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0.5f);
+            rt.anchorMax = new Vector2(0f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(56f, 56f);
+            rt.anchoredPosition = new Vector2(36f, 0f);
+
+            _itemIconImage = go.GetComponent<Image>();
+            _itemIconImage.raycastTarget = false;
+            _itemIconImage.preserveAspect = true;
+            _itemIconImage.color = Color.white;
+        }
+
+        private void ApplyItemIconSprite(string typeId)
+        {
+            EnsureItemIconImage();
+            if (_itemIconImage == null)
+                return;
+
+            var sprite = GlobalIconResolver.GetItemIcon(typeId);
+            _itemIconImage.sprite = sprite;
+            _itemIconImage.enabled = sprite != null;
+            _itemIconImage.gameObject.SetActive(sprite != null);
+
+            if (_nameLabel != null)
+            {
+                var nameRt = _nameLabel.rectTransform;
+                var om = nameRt.offsetMin;
+                om.x = sprite != null ? 72f : 0f;
+                nameRt.offsetMin = om;
+            }
         }
         
         /// <summary>
@@ -110,7 +163,8 @@ namespace _Project
         public void SetItem(string itemName, int quantity)
         {
             _itemName = itemName;
-            
+            ApplyItemIconSprite(itemName);
+
             // Assicurati che il GameObject sia attivo e visibile
             gameObject.SetActive(true);
             

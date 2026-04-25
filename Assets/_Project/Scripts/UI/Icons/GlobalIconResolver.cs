@@ -17,12 +17,18 @@ namespace Sporae.UI.Icons
 
         public static Sprite GetItemIcon(string typeId)
         {
+            string category = string.IsNullOrWhiteSpace(typeId) ? "misc" : ResolveItemCategory(typeId);
+            string variant = string.IsNullOrWhiteSpace(typeId) ? string.Empty : ResolveItemVariantKey(typeId);
+
             var catalog = GetCatalog();
             if (catalog != null)
             {
                 if (catalog.TryGetTypeIcon(typeId, out var typeIcon)) return typeIcon;
 
-                string category = ResolveItemCategory(typeId);
+                if (!string.IsNullOrEmpty(variant) &&
+                    catalog.TryGetCategoryVariantIcon(category, variant, out var variantIcon))
+                    return variantIcon;
+
                 if (catalog.TryGetCategoryIcon(category, out var categoryIcon)) return categoryIcon;
 
                 if (catalog.DefaultItemIcon != null) return catalog.DefaultItemIcon;
@@ -32,6 +38,12 @@ namespace Sporae.UI.Icons
             {
                 var byType = Resources.Load<Sprite>(ItemsResourcePath + typeId);
                 if (byType != null) return byType;
+
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    var byCatVar = Resources.Load<Sprite>(ItemsResourcePath + category + "-" + variant);
+                    if (byCatVar != null) return byCatVar;
+                }
             }
 
             return Resources.Load<Sprite>(ItemsResourcePath + DefaultIconName);
@@ -93,6 +105,37 @@ namespace Sporae.UI.Icons
             if (typeId == Items.WholePlant) return "plant";
 
             return "misc";
+        }
+
+        /// <summary>
+        /// Sotto-chiave per <see cref="GlobalIconCatalog.TryGetCategoryVariantIcon"/> e per sprite in Resources
+        /// (<c>Icons/Items/{category}-{variant}.png</c>, es. <c>water-potable</c>, <c>fertilizer-pure</c>).
+        /// Stringa vuota = nessuna variante (solo icona di categoria o per-typeId).
+        /// </summary>
+        public static string ResolveItemVariantKey(string typeId)
+        {
+            if (string.IsNullOrWhiteSpace(typeId))
+                return string.Empty;
+
+            if (typeId == Items.Water) return "raw";
+            if (typeId == Items.WaterPotable) return "potable";
+
+            if (typeId == Items.FertilizerStandard) return "standard";
+            if (typeId == Items.FertilizerPure) return "pure";
+            if (typeId == Items.FertilizerProhibited) return "prohibited";
+
+            if (typeId == Items.SprayAntifungal) return "spray";
+            if (typeId == Items.AdditiveBasic) return "basic";
+            if (typeId == Items.AdditiveAcid) return "acid";
+
+            if (typeId == Items.ReagentX) return "x";
+            if (typeId == Items.ReagentY) return "y";
+
+            if (typeId == Items.StemCellVegetable) return "vegetable";
+            if (typeId == Items.StemCellFungus) return "fungus";
+            if (typeId == Items.StemCellAnimal) return "animal";
+
+            return string.Empty;
         }
 
         public static string NormalizeKey(string key)

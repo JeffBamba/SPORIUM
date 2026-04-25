@@ -144,6 +144,15 @@
     border-width: 1px;
     border-color: rgb(45, 65, 80);
     border-radius: 3px;
+    align-items: center;
+    justify-content: center;
+}
+
+.seedstorage-inv-iconglyph {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
 }
 
 /* Item display name */
