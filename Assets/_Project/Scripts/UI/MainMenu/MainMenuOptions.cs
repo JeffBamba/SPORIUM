@@ -36,7 +36,6 @@ namespace _Project
 
         private void Start()
         {
-            EnsureOptionsPopupController();
             EnsureMainMenuUiToolkitController();
 
             _newGameButton.onClick.AddListener(HandleNewGame);
@@ -53,13 +52,6 @@ namespace _Project
         {
             if (GetComponent<MainMenuUIToolkitController>() == null)
                 gameObject.AddComponent<MainMenuUIToolkitController>();
-        }
-
-        private void EnsureOptionsPopupController()
-        {
-            if (_menuScreens?.OptionsPopup == null) return;
-            if (_menuScreens.OptionsPopup.GetComponent<OptionsPopupController>() == null)
-                _menuScreens.OptionsPopup.AddComponent<OptionsPopupController>();
         }
 
         /// <summary>
@@ -124,10 +116,15 @@ namespace _Project
         
         private void HandleOptions()
         {
-            if (_menuScreens.IsOptionsOpen)
-                _menuScreens.HideActivePopup();
-            else
-                _menuScreens.ShowOptionsPopup();
+            var toolkit = ResolveMainMenuToolkit();
+            if (toolkit != null && toolkit.IsRuntimeReady)
+            {
+                toolkit.ShowInGameMenu();
+                toolkit.OpenOptionsOverlay();
+                return;
+            }
+
+            Debug.LogWarning("[MainMenuOptions] MainMenuUIToolkitController non pronto: impossibile aprire Opzioni.");
         }
         
         private void HandleNewGame()

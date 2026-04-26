@@ -758,7 +758,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Aggiungi Spray Antifungino (consuma STR-004)
+  m_Text: Aggiungi additivo basico (consuma STR-004-Basic)
 --- !u!1 &7162044197452648004
 GameObject:
   m_ObjectHideFlags: 0

@@ -804,7 +804,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             string locKey,
             string it,
             string en,
-            string tooltipIt = null)
+            string tooltipIt = null,
+            string tooltipEn = null)
         {
             return new NotificationTypeSpec
             {
@@ -819,7 +820,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 LocKey = locKey,
                 TemplateIt = it,
                 TemplateEn = en,
-                TooltipIt = tooltipIt
+                TooltipIt = tooltipIt,
+                TooltipEn = tooltipEn
             };
         }
     }

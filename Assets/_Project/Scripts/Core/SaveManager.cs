@@ -976,7 +976,11 @@ namespace Sporae.Core
 
         private _Project.Sporae.Core.Item BuildItemFromInventoryItemData(InventoryItemData itemData, int inventoryVersion)
         {
-            var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(itemData.typeId);
+            string typeId = itemData.typeId;
+            if (string.Equals(typeId, "STR-004", StringComparison.OrdinalIgnoreCase))
+                typeId = Items.AdditiveBasic;
+
+            var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(typeId);
             if (item == null)
                 return null;
 

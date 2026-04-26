@@ -77,6 +77,30 @@
                 <ui:Label text="VAULT SYSTEMS ONLINE • ALL PROTOCOLS NOMINAL" name="footer-live-text" style="color: rgba(70, 141, 67, 0.9);" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="options-overlay" class="options-overlay">
+            <ui:VisualElement name="options-panel" class="options-panel">
+                <ui:VisualElement name="options-header" class="options-header">
+                    <ui:VisualElement name="options-header-titles" class="options-header-titles">
+                        <ui:Label text="OPZIONI" name="options-title" class="options-title" />
+                        <ui:Label text="Configura lingua e preferenze di sessione" name="options-subtitle" class="options-subtitle" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-options-close" class="options-close" text="CHIUDI" />
+                </ui:VisualElement>
+                <ui:VisualElement name="options-content" class="options-content">
+                    <ui:VisualElement name="options-row-language" class="options-row">
+                        <ui:VisualElement class="options-row-copy">
+                            <ui:Label text="Lingua" name="options-language-title" class="options-row-title" />
+                            <ui:Label text="Scegli la lingua dei testi di gioco." name="options-language-desc" class="options-row-desc" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="options-language-buttons" class="options-language-buttons">
+                            <ui:Button name="btn-language-auto" class="options-language-button" text="AUTO" />
+                            <ui:Button name="btn-language-it" class="options-language-button" text="IT" />
+                            <ui:Button name="btn-language-en" class="options-language-button" text="EN" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:VisualElement name="save-slots-overlay" class="save-slots-overlay">
             <ui:VisualElement name="save-slots-panel" class="save-slots-panel">
                 <ui:VisualElement name="save-slots-header" class="save-slots-header">

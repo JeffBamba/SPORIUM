@@ -6,6 +6,7 @@ using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.ExtractorDisplay;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core.Localization;
 using UnityEngine;
 using Sporae.DevTools;
 
@@ -361,7 +362,7 @@ namespace _Project
                     if (sampleForUi != null)
                         foundationCollect.PostAddedToInventory(CollectionPayloadFactory.FromItem(sampleForUi, _slotSpore[i], RoomNames.Laboratory));
                     else
-                        foundationCollect.PostAddedToInventory(Items.SporeGeneric, "Spore Grezza", _slotSpore[i], RoomNames.Laboratory);
+                        foundationCollect.PostAddedToInventory(Items.SporeGeneric, ItemDisplayNameLocalization.GetSporeTitle(SporeStage.Raw), _slotSpore[i], RoomNames.Laboratory);
                 }
             }
 
@@ -371,12 +372,12 @@ namespace _Project
 
             if (foundationNotify)
             {
-                if (totalC1 > 0)
-                    foundationCollect.PostAddedToInventory(Items.StemCellVegetable, "Cellula staminale (vegetale)", totalC1, RoomNames.Laboratory);
-                if (totalC2 > 0)
-                    foundationCollect.PostAddedToInventory(Items.StemCellFungus, "Cellula staminale (fungina)", totalC2, RoomNames.Laboratory);
-                if (totalC3 > 0)
-                    foundationCollect.PostAddedToInventory(Items.StemCellAnimal, "Cellula staminale (animale)", totalC3, RoomNames.Laboratory);
+                if (totalC1 > 0 && ItemDisplayNameLocalization.TryGetByTypeId(Items.StemCellVegetable, out var stemV))
+                    foundationCollect.PostAddedToInventory(Items.StemCellVegetable, stemV, totalC1, RoomNames.Laboratory);
+                if (totalC2 > 0 && ItemDisplayNameLocalization.TryGetByTypeId(Items.StemCellFungus, out var stemF))
+                    foundationCollect.PostAddedToInventory(Items.StemCellFungus, stemF, totalC2, RoomNames.Laboratory);
+                if (totalC3 > 0 && ItemDisplayNameLocalization.TryGetByTypeId(Items.StemCellAnimal, out var stemA))
+                    foundationCollect.PostAddedToInventory(Items.StemCellAnimal, stemA, totalC3, RoomNames.Laboratory);
             }
 
             for (int i = 0; i < 3; i++)

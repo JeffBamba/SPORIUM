@@ -80,3 +80,8 @@ Il testo è un attributo UXML, non CSS. Se l'autore cambia il testo di un'etiche
 - `DomeStatusHUD.uxml` / `DomeStatusHUDController.cs` — campione `dome-pot-card-sample` dentro `dome-hud-builder-reference`.
 - Le label stat (`dome-pot-stat-label`) devono avere testo identico tra campione e card 0-3; lo stile vive in `.dome-pot-stat-label` nell'USS.
 - Testi attualmente sincronizzati: `IDRATAZIONE`, `FERTILIZZANTE`, `LUCE LED`.
+
+## Skill e indice agenti
+
+- Skill Cursor (checklist e trigger): `.cursor/skills/ui-toolkit-builder-parity/SKILL.md`
+- Indice per agenti nel repo: `AGENTS.md` (riferimenti a questa regola e alle skill UI)

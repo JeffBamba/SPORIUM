@@ -23,10 +23,7 @@ namespace _Project.Sporae.Core
         public const string FertilizerPure = "fertilizer-pure";            // 75 CRY, +40%
         public const string FertilizerProhibited = "fertilizer-prohibited"; // 75 CRY, +40%
         
-        // AZ-13/AZ-14: Spray Antifungino
-        public const string SprayAntifungal = "STR-004";                   // Spray Antifungino (rimuove muffe, pH +5)
-
-        // BLK-??: Additivi pH (sostituiscono Spray Antifungino come consumabile selezionabile)
+        // BLK-??: Additivi pH (consumabili selezionabili; ex STR-004 legacy rimosso)
         public const string AdditiveBasic = "STR-004-Basic";               // Additivo Basico (pH +5, riduce muffe)
         public const string AdditiveAcid = "STR-004-Acid";                 // Additivo Acido (pH -5, aumenta muffe)
 
@@ -52,7 +49,7 @@ namespace _Project.Sporae.Core
             Water, WholePlant, OrganicScrap001, SporeGeneric, PreSeed,
             Seed001, Seed002, Seed003,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
-            SprayAntifungal, AdditiveBasic, AdditiveAcid,
+            AdditiveBasic, AdditiveAcid,
             StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,
             ReagentX, ReagentY,
             FoodVegetable, FoodFungus, FoodMeat, WaterPotable, OrganicResidue
@@ -78,7 +75,7 @@ namespace _Project.Sporae.Core
             FruitFerricPod, FruitArcticPod, FruitGlassPod,
             Water, WholePlant, OrganicScrap001,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
-            SprayAntifungal, AdditiveBasic, AdditiveAcid,
+            AdditiveBasic, AdditiveAcid,
             StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,
             ReagentX, ReagentY,
             FoodVegetable, FoodFungus, FoodMeat, WaterPotable, OrganicResidue

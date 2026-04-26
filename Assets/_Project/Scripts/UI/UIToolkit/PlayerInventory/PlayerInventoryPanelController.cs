@@ -8,6 +8,7 @@ using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.Icons;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.PlayerInventory
 {
@@ -88,6 +89,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _list = _root.Q<ScrollView>("inv-list");
             _btnClose = _root.Q<Button>("btn-close");
             _btnCancel = _root.Q<Button>("btn-cancel");
+            if (_invTitle != null)
+                _invTitle.text = LocalizationManager.GetString("inventory.title");
+            if (_btnCancel != null)
+                _btnCancel.text = LocalizationManager.GetString("inventory.cancel");
 
             if (_btnClose != null)
             {
@@ -103,6 +108,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void OnEnable()
         {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             TryBindInventory();
             if (_playerInventory != null)
                 _playerInventory.OnInventoryChanged += OnInventoryChanged;
@@ -110,8 +116,21 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void OnDisable()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_playerInventory != null)
                 _playerInventory.OnInventoryChanged -= OnInventoryChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            if (_invTitle != null)
+                _invTitle.text = LocalizationManager.GetString("inventory.title");
+            if (_btnCancel != null)
+                _btnCancel.text = LocalizationManager.GetString("inventory.cancel");
+            if (_invSubtitle != null && _pickerAllowedTypes == null)
+                _invSubtitle.text = LocalizationManager.GetString("inventory.subtitle");
+            if (IsVisible)
+                Rebuild();
         }
 
         private void Start()
@@ -149,7 +168,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _onCancel = null;
             ShowInternal();
             if (_invSubtitle != null)
-                _invSubtitle.text = "Oggetti nel tuo inventario";
+                _invSubtitle.text = LocalizationManager.GetString("inventory.subtitle");
             if (_btnCancel != null)
                 _btnCancel.style.display = DisplayStyle.None;
             Rebuild();
@@ -253,7 +272,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
             if (_playerInventory.IsEmpty)
             {
-                var empty = new Label("Nessun oggetto in inventario.");
+                var empty = new Label(LocalizationManager.GetString("inventory.empty"));
                 empty.AddToClassList("inv-empty");
                 _list.Add(empty);
                 return;
@@ -261,21 +280,30 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
             bool isPicker = _pickerAllowedTypes != null && _pickerAllowedTypes.Count > 0;
 
-            IEnumerable<InventorySlot> slotsToShow = _playerInventory.Items.Where(s => s.Items.Count > 0);
+            IEnumerable<InventorySlot> slotsToShow = _playerInventory.Items.Where(IsInventorySlotVisibleInList);
             if (isPicker && _pickerAllowedTypesOrdered != null && _pickerAllowedTypesOrdered.Count > 0)
             {
-                var byType = _playerInventory.Items.Where(s => s.Items.Count > 0).ToDictionary(s => s.TypeId, s => s);
+                var byType = _playerInventory.Items.Where(IsInventorySlotVisibleInList).ToDictionary(s => s.TypeId, s => s);
                 var ordered = new List<InventorySlot>();
                 foreach (var typeId in _pickerAllowedTypesOrdered)
                     if (byType.TryGetValue(typeId, out var slot))
                         ordered.Add(slot);
                 foreach (var slot in _playerInventory.Items)
-                    if (slot.Items.Count > 0 && !_pickerAllowedTypes.Contains(slot.TypeId))
+                    if (IsInventorySlotVisibleInList(slot) && !_pickerAllowedTypes.Contains(slot.TypeId))
                         ordered.Add(slot);
                 slotsToShow = ordered;
             }
 
-            foreach (var slot in slotsToShow)
+            var slotsList = slotsToShow as IList<InventorySlot> ?? slotsToShow.ToList();
+            if (slotsList.Count == 0)
+            {
+                var empty = new Label(LocalizationManager.GetString("inventory.empty"));
+                empty.AddToClassList("inv-empty");
+                _list.Add(empty);
+                return;
+            }
+
+            foreach (var slot in slotsList)
             {
                 string typeId = slot.TypeId;
 
@@ -332,7 +360,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                         var rowItem = slot.Items.FirstOrDefault();
                         _onSelectedWithStage?.Invoke(typeId, null, rowItem);
                         Hide();
-                    }) { text = "Seleziona" };
+                    }) { text = LocalizationManager.GetString("inventory.select") };
                     selectBtn.AddToClassList("inv-select");
                     right.Add(selectBtn);
                 }
@@ -359,6 +387,33 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
         }
 
+        /// <summary>Nasconde CELL-001/002/003 in lista (demo e full) salvo picker che include esplicitamente uno di questi typeId.</summary>
+        private bool IsInventorySlotVisibleInList(InventorySlot slot)
+        {
+            if (slot == null || slot.Items.Count == 0)
+                return false;
+            if (ShouldHideStemCellsFromInventoryList() && IsStemCellTypeId(slot.TypeId))
+                return false;
+            return true;
+        }
+
+        private static bool IsStemCellTypeId(string typeId) =>
+            typeId == Items.StemCellVegetable || typeId == Items.StemCellFungus || typeId == Items.StemCellAnimal;
+
+        private bool ShouldHideStemCellsFromInventoryList()
+        {
+            if (_pickerAllowedTypes != null)
+            {
+                foreach (var t in _pickerAllowedTypes)
+                {
+                    if (IsStemCellTypeId(t))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         private static bool IsFruitType(string typeId)
         {
             return Items.IsFruitType(typeId);
@@ -372,10 +427,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
             string typeId = slot.TypeId;
             bool selectable = !isPicker || _pickerAllowedTypes.Contains(typeId);
-            string displayName = ItemFabric.GetFruitDisplayNameByTypeId(typeId);
 
             foreach (var fruit in slot.Items)
             {
+                string displayName = GetItemDisplayName(typeId, fruit);
                 bool unknown = Lab.ExtractorTooltipTexts.IsUnknownFruit(fruit);
                 string subText;
                 string tooltipContent;
@@ -424,7 +479,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     {
                         _onSelectedWithStage?.Invoke(typeId, null, fruit);
                         Hide();
-                    }) { text = "Seleziona" };
+                    }) { text = LocalizationManager.GetString("inventory.select") };
                     selectBtn.AddToClassList("inv-select");
                     right.Add(selectBtn);
                 }
@@ -434,7 +489,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     {
                         if (_playerInventory != null && _playerInventory.ConsumeItem(typeId, 1))
                             Rebuild();
-                    }) { text = "Mangia" };
+                    }) { text = LocalizationManager.GetString("inventory.eat") };
                     useBtn.AddToClassList("inv-select");
                     right.Add(useBtn);
                 }
@@ -448,10 +503,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private static string GetConsumeButtonLabel(string typeId)
         {
-            if (typeId == Items.WaterPotable || typeId == Items.Water) return "Bevi";
-            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat) return "Mangia";
-            if (Items.IsFruitType(typeId)) return "Mangia";
-            return "Usa";
+            if (typeId == Items.WaterPotable || typeId == Items.Water) return LocalizationManager.GetString("inventory.drink");
+            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat) return LocalizationManager.GetString("inventory.eat");
+            if (Items.IsFruitType(typeId)) return LocalizationManager.GetString("inventory.eat");
+            return LocalizationManager.GetString("inventory.use");
         }
 
         private void RegisterRowTooltip(VisualElement row, string tooltipContent)
@@ -502,7 +557,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 if (filterStage.HasValue && item.SporeStageValue != filterStage)
                     continue;
 
-                string displayName = "Spora";
+                string displayName = ItemDisplayNameLocalization.GetSporeTitle(item.SporeStageValue);
                 string subText = GetSporeSubText(item.SporeStageValue, item.GeneticTypeValue);
                 bool selectable = !isPicker || _pickerAllowedTypes.Contains(Items.SporeGeneric);
 
@@ -510,7 +565,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 row.AddToClassList("inv-row");
                 if (!selectable && isPicker)
                     row.AddToClassList("inv-row-disabled");
-                row.Add(BuildItemIcon(Items.SporeGeneric));
+                row.Add(BuildItemIcon(Items.SporeGeneric, item.SporeStageValue));
 
                 var left = new VisualElement();
                 left.style.flexDirection = FlexDirection.Column;
@@ -541,7 +596,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     {
                         _onSelectedWithStage?.Invoke(Items.SporeGeneric, stage, item);
                         Hide();
-                    }) { text = "Seleziona" };
+                    }) { text = LocalizationManager.GetString("inventory.select") };
                     selectBtn.AddToClassList("inv-select");
                     right.Add(selectBtn);
                 }
@@ -558,30 +613,22 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private static string GetSporeSubText(SporeStage? stage, GeneticType? genetic)
         {
             var parts = new List<string>();
-            if (stage.HasValue)
-                parts.Add(stage.Value == SporeStage.Raw ? "Raw" : "Maturata");
             if (genetic.HasValue)
                 parts.Add(Lab.ExtractorTooltipTexts.GeneticTypeToTrattiLabel(genetic));
             return parts.Count > 0 ? string.Join(", ", parts) : "";
         }
 
-        private static VisualElement BuildItemIcon(string typeId)
+        private static VisualElement BuildItemIcon(string typeId, SporeStage? sporeStage = null)
         {
-            var iconBox = new VisualElement();
-            iconBox.AddToClassList("inv-row-iconbox");
+            var box = new VisualElement();
+            box.AddToClassList("inv-row-iconbox");
+            box.focusable = false;
 
-            var iconGlyph = new VisualElement();
-            iconGlyph.AddToClassList("inv-row-iconglyph");
+            var sprite = GlobalIconResolver.GetItemIcon(typeId, sporeStage);
+            if (sprite != null)
+                box.style.backgroundImage = new StyleBackground(sprite);
 
-            var icon = GlobalIconResolver.GetItemIcon(typeId);
-            if (icon != null)
-            {
-                iconGlyph.style.backgroundImage = new StyleBackground(icon);
-                iconGlyph.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
-            }
-
-            iconBox.Add(iconGlyph);
-            return iconBox;
+            return box;
         }
 
         /// <summary>Nome leggibile per un typeId (semi/pianta intera da metadata o da PlantData, altri da typeId).</summary>
@@ -590,20 +637,20 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (item != null && !string.IsNullOrWhiteSpace(item.CustomPlantName))
             {
                 if (typeId == Items.WholePlant)
-                    return "Pianta intera " + item.CustomPlantName;
-                return "Seme di Pianta " + item.CustomPlantName;
+                    return ItemDisplayNameLocalization.GetWholePlantWithSpecies(item.CustomPlantName);
+                return ItemDisplayNameLocalization.GetSeedWithSpecies(item.CustomPlantName);
             }
+            if (typeId == Items.SporeGeneric && item != null && item.SporeStageValue.HasValue)
+                return ItemDisplayNameLocalization.GetSporeTitle(item.SporeStageValue);
             return GetItemDisplayNameInternal(typeId);
         }
 
         private static string GetItemDisplayNameInternal(string typeId)
         {
             if (string.IsNullOrEmpty(typeId)) return typeId;
-            if (typeId == Items.PreSeed) return "Pre-Seed";
+            if (ItemDisplayNameLocalization.TryGetByTypeId(typeId, out var localized))
+                return localized;
             if (Items.IsFruitType(typeId)) return ItemFabric.GetFruitDisplayNameByTypeId(typeId);
-            if (typeId == Items.FoodVegetable) return "Vegetable Synthetic";
-            if (typeId == Items.FoodFungus) return "Fungal Synthetic";
-            if (typeId == Items.FoodMeat) return "Meat Synthetic";
             if (PlantDatabase.Instance != null)
             {
                 var plantData = PlantDatabase.Instance.GetPlantDataBySeedTypeId(typeId);
@@ -618,7 +665,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         /// <summary>Tooltip Pre-Seed: Tratti (Fissi/Stabili/Instabili), Famiglie sorgente, Tratti compatibili.</summary>
         private static string BuildPreSeedItemTooltip(Item item)
         {
-            if (item == null) return Tv("Pre-Seed");
+            if (item == null) return Tv(ItemDisplayNameLocalization.GetPreSeedTooltipTitleFallback());
             string trattiLabel = Lab.ExtractorTooltipTexts.GeneticTypeToTrattiLabel(item.GeneticTypeValue);
             string fa = string.IsNullOrWhiteSpace(item.ParentFamilyA) ? "—" : item.ParentFamilyA;
             string fb = string.IsNullOrWhiteSpace(item.ParentFamilyB) ? "—" : item.ParentFamilyB;
@@ -728,10 +775,14 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (first == null) return "";
             var parts = new List<string>();
             if (first.SporeStageValue.HasValue)
-                parts.Add(first.SporeStageValue.Value == SporeStage.Raw ? "Raw" : "Maturata");
+                parts.Add(ItemDisplayNameLocalization.GetSporeStageSubLabel(first.SporeStageValue.Value));
             if (first.GeneticTypeValue.HasValue)
                 parts.Add(Lab.ExtractorTooltipTexts.GeneticTypeToTrattiLabel(first.GeneticTypeValue));
-            return parts.Count > 0 ? string.Join(", ", parts) : "Spora generica";
+            if (parts.Count > 0)
+                return string.Join(", ", parts);
+            return GameLanguageSettings.GetEffectiveLanguage() == GameLanguage.Italian
+                ? "Spora generica"
+                : "Generic spore";
         }
     }
 }

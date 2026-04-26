@@ -129,7 +129,18 @@ namespace Sporae.UI.UIToolkit.ExtractorDisplay
         private bool EnsureInitialized()
         {
             if (_uiBound)
-                return true;
+            {
+                if (_root == null || _uiDocument == null || _uiDocument.rootVisualElement == null ||
+                    !ReferenceEquals(_uiDocument.rootVisualElement, _root))
+                {
+                    _uiBound = false;
+                    _root = null;
+                }
+                else
+                {
+                    return true;
+                }
+            }
 
             if (_extractor == null)
                 _extractor = GetComponent<Extractor>();
@@ -386,6 +397,9 @@ namespace Sporae.UI.UIToolkit.ExtractorDisplay
 
         private void SetRootStateClass(string className)
         {
+            if (_root == null || string.IsNullOrEmpty(className))
+                return;
+
             if (_root.ClassListContains(className))
                 return;
 

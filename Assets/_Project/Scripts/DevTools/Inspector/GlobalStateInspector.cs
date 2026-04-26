@@ -676,7 +676,7 @@ namespace Sporae.DevTools
             Items.FruitFerricPod, Items.FruitArcticPod, Items.FruitGlassPod,
             Items.Water, Items.WholePlant, Items.OrganicScrap001,
             Items.FertilizerStandard, Items.FertilizerPure, Items.FertilizerProhibited,
-            Items.SprayAntifungal, Items.AdditiveBasic, Items.AdditiveAcid,
+            Items.AdditiveBasic, Items.AdditiveAcid,
             Items.StemCellVegetable, Items.StemCellFungus, Items.StemCellAnimal,
             Items.ProteinResidue, Items.ReagentX, Items.ReagentY
         };

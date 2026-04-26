@@ -8,6 +8,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.Lab
 {
@@ -440,7 +441,9 @@ namespace Sporae.UI.UIToolkit.Lab
             if (foundation != null && foundation.Enabled)
             {
                 foundation.RemoveToast(FusionDoneToastKey);
-                foundation.PostAddedToInventory(Items.PreSeed, "Pre-Seed", amount, RoomNames.Laboratory);
+                foundation.PostAddedToInventory(Items.PreSeed,
+                    ItemDisplayNameLocalization.TryGetByTypeId(Items.PreSeed, out var preSeedName) ? preSeedName : "Pre-seed",
+                    amount, RoomNames.Laboratory);
             }
         }
     }

@@ -8,81 +8,70 @@ namespace Sporae.UI.Icons
     public static class GlobalIconResolver
     {
         private const string CatalogResourcePath = "UI/GlobalIconCatalog";
-        private const string ItemsResourcePath = "Icons/Items/";
-        private const string ActionsResourcePath = "Icons/Actions/";
-        private const string DefaultIconName = "default";
 
         private static GlobalIconCatalog _catalog;
         private static bool _catalogTriedLoad;
 
-        public static Sprite GetItemIcon(string typeId)
+        /// <summary>Solo voci del <see cref="GlobalIconCatalog"/> (type / categoria+variante / categoria). Nessun Resources né default item.</summary>
+        /// <param name="sporeStage">Solo per <see cref="Items.SporeGeneric"/>: varianti catalogo <c>spore-raw</c> / <c>spore-matured</c>; ignorato per altri typeId.</param>
+        public static Sprite GetItemIcon(string typeId, SporeStage? sporeStage = null)
         {
-            string category = string.IsNullOrWhiteSpace(typeId) ? "misc" : ResolveItemCategory(typeId);
-            string variant = string.IsNullOrWhiteSpace(typeId) ? string.Empty : ResolveItemVariantKey(typeId);
+            if (string.IsNullOrWhiteSpace(typeId))
+                return null;
+
+            string category = ResolveItemCategory(typeId);
+            string variant = ResolveItemVariantKey(typeId);
+            if (typeId == Items.SporeGeneric && sporeStage.HasValue)
+                variant = sporeStage.Value == SporeStage.Raw ? "raw" : "matured";
 
             var catalog = GetCatalog();
-            if (catalog != null)
-            {
-                if (catalog.TryGetTypeIcon(typeId, out var typeIcon)) return typeIcon;
+            if (catalog == null)
+                return null;
 
-                if (!string.IsNullOrEmpty(variant) &&
-                    catalog.TryGetCategoryVariantIcon(category, variant, out var variantIcon))
-                    return variantIcon;
+            if (catalog.TryGetTypeIcon(typeId, out var typeIcon))
+                return typeIcon;
 
-                if (catalog.TryGetCategoryIcon(category, out var categoryIcon)) return categoryIcon;
+            if (!string.IsNullOrEmpty(variant) &&
+                catalog.TryGetCategoryVariantIcon(category, variant, out var variantIcon))
+                return variantIcon;
 
-                if (catalog.DefaultItemIcon != null) return catalog.DefaultItemIcon;
-            }
+            if (catalog.TryGetCategoryIcon(category, out var categoryIcon))
+                return categoryIcon;
 
-            if (!string.IsNullOrWhiteSpace(typeId))
-            {
-                var byType = Resources.Load<Sprite>(ItemsResourcePath + typeId);
-                if (byType != null) return byType;
-
-                if (!string.IsNullOrEmpty(variant))
-                {
-                    var byCatVar = Resources.Load<Sprite>(ItemsResourcePath + category + "-" + variant);
-                    if (byCatVar != null) return byCatVar;
-                }
-            }
-
-            return Resources.Load<Sprite>(ItemsResourcePath + DefaultIconName);
+            return null;
         }
 
+        /// <summary>Override per <c>PlantCode</c> nel catalogo, altrimenti solo <see cref="GlobalIconCatalog.DefaultPlantIcon"/> (nessuna categoria <c>plant</c>, Resources o default item).</summary>
         public static Sprite GetPlantIcon(string plantCode = null)
         {
             var catalog = GetCatalog();
-            if (catalog != null)
-            {
-                if (catalog.TryGetPlantCodeIcon(plantCode, out var plantCodeIcon)) return plantCodeIcon;
-                if (catalog.TryGetCategoryIcon("plant", out var plantCategoryIcon)) return plantCategoryIcon;
-                if (catalog.DefaultPlantIcon != null) return catalog.DefaultPlantIcon;
-                if (catalog.DefaultItemIcon != null) return catalog.DefaultItemIcon;
-            }
+            if (catalog == null)
+                return null;
 
-            return Resources.Load<Sprite>(ItemsResourcePath + DefaultIconName);
+            if (!string.IsNullOrWhiteSpace(plantCode) &&
+                catalog.TryGetPlantCodeIcon(plantCode, out var plantCodeIcon))
+                return plantCodeIcon;
+
+            return catalog.DefaultPlantIcon;
         }
 
+        /// <summary>Solo mappa azioni del catalogo (chiave normalizzata o raw). Nessuna categoria action, default né Resources.</summary>
         public static Sprite GetActionIcon(string actionKeyOrDisplayName)
         {
-            string normalized = NormalizeKey(actionKeyOrDisplayName);
             var catalog = GetCatalog();
-            if (catalog != null)
-            {
-                if (catalog.TryGetActionIcon(normalized, out var actionIcon)) return actionIcon;
-                if (catalog.TryGetActionIcon(actionKeyOrDisplayName, out var rawActionIcon)) return rawActionIcon;
-                if (catalog.TryGetCategoryIcon("action", out var actionCategoryIcon)) return actionCategoryIcon;
-                if (catalog.DefaultActionIcon != null) return catalog.DefaultActionIcon;
-                if (catalog.DefaultItemIcon != null) return catalog.DefaultItemIcon;
-            }
+            if (catalog == null)
+                return null;
 
-            if (!string.IsNullOrWhiteSpace(normalized))
-            {
-                var byAction = Resources.Load<Sprite>(ActionsResourcePath + normalized);
-                if (byAction != null) return byAction;
-            }
+            string normalized = NormalizeKey(actionKeyOrDisplayName);
+            if (!string.IsNullOrWhiteSpace(normalized) &&
+                catalog.TryGetActionIcon(normalized, out var actionIcon))
+                return actionIcon;
 
-            return Resources.Load<Sprite>(ItemsResourcePath + DefaultIconName);
+            if (!string.IsNullOrWhiteSpace(actionKeyOrDisplayName) &&
+                catalog.TryGetActionIcon(actionKeyOrDisplayName, out var rawActionIcon))
+                return rawActionIcon;
+
+            return null;
         }
 
         public static string ResolveItemCategory(string typeId)
@@ -97,7 +86,7 @@ namespace Sporae.UI.Icons
             if (Items.IsFruitType(typeId)) return "fruit";
             if (typeId == Items.Water || typeId == Items.WaterPotable) return "water";
             if (typeId == Items.FertilizerStandard || typeId == Items.FertilizerPure || typeId == Items.FertilizerProhibited) return "fertilizer";
-            if (typeId == Items.AdditiveAcid || typeId == Items.AdditiveBasic || typeId == Items.SprayAntifungal) return "additive";
+            if (typeId == Items.AdditiveAcid || typeId == Items.AdditiveBasic) return "additive";
             if (typeId == Items.ReagentX || typeId == Items.ReagentY) return "reagent";
             if (typeId == Items.StemCellVegetable || typeId == Items.StemCellFungus || typeId == Items.StemCellAnimal) return "stemcell";
             if (typeId == Items.ProteinResidue || typeId == Items.OrganicResidue) return "protein";
@@ -109,7 +98,7 @@ namespace Sporae.UI.Icons
 
         /// <summary>
         /// Sotto-chiave per <see cref="GlobalIconCatalog.TryGetCategoryVariantIcon"/> e per sprite in Resources
-        /// (<c>Icons/Items/{category}-{variant}.png</c>, es. <c>water-potable</c>, <c>fertilizer-pure</c>).
+        /// Chiavi varianti per il catalogo (es. <c>water-potable</c>, <c>spore-matured</c> in <see cref="GlobalIconCatalog"/>).
         /// Stringa vuota = nessuna variante (solo icona di categoria o per-typeId).
         /// </summary>
         public static string ResolveItemVariantKey(string typeId)
@@ -124,7 +113,6 @@ namespace Sporae.UI.Icons
             if (typeId == Items.FertilizerPure) return "pure";
             if (typeId == Items.FertilizerProhibited) return "prohibited";
 
-            if (typeId == Items.SprayAntifungal) return "spray";
             if (typeId == Items.AdditiveBasic) return "basic";
             if (typeId == Items.AdditiveAcid) return "acid";
 
@@ -134,6 +122,10 @@ namespace Sporae.UI.Icons
             if (typeId == Items.StemCellVegetable) return "vegetable";
             if (typeId == Items.StemCellFungus) return "fungus";
             if (typeId == Items.StemCellAnimal) return "animal";
+
+            if (typeId == Items.FoodVegetable) return "vegetable";
+            if (typeId == Items.FoodFungus) return "fungus";
+            if (typeId == Items.FoodMeat) return "meat";
 
             return string.Empty;
         }

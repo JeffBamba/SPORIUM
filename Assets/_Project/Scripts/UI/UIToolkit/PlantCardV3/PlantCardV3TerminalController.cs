@@ -6751,7 +6751,6 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             {
                 if (GetAvailableQuantity(Items.AdditiveBasic) > 0) list.Add(Items.AdditiveBasic);
                 if (GetAvailableQuantity(Items.AdditiveAcid) > 0) list.Add(Items.AdditiveAcid);
-                if (GetAvailableQuantity(Items.SprayAntifungal) > 0) list.Add(Items.SprayAntifungal);
                 return list;
             }
 
@@ -7302,16 +7301,7 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
         {
             if (string.IsNullOrEmpty(itemTypeId))
                 return itemTypeId;
-
-            // Prova a convertire in nome seed leggibile
-            string seedDisplayName = PlantCardFormatters.GetSeedDisplayName(itemTypeId);
-            
-            // Se è diverso dal typeId originale, significa che è stato convertito (è un seed)
-            if (seedDisplayName != itemTypeId)
-                return seedDisplayName;
-
-            // Altrimenti è un item normale, mostra il typeId
-            return itemTypeId;
+            return PlayerInventoryPanelController.GetItemDisplayName(itemTypeId, null);
         }
 
         private static string FormatPlantFamilyBadge(string plantCode)

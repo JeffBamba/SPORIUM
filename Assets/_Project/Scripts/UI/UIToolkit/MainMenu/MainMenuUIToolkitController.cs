@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project.Sporae.Core;
 using _Project.Sporae.Core.Installers;
@@ -12,7 +14,7 @@ namespace _Project.UI.UIToolkit.MainMenu
 {
     /// <summary>
     /// UI Toolkit front-end per il menu principale.
-    /// Slot salvataggi/caricamento in UI Toolkit (stesso USS del menu); Opzioni ancora su popup uGUI legacy.
+    /// Slot salvataggi/caricamento e Opzioni in UI Toolkit (stesso USS del menu).
     /// </summary>
     [DefaultExecutionOrder(-40)]
     [DisallowMultipleComponent]
@@ -38,12 +40,19 @@ namespace _Project.UI.UIToolkit.MainMenu
         private bool _saveSlotsVisible;
         private bool _saveSlotsModeIsSave;
 
+        private VisualElement _optionsOverlay;
+        private Label _optionsTitle;
+        private Label _optionsSubtitle;
+        private Label _optionsLanguageTitle;
+        private Label _optionsLanguageDesc;
+        private Button _btnOptionsClose;
+        private Button _btnLanguageAuto;
+        private Button _btnLanguageIt;
+        private Button _btnLanguageEn;
+        private bool _optionsVisible;
+
         private bool _isLoading;
         private bool _isMainMenuScene;
-        /// <summary>
-        /// Popup Opzioni uGUI sotto al layer UI Toolkit: nascondiamo il root finché il popup è aperto.
-        /// </summary>
-        private bool _toolkitSuppressedForLegacyPopup;
 
         public bool IsRuntimeReady => _root != null;
 
@@ -54,6 +63,25 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (_mainMenuScreens == null)
                 _mainMenuScreens = GetComponent<MainMenuScreens>();
             TryBuildUiFromMenuContext();
+        }
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            ApplyLocalizedStaticText();
+            if (_saveSlotsVisible)
+                ShowSaveSlotsOverlay(_saveSlotsModeIsSave);
+            if (_optionsVisible)
+                RefreshOptionsOverlay();
         }
 
         public void InjectRuntimeReferences(MainMenuOptions mainMenuOptions, MainMenuScreens mainMenuScreens)
@@ -95,17 +123,14 @@ namespace _Project.UI.UIToolkit.MainMenu
 
         private void Update()
         {
-            if (_root != null && _toolkitSuppressedForLegacyPopup && _mainMenuScreens != null)
-            {
-                if (!_mainMenuScreens.IsSlotsOpen && !_mainMenuScreens.IsOptionsOpen)
-                {
-                    _root.style.display = DisplayStyle.Flex;
-                    _toolkitSuppressedForLegacyPopup = false;
-                }
-            }
-
             if (_root == null || _isLoading)
                 return;
+
+            if (Input.GetKeyDown(KeyCode.Escape) && _optionsVisible)
+            {
+                HideOptionsOverlay();
+                return;
+            }
 
             if (Input.GetKeyDown(KeyCode.Escape) && _saveSlotsVisible)
             {
@@ -154,6 +179,75 @@ namespace _Project.UI.UIToolkit.MainMenu
             _saveSlotsSubtitle = _root.Q<Label>("save-slots-subtitle");
             if (_saveSlotsOverlay != null)
                 _saveSlotsOverlay.style.display = DisplayStyle.None;
+
+            _optionsOverlay = _root.Q<VisualElement>("options-overlay");
+            _optionsTitle = _root.Q<Label>("options-title");
+            _optionsSubtitle = _root.Q<Label>("options-subtitle");
+            _optionsLanguageTitle = _root.Q<Label>("options-language-title");
+            _optionsLanguageDesc = _root.Q<Label>("options-language-desc");
+            _btnOptionsClose = _root.Q<Button>("btn-options-close");
+            _btnLanguageAuto = _root.Q<Button>("btn-language-auto");
+            _btnLanguageIt = _root.Q<Button>("btn-language-it");
+            _btnLanguageEn = _root.Q<Button>("btn-language-en");
+            if (_optionsOverlay != null)
+                _optionsOverlay.style.display = DisplayStyle.None;
+            ApplyLocalizedStaticText();
+        }
+
+        private void ApplyLocalizedStaticText()
+        {
+            if (_root == null) return;
+
+            SetMenuActionLabel("btn-new-game", "menu.new_game");
+            SetMenuActionLabel("btn-load-game", "menu.load_game");
+            SetMenuActionLabel("btn-demo", "menu.play_demo");
+            SetMenuActionLabel("btn-credits", "menu.credits");
+            SetMenuActionLabel("btn-exit", "menu.exit_sporium");
+
+            if (!_saveSlotsVisible)
+            {
+                if (_saveSlotsTitle != null)
+                    _saveSlotsTitle.text = LocalizationManager.GetString("save.title.default");
+                if (_saveSlotsSubtitle != null)
+                    _saveSlotsSubtitle.text = LocalizationManager.GetString("save.subtitle.default");
+            }
+
+            var close = _root.Q<Button>("btn-save-slots-close");
+            if (close != null)
+                close.text = LocalizationManager.GetString("save.action.close");
+
+            if (_optionsTitle != null)
+                _optionsTitle.text = LocalizationManager.GetString("options.title");
+            if (_optionsSubtitle != null)
+                _optionsSubtitle.text = LocalizationManager.GetString("options.subtitle");
+            if (_optionsLanguageTitle != null)
+                _optionsLanguageTitle.text = LocalizationManager.GetString("options.language");
+            if (_optionsLanguageDesc != null)
+                _optionsLanguageDesc.text = LocalizationManager.GetString("options.language.description");
+            if (_btnOptionsClose != null)
+                _btnOptionsClose.text = LocalizationManager.GetString("save.action.close");
+            if (_btnLanguageAuto != null)
+                _btnLanguageAuto.text = LocalizationManager.GetString("options.language.auto");
+            if (_btnLanguageIt != null)
+                _btnLanguageIt.text = LocalizationManager.GetString("options.language.it");
+            if (_btnLanguageEn != null)
+                _btnLanguageEn.text = LocalizationManager.GetString("options.language.en");
+            RefreshLanguageSelection();
+
+            for (var i = 0; i < SaveManager.SlotNames.Length; i++)
+            {
+                var del = _root.Q<Button>($"save-slot-delete-{i}");
+                if (del != null)
+                    del.text = LocalizationManager.GetString("save.action.delete");
+            }
+        }
+
+        private void SetMenuActionLabel(string buttonName, string key)
+        {
+            var button = _root.Q<Button>(buttonName);
+            var label = button?.Q<Label>(className: "menu-action-label");
+            if (label != null)
+                label.text = LocalizationManager.GetString(key);
         }
 
         private void HookButtons()
@@ -171,13 +265,13 @@ namespace _Project.UI.UIToolkit.MainMenu
             btnLoadGame?.RegisterCallback<ClickEvent>(_ => _mainMenuOptions.OpenLoadPopupFromExternalUI());
             btnDemo?.RegisterCallback<ClickEvent>(_ => StartDemoLoad());
             btnExit?.RegisterCallback<ClickEvent>(_ => _mainMenuOptions.QuitFromExternalUI());
-            btnSettings?.RegisterCallback<ClickEvent>(_ =>
-                OpenLegacyMainMenuPopup(_mainMenuOptions.OpenOptionsPopupFromExternalUI));
+            btnSettings?.RegisterCallback<ClickEvent>(_ => OpenOptionsOverlay());
 
             if (btnCredits != null)
                 btnCredits.SetEnabled(false);
 
             WireSaveSlotsButtons();
+            WireOptionsButtons();
         }
 
         private void WireSaveSlotsButtons()
@@ -201,6 +295,69 @@ namespace _Project.UI.UIToolkit.MainMenu
         /// <summary>Salva su slot — UI Toolkit.</summary>
         public void OpenSaveSlotsOverlay() => ShowSaveSlotsOverlay(true);
 
+        public void OpenOptionsOverlay()
+        {
+            if (_optionsOverlay == null)
+                return;
+
+            if (!_isMainMenuScene && _root != null && _root.style.display == DisplayStyle.None)
+                ShowInGameMenu();
+
+            HideSaveSlotsOverlay();
+            RefreshOptionsOverlay();
+            _optionsOverlay.style.display = DisplayStyle.Flex;
+            _optionsVisible = true;
+        }
+
+        private void HideOptionsOverlay()
+        {
+            if (_optionsOverlay == null)
+                return;
+            _optionsOverlay.style.display = DisplayStyle.None;
+            _optionsVisible = false;
+        }
+
+        private void RefreshOptionsOverlay()
+        {
+            ApplyLocalizedStaticText();
+            RefreshLanguageSelection();
+        }
+
+        private void WireOptionsButtons()
+        {
+            _btnOptionsClose?.RegisterCallback<ClickEvent>(_ => HideOptionsOverlay());
+            _btnLanguageAuto?.RegisterCallback<ClickEvent>(_ => SetLanguage(GameLanguage.Auto));
+            _btnLanguageIt?.RegisterCallback<ClickEvent>(_ => SetLanguage(GameLanguage.Italian));
+            _btnLanguageEn?.RegisterCallback<ClickEvent>(_ => SetLanguage(GameLanguage.English));
+        }
+
+        private void SetLanguage(GameLanguage language)
+        {
+            GameLanguageSettings.CurrentLanguage = language;
+            NotificationLocalization.OverrideLanguage = language switch
+            {
+                GameLanguage.Italian => NotificationLanguage.It,
+                GameLanguage.English => NotificationLanguage.En,
+                _ => NotificationLanguage.Auto
+            };
+            RefreshOptionsOverlay();
+        }
+
+        private void RefreshLanguageSelection()
+        {
+            var current = GameLanguageSettings.CurrentLanguage;
+            SetLanguageButtonSelected(_btnLanguageAuto, current == GameLanguage.Auto);
+            SetLanguageButtonSelected(_btnLanguageIt, current == GameLanguage.Italian);
+            SetLanguageButtonSelected(_btnLanguageEn, current == GameLanguage.English);
+        }
+
+        private static void SetLanguageButtonSelected(Button button, bool selected)
+        {
+            if (button == null)
+                return;
+            button.EnableInClassList("options-language-button--selected", selected);
+        }
+
         private void ShowSaveSlotsOverlay(bool forSave)
         {
             if (_saveSlotsOverlay == null)
@@ -209,14 +366,13 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (!_isMainMenuScene && _root != null && _root.style.display == DisplayStyle.None)
                 ShowInGameMenu();
 
+            HideOptionsOverlay();
             _saveSlotsModeIsSave = forSave;
             if (_saveSlotsTitle != null)
-                _saveSlotsTitle.text = forSave ? "SALVA PARTITA" : "CARICA PARTITA";
+                _saveSlotsTitle.text = LocalizationManager.GetString(forSave ? "save.title.save" : "save.title.load");
             if (_saveSlotsSubtitle != null)
             {
-                _saveSlotsSubtitle.text = forSave
-                    ? "Scegli uno slot — i dati esistenti verranno sovrascritti."
-                    : "Seleziona uno slot con salvataggio valido.";
+                _saveSlotsSubtitle.text = LocalizationManager.GetString(forSave ? "save.subtitle.save" : "save.subtitle.load");
             }
 
             RefreshSaveSlotsUi();
@@ -255,14 +411,20 @@ namespace _Project.UI.UIToolkit.MainMenu
                     if (hasSave)
                     {
                         var s = summary.Value;
-                        summaryLabel.text =
-                            $"{displayName} — Giorno {s.day}, Piante in Dome {s.plantsInDome}, CRY {s.cry} — {s.timestamp}";
+                        summaryLabel.text = LocalizationManager.GetString("save.summary.filled", new Dictionary<string, string>
+                        {
+                            { "slot", displayName },
+                            { "day", s.day.ToString() },
+                            { "plants", s.plantsInDome.ToString() },
+                            { "cry", s.cry.ToString() },
+                            { "timestamp", s.timestamp }
+                        });
                     }
                     else
                     {
-                        summaryLabel.text = _saveSlotsModeIsSave
-                            ? $"{displayName} — Vuoto (salva qui)"
-                            : $"{displayName} — Nessun salvataggio";
+                        summaryLabel.text = LocalizationManager.GetString(
+                            _saveSlotsModeIsSave ? "save.summary.empty_for_save" : "save.summary.empty_for_load",
+                            new Dictionary<string, string> { { "slot", displayName } });
                     }
                 }
 
@@ -273,7 +435,7 @@ namespace _Project.UI.UIToolkit.MainMenu
                         primary.style.display = DisplayStyle.Flex;
                         primary.SetEnabled(true);
                         if (primaryLbl != null)
-                            primaryLbl.text = "Salva";
+                            primaryLbl.text = LocalizationManager.GetString("save.action.save");
                     }
                     else
                     {
@@ -282,7 +444,7 @@ namespace _Project.UI.UIToolkit.MainMenu
                             primary.style.display = DisplayStyle.Flex;
                             primary.SetEnabled(true);
                             if (primaryLbl != null)
-                                primaryLbl.text = "Carica";
+                                primaryLbl.text = LocalizationManager.GetString("save.action.load");
                         }
                         else
                         {
@@ -374,24 +536,11 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (_root.resolvedStyle.display == DisplayStyle.None || _root.style.display == DisplayStyle.None)
                 ShowInGameMenu();
             else
-                HideInGameMenu();
-        }
-
-        /// <summary>
-        /// Popup Opzioni uGUI sotto al layer UI Toolkit: nascondiamo il Toolkit finché il popup è aperto.
-        /// </summary>
-        private void OpenLegacyMainMenuPopup(Action openAction)
-        {
-            if (openAction == null)
-                return;
-
-            if (_root != null)
             {
-                _root.style.display = DisplayStyle.None;
-                _toolkitSuppressedForLegacyPopup = true;
+                HideSaveSlotsOverlay();
+                HideOptionsOverlay();
+                HideInGameMenu();
             }
-
-            openAction();
         }
 
         private void StartNewGameLoad()
@@ -435,7 +584,8 @@ namespace _Project.UI.UIToolkit.MainMenu
                     _loadingFill.style.width = Length.Percent(percentage);
 
                 if (_loadingText != null)
-                    _loadingText.text = $"Caricamento {percentage}%";
+                    _loadingText.text = LocalizationManager.GetString("menu.loading_progress",
+                        new Dictionary<string, string> { { "percent", percentage.ToString() } });
 
                 yield return null;
             }

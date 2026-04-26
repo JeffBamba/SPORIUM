@@ -24,7 +24,7 @@ namespace Sporae.Dome.UI
         
         public event Action<bool, bool> OnDialogResult; // confirmed, useSpray
         
-        private bool _hasSprayAvailable = false; // Memorizza disponibilità STR-004
+        private bool _hasSprayAvailable = false; // Additivo basico (STR-004-Basic) per bonus potatura
         
         private void Awake()
         {
@@ -75,10 +75,9 @@ namespace Sporae.Dome.UI
         {
             SporiumLogger.LogDebug(LogCategory.UI, $"Toggle value changed: {isOn} (hasSprayAvailable: {_hasSprayAvailable})");
             
-            // BUG FIX: Se l'utente prova a selezionare il toggle ma non c'è STR-004, resetta
             if (isOn && !_hasSprayAvailable)
             {
-                SporiumLogger.LogWarning(LogCategory.UI, "Tentativo di selezionare toggle senza STR-004 disponibile. Reset.");
+                SporiumLogger.LogWarning(LogCategory.UI, "Toggle potatura: additivo basico non disponibile. Reset.");
                 if (sprayToggle != null)
                 {
                     sprayToggle.isOn = false;
@@ -115,13 +114,9 @@ namespace Sporae.Dome.UI
             }
         }
         
-        /// <summary>
-        /// Mostra il dialog e verifica disponibilità STR-004
-        /// </summary>
-        /// <param name="hasSprayAvailable">Se true, STR-004 è disponibile in inventario</param>
+        /// <param name="hasSprayAvailable">Se true, STR-004-Basic è disponibile in inventario</param>
         public void Show(bool hasSprayAvailable)
         {
-            // Memorizza disponibilità STR-004
             _hasSprayAvailable = hasSprayAvailable;
             
             if (dialogPanel != null)
@@ -136,8 +131,7 @@ namespace Sporae.Dome.UI
             // Configura toggle Spray
             if (sprayToggle != null)
             {
-                // BUG FIX: Il toggle deve essere sempre interattivo per permettere il click
-                // Se non c'è STR-004, il toggle sarà disabilitato visivamente ma comunque cliccabile per feedback
+                // Toggle sempre interattivo per feedback se additivo assente
                 sprayToggle.interactable = true; // Sempre interattivo per permettere il click
                 sprayToggle.isOn = false; // Default: non selezionato
                 
@@ -161,9 +155,9 @@ namespace Sporae.Dome.UI
                 if (toggleLabel != null)
                 {
                     if (hasSprayAvailable)
-                        toggleLabel.text = "Aggiungi Spray Antifungino (consuma STR-004)";
+                        toggleLabel.text = "Aggiungi additivo basico (consuma STR-004-Basic)";
                     else
-                        toggleLabel.text = "Aggiungi Spray Antifungino (STR-004 non disponibile)";
+                        toggleLabel.text = "Aggiungi additivo basico (STR-004-Basic non disponibile)";
                 }
             }
             else

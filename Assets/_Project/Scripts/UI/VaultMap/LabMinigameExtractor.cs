@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core.Localization;
 
 namespace _Project
 {
@@ -223,7 +224,7 @@ namespace _Project
                     if (sample != null)
                         foundation.PostAddedToInventory(CollectionPayloadFactory.FromItem(sample, count, RoomNames.Laboratory));
                     else
-                        foundation.PostAddedToInventory(Items.SporeGeneric, "Spora", count, RoomNames.Laboratory);
+                        foundation.PostAddedToInventory(Items.SporeGeneric, ItemDisplayNameLocalization.GetSporeTitle(SporeStage.Raw), count, RoomNames.Laboratory);
                 }
                 else
                 {

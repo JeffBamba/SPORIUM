@@ -478,3 +478,152 @@
     font-size: 13px;
     -unity-font-style: bold;
 }
+
+/* --- Options overlay (stesso linguaggio visuale del Main Menu) --- */
+.options-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(4, 8, 10, 0.88);
+    justify-content: center;
+    align-items: center;
+    display: none;
+    flex-direction: column;
+}
+
+.options-panel {
+    width: 92%;
+    max-width: 680px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(230, 201, 111, 0.88);
+    border-right-color: rgba(230, 201, 111, 0.88);
+    border-bottom-color: rgba(230, 201, 111, 0.88);
+    border-left-color: rgba(230, 201, 111, 0.88);
+    background-color: rgba(8, 16, 20, 0.96);
+}
+
+.options-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.options-header-titles {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.options-title {
+    color: rgb(230, 201, 111);
+    font-size: 22px;
+    letter-spacing: 3px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.options-subtitle {
+    color: rgba(93, 182, 227, 0.88);
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.options-close {
+    min-width: 100px;
+    height: 40px;
+    background-color: rgba(12, 22, 28, 0.85);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(211, 95, 95, 0.75);
+    border-right-color: rgba(211, 95, 95, 0.75);
+    border-bottom-color: rgba(211, 95, 95, 0.75);
+    border-left-color: rgba(211, 95, 95, 0.75);
+    color: rgba(231, 244, 255, 0.95);
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.options-content {
+    flex-direction: column;
+}
+
+.options-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(230, 201, 111, 0.35);
+    border-right-color: rgba(230, 201, 111, 0.35);
+    border-bottom-color: rgba(230, 201, 111, 0.35);
+    border-left-color: rgba(230, 201, 111, 0.35);
+    background-color: rgba(12, 22, 28, 0.55);
+}
+
+.options-row-copy {
+    flex-grow: 1;
+    flex-direction: column;
+    margin-right: 16px;
+}
+
+.options-row-title {
+    color: rgb(231, 244, 255);
+    font-size: 16px;
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+}
+
+.options-row-desc {
+    color: rgba(166, 199, 217, 0.86);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.options-language-buttons {
+    flex-direction: row;
+    flex-shrink: 0;
+}
+
+.options-language-button {
+    min-width: 76px;
+    height: 42px;
+    margin-left: 8px;
+    background-color: rgba(12, 22, 28, 0.85);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgba(93, 182, 227, 0.65);
+    border-right-color: rgba(93, 182, 227, 0.65);
+    border-bottom-color: rgba(93, 182, 227, 0.65);
+    border-left-color: rgba(93, 182, 227, 0.65);
+    color: rgba(231, 244, 255, 0.95);
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.options-language-button--selected {
+    background-color: rgba(127, 255, 122, 0.16);
+    border-top-color: rgba(127, 255, 122, 0.9);
+    border-right-color: rgba(127, 255, 122, 0.9);
+    border-bottom-color: rgba(127, 255, 122, 0.9);
+    border-left-color: rgba(127, 255, 122, 0.9);
+    color: rgb(127, 255, 122);
+}

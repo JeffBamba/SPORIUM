@@ -152,13 +152,6 @@ public sealed class PotActionValidator
 
         if (_context.PlayerInventory != null && !string.IsNullOrEmpty(additiveTypeId))
         {
-            if (additiveTypeId == Items.AdditiveBasic
-                && !_context.PlayerInventory.Has(Items.AdditiveBasic, 1)
-                && _context.PlayerInventory.Has(Items.SprayAntifungal, 1))
-            {
-                return "Azione non permessa";
-            }
-
             if (!_context.PlayerInventory.Has(additiveTypeId, 1))
                 return "Additivo non disponibile";
         }

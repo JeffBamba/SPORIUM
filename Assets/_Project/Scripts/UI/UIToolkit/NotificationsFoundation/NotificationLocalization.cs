@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using UnityEngine;
 using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.NotificationsFoundation
@@ -14,8 +12,6 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
     public static class NotificationLocalization
     {
-        private static readonly Regex TokenRegex = new Regex(@"\{([a-zA-Z0-9_]+)\}", RegexOptions.Compiled);
-
         public static NotificationLanguage OverrideLanguage = NotificationLanguage.Auto;
 
         public static NotificationLanguage GetLanguage()
@@ -30,31 +26,35 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
         public static string ResolveTemplate(NotificationTypeSpec spec)
         {
+            if (spec == null)
+                return string.Empty;
+
             var lang = GetLanguage();
             if (lang == NotificationLanguage.It)
                 return string.IsNullOrEmpty(spec.TemplateIt) ? spec.TemplateEn : spec.TemplateIt;
             return string.IsNullOrEmpty(spec.TemplateEn) ? spec.TemplateIt : spec.TemplateEn;
         }
 
-        public static string Format(string template, IReadOnlyDictionary<string, string> args)
+        public static string ResolveTooltip(NotificationTypeSpec spec)
         {
-            if (string.IsNullOrEmpty(template))
+            if (spec == null)
                 return string.Empty;
 
-            if (args == null || args.Count == 0)
-                return template;
+            var lang = GetLanguage();
+            if (lang == NotificationLanguage.It)
+                return string.IsNullOrEmpty(spec.TooltipIt) ? spec.TooltipEn : spec.TooltipIt;
+            return string.IsNullOrEmpty(spec.TooltipEn) ? spec.TooltipIt : spec.TooltipEn;
+        }
 
-            return TokenRegex.Replace(template, m =>
-            {
-                var key = m.Groups[1].Value;
-                return args.TryGetValue(key, out var value) ? value : m.Value;
-            });
+        public static string Format(string template, IReadOnlyDictionary<string, string> args)
+        {
+            return LocalizationManager.Format(template, args);
         }
 
         /// <summary>Titolo per il toast "Added To Inventory" (layout item). Maiuscolo e grassetto in UI.</summary>
         public static string GetAddedToInventoryTitle()
         {
-            return GetLanguage() == NotificationLanguage.It ? "AGGIUNTO ALL'INVENTARIO" : "ADDED TO INVENTORY";
+            return Pick("AGGIUNTO ALL'INVENTARIO", "ADDED TO INVENTORY");
         }
 
         /// <summary>Stringa per toast/messaggi costruiti a codice: italiano se lingua IT, altrimenti inglese.</summary>

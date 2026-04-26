@@ -2,6 +2,7 @@ using _Project.Sporae.Core;
 using Sporae.UI.UIToolkit.Lab;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -38,7 +39,8 @@ namespace Sporae.UI.UIToolkit.HUD
             }
 
             p.ItemName = BuildDisplayTitle(item);
-            p.ItemIcon = NotificationItemIconResolver.GetIcon(item.TypeId);
+            p.ItemSporeStage = item.SporeStageValue;
+            p.ItemIcon = NotificationItemIconResolver.GetIcon(item.TypeId, p.ItemSporeStage);
 
             if (item.TypeId == Items.SporeGeneric)
                 ApplySporeMetadata(p, item);
@@ -53,10 +55,10 @@ namespace Sporae.UI.UIToolkit.HUD
             if (item.TypeId == Items.SporeGeneric)
             {
                 var plantLabel = ItemFabric.ResolveSourcePlantDisplayNameForUi(item);
-                bool matured = item.SporeStageValue == SporeStage.Matured;
+                string baseName = ItemDisplayNameLocalization.GetSporeTitle(item.SporeStageValue);
                 if (!string.IsNullOrWhiteSpace(plantLabel))
-                    return matured ? $"Spore matura di {plantLabel}" : $"Spore Grezza di {plantLabel}";
-                return matured ? "Spore matura" : "Spore Grezza";
+                    return baseName + " — " + plantLabel;
+                return baseName;
             }
 
             return PlayerInventoryPanelController.GetItemDisplayName(item.TypeId, item);
@@ -66,7 +68,9 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             p.Args[MetaGenetic] = ExtractorTooltipTexts.GeneticTypeToTrattiLabel(item.GeneticTypeValue);
             p.Args[MetaMutatePct] = ExtractorTooltipTexts.GeneticTypeToPercentMutare(item.GeneticTypeValue);
-            p.Args[MetaStage] = item.SporeStageValue == SporeStage.Matured ? "Maturata" : "Raw";
+            p.Args[MetaStage] = item.SporeStageValue.HasValue
+                ? ItemDisplayNameLocalization.GetSporeStageSubLabel(item.SporeStageValue.Value)
+                : "—";
             p.Args[MetaFamily] = string.IsNullOrWhiteSpace(item.FamilyMetadata) ? "—" : item.FamilyMetadata;
             var src = ItemFabric.ResolveSourcePlantDisplayNameForUi(item);
             p.Args[MetaSource] = string.IsNullOrWhiteSpace(src) ? "—" : src;

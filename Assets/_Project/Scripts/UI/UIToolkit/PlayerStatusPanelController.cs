@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Sporae.UI.UIToolkit;
 using Sporae.UI.UIToolkit.PlayerInventory;
-using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 using System.Linq;
 using _Project;
@@ -76,6 +76,21 @@ namespace Sporae.UI.UIToolkit
             InitializeBars();
             TryConnectHydrationSystem();
             UpdateAllBars();
+        }
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            InitializeBars();
         }
 
         private void TryConnectHydrationSystem()
@@ -184,13 +199,13 @@ namespace Sporae.UI.UIToolkit
 
             var hydrationLabel = _root.Q<Label>("hydration-label");
             if (hydrationLabel != null)
-                hydrationLabel.text = NotificationLocalization.Pick("IDRATAZIONE", "HYDRATION");
+                hydrationLabel.text = LocalizationManager.GetString("player_status.hydration");
             var diaryLabel = _root.Q<Label>("diary-label");
             if (diaryLabel != null)
-                diaryLabel.text = NotificationLocalization.Pick("Diario SPORAE", "SPORAE Diary");
+                diaryLabel.text = LocalizationManager.GetString("player_status.diary");
             
             if (_warningLabel != null && !_hydrationConnectedToRealSystem)
-                _warningLabel.text = "▲ -1 Azione se <40%";
+                _warningLabel.text = LocalizationManager.GetString("player_status.low_action_warning");
             
             // Setup buttons
             if (_inventoryButton != null)

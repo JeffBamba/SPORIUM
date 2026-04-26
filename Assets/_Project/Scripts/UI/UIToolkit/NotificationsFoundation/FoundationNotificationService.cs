@@ -243,7 +243,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (string.IsNullOrEmpty(payload.ItemName)) payload.ItemName = payload.ItemTypeId;
             if (string.IsNullOrEmpty(payload.ItemLocation)) payload.ItemLocation = "—";
             if (payload.ItemIcon == null)
-                payload.ItemIcon = NotificationItemIconResolver.GetIcon(payload.ItemTypeId);
+                payload.ItemIcon = NotificationItemIconResolver.GetIcon(payload.ItemTypeId, payload.ItemSporeStage);
             PostToastImmediate("ADDED-TO-INVENTORY", payload, NotificationSeverity.Success);
             OnItemAdded?.Invoke(payload);
         }

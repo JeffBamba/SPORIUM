@@ -21,7 +21,11 @@ namespace Sporae.UI.Icons
             public Sprite Icon;
         }
 
-        /// <summary>Esempio: CategoryKey=fertilizer, VariantKey=pure → flacone verde; VariantKey=prohibited → variante "evil".</summary>
+        /// <summary>
+        /// Esempi: <c>fertilizer</c>+<c>pure</c> vs <c>prohibited</c>; per <c>spore-generic</c> usare <c>CategoryKey=spore</c> con
+        /// <c>VariantKey=raw</c> (Raw) o <c>matured</c> (Maturata), in linea con <see cref="GlobalIconResolver.GetItemIcon(string, SporeStage?)"/>.
+        /// Le icone non si definiscono in questo file .cs: si assegnano nell’asset <c>GlobalIconCatalog</c> in Inspector.
+        /// </summary>
         [Serializable]
         public struct CategoryVariantIconEntry
         {

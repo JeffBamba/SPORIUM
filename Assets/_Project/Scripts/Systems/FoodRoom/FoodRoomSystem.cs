@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core.Localization;
 
 namespace _Project.Systems.FoodRoom
 {
@@ -282,7 +283,9 @@ namespace _Project.Systems.FoodRoom
                 case FoodProductionType.Meat:
                     int resProtQty = 1;
                     _inventory.Add(Items.ProteinResidue, resProtQty);
-                    foundation.PostAddedToInventory(Items.ProteinResidue, "Proteina residua", resProtQty, RoomNames.Kitchen);
+                    foundation.PostAddedToInventory(Items.ProteinResidue,
+                        ItemDisplayNameLocalization.TryGetByTypeId(Items.ProteinResidue, out var protName) ? protName : "Protein Residue",
+                        resProtQty, RoomNames.Kitchen);
                     break;
                 default:
                     break;
@@ -299,7 +302,9 @@ namespace _Project.Systems.FoodRoom
             _waterSlot.IsActive = false;
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundation != null && foundation.Enabled)
-                foundation.PostAddedToInventory(Items.WaterPotable, "Acqua potabile", amount, RoomNames.Kitchen);
+                foundation.PostAddedToInventory(Items.WaterPotable,
+                    ItemDisplayNameLocalization.TryGetByTypeId(Items.WaterPotable, out var potName) ? potName : "Drinking Water",
+                    amount, RoomNames.Kitchen);
             RefreshWaterToasts();
             return true;
         }
@@ -432,13 +437,22 @@ namespace _Project.Systems.FoodRoom
 
         private static string GetFoodTypeDisplayName(FoodProductionType type)
         {
-            switch (type)
+            string typeId = type switch
             {
-                case FoodProductionType.Vegetable: return "Vegetal Synthesis";
-                case FoodProductionType.Fungus: return "Fungal Synthesis";
-                case FoodProductionType.Meat: return "Meat Synthesis";
-                default: return "Cibo";
-            }
+                FoodProductionType.Vegetable => Items.FoodVegetable,
+                FoodProductionType.Fungus => Items.FoodFungus,
+                FoodProductionType.Meat => Items.FoodMeat,
+                _ => null
+            };
+            if (typeId != null && ItemDisplayNameLocalization.TryGetByTypeId(typeId, out var localized))
+                return localized;
+            return type switch
+            {
+                FoodProductionType.Vegetable => "Vegetable Synthetic",
+                FoodProductionType.Fungus => "Fungal Synthetic",
+                FoodProductionType.Meat => "Meat Synthetic",
+                _ => "Food"
+            };
         }
 
         /// <summary>Chiamato periodicamente dal panel o da tick per mantenere il toast PROGRESS visibile per tutta la durata.</summary>

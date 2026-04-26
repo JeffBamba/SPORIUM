@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sporae.DevTools;
+using Sporae.Core.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -481,14 +482,11 @@ namespace _Project.Sporae.Core
             if (string.IsNullOrWhiteSpace(typeId))
                 return typeId;
 
+            if (ItemDisplayNameLocalization.TryGetByTypeId(typeId, out var localized))
+                return localized;
+
             if (_fruitDefinitionsByTypeId.TryGetValue(typeId, out var definition))
                 return definition.DisplayName;
-
-            if (typeId == Items.FruitsKnown)
-                return "Frutto conosciuto";
-
-            if (typeId == Items.Fruits)
-                return "Frutto";
 
             return typeId;
         }

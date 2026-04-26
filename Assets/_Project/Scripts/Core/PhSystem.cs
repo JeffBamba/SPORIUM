@@ -78,7 +78,7 @@ namespace _Project
         /// </summary>
         private struct ActionContribution
         {
-            public string ActionName;  // "Overwatering", "BlueLED", "RedLED", "SprayAntifungal"
+            public string ActionName;  // "Overwatering", "BlueLED", "RedLED", "AdditiveBasic", ...
             public string PotId;       // "POT-001", "POT-002", etc.
             public float Delta;        // Valore del drift applicato
             

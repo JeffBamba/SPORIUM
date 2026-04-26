@@ -7,6 +7,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.Lab
 {
@@ -456,7 +457,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
             var foundationRitira = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
             if (foundationRitira != null && foundationRitira.Enabled)
-                foundationRitira.PostAddedToInventory(Items.SporeGeneric, "Spora Maturata", ready, RoomNames.Laboratory);
+                foundationRitira.PostAddedToInventory(Items.SporeGeneric, ItemDisplayNameLocalization.GetSporeTitle(SporeStage.Matured), ready, RoomNames.Laboratory);
 
             Hide();
         }

@@ -4,17 +4,17 @@
         <ui:VisualElement name="dome-hud-tabs" class="dome-hud-tabs" style="display: flex; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-color: rgba(0, 0, 0, 0);">
             <ui:Button name="btn-tab-pots" class="dome-tab-btn dome-tab-btn--pots dome-tab-active" style="border-left-color: rgb(179, 178, 156); border-right-color: rgb(179, 178, 156); border-top-color: rgb(179, 178, 156); border-bottom-color: rgb(179, 178, 156);">
                 <ui:VisualElement class="dome-tab-btn__content">
-                    <ui:VisualElement name="dome-tab-pots-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--pots" style="background-image: url(&quot;project://database/Assets/_Project/Art/Enviroments/Png/Elementi/status_sprout.png?fileID=2800000&amp;guid=939e2047e05c1364585ba82b99e00c85&amp;type=3#status_sprout&quot;); background-color: rgba(0, 0, 0, 0); color: rgb(179, 178, 156); border-left-color: rgba(179, 178, 156, 0.55); border-right-color: rgba(179, 178, 156, 0.55); border-top-color: rgba(179, 178, 156, 0.55); border-bottom-color: rgba(179, 178, 156, 0.55);" />
+                    <ui:VisualElement name="dome-tab-pots-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--pots" style="background-image: resource(&apos;Items/Plant_icon&apos;); background-color: rgba(0, 0, 0, 0); color: rgb(179, 178, 156); border-left-color: rgba(179, 178, 156, 0.55); border-right-color: rgba(179, 178, 156, 0.55); border-top-color: rgba(179, 178, 156, 0.55); border-bottom-color: rgba(179, 178, 156, 0.55); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
                     <ui:Label name="lbl-tab-pots" text="POT [0/4]" class="dome-tab-btn__label" style="color: rgb(178, 178, 155);" />
                 </ui:VisualElement>
             </ui:Button>
             <ui:Button name="btn-tab-cryo" class="dome-tab-btn dome-tab-btn--cryo">
                 <ui:VisualElement class="dome-tab-btn__content">
-                    <ui:VisualElement name="dome-tab-cryo-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--cryo" style="background-image: url(&quot;project://database/Assets/_Project/Art/icona_Placeholder_cryo.png?fileID=2800000&amp;guid=675fac4d91214294abdb91af31d837c9&amp;type=3#icona_Placeholder_cryo&quot;); background-color: rgba(0, 0, 0, 0);" />
+                    <ui:VisualElement name="dome-tab-cryo-icon" picking-mode="Ignore" class="dome-tab-icon-box dome-tab-icon-box--cryo" style="background-image: resource(&apos;Items/Plant_cryo&apos;); background-color: rgba(0, 0, 0, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
                     <ui:Label name="lbl-tab-cryo" text="CRYO [0/3]" class="dome-tab-btn__label" />
                 </ui:VisualElement>
             </ui:Button>
-            <ui:Button name="btn-dome-hud-toggle" class="dome-hud-toggle-btn" tooltip="Apri / Chiudi panoramica POT e CRYO">
+            <ui:Button name="btn-dome-hud-toggle" tooltip="Apri / Chiudi panoramica POT e CRYO" class="dome-hud-toggle-btn">
                 <ui:Label name="dome-hud-toggle-chevron" text="^" picking-mode="Ignore" class="dome-hud-toggle-chevron" />
             </ui:Button>
         </ui:VisualElement>
@@ -23,7 +23,7 @@
                 <ui:VisualElement name="dome-pot-header-0" class="dome-pot-header">
                     <ui:Label name="dome-pot-chevron-0" text="v" class="dome-pot-chevron" />
                     <ui:Label name="dome-pot-badge-0" text="POT-001" class="dome-pot-badge dome-pot-badge--occupied" />
-                    <ui:VisualElement name="dome-pot-preview-0" class="dome-pot-preview" style="background-image: resource(&apos;icona_Placeholder&apos;);" />
+                    <ui:VisualElement name="dome-pot-preview-0" class="dome-pot-preview" style="background-image: none;" />
                     <ui:VisualElement name="dome-pot-info-0" class="dome-pot-info">
                         <ui:Label name="dome-pot-name-0" text="Arctic Hask" class="dome-pot-name" />
                         <ui:Label name="dome-pot-sub-0" text="Lvl.1 • Seme • WILD" class="dome-pot-sub" />

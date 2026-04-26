@@ -417,16 +417,14 @@ public class PotActions : MonoBehaviour
     }
     
     /// <summary>
-    /// AZ-13: Verifica se è disponibile STR-004 (Spray Antifungino) in inventario
+    /// AZ-13: Additivo basico disponibile (ex STR-004 legacy; ora STR-004-Basic).
     /// </summary>
     public bool HasSprayAntifungal()
     {
         if (_playerInventory == null)
             return false;
-        
-        // Verifica presenza STR-004 nell'inventario
-        bool hasItem = _playerInventory.Has(Items.SprayAntifungal, 1);
-        return hasItem;
+
+        return _playerInventory.Has(Items.AdditiveBasic, 1);
     }
 
     /// <summary>
@@ -1071,17 +1069,6 @@ public class PotActions : MonoBehaviour
     /// </summary>
     public bool DoSprayAntifungal()
     {
-        // Wrapper retrocompatibile: prova prima AdditiveBasic, altrimenti accetta STR-004 legacy.
-        if (_playerInventory != null && _playerInventory.Has(Items.AdditiveBasic, 1))
-            return DoApplyAdditive(Items.AdditiveBasic);
-
-        if (_playerInventory != null && _playerInventory.Has(Items.SprayAntifungal, 1))
-        {
-            SporiumLogger.LogWarning(LogCategory.Pot, $"[ACT-014][{potSlot?.PotId}] DoSprayAntifungal legacy: uso STR-004 come equivalente AdditiveBasic");
-            return DoApplyAdditive(Items.SprayAntifungal);
-        }
-
-        // Fallback: tenta comunque (gestirà failure reason)
         return DoApplyAdditive(Items.AdditiveBasic);
     }
 
@@ -1105,7 +1092,7 @@ public class PotActions : MonoBehaviour
             return false;
         }
 
-        bool isBasic = additiveTypeId == Items.AdditiveBasic || additiveTypeId == Items.SprayAntifungal; // legacy mapping
+        bool isBasic = additiveTypeId == Items.AdditiveBasic;
         bool isAcid = additiveTypeId == Items.AdditiveAcid;
         if (!isBasic && !isAcid)
         {
@@ -1175,7 +1162,7 @@ public class PotActions : MonoBehaviour
     /// <summary>
     /// AZ-13: Esegue l'azione di potatura
     /// </summary>
-    /// <param name="useSpray">Se true, usa Spray Antifungino (STR-004) per bonus e reroll</param>
+    /// <param name="useSpray">Se true, consuma un Additivo basico (STR-004-Basic) per bonus e reroll</param>
     public bool DoPruning(bool useSpray = false)
     {
         var dayActivityLogPrune = ServiceContainer.Instance.Get<DayActivityLog>(suppressWarning: true);
@@ -1189,22 +1176,21 @@ public class PotActions : MonoBehaviour
         }
         
         // Se richiesto Spray, verifica disponibilità
-        if (useSpray && !IsAutomationContext && !HasSprayAntifungal())
+        if (useSpray && !IsAutomationContext && !_playerInventory.Has(Items.AdditiveBasic, 1))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "STR-004 (Spray Antifungino) non disponibile");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Additivo basico (STR-004-Basic) non disponibile");
             return false;
         }
-        
-        // Consuma STR-004 se usato
+
         if (useSpray && !IsAutomationContext)
         {
-            if (!_playerInventory.Consume(Items.SprayAntifungal, 1))
+            if (!_playerInventory.Consume(Items.AdditiveBasic, 1))
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Impossibile consumare STR-004");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Impossibile consumare additivo basico");
                 return false;
             }
             if (showDebugLogs)
-                SporiumLogger.LogInfo(LogCategory.Inventory, $"[ACT-013][{potSlot.PotId}] Consumato STR-004 per potatura");
+                SporiumLogger.LogInfo(LogCategory.Inventory, $"[ACT-013][{potSlot.PotId}] Consumato STR-004-Basic per potatura");
         }
         
         // Consuma le risorse (1 azione) - in automation già pagate nel terminale

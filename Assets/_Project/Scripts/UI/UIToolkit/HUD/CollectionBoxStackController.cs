@@ -249,7 +249,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 var sprite = payload.ItemIcon;
                 if (sprite == null && !string.IsNullOrEmpty(payload.ItemTypeId))
-                    sprite = NotificationItemIconResolver.GetIcon(payload.ItemTypeId);
+                    sprite = NotificationItemIconResolver.GetIcon(payload.ItemTypeId, payload.ItemSporeStage);
                 if (sprite != null)
                     iconEl.style.backgroundImage = new StyleBackground(sprite);
             }
@@ -367,7 +367,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 var sprite = payload.ItemIcon;
                 if (sprite == null && !string.IsNullOrEmpty(payload.ItemTypeId))
-                    sprite = NotificationItemIconResolver.GetIcon(payload.ItemTypeId);
+                    sprite = NotificationItemIconResolver.GetIcon(payload.ItemTypeId, payload.ItemSporeStage);
                 if (sprite != null)
                     _detailIcon.style.backgroundImage = new StyleBackground(sprite);
             }

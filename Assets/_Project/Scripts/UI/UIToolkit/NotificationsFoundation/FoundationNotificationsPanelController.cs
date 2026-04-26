@@ -290,7 +290,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
                 var isItemLayout = entry.Spec != null && entry.Spec.IsItemLayout && entry.Payload != null;
 
-                TooltipText = NotificationLocalization.Format(entry.Spec?.TooltipIt ?? string.Empty, entry.Payload?.Args);
+                TooltipText = NotificationLocalization.Format(NotificationLocalization.ResolveTooltip(entry.Spec), entry.Payload?.Args);
                 if (ToastTooltip != null && Root != null)
                 {
                     Root.UnregisterCallback<MouseEnterEvent>(OnRowMouseEnter);
@@ -321,7 +321,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                         if (p.ItemIcon != null)
                             sprite = p.ItemIcon;
                         else if (placeholderSprite == null)
-                            sprite = NotificationItemIconResolver.GetIcon(p.ItemTypeId);
+                            sprite = NotificationItemIconResolver.GetIcon(p.ItemTypeId, p.ItemSporeStage);
                         Texture2D tex = null;
                         if (sprite != null && sprite.texture != null)
                             tex = sprite.texture;

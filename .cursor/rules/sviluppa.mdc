@@ -3,6 +3,8 @@ REGOLA: Modalità "SVILUPPA"
 TRIGGER
 Quando il prompt inizia con: SVILUPPA: <titolo task> [#tag opzionali]
 
+Skill (workflow esteso, checklist): `.cursor/skills/sviluppa/SKILL.md`
+
 OBIETTIVO
 Prima di scrivere codice, esegui una ricognizione completa del progetto e del contesto per evitare rework, duplicazioni e scelte miopi. Riusa ciò che esiste, estendi dove serve, riscrivi solo se dimostrabilmente necessario.
 
@@ -16,7 +18,15 @@ FLOW OBBLIGATORIO (in questo ordine)
    - Identifica pattern e astrazioni esistenti.
    - Evidenzia API pubbliche, contratti, config/env.
 
+2bis) VINCOLI E CONVENZIONI REPO (Cursor — non saltare)
+   - Leggi **`AGENTS.md`** in root: indice verso regole e skill del progetto.
+   - **UI Toolkit / HUD / modali / inventario UI:** applica `.cursor/rules/ui-hud-foundation-ui-builder-parity.mdc` (sempre attiva) e, per checklist operativa, `.cursor/skills/ui-toolkit-builder-parity/SKILL.md`.
+   - **DEV REPORT:** contesto recente → **passo 3** (ultimi 5 report). Per **scrivere** un report: `.cursor/rules/dev-report.mdc` + skill `.cursor/skills/dev-report-authoring/SKILL.md` — includere sempre **`## Statistiche e progresso`** (righe codice, sistemi verificati, bug risolti, bullet progresso gameplay; **N/D** se un dato manca, mai numeri inventati).
+   - **Gameplay / servizi / Dome / DayCycle:** quando il codice tocca quegli ambiti, allinea a `.cursor/rules/architecture-runtime-services.mdc`, `gameplay-runtime-patterns.mdc`, `new-feature-extension-paths.mdc` (e `feature-both-demo-full-parity.mdc` se “Both”).
+   - **Piani:** cerca in `.cursor/plans/` gap map o piani già scritti sullo stesso dominio per riuso decisioni e non duplicare analisi.
+
 3) RICOGNIZIONE CONOSCENZA (storico & pianificazione)
+   - **DEV REPORT (repo locale, obbligatorio):** in `Assets/Docs/REPORT/` elenca `DEV_REPORT_*.md`, ordina per **numero progressivo `NNNN`** nel nome (dal più alto al più basso) e **leggi almeno i primi 5** (= ultimi 5 report). In `# ANALISI` riassumi cosa è stato fatto di recente che **tocca o vincola** il task (evita duplicare lavoro già chiuso in report).
    - GITHUB: leggi README, ADR, CHANGELOG, Issues, PR, TODO/FIXME.
    - NOTION: controlla roadmap/board per task correlati.
    - SE TROVI OVERLAP: segnala cosa riusare/estendere; se trovi conflitti, proponi risoluzione.

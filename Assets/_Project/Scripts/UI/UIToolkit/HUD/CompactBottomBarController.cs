@@ -34,8 +34,6 @@ namespace Sporae.UI.UIToolkit.HUD
         private GameObject _mainMenuUiToolkitHost;
         [Tooltip("Menu in-game (stesso effetto del tasto ESC su Pages). Assegna il GO Menu con MainMenuScreens.")]
         [SerializeField] private MainMenuScreens _mainMenuScreens;
-        /// <summary>Fallback se MainMenuScreens non è in scena.</summary>
-        [SerializeField] private OptionsPopupController _optionsController;
 
         [Header("Configuration")]
         [SerializeField] private string _defaultRoom = "dome";
@@ -558,7 +556,8 @@ namespace Sporae.UI.UIToolkit.HUD
             EnsureInGameMainMenuController();
             if (_mainMenuUIToolkit != null)
             {
-                _mainMenuUIToolkit.ToggleInGameMenu();
+                _mainMenuUIToolkit.ShowInGameMenu();
+                _mainMenuUIToolkit.OpenOptionsOverlay();
                 return;
             }
             SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] MainMenuUIToolkitController non disponibile: impossibile aprire il nuovo menu.");

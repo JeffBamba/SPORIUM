@@ -1,15 +1,17 @@
+using _Project.Sporae.Core;
 using UnityEngine;
 using Sporae.UI.Icons;
 
 namespace Sporae.UI.UIToolkit.NotificationsFoundation
 {
-    /// <summary>Risolve l'icona per un item typeId (Resources/Icons/Items/{typeId}). Fallback su icona generica se mancante.</summary>
+    /// <summary>Risolve l'icona per un item typeId solo via <see cref="GlobalIconResolver"/> (catalogo, senza Resources).</summary>
     public static class NotificationItemIconResolver
     {
-        /// <summary>Restituisce lo sprite per il typeId tramite catalogo globale; fallback su icona default.</summary>
-        public static Sprite GetIcon(string itemTypeId)
+        /// <summary>Sprite dal catalogo globale; può essere null se non configurato.</summary>
+        /// <param name="sporeStage">Per <see cref="Items.SporeGeneric"/>: distingue varianti catalogo <c>raw</c> / <c>matured</c>.</param>
+        public static Sprite GetIcon(string itemTypeId, SporeStage? sporeStage = null)
         {
-            return GlobalIconResolver.GetItemIcon(itemTypeId);
+            return GlobalIconResolver.GetItemIcon(itemTypeId, sporeStage);
         }
     }
 }

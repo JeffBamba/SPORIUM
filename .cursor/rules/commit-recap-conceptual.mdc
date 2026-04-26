@@ -1,0 +1,34 @@
+---
+description: Recap commit / messaggio merge — sintesi concettuale (non elenco tecnico di file)
+alwaysApply: true
+---
+
+# Recap commit — stile obbligatorio (Sporae)
+
+Quando l’utente chiede un **Recap commit**, un **messaggio di commit**, un **sommario per PR/merge** o equivalente (“cosa stiamo committando”, “testo per il commit”):
+
+## Cosa produrre
+
+- **Lingua:** italiano (salvo richiesta contraria).
+- **Tono:** **concettuale** — spiega *cosa cambia per il gioco, il team o il processo*, non *come è implementato*.
+- **Lunghezza:** breve — **titolo** (una riga, ≤ ~80 caratteri) + **3–5 bullet** al massimo; niente paragrafi lunghi.
+
+## Cosa evitare (salvo richiesta esplicita dell’utente)
+
+- Elenco lungo di path, classi, metodi o comandi `git`.
+- Statistiche diff (righe +/-, numero file) **in primo piano**; al massimo **una riga** in coda se servono per tracciabilità interna.
+- Gergo solo-tecnico senza traduzione in valore (es. “refactor `FooBar`” senza dire a cosa serve).
+
+## Struttura consigliata
+
+1. **Titolo:** frase che un non-programmatore capisce (es. “Lingua e testi: menu opzioni unificato, inventario più chiaro”).
+2. **Bullet:** per ogni voce, *effetto* o *intento* (es. “Il giocatore sceglie italiano o inglese dalle opzioni nello stesso stile del menu principale”).
+3. **Opzionale:** una riga “**Non in questo commit:** …” solo se c’è materiale ovvio escluso (es. file ancora unstaged) e l’utente sta parlando di uno stage preciso — verificare con `git status` / `git diff --cached` se serve.
+
+## Fonte della verità
+
+- Basare il recap su **ciò che entra nel commit** (tipicamente `git diff --cached` / elenco staged), ma **sintetizzare** il significato, non copiare l’elenco file.
+
+## Riferimento
+
+- Indice agenti: `AGENTS.md` (sezione recap commit).
