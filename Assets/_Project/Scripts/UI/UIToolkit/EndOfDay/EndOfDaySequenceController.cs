@@ -8,6 +8,7 @@ using _Project.Sporae.Core;
 using _Project.Systems.SeedStorage;
 using _Project.Systems.FoodRoom;
 using Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
@@ -297,8 +298,8 @@ namespace _Project
             if (step == 5) PopulateForecast();
             if (step == 7)
             {
-                if (_eodDayFrom != null) _eodDayFrom.text = $"GIORNO {_dayBeforeTransition:D2}";
-                if (_eodDayTo != null) _eodDayTo.text = $"→ GIORNO {_dayBeforeTransition + 1:D2}";
+                if (_eodDayFrom != null) _eodDayFrom.text = LocalizationManager.GetString("eod.day_from", new Dictionary<string, string> { ["n"] = _dayBeforeTransition.ToString("D2") });
+                if (_eodDayTo != null) _eodDayTo.text = LocalizationManager.GetString("eod.day_to", new Dictionary<string, string> { ["n"] = (_dayBeforeTransition + 1).ToString("D2") });
             }
         }
 
@@ -313,23 +314,35 @@ namespace _Project
         private void PopulateSnapshot()
         {
             int day = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 0;
-            if (_snapshotTitle != null) _snapshotTitle.text = $"SPORAE — Giorno {day}";
-            if (_snapshotDate != null) _snapshotDate.text = "Data di sistema: " + System.DateTime.Now.ToString("dd.MM.yyyy");
-            if (_snapshotVault != null) _snapshotVault.text = "Stato Vault: operativo";
+            if (_snapshotTitle != null) _snapshotTitle.text = LocalizationManager.GetString("eod.snapshot_title", new Dictionary<string, string> { ["day"] = day.ToString() });
+            if (_snapshotDate != null) _snapshotDate.text = LocalizationManager.GetString("eod.snapshot_date", new Dictionary<string, string> { ["date"] = System.DateTime.Now.ToString("dd.MM.yyyy") });
+            if (_snapshotVault != null) _snapshotVault.text = LocalizationManager.GetString("eod.snapshot_vault");
 
-            string phLine = "pH Cupola: —";
+            string phLine = LocalizationManager.GetString("eod.snapshot_ph_empty");
             if (_phSystem != null)
-                phLine = $"pH Cupola: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})";
+                phLine = LocalizationManager.GetString("eod.snapshot_ph", new Dictionary<string, string>
+                {
+                    ["ph"] = _phSystem.CurrentPh.ToString("F1"),
+                    ["band"] = _phSystem.GetBandName()
+                });
             if (_snapshotPh != null) _snapshotPh.text = phLine;
 
             var sb = new StringBuilder();
             if (_diaryStatistics != null)
             {
                 int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
-                sb.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent}/{max}");
-                sb.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
+                sb.AppendLine(LocalizationManager.GetString("eod.snapshot_actions", new Dictionary<string, string>
+                {
+                    ["used"] = _diaryStatistics.ActionsSpent.ToString(),
+                    ["max"] = max.ToString()
+                }));
+                sb.AppendLine(LocalizationManager.GetString("eod.snapshot_cry", new Dictionary<string, string>
+                {
+                    ["earned"] = _diaryStatistics.CryEarned.ToString(),
+                    ["spent"] = _diaryStatistics.CrySpent.ToString()
+                }));
                 if (_gameManager != null)
-                    sb.AppendLine($"Saldo: {_gameManager.CurrentCRY} CRY");
+                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_balance", new Dictionary<string, string> { ["cry"] = _gameManager.CurrentCRY.ToString() }));
             }
             if (_dayActivityLog != null)
             {
@@ -356,17 +369,17 @@ namespace _Project
                         string displayName = PlantDatabase.Instance?.GetPlantDataByCode(plantCode)?.name ?? plantCode;
                         harvestParts.Add($"{amount} {displayName} (L{level})");
                     }
-                    sb.AppendLine("Raccolto: " + string.Join(", ", harvestParts) + ".");
+                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_harvest", new Dictionary<string, string> { ["list"] = string.Join(", ", harvestParts) }));
                 }
 
                 var waterPots = new List<string>();
                 foreach (var e in domeEntries)
                 {
                     if (e.ActionKind == "Water" && !string.IsNullOrEmpty(e.PotId))
-                        waterPots.Add("POT " + FormatPotNumber(e.PotId));
+                        waterPots.Add(LocalizationManager.GetString("eod.snapshot_pot_prefix", new Dictionary<string, string> { ["n"] = FormatPotNumber(e.PotId) }));
                 }
                 if (waterPots.Count > 0)
-                    sb.AppendLine("Annaffiati " + string.Join(", ", waterPots.Distinct()) + ".");
+                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_water", new Dictionary<string, string> { ["list"] = string.Join(", ", waterPots.Distinct()) }));
 
                 var bestPerPot = new Dictionary<string, DayActivityLog.DomeActivityEntry>();
                 int actionPriority(string k) => k == "Plant" ? 5 : k == "Water" ? 4 : k == "Light" ? 3 : k == "Fertilize" ? 2 : k == "Pruning" ? 1 : 0;
@@ -380,16 +393,17 @@ namespace _Project
                 foreach (var e in bestPerPot.Values)
                 {
                     string potNum = FormatPotNumber(e.PotId);
+                    string plantName = !string.IsNullOrEmpty(e.PlantDisplayName) ? e.PlantDisplayName : e.PlantCode ?? "?";
                     string line = e.ActionKind == "Plant"
-                        ? $"Hai piantato un seme di {(!string.IsNullOrEmpty(e.PlantDisplayName) ? e.PlantDisplayName : e.PlantCode ?? "?")} nel POT {potNum}."
+                        ? LocalizationManager.GetString("eod.snapshot_plant", new Dictionary<string, string> { ["plant"] = plantName, ["pot"] = potNum })
                         : e.ActionKind == "Light"
-                        ? $"Hai modificato le luci LED nel POT {potNum}."
+                        ? LocalizationManager.GetString("eod.snapshot_light", new Dictionary<string, string> { ["pot"] = potNum })
                         : e.ActionKind == "Fertilize"
-                        ? $"Hai applicato fertilizzante nel POT {potNum}."
+                        ? LocalizationManager.GetString("eod.snapshot_fertilize", new Dictionary<string, string> { ["pot"] = potNum })
                         : e.ActionKind == "Pruning"
-                        ? $"Hai potato la pianta nel POT {potNum}."
+                        ? LocalizationManager.GetString("eod.snapshot_prune", new Dictionary<string, string> { ["pot"] = potNum })
                         : e.ActionKind == "Started"
-                        ? $"Azione avviata sul POT {potNum}."
+                        ? LocalizationManager.GetString("eod.snapshot_started", new Dictionary<string, string> { ["pot"] = potNum })
                         : null;
                     if (line != null)
                         sb.AppendLine(line);
@@ -403,16 +417,20 @@ namespace _Project
                         if (e.Cell001Out > 0) parts.Add($"{e.Cell001Out} Cell001");
                         if (e.Cell002Out > 0) parts.Add($"{e.Cell002Out} Cell002");
                         if (e.Cell003Out > 0) parts.Add($"{e.Cell003Out} Cell003");
-                        string extracted = parts.Count > 0 ? string.Join(", ", parts) : "estrazione";
-                        sb.AppendLine($"Hai estratto {extracted} da {e.InputDescription}.");
+                        string extracted = parts.Count > 0 ? string.Join(", ", parts) : LocalizationManager.GetString("eod.lab_extract_fallback");
+                        sb.AppendLine(LocalizationManager.GetString("eod.lab_extractor", new Dictionary<string, string>
+                        {
+                            ["out"] = extracted,
+                            ["input"] = e.InputDescription
+                        }));
                     }
                     else if (e.LabType == "Fusion")
                     {
-                        string sporeDesc = !string.IsNullOrEmpty(e.InputDescription) ? e.InputDescription : "due Spore";
-                        sb.AppendLine($"Hai completato la fusione di due Spore ({sporeDesc}) nella Stazione di Fusione.");
+                        string sporeDesc = !string.IsNullOrEmpty(e.InputDescription) ? e.InputDescription : LocalizationManager.GetString("eod.lab_two_spores");
+                        sb.AppendLine(LocalizationManager.GetString("eod.lab_fusion", new Dictionary<string, string> { ["desc"] = sporeDesc }));
                     }
                     else
-                        sb.AppendLine($"Hai usato il {e.LabType}.");
+                        sb.AppendLine(LocalizationManager.GetString("eod.lab_generic", new Dictionary<string, string> { ["lab"] = e.LabType }));
                 }
             }
 
@@ -422,16 +440,24 @@ namespace _Project
                 var conditions = _dayCycleController.GetActiveConditionsForReport();
                 if (conditions.Count > 0)
                 {
-                    sb.AppendLine("Condizioni attive:");
+                    sb.AppendLine(LocalizationManager.GetString("eod.conditions_header"));
                     foreach (var c in conditions)
                     {
-                        string severity = c.IsInfested ? "Infestazione" : (c.MoldRiskLevel >= 2 ? "Rischio muffa grave" : "Rischio muffa lieve");
-                        sb.AppendLine($"  POT {FormatPotNumber(c.PotId)}: {severity} (rischio muffa se non trattato domani).");
+                        string severity = c.IsInfested
+                            ? LocalizationManager.GetString("eod.sev_infest")
+                            : (c.MoldRiskLevel >= 2
+                                ? LocalizationManager.GetString("eod.sev_mold_high")
+                                : LocalizationManager.GetString("eod.sev_mold_low"));
+                        sb.AppendLine(LocalizationManager.GetString("eod.condition_line", new Dictionary<string, string>
+                        {
+                            ["pot"] = FormatPotNumber(c.PotId),
+                            ["sev"] = severity
+                        }));
                     }
                 }
             }
 
-            string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : "Nessuna attività registrata.";
+            string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : LocalizationManager.GetString("eod.activity_none");
             if (_activitySummary != null)
             {
                 _activitySummary.enableRichText = true;
@@ -442,14 +468,19 @@ namespace _Project
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string phDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
             string phTrendLine = _phSystem != null
-                ? $"Andamento pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()}), deriva {phDriftStr}"
-                : "Andamento pH: —";
+                ? LocalizationManager.GetString("eod.drift_ph", new Dictionary<string, string>
+                {
+                    ["ph"] = _phSystem.CurrentPh.ToString("F1"),
+                    ["band"] = _phSystem.GetBandName(),
+                    ["drift"] = phDriftStr
+                })
+                : LocalizationManager.GetString("eod.drift_ph_empty");
 
             var driftSb = new StringBuilder();
-            driftSb.AppendLine("Deriva e conseguenze:");
+            driftSb.AppendLine(LocalizationManager.GetString("eod.drift_title"));
             driftSb.AppendLine(phTrendLine);
-            driftSb.AppendLine("La Cupola respira.");
-            driftSb.AppendLine(PlaceholderOpen + "Conseguenza: pH stabilizzato / nota ambientale [placeholder: collegare a eventi]" + PlaceholderClose);
+            driftSb.AppendLine(LocalizationManager.GetString("eod.drift_breathe"));
+            driftSb.AppendLine(PlaceholderOpen + LocalizationManager.GetString("eod.drift_placeholder") + PlaceholderClose);
             if (_drift != null)
             {
                 _drift.enableRichText = true;
@@ -457,20 +488,20 @@ namespace _Project
             }
 
             var notesSb = new StringBuilder();
-            notesSb.AppendLine("[NOTE E TAG]");
-            notesSb.AppendLine("Inventario ........ " + BuildInventorySummary());
-            notesSb.AppendLine("Deposito semi ..... " + BuildSeedStorageSummary());
-            notesSb.AppendLine("Ricerca ........... IN ATTESA");
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_header"));
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_inventory", new Dictionary<string, string> { ["v"] = BuildInventorySummary() }));
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_seed", new Dictionary<string, string> { ["v"] = BuildSeedStorageSummary() }));
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_research"));
             notesSb.AppendLine();
-            notesSb.AppendLine("Cibo cucina ....... " + BuildKitchenFoodSummary());
-            notesSb.AppendLine("Acqua potabile .... " + BuildPotableWaterSummary());
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_food", new Dictionary<string, string> { ["v"] = BuildKitchenFoodSummary() }));
+            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_water", new Dictionary<string, string> { ["v"] = BuildPotableWaterSummary() }));
             notesSb.AppendLine();
-            notesSb.Append("Avviso .............. ");
+            notesSb.Append(LocalizationManager.GetString("eod.notes_warning_label"));
             if (_dayCycleController != null)
             {
                 var moldPots = _dayCycleController.GetActiveConditionsForReport().Select(c => FormatPotNumber(c.PotId)).Distinct().ToList();
                 if (moldPots.Count > 0)
-                    notesSb.Append($"Rischio muffa nel POT {string.Join(", ", moldPots)}.");
+                    notesSb.Append(LocalizationManager.GetString("eod.notes_mold", new Dictionary<string, string> { ["list"] = string.Join(", ", moldPots) }));
                 else
                     notesSb.Append("—");
             }
@@ -512,12 +543,18 @@ namespace _Project
             if (spores > 0)
             {
                 if (pure > 0 || evil > 0 || standard > 0)
-                    parts.Add($"{spores} spore (Puri: {pure}, Malvagi: {evil}, Standard: {standard})");
+                    parts.Add(LocalizationManager.GetString("eod.inv_spores_detail", new Dictionary<string, string>
+                    {
+                        ["n"] = spores.ToString(),
+                        ["pure"] = pure.ToString(),
+                        ["evil"] = evil.ToString(),
+                        ["standard"] = standard.ToString()
+                    }));
                 else
-                    parts.Add($"{spores} spore");
+                    parts.Add(LocalizationManager.GetString("eod.inv_spores", new Dictionary<string, string> { ["n"] = spores.ToString() }));
             }
-            if (seeds > 0) parts.Add($"{seeds} semi");
-            if (reagents > 0) parts.Add($"{reagents} reagenti");
+            if (seeds > 0) parts.Add(LocalizationManager.GetString("eod.inv_seeds", new Dictionary<string, string> { ["n"] = seeds.ToString() }));
+            if (reagents > 0) parts.Add(LocalizationManager.GetString("eod.inv_reagents", new Dictionary<string, string> { ["n"] = reagents.ToString() }));
             return parts.Count > 0 ? string.Join(", ", parts) + "." : "—";
         }
 
@@ -564,7 +601,7 @@ namespace _Project
                 }
             }
 
-            if (preSeed > 0) seedParts.Add($"{preSeed} Pre-Seed");
+            if (preSeed > 0) seedParts.Add(LocalizationManager.GetString("eod.seed_preseed", new Dictionary<string, string> { ["n"] = preSeed.ToString() }));
             foreach (var kv in seedByTypeId.OrderBy(k => k.Key))
                 seedParts.Add($"{kv.Value} {kv.Key}");
             return seedParts.Count > 0 ? string.Join(", ", seedParts) + "." : "—";
@@ -579,16 +616,32 @@ namespace _Project
             {
                 if (slot.State == SlotState.Growing)
                 {
-                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Ortaggi" : slot.Type == FoodProductionType.Fungus ? "Funghi" : slot.Type == FoodProductionType.Meat ? "Carne" : "Cibo";
-                    parts.Add($"{typeName} in corso ({slot.DaysRemaining} giorno/i rimanenti)");
+                    string typeName = slot.Type == FoodProductionType.Vegetable
+                        ? LocalizationManager.GetString("eod.kitchen_veg")
+                        : slot.Type == FoodProductionType.Fungus
+                            ? LocalizationManager.GetString("eod.kitchen_fungus")
+                            : slot.Type == FoodProductionType.Meat
+                                ? LocalizationManager.GetString("eod.kitchen_meat")
+                                : LocalizationManager.GetString("eod.kitchen_food");
+                    parts.Add(LocalizationManager.GetString("eod.kitchen_growing", new Dictionary<string, string>
+                    {
+                        ["type"] = typeName,
+                        ["days"] = slot.DaysRemaining.ToString()
+                    }));
                 }
                 else if (slot.State == SlotState.Ready)
                 {
-                    string typeName = slot.Type == FoodProductionType.Vegetable ? "Ortaggi" : slot.Type == FoodProductionType.Fungus ? "Funghi" : slot.Type == FoodProductionType.Meat ? "Carne" : "Cibo";
-                    parts.Add($"{typeName} pronto per il raccolto");
+                    string typeName = slot.Type == FoodProductionType.Vegetable
+                        ? LocalizationManager.GetString("eod.kitchen_veg")
+                        : slot.Type == FoodProductionType.Fungus
+                            ? LocalizationManager.GetString("eod.kitchen_fungus")
+                            : slot.Type == FoodProductionType.Meat
+                                ? LocalizationManager.GetString("eod.kitchen_meat")
+                                : LocalizationManager.GetString("eod.kitchen_food");
+                    parts.Add(LocalizationManager.GetString("eod.kitchen_ready", new Dictionary<string, string> { ["type"] = typeName }));
                 }
             }
-            return parts.Count > 0 ? string.Join("; ", parts) + "." : "Nessun cibo in produzione.";
+            return parts.Count > 0 ? string.Join("; ", parts) + "." : LocalizationManager.GetString("eod.kitchen_none");
         }
 
         private string BuildPotableWaterSummary()
@@ -597,10 +650,10 @@ namespace _Project
             if (foodRoom == null) return "—";
             var water = foodRoom.WaterSlot;
             if (!water.IsActive)
-                return "Nessuna potabilizzazione in corso.";
+                return LocalizationManager.GetString("eod.water_none");
             if (water.PotableWaterOutput > 0)
-                return $"{water.PotableWaterOutput} unità di acqua potabile pronte per la raccolta.";
-            return "Potabilizzazione in corso.";
+                return LocalizationManager.GetString("eod.water_ready", new Dictionary<string, string> { ["n"] = water.PotableWaterOutput.ToString() });
+            return LocalizationManager.GetString("eod.water_progress");
         }
 
         private static string FormatPotNumber(string potId)
@@ -617,13 +670,11 @@ namespace _Project
             if (_dayActivityLog != null)
             {
                 var h = _dayActivityLog.HarvestsThisDay;
-                if (h.Count > 0) sb.AppendLine("Oggi hai raccolto. Le spore ricordano.");
+                if (h.Count > 0) sb.AppendLine(LocalizationManager.GetString("eod.diario_harvest"));
                 var w = _dayActivityLog.PotIdsWateringTurnedOnThisDay;
-                if (w.Count > 0) sb.AppendLine("L’acqua è scorsa. La vita è stata sostenuta.");
+                if (w.Count > 0) sb.AppendLine(LocalizationManager.GetString("eod.diario_water"));
             }
-            sb.AppendLine("Sistema SPORAE: registrazione completata.");
-            sb.AppendLine("Integrità memoria: 100%. Prossimo risveglio tra: —");
-            sb.Append("Buona notte, Biologo. O chiunque tu sia.");
+            sb.AppendLine(LocalizationManager.GetString("eod.diario_footer"));
             string full = sb.ToString();
             if (_diarioText != null)
             {
@@ -634,30 +685,42 @@ namespace _Project
 
         private void PopulateForecast()
         {
-            var sbToday = new StringBuilder("[OGGI]\n");
+            var sbToday = new StringBuilder(LocalizationManager.GetString("eod.forecast_today"));
             if (_diaryStatistics != null)
             {
                 int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
-                sbToday.AppendLine($"Azioni usate: {_diaryStatistics.ActionsSpent} / {max}");
-                sbToday.AppendLine($"CRY guadagnati: {_diaryStatistics.CryEarned}, spesi: {_diaryStatistics.CrySpent}");
+                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_actions_today", new Dictionary<string, string>
+                {
+                    ["used"] = _diaryStatistics.ActionsSpent.ToString(),
+                    ["max"] = max.ToString()
+                }));
+                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_cry_today", new Dictionary<string, string>
+                {
+                    ["earned"] = _diaryStatistics.CryEarned.ToString(),
+                    ["spent"] = _diaryStatistics.CrySpent.ToString()
+                }));
             }
             if (_phSystem != null)
-                sbToday.AppendLine($"pH: {_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})");
-            sbToday.Append("Reputazioni: —");
+                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_ph_line", new Dictionary<string, string>
+                {
+                    ["ph"] = _phSystem.CurrentPh.ToString("F1"),
+                    ["band"] = _phSystem.GetBandName()
+                }));
+            sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_reputations"));
             string textToday = sbToday.ToString();
 
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string predictedPhDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
 
             int maxActionsForecast = _gameManager?.ActionSystem?.MaxActions ?? 5;
-            var sbTomorrow = new StringBuilder("[PREVISIONE DOMANI]\n");
-            sbTomorrow.AppendLine($"Azioni disponibili: {maxActionsForecast}");
-            sbTomorrow.AppendLine($"Deriva pH prevista: {predictedPhDriftStr}");
-            sbTomorrow.AppendLine("Rischi ambientali: —");
-            sbTomorrow.Append("Missioni attive: —");
+            var sbTomorrow = new StringBuilder(LocalizationManager.GetString("eod.forecast_tomorrow"));
+            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_actions_avail", new Dictionary<string, string> { ["n"] = maxActionsForecast.ToString() }));
+            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_ph_drift", new Dictionary<string, string> { ["v"] = predictedPhDriftStr }));
+            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_risks"));
+            sbTomorrow.Append(LocalizationManager.GetString("eod.forecast_missions"));
             string textTomorrow = sbTomorrow.ToString();
 
-            string textResearch = _nightResearchChosen ? "Ricerca completata: → Nuovo frammento di lore sbloccato." : "";
+            string textResearch = _nightResearchChosen ? LocalizationManager.GetString("eod.forecast_research_done") : "";
             StartCoroutine(RunForecastTypewriter(textToday, textTomorrow, textResearch));
         }
 
@@ -696,9 +759,9 @@ namespace _Project
         private void PopulateDawn(int newDay)
         {
             var title = _root.Q<Label>("eod-dawn-title");
-            if (title != null) title.text = "RIEPILOGO ALBA";
+            if (title != null) title.text = LocalizationManager.GetString("eod.dawn_title");
             var sub = _root.Q<Label>("eod-dawn-subtitle");
-            if (sub != null) sub.text = $"GIORNO {newDay} – VARIAZIONI NOTTURNE";
+            if (sub != null) sub.text = LocalizationManager.GetString("eod.dawn_sub", new Dictionary<string, string> { ["day"] = newDay.ToString() });
 
             int dailyCost = 20;
             var endDayBtn = FindObjectOfType<EndDayButton>();
@@ -720,21 +783,50 @@ namespace _Project
             int grate = topBar != null ? topBar.GetGrateValue() : 0;
 
             string phDriftStr = float.IsNaN(phDrift) ? "—" : phDrift.ToString("+#0.00;-#0.00;0", System.Globalization.CultureInfo.InvariantCulture);
-            string phTrend = float.IsNaN(phDrift) ? "" : (phDrift < 0 ? " (tendenza acida)" : " (tendenza alcalina)");
+            string phTrend = float.IsNaN(phDrift)
+                ? ""
+                : (phDrift < 0 ? LocalizationManager.GetString("eod.dawn_trend_acid") : LocalizationManager.GetString("eod.dawn_trend_alk"));
 
-            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation) ? "Indice di mutazione: —" : $"Indice di mutazione: {mutation:P0}");
-            SetDawnRow("eod-dawn-text-ph", $"Deriva pH: {phDriftStr}{phTrend}");
-            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation) ? "Condensazione: —" : $"Condensazione: {condensation:F0}%");
-            SetDawnRow("eod-dawn-text-grate", $"G-rate: +{grate}");
-            SetDawnRow("eod-dawn-text-cry", $"Saldo CRY (previsione fine giorno): {cryForecast} (solo costi fissi)");
+            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation)
+                ? LocalizationManager.GetString("eod.dawn_mutation_empty")
+                : LocalizationManager.GetString("eod.dawn_mutation", new Dictionary<string, string> { ["v"] = mutation.ToString("P0") }));
+            SetDawnRow("eod-dawn-text-ph", LocalizationManager.GetString("eod.dawn_ph_drift", new Dictionary<string, string> { ["v"] = phDriftStr, ["trend"] = phTrend }));
+            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation)
+                ? LocalizationManager.GetString("eod.dawn_cond_empty")
+                : LocalizationManager.GetString("eod.dawn_cond", new Dictionary<string, string> { ["v"] = condensation.ToString("F0") }));
+            SetDawnRow("eod-dawn-text-grate", LocalizationManager.GetString("eod.dawn_grate", new Dictionary<string, string> { ["n"] = grate.ToString() }));
+            SetDawnRow("eod-dawn-text-cry", LocalizationManager.GetString("eod.dawn_cry", new Dictionary<string, string> { ["cry"] = cryForecast.ToString() }));
 
+            string phDesc = float.IsNaN(phDrift)
+                ? LocalizationManager.GetString("eod.tt_ph_desc_neutral")
+                : LocalizationManager.GetString("eod.tt_ph_desc_shift", new Dictionary<string, string>
+                {
+                    ["dir"] = phDrift < 0
+                        ? LocalizationManager.GetString("eod.tt_ph_dir_acid")
+                        : LocalizationManager.GetString("eod.tt_ph_dir_alk")
+                });
             var tooltips = new Dictionary<string, (string title, string desc, string tip)>
             {
-                ["mutation"] = ("[INDICE DI MUTAZIONE]", "L’indice di mutazione riflette la deriva genetica nella Cupola. Le condizioni notturne possono spostare la probabilità di mutazione.", "SUGGERIMENTO: Monitora le zone a mutazione elevata e usa stabilizzatori in Lab se necessario."),
-                ["ph"] = ("[DERIVA pH RILEVATA]", float.IsNaN(phDrift) ? "L’andamento del pH è monitorato durante la notte. La deriva influenza la crescita delle piante e la probabilità di mutazione." : "L’ambiente della Cupola si è spostato verso " + (phDrift < 0 ? "l’acidità" : "l’alcalinità") + ". Influenza i modelli di crescita e la probabilità di mutazione.", "SUGGERIMENTO: Usa substrati alcalini o attiva stabilizzatori di pH in Lab per contrastare la deriva."),
-                ["condensation"] = ("[VARIAZIONE LIVELLO CONDENSAZIONE]", "La condensazione si è accumulata durante la notte. L’umidità eccessiva favorisce la muffa ma beneficia le specie dipendenti dall’acqua.", "SUGGERIMENTO: Controlla le piante per segni di muffa. Valuta di raccogliere presto le specie sensibili alla condensazione."),
-                ["grate"] = ("[AGGIORNAMENTO G-RATE]", "Contributo giornaliero al tasso di crescita dai sistemi. Influenza accumulo risorse e sviluppo delle piante.", "SUGGERIMENTO: Massimizza il G-rate bilanciando attività in Cupola e Lab."),
-                ["cry"] = ("[PREVISIONE SALDO CRY]", "CRY previsti a fine giornata considerando solo i costi fissi (es. energia). Non include azioni variabili.", "SUGGERIMENTO: Assicurati di avere CRY sufficienti prima della notte per coprire i costi fissi.")
+                ["mutation"] = (
+                    LocalizationManager.GetString("eod.tt_mutation_title"),
+                    LocalizationManager.GetString("eod.tt_mutation_desc"),
+                    LocalizationManager.GetString("eod.tt_mutation_tip")),
+                ["ph"] = (
+                    LocalizationManager.GetString("eod.tt_ph_title"),
+                    phDesc,
+                    LocalizationManager.GetString("eod.tt_ph_tip")),
+                ["condensation"] = (
+                    LocalizationManager.GetString("eod.tt_cond_title"),
+                    LocalizationManager.GetString("eod.tt_cond_desc"),
+                    LocalizationManager.GetString("eod.tt_cond_tip")),
+                ["grate"] = (
+                    LocalizationManager.GetString("eod.tt_grate_title"),
+                    LocalizationManager.GetString("eod.tt_grate_desc"),
+                    LocalizationManager.GetString("eod.tt_grate_tip")),
+                ["cry"] = (
+                    LocalizationManager.GetString("eod.tt_cry_title"),
+                    LocalizationManager.GetString("eod.tt_cry_desc"),
+                    LocalizationManager.GetString("eod.tt_cry_tip"))
             };
 
             _dawnTooltipData = tooltips;
@@ -765,12 +857,7 @@ namespace _Project
                     if (_dawnTooltipTip != null)
                     {
                         var tip = t.tip;
-                        if (tip.StartsWith("SUGGERIMENTO:", System.StringComparison.OrdinalIgnoreCase))
-                            _dawnTooltipTip.text = tip;
-                        else if (tip.StartsWith("TIP:", System.StringComparison.OrdinalIgnoreCase))
-                            _dawnTooltipTip.text = "SUGGERIMENTO:" + tip.Substring(4);
-                        else
-                            _dawnTooltipTip.text = "SUGGERIMENTO: " + tip;
+                        _dawnTooltipTip.text = LocalizationManager.GetString("eod.tip_prefix") + tip;
                     }
                     _dawnTooltip.style.display = DisplayStyle.Flex;
                     _dawnTooltip.BringToFront();

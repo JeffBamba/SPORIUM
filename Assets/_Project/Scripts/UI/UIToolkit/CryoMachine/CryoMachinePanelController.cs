@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
 using _Project.Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.CryoMachine
@@ -69,6 +71,22 @@ namespace Sporae.UI.UIToolkit.CryoMachine
 
             // Pannello nascosto all'avvio
             SetVisible(false);
+        }
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            if (_isOpen)
+                RefreshSlots();
         }
 
         private void Update()
@@ -145,7 +163,7 @@ namespace Sporae.UI.UIToolkit.CryoMachine
             if (cryo == null)
             {
                 if (_footer != null)
-                    _footer.text = "⚠ CRYO MACHINE NON DISPONIBILE";
+                    _footer.text = LocalizationManager.GetString("cryo.footer_unavailable");
                 return;
             }
 
@@ -154,7 +172,11 @@ namespace Sporae.UI.UIToolkit.CryoMachine
             int total    = slots?.Count ?? 0;
 
             if (_footer != null)
-                _footer.text = $"SLOT OCCUPATI: {occupied} / {total}";
+                _footer.text = LocalizationManager.GetString("cryo.slots_occupied", new Dictionary<string, string>
+                {
+                    ["n"] = occupied.ToString(),
+                    ["total"] = total.ToString()
+                });
 
             for (int i = 0; i < SLOT_COUNT; i++)
             {
@@ -174,7 +196,7 @@ namespace Sporae.UI.UIToolkit.CryoMachine
 
                 if (!slot.IsOccupied)
                 {
-                    SetSlotEmpty(ref el, slot.SlotId, "VUOTO");
+                    SetSlotEmpty(ref el, slot.SlotId, LocalizationManager.GetString("cryo.badge_empty"));
                 }
                 else
                 {
@@ -183,7 +205,7 @@ namespace Sporae.UI.UIToolkit.CryoMachine
             }
         }
 
-        private static void SetSlotEmpty(ref SlotElements el, string slotId, string badgeText)
+        private void SetSlotEmpty(ref SlotElements el, string slotId, string badgeText)
         {
             if (el.Badge != null)
             {
@@ -193,18 +215,18 @@ namespace Sporae.UI.UIToolkit.CryoMachine
             }
             if (el.PlantLabel != null)
             {
-                el.PlantLabel.text = "Slot disponibile";
+                el.PlantLabel.text = LocalizationManager.GetString("cryo.slot_free");
                 el.PlantLabel.style.display = DisplayStyle.Flex;
             }
             if (el.InfoBlock != null)
                 el.InfoBlock.style.display = DisplayStyle.None;
         }
 
-        private static void SetSlotOccupied(ref SlotElements el, CryoPlantPayload p)
+        private void SetSlotOccupied(ref SlotElements el, CryoPlantPayload p)
         {
             if (el.Badge != null)
             {
-                el.Badge.text = "ATTIVO";
+                el.Badge.text = LocalizationManager.GetString("cryo.badge_active");
                 el.Badge.RemoveFromClassList("cryo-badge-empty");
                 el.Badge.AddToClassList("cryo-badge-active");
             }
@@ -224,7 +246,7 @@ namespace Sporae.UI.UIToolkit.CryoMachine
                 el.InfoBlock.style.display = DisplayStyle.Flex;
 
             if (el.Level != null)
-                el.Level.text = $"Lvl {p.PlantLevel}";
+                el.Level.text = LocalizationManager.GetString("cryo.level", new Dictionary<string, string> { ["n"] = p.PlantLevel.ToString() });
 
             if (el.Family != null)
                 el.Family.text = !string.IsNullOrWhiteSpace(p.PlantFamilyMetadata) ? p.PlantFamilyMetadata : "—";

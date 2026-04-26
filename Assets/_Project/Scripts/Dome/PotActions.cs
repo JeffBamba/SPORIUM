@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using _Project.Sporae.Core;
@@ -14,6 +15,7 @@ using _Project;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.HUD;
+using Sporae.Core.Localization;
 
 /// <summary>
 /// Gestisce le azioni base sui vasi: piantare, annaffiare e illuminare.
@@ -543,7 +545,7 @@ public class PotActions : MonoBehaviour
                 if (string.IsNullOrEmpty(seedTypeId))
                 {
                     SporiumLogger.LogError(LogCategory.Inventory, "Impossible to find seed in inventory");
-                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Nessun seme disponibile");
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, LocalizationManager.GetString("gameplay.pot.no_seed"));
                     return false;
                 }
             }
@@ -552,7 +554,7 @@ public class PotActions : MonoBehaviour
             if (!IsAutomationContext && !_playerInventory.Has(seedTypeId))
             {
                 SporiumLogger.LogError(LogCategory.Inventory, $"Seme '{seedTypeId}' non disponibile nell'inventario");
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, $"Seme '{seedTypeId}' non disponibile");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, LocalizationManager.GetString("gameplay.pot.seed_unavailable", new Dictionary<string, string> { ["id"] = seedTypeId }));
                 return false;
             }
 
@@ -564,7 +566,7 @@ public class PotActions : MonoBehaviour
             // Qui non dobbiamo bloccare l'esecuzione ritardata in base ad ActionsLeft corrente.
             if (_gameManager == null || (!IsAutomationContext && _gameManager.ActionsLeft < totalActionsCost))
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Azioni insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_actions"));
                 return false;
             }
 
@@ -575,7 +577,7 @@ public class PotActions : MonoBehaviour
                 bool spendOk = _gameManager.TrySpendAction(totalActionsCost);
                 if (!spendOk)
                 {
-                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, "Risorse insufficienti");
+                    PotEvents.EmitActionFailed(PotEvents.PotActionType.Plant, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                     return false;
                 }
             }
@@ -846,7 +848,7 @@ public class PotActions : MonoBehaviour
             // DEBUG_SAFE_FIX: Manteniamo i log espliciti per verificare costo ON/OFF.
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, "Risorse insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Water, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                 return false;
             }
             
@@ -932,7 +934,7 @@ public class PotActions : MonoBehaviour
             // Consuma solo 1 Azione per il toggle (non CRY - consumo giornaliero)
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, "Risorse insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Light, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                 return false;
             }
             
@@ -1088,7 +1090,7 @@ public class PotActions : MonoBehaviour
         
         if (string.IsNullOrEmpty(additiveTypeId))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Additivo non valido");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, LocalizationManager.GetString("gameplay.pot.spray_invalid"));
             return false;
         }
 
@@ -1096,13 +1098,13 @@ public class PotActions : MonoBehaviour
         bool isAcid = additiveTypeId == Items.AdditiveAcid;
         if (!isBasic && !isAcid)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, $"Additivo sconosciuto: {additiveTypeId}");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, LocalizationManager.GetString("gameplay.pot.spray_unknown", new Dictionary<string, string> { ["id"] = additiveTypeId }));
             return false;
         }
 
         if (!IsAutomationContext && (_playerInventory == null || !_playerInventory.Has(additiveTypeId, 1)))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Additivo non disponibile");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, LocalizationManager.GetString("gameplay.pot.spray_unavailable"));
             return false;
         }
 
@@ -1111,7 +1113,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Risorse insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                 return false;
             }
         }
@@ -1121,7 +1123,7 @@ public class PotActions : MonoBehaviour
         {
             if (!_playerInventory.Consume(additiveTypeId, 1))
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, "Impossibile consumare additivo");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Spray, potSlot, LocalizationManager.GetString("gameplay.pot.spray_consume_fail"));
                 return false;
             }
         }
@@ -1178,7 +1180,7 @@ public class PotActions : MonoBehaviour
         // Se richiesto Spray, verifica disponibilità
         if (useSpray && !IsAutomationContext && !_playerInventory.Has(Items.AdditiveBasic, 1))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Additivo basico (STR-004-Basic) non disponibile");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, LocalizationManager.GetString("gameplay.pot.prune_additive_missing"));
             return false;
         }
 
@@ -1186,7 +1188,7 @@ public class PotActions : MonoBehaviour
         {
             if (!_playerInventory.Consume(Items.AdditiveBasic, 1))
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Impossibile consumare additivo basico");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, LocalizationManager.GetString("gameplay.pot.prune_consume_fail"));
                 return false;
             }
             if (showDebugLogs)
@@ -1198,7 +1200,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Risorse insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                 return false;
             }
         }
@@ -1208,7 +1210,7 @@ public class PotActions : MonoBehaviour
         if (pruningConfig == null)
         {
             SporiumLogger.LogError(LogCategory.Pot, $"[ACT-013][{potSlot.PotId}] PruningConfig non trovato in Resources/Configs/PruningConfig");
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, "Configurazione potatura non trovata");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Pruning, potSlot, LocalizationManager.GetString("gameplay.pot.prune_config_missing"));
             return false;
         }
         
@@ -1276,7 +1278,7 @@ public class PotActions : MonoBehaviour
         {
             if (!TryConsumeResources())
             {
-                PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Risorse insufficienti");
+                PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, LocalizationManager.GetString("gameplay.pot.insufficient_resources"));
                 return false;
             }
         }
@@ -1360,7 +1362,7 @@ public class PotActions : MonoBehaviour
         int fruitsToHarvest = Mathf.RoundToInt(baseAmount);
         if (fruitsToHarvest <= 0)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, "Nessun frutto disponibile");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Harvest, potSlot, LocalizationManager.GetString("gameplay.pot.no_fruit"));
             return false;
         }
         
@@ -1473,14 +1475,14 @@ public class PotActions : MonoBehaviour
         // 1. Verifica vaso e pianta
         if (_potState == null || !_potState.HasPlant)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, "Vaso vuoto");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, LocalizationManager.GetString("gameplay.pot.empty_pot"));
             return false;
         }
         
         // 2. Verifica fertilizzante nell'inventario
         if (!IsAutomationContext && !_playerInventory.Has(fertilizerItemCode))
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, $"Fertilizzante '{fertilizerItemCode}' non disponibile");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, LocalizationManager.GetString("gameplay.pot.fertilizer_unavailable", new Dictionary<string, string> { ["id"] = fertilizerItemCode }));
             return false;
         }
         
@@ -1491,7 +1493,7 @@ public class PotActions : MonoBehaviour
         var plantData = _potState.GetPlantData();
         if (plantData == null)
         {
-            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, "PlantData non trovato");
+            PotEvents.EmitActionFailed(PotEvents.PotActionType.Fertilize, potSlot, LocalizationManager.GetString("gameplay.pot.plantdata_missing"));
             return false;
         }
         

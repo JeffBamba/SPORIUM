@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlayerInventory;
 
@@ -186,8 +187,11 @@ namespace Sporae.UI.UIToolkit.Lab
                 _storage.OnInventoryChanged += RefreshDisplay;
             if (_labUpgradesConfig == null)
                 _labUpgradesConfig = Resources.Load<LabUpgradesConfig>("LabUpgradesConfig");
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
         }
+
+        private void OnLanguageChanged(GameLanguage _) => RefreshDisplay();
 
         private void Update()
         {
@@ -201,6 +205,7 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_storage != null)
                 _storage.OnInventoryChanged -= RefreshDisplay;
         }
@@ -243,9 +248,24 @@ namespace Sporae.UI.UIToolkit.Lab
                     inputDesc = $"{PlayerInventoryPanelController.GetItemDisplayName(fruitSlot.TypeId, fruitSlot.Items.FirstOrDefault())} x{fruitSlot.Quantity}";
                     canAvvia = true;
                 }
-                else if (HasStemCellModule && _storage.Has(Items.WholePlant)) { inputDesc = $"{Items.WholePlant} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.WholePlant)?.Quantity ?? 0}"; canAvvia = true; }
-                else if (HasStemCellModule && _storage.Has(Items.OrganicScrap001)) { inputDesc = $"{Items.OrganicScrap001} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicScrap001)?.Quantity ?? 0}"; canAvvia = true; }
-                else if (HasStemCellModule && _storage.Has(Items.ProteinResidue)) { inputDesc = $"{Items.ProteinResidue} x{_storage.Items.FirstOrDefault(s => s.TypeId == Items.ProteinResidue)?.Quantity ?? 0}"; canAvvia = true; }
+                else if (HasStemCellModule && _storage.Has(Items.WholePlant))
+                {
+                    int q = _storage.Items.FirstOrDefault(s => s.TypeId == Items.WholePlant)?.Quantity ?? 0;
+                    inputDesc = $"{FormatItemTypeLabel(Items.WholePlant)} x{q}";
+                    canAvvia = true;
+                }
+                else if (HasStemCellModule && _storage.Has(Items.OrganicScrap001))
+                {
+                    int q = _storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicScrap001)?.Quantity ?? 0;
+                    inputDesc = $"{FormatItemTypeLabel(Items.OrganicScrap001)} x{q}";
+                    canAvvia = true;
+                }
+                else if (HasStemCellModule && _storage.Has(Items.ProteinResidue))
+                {
+                    int q = _storage.Items.FirstOrDefault(s => s.TypeId == Items.ProteinResidue)?.Quantity ?? 0;
+                    inputDesc = $"{FormatItemTypeLabel(Items.ProteinResidue)} x{q}";
+                    canAvvia = true;
+                }
             }
             if (_inputText != null) _inputText.text = inputDesc;
 
@@ -256,12 +276,12 @@ namespace Sporae.UI.UIToolkit.Lab
                 if (inProgress)
                 {
                     int pct = Mathf.RoundToInt(_extractor.ExtractionProgress * 100f);
-                    _progressText.text = $"Estrazione in Corso.. {pct}%";
+                    _progressText.text = LocalizationManager.GetString("lab_extractor.progress_in_progress", new Dictionary<string, string> { ["pct"] = pct.ToString() });
                     _progressText.style.display = DisplayStyle.Flex;
                 }
                 else if (completed)
                 {
-                    _progressText.text = "Estrazione completata";
+                    _progressText.text = LocalizationManager.GetString("lab_extractor.done");
                     _progressText.style.display = DisplayStyle.Flex;
                 }
                 else
@@ -273,10 +293,11 @@ namespace Sporae.UI.UIToolkit.Lab
             int outC2 = _extractor != null ? _extractor.PendingCell002 : 0;
             int outC3 = _extractor != null ? _extractor.PendingCell003 : 0;
             var outParts = new System.Collections.Generic.List<string>();
-            if (outSpore > 0) outParts.Add($"Spora Raw x{outSpore}");
-            if (outC1 > 0) outParts.Add($"{Items.StemCellVegetable} x{outC1}");
-            if (outC2 > 0) outParts.Add($"{Items.StemCellFungus} x{outC2}");
-            if (outC3 > 0) outParts.Add($"{Items.StemCellAnimal} x{outC3}");
+            if (outSpore > 0)
+                outParts.Add($"{ItemDisplayNameLocalization.GetSporeTitle(SporeStage.Raw)} x{outSpore}");
+            if (outC1 > 0) outParts.Add($"{FormatItemTypeLabel(Items.StemCellVegetable)} x{outC1}");
+            if (outC2 > 0) outParts.Add($"{FormatItemTypeLabel(Items.StemCellFungus)} x{outC2}");
+            if (outC3 > 0) outParts.Add($"{FormatItemTypeLabel(Items.StemCellAnimal)} x{outC3}");
             if (_outputText != null) _outputText.text = outParts.Count > 0 ? string.Join(", ", outParts) : "—";
 
             if (_btnRitira != null)
@@ -303,7 +324,7 @@ namespace Sporae.UI.UIToolkit.Lab
             var allowed = ExtractorAllowedTypes();
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
-                "Seleziona item da inserire nell'Extractor",
+                LocalizationManager.GetString("lab_extractor.picker_title"),
                 (typeId, _, pickedItem) =>
                 {
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;
@@ -355,5 +376,8 @@ namespace Sporae.UI.UIToolkit.Lab
             RefreshDisplay();
             // PostAddedToInventory emesso da Extractor.CollectOutput (quantità reali spore/cellule).
         }
+
+        private static string FormatItemTypeLabel(string typeId) =>
+            ItemDisplayNameLocalization.TryGetByTypeId(typeId, out var label) ? label : typeId;
     }
 }

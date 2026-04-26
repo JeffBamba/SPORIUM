@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using _Project.Systems.SeedStorage;
 using Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.Icons;
@@ -50,6 +51,16 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         private Label         _availableLabel;
         private Label         _dailyCostLabel;
         private Label         _apLabel;
+        private Label         _leftTitle;
+        private Label         _leftSubtitle;
+        private Label         _catBotanicalLabel;
+        private Label         _catSeedsLabel;
+        private Label         _catSporesLabel;
+        private Label         _tipLabel;
+        private Label         _rightTitle;
+        private Label         _rightSubtitle;
+        private Label         _capacityMetricLabel;
+        private Label         _logTitleLabel;
 
         // Slot elements — length 6
         private readonly VisualElement[] _slotEls      = new VisualElement[SeedStorageSystem.SlotCount];
@@ -134,12 +145,54 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             QueryElements();
             BindUi();
             InitLog();
+            ApplyLocalizedSeedStorageStaticChrome();
             RefreshButtonStates();
 
             if (_root != null) _root.style.display = DisplayStyle.None;
             IsOpen = false;
 
             ServiceContainer.Instance?.Register(this);
+        }
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            ApplyLocalizedSeedStorageStaticChrome();
+            if (IsOpen)
+                Refresh();
+        }
+
+        private void ApplyLocalizedSeedStorageStaticChrome()
+        {
+            if (_leftTitle != null) _leftTitle.text = LocalizationManager.GetString("seed_storage.chrome.left_title");
+            if (_leftSubtitle != null) _leftSubtitle.text = LocalizationManager.GetString("seed_storage.chrome.left_subtitle");
+            if (_catBotanicalLabel != null) _catBotanicalLabel.text = LocalizationManager.GetString("seed_storage.chrome.cat_botanical");
+            if (_catSeedsLabel != null) _catSeedsLabel.text = LocalizationManager.GetString("seed_storage.chrome.cat_seeds");
+            if (_catSporesLabel != null) _catSporesLabel.text = LocalizationManager.GetString("seed_storage.chrome.cat_spores");
+            if (_tipLabel != null) _tipLabel.text = LocalizationManager.GetString("seed_storage.chrome.tip");
+            if (_rightTitle != null) _rightTitle.text = LocalizationManager.GetString("seed_storage.chrome.right_title");
+            if (_rightSubtitle != null) _rightSubtitle.text = LocalizationManager.GetString("seed_storage.chrome.right_subtitle");
+            if (_capacityMetricLabel != null) _capacityMetricLabel.text = LocalizationManager.GetString("seed_storage.chrome.capacity");
+            if (_logTitleLabel != null) _logTitleLabel.text = LocalizationManager.GetString("seed_storage.chrome.log_title");
+            if (_btnDeposit != null) _btnDeposit.text = LocalizationManager.GetString("seed_storage.chrome.btn_deposit");
+            if (_btnWithdraw != null) _btnWithdraw.text = LocalizationManager.GetString("seed_storage.chrome.btn_withdraw");
+            string unlockTxt = LocalizationManager.GetString("seed_storage.chrome.unlock_btn");
+            for (int k = 0; k < _slotUnlockBtns.Length; k++)
+                if (_slotUnlockBtns[k] != null) _slotUnlockBtns[k].text = unlockTxt;
+            for (int i = 0; i < _slotViaRows.Length; i++)
+            {
+                var viaLab = _slotViaRows[i]?.Q<Label>(className: "seedstorage-via-label");
+                if (viaLab != null) viaLab.text = LocalizationManager.GetString("seed_storage.chrome.vitality");
+            }
         }
 
         private void OnDestroy()
@@ -180,6 +233,16 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             _dailyCostLabel    = ve.Q<Label>("seedstorage-daily-cost");
             _apLabel           = ve.Q<Label>("seedstorage-ap");
             _logScroll         = ve.Q<ScrollView>("seedstorage-log-scroll");
+            _leftTitle         = ve.Q<Label>("seedstorage-left-title");
+            _leftSubtitle      = ve.Q<Label>("seedstorage-left-subtitle");
+            _catBotanicalLabel = ve.Q<Label>("seedstorage-cat-label-botanical");
+            _catSeedsLabel     = ve.Q<Label>("seedstorage-cat-label-seeds");
+            _catSporesLabel    = ve.Q<Label>("seedstorage-cat-label-spores");
+            _tipLabel          = ve.Q<Label>("seedstorage-tip");
+            _rightTitle        = ve.Q<Label>("seedstorage-right-title");
+            _rightSubtitle     = ve.Q<Label>("seedstorage-right-subtitle");
+            _capacityMetricLabel = ve.Q<Label>("seedstorage-capacity-metric");
+            _logTitleLabel     = ve.Q<Label>("seedstorage-log-title");
 
             for (int i = 0; i < SeedStorageSystem.SlotCount; i++)
             {
@@ -264,6 +327,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             _root.style.display = DisplayStyle.Flex;
             IsOpen = true;
             GameplayUiModalLock.SetMachineModalState(true);
+            ApplyLocalizedSeedStorageStaticChrome();
             Refresh();
         }
 
@@ -280,14 +344,16 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         {
             if (_seed == null) return;
             _seed.SetPower(!_seed.IsOn);
-            AppendLog(_seed.IsOn ? "> Alimentazione ON — crioconservazione attiva." : "> Alimentazione OFF — decadimento attivo sui contenuti.");
+            AppendLog(_seed.IsOn
+                ? LocalizationManager.GetString("seed_storage.log.power_on")
+                : LocalizationManager.GetString("seed_storage.log.power_off"));
         }
 
         private void OnUnlockClicked()
         {
             if (_seed == null) return;
             if (_seed.TryUnlockExtendedSlots())
-                AppendLog("> Slot 4-6 sbloccati (tier 2 · 3 CRY/giorno per slot occupato).");
+                AppendLog(LocalizationManager.GetString("seed_storage.log.unlock"));
             Refresh();
         }
 
@@ -295,29 +361,29 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         {
             if (_seed == null || _gameManager == null) return;
             var items = CollectSelectedItems();
-            if (items.Count == 0) { AppendLog("> Nessun item selezionato."); return; }
+            if (items.Count == 0) { AppendLog(LocalizationManager.GetString("seed_storage.log.no_selection_items")); return; }
             if (_seed.TryDepositItems(items, out var err))
             {
-                AppendLog($"> Depositati {items.Count} item (1 AP).");
+                AppendLog(LocalizationManager.GetString("seed_storage.log.deposit_ok", new Dictionary<string, string> { ["n"] = items.Count.ToString() }));
                 _depositSelectionTypeIds.Clear();
             }
             else
-                AppendLog($"> Deposito fallito: {DescribeError(err)}.");
+                AppendLog(LocalizationManager.GetString("seed_storage.log.deposit_fail", new Dictionary<string, string> { ["reason"] = DescribeError(err) }));
             Refresh();
         }
 
         private void OnWithdrawClicked()
         {
             if (_seed == null) return;
-            if (_withdrawSlots.Count == 0) { AppendLog("> Nessuno slot selezionato."); return; }
+            if (_withdrawSlots.Count == 0) { AppendLog(LocalizationManager.GetString("seed_storage.log.no_slots")); return; }
             var list = new List<int>(_withdrawSlots);
             if (_seed.TryWithdrawFromSlots(list, out var err))
             {
-                AppendLog($"> Prelevati {list.Count} slot (1 AP).");
+                AppendLog(LocalizationManager.GetString("seed_storage.log.withdraw_ok", new Dictionary<string, string> { ["n"] = list.Count.ToString() }));
                 _withdrawSlots.Clear();
             }
             else
-                AppendLog($"> Prelievo fallito: {DescribeError(err)}.");
+                AppendLog(LocalizationManager.GetString("seed_storage.log.withdraw_fail", new Dictionary<string, string> { ["reason"] = DescribeError(err) }));
             Refresh();
         }
 
@@ -347,21 +413,25 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             }
             if (_statusText != null)
             {
-                _statusText.text = on ? "CONNESSIONE: STABILE" : "CONNESSIONE: OFFLINE";
+                _statusText.text = on
+                    ? LocalizationManager.GetString("seed_storage.conn_on")
+                    : LocalizationManager.GetString("seed_storage.conn_off");
                 _statusText.EnableInClassList("seedstorage-status-text--on",  on);
                 _statusText.EnableInClassList("seedstorage-status-text--off", !on);
             }
-            if (_tempLabel         != null) _tempLabel.text         = on ? "❄ TEMP: -18°C" : "TEMP: —";
-            if (_powerLabel        != null) _powerLabel.text        = on ? "⚡ ALIMENT.: ON" : "⚡ ALIMENT.: OFF";
-            if (_systemStatusLabel != null) _systemStatusLabel.text = on ? "STATO SISTEMA: NOMINALE" : "STATO SISTEMA: OFFLINE";
+            if (_tempLabel         != null) _tempLabel.text         = on ? LocalizationManager.GetString("seed_storage.temp_on") : LocalizationManager.GetString("seed_storage.temp_off");
+            if (_powerLabel        != null) _powerLabel.text        = on ? LocalizationManager.GetString("seed_storage.power_on") : LocalizationManager.GetString("seed_storage.power_off");
+            if (_systemStatusLabel != null) _systemStatusLabel.text = on ? LocalizationManager.GetString("seed_storage.sys_nominal") : LocalizationManager.GetString("seed_storage.sys_off");
 
             int occupied  = CountOccupied();
             int available = CountAvailable();
-            if (_occupiedLabel  != null) _occupiedLabel.text  = $"OCCUPATI: {occupied}/6";
-            if (_availableLabel != null) _availableLabel.text = $"DISPONIBILI: {available}";
-            if (_dailyCostLabel != null) _dailyCostLabel.text = on ? $"COSTO GIORN.: {cost} CRY" : "COSTO GIORN.: 0 CRY (OFF)";
-            if (_apLabel        != null) _apLabel.text        = $"AP: {_gameManager.ActionsLeft}";
-            if (_btnPower       != null) _btnPower.text       = on ? "SPEGNI" : "ACCENDI";
+            if (_occupiedLabel  != null) _occupiedLabel.text  = LocalizationManager.GetString("seed_storage.occupied", new Dictionary<string, string> { ["n"] = occupied.ToString() });
+            if (_availableLabel != null) _availableLabel.text = LocalizationManager.GetString("seed_storage.available", new Dictionary<string, string> { ["n"] = available.ToString() });
+            if (_dailyCostLabel != null) _dailyCostLabel.text = on
+                ? LocalizationManager.GetString("seed_storage.cost_on", new Dictionary<string, string> { ["cost"] = cost.ToString() })
+                : LocalizationManager.GetString("seed_storage.cost_off");
+            if (_apLabel        != null) _apLabel.text        = LocalizationManager.GetString("seed_storage.ap", new Dictionary<string, string> { ["n"] = _gameManager.ActionsLeft.ToString() });
+            if (_btnPower       != null) _btnPower.text       = on ? LocalizationManager.GetString("seed_storage.btn_off") : LocalizationManager.GetString("seed_storage.btn_on");
 
             RebuildInventoryRows();
             RebuildSlots();
@@ -534,7 +604,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
 
         private static void AddEmptyPlaceholder(VisualElement container)
         {
-            var lbl = new Label("— vuoto");
+            var lbl = new Label(LocalizationManager.GetString("seed_storage.inv_empty"));
             lbl.AddToClassList("seedstorage-inv-empty");
             container.Add(lbl);
         }
@@ -559,7 +629,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
 
                 if (_slotTags[i] != null)
                 {
-                    _slotTags[i].text = $"SLOT {i + 1}";
+                    _slotTags[i].text = LocalizationManager.GetString("seed_storage.slot_n", new Dictionary<string, string> { ["n"] = (i + 1).ToString() });
                     _slotTags[i].EnableInClassList("seedstorage-slot-tag--locked", isLocked);
                 }
 
@@ -576,7 +646,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                         _slotBodies[i].AddToClassList("seedstorage-slot-lock-icon");
                         _slotBodies[i].RemoveFromClassList("seedstorage-slot-body");
                     }
-                    if (_slotSubs[i] != null) { _slotSubs[i].text = "SLOT BLOCCATO"; _slotSubs[i].style.display = DisplayStyle.Flex; }
+                    if (_slotSubs[i] != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.slot_locked"); _slotSubs[i].style.display = DisplayStyle.Flex; }
                     SetSlotIconState(i, "locked");
                     SetViaRowVisible(i, false);
                     continue;
@@ -591,8 +661,8 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                 if (isEmpty)
                 {
                     el.AddToClassList("seedstorage-slot--empty");
-                    if (_slotBodies[i] != null) _slotBodies[i].text = "SLOT VUOTO";
-                    if (_slotSubs[i]   != null) { _slotSubs[i].text = "Pronto per lo storage"; _slotSubs[i].style.display = DisplayStyle.Flex; }
+                    if (_slotBodies[i] != null) _slotBodies[i].text = LocalizationManager.GetString("seed_storage.slot_empty");
+                    if (_slotSubs[i]   != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.slot_ready"); _slotSubs[i].style.display = DisplayStyle.Flex; }
                     SetSlotIconState(i, "empty");
                     SetFill(i, 0f);
                     if (_slotViaPcts[i] != null) _slotViaPcts[i].text = "—";
@@ -606,7 +676,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                 int    qty = _seed.GetSlotQuantity(i);
                 float  via = _seed.GetSlotViabilityRatio(i);
                 if (_slotBodies[i] != null) _slotBodies[i].text = FormatItemName(tid ?? "—");
-                if (_slotSubs[i]   != null) { _slotSubs[i].text = $"Quantità: {qty}"; _slotSubs[i].style.display = DisplayStyle.Flex; }
+                if (_slotSubs[i]   != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.qty", new Dictionary<string, string> { ["n"] = qty.ToString() }); _slotSubs[i].style.display = DisplayStyle.Flex; }
                 SetSlotIconState(i, "occupied");
                 SetFill(i, via);
                 if (_slotViaPcts[i] != null) _slotViaPcts[i].text = $"{Mathf.RoundToInt(via * 100f)}%";
@@ -650,8 +720,8 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             if (_logScroll == null) return;
             _logScroll.Clear();
             _logBuffer.Clear();
-            AddLogLabel("> Sistema inizializzato — Camere crioniche stabili");
-            AddLogLabel("> Connessione stabilita — Terminale pronto");
+            AddLogLabel(LocalizationManager.GetString("seed_storage.log.init_cryo"));
+            AddLogLabel(LocalizationManager.GetString("seed_storage.log.init_ready"));
         }
 
         private void AppendLog(string line)
@@ -675,14 +745,14 @@ namespace Sporae.UI.UIToolkit.SeedStorage
 
         private static string DescribeError(string err) => err switch
         {
-            "no_ap"            => "AP insufficienti",
-            "no_room"          => "spazio esaurito",
-            "ineligible"       => "item non ammesso",
-            "not_in_inventory" => "item non più disponibile",
-            "remove_failed"    => "errore interno",
-            "bad_slot"         => "slot non valido",
-            "empty"            => "selezione vuota",
-            _                  => err ?? "errore"
+            "no_ap"            => LocalizationManager.GetString("seed_storage.err.no_ap"),
+            "no_room"          => LocalizationManager.GetString("seed_storage.err.no_room"),
+            "ineligible"       => LocalizationManager.GetString("seed_storage.err.ineligible"),
+            "not_in_inventory" => LocalizationManager.GetString("seed_storage.err.not_in_inventory"),
+            "remove_failed"    => LocalizationManager.GetString("seed_storage.err.remove_failed"),
+            "bad_slot"         => LocalizationManager.GetString("seed_storage.err.bad_slot"),
+            "empty"            => LocalizationManager.GetString("seed_storage.err.empty"),
+            _                  => string.IsNullOrEmpty(err) ? LocalizationManager.GetString("seed_storage.err.generic") : err
         };
     }
 }

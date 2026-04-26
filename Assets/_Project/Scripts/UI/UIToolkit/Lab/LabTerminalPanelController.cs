@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using _Project.Systems.SeedStorage;
 using Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.UI.UIToolkit.PlayerInventory;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -249,7 +250,22 @@ namespace Sporae.UI.UIToolkit.Lab
         private void Start()
         {
             EnsureGameManager();
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            if (_analysisCompleted && !_analysisRunning)
+                _projectTypeAnalysis = BuildProjectTypeAnalysis();
+            ApplyLabTerminalStaticChrome();
+            if (gameObject.activeInHierarchy && _overlay != null && _overlay.resolvedStyle.display == DisplayStyle.Flex)
+                RefreshDisplay();
+        }
+
+        private void OnDestroy()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
         }
 
         private void Update()
@@ -429,6 +445,119 @@ namespace Sporae.UI.UIToolkit.Lab
                 _btnAnalysisCancelSelection.clicked += CancelProjectTypeSelection;
 
             _uiBound = true;
+            ApplyLabTerminalStaticChrome();
+        }
+
+        private void ApplyLabTerminalStaticChrome()
+        {
+            if (_root == null)
+                return;
+
+            var panel = _root.Q<VisualElement>("lab-terminal-panel");
+            if (panel == null)
+                return;
+
+            var mainTitle = panel.Q<Label>(className: "lab-terminal-title");
+            if (mainTitle != null) mainTitle.text = LocalizationManager.GetString("lab_terminal.chrome.title");
+
+            var subtitle = panel.Q<Label>(className: "lab-terminal-subtitle");
+            if (subtitle != null) subtitle.text = LocalizationManager.GetString("lab_terminal.chrome.subtitle");
+
+            var standalone = panel.Q<VisualElement>(className: "lab-terminal-section-standalone");
+            var machinesHeader = standalone?.Q<VisualElement>(className: "lab-terminal-section-header")?.Q<Label>(className: "lab-terminal-section-title");
+            if (machinesHeader != null) machinesHeader.text = LocalizationManager.GetString("lab_terminal.chrome.section_machines");
+
+            if (_machinesContent != null)
+            {
+                var hint = _machinesContent.Q<Label>(className: "lab-terminal-section-hint");
+                if (hint != null) hint.text = LocalizationManager.GetString("lab_terminal.chrome.machines_hint");
+            }
+
+            void StyleMachineRow(Button openBtn, string machineNameKey)
+            {
+                if (openBtn == null) return;
+                var row = openBtn.parent;
+                var nm = row?.Q<Label>(className: "lab-terminal-machine-name");
+                if (nm != null) nm.text = LocalizationManager.GetString(machineNameKey);
+                openBtn.text = LocalizationManager.GetString("lab_terminal.chrome.btn_open");
+            }
+
+            StyleMachineRow(_btnOpenExtractor, "lab_terminal.chrome.machine_extractor");
+            StyleMachineRow(_btnOpenCatalizzatore, "lab_terminal.chrome.machine_catalizzatore");
+            StyleMachineRow(_btnOpenFusion, "lab_terminal.chrome.machine_fusion");
+            StyleMachineRow(_btnOpenIncubator, "lab_terminal.chrome.machine_incubator");
+
+            var projectSection = panel.Q<VisualElement>(className: "lab-terminal-section-project");
+            if (projectSection != null && projectSection.childCount > 0 && projectSection[0] is Label projectHead)
+                projectHead.text = LocalizationManager.GetString("lab_terminal.chrome.project_title");
+
+            var quickStaticHead = panel.Q<Label>(className: "lab-terminal-quick-title-static");
+            if (quickStaticHead != null) quickStaticHead.text = LocalizationManager.GetString("lab_terminal.chrome.quick_static_title");
+            var quickDynHead = panel.Q<Label>(className: "lab-terminal-quick-title-dynamic");
+            if (quickDynHead != null) quickDynHead.text = LocalizationManager.GetString("lab_terminal.chrome.quick_dynamic_title");
+
+            if (_projectQuickIntroLabel != null)
+                _projectQuickIntroLabel.text = LocalizationManager.GetString("lab_terminal.chrome.quick_intro_placeholder");
+            if (_projectQuickWhatNowLabel != null)
+                _projectQuickWhatNowLabel.text = LocalizationManager.GetString("lab_terminal.chrome.quick_what_placeholder");
+            if (_projectQuickLiveLabel != null)
+                _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.chrome.quick_live_placeholder");
+            if (_projectQuickOutcomeLabel != null)
+                _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.chrome.quick_outcome_placeholder");
+
+            if (_btnCreateProject != null) _btnCreateProject.text = LocalizationManager.GetString("lab_terminal.chrome.btn_create");
+            if (_btnCancelProject != null) _btnCancelProject.text = LocalizationManager.GetString("lab_terminal.chrome.btn_cancel");
+
+            var ph = panel.Q<VisualElement>("lab-terminal-project-image-placeholder")?.Q<Label>(className: "lab-terminal-project-image-placeholder-label");
+            if (ph != null) ph.text = LocalizationManager.GetString("lab_terminal.chrome.placeholder_image");
+
+            if (_projectBoard != null)
+            {
+                var boardTitle = _projectBoard.Q<Label>(className: "lab-terminal-board-title");
+                if (boardTitle != null) boardTitle.text = LocalizationManager.GetString("lab_terminal.chrome.board_title");
+                var legend = _projectBoard.Q<VisualElement>(className: "lab-terminal-board-legend");
+                if (legend != null)
+                {
+                    var legTitle = legend.Q<Label>(className: "lab-terminal-legend-title");
+                    if (legTitle != null) legTitle.text = LocalizationManager.GetString("lab_terminal.chrome.legend_title");
+                    var li = legend.Q<Label>(className: "lab-terminal-legend-inprogress");
+                    if (li != null) li.text = LocalizationManager.GetString("lab_terminal.chrome.legend_inprogress");
+                    var lc = legend.Q<Label>(className: "lab-terminal-legend-completed");
+                    if (lc != null) lc.text = LocalizationManager.GetString("lab_terminal.chrome.legend_completed");
+                    var lt = legend.Q<Label>(className: "lab-terminal-legend-todo");
+                    if (lt != null) lt.text = LocalizationManager.GetString("lab_terminal.chrome.legend_todo");
+                    var lb = legend.Q<Label>(className: "lab-terminal-legend-blocked");
+                    if (lb != null) lb.text = LocalizationManager.GetString("lab_terminal.chrome.legend_blocked");
+                }
+            }
+
+            if (_analysisBlock != null)
+            {
+                var at = _analysisBlock.Q<Label>(className: "lab-terminal-analysis-title");
+                if (at != null) at.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_title");
+                if (_analysisStatusLabel != null && !_analysisRunning)
+                    _analysisStatusLabel.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_status_prep");
+                var sub = _analysisBlock.Q<Label>(className: "lab-terminal-analysis-subtitle");
+                if (sub != null) sub.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_project_type_caption");
+                if (_btnProjectTypeReplica != null) _btnProjectTypeReplica.text = LocalizationManager.GetString("lab_terminal.chrome.type_replica");
+                if (_btnProjectTypeHybrid != null) _btnProjectTypeHybrid.text = LocalizationManager.GetString("lab_terminal.chrome.type_hybrid");
+                if (_btnProjectTypeNewProfile != null) _btnProjectTypeNewProfile.text = LocalizationManager.GetString("lab_terminal.chrome.type_new_profile");
+                if (_analysisSelectedTitleLabel != null)
+                    _analysisSelectedTitleLabel.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_sheet_title");
+                if (_analysisSelectedProjectLabel != null)
+                    _analysisSelectedProjectLabel.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_project_line");
+                if (_analysisRequiredItemsLabel != null)
+                    _analysisRequiredItemsLabel.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_required_placeholder");
+                if (_analysisExecutionStatusLabel != null)
+                    _analysisExecutionStatusLabel.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_exec_placeholder");
+                if (_btnAnalysisCancelSelection != null)
+                    _btnAnalysisCancelSelection.text = LocalizationManager.GetString("lab_terminal.chrome.analysis_cancel");
+                if (_btnAnalysisOpenCurrentStep != null)
+                    _btnAnalysisOpenCurrentStep.text = LocalizationManager.GetString("lab_terminal.btn_open_step");
+            }
+
+            if (_btnOpenCurrentStep != null)
+                _btnOpenCurrentStep.text = LocalizationManager.GetString("lab_terminal.btn_open_step");
         }
 
         private void OpenExtractorPanel()
@@ -532,8 +661,11 @@ namespace Sporae.UI.UIToolkit.Lab
 
             if (_selectedProjectType != SeedProjectType.None && _selectedProjectType != type)
             {
-                _projectDirectionChangedMessage =
-                    $"<color=#AFC8D8>Hai cambiato direzione in corso:</color> da {ProjectTypeLabel(_selectedProjectType)} a {ProjectTypeLabel(type)}. Nessuna penalita, il sistema aggiorna solo i consigli.";
+                _projectDirectionChangedMessage = LocalizationManager.GetString("lab_terminal.direction_changed", new Dictionary<string, string>
+                {
+                    ["from"] = ProjectTypeLabel(_selectedProjectType),
+                    ["to"] = ProjectTypeLabel(type)
+                });
             }
 
             _selectedProjectType = type;
@@ -587,40 +719,40 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_machineExtractorStatus != null)
             {
                 _machineExtractorStatus.text = snapshot.ExtractorInProgress
-                    ? $"In corso ({snapshot.ExtractorProgressPct}%)"
+                    ? LocalizationManager.GetString("lab_terminal.machine.extractor_progress", new Dictionary<string, string> { ["pct"] = snapshot.ExtractorProgressPct.ToString() })
                     : snapshot.ExtractorStepDone
-                        ? $"Completato (Spore RAW rilevate: {Mathf.Max(snapshot.ExtractorPendingRawCount, 1)})"
-                        : "Idle";
+                        ? LocalizationManager.GetString("lab_terminal.machine.extractor_done", new Dictionary<string, string> { ["n"] = Mathf.Max(snapshot.ExtractorPendingRawCount, 1).ToString() })
+                        : LocalizationManager.GetString("lab_terminal.machine.idle");
                 ApplyMachineStatusStyle(_machineExtractorStatus, snapshot.ExtractorInProgress, snapshot.ExtractorStepDone);
             }
 
             if (_machineCatalizzatoreStatus != null)
             {
                 _machineCatalizzatoreStatus.text = snapshot.CatalizzatoreInProgress
-                    ? "In corso (maturazione 1 giorno)"
+                    ? LocalizationManager.GetString("lab_terminal.machine.cat_progress")
                     : snapshot.CatalizzatoreStepDone
-                        ? $"Completato (Spore mature: {Mathf.Max(snapshot.CatalizzatoreReadyCount, 1)})"
-                        : "Idle";
+                        ? LocalizationManager.GetString("lab_terminal.machine.cat_done", new Dictionary<string, string> { ["n"] = Mathf.Max(snapshot.CatalizzatoreReadyCount, 1).ToString() })
+                        : LocalizationManager.GetString("lab_terminal.machine.idle");
                 ApplyMachineStatusStyle(_machineCatalizzatoreStatus, snapshot.CatalizzatoreInProgress, snapshot.CatalizzatoreStepDone);
             }
 
             if (_machineFusionStatus != null)
             {
                 _machineFusionStatus.text = snapshot.FusionInProgress
-                    ? $"In corso ({snapshot.FusionProgressPct}%)"
+                    ? LocalizationManager.GetString("lab_terminal.machine.fusion_progress", new Dictionary<string, string> { ["pct"] = snapshot.FusionProgressPct.ToString() })
                     : snapshot.FusionStepDone
-                        ? $"Completato (Pre-seed: {Mathf.Max(snapshot.FusionReadyCount, 1)})"
-                        : "Idle";
+                        ? LocalizationManager.GetString("lab_terminal.machine.fusion_done", new Dictionary<string, string> { ["n"] = Mathf.Max(snapshot.FusionReadyCount, 1).ToString() })
+                        : LocalizationManager.GetString("lab_terminal.machine.idle");
                 ApplyMachineStatusStyle(_machineFusionStatus, snapshot.FusionInProgress, snapshot.FusionStepDone);
             }
 
             if (_machineIncubatorStatus != null)
             {
                 _machineIncubatorStatus.text = snapshot.IncubatorInProgress
-                    ? $"In corso (giorno {snapshot.IncubatorDay}/2)"
+                    ? LocalizationManager.GetString("lab_terminal.machine.inc_progress", new Dictionary<string, string> { ["day"] = snapshot.IncubatorDay.ToString() })
                     : snapshot.IncubatorStepDone
-                        ? $"Completato (Semi: {Mathf.Max(snapshot.IncubatorReadyCount, 1)})"
-                        : "Idle";
+                        ? LocalizationManager.GetString("lab_terminal.machine.inc_done", new Dictionary<string, string> { ["n"] = Mathf.Max(snapshot.IncubatorReadyCount, 1).ToString() })
+                        : LocalizationManager.GetString("lab_terminal.machine.idle");
                 ApplyMachineStatusStyle(_machineIncubatorStatus, snapshot.IncubatorInProgress, snapshot.IncubatorStepDone);
             }
 
@@ -643,7 +775,9 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_btnOpenCurrentStep != null && _projectActive && _analysisCompleted && !_analysisScreenOpen)
             {
                 _btnOpenCurrentStep.SetEnabled(!collectGate);
-                _btnOpenCurrentStep.text = collectGate ? $"RITIRA OUTPUT DA {StepMachineName(pendingCollectionStep.Value)}" : "APRI STEP CORRENTE";
+                _btnOpenCurrentStep.text = collectGate
+                    ? LocalizationManager.GetString("lab_terminal.btn_collect_output", new Dictionary<string, string> { ["machine"] = StepMachineName(pendingCollectionStep.Value) })
+                    : LocalizationManager.GetString("lab_terminal.btn_open_step");
             }
 
             if (_projectStatusLabel != null)
@@ -652,19 +786,23 @@ namespace Sporae.UI.UIToolkit.Lab
                 {
                     if (_analysisRunning)
                     {
-                        _projectStatusLabel.text = "Progetto attivo: analisi risorse in corso...";
+                        _projectStatusLabel.text = LocalizationManager.GetString("lab_terminal.status.analysis_resources");
                     }
                     else if (!_analysisCompleted)
                     {
-                        _projectStatusLabel.text = "Progetto attivo: analisi iniziale in attesa.";
+                        _projectStatusLabel.text = LocalizationManager.GetString("lab_terminal.status.analysis_waiting");
                     }
                     else
                     {
                         _projectStatusLabel.text = collectGate
-                            ? $"Progetto attivo: ritira output pronto da {StepMachineName(pendingCollectionStep.Value)} prima di continuare."
+                            ? LocalizationManager.GetString("lab_terminal.status.collect_gate", new Dictionary<string, string> { ["machine"] = StepMachineName(pendingCollectionStep.Value) })
                             : currentStep == ProjectStep.Completed
-                            ? "Progetto completato: seed pronto per il ritiro."
-                            : $"Progetto attivo ({ProjectTypeLabel(_selectedProjectType)}): step corrente {StepLabel(currentStep)}.";
+                            ? LocalizationManager.GetString("lab_terminal.status.completed_seed")
+                            : LocalizationManager.GetString("lab_terminal.status.active_step", new Dictionary<string, string>
+                            {
+                                ["type"] = ProjectTypeLabel(_selectedProjectType),
+                                ["step"] = StepLabel(currentStep)
+                            });
                     }
                     _projectStatusLabel.EnableInClassList("lab-terminal-project-status-active", currentStep != ProjectStep.Completed);
                     _projectStatusLabel.EnableInClassList("lab-terminal-project-status-complete", currentStep == ProjectStep.Completed);
@@ -675,8 +813,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 else
                 {
                     _projectStatusLabel.text = _projectCompletedSinceLastOpen
-                        ? "Ultimo progetto completato. Avvia un nuovo ciclo quando vuoi."
-                        : "Nessun progetto attivo. Usa i macchinari in modalità standalone o avvia Crea Nuovo Seme.";
+                        ? LocalizationManager.GetString("lab_terminal.status.last_done")
+                        : LocalizationManager.GetString("lab_terminal.status.no_project");
                     _projectStatusLabel.EnableInClassList("lab-terminal-project-status-active", false);
                     _projectStatusLabel.EnableInClassList("lab-terminal-project-status-complete", _projectCompletedSinceLastOpen);
                     _projectStatusLabel.style.color = _projectCompletedSinceLastOpen ? StatusColorCompleted : StatusColorIdle;
@@ -700,22 +838,22 @@ namespace Sporae.UI.UIToolkit.Lab
 
                 if (_projectStepExtractor != null)
                 {
-                    _projectStepExtractor.text = $"Frutto -> Spora: {StepStateLabel(extractorState)}";
+                    _projectStepExtractor.text = LocalizationManager.GetString("lab_terminal.step_row.extractor", new Dictionary<string, string> { ["state"] = StepStateLabel(extractorState) });
                     ApplyStepLabelStyle(_projectStepExtractor, extractorState);
                 }
                 if (_projectStepCatalizzatore != null)
                 {
-                    _projectStepCatalizzatore.text = $"Spora -> Maturazione: {StepStateLabel(catalizzatoreState)}";
+                    _projectStepCatalizzatore.text = LocalizationManager.GetString("lab_terminal.step_row.catalizzatore", new Dictionary<string, string> { ["state"] = StepStateLabel(catalizzatoreState) });
                     ApplyStepLabelStyle(_projectStepCatalizzatore, catalizzatoreState);
                 }
                 if (_projectStepFusion != null)
                 {
-                    _projectStepFusion.text = $"Maturazione -> Pre-seed: {StepStateLabel(fusionState)}";
+                    _projectStepFusion.text = LocalizationManager.GetString("lab_terminal.step_row.fusion", new Dictionary<string, string> { ["state"] = StepStateLabel(fusionState) });
                     ApplyStepLabelStyle(_projectStepFusion, fusionState);
                 }
                 if (_projectStepIncubator != null)
                 {
-                    _projectStepIncubator.text = $"Pre-seed -> Incubazione: {StepStateLabel(incubatorState)}";
+                    _projectStepIncubator.text = LocalizationManager.GetString("lab_terminal.step_row.incubator", new Dictionary<string, string> { ["state"] = StepStateLabel(incubatorState) });
                     ApplyStepLabelStyle(_projectStepIncubator, incubatorState);
                 }
             }
@@ -833,16 +971,14 @@ namespace Sporae.UI.UIToolkit.Lab
             return isUnlocked ? StepVisualState.Todo : StepVisualState.Blocked;
         }
 
-        private static string StepStateLabel(StepVisualState state)
-        {
-            return state switch
+        private static string StepStateLabel(StepVisualState state) =>
+            state switch
             {
-                StepVisualState.Completed => "Completato",
-                StepVisualState.InProgress => "In corso",
-                StepVisualState.Todo => "Da fare",
-                _ => "Bloccato"
+                StepVisualState.Completed => LocalizationManager.GetString("lab_terminal.step_state.completed"),
+                StepVisualState.InProgress => LocalizationManager.GetString("lab_terminal.step_state.in_progress"),
+                StepVisualState.Todo => LocalizationManager.GetString("lab_terminal.step_state.todo"),
+                _ => LocalizationManager.GetString("lab_terminal.step_state.blocked")
             };
-        }
 
         private static void ApplyMachineStatusStyle(Label label, bool inProgress, bool completed)
         {
@@ -873,29 +1009,25 @@ namespace Sporae.UI.UIToolkit.Lab
             label.style.color = new StyleColor(color);
         }
 
-        private static string StepLabel(ProjectStep step)
-        {
-            return step switch
+        private static string StepLabel(ProjectStep step) =>
+            step switch
             {
-                ProjectStep.Extractor => "Frutto -> Spora",
-                ProjectStep.Catalizzatore => "Spora -> Maturazione",
-                ProjectStep.Fusion => "Maturazione -> Pre-seed",
-                ProjectStep.Incubator => "Pre-seed -> Incubazione",
-                _ => "Completato"
+                ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.step.extractor"),
+                ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.step.catalizzatore"),
+                ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.step.fusion"),
+                ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.step.incubator"),
+                _ => LocalizationManager.GetString("lab_terminal.step.completed")
             };
-        }
 
-        private static string StepMachineName(ProjectStep step)
-        {
-            return step switch
+        private static string StepMachineName(ProjectStep step) =>
+            step switch
             {
-                ProjectStep.Extractor => "EXTRACTOR",
-                ProjectStep.Catalizzatore => "CATALIZZATORE",
-                ProjectStep.Fusion => "FUSION",
-                ProjectStep.Incubator => "INCUBATOR",
-                _ => "MACCHINA"
+                ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.machine.extractor"),
+                ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.machine.catalizzatore"),
+                ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.machine.fusion"),
+                ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.machine.incubator"),
+                _ => LocalizationManager.GetString("lab_terminal.machine.generic")
             };
-        }
 
         private void EnsureGameManager()
         {
@@ -967,22 +1099,25 @@ namespace Sporae.UI.UIToolkit.Lab
                 {
                     string intent = _selectedProjectType switch
                     {
-                        SeedProjectType.Replica => "replicare la linea di origine con coerenza.",
-                        SeedProjectType.Hybrid => "combinare due linee per tratti misti.",
-                        SeedProjectType.NewProfile => "costruire un outcome nuovo orientato da reagenti.",
-                        _ => "definire un risultato operativo."
+                        SeedProjectType.Replica => LocalizationManager.GetString("lab_terminal.intent.replica"),
+                        SeedProjectType.Hybrid => LocalizationManager.GetString("lab_terminal.intent.hybrid"),
+                        SeedProjectType.NewProfile => LocalizationManager.GetString("lab_terminal.intent.new_profile"),
+                        _ => LocalizationManager.GetString("lab_terminal.intent.default")
                     };
                     ProjectStep? pendingCollect = GetPendingCollectionStep(snapshot);
                     string phase = pendingCollect.HasValue
-                        ? $"Output pronto da {StepMachineName(pendingCollect.Value)}: ritira prima di continuare."
-                        : $"Fase attuale: {StepLabel(currentStep)}.";
-                    _projectQuickIntroLabel.text =
-                        $"<color=#97A7B2>Progetto Seme ({ProjectTypeLabel(_selectedProjectType)}):</color> obiettivo {intent} {phase}";
+                        ? LocalizationManager.GetString("lab_terminal.phase.collect", new Dictionary<string, string> { ["machine"] = StepMachineName(pendingCollect.Value) })
+                        : LocalizationManager.GetString("lab_terminal.phase.current", new Dictionary<string, string> { ["step"] = StepLabel(currentStep) });
+                    _projectQuickIntroLabel.text = LocalizationManager.GetString("lab_terminal.quick_intro_active", new Dictionary<string, string>
+                    {
+                        ["type"] = ProjectTypeLabel(_selectedProjectType),
+                        ["intent"] = intent,
+                        ["phase"] = phase
+                    });
                 }
                 else
                 {
-                    _projectQuickIntroLabel.text =
-                        "<color=#97A7B2>Progetto Seme:</color> scegli un intento (Replica / Ibrido / Nuovo Profilo). E una bussola strategica, non un vincolo: il sistema consiglia, il player decide.";
+                    _projectQuickIntroLabel.text = LocalizationManager.GetString("lab_terminal.quick_intro_idle");
                 }
             }
 
@@ -990,29 +1125,35 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 if (_projectActive && _analysisRunning)
                 {
-                    _projectQuickWhatNowLabel.text = "<color=#98CFFF>Step corrente:</color> analisi iniziale in corso. Il terminale sta valutando frutti in inventario e Seed Storage.";
+                    _projectQuickWhatNowLabel.text = LocalizationManager.GetString("lab_terminal.quick_what_analysis");
                 }
                 else if (_projectActive && !_analysisCompleted)
                 {
-                    _projectQuickWhatNowLabel.text = "<color=#98CFFF>Step corrente:</color> completa la fase Analisi e scegli una tipologia progetto per ricevere consigli contestuali.";
+                    _projectQuickWhatNowLabel.text = LocalizationManager.GetString("lab_terminal.quick_what_pick_type");
                 }
                 else if (_projectActive)
                 {
                     string detail = currentStep switch
                     {
-                        ProjectStep.Extractor => "estrai una Spora RAW da un frutto (Extractor).",
-                        ProjectStep.Catalizzatore => "matura la Spora RAW in Spora Maturata (Catalizzatore).",
-                        ProjectStep.Fusion => "combina due Spore Maturate per ottenere un Pre-seed (Fusion).",
-                        ProjectStep.Incubator => "incuba il Pre-seed per ottenere il Seme finale (Incubator).",
-                        _ => "progetto completato. Ritira il seed e avvia un nuovo ciclo se vuoi."
+                        ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.quick_detail.extractor"),
+                        ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.quick_detail.catalizzatore"),
+                        ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.quick_detail.fusion"),
+                        ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.quick_detail.incubator"),
+                        _ => LocalizationManager.GetString("lab_terminal.quick_detail.done")
                     };
                     string keywordColor = currentStep == ProjectStep.Completed ? "#78F27A" : "#98CFFF";
                     string reminder = BuildStepReminderByProjectType(currentStep);
-                    _projectQuickWhatNowLabel.text = $"<color={keywordColor}>Step corrente:</color> {detail} <color=#A4B7C5>Intento:</color> {ProjectTypeLabel(_selectedProjectType)}. {reminder}";
+                    _projectQuickWhatNowLabel.text = LocalizationManager.GetString("lab_terminal.quick_what_active", new Dictionary<string, string>
+                    {
+                        ["kw"] = keywordColor,
+                        ["detail"] = detail,
+                        ["type"] = ProjectTypeLabel(_selectedProjectType),
+                        ["reminder"] = reminder
+                    });
                 }
                 else
                 {
-                    _projectQuickWhatNowLabel.text = "<color=#98CFFF>Step corrente:</color> nessun progetto attivo. Premi CREA NUOVO SEME per avviare il flow guidato.";
+                    _projectQuickWhatNowLabel.text = LocalizationManager.GetString("lab_terminal.quick_what_idle");
                 }
             }
 
@@ -1020,32 +1161,32 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 if (!_projectActive)
                 {
-                    _projectQuickLiveLabel.text = "<color=#9EC8E4>Live:</color> modalità standalone. Apri i macchinari singolarmente dal terminale.";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_standalone");
                 }
                 else if (_analysisRunning)
                 {
                     float pct = Mathf.Clamp01((Time.unscaledTime - _analysisStartTime) / Mathf.Max(0.15f, _analysisDurationSeconds));
-                    _projectQuickLiveLabel.text = $"<color=#B98DFF>Live:</color> analisi combinazioni in corso ({Mathf.RoundToInt(pct * 100f)}%).";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_analysis", new Dictionary<string, string> { ["pct"] = Mathf.RoundToInt(pct * 100f).ToString() });
                 }
                 else if (snapshot.ExtractorInProgress)
                 {
-                    _projectQuickLiveLabel.text = $"<color=#B98DFF>Live:</color> Extractor in corso ({snapshot.ExtractorProgressPct}%).";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_extractor", new Dictionary<string, string> { ["pct"] = snapshot.ExtractorProgressPct.ToString() });
                 }
                 else if (snapshot.CatalizzatoreInProgress)
                 {
-                    _projectQuickLiveLabel.text = "<color=#B98DFF>Live:</color> Catalizzatore in corso (1 giorno di maturazione).";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_catalizzatore");
                 }
                 else if (snapshot.FusionInProgress)
                 {
-                    _projectQuickLiveLabel.text = $"<color=#B98DFF>Live:</color> Fusion in corso ({snapshot.FusionProgressPct}%).";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_fusion", new Dictionary<string, string> { ["pct"] = snapshot.FusionProgressPct.ToString() });
                 }
                 else if (snapshot.IncubatorInProgress)
                 {
-                    _projectQuickLiveLabel.text = $"<color=#B98DFF>Live:</color> Incubazione in corso (giorno {snapshot.IncubatorDay}/2).";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_incubator", new Dictionary<string, string> { ["day"] = snapshot.IncubatorDay.ToString() });
                 }
                 else
                 {
-                    _projectQuickLiveLabel.text = "<color=#9EC8E4>Live:</color> nessun processo attivo, pronto allo step successivo.";
+                    _projectQuickLiveLabel.text = LocalizationManager.GetString("lab_terminal.quick_live_idle");
                 }
             }
 
@@ -1054,28 +1195,28 @@ namespace Sporae.UI.UIToolkit.Lab
 
             if (_projectActive && !_analysisCompleted)
             {
-                _projectQuickOutcomeLabel.text = "<color=#76828C>Outcome:</color> attendi la fine dell'analisi iniziale per vedere combinazioni consigliate e vincoli reali disponibili.";
+                _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_wait_analysis");
                 return;
             }
 
             if (snapshot.IncubatorStepDone)
             {
                 Item seed = _incubatorPanel?.ReadySeedPreview ?? GetLatestPlayerSeed();
-                _projectQuickOutcomeLabel.text = "<color=#7EFD80>Outcome:</color> " + BuildItemOutcomeLine("Seed", seed);
+                _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_prefix") + BuildItemOutcomeLine(LocalizationManager.GetString("lab_terminal.label.seed"), seed);
                 return;
             }
 
             if (snapshot.FusionStepDone)
             {
                 Item preSeed = _fusionPanel?.ReadyPreSeedPreview ?? GetLatestPlayerItemByType(Items.PreSeed);
-                _projectQuickOutcomeLabel.text = "<color=#7EFD80>Outcome:</color> " + BuildItemOutcomeLine("Pre-seed", preSeed);
+                _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_prefix") + BuildItemOutcomeLine(LocalizationManager.GetString("lab_terminal.label.preseed"), preSeed);
                 return;
             }
 
             if (snapshot.CatalizzatoreStepDone)
             {
                 Item matured = _catalizzatorePanel?.ReadyMaturedPreviewSource ?? GetLatestPlayerSporeByStage(SporeStage.Matured);
-                _projectQuickOutcomeLabel.text = "<color=#7EFD80>Outcome:</color> " + BuildItemOutcomeLine("Spora Maturata", matured);
+                _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_prefix") + BuildItemOutcomeLine(LocalizationManager.GetString("lab_terminal.label.mature_spore"), matured);
                 return;
             }
 
@@ -1084,26 +1225,30 @@ namespace Sporae.UI.UIToolkit.Lab
                 Item raw = GetLatestPlayerSporeByStage(SporeStage.Raw);
                 if (raw != null)
                 {
-                    _projectQuickOutcomeLabel.text = "<color=#7EFD80>Outcome:</color> " + BuildItemOutcomeLine("Spora RAW", raw);
+                    _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_prefix") + BuildItemOutcomeLine(LocalizationManager.GetString("lab_terminal.label.raw_spore"), raw);
                 }
                 else
                 {
                     var snap = _extractor?.GetFirstCompletedResultSnapshot();
                     _projectQuickOutcomeLabel.text = snap != null
-                        ? $"<color=#7EFD80>Outcome:</color> <color=#98CFFF>Spora RAW</color> pronta al ritiro | TRATTI <color=#7EFD80>{ExtractorTooltipTexts.GeneticTypeToTrattiLabel(snap.GeneticTypeValue)}</color> | FAMIGLIA <color=#98CFFF>{snap.Famiglia ?? "—"}</color>."
-                        : "<color=#7EFD80>Outcome:</color> estrazione completata. Raccogli la Spora RAW per vedere metadata e tratti.";
+                        ? LocalizationManager.GetString("lab_terminal.outcome_raw_line", new Dictionary<string, string>
+                        {
+                            ["tratti"] = ExtractorTooltipTexts.GeneticTypeToTrattiLabel(snap.GeneticTypeValue),
+                            ["fam"] = snap.Famiglia ?? "—"
+                        })
+                        : LocalizationManager.GetString("lab_terminal.outcome_raw_fallback");
                 }
 
                 return;
             }
 
-            _projectQuickOutcomeLabel.text = "<color=#76828C>Outcome:</color> nessun risultato ancora. Completa il primo step per produrre la prima <color=#98CFFF>Spora RAW</color>.";
+            _projectQuickOutcomeLabel.text = LocalizationManager.GetString("lab_terminal.outcome_none");
         }
 
         private string BuildItemOutcomeLine(string stageLabel, Item item)
         {
             if (item == null)
-                return $"<color=#98CFFF>{stageLabel}</color> pronto, ma metadata non disponibili finche non viene ritirato nell'inventario.";
+                return LocalizationManager.GetString("lab_terminal.outcome_line_ready_no_meta", new Dictionary<string, string> { ["stage"] = stageLabel });
 
             string displayName = PlayerInventoryPanelController.GetItemDisplayName(item.TypeId, item);
             string tratti = ExtractorTooltipTexts.GeneticTypeToTrattiLabel(item.GeneticTypeValue);
@@ -1111,9 +1256,19 @@ namespace Sporae.UI.UIToolkit.Lab
             string family = string.IsNullOrWhiteSpace(item.FamilyMetadata) ? "STANDARD" : item.FamilyMetadata;
             string origine = ExtractorTooltipTexts.GetOriginTraceLabel(item);
 
-            string metadata =
-                $"TRATTI <color=#7EFD80>{tratti}</color> | MUTARE <color=#B98DFF>{percentMutare}</color> | FAMIGLIA <color=#98CFFF>{family}</color> | ORIGINE <color=#98CFFF>{origine}</color>";
-            return $"<color=#98CFFF>{stageLabel}</color> prodotto: <color=#7EFD80>{displayName}</color> | {metadata}";
+            string metadata = LocalizationManager.GetString("lab_terminal.outcome_meta", new Dictionary<string, string>
+            {
+                ["tratti"] = tratti,
+                ["mut"] = percentMutare,
+                ["fam"] = family,
+                ["orig"] = origine
+            });
+            return LocalizationManager.GetString("lab_terminal.outcome_line_produced", new Dictionary<string, string>
+            {
+                ["stage"] = stageLabel,
+                ["name"] = displayName,
+                ["meta"] = metadata
+            });
         }
 
         private int CountPlayerType(string typeId)
@@ -1212,20 +1367,17 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!_projectActive)
             {
                 if (_analysisStatusLabel != null)
-                {
-                    _analysisStatusLabel.text =
-                        "Premi <color=#98CFFF>CREA NUOVO SEME</color> per analizzare frutti disponibili e combinazioni possibili.";
-                }
+                    _analysisStatusLabel.text = LocalizationManager.GetString("lab_terminal.analysis_cta_idle");
                 SetSelectedProjectSchema(
-                    "Progetto: --",
-                    "Item necessari: seleziona una tipologia.",
-                    "Status: in attesa selezione.");
+                    LocalizationManager.GetString("lab_terminal.schema.project_none"),
+                    LocalizationManager.GetString("lab_terminal.schema.items_pick"),
+                    LocalizationManager.GetString("lab_terminal.schema.status_pick"));
                 SetProjectTypeButtonsInteractable(false);
                 UpdateProjectTypeButtonsState();
                 if (_btnAnalysisOpenCurrentStep != null)
                 {
                     _btnAnalysisOpenCurrentStep.SetEnabled(false);
-                    _btnAnalysisOpenCurrentStep.text = "APRI STEP CORRENTE";
+                    _btnAnalysisOpenCurrentStep.text = LocalizationManager.GetString("lab_terminal.btn_open_step");
                 }
                 if (_btnAnalysisCancelSelection != null)
                     _btnAnalysisCancelSelection.SetEnabled(false);
@@ -1238,19 +1390,21 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 if (_analysisStatusLabel != null)
                 {
-                    _analysisStatusLabel.text =
-                        $"Analisi in corso... <color=#B98DFF>{Mathf.RoundToInt(analysisPct * 100f)}%</color> | scanning inventario player + Seed Storage.";
+                    _analysisStatusLabel.text = LocalizationManager.GetString("lab_terminal.analysis_running", new Dictionary<string, string>
+                    {
+                        ["pct"] = Mathf.RoundToInt(analysisPct * 100f).ToString()
+                    });
                 }
                 SetSelectedProjectSchema(
-                    "Progetto: --",
-                    "Item necessari: in valutazione...",
-                    "Status: analisi in corso.");
+                    LocalizationManager.GetString("lab_terminal.schema.project_none"),
+                    LocalizationManager.GetString("lab_terminal.schema.items_eval"),
+                    LocalizationManager.GetString("lab_terminal.schema.status_running"));
                 SetProjectTypeButtonsInteractable(false);
                 UpdateProjectTypeButtonsState();
                 if (_btnAnalysisOpenCurrentStep != null)
                 {
                     _btnAnalysisOpenCurrentStep.SetEnabled(false);
-                    _btnAnalysisOpenCurrentStep.text = "ANALISI IN CORSO...";
+                    _btnAnalysisOpenCurrentStep.text = LocalizationManager.GetString("lab_terminal.btn_analysis_running");
                 }
                 if (_btnAnalysisCancelSelection != null)
                     _btnAnalysisCancelSelection.SetEnabled(false);
@@ -1262,17 +1416,17 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!_analysisCompleted)
             {
                 if (_analysisStatusLabel != null)
-                    _analysisStatusLabel.text = "Analisi in attesa. Riavvia progetto per calcolare suggerimenti.";
+                    _analysisStatusLabel.text = LocalizationManager.GetString("lab_terminal.analysis_waiting_restart");
                 SetSelectedProjectSchema(
-                    "Progetto: --",
-                    "Item necessari: seleziona una tipologia.",
-                    "Status: in attesa selezione.");
+                    LocalizationManager.GetString("lab_terminal.schema.project_none"),
+                    LocalizationManager.GetString("lab_terminal.schema.items_pick"),
+                    LocalizationManager.GetString("lab_terminal.schema.status_pick"));
                 SetProjectTypeButtonsInteractable(false);
                 UpdateProjectTypeButtonsState();
                 if (_btnAnalysisOpenCurrentStep != null)
                 {
                     _btnAnalysisOpenCurrentStep.SetEnabled(false);
-                    _btnAnalysisOpenCurrentStep.text = "APRI STEP CORRENTE";
+                    _btnAnalysisOpenCurrentStep.text = LocalizationManager.GetString("lab_terminal.btn_open_step");
                 }
                 if (_btnAnalysisCancelSelection != null)
                     _btnAnalysisCancelSelection.SetEnabled(false);
@@ -1282,8 +1436,14 @@ namespace Sporae.UI.UIToolkit.Lab
             int totalFruits = _projectTypeAnalysis.PlayerFruitTotal + _projectTypeAnalysis.StorageFruitTotal;
             if (_analysisStatusLabel != null)
             {
-                _analysisStatusLabel.text =
-                    $"Analisi completata: frutti disponibili <color=#98CFFF>{totalFruits}</color> (inventario {_projectTypeAnalysis.PlayerFruitTotal} + storage {_projectTypeAnalysis.StorageFruitTotal}) | reagenti X/Y: <color=#98CFFF>{_projectTypeAnalysis.ReagentXCount}</color>/<color=#98CFFF>{_projectTypeAnalysis.ReagentYCount}</color>.";
+                _analysisStatusLabel.text = LocalizationManager.GetString("lab_terminal.analysis_done", new Dictionary<string, string>
+                {
+                    ["total"] = totalFruits.ToString(),
+                    ["inv"] = _projectTypeAnalysis.PlayerFruitTotal.ToString(),
+                    ["stor"] = _projectTypeAnalysis.StorageFruitTotal.ToString(),
+                    ["x"] = _projectTypeAnalysis.ReagentXCount.ToString(),
+                    ["y"] = _projectTypeAnalysis.ReagentYCount.ToString()
+                });
             }
 
             SetProjectTypeButtonsInteractable(true);
@@ -1295,7 +1455,9 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 bool canOpen = _selectedProjectType != SeedProjectType.None;
                 _btnAnalysisOpenCurrentStep.SetEnabled(canOpen);
-                _btnAnalysisOpenCurrentStep.text = canOpen ? "APRI STEP CORRENTE" : "SELEZIONA TIPOLOGIA";
+                _btnAnalysisOpenCurrentStep.text = canOpen
+                    ? LocalizationManager.GetString("lab_terminal.btn_open_step")
+                    : LocalizationManager.GetString("lab_terminal.btn_select_type");
             }
             if (_btnAnalysisCancelSelection != null)
                 _btnAnalysisCancelSelection.SetEnabled(_selectedProjectType != SeedProjectType.None);
@@ -1309,13 +1471,20 @@ namespace Sporae.UI.UIToolkit.Lab
                 else
                 {
                     string stepHint = currentStep == ProjectStep.Completed
-                        ? "Progetto completato."
-                        : $"Suggerimento step: {BuildStepReminderByProjectType(currentStep)}";
+                        ? LocalizationManager.GetString("lab_terminal.analysis_hint_done")
+                        : LocalizationManager.GetString("lab_terminal.analysis_hint_step", new Dictionary<string, string>
+                        {
+                            ["text"] = BuildStepReminderByProjectType(currentStep)
+                        });
                     string initialHint = _initialProjectType != SeedProjectType.None
-                        ? $"<color=#7E90A0>Intento iniziale:</color> {ProjectTypeLabel(_initialProjectType)}. "
+                        ? LocalizationManager.GetString("lab_terminal.analysis_initial", new Dictionary<string, string> { ["type"] = ProjectTypeLabel(_initialProjectType) })
                         : string.Empty;
-                    _analysisChangeWarningLabel.text =
-                        $"{initialHint}<color=#9CB3C4>Direzione attuale:</color> {ProjectTypeLabel(_selectedProjectType)}. {stepHint}";
+                    _analysisChangeWarningLabel.text = LocalizationManager.GetString("lab_terminal.analysis_direction", new Dictionary<string, string>
+                    {
+                        ["initial"] = initialHint,
+                        ["type"] = ProjectTypeLabel(_selectedProjectType),
+                        ["hint"] = stepHint
+                    });
                 }
             }
         }
@@ -1342,27 +1511,45 @@ namespace Sporae.UI.UIToolkit.Lab
             bool newProfileNow = hybridNow && (hasReagentX || hasReagentY);
 
             string fruitTypesSummary = BuildFruitTypeSummary(fruitCounts);
+            int sameNeed = Mathf.Max(0, 2 - bestDuplicateCount);
             string sameFruitRequirement = replicaNow
-                ? $"Frutti uguali x2: <color=#7EFD80>PRESENTE</color> ({bestDuplicateTypeId} x{bestDuplicateCount})."
-                : $"Frutti uguali x2: <color=#76828C>ASSENTE</color> (manca almeno {Mathf.Max(0, 2 - bestDuplicateCount)} unita sul tipo piu disponibile: {bestDuplicateTypeId} x{bestDuplicateCount}).";
+                ? LocalizationManager.GetString("lab_terminal.analysis_same_ok", new Dictionary<string, string> { ["type"] = bestDuplicateTypeId, ["count"] = bestDuplicateCount.ToString() })
+                : LocalizationManager.GetString("lab_terminal.analysis_same_no", new Dictionary<string, string>
+                {
+                    ["need"] = sameNeed.ToString(),
+                    ["type"] = bestDuplicateTypeId,
+                    ["count"] = bestDuplicateCount.ToString()
+                });
             string twoFruitTypesRequirement = hybridNow
-                ? $"Frutti diversi x2: <color=#7EFD80>PRESENTE</color> (tipologie rilevate: {distinctFruitTypes}; {fruitTypesSummary})."
+                ? LocalizationManager.GetString("lab_terminal.analysis_two_ok", new Dictionary<string, string>
+                {
+                    ["types"] = distinctFruitTypes.ToString(),
+                    ["summary"] = fruitTypesSummary
+                })
                 : totalFruit < 2
-                    ? $"Frutti diversi x2: <color=#76828C>ASSENTE</color> (frutti totali {totalFruit}/2, ne manca {2 - totalFruit})."
-                    : $"Frutti diversi x2: <color=#76828C>ASSENTE</color> (manca seconda tipologia: presenti {distinctFruitTypes}; {fruitTypesSummary}).";
+                    ? LocalizationManager.GetString("lab_terminal.analysis_two_no_total", new Dictionary<string, string>
+                    {
+                        ["have"] = totalFruit.ToString(),
+                        ["need"] = (2 - totalFruit).ToString()
+                    })
+                    : LocalizationManager.GetString("lab_terminal.analysis_two_no_types", new Dictionary<string, string>
+                    {
+                        ["types"] = distinctFruitTypes.ToString(),
+                        ["summary"] = fruitTypesSummary
+                    });
             string reagentRequirement = (hasReagentX || hasReagentY)
-                ? $"Reagente X/Y: <color=#7EFD80>PRESENTE</color> (X:{reagentXCount}, Y:{reagentYCount})."
-                : "Reagente X/Y: <color=#76828C>ASSENTE</color> (manca almeno REAG-X o REAG-Y).";
+                ? LocalizationManager.GetString("lab_terminal.analysis_reagent_ok", new Dictionary<string, string> { ["x"] = reagentXCount.ToString(), ["y"] = reagentYCount.ToString() })
+                : LocalizationManager.GetString("lab_terminal.analysis_reagent_no");
 
             var replica = new ProjectTypeAdvice(
                 replicaNow,
-                $"{sameFruitRequirement} Consiglio: usa 2 frutti della stessa origine per massima coerenza.");
+                $"{sameFruitRequirement} {LocalizationManager.GetString("lab_terminal.advice_replica_tail")}");
             var hybrid = new ProjectTypeAdvice(
                 hybridNow,
-                $"{twoFruitTypesRequirement} Consiglio: usa 2 frutti diversi per aprire tratti combinati.");
+                $"{twoFruitTypesRequirement} {LocalizationManager.GetString("lab_terminal.advice_hybrid_tail")}");
             var newProfile = new ProjectTypeAdvice(
                 newProfileNow,
-                $"{twoFruitTypesRequirement} {reagentRequirement} Consiglio: combina frutti diversi e usa reagente X/Y per orientare outcome.");
+                $"{twoFruitTypesRequirement} {reagentRequirement} {LocalizationManager.GetString("lab_terminal.advice_new_tail")}");
 
             return new ProjectTypeAnalysis(
                 playerFruitTotal,
@@ -1382,7 +1569,7 @@ namespace Sporae.UI.UIToolkit.Lab
         private static string BuildFruitTypeSummary(Dictionary<string, int> fruitCounts)
         {
             if (fruitCounts == null || fruitCounts.Count == 0)
-                return "nessun frutto disponibile";
+                return LocalizationManager.GetString("lab_terminal.fruit_summary_none");
 
             return string.Join(", ",
                 fruitCounts
@@ -1497,29 +1684,29 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             string replicaAdvice = currentStep switch
             {
-                ProjectStep.Extractor => "Reminder Replica: seleziona frutti stessa origine.",
-                ProjectStep.Catalizzatore => "Reminder Replica: mantieni coerenza materiale nelle spore.",
-                ProjectStep.Fusion => "Reminder Replica: combina 2 spore allineate per output stabile.",
-                ProjectStep.Incubator => "Reminder Replica: evita deviazioni se vuoi fedelta al genitore.",
-                _ => "Replica completata: confronta outcome con l'origine."
+                ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.reminder.replica.extractor"),
+                ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.reminder.replica.cat"),
+                ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.reminder.replica.fusion"),
+                ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.reminder.replica.inc"),
+                _ => LocalizationManager.GetString("lab_terminal.reminder.replica.done")
             };
 
             string hybridAdvice = currentStep switch
             {
-                ProjectStep.Extractor => "Reminder Ibrido: prepara 2 origini diverse.",
-                ProjectStep.Catalizzatore => "Reminder Ibrido: matura entrambe le linee prima della fusion.",
-                ProjectStep.Fusion => "Reminder Ibrido: mixa spore differenti per tratti combinati.",
-                ProjectStep.Incubator => "Reminder Ibrido: reagente Y puo aiutare la convergenza famiglia.",
-                _ => "Ibrido completato: verifica sinergia tratti."
+                ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.reminder.hybrid.extractor"),
+                ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.reminder.hybrid.cat"),
+                ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.reminder.hybrid.fusion"),
+                ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.reminder.hybrid.inc"),
+                _ => LocalizationManager.GetString("lab_terminal.reminder.hybrid.done")
             };
 
             string newProfileAdvice = currentStep switch
             {
-                ProjectStep.Extractor => "Reminder Nuovo Profilo: seleziona frutti con identita lontane.",
-                ProjectStep.Catalizzatore => "Reminder Nuovo Profilo: conserva variabilita utile al design finale.",
-                ProjectStep.Fusion => "Reminder Nuovo Profilo: qui nasce il nuovo outcome mentale.",
-                ProjectStep.Incubator => "Reminder Nuovo Profilo: usa reagente X/Y per orientare nome/poteri.",
-                _ => "Nuovo Profilo completato: documenta il risultato ottenuto."
+                ProjectStep.Extractor => LocalizationManager.GetString("lab_terminal.reminder.new.extractor"),
+                ProjectStep.Catalizzatore => LocalizationManager.GetString("lab_terminal.reminder.new.cat"),
+                ProjectStep.Fusion => LocalizationManager.GetString("lab_terminal.reminder.new.fusion"),
+                ProjectStep.Incubator => LocalizationManager.GetString("lab_terminal.reminder.new.inc"),
+                _ => LocalizationManager.GetString("lab_terminal.reminder.new.done")
             };
 
             return _selectedProjectType switch
@@ -1527,20 +1714,18 @@ namespace Sporae.UI.UIToolkit.Lab
                 SeedProjectType.Replica => replicaAdvice,
                 SeedProjectType.Hybrid => hybridAdvice,
                 SeedProjectType.NewProfile => newProfileAdvice,
-                _ => "Scegli una tipologia per ricevere suggerimenti mirati."
+                _ => LocalizationManager.GetString("lab_terminal.reminder.pick_type")
             };
         }
 
-        private static string ProjectTypeLabel(SeedProjectType type)
-        {
-            return type switch
+        private static string ProjectTypeLabel(SeedProjectType type) =>
+            type switch
             {
-                SeedProjectType.Replica => "Replica",
-                SeedProjectType.Hybrid => "Ibrido",
-                SeedProjectType.NewProfile => "Nuovo Profilo",
-                _ => "Non definito"
+                SeedProjectType.Replica => LocalizationManager.GetString("lab_terminal.type.replica"),
+                SeedProjectType.Hybrid => LocalizationManager.GetString("lab_terminal.type.hybrid"),
+                SeedProjectType.NewProfile => LocalizationManager.GetString("lab_terminal.type.new_profile"),
+                _ => LocalizationManager.GetString("lab_terminal.type.undefined")
             };
-        }
 
         private bool IsProjectTypeAvailable(SeedProjectType type)
         {
@@ -1571,9 +1756,9 @@ namespace Sporae.UI.UIToolkit.Lab
             if (type == SeedProjectType.None)
             {
                 return (
-                    "Progetto: --",
-                    "Item necessari: seleziona una tipologia.",
-                    "Status: in attesa selezione.");
+                    LocalizationManager.GetString("lab_terminal.schema.project_none"),
+                    LocalizationManager.GetString("lab_terminal.schema.items_pick"),
+                    LocalizationManager.GetString("lab_terminal.schema.status_pick"));
             }
 
             int totalFruits = _projectTypeAnalysis.PlayerFruitTotal + _projectTypeAnalysis.StorageFruitTotal;
@@ -1584,58 +1769,80 @@ namespace Sporae.UI.UIToolkit.Lab
                 case SeedProjectType.Replica:
                 {
                     bool executable = _projectTypeAnalysis.Replica.AvailableNow;
-                    string projectLine = "Progetto: REPLICA";
-                    string requiredItemsLine =
-                        $"Item necessari: 2x frutto uguale (best: {_projectTypeAnalysis.BestDuplicateFruitTypeId} x{_projectTypeAnalysis.BestDuplicateFruitCount}).";
+                    string projectLine = LocalizationManager.GetString("lab_terminal.schema.project_replica");
+                    string requiredItemsLine = LocalizationManager.GetString("lab_terminal.schema.replica_items", new Dictionary<string, string>
+                    {
+                        ["type"] = _projectTypeAnalysis.BestDuplicateFruitTypeId,
+                        ["count"] = _projectTypeAnalysis.BestDuplicateFruitCount.ToString()
+                    });
+                    int needReplica = Mathf.Max(0, 2 - _projectTypeAnalysis.BestDuplicateFruitCount);
                     string itemStatus = executable
-                        ? "<color=#7EFD80>Item presenti</color>"
-                        : $"<color=#76828C>Item mancanti</color> (serve ancora {Mathf.Max(0, 2 - _projectTypeAnalysis.BestDuplicateFruitCount)} unita dello stesso frutto).";
+                        ? LocalizationManager.GetString("lab_terminal.schema.replica_ok")
+                        : LocalizationManager.GetString("lab_terminal.schema.replica_missing", new Dictionary<string, string> { ["need"] = needReplica.ToString() });
                     string projectStatus = executable
-                        ? "<color=#7EFD80>Progetto eseguibile</color>"
-                        : "<color=#76828C>Progetto non eseguibile</color>";
-                    return (projectLine, requiredItemsLine, $"Status: {itemStatus} | {projectStatus}.");
+                        ? LocalizationManager.GetString("lab_terminal.schema.exec_ok")
+                        : LocalizationManager.GetString("lab_terminal.schema.exec_no");
+                    return (projectLine, requiredItemsLine, LocalizationManager.GetString("lab_terminal.schema.status_pair", new Dictionary<string, string>
+                    {
+                        ["items"] = itemStatus,
+                        ["proj"] = projectStatus
+                    }));
                 }
                 case SeedProjectType.Hybrid:
                 {
                     bool executable = _projectTypeAnalysis.Hybrid.AvailableNow;
-                    string projectLine = "Progetto: IBRIDO";
-                    string requiredItemsLine = "Item necessari: 2x frutti diversi.";
-                    string missingReason = totalFruits < 2
-                        ? $"(frutti totali {totalFruits}/2)"
-                        : $"(tipologie disponibili {_projectTypeAnalysis.DistinctFruitTypes}/2)";
+                    string projectLine = LocalizationManager.GetString("lab_terminal.schema.project_hybrid");
+                    string requiredItemsLine = LocalizationManager.GetString("lab_terminal.schema.hybrid_items");
                     string itemStatus = executable
-                        ? "<color=#7EFD80>Item presenti</color>"
-                        : $"<color=#76828C>Item mancanti</color> {missingReason}";
+                        ? LocalizationManager.GetString("lab_terminal.schema.replica_ok")
+                        : totalFruits < 2
+                            ? LocalizationManager.GetString("lab_terminal.schema.hybrid_missing_total", new Dictionary<string, string> { ["have"] = totalFruits.ToString() })
+                            : LocalizationManager.GetString("lab_terminal.schema.hybrid_missing_types", new Dictionary<string, string>
+                            {
+                                ["have"] = _projectTypeAnalysis.DistinctFruitTypes.ToString()
+                            });
                     string projectStatus = executable
-                        ? "<color=#7EFD80>Progetto eseguibile</color>"
-                        : "<color=#76828C>Progetto non eseguibile</color>";
-                    return (projectLine, requiredItemsLine, $"Status: {itemStatus} | {projectStatus}.");
+                        ? LocalizationManager.GetString("lab_terminal.schema.exec_ok")
+                        : LocalizationManager.GetString("lab_terminal.schema.exec_no");
+                    return (projectLine, requiredItemsLine, LocalizationManager.GetString("lab_terminal.schema.status_pair", new Dictionary<string, string>
+                    {
+                        ["items"] = itemStatus,
+                        ["proj"] = projectStatus
+                    }));
                 }
                 case SeedProjectType.NewProfile:
                 {
                     bool executable = _projectTypeAnalysis.NewProfile.AvailableNow;
-                    string projectLine = "Progetto: NUOVO PROFILO";
-                    string requiredItemsLine =
-                        $"Item necessari: 2x frutti diversi + 1x reagente (X o Y). Reagenti ora: X={_projectTypeAnalysis.ReagentXCount}, Y={_projectTypeAnalysis.ReagentYCount}.";
+                    string projectLine = LocalizationManager.GetString("lab_terminal.schema.project_new");
+                    string requiredItemsLine = LocalizationManager.GetString("lab_terminal.schema.new_items", new Dictionary<string, string>
+                    {
+                        ["x"] = _projectTypeAnalysis.ReagentXCount.ToString(),
+                        ["y"] = _projectTypeAnalysis.ReagentYCount.ToString()
+                    });
                     bool fruitReady = _projectTypeAnalysis.Hybrid.AvailableNow;
-                    string missingReason = !fruitReady
-                        ? "mancano frutti diversi"
+                    string missingReasonKey = !fruitReady
+                        ? "lab_terminal.schema.new_missing_fruit"
                         : !hasAnyReagent
-                            ? "manca REAG-X o REAG-Y"
-                            : "ok";
+                            ? "lab_terminal.schema.new_missing_reagent"
+                            : "lab_terminal.schema.new_ok_reason";
+                    string missingReason = LocalizationManager.GetString(missingReasonKey);
                     string itemStatus = executable
-                        ? "<color=#7EFD80>Item presenti</color>"
-                        : $"<color=#76828C>Item mancanti</color> ({missingReason})";
+                        ? LocalizationManager.GetString("lab_terminal.schema.replica_ok")
+                        : LocalizationManager.GetString("lab_terminal.schema.new_missing_wrap", new Dictionary<string, string> { ["reason"] = missingReason });
                     string projectStatus = executable
-                        ? "<color=#7EFD80>Progetto eseguibile</color>"
-                        : "<color=#76828C>Progetto non eseguibile</color>";
-                    return (projectLine, requiredItemsLine, $"Status: {itemStatus} | {projectStatus}.");
+                        ? LocalizationManager.GetString("lab_terminal.schema.exec_ok")
+                        : LocalizationManager.GetString("lab_terminal.schema.exec_no");
+                    return (projectLine, requiredItemsLine, LocalizationManager.GetString("lab_terminal.schema.status_pair", new Dictionary<string, string>
+                    {
+                        ["items"] = itemStatus,
+                        ["proj"] = projectStatus
+                    }));
                 }
                 default:
                     return (
-                        "Progetto: --",
-                        "Item necessari: seleziona una tipologia.",
-                        "Status: in attesa selezione.");
+                        LocalizationManager.GetString("lab_terminal.schema.project_none"),
+                        LocalizationManager.GetString("lab_terminal.schema.items_pick"),
+                        LocalizationManager.GetString("lab_terminal.schema.status_pick"));
             }
         }
 

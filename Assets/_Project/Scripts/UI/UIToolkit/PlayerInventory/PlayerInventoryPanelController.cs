@@ -721,7 +721,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 if (IsOrganicDeterioratingType(typeId))
                 {
                     int days = Mathf.Max(0, Mathf.CeilToInt(firstItem.Quality));
-                    lines.Add($"SI DETERIORA IN: {Tv(days.ToString() + " giorni. Mettilo in Seed Storage o Dispensa Refrigerata per freezarlo")}");
+                    lines.Add(Tv(LocalizationManager.GetString("inventory.decay_line",
+                        new Dictionary<string, string> { { "days", days.ToString() } })));
                 }
             }
             return string.Join("\n", lines);

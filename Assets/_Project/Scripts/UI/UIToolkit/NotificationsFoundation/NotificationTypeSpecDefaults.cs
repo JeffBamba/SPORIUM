@@ -151,7 +151,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 Spec("KTCH-001", NotificationCategory.Room, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 8f,
                     "notif.ktch001",
                     "Terminale cucina: accesso effettuato",
-                    "Terminale cucina: accesso effettuato",
+                    "Kitchen terminal accessed",
                     "Terminale cucina aperto.\nProduci cibo, acqua potabile e gestisci le risorse alimentari."),
                 Spec("MKT-666", NotificationCategory.Room, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 8f,
                     "notif.mkt666",
@@ -821,7 +821,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 TemplateIt = it,
                 TemplateEn = en,
                 TooltipIt = tooltipIt,
-                TooltipEn = tooltipEn
+                // Se manca TooltipEn ma c'è un tooltip IT, usa il template EN (titolo) così in inglese non si fa fallback sul paragrafo italiano.
+                TooltipEn = !string.IsNullOrEmpty(tooltipEn)
+                    ? tooltipEn
+                    : (!string.IsNullOrEmpty(tooltipIt) ? en : null)
             };
         }
     }

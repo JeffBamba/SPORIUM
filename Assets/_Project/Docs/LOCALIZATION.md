@@ -4,8 +4,8 @@
 
 - **Lingue supportate**: `Auto`, `Italian`, `English`.
 - **Sistema code-first**: le stringhe player-facing migrate passano da chiavi C# centralizzate, non da Unity Localization Package.
-- **Copertura attuale**: menu opzioni / menu principale UI Toolkit, slot save/load, nomi item, inventario player, Player Status e notifiche Foundation usano il sistema IT/EN o i wrapper compatibili.
-- **Migrazione progressiva**: alcuni pannelli estesi (Lab, PlantCardV3, FoodRoom, EndOfDay, Cryo/Dispensa) hanno ancora copy hardcoded e vanno convertiti per blocchi verificabili.
+- **Copertura attuale**: menu opzioni / menu principale UI Toolkit, slot save/load, nomi item, inventario player (incl. riga deterioramento organico in tooltip), Player Status, **HUD navigazione (CompactBottomBar, TopBar)**, **Dome Status HUD**, **Food Room panel**, **Dispensa refrigerata** (HUD overlay: stati, costi, log, camere), **tutti i pannelli Lab** (Catalizzatore, Fusion, Extractor, Incubator, **Kitchen Terminal**), **notifiche Foundation** (tooltip EN allineati), **PruningDialog** (UGUI), **Cryo machine panel**, **Seed Storage panel**, **etichetta outfit armadio** (`PlayerOutfitController` + refresh su cambio lingua), **PlantCardV3** (pannello A9: tooltip suggerimenti, driver rapidi, messaggi disabilitazione azioni), **End of day** (snapshot, note, forecast, diario, alba + tooltip), messaggi **PotActions** (`EmitActionFailed`) e **Extractor** (etichetta mondo 3D + descrizioni input log lab) passano da `LocalizationManager` / `ItemDisplayNameLocalization` dove applicato.
+- **Migrazione progressiva**: restano stringhe IT (o miste) in **PlantCardV3 terminale/console** (comandi, output DOS, copy non ancora mappata), **SaveManager** solo log dev, altri messaggi one-off. Verificare in play con **English** effettivo (non Auto su OS italiano).
 
 ## Architettura
 
@@ -42,3 +42,14 @@ Il player può cambiare lingua da **Opzioni**:
 ## Persistenza
 
 La lingua è salvata in **PlayerPrefs** (`Sporium_Language`), non nel salvataggio di gioco. Resta quindi uguale per tutte le partite e dopo il riavvio del gioco.
+
+## Checklist QA (lingua English)
+
+1. Opzioni → **English** (non Auto), avviare VaultMap.
+2. Menu principale, inventario, notifiche + tooltip.
+3. HUD: TopBar, bottom bar, Dome Status HUD (tab POT/CRYO, etichette stati).
+4. Food Room, Dispensa refrigerata (accendi/spegni, log, righe inventario), Seed Storage, Cryo, Pruning (potatura con toggle spray).
+5. Lab: ogni macchinario + terminale Kitchen (stati macchina, testi progetto, analisi).
+6. PlantCard: pannello suggerimenti rapidi e driver.
+7. Fine giornata: conferma → snapshot → passi successivi (testo EN coerente).
+8. Azioni vaso fallite (es. piantare senza seme) → messaggio EN da `PotActions`.

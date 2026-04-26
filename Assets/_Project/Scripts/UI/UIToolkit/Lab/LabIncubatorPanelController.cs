@@ -8,6 +8,7 @@ using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.DevTools;
+using Sporae.Core.Localization;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
 
@@ -336,11 +337,15 @@ namespace Sporae.UI.UIToolkit.Lab
             _dayCycleSystem = ServiceContainer.Instance?.Get<DayCycleSystem>();
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
         }
 
+        private void OnLanguageChanged(GameLanguage _) => RefreshDisplay();
+
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
@@ -387,7 +392,7 @@ namespace Sporae.UI.UIToolkit.Lab
             var allowed = IncubatorAllowedTypes();
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
-                "Seleziona Pre-Seed per l'Incubatore",
+                LocalizationManager.GetString("lab_incubator.picker_preseed"),
                 typeId =>
                 {
                     // L'Incubatore usa direttamente l'inventario del giocatore; la selezione serve solo a confermare/disporre il picker
@@ -416,7 +421,7 @@ namespace Sporae.UI.UIToolkit.Lab
             }
             _playerInventoryPanel.ShowAsPicker(
                 IncubatorReagentTypes(),
-                "Seleziona Reagente (X o Y) dall'inventario",
+                LocalizationManager.GetString("lab_incubator.picker_reagent"),
                 typeId =>
                 {
                     _reagentTypeId = typeId;
@@ -482,16 +487,16 @@ namespace Sporae.UI.UIToolkit.Lab
                 preseedInInventory = slot?.Quantity ?? 0;
             }
             if (_preseedText != null)
-                _preseedText.text = preseedInInventory > 0 ? $"In inventario: Pre-Seed x{preseedInInventory}" : "—";
+                _preseedText.text = preseedInInventory > 0
+                    ? LocalizationManager.GetString("lab_incubator.inv_preseed", new Dictionary<string, string> { ["count"] = preseedInInventory.ToString() })
+                    : "—";
 
             if (_reagentText != null)
             {
                 if (string.IsNullOrEmpty(_reagentTypeId))
                     _reagentText.text = "—";
-                else if (_reagentTypeId == Items.ReagentX)
-                    _reagentText.text = "Reagente X";
-                else if (_reagentTypeId == Items.ReagentY)
-                    _reagentText.text = "Reagente Y";
+                else if (ItemDisplayNameLocalization.TryGetByTypeId(_reagentTypeId, out var reagentLabel))
+                    _reagentText.text = reagentLabel;
                 else
                     _reagentText.text = _reagentTypeId;
             }
@@ -893,16 +898,22 @@ namespace Sporae.UI.UIToolkit.Lab
 
         private static void BuildIncubatorCollectedProfile(Item firstSeed, out string profile, out string detail)
         {
-            const string baseDetailIt = "Ritira l'output dall'Incubatore per aggiungere i semi all'inventario.";
+            string baseDetail = LocalizationManager.GetString("lab_incubator.profile_base");
             profile = string.Empty;
-            detail = baseDetailIt;
+            detail = baseDetail;
             if (firstSeed == null || !IsLabHybridProfileSeed(firstSeed))
                 return;
             string fam = string.IsNullOrWhiteSpace(firstSeed.FamilyMetadata) ? "—" : firstSeed.FamilyMetadata.Trim();
             string traits = string.IsNullOrWhiteSpace(firstSeed.SelectedTraitsCsv) ? "—" : firstSeed.SelectedTraitsCsv.Trim();
             string reag = string.IsNullOrWhiteSpace(firstSeed.ReagentUsedMetadata) ? "—" : firstSeed.ReagentUsedMetadata.Trim();
             profile = $" — {fam} | {traits}";
-            detail = $"Profilo Lab: famiglia {fam}, tratti: {traits}, reagente: {reag}.\n{baseDetailIt}";
+            detail = LocalizationManager.GetString("lab_incubator.profile_hybrid_detail", new Dictionary<string, string>
+            {
+                ["fam"] = fam,
+                ["traits"] = traits,
+                ["reag"] = reag,
+                ["base"] = baseDetail
+            });
         }
 
         private Item BuildSeedOutputFromIncubation()

@@ -67,54 +67,54 @@
         <ui:VisualElement name="cry-tooltip" picking-mode="Ignore" class="cbb-tooltip cbb-cry-tooltip" style="display: flex; border-left-color: rgb(91, 176, 217); border-right-color: rgb(91, 176, 217); border-top-color: rgb(91, 176, 217); border-bottom-color: rgb(91, 176, 217); background-image: url(&quot;project://database/Assets/_Project/Art/Crt_background_tooltip_blue.png?fileID=2800000&amp;guid=5f043c9698e91da4680916e1badfc0ac&amp;type=3#Crt_background_tooltip_blue&quot;);">
             <ui:VisualElement class="cbb-cry-title-row">
                 <ui:VisualElement picking-mode="Ignore" class="cbb-cry-title-icon" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/Icone%20ITEMS%20&amp;%20Actions/Icona_Cry.png?fileID=21300000&amp;guid=23e3fafbaad31674c881fafffbd6637e&amp;type=3#Icona_Cry&quot;); height: 16px; width: 17px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; -unity-background-image-tint-color: rgb(255, 255, 255); background-color: rgba(93, 182, 227, 0);" />
-                <ui:Label name="cry-tooltip-title" text="CRY - VAULT CURRENCY" class="cbb-cry-title" style="font-size: 13px;" />
+                <ui:Label name="cry-tooltip-title" text="CRY — VALUTA DEL VAULT" class="cbb-cry-title" style="font-size: 13px;" />
             </ui:VisualElement>
             <ui:VisualElement name="cry-tooltip-sep" class="cbb-cry-sep" />
             <ui:VisualElement name="cry-tooltip-section-stack" class="cbb-cry-section-stack">
                 <ui:VisualElement name="cry-tooltip-row-balance" class="cbb-cry-row cbb-cry-outline-balance">
-                    <ui:Label text="SALDO ATTUALE" class="cbb-cry-key" style="color: rgb(91, 176, 217); font-size: 12px;" />
+                    <ui:Label name="cry-caption-balance" text="SALDO ATTUALE" class="cbb-cry-key" style="color: rgb(91, 176, 217); font-size: 12px;" />
                     <ui:Label name="cry-balance-value" text="2 350 CRY" class="cbb-cry-value cbb-cry-balance-num" style="color: rgb(91, 176, 217);" />
                 </ui:VisualElement>
                 <ui:VisualElement class="cbb-cry-outline-cycle" style="background-color: rgb(26, 26, 37);">
-                    <ui:Label text="RIEPILOGO CICLO" class="cbb-cry-label" style="color: rgb(91, 176, 217); font-size: 12px;" />
+                    <ui:Label name="cry-section-cycle" text="RIEPILOGO CICLO" class="cbb-cry-label" style="color: rgb(91, 176, 217); font-size: 12px;" />
                     <ui:VisualElement name="cry-tooltip-row-earned" class="cbb-cry-row">
-                        <ui:Label text="Guadagnato oggi" class="cbb-cry-key" style="font-size: 11px;" />
+                        <ui:Label name="cry-caption-earned" text="Guadagnato oggi" class="cbb-cry-key" style="font-size: 11px;" />
                         <ui:Label name="cry-earned-today" text="+240 CRY" class="cbb-cry-value cbb-cry-green" />
                     </ui:VisualElement>
                     <ui:VisualElement name="cry-tooltip-row-spent" class="cbb-cry-row">
-                        <ui:Label text="Speso oggi" class="cbb-cry-key" style="font-size: 11px;" />
+                        <ui:Label name="cry-caption-spent" text="Speso oggi" class="cbb-cry-key" style="font-size: 11px;" />
                         <ui:Label name="cry-spent-today" text="-80 CRY" class="cbb-cry-value cbb-cry-red" />
                     </ui:VisualElement>
                     <ui:VisualElement name="cry-tooltip-row-net" class="cbb-cry-row cbb-cry-row-last">
-                        <ui:Label text="Netto oggi" class="cbb-cry-key" style="font-size: 11px;" />
+                        <ui:Label name="cry-caption-net" text="Netto oggi" class="cbb-cry-key" style="font-size: 11px;" />
                         <ui:Label name="cry-net-today" text="+160 CRY" class="cbb-cry-value cbb-cry-green" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="cbb-cry-ph-section" style="border-left-color: rgba(80, 200, 220, 0.45); border-right-color: rgba(80, 200, 220, 0.45); border-top-color: rgba(80, 200, 220, 0.45); border-bottom-color: rgba(80, 200, 220, 0.45);">
-                <ui:Label text="DETTAGLIO PLH" class="cbb-cry-section-header" style="color: rgb(91, 176, 217); font-size: 12px;" />
+                <ui:Label name="cry-section-detail-header" text="DETTAGLIO PLH" class="cbb-cry-section-header" style="color: rgb(91, 176, 217); font-size: 12px;" />
                 <ui:VisualElement name="cry-tooltip-row-maint" class="cbb-cry-row">
-                    <ui:Label text="Manutenzione Dome — PLH" class="cbb-cry-key" style="font-size: 11px;" />
+                    <ui:Label name="cry-row-maint-label" text="Manutenzione Dome — PLH" class="cbb-cry-key" style="font-size: 11px;" />
                     <ui:Label text="-120 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 12px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="cry-tooltip-row-sales" class="cbb-cry-row">
-                    <ui:Label text="Vendite piante — PLH" class="cbb-cry-key" style="font-size: 11px;" />
+                    <ui:Label name="cry-row-sales-label" text="Vendite piante — PLH" class="cbb-cry-key" style="font-size: 11px;" />
                     <ui:Label text="+200 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 12px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="cry-tooltip-row-reagents" class="cbb-cry-row">
-                    <ui:Label text="Acquisti reagenti — PLH" class="cbb-cry-key" style="font-size: 11px;" />
+                    <ui:Label name="cry-row-reagents-label" text="Acquisti reagenti — PLH" class="cbb-cry-key" style="font-size: 11px;" />
                     <ui:Label text="-50 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 12px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="cbb-cry-ph-section cbb-cry-ph-section-accent">
-                <ui:Label text="PREVISIONE DOMANI" class="cbb-cry-section-header-accent" style="font-size: 12px;" />
+                <ui:Label name="cry-section-forecast-header" text="PREVISIONE DOMANI" class="cbb-cry-section-header-accent" style="font-size: 12px;" />
                 <ui:VisualElement name="cry-tooltip-row-forecast" class="cbb-cry-row">
-                    <ui:Label text="Entrate stimate — PLH" class="cbb-cry-key" style="font-size: 11px;" />
+                    <ui:Label name="cry-row-forecast-label" text="Entrate stimate — PLH" class="cbb-cry-key" style="font-size: 11px;" />
                     <ui:Label text="+100 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 12px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="cbb-cry-ph-section-tip" style="border-left-color: rgb(224, 174, 102); border-right-color: rgb(224, 174, 102); border-top-color: rgb(224, 174, 102); border-bottom-color: rgb(224, 174, 102);">
-                <ui:Label text="SUGGERIMENTO" class="cbb-cry-tip-header" style="font-size: 12px;" />
+                <ui:Label name="cry-tip-header" text="SUGGERIMENTO" class="cbb-cry-tip-header" style="font-size: 12px;" />
                 <ui:Label name="cry-tooltip-tip" text="Monitora il netto giornaliero per bilanciare costi e ricavi CRY." class="cbb-cry-tip-value" style="color: rgb(202, 157, 95); font-size: 11px;" />
             </ui:VisualElement>
             <ui:VisualElement name="cry-tooltip-crt-refresh" picking-mode="Ignore" class="cbb-cry-crt-refresh" style="height: 6px;" />

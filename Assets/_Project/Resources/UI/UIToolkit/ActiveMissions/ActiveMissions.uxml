@@ -14,7 +14,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="active-missions-content" picking-mode="Ignore" class="active-missions-content">
-            <ui:Label name="active-missions-empty" text="Nessuna missione_" picking-mode="Ignore" class="active-missions-empty" style="font-size: 11px; color: rgba(182, 230, 255, 0.6);" />
+            <ui:Label name="active-missions-empty" text="Nessuna missione attiva." picking-mode="Ignore" class="active-missions-empty" style="font-size: 11px; color: rgba(182, 230, 255, 0.6);" />
             <ui:VisualElement name="active-missions-list" picking-mode="Ignore" class="active-missions-list" />
         </ui:VisualElement>
         <ui:VisualElement name="active-mission-tooltip" picking-mode="Ignore" class="active-mission-tooltip am-status-active" style="display: none;">

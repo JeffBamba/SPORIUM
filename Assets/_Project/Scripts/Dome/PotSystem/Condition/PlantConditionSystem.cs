@@ -6,6 +6,7 @@ using Sporae.Dome.PotSystem.Mold;
 using _Project; // Per PhSystem
 using _Project.Sporae.Core;
 using Sporae.DevTools; // Per DifficultyCalibrationConfig
+using Sporae.Core.Localization;
 
 namespace Sporae.Dome.PotSystem.Condition
 {
@@ -575,31 +576,22 @@ namespace Sporae.Dome.PotSystem.Condition
         public static string GetConditionName(PlantCondition condition, bool isOverwatering = false)
         {
             if (condition == PlantCondition.Morta)
-            {
-                return "Morta";
-            }
-            
-            // Overwatering ora forza "Sana" (con i nuovi threshold, score >= 40 → Sana)
+                return LocalizationManager.GetString("plant_condition.dead");
+
             if (isOverwatering && condition == PlantCondition.Sana)
-            {
-                return "Sana (Overwatering)";
-            }
-            
-            // Gestione retrocompatibilità: se per qualche motivo arriva Stressata (dati salvati vecchi), mostra "Sana"
-            // Questo può accadere solo con dati salvati vecchi, il sistema non genera più Stressata
+                return LocalizationManager.GetString("plant_condition.healthy_overwatering");
+
             if (condition == PlantCondition.Stressata)
-            {
-                return "Sana";  // Retrocompatibilità: Stressata → Sana
-            }
-            
+                return LocalizationManager.GetString("plant_condition.sana");
+
             return condition switch
             {
-                PlantCondition.Rigogliosa => "Rigogliosa",
-                PlantCondition.Sana => "Sana",
-                PlantCondition.Appassita => "Appassita",
-                PlantCondition.Critica => "Critica",
-                PlantCondition.Morta => "Morta",
-                _ => "Sconosciuta"
+                PlantCondition.Rigogliosa => LocalizationManager.GetString("plant_condition.rigogliosa"),
+                PlantCondition.Sana => LocalizationManager.GetString("plant_condition.sana"),
+                PlantCondition.Appassita => LocalizationManager.GetString("plant_condition.appassita"),
+                PlantCondition.Critica => LocalizationManager.GetString("plant_condition.critica"),
+                PlantCondition.Morta => LocalizationManager.GetString("plant_condition.dead"),
+                _ => LocalizationManager.GetString("plant_condition.unknown")
             };
         }
         

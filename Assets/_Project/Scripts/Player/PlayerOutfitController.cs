@@ -1,3 +1,4 @@
+using Sporae.Core.Localization;
 using UnityEngine;
 
 namespace _Project.Player
@@ -52,6 +53,11 @@ namespace _Project.Player
             _spriteRenderer.color = _outfitTints[_index];
         }
 
-        public string GetCurrentLabel() => $"Outfit {_index + 1}/{_outfitTints.Length}";
+        public string GetCurrentLabel() =>
+            LocalizationManager.GetString("wardrobe.outfit", new System.Collections.Generic.Dictionary<string, string>
+            {
+                ["i"] = (_index + 1).ToString(),
+                ["n"] = _outfitTints.Length.ToString()
+            });
     }
 }

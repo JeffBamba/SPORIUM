@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Globalization;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.DevTools;
 using _Project.Sporae.Core;
@@ -14,6 +15,7 @@ using Sporae.Dome.PotSystem.Botanical;
 using Sporae.Dome;
 using Sporae.UI.Icons;
 using Sporae.UI.UIToolkit;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -22,6 +24,9 @@ namespace Sporae.UI.UIToolkit.HUD
     /// </summary>
     public class TopBarController : MonoBehaviour
     {
+        private static CultureInfo HudNumberCulture =>
+            LocalizationManager.IsItalian ? CultureInfo.GetCultureInfo("it-IT") : CultureInfo.GetCultureInfo("en-US");
+
         [Header("UI Toolkit References")]
         [SerializeField] private UIDocument _uiDocument;
         
@@ -343,10 +348,12 @@ namespace Sporae.UI.UIToolkit.HUD
             float mul = gm?.PlayerHydrationSystem != null ? gm.PlayerHydrationSystem.GetMovementSpeedMultiplier() : 1f;
             int max = _actionSystem != null ? _actionSystem.MaxActions : 0;
             int left = _actionSystem != null ? _actionSystem.ActionsLeft : 0;
-            string text =
-                $"Azioni oggi: {left}/{max}.\n" +
-                "Cap all’alba dalla colazione (max 5); senza cibo il cap cala; 3 giorni a 1 az. senza cibo → game over.\n" +
-                $"Velocità di movimento da idratazione: circa {mul * 100f:0}% del normale.";
+            string text = LocalizationManager.GetString("topbar.actions_tooltip_os", new Dictionary<string, string>
+            {
+                ["left"] = left.ToString(),
+                ["max"] = max.ToString(),
+                ["speed"] = (mul * 100f).ToString("0")
+            });
 
             if (_iconActions != null)
                 _iconActions.tooltip = text;
@@ -425,6 +432,92 @@ namespace Sporae.UI.UIToolkit.HUD
         /// <summary>
         /// Emette una toast notification per la condensazione.
         /// </summary>
+        /// <summary>Etichette metriche + tooltip statici (UXML): allineati a <see cref="GameLanguageSettings"/>.</summary>
+        private void ApplyLocalizedTopBarStaticTexts()
+        {
+            if (_root == null)
+                return;
+
+            if (_actionsLabel != null)
+                _actionsLabel.text = LocalizationManager.GetString("topbar.metric.actions");
+            var mutMetric = _root.Q<Label>("metric-label-mutation");
+            if (mutMetric != null)
+                mutMetric.text = LocalizationManager.GetString("topbar.metric.mutation");
+            var condMetric = _root.Q<Label>("metric-label-condensation");
+            if (condMetric != null)
+                condMetric.text = LocalizationManager.GetString("topbar.metric.condensation");
+
+            if (_phTooltip != null)
+            {
+                var t = _phTooltip.Q<Label>("ph-tooltip-title");
+                if (t != null) t.text = LocalizationManager.GetString("topbar.ph_tooltip.title_drift");
+                var lc = _phTooltip.Q<Label>("ph-tooltip-label-current");
+                if (lc != null) lc.text = LocalizationManager.GetString("topbar.ph_tooltip.label_current");
+                var osc = _phTooltip.Q<Label>("ph-tooltip-current-oscillate-caption");
+                if (osc != null) osc.text = LocalizationManager.GetString("topbar.ph_tooltip.oscillate_caption");
+                var lm = _phTooltip.Q<Label>("ph-tooltip-label-modifiers");
+                if (lm != null) lm.text = LocalizationManager.GetString("topbar.ph_tooltip.label_modifiers");
+                var lt = _phTooltip.Q<Label>("ph-tooltip-label-total");
+                if (lt != null) lt.text = LocalizationManager.GetString("topbar.ph_tooltip.label_total_drift");
+                var lp = _phTooltip.Q<Label>("ph-tooltip-label-passive");
+                if (lp != null) lp.text = LocalizationManager.GetString("topbar.ph_tooltip.label_passive");
+                var le = _phTooltip.Q<Label>("ph-tooltip-label-effects");
+                if (le != null) le.text = LocalizationManager.GetString("topbar.ph_tooltip.label_effects");
+                var ltip = _phTooltip.Q<Label>("ph-tooltip-label-tip");
+                if (ltip != null) ltip.text = LocalizationManager.GetString("topbar.ph_tooltip.label_tip");
+            }
+
+            if (_actionsTooltip != null)
+            {
+                var at = _actionsTooltip.Q<Label>("actions-tooltip-title");
+                if (at != null) at.text = LocalizationManager.GetString("topbar.actions_tt.title");
+                var ac = _actionsTooltip.Q<Label>("actions-tooltip-section-current-caption");
+                if (ac != null) ac.text = LocalizationManager.GetString("topbar.actions_tt.section_current");
+                var bh = _actionsTooltip.Q<Label>("actions-tooltip-breakdown-header");
+                if (bh != null) bh.text = LocalizationManager.GetString("topbar.actions_tt.breakdown_header");
+                var tc = _actionsTooltip.Q<Label>("actions-tooltip-total-caption");
+                if (tc != null) tc.text = LocalizationManager.GetString("topbar.actions_tt.total_cap");
+                var hh = _actionsTooltip.Q<Label>("actions-tooltip-hydration-header");
+                if (hh != null) hh.text = LocalizationManager.GetString("topbar.actions_tt.hydration_header");
+                var nh = _actionsTooltip.Q<Label>("actions-tooltip-notes-header");
+                if (nh != null) nh.text = LocalizationManager.GetString("topbar.actions_tt.notes_header");
+            }
+
+            if (_mutationTooltip != null)
+            {
+                var mt = _mutationTooltip.Q<Label>("mutation-tooltip-title");
+                if (mt != null) mt.text = LocalizationManager.GetString("topbar.mutation_tt.title");
+                var p0 = _mutationTooltip.Q<Label>("mutation-tooltip-para-stable");
+                if (p0 != null) p0.text = LocalizationManager.GetString("topbar.mutation_tt.para_stable");
+                var p1 = _mutationTooltip.Q<Label>("mutation-tooltip-para-balanced");
+                if (p1 != null) p1.text = LocalizationManager.GetString("topbar.mutation_tt.para_balanced");
+                var p2 = _mutationTooltip.Q<Label>("mutation-tooltip-para-high");
+                if (p2 != null) p2.text = LocalizationManager.GetString("topbar.mutation_tt.para_high");
+                var mh = _mutationTooltip.Q<Label>("mutation-mechanics-header");
+                if (mh != null) mh.text = LocalizationManager.GetString("topbar.mutation_tt.mechanics_header");
+                var dec = _mutationTooltip.Q<Label>("mutation-tooltip-decreases");
+                if (dec != null) dec.text = LocalizationManager.GetString("topbar.mutation_tt.decreases");
+                var inc = _mutationTooltip.Q<Label>("mutation-tooltip-increases");
+                if (inc != null) inc.text = LocalizationManager.GetString("topbar.mutation_tt.increases");
+                var brh = _mutationTooltip.Q<Label>("mutation-breakdown-header");
+                if (brh != null) brh.text = LocalizationManager.GetString("topbar.mutation_tt.breakdown_header");
+                var foot = _mutationTooltip.Q<Label>("mutation-tooltip-footer");
+                if (foot != null) foot.text = LocalizationManager.GetString("topbar.mutation_tt.footer");
+            }
+
+            if (_condensationTooltip != null)
+            {
+                var ct = _condensationTooltip.Q<Label>("condensation-tooltip-title");
+                if (ct != null) ct.text = LocalizationManager.GetString("topbar.condensation.title");
+                var cap = _condensationTooltip.Q<Label>("condensation-tooltip-level-caption");
+                if (cap != null) cap.text = LocalizationManager.GetString("topbar.condensation.level_caption");
+                var tcap = _condensationTooltip.Q<Label>("condensation-tooltip-tip-caption");
+                if (tcap != null) tcap.text = LocalizationManager.GetString("topbar.condensation.tip_caption");
+                if (_condensationCollectButton != null)
+                    _condensationCollectButton.text = LocalizationManager.GetString("topbar.condensation.collect");
+            }
+        }
+
         private void EmitCondensationToast(string toastCode)
         {
             var foundation = Sporae.UI.UIToolkit.NotificationsFoundation.FoundationNotificationServiceAccessor.Get(suppressWarning: true);
@@ -564,7 +657,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phSystem == null || _phTooltipValueCurrent == null)
                 return;
 
-            var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+            var culture = HudNumberCulture;
             float currentPh = _phSystem.CurrentPh;
             int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
 
@@ -603,7 +696,9 @@ namespace Sporae.UI.UIToolkit.HUD
             }
             if (_phTooltipTitleStatus != null)
             {
-                _phTooltipTitleStatus.text = hasAnyModifiers ? "Online" : "Offline";
+                _phTooltipTitleStatus.text = hasAnyModifiers
+                    ? LocalizationManager.GetString("topbar.status.online")
+                    : LocalizationManager.GetString("topbar.status.offline");
                 _phTooltipTitleStatus.style.color = new StyleColor(hasAnyModifiers ? new Color(0.498f, 1f, 0.478f, 1f) : new Color(0.784f, 0.235f, 0.235f, 1f));
             }
 
@@ -614,7 +709,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                     var iconBox = new VisualElement { name = "ph-modifier-icon", style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f) } };
-                    var nameLabel = new Label { text = "Nessun modificatore attivo", enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
+                    var nameLabel = new Label { text = LocalizationManager.GetString("topbar.ph_modifier_none"), enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
                     row.Add(iconBox);
                     row.Add(nameLabel);
                     _phTooltipModifiersList.Add(row);
@@ -669,10 +764,13 @@ namespace Sporae.UI.UIToolkit.HUD
                     {
                         string driftStr = m.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
                         string capStr = Mathf.Abs(m.PhCap) > 0.01f
-                            ? $" (cap {m.PhCap:+0;-0})" : "";
+                            ? LocalizationManager.GetString("topbar.ph_passive_cap_suffix",
+                                new Dictionary<string, string> { { "cap", m.PhCap.ToString("+0;-0", culture) } })
+                            : "";
+                        string perDay = LocalizationManager.GetString("topbar.ph_passive_per_day");
                         AddPhPassiveRow(_phTooltipPassiveList,
                             m.SlotId, m.PassivePowerLabel,
-                            $"{driftStr}/g{capStr}");
+                            $"{driftStr}{perDay}{capStr}");
                     }
                 }
                 else
@@ -699,7 +797,7 @@ namespace Sporae.UI.UIToolkit.HUD
                     {
                         var emptyRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                         var emptyIcon = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.1f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.3f) } };
-                        var emptyLabel = new Label { text = "Nessun slot cryo attivo", enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
+                        var emptyLabel = new Label { text = LocalizationManager.GetString("topbar.ph_cryo_empty"), enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
                         emptyRow.Add(emptyIcon);
                         emptyRow.Add(emptyLabel);
                         _phTooltipPassiveList.Add(emptyRow);
@@ -710,7 +808,7 @@ namespace Sporae.UI.UIToolkit.HUD
             // Total daily drift = somma degli elementi in Active Modifiers (coerente con la lista)
             float totalDaily = totalFromModifiers;
             string totalStr = totalDaily.ToString("+#0.0;-#0.0;0", culture);
-            string stableStr = Mathf.Abs(totalDaily) < 0.2f ? " (Stable)" : "";
+            string stableStr = Mathf.Abs(totalDaily) < 0.2f ? LocalizationManager.GetString("topbar.ph_total_stable") : "";
             if (_phTooltipValueTotal != null)
                 _phTooltipValueTotal.text = $"<color=#7FFF7A>{totalStr}{stableStr}</color>";
 
@@ -727,9 +825,11 @@ namespace Sporae.UI.UIToolkit.HUD
             // TIP (solo valore; titolo è fisso in UXML). Se nessuna pianta: invito a piantare dal Terminale POT.
             if (_phTooltipValueTip != null)
             {
-                string tipBase = hasPlantsInPots ? "  " + GetPhTooltipTipForDay(currentDay) : "  Piantare piante dal Terminale POT per attivare il sistema di monitoraggio del pH.";
+                string tipBase = hasPlantsInPots
+                    ? "  " + GetPhTooltipTipForDay(currentDay)
+                    : LocalizationManager.GetString("topbar.ph_tip_plant_first");
                 if (hasAnyModifiers)
-                    tipBase += "\n  Il valore \"CURRENT VALUE\" è il pH attuale della Dome; il drift indicato viene applicato al cambio giornata.";
+                    tipBase += LocalizationManager.GetString("topbar.ph_tip_current_value");
                 _phTooltipValueTip.text = tipBase;
             }
         }
@@ -737,24 +837,16 @@ namespace Sporae.UI.UIToolkit.HUD
         /// <summary>Restituisce un consiglio generico rotante per il tooltip pH (basato sul giorno).</summary>
         private static string GetPhTooltipTipForDay(int day)
         {
-            string[] tips = new[]
-            {
-                "Aggiungi piante Pure o LED Blu per stabilizzare il baseline del pH.",
-                "Il pH della Dome influenza crescita e resa: monitora la banda (Acido/Neutro/Basico).",
-                "Overwatering e LED Rosso spostano il pH; usa le azioni con consapevolezza.",
-                "Condensazione e fertilizzanti contribuiscono al drift giornaliero.",
-                "Ogni pianta nei Pot ha un impatto giornaliero sul pH: meno vasi = drift più prevedibile.",
-                "Il forecast del giorno dopo (fine giornata) include tutti gli effetti: piante, LED, azioni.",
-                "Usa il Laboratorio e l'Extractor per spore e semi; il pH non influenza l'estrazione.",
-            };
-            int index = (day - 1) % tips.Length;
-            return tips[index];
+            const int tipCount = 7;
+            int index = (day - 1) % tipCount;
+            if (index < 0) index = 0;
+            return LocalizationManager.GetString($"topbar.ph_rotate.{index}");
         }
 
         private static string GetPlantDisplayName(string plantCode)
         {
             if (string.IsNullOrEmpty(plantCode) || plantCode == "Unknown")
-                return "Pianta";
+                return LocalizationManager.GetString("topbar.plant_fallback");
             var plantData = PlantDatabase.Instance?.GetPlantDataByCode(plantCode);
             return plantData != null ? (plantData.name ?? plantCode) : plantCode;
         }
@@ -898,6 +990,8 @@ namespace Sporae.UI.UIToolkit.HUD
             SetupMutationTooltip();
 
             SetupActionsTooltip();
+
+            ApplyLocalizedTopBarStaticTexts();
             
             // Crea texture gradiente pH (0-14 scale)
             CreatePhGradientTexture();
@@ -1098,8 +1192,21 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void OnDisable()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChangedForHudText;
             _glowFrameGenerator?.Dispose();
             _glowFrameGenerator = null;
+        }
+
+        private void OnLanguageChangedForHudText(GameLanguage _)
+        {
+            ApplyLocalizedTopBarStaticTexts();
+            UpdateActionsTooltipText();
+            if (_phTooltip != null && _phTooltip.style.display == DisplayStyle.Flex)
+                UpdatePhTooltipContent();
+            if (_mutationTooltip != null && _mutationTooltip.style.display == DisplayStyle.Flex)
+                UpdateMutationTooltipContent();
+            if (_condensationTooltip != null && _condensationTooltip.style.display == DisplayStyle.Flex)
+                UpdateCondensationTooltipContent();
         }
         
         private void InitializeComponents()
@@ -1195,9 +1302,9 @@ namespace Sporae.UI.UIToolkit.HUD
         /// <summary>Restituisce una banda pH per display (scala -100..+100) per il valore oscillante nel tooltip.</summary>
         private static string GetPhBandNameForDisplay(float ph)
         {
-            if (ph < -25f) return "Acido";
-            if (ph > 25f) return "Basico";
-            return "Neutrale";
+            if (ph < -25f) return LocalizationManager.GetString("topbar.ph_display_band.acid");
+            if (ph > 25f) return LocalizationManager.GetString("topbar.ph_display_band.base");
+            return LocalizationManager.GetString("topbar.ph_display_band.neutral");
         }
         
         /// <summary>
@@ -1226,7 +1333,7 @@ namespace Sporae.UI.UIToolkit.HUD
             // Aggiorna label "PH DRIFT" — colore dalla banda pH Dome corrente
             if (_phDriftLabel != null)
             {
-                _phDriftLabel.text = "DRIFT pH";
+                _phDriftLabel.text = LocalizationManager.GetString("topbar.metric.ph_drift");
                 Color phDriftColor = _phSystem != null
                     ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
                     : PhGradientDisplayColors.GetColorFromScale(7f);
@@ -1628,6 +1735,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         private void OnEnable()
         {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChangedForHudText;
             // Re-subscribe when enabled
             if (_actionSystem != null)
             {
@@ -1778,9 +1886,15 @@ namespace Sporae.UI.UIToolkit.HUD
         private void UpdateMutationTooltipContent()
         {
             if (_mutationTooltipCurrentLevel == null) return;
-            var culture = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+            var culture = HudNumberCulture;
             int pct = Mathf.RoundToInt(_mutationIndex * 100f);
-            string band = DomeMutationRuntimeService.GetBandLabelItalian(_mutationIndex);
+            int bandIdx = DomeMutationRuntimeService.GetBandIndex(_mutationIndex);
+            string band = bandIdx switch
+            {
+                0 => LocalizationManager.GetString("topbar.mutation_band.stable"),
+                1 => LocalizationManager.GetString("topbar.mutation_band.balanced"),
+                _ => LocalizationManager.GetString("topbar.mutation_band.elevated"),
+            };
             _mutationTooltipCurrentLevel.text = $"{pct.ToString(culture)}% — {band}";
             Color c;
             if (_mutationIndex <= DomeMutationRuntimeService.BandStableMax)
@@ -1795,7 +1909,8 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_mutationTooltipBreakdownBase != null)
             {
                 float b = mutSvc != null ? mutSvc.DesignerBaseNormalized : _mutationDesignerBase;
-                _mutationTooltipBreakdownBase.text = $"Base designer: {Mathf.RoundToInt(b * 100f).ToString(culture)}%";
+                _mutationTooltipBreakdownBase.text = LocalizationManager.GetString("topbar.mutation_tt.breakdown_base",
+                    new Dictionary<string, string> { { "pct", Mathf.RoundToInt(b * 100f).ToString(culture) } });
             }
 
             if (_mutationTooltipBreakdownGlasscap != null)
@@ -1805,8 +1920,9 @@ namespace Sporae.UI.UIToolkit.HUD
                     g = BotanicalRosterSnapshot.FromServices(_phSystem).GlasscapActiveMutationBonusSum;
                 int gp = Mathf.RoundToInt(g * 100f);
                 _mutationTooltipBreakdownGlasscap.text = gp > 0
-                    ? $"Bonus Glasscap (vasi attivi): +{gp.ToString(culture)}%"
-                    : "Bonus Glasscap (vasi attivi): +0% (nessuna Glasscap in crescita)";
+                    ? LocalizationManager.GetString("topbar.mutation_tt.breakdown_glass_pos",
+                        new Dictionary<string, string> { { "pct", gp.ToString(culture) } })
+                    : LocalizationManager.GetString("topbar.mutation_tt.breakdown_glass_zero");
             }
         }
 
@@ -1898,7 +2014,8 @@ namespace Sporae.UI.UIToolkit.HUD
                 _actionsTooltipTitleStatus.text = $"{left}/{max}";
 
             if (_actionsTooltipCurrent != null)
-                _actionsTooltipCurrent.text = $"<b>{left}</b>/<b>{max}</b> azioni rimanenti oggi";
+                _actionsTooltipCurrent.text = LocalizationManager.GetString("topbar.actions_tt.current_line",
+                    new Dictionary<string, string> { { "left", left.ToString() }, { "max", max.ToString() } });
 
             // Breakdown dal ledger (colazione + futuri moduli/ambiente/item).
             if (_actionsTooltipBreakdownList != null)
@@ -1920,7 +2037,7 @@ namespace Sporae.UI.UIToolkit.HUD
                     _actionsTooltipBreakdownList.Add(BuildBreakdownRow(new ActionBudgetEntry
                     {
                         Source = ActionBudgetSource.Breakfast,
-                        Label = "Colazione (base)",
+                        Label = LocalizationManager.GetString("topbar.actions_tt.breakfast_base"),
                         Amount = max
                     }));
                 }
@@ -1933,25 +2050,22 @@ namespace Sporae.UI.UIToolkit.HUD
                     _actionsTooltipBreakdownList.Add(BuildBreakdownRow(new ActionBudgetEntry
                     {
                         Source = ActionBudgetSource.Other,
-                        Label = delta > 0 ? "Regolazione runtime" : "Limite runtime",
+                        Label = delta > 0
+                            ? LocalizationManager.GetString("topbar.actions_tt.runtime_adjust_pos")
+                            : LocalizationManager.GetString("topbar.actions_tt.runtime_adjust_neg"),
                         Amount = delta
                     }));
                 }
             }
 
             if (_actionsTooltipTotal != null)
-                _actionsTooltipTotal.text = $"<b>{max}</b> azioni  ({left} rimanenti)";
+                _actionsTooltipTotal.text = LocalizationManager.GetString("topbar.actions_tt.total_line",
+                    new Dictionary<string, string> { { "max", max.ToString() }, { "left", left.ToString() } });
 
             UpdateActionsTooltipHydrationSection();
 
             if (_actionsTooltipTip != null)
-            {
-                _actionsTooltipTip.text =
-                    "Devi mangiare (cibo o frutta) almeno una volta ogni due giorni: dal terzo giorno " +
-                    "senza pasto il cap scende di 1 al giorno (minimo 1/5). " +
-                    "Tre giorni di fila a 1 azione senza cibo → game over per fame. " +
-                    "In futuro: moduli, bonus ambiente e item sul cap.";
-            }
+                _actionsTooltipTip.text = LocalizationManager.GetString("topbar.actions_tt.tip_body");
         }
 
         private VisualElement BuildBreakdownRow(ActionBudgetEntry entry)
@@ -2035,9 +2149,10 @@ namespace Sporae.UI.UIToolkit.HUD
             if (hyd == null)
             {
                 if (_actionsTooltipHydrationValue != null) _actionsTooltipHydrationValue.text = "—";
-                if (_actionsTooltipHydrationSpeed != null) _actionsTooltipHydrationSpeed.text = "Velocità di movimento: —";
+                if (_actionsTooltipHydrationSpeed != null)
+                    _actionsTooltipHydrationSpeed.text = LocalizationManager.GetString("topbar.actions_tt.move_speed_empty");
                 if (_actionsTooltipHydrationNote != null)
-                    _actionsTooltipHydrationNote.text = "L’idratazione non influenza le Azioni: regola solo la velocità di movimento.";
+                    _actionsTooltipHydrationNote.text = LocalizationManager.GetString("topbar.actions_tt.hydr_note_none");
                 return;
             }
 
@@ -2049,24 +2164,29 @@ namespace Sporae.UI.UIToolkit.HUD
 
             string speedLabel;
             Color speedColor;
+            var hStr = Mathf.RoundToInt(h).ToString();
+            var mulStr = Mathf.RoundToInt(mul * 100f).ToString();
             if (h > 50f)
             {
-                speedLabel = $"Velocità di movimento: <b>100%</b> (H {Mathf.RoundToInt(h)}% — nessuna penalità)";
+                speedLabel = LocalizationManager.GetString("topbar.actions_tt.move_speed_ok",
+                    new Dictionary<string, string> { { "h", hStr } });
                 speedColor = _greenStable;
             }
             else if (h > 25f)
             {
-                speedLabel = $"Velocità di movimento: <b>~{Mathf.RoundToInt(mul * 100f)}%</b> del normale (H {Mathf.RoundToInt(h)}% — leggera penalità sotto il 50%)";
+                speedLabel = LocalizationManager.GetString("topbar.actions_tt.move_speed_mid",
+                    new Dictionary<string, string> { { "mul", mulStr }, { "h", hStr } });
                 speedColor = _yellowWarning;
             }
             else if (h > 0.01f)
             {
-                speedLabel = $"Velocità di movimento: <b>~{Mathf.RoundToInt(mul * 100f)}%</b> del normale (H {Mathf.RoundToInt(h)}% — forte penalità sotto il 25%)";
+                speedLabel = LocalizationManager.GetString("topbar.actions_tt.move_speed_low",
+                    new Dictionary<string, string> { { "mul", mulStr }, { "h", hStr } });
                 speedColor = _redCritical;
             }
             else
             {
-                speedLabel = "Velocità di movimento: <b>minima</b> (H ≈ 0% — rischio game over se resti a 0% per 2 giorni)";
+                speedLabel = LocalizationManager.GetString("topbar.actions_tt.move_speed_crit");
                 speedColor = _redCritical;
             }
 
@@ -2077,11 +2197,7 @@ namespace Sporae.UI.UIToolkit.HUD
             }
 
             if (_actionsTooltipHydrationNote != null)
-            {
-                _actionsTooltipHydrationNote.text =
-                    "L’idratazione non influenza le Azioni: regola solo la velocità. " +
-                    "Il cap azioni dipende dalla colazione e dalla fame (mangiare almeno ogni 2 giorni).";
-            }
+                _actionsTooltipHydrationNote.text = LocalizationManager.GetString("topbar.actions_tt.hydr_note_full");
         }
 
         /// <summary>
@@ -2243,56 +2359,57 @@ namespace Sporae.UI.UIToolkit.HUD
                 _condensationTooltipLevel.text = $"{Mathf.RoundToInt(currentPercentage)}%";
 
             var sb = new System.Text.StringBuilder();
+            var c = HudNumberCulture;
 
-            // Definizione (titolo e livello sono nel layout UXML, come il ph-tooltip)
-            sb.AppendLine($"La <color=#5DB6E3>condensazione</color> è acqua grezza (WAT-RAW) raccolta dalla traspirazione delle piante (0-100%).");
+            sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_1"));
             sb.AppendLine();
-            
-            // Effetto alto
+
             if (currentPercentage >= 50f)
             {
-                sb.AppendLine($"Oltre il 50%, l'umidità ambientale aggiunge <color=#FF0000>giorni virtuali</color> al <color=#FF0000>Rischio Muffa</color> di tutte le piante (fino a +1,5g/giorno).");
+                sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_2_high"));
                 if (virtualDays > 0f)
                 {
-                    sb.AppendLine($"<color=#FF0000>Attualmente aggiunge +{virtualDays:F1} giorni virtuali/giorno</color>");
+                    sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_2_high_extra",
+                        new Dictionary<string, string> { { "v", virtualDays.ToString("F1", c) } }));
                 }
                 sb.AppendLine();
             }
             else
             {
-                sb.AppendLine($"Oltre il 50%, l'umidità ambientale aggiunge <color=#FF0000>giorni virtuali</color> al <color=#FF0000>Rischio Muffa</color> di tutte le piante (fino a +1,5g/giorno).");
+                sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_2_low"));
                 sb.AppendLine();
             }
-            
-            // Raccolta
-            sb.AppendLine($"Raccogliere azzera la %, rimuove i giorni virtuali e produce acqua grezza: <color=#FFA500>più aspetti, maggiore è la ricompensa ma anche il rischio muffa</color>.");
+
+            sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_3"));
             sb.AppendLine();
-            
-            // Ricompensa stimata
-            sb.AppendLine($"<b>Ricompensa stimata:</b> {estimatedRewardMin}-{estimatedRewardMax} WAT-RAW");
+
+            sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_reward",
+                new Dictionary<string, string>
+                {
+                    { "min", estimatedRewardMin.ToString(c) },
+                    { "max", estimatedRewardMax.ToString(c) }
+                }));
             sb.AppendLine();
-            
-            // Produzione
-            sb.AppendLine($"<b>Produzione di oggi:</b> {dailyProduction:F1}%");
+
+            sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_prod_today",
+                new Dictionary<string, string> { { "v", dailyProduction.ToString("F1", c) } }));
             if (tomorrowProduction > 0f)
             {
-                sb.AppendLine($"<b>Stima di domani:</b> ~{tomorrowProduction:F1}%");
+                sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_prod_tomorrow",
+                    new Dictionary<string, string> { { "v", tomorrowProduction.ToString("F1", c) } }));
             }
             sb.AppendLine();
-            
-            // LED Bonus
+
             if (hasLed)
             {
-                sb.AppendLine($"✨ <color=#00FF00>Bonus LED attivo: +2 WAT-RAW</color>");
+                sb.AppendLine(LocalizationManager.GetString("topbar.condensation.body_led_bonus"));
                 sb.AppendLine();
             }
-            
+
             _condensationTooltipText.text = sb.ToString();
 
-            const string tipRich =
-                "💡 <color=#7FFF7A>L'intervallo ottimale è 70-85%. Monitora ogni giorno per evitare problemi.</color>";
             if (_condensationTooltipTip != null)
-                _condensationTooltipTip.text = tipRich;
+                _condensationTooltipTip.text = LocalizationManager.GetString("topbar.condensation.tip_body");
             if (_condensationTooltipTipSection != null)
                 _condensationTooltipTipSection.style.display = DisplayStyle.Flex;
             

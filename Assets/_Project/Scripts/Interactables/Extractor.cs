@@ -208,7 +208,7 @@ namespace _Project
             if (TryRemoveFirstFruit(out var fruit))
             {
                 // Task 7: 1 o 2 Spore RAW; seconda con genetica alternata rispetto alla madre.
-                inputDesc = "frutto";
+                inputDesc = LocalizationManager.GetString("gameplay.extractor.input_fruit");
                 sporeOut = FruitSporeExtractionRules.RollSporeRawCount(fruit);
                 cell002Out = 0;
                 _slotInputFruit[idx] = fruit;
@@ -221,7 +221,8 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.WholePlant))
             {
-                inputDesc = "pianta intera"; cell001Out = 1;
+                inputDesc = ItemDisplayNameLocalization.TryGetByTypeId(Items.WholePlant, out var wn) ? wn : Items.WholePlant;
+                cell001Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.WholePlant, 1);
@@ -230,7 +231,8 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.OrganicScrap001))
             {
-                inputDesc = "scrap organico"; cell001Out = 1;
+                inputDesc = ItemDisplayNameLocalization.TryGetByTypeId(Items.OrganicScrap001, out var on) ? on : Items.OrganicScrap001;
+                cell001Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.OrganicScrap001, 1);
@@ -239,7 +241,8 @@ namespace _Project
             }
             else if (hasStem && _inventory.Has(Items.ProteinResidue))
             {
-                inputDesc = "residuo proteico"; cell003Out = 1;
+                inputDesc = ItemDisplayNameLocalization.TryGetByTypeId(Items.ProteinResidue, out var pn) ? pn : Items.ProteinResidue;
+                cell003Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
                 _inventory.Consume(Items.ProteinResidue, 1);
@@ -406,10 +409,10 @@ namespace _Project
                 int pct = 0;
                 for (int i = 0; i < 3; i++)
                     if (_slotStates[i] == 1) { pct = Mathf.RoundToInt(_slotProgress[i] * 100f); break; }
-                _worldStatusLabel.text = $"Estrazione in Corso.. {pct}%";
+                _worldStatusLabel.text = LocalizationManager.GetString("lab_extractor.progress_in_progress", new System.Collections.Generic.Dictionary<string, string> { ["pct"] = pct.ToString() });
             }
             else if (CompletedCount() > 0)
-                _worldStatusLabel.text = "Estrazione completata";
+                _worldStatusLabel.text = LocalizationManager.GetString("lab_extractor.done");
             else
                 _worldStatusLabel.text = "";
         }

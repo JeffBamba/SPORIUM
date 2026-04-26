@@ -20,6 +20,7 @@ using Sporae.UI.UIToolkit.HUD.Components;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit.PlantCard.Components;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit;
 
@@ -864,6 +865,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     _potSystemConfig = allConfigs[0];
             }
             SubscribeToRuntimeServicesIfNeeded();
+            GameLanguageSettings.OnLanguageChanged += OnPlantCardLanguageChanged;
 
             if (_isVisible)
             {
@@ -874,6 +876,12 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             // Safety: se siamo nella stessa Canvas della HUD, forza PlantCardV3 dopo TopBar/BottomNav nella gerarchia.
             TryMoveAfterHud();
+        }
+
+        private void OnPlantCardLanguageChanged(GameLanguage _)
+        {
+            if (_isVisible)
+                RefreshHudFromSelectedPot();
         }
 
         private void ResolveRuntimeDependencies()
@@ -1346,6 +1354,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnPlantCardLanguageChanged;
             StopBootSequence();
             StopTypewriter();
             _outerGlowGenerator?.Dispose();
@@ -2088,13 +2097,15 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
 
             bool hasPot = pot != null && !string.IsNullOrEmpty(pot.PotId);
             string selectedPotId = hasPot ? pot.PotId : "---";
-            string disabledReason = empty ? "Vaso vuoto: pianta prima un seme." : "Azione non disponibile ora.";
+            string disabledReason = empty
+                ? LocalizationManager.GetString("plant_terminal.reason_empty_pot")
+                : LocalizationManager.GetString("plant_terminal.reason_action_na");
 
             if (_a9SuggestionsLabel != null)
             {
                 _a9SuggestionsLabel.enableRichText = true;
                 _a9SuggestionsLabel.text = BuildA9SuggestionText(state, plantData, empty);
-                _a9SuggestionsLabel.tooltip = $"Suggerimenti live per {selectedPotId}";
+                _a9SuggestionsLabel.tooltip = LocalizationManager.GetString("plant_terminal.suggestions_tooltip", new Dictionary<string, string> { ["pot"] = selectedPotId });
             }
 
             var actions = pot?.PotActions;
@@ -2266,30 +2277,30 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             int maxHydration = _potSystemConfig.MaxHydration;
             int hydrationPercent = PlantCardCalculators.CalculateHydrationPercent(state.Hydration, maxHydration);
             if (hydrationPercent < stageReq.hydrationMin)
-                drivers.Add(("Idratazione bassa", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_hydration_low"), false));
             else if (hydrationPercent > stageReq.hydrationMax)
-                drivers.Add(("Sovra-irrigazione", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_overwater"), false));
 
             int consecutiveDays = state.GetConsecutiveLedDays();
             int maxDays = Mathf.Max(1, _potSystemConfig.MaxDaysForFullStress);
             int lightStress = Mathf.RoundToInt(Mathf.Clamp01((float)consecutiveDays / maxDays) * 100f);
             if (lightStress > 80)
-                drivers.Add(("Light stress critico", true));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_light_crit"), true));
             else if (lightStress > 50)
-                drivers.Add(("Light stress alto", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_light_high"), false));
 
             bool isSeedOrSprout = currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout;
             if (!isSeedOrSprout && state.FertilizerLevel < stageReq.fertilizerMin)
-                drivers.Add(("Fertilizzante basso", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_fertilizer_low"), false));
             else if (!isSeedOrSprout && state.FertilizerLevel > stageReq.fertilizerMax)
-                drivers.Add(("Fertilizzante in eccesso", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_fertilizer_high"), false));
 
             if (state.IsInfested)
-                drivers.Add(("INFESTATA — esegui PRUNE", true));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_infested"), true));
             else if (state.MoldRiskLevel >= 3)
-                drivers.Add(("Rischio muffa critico", true));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_mold_crit"), true));
             else if (state.MoldRiskLevel >= 2)
-                drivers.Add(("Rischio muffa", false));
+                drivers.Add((LocalizationManager.GetString("plant_terminal.driver_mold"), false));
 
             if (drivers.Count > 3) drivers = drivers.GetRange(0, 3);
             return drivers;

@@ -10,6 +10,7 @@ using _Project.UI.UIToolkit.MainMenu;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -248,6 +249,49 @@ namespace Sporae.UI.UIToolkit.HUD
             _btnOptions?.RegisterCallback<ClickEvent>(_ => OnOptionsClicked());
             _btnSave?.RegisterCallback<ClickEvent>(_ => OnSaveClicked());
             _btnExit?.RegisterCallback<ClickEvent>(_ => OnExitClicked());
+
+            ApplyLocalizedCompactBottomBarChrome();
+        }
+
+        /// <summary>Tooltip CRY, etichette statiche e tooltip OS dei pulsanti — da <see cref="LocalizationManager"/>.</summary>
+        private void ApplyLocalizedCompactBottomBarChrome()
+        {
+            var uiRoot = _uiDocument?.rootVisualElement;
+            if (uiRoot == null)
+                return;
+
+            var cryRoot = uiRoot.Q<VisualElement>("cry-tooltip");
+            if (cryRoot != null)
+            {
+                void SetLabel(string elementName, string locKey)
+                {
+                    var l = cryRoot.Q<Label>(elementName);
+                    if (l != null)
+                        l.text = LocalizationManager.GetString(locKey);
+                }
+
+                SetLabel("cry-tooltip-title", "cbb.cry.title");
+                SetLabel("cry-caption-balance", "cbb.cry.balance_caption");
+                SetLabel("cry-section-cycle", "cbb.cry.cycle_header");
+                SetLabel("cry-caption-earned", "cbb.cry.earned_today");
+                SetLabel("cry-caption-spent", "cbb.cry.spent_today");
+                SetLabel("cry-caption-net", "cbb.cry.net_today");
+                SetLabel("cry-section-detail-header", "cbb.cry.detail_header");
+                SetLabel("cry-row-maint-label", "cbb.cry.maint_row");
+                SetLabel("cry-row-sales-label", "cbb.cry.sales_row");
+                SetLabel("cry-row-reagents-label", "cbb.cry.reagents_row");
+                SetLabel("cry-section-forecast-header", "cbb.cry.forecast_header");
+                SetLabel("cry-row-forecast-label", "cbb.cry.forecast_income");
+                SetLabel("cry-tip-header", "cbb.cry.tip_header");
+                SetLabel("cry-tooltip-tip", "cbb.cry.tip_body");
+            }
+
+            if (_btnOptions != null)
+                _btnOptions.tooltip = LocalizationManager.GetString("cbb.btn.options");
+            if (_btnSave != null)
+                _btnSave.tooltip = LocalizationManager.GetString("cbb.btn.save");
+            if (_btnExit != null)
+                _btnExit.tooltip = LocalizationManager.GetString("cbb.btn.exit");
         }
 
         // ── Event subscriptions ──
@@ -268,10 +312,13 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (_roomTracker != null)
                 _roomTracker.OnRoomChanged += OnRoomTrackerChanged;
+
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
         }
 
         private void UnsubscribeFromServices()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= OnDayChanged;
 
@@ -284,10 +331,21 @@ namespace Sporae.UI.UIToolkit.HUD
 
         // ── DAY ──
 
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            ApplyLocalizedCompactBottomBarChrome();
+            if (_dayCycleSystem != null)
+                OnDayChanged(_dayCycleSystem.CurrentDay);
+            if (_economySystem != null)
+                OnCRYChanged(_economySystem.CurrentCRY);
+            if (!string.IsNullOrEmpty(_activeRoom))
+                PlayLocationTypewriter(_activeRoom);
+        }
+
         private void OnDayChanged(int day)
         {
             if (_dayLabel != null)
-                _dayLabel.text = NotificationLocalization.Pick($"GIORNO - {day}", $"DAY - {day}");
+                _dayLabel.text = LocalizationManager.Pick($"GIORNO - {day}", $"DAY - {day}");
         }
 
         // ── CRY ──
@@ -335,7 +393,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_locationLabel == null) return;
             string display = ResolveRoomDisplayName(roomId);
-            string full = NotificationLocalization.Pick($"[Posizione: {display}]", $"[Location: {display}]");
+            string full = LocalizationManager.Pick($"[Posizione: {display}]", $"[Location: {display}]");
             if (_locationTypewriterRoutine != null)
             {
                 StopCoroutine(_locationTypewriterRoutine);
@@ -610,58 +668,58 @@ namespace Sporae.UI.UIToolkit.HUD
             switch (roomId.ToLowerInvariant())
             {
                 case "dome":
-                    name = NotificationLocalization.Pick("Cupola", "Dome");
-                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Cupola", "Dome");
+                    floor = LocalizationManager.Pick("Piano -1", "Floor -1");
+                    desc = LocalizationManager.Pick(
                         "Cuore biologico del Vault. Le piante ti obbediscono — o ti tradiscono.",
                         "Biological heart of the Vault. The plants obey—or betray—you.");
                     return true;
                 case "lab":
-                    name = NotificationLocalization.Pick("Laboratorio", "Lab");
-                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Laboratorio", "Lab");
+                    floor = LocalizationManager.Pick("Piano -1", "Floor -1");
+                    desc = LocalizationManager.Pick(
                         "Ricerca, analisi, protocolli. Ogni campione racconta una storia.",
                         "Research, analysis, protocols. Every sample tells a story.");
                     return true;
                 case "kitchen":
-                    name = NotificationLocalization.Pick("Cucina", "Kitchen");
-                    floor = NotificationLocalization.Pick("Piano -2", "Floor -2");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Cucina", "Kitchen");
+                    floor = LocalizationManager.Pick("Piano -2", "Floor -2");
+                    desc = LocalizationManager.Pick(
                         "Coltiva ciò che ti tiene in vita. Non tutto ciò che nutre è puro.",
                         "Grow what keeps you alive. Not everything that feeds is pure.");
                     return true;
                 case "dormitory":
-                    name = NotificationLocalization.Pick("Dormitorio", "Dormitory");
-                    floor = NotificationLocalization.Pick("Piano -1", "Floor -1");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Dormitorio", "Dormitory");
+                    floor = LocalizationManager.Pick("Piano -1", "Floor -1");
+                    desc = LocalizationManager.Pick(
                         "Riposo e recupero. Il corpo ricorda ciò che la mente vorrebbe dimenticare.",
                         "Rest and recovery. The body remembers what the mind would forget.");
                     return true;
                 case "visitor":
-                    name = NotificationLocalization.Pick("Sala visitatori", "Visitor Room");
-                    floor = NotificationLocalization.Pick("Piano terra", "Ground floor");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Sala visitatori", "Visitor Room");
+                    floor = LocalizationManager.Pick("Piano terra", "Ground floor");
+                    desc = LocalizationManager.Pick(
                         "Punto d'ingresso per i sopravvissuti. Ogni visita può cambiare l'equilibrio del Vault.",
                         "Entry point for survivors. Every visit can shift the Vault's balance.");
                     return true;
                 case "storage":
-                    name = NotificationLocalization.Pick("Deposito semi", "Seed Storage");
-                    floor = NotificationLocalization.Pick("Piano terra", "Ground floor");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Deposito semi", "Seed Storage");
+                    floor = LocalizationManager.Pick("Piano terra", "Ground floor");
+                    desc = LocalizationManager.Pick(
                         "Archivio criogenico per semi e spore. Tutto dorme finché non serve.",
                         "Cryogenic archive for seeds and spores. Everything sleeps until needed.");
                     return true;
                 case "restricted1":
-                    name = NotificationLocalization.Pick("Zona riservata I", "Restricted Zone I");
-                    floor = NotificationLocalization.Pick("Accesso limitato", "Restricted access");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Zona riservata I", "Restricted Zone I");
+                    floor = LocalizationManager.Pick("Accesso limitato", "Restricted access");
+                    desc = LocalizationManager.Pick(
                         "Oltre questa soglia valgono protocolli di sicurezza diversi.",
                         "Beyond this threshold, different security protocols apply.");
                     return true;
                 case "restricted2":
-                    name = NotificationLocalization.Pick("Zona riservata II", "Restricted Zone II");
-                    floor = NotificationLocalization.Pick("Accesso limitato", "Restricted access");
-                    desc = NotificationLocalization.Pick(
+                    name = LocalizationManager.Pick("Zona riservata II", "Restricted Zone II");
+                    floor = LocalizationManager.Pick("Accesso limitato", "Restricted access");
+                    desc = LocalizationManager.Pick(
                         "Livello di sicurezza elevato. Solo autorizzazione esplicita.",
                         "High security clearance. Explicit authorization only.");
                     return true;

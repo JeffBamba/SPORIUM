@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using _Project; // Per UINotification
 using _Project.Sporae.Core; // Per ServiceContainer
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 
 namespace Sporae.Dome.UI
@@ -25,7 +26,21 @@ namespace Sporae.Dome.UI
         public event Action<bool, bool> OnDialogResult; // confirmed, useSpray
         
         private bool _hasSprayAvailable = false; // Additivo basico (STR-004-Basic) per bonus potatura
-        
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+            if (dialogPanel != null && dialogPanel.activeSelf)
+                ApplyLocalizedTexts();
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _) => ApplyLocalizedTexts();
+
         private void Awake()
         {
             if (confirmButton != null)
@@ -55,7 +70,7 @@ namespace Sporae.Dome.UI
                     entry.callback.AddListener((data) => {
                         if (sprayToggle.isOn && _hasSprayAvailable)
                         {
-                            ShowSprayToggleToast("Spray Antifungino selezionato. Verrà utilizzato durante la potatura.");
+                            ShowSprayToggleToast(LocalizationManager.GetString("pruning.toast_spray"));
                         }
                     });
                     eventTrigger.triggers.Add(entry);
@@ -86,7 +101,7 @@ namespace Sporae.Dome.UI
             else if (isOn && _hasSprayAvailable)
             {
                 // BUG FIX: Mostra toast quando il toggle viene selezionato
-                ShowSprayToggleToast("Spray Antifungino selezionato. Verrà utilizzato durante la potatura.");
+                ShowSprayToggleToast(LocalizationManager.GetString("pruning.toast_spray"));
             }
         }
         
@@ -122,11 +137,7 @@ namespace Sporae.Dome.UI
             if (dialogPanel != null)
                 dialogPanel.SetActive(true);
             
-            if (titleText != null)
-                titleText.text = "✂️ Potatura";
-            
-            if (bodyText != null)
-                bodyText.text = "Eseguire la potatura su questa pianta?";
+            ApplyLocalizedTexts();
             
             // Configura toggle Spray
             if (sprayToggle != null)
@@ -153,16 +164,29 @@ namespace Sporae.Dome.UI
                 // Aggiorna testo toggle
                 var toggleLabel = sprayToggle.GetComponentInChildren<TextMeshProUGUI>();
                 if (toggleLabel != null)
-                {
-                    if (hasSprayAvailable)
-                        toggleLabel.text = "Aggiungi additivo basico (consuma STR-004-Basic)";
-                    else
-                        toggleLabel.text = "Aggiungi additivo basico (STR-004-Basic non disponibile)";
-                }
+                    toggleLabel.text = hasSprayAvailable
+                        ? LocalizationManager.GetString("pruning.toggle_available")
+                        : LocalizationManager.GetString("pruning.toggle_unavailable");
             }
             else
             {
                 SporiumLogger.LogError(LogCategory.UI, "sprayToggle è NULL! Verifica che sia collegato nel prefab.");
+            }
+        }
+
+        private void ApplyLocalizedTexts()
+        {
+            if (titleText != null)
+                titleText.text = LocalizationManager.GetString("pruning.title");
+            if (bodyText != null)
+                bodyText.text = LocalizationManager.GetString("pruning.body");
+            if (sprayToggle != null)
+            {
+                var toggleLabel = sprayToggle.GetComponentInChildren<TextMeshProUGUI>();
+                if (toggleLabel != null)
+                    toggleLabel.text = _hasSprayAvailable
+                        ? LocalizationManager.GetString("pruning.toggle_available")
+                        : LocalizationManager.GetString("pruning.toggle_unavailable");
             }
         }
         

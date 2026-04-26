@@ -205,11 +205,15 @@ namespace Sporae.UI.UIToolkit.Lab
                 _storage.OnInventoryChanged += RefreshDisplay;
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged += HandleDayChanged;
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
         }
 
+        private void OnLanguageChanged(GameLanguage _) => RefreshDisplay();
+
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_storage != null)
                 _storage.OnInventoryChanged -= RefreshDisplay;
             if (_dayCycleSystem != null)
@@ -328,11 +332,12 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_statusLabel != null)
             {
                 if (inProgressCount > 0)
-                    _statusLabel.text = $"Stato: {inProgressCount} maturazione/i in corso (fino a 3)";
+                    _statusLabel.text = LocalizationManager.GetString("lab_cat.status_progress", new Dictionary<string, string>
+                        { ["n"] = inProgressCount.ToString() });
                 else if (ready > 0)
-                    _statusLabel.text = "Stato: Pronto — ritira spora/e maturata/e";
+                    _statusLabel.text = LocalizationManager.GetString("lab_cat.status_ready");
                 else
-                    _statusLabel.text = "Stato: In attesa di input (spora Raw). Fino a 3 in parallelo.";
+                    _statusLabel.text = LocalizationManager.GetString("lab_cat.status_idle");
             }
 
             if (_operationLabel != null)
@@ -351,7 +356,9 @@ namespace Sporae.UI.UIToolkit.Lab
             }
 
             if (_outputText != null)
-                _outputText.text = ready > 0 ? $"Spora maturata x{ready}" : "—";
+                _outputText.text = ready > 0
+                    ? LocalizationManager.GetString("lab_cat.output_mature", new Dictionary<string, string> { ["count"] = ready.ToString() })
+                    : "—";
 
             if (_btnRitira != null)
                 _btnRitira.SetEnabled(ready > 0);
@@ -378,7 +385,7 @@ namespace Sporae.UI.UIToolkit.Lab
             var allowed = CatalizzatoreAllowedTypes();
             _playerInventoryPanel.ShowAsPicker(
                 allowed,
-                "Seleziona spora Raw da inserire nel Catalizzatore",
+                LocalizationManager.GetString("lab_cat.picker_title"),
                 (typeId, stage, pickedItem) =>
                 {
                     if (_gameManager?.PlayerInventory == null || _storage == null) return;

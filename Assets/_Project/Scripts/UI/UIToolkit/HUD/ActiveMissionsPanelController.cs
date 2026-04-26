@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
 using _Project.UI.UIToolkit.VoOverlay;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -52,6 +53,10 @@ namespace Sporae.UI.UIToolkit.HUD
         private VisualElement _tooltipRepRow;
         private VisualElement _tooltipDeadline;
         private Label _tooltipDeadlineText;
+        private Label _tooltipObjectiveHeader;
+        private Label _tooltipRewardHeader;
+
+        private bool _languageSubscribed;
 
         private MissionManager _missionManager;
         private DayCycleSystem _dayCycleSystem;
@@ -216,6 +221,36 @@ namespace Sporae.UI.UIToolkit.HUD
             }
             _completedLingerCoroutines.Clear();
             CancelTooltipSchedules();
+
+            if (_languageSubscribed)
+            {
+                GameLanguageSettings.OnLanguageChanged -= OnGameLanguageChanged;
+                _languageSubscribed = false;
+            }
+        }
+
+        private void OnGameLanguageChanged(GameLanguage _)
+        {
+            ApplyMissionLocalizationChrome();
+            HandleMissionsChanged();
+            if (_tooltip != null && _tooltip.style.display == DisplayStyle.Flex &&
+                _pendingTooltipCard != null && _pendingTooltipMission != null && _pendingTooltipMission.Config != null &&
+                _missionMeta.TryGetValue(_pendingTooltipMission, out var meta))
+            {
+                ShowTooltipNow(_pendingTooltipCard, _pendingTooltipMission, meta, _pendingTooltipStatus);
+            }
+        }
+
+        private void ApplyMissionLocalizationChrome()
+        {
+            if (_tooltipObjectiveHeader != null)
+                _tooltipObjectiveHeader.text = LocalizationManager.GetString("missions.tooltip.objective_section");
+            if (_tooltipRewardHeader != null)
+                _tooltipRewardHeader.text = LocalizationManager.GetString("missions.tooltip.reward_section");
+            if (_filterActiveButton != null)
+                _filterActiveButton.text = LocalizationManager.GetString("missions.filter.active");
+            if (_filterCompletedButton != null)
+                _filterCompletedButton.text = LocalizationManager.GetString("missions.filter.completed");
         }
 
         private void OnDemoBreakfastProgressChanged()
@@ -243,7 +278,7 @@ namespace Sporae.UI.UIToolkit.HUD
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
-                toastManager.ShowMission($"Nuova missione: {title}", "MIS-NEW");
+                toastManager.ShowMission(LocalizationManager.GetString("missions.toast.new", new Dictionary<string, string> { { "title", title } }), "MIS-NEW");
                 return;
             }
 
@@ -274,7 +309,7 @@ namespace Sporae.UI.UIToolkit.HUD
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
-                toastManager.ShowMission($"Missione completata: {title}", "MIS-DONE");
+                toastManager.ShowMission(LocalizationManager.GetString("missions.toast.done", new Dictionary<string, string> { { "title", title } }), "MIS-DONE");
             }
             else
             {
@@ -296,7 +331,7 @@ namespace Sporae.UI.UIToolkit.HUD
             var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
             if (vo != null && !skipGenericCompletionVo)
             {
-                string line = $"Ottimo lavoro. Missione completata: {title}.";
+                string line = LocalizationManager.GetString("missions.vo.complete", new Dictionary<string, string> { { "title", title } });
                 var presentation = new VoLinePresentationOptions(
                     useMultiSentenceWhenSplit: true,
                     advanceMode: VoSentenceAdvanceMode.AutoReadingPause,
@@ -362,6 +397,16 @@ namespace Sporae.UI.UIToolkit.HUD
             _tooltipRepRow = rootVe.Q<VisualElement>("am-tooltip-rep-row");
             _tooltipDeadline = rootVe.Q<VisualElement>("am-tooltip-deadline");
             _tooltipDeadlineText = rootVe.Q<Label>("am-tooltip-deadline-text");
+            _tooltipObjectiveHeader = rootVe.Q<Label>("am-tooltip-objective-label");
+            _tooltipRewardHeader = rootVe.Q<Label>("am-tooltip-reward-label");
+
+            if (!_languageSubscribed)
+            {
+                GameLanguageSettings.OnLanguageChanged += OnGameLanguageChanged;
+                _languageSubscribed = true;
+            }
+
+            ApplyMissionLocalizationChrome();
 
             if (_root != null)
                 _root.style.display = DisplayStyle.Flex;
@@ -486,12 +531,16 @@ namespace Sporae.UI.UIToolkit.HUD
 
             if (_countLabel != null)
             {
-                _titleLabel.text = _filterMode == MissionFilterMode.Completed ? "MISSIONI COMPLETATE" : "MISSIONI";
+                _titleLabel.text = _filterMode == MissionFilterMode.Completed
+                    ? LocalizationManager.GetString("missions.panel.completed")
+                    : LocalizationManager.GetString("missions.panel.active");
                 _countLabel.text = $"[{missionRows.Count}]";
             }
             else
             {
-                string title = _filterMode == MissionFilterMode.Completed ? "MISSIONI COMPLETATE" : "MISSIONI";
+                string title = _filterMode == MissionFilterMode.Completed
+                    ? LocalizationManager.GetString("missions.panel.completed")
+                    : LocalizationManager.GetString("missions.panel.active");
                 _titleLabel.text = $"{title} [{missionRows.Count}]";
             }
 
@@ -499,7 +548,9 @@ namespace Sporae.UI.UIToolkit.HUD
             bool hasMissions = missionRows.Count > 0;
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _filterMode == MissionFilterMode.Completed ? "Nessuna missione completata_" : "Nessuna missione_";
+                _emptyLabel.text = _filterMode == MissionFilterMode.Completed
+                    ? LocalizationManager.GetString("missions.empty.completed")
+                    : LocalizationManager.GetString("missions.empty.none");
                 _emptyLabel.style.display = hasMissions ? DisplayStyle.None : DisplayStyle.Flex;
             }
 
@@ -611,7 +662,9 @@ namespace Sporae.UI.UIToolkit.HUD
             timerWrap.AddToClassList("active-mission-card-timer-wrap");
             var timerIcon = new Label("o");
             timerIcon.AddToClassList("active-mission-card-timer-icon");
-            string timerValue = mission.IsCompleted ? "FATTA" : $"{Mathf.Max(0, daysLeft)}g";
+            string timerValue = mission.IsCompleted
+                ? LocalizationManager.GetString("missions.card.done")
+                : LocalizationManager.GetString("missions.card.days", new Dictionary<string, string> { { "n", Mathf.Max(0, daysLeft).ToString() } });
             var timerText = new Label(timerValue);
             timerText.AddToClassList("active-mission-card-timer");
             if (!mission.IsCompleted && daysLeft <= 2)
@@ -712,9 +765,9 @@ namespace Sporae.UI.UIToolkit.HUD
             _tooltipTitle.text = GetMissionTitle(mission);
             _tooltipFaction.text = GetFactionName(meta.Faction);
             _tooltipObjective.text = string.IsNullOrWhiteSpace(mission.Config.Description)
-                ? "Nessuna descrizione dettagliata."
+                ? LocalizationManager.GetString("missions.tooltip.no_description")
                 : mission.Config.Description.Trim();
-            _tooltipTaskSummary.text = $"-> {GetPrimaryObjectiveLine(mission)}";
+            _tooltipTaskSummary.text = LocalizationManager.GetString("missions.tooltip.task_prefix") + GetPrimaryObjectiveLine(mission);
             _tooltipReward.text = BuildRewardLine(mission.Config);
 
             string rep = BuildRepLine(mission.Config);
@@ -725,7 +778,7 @@ namespace Sporae.UI.UIToolkit.HUD
             int daysLeft = Mathf.Max(0, GetDaysRemaining(meta));
             bool showDeadline = status != MissionVisualStatus.Completed && daysLeft <= 2;
             _tooltipDeadline.style.display = showDeadline ? DisplayStyle.Flex : DisplayStyle.None;
-            _tooltipDeadlineText.text = $"SCADE TRA {daysLeft} GIORNI";
+            _tooltipDeadlineText.text = LocalizationManager.GetString("missions.tooltip.deadline", new Dictionary<string, string> { { "n", daysLeft.ToString() } });
 
             StopTooltipWarningPulse();
             if (showDeadline)
@@ -795,14 +848,14 @@ namespace Sporae.UI.UIToolkit.HUD
         private static string GetMissionTitle(MissionChecker mission)
         {
             if (mission?.Config == null || string.IsNullOrWhiteSpace(mission.Config.Title))
-                return "Missione senza titolo";
+                return LocalizationManager.GetString("missions.fallback_title");
             return mission.Config.Title.Trim();
         }
 
         private static string GetPrimaryObjectiveLine(MissionChecker mission)
         {
             if (mission?.Config == null || mission.Config.Goals == null)
-                return "Nessun obiettivo";
+                return LocalizationManager.GetString("missions.tooltip.no_objective");
 
             foreach (var goal in mission.Config.Goals)
             {
@@ -817,7 +870,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 }
             }
 
-            return "Nessun obiettivo";
+            return LocalizationManager.GetString("missions.tooltip.no_objective");
         }
 
         private static string BuildRewardLine(MissionConfig cfg)
@@ -826,7 +879,9 @@ namespace Sporae.UI.UIToolkit.HUD
                 return "-";
 
             var reward = cfg.QuickPathReward;
-            string cry = reward.CryReward > 0 ? $"+{reward.CryReward} CRY" : string.Empty;
+            string cry = reward.CryReward > 0
+                ? LocalizationManager.GetString("missions.tooltip.reward_cry", new Dictionary<string, string> { { "n", reward.CryReward.ToString() } })
+                : string.Empty;
 
             string item = string.Empty;
             if (reward.Rewards != null && reward.Rewards.Count > 0 && reward.Rewards[0].Item != null)
@@ -842,7 +897,7 @@ namespace Sporae.UI.UIToolkit.HUD
             if (!string.IsNullOrEmpty(item))
                 return item;
 
-            return "Nessuna ricompensa";
+            return LocalizationManager.GetString("missions.tooltip.no_reward");
         }
 
         private static string BuildRepLine(MissionConfig cfg)
@@ -974,10 +1029,10 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             return faction switch
             {
-                MissionFaction.Routine => "Routine",
-                MissionFaction.Mercanti => "Mercanti",
-                MissionFaction.Cult => "Cult",
-                _ => "Custodi"
+                MissionFaction.Routine => LocalizationManager.GetString("missions.faction.routine"),
+                MissionFaction.Mercanti => LocalizationManager.GetString("missions.faction.mercanti"),
+                MissionFaction.Cult => LocalizationManager.GetString("missions.faction.cult"),
+                _ => LocalizationManager.GetString("missions.faction.custodi")
             };
         }
 

@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using _Project.Sporae.Core;
+using Sporae.Core.Localization;
 
 namespace _Project
 {
@@ -42,9 +43,10 @@ namespace _Project
             if (isVisible)
             {
                 if (!string.IsNullOrWhiteSpace(_lastSuggestedTarget))
-                    _adviceLabel.text = $"Premi 'E' per interagire con \"{_lastSuggestedTarget}\"";
+                    _adviceLabel.text = LocalizationManager.GetString("gameplay.interact.press_e_with",
+                        new System.Collections.Generic.Dictionary<string, string> { { "name", _lastSuggestedTarget } });
                 else
-                    _adviceLabel.text = "Premi 'E' per interagire";
+                    _adviceLabel.text = LocalizationManager.GetString("gameplay.interact.press_e");
             }
             _interactablesInRange = 0;
             _lastSuggestedTarget = string.Empty;

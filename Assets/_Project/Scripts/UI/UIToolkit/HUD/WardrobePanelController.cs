@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using _Project.Player;
 using _Project.Sporae.Core;
+using Sporae.Core.Localization;
 using Sporae.DevTools;
 
 namespace Sporae.UI.UIToolkit.HUD
@@ -63,6 +64,22 @@ namespace Sporae.UI.UIToolkit.HUD
                 closeBtn.clicked += Close;
 
             ServiceContainer.Instance?.Register(this);
+        }
+
+        private void OnEnable()
+        {
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            if (IsOpen)
+                RefreshOutfitLabel();
         }
 
         private void OnDestroy()

@@ -12,6 +12,7 @@ using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlantCard.Helpers;
 using Sporae.UI.UIToolkit;
 using Sporae.UI.UIToolkit.HUD;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.DomeStatusHUD
 {
@@ -133,11 +134,13 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             PotEvents.OnPotStateChanged += HandlePotStateChanged;
 
             SetupUI();
+            GameLanguageSettings.OnLanguageChanged += HandleLanguageChanged;
             RefreshData();
         }
 
         private void OnDisable()
         {
+            GameLanguageSettings.OnLanguageChanged -= HandleLanguageChanged;
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= HandleDayChanged;
 
@@ -303,6 +306,30 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             SwitchTab(false);
             _hudBodyExpanded = _startHudExpanded;
             ApplyHudBodyExpandedState();
+            ApplyLocalizedStaticLabels();
+        }
+
+        private void HandleLanguageChanged(GameLanguage _)
+        {
+            ApplyLocalizedStaticLabels();
+            RefreshData();
+        }
+
+        /// <summary>Etichette statiche UXML (stat + footer) allineate alla lingua corrente.</summary>
+        private void ApplyLocalizedStaticLabels()
+        {
+            if (_hudRoot == null) return;
+            for (int i = 0; i < 4; i++)
+            {
+                var w = _hudRoot.Q<Label>($"dome-pot-stat-label-{i}-water");
+                if (w != null) w.text = LocalizationManager.GetString("player_status.hydration");
+                var f = _hudRoot.Q<Label>($"dome-pot-stat-label-{i}-fert");
+                if (f != null) f.text = LocalizationManager.GetString("dome_hud.stat.fertilizer");
+                var l = _hudRoot.Q<Label>($"dome-pot-stat-label-{i}-led");
+                if (l != null) l.text = LocalizationManager.GetString("dome_hud.stat.led");
+                var foot = _hudRoot.Q<Label>($"dome-pot-footer-{i}");
+                if (foot != null) foot.text = LocalizationManager.GetString("dome_hud.footer.pot_hint");
+            }
         }
 
         private void ToggleHudBodyExpanded()
@@ -499,7 +526,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                     else
                     {
-                        _potNames[i].text = "VASO VUOTO";
+                        _potNames[i].text = LocalizationManager.GetString("dome_hud.pot.empty");
                         _potNames[i].style.color = StyleKeyword.Null;
                     }
                 }
@@ -516,7 +543,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                     else
                     {
-                        _potSubs[i].text = "Pronto per la piantagione";
+                        _potSubs[i].text = LocalizationManager.GetString("dome_hud.pot.ready_plant");
                         _potSubs[i].style.color = StyleKeyword.Null;
                     }
                 }
@@ -619,7 +646,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                         StageRequirements reqF = careData?.GetStageRequirements(stageEnum);
                         if (IsFertilizerOptionalForStage(stageEnum))
                         {
-                            _potStatFert[i].text = "NON NECESSARIO";
+                            _potStatFert[i].text = LocalizationManager.GetString("dome_hud.fertilizer.not_needed");
                             _potStatFert[i].style.color = new StyleColor(TipMuted);
                         }
                         else
@@ -739,7 +766,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     }
                     else
                     {
-                        _cryoDetails[i].text = "slot disponibile";
+                        _cryoDetails[i].text = LocalizationManager.GetString("dome_hud.cryo.slot_free");
                     }
                 }
             }
@@ -988,9 +1015,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         {
             switch (s)
             {
-                case LedSystemState.Blue: return "BLUE";
-                case LedSystemState.Red:  return "RED";
-                default:                   return "OFF";
+                case LedSystemState.Blue: return LocalizationManager.GetString("dome_hud.led.blue");
+                case LedSystemState.Red:  return LocalizationManager.GetString("dome_hud.led.red");
+                default:                   return LocalizationManager.GetString("dome_hud.led.off");
             }
         }
 
@@ -1012,7 +1039,12 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             string cond  = ConditionLabel(condEnum);
 
             lines.Add(new TooltipLine($"■ {name}  Lvl {state.PlantLevel}", TipPhCyan, bold: true));
-            lines.Add(new TooltipLine($"  {state.PotId} · {stage} · Giorno {state.DaysInCurrentStage}", TipMuted));
+            lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.day_line", new Dictionary<string, string>
+            {
+                ["potId"] = state.PotId,
+                ["stage"] = stage,
+                ["day"] = state.DaysInCurrentStage.ToString()
+            }), TipMuted));
 
             var stageEnum = (PlantStage)state.Stage;
             PlantData careForReq = LabHybridGameplayModifiers.ResolvePlantDataForCareRequirements(state, plantData) ?? plantData;
@@ -1024,58 +1056,71 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             if (req != null)
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("REQUISITI E AVANZAMENTO", TipPhSection, bold: true));
-                lines.Add(new TooltipLine($"  Idratazione   : {req.hydrationMin}–{req.hydrationMax}%", TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.reqs_title"), TipPhSection, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.hydration_req", new Dictionary<string, string>
+                    { ["min"] = req.hydrationMin.ToString(), ["max"] = req.hydrationMax.ToString() }), TipMuted));
                 LedType? reqLed = req.GetRequiredLed();
-                lines.Add(new TooltipLine($"  LED           : {(reqLed.HasValue ? reqLed.Value.ToString() : "nessuno")}", TipMuted));
-                string fertReqLine = $"  Fertilizzante : {req.fertilizerMin}–{req.fertilizerMax}%";
+                string ledReqText = reqLed.HasValue ? reqLed.Value.ToString() : LocalizationManager.GetString("dome_hud.tooltip.led_none");
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.led_req", new Dictionary<string, string>
+                    { ["led"] = ledReqText }), TipMuted));
+                string fertReqCore = LocalizationManager.GetString("dome_hud.tooltip.fert_req", new Dictionary<string, string>
+                    { ["min"] = req.fertilizerMin.ToString(), ["max"] = req.fertilizerMax.ToString() });
                 if (IsFertilizerOptionalForStage(stageEnum))
-                    fertReqLine += " (opzionale Seme/Germoglio)";
-                lines.Add(new TooltipLine(fertReqLine, TipMuted));
-                lines.Add(new TooltipLine($"  Durata        : {req.durationDays} giorni", TipMuted));
+                    fertReqCore += LocalizationManager.GetString("dome_hud.tooltip.fert_optional_suffix");
+                lines.Add(new TooltipLine(fertReqCore, TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.duration", new Dictionary<string, string>
+                    { ["days"] = req.durationDays.ToString() }), TipMuted));
 
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
-                lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%",
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.state_title"), TipPhSection, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.current_hydration", new Dictionary<string, string>
+                    { ["pct"] = hydPct.ToString() }),
                     RangeColor(hydPct, req.hydrationMin, req.hydrationMax)));
                 if (IsFertilizerOptionalForStage(stageEnum))
                 {
                     lines.Add(new TooltipLine(
-                        "  Fertilizzante : non necessario in questo stadio",
+                        LocalizationManager.GetString("dome_hud.tooltip.fert_not_stage"),
                         TipMuted));
                 }
                 else
                 {
                     lines.Add(new TooltipLine(
-                        $"  Fertilizzante : {state.FertilizerLevel}% (necessario)",
+                        LocalizationManager.GetString("dome_hud.tooltip.fert_required", new Dictionary<string, string>
+                            { ["pct"] = state.FertilizerLevel.ToString() }),
                         RangeColor(state.FertilizerLevel, req.fertilizerMin, req.fertilizerMax)));
                 }
 
-                lines.Add(new TooltipLine($"  LED           : {ledStat}",
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.led_line", new Dictionary<string, string>
+                    { ["led"] = ledStat }),
                     LedColor(state.LedSystemState, req.GetRequiredLed())));
-                lines.Add(new TooltipLine($"  Light stress  : {lightStressPct}% (20–80% ideale)",
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.light_stress", new Dictionary<string, string>
+                    { ["pct"] = lightStressPct.ToString() }),
                     LightStressColor(lightStressPct)));
             }
             else
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("STATO ATTUALE", TipPhSection, bold: true));
-                lines.Add(new TooltipLine($"  Idratazione   : {hydPct}%", TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.state_title"), TipPhSection, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.current_hydration", new Dictionary<string, string>
+                    { ["pct"] = hydPct.ToString() }), TipMuted));
                 if (IsFertilizerOptionalForStage(stageEnum))
                 {
                     lines.Add(new TooltipLine(
-                        "  Fertilizzante : non necessario in questo stadio",
+                        LocalizationManager.GetString("dome_hud.tooltip.fert_not_stage"),
                         TipMuted));
                 }
                 else
-                    lines.Add(new TooltipLine($"  Fertilizzante : {state.FertilizerLevel}%", TipMuted));
-                lines.Add(new TooltipLine($"  LED           : {ledStat}", TipMuted));
-                lines.Add(new TooltipLine($"  Light stress  : {lightStressPct}% (20–80% ideale)",
+                    lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.fert_simple", new Dictionary<string, string>
+                        { ["pct"] = state.FertilizerLevel.ToString() }), TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.led_line", new Dictionary<string, string>
+                    { ["led"] = ledStat }), TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.light_stress", new Dictionary<string, string>
+                    { ["pct"] = lightStressPct.ToString() }),
                     LightStressColor(lightStressPct)));
             }
 
             lines.Add(TooltipLine.Sep());
-            lines.Add(new TooltipLine("CONDIZIONE", TipPhSection, bold: true));
+            lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.condition_title"), TipPhSection, bold: true));
             lines.Add(new TooltipLine($"  {cond.ToUpperInvariant()} ({state.ConditionScore}%)  {PlantConditionSystem.GetForecastSymbol((ForecastDirection)state.ForecastDirection)}",
                 ConditionColor(condEnum), bold: true));
             string effectHint = ConditionEffectHint(condEnum);
@@ -1086,24 +1131,26 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             var drivers = BuildConditionDrivers(state, plantData);
             if (drivers.Count > 0)
             {
-                lines.Add(new TooltipLine("  Fattori:", TipMuted));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.factors"), TipMuted));
                 foreach (var (driverText, driverCol) in drivers)
                     lines.Add(new TooltipLine($"    · {driverText}", driverCol));
             }
-            lines.Add(new TooltipLine($"  Giorni ottimali: {state.DaysConsecutiveOptimal}",
+            lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.optimal_days", new Dictionary<string, string>
+                { ["n"] = state.DaysConsecutiveOptimal.ToString() }),
                 state.DaysConsecutiveOptimal > 0 ? TipGreen : TipMuted));
 
             if (state.MoldRiskLevel > 0)
             {
                 lines.Add(TooltipLine.Sep());
                 Color moldCol = state.MoldRiskLevel >= 3 ? TipRed : TipYellow;
-                lines.Add(new TooltipLine($"  ⚠ Rischio muffa: livello {state.MoldRiskLevel}", moldCol, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.mold_risk", new Dictionary<string, string>
+                    { ["lvl"] = state.MoldRiskLevel.ToString() }), moldCol, bold: true));
             }
 
             if (state.IsInfested)
             {
                 if (state.MoldRiskLevel == 0) lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("  ✗ INFESTATA DA MUFFE", TipRed, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.mold_infested"), TipRed, bold: true));
             }
 
             lines.Add(TooltipLine.Sep());
@@ -1130,7 +1177,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             if (!string.IsNullOrWhiteSpace(payload.PassivePowerLabel))
             {
                 lines.Add(TooltipLine.Sep());
-                lines.Add(new TooltipLine("POTERE PASSIVO", TipPhSection, bold: true));
+                lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.cryo_passive"), TipPhSection, bold: true));
                 lines.Add(new TooltipLine($"   {payload.PassivePowerLabel}", TipMuted));
             }
 
@@ -1142,16 +1189,18 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     if (mod.SlotId == slot.SlotId)
                     {
                         lines.Add(TooltipLine.Sep());
-                        lines.Add(new TooltipLine("EFFETTO pH", TipPhCyan, bold: true));
+                        lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.cryo_ph"), TipPhCyan, bold: true));
                         float drift    = mod.DailyDrift;
                         Color driftCol = Mathf.Abs(drift) < 0.01f
                             ? TipMuted
                             : (_phSystem != null
                                 ? PhGradientDisplayColors.GetColorForPhBand(_phSystem.EvaluateState())
                                 : PhGradientDisplayColors.GetColorFromDrift(drift));
-                        lines.Add(new TooltipLine($"   Drift/giorno: {FormatPhDrift(drift)}", driftCol));
+                        lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.drift_day", new Dictionary<string, string>
+                            { ["drift"] = FormatPhDrift(drift) }), driftCol));
                         if (Mathf.Abs(mod.PhCap) > 0.01f)
-                            lines.Add(new TooltipLine($"   Cap pH: {mod.PhCap:F1}", TipMuted));
+                            lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.ph_cap", new Dictionary<string, string>
+                                { ["cap"] = mod.PhCap.ToString("F1") }), TipMuted));
                         break;
                     }
                 }
@@ -1197,14 +1246,14 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         private static string PlantStageLabel(int stage) => stage switch
         {
-            0 => "Vuoto",
-            1 => "Seme",
-            2 => "Germoglio",
-            3 => "Crescita",
-            4 => "Fioritura",
-            5 => "Raccolta",
-            6 => "Riposo",
-            _ => $"Stadio {stage}"
+            0 => LocalizationManager.GetString("dome_hud.stage.empty"),
+            1 => LocalizationManager.GetString("dome_hud.stage.seed"),
+            2 => LocalizationManager.GetString("dome_hud.stage.sprout"),
+            3 => LocalizationManager.GetString("dome_hud.stage.growth"),
+            4 => LocalizationManager.GetString("dome_hud.stage.flowering"),
+            5 => LocalizationManager.GetString("dome_hud.stage.harvest"),
+            6 => LocalizationManager.GetString("dome_hud.stage.rest"),
+            _ => LocalizationManager.GetString("dome_hud.stage.n", new Dictionary<string, string> { ["n"] = stage.ToString() })
         };
 
         // Derives PlantCondition from live ConditionScore using simulation thresholds (80/40/20).
@@ -1236,11 +1285,11 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         private static string ConditionEffectHint(PlantCondition cond) => cond switch
         {
-            PlantCondition.Rigogliosa => "Crescita +20% · Produzione +15%",
-            PlantCondition.Sana       => "Crescita normale",
-            PlantCondition.Appassita  => "Crescita -30% · Avanzamento bloccato",
-            PlantCondition.Critica    => "Avanzamento bloccato · rischio morte",
-            PlantCondition.Morta      => "Nessuna crescita — esegui UPROOT",
+            PlantCondition.Rigogliosa => LocalizationManager.GetString("dome_hud.cond_fx.rigogliosa"),
+            PlantCondition.Sana       => LocalizationManager.GetString("dome_hud.cond_fx.sana"),
+            PlantCondition.Appassita  => LocalizationManager.GetString("dome_hud.cond_fx.appassita"),
+            PlantCondition.Critica    => LocalizationManager.GetString("dome_hud.cond_fx.critica"),
+            PlantCondition.Morta      => LocalizationManager.GetString("dome_hud.cond_fx.morta"),
             _                         => string.Empty,
         };
 
@@ -1259,38 +1308,47 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             if (req != null)
             {
                 if (hydPct < req.hydrationMin)
-                    drivers.Add(($"Idratazione bassa ({hydPct}% / min {req.hydrationMin}%)", TipRed));
+                    drivers.Add((LocalizationManager.GetString("dome_hud.driver.hydration_low", new Dictionary<string, string>
+                        { ["pct"] = hydPct.ToString(), ["min"] = req.hydrationMin.ToString() }), TipRed));
                 else if (hydPct > req.hydrationMax)
-                    drivers.Add(($"Sovra-irrigazione ({hydPct}% / max {req.hydrationMax}%)", TipYellow));
+                    drivers.Add((LocalizationManager.GetString("dome_hud.driver.overwater", new Dictionary<string, string>
+                        { ["pct"] = hydPct.ToString(), ["max"] = req.hydrationMax.ToString() }), TipYellow));
             }
 
             // Fertilizer
             if (!IsFertilizerOptionalForStage(stageEnum) && req != null)
             {
                 if (state.FertilizerLevel < req.fertilizerMin)
-                    drivers.Add(($"Fertilizzante basso ({state.FertilizerLevel}% / min {req.fertilizerMin}%)", TipRed));
+                    drivers.Add((LocalizationManager.GetString("dome_hud.driver.fert_low", new Dictionary<string, string>
+                        { ["pct"] = state.FertilizerLevel.ToString(), ["min"] = req.fertilizerMin.ToString() }), TipRed));
                 else if (state.FertilizerLevel > req.fertilizerMax)
-                    drivers.Add(($"Fertilizzante in eccesso ({state.FertilizerLevel}%)", TipYellow));
+                    drivers.Add((LocalizationManager.GetString("dome_hud.driver.fert_high", new Dictionary<string, string>
+                        { ["pct"] = state.FertilizerLevel.ToString() }), TipYellow));
             }
 
             // Light stress
             int lightStress = GetLightStressPercent(state);
             if (lightStress > 80)
-                drivers.Add(($"Light stress critico ({lightStress}%)", TipRed));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.light_crit", new Dictionary<string, string>
+                    { ["pct"] = lightStress.ToString() }), TipRed));
             else if (lightStress > 50)
-                drivers.Add(($"Light stress elevato ({lightStress}%)", TipYellow));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.light_high", new Dictionary<string, string>
+                    { ["pct"] = lightStress.ToString() }), TipYellow));
 
             // Mold
             if (state.IsInfested)
-                drivers.Add(("INFESTATA DA MUFFE — esegui PRUNE", TipRed));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.mold_prune"), TipRed));
             else if (state.MoldRiskLevel >= 3)
-                drivers.Add(($"Rischio muffa critico (liv. {state.MoldRiskLevel})", TipRed));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.mold_crit", new Dictionary<string, string>
+                    { ["lvl"] = state.MoldRiskLevel.ToString() }), TipRed));
             else if (state.MoldRiskLevel >= 1)
-                drivers.Add(($"Rischio muffa (liv. {state.MoldRiskLevel})", TipYellow));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.mold", new Dictionary<string, string>
+                    { ["lvl"] = state.MoldRiskLevel.ToString() }), TipYellow));
 
             // Neglect streak
             if (state.DaysNeglectedStreak >= 3)
-                drivers.Add(($"Vaso trascurato da {state.DaysNeglectedStreak} giorni", TipYellow));
+                drivers.Add((LocalizationManager.GetString("dome_hud.driver.neglect", new Dictionary<string, string>
+                    { ["days"] = state.DaysNeglectedStreak.ToString() }), TipYellow));
 
             // Return top 3 only
             if (drivers.Count > 3) drivers = drivers.GetRange(0, 3);

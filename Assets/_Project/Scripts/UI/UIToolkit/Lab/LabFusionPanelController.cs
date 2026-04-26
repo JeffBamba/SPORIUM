@@ -208,11 +208,15 @@ namespace Sporae.UI.UIToolkit.Lab
                 _storage = _pipette.GetInventory();
             if (_storage != null)
                 _storage.OnInventoryChanged += RefreshDisplay;
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
         }
 
+        private void OnLanguageChanged(GameLanguage _) => RefreshDisplay();
+
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_storage != null)
                 _storage.OnInventoryChanged -= RefreshDisplay;
             if (_fusionCoroutine != null)
@@ -278,16 +282,16 @@ namespace Sporae.UI.UIToolkit.Lab
             int count = GetMaturedCount();
 
             if (_slot1Text != null)
-                _slot1Text.text = count >= 1 ? "Spora Maturata" : "—";
+                _slot1Text.text = count >= 1 ? LocalizationManager.GetString("lab_fusion.slot_mature") : "—";
             if (_slot2Text != null)
-                _slot2Text.text = count >= 2 ? "Spora Maturata" : "—";
+                _slot2Text.text = count >= 2 ? LocalizationManager.GetString("lab_fusion.slot_mature") : "—";
 
             if (_progressText != null)
             {
                 if (_fusionInProgress)
                 {
                     int pct = Mathf.RoundToInt(_fusionProgress * 100f);
-                    _progressText.text = $"Fusione in corso.. {pct}%";
+                    _progressText.text = LocalizationManager.GetString("lab_fusion.progress", new Dictionary<string, string> { ["pct"] = pct.ToString() });
                     _progressText.style.display = DisplayStyle.Flex;
                 }
                 else
@@ -295,7 +299,9 @@ namespace Sporae.UI.UIToolkit.Lab
             }
 
             if (_outputText != null)
-                _outputText.text = _outputPreSeeds.Count > 0 ? $"Pre-Seed x{_outputPreSeeds.Count}" : "—";
+                _outputText.text = _outputPreSeeds.Count > 0
+                    ? LocalizationManager.GetString("lab_fusion.output_preseed", new Dictionary<string, string> { ["count"] = _outputPreSeeds.Count.ToString() })
+                    : "—";
 
             if (_btnRitira != null)
                 _btnRitira.SetEnabled(_outputPreSeeds.Count > 0);

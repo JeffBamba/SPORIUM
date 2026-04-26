@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using _Project.Sporae.Core;
 using System;
 using System.Linq;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.NotificationsFoundation
 {
@@ -35,12 +36,14 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         private VisualElement _badge;
         private Label _badgeText;
         private Label _chevron;
+        private Label _headerTitleLabel;
         private VisualElement _list;
         private VisualElement _toastTooltip;
         private Label _toastTooltipLabel;
 
         private RowUI[] _rows = new RowUI[5];
         private bool _expanded;
+        private bool _languageSubscribed;
 
         private void Awake()
         {
@@ -62,7 +65,14 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (_service != null)
                 _service.OnChanged += Refresh;
 
+            if (!_languageSubscribed)
+            {
+                GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
+                _languageSubscribed = true;
+            }
+
             SetupUI();
+            ApplyLocalizedHeaderTitle();
             _expanded = _startExpanded;
             ApplyExpandedState();
             Refresh();
@@ -72,6 +82,19 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         {
             if (_service != null)
                 _service.OnChanged -= Refresh;
+            if (_languageSubscribed)
+            {
+                GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+                _languageSubscribed = false;
+            }
+        }
+
+        private void OnLanguageChanged(GameLanguage _) => ApplyLocalizedHeaderTitle();
+
+        private void ApplyLocalizedHeaderTitle()
+        {
+            if (_headerTitleLabel != null)
+                _headerTitleLabel.text = LocalizationManager.GetString("notifications.title");
         }
 
         private void Update()
@@ -105,6 +128,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             _badgeText = _root.Q<Label>("nf-badge-text");
             _chevron = _root.Q<Label>("nf-chevron");
             _list = _root.Q<VisualElement>("nf-list");
+            _headerTitleLabel = _root.Q<Label>("nf-header-title");
 
             _toastTooltip = new VisualElement();
             _toastTooltip.AddToClassList("nf-toast-tooltip");

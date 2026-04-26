@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using _Project;
@@ -5,6 +6,7 @@ using _Project.Sporae.Core;
 using _Project.Systems.FoodRoom;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.FoodRoom
 {
@@ -87,7 +89,14 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 BindAndSubscribe();
             if (_gameManager?.PlayerInventory != null)
                 _gameManager.PlayerInventory.OnInventoryChanged += OnPlayerInventoryChanged;
+            GameLanguageSettings.OnLanguageChanged += OnLanguageChanged;
             Hide();
+        }
+
+        private void OnLanguageChanged(GameLanguage _)
+        {
+            ApplyLocalizedFoodRoomStaticChrome();
+            Refresh();
         }
 
         private void OnPlayerInventoryChanged()
@@ -151,6 +160,86 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_btnPurifyMinus != null) _btnPurifyMinus.clicked += OnPurifyAmountDecrease;
             if (_btnPurifyPlus != null) _btnPurifyPlus.clicked += OnPurifyAmountIncrease;
             if (_btnHarvest != null) _btnHarvest.clicked += OnHarvest;
+
+            ApplyLocalizedFoodRoomStaticChrome();
+        }
+
+        private void ApplyLocalizedFoodRoomStaticChrome()
+        {
+            if (_root == null)
+                return;
+
+            var status = _root.Q<Label>("status");
+            if (status != null) status.text = LocalizationManager.GetString("food_room.chrome.header_status");
+            var title = _root.Q<Label>("title");
+            if (title != null) title.text = LocalizationManager.GetString("food_room.chrome.title");
+            var subtitle = _root.Q<Label>("subtitle");
+            if (subtitle != null) subtitle.text = LocalizationManager.GetString("food_room.chrome.subtitle");
+
+            var chambersTitleRow = _root.Q<VisualElement>("chambers-title-row");
+            var chambersTitle = chambersTitleRow?.Q<Label>(className: "section-title");
+            if (chambersTitle != null) chambersTitle.text = LocalizationManager.GetString("food_room.chrome.section_growth");
+
+            void SetChamberCard(VisualElement card, string nameKey, string detailsKey, string descKey)
+            {
+                if (card == null) return;
+                var nm = card.Q<Label>(className: "chamber-name");
+                if (nm != null) nm.text = LocalizationManager.GetString(nameKey);
+                var det = card.Q<Label>(className: "chamber-details");
+                if (det != null) det.text = LocalizationManager.GetString(detailsKey);
+                var desc = card.Q<Label>(className: "chamber-desc");
+                if (desc != null) desc.text = LocalizationManager.GetString(descKey);
+                var progLab = card.Q<Label>(className: "chamber-progress-label");
+                if (progLab != null) progLab.text = LocalizationManager.GetString("food_room.chrome.progress_label");
+            }
+
+            SetChamberCard(_chamberVegetal, "food_room.chrome.veg_name", "food_room.chrome.veg_details", "food_room.chrome.veg_desc");
+            SetChamberCard(_chamberFungal, "food_room.chrome.fung_name", "food_room.chrome.fung_details", "food_room.chrome.fung_desc");
+            SetChamberCard(_chamberMeat, "food_room.chrome.meat_name", "food_room.chrome.meat_details", "food_room.chrome.meat_desc");
+
+            var hydrationTitleRow = _root.Q<VisualElement>("hydration-title-row");
+            var hydrationSectionTitle = hydrationTitleRow?.Q<Label>(className: "section-title");
+            if (hydrationSectionTitle != null) hydrationSectionTitle.text = LocalizationManager.GetString("food_room.chrome.section_hydration");
+
+            var hydrationLabel = _root.Q<Label>("hydration-label");
+            if (hydrationLabel != null) hydrationLabel.text = LocalizationManager.GetString("food_room.chrome.hydration_label");
+            var hydrationFlavor = _root.Q<Label>("hydration-flavor");
+            if (hydrationFlavor != null) hydrationFlavor.text = LocalizationManager.GetString("food_room.chrome.hydration_flavor");
+
+            var unitsRow = _root.Q<VisualElement>("hydration-units-row");
+            var unitsCaption = unitsRow?.Q<Label>(className: "hydration-units-label");
+            if (unitsCaption != null) unitsCaption.text = LocalizationManager.GetString("food_room.chrome.units_label");
+
+            var residualPanel = _root.Q<VisualElement>("residual-protein-panel");
+            var residualTitle = residualPanel?.Q<Label>(className: "residual-protein-title");
+            if (residualTitle != null) residualTitle.text = LocalizationManager.GetString("food_room.chrome.residual_title");
+            var residualHint = _root.Q<Label>("residual-protein-hint");
+            if (residualHint != null) residualHint.text = LocalizationManager.GetString("food_room.chrome.residual_hint");
+
+            var comment = _root.Q<Label>("comment-text");
+            if (comment != null) comment.text = LocalizationManager.GetString("food_room.chrome.comment");
+
+            var lifeRow = _root.Q<VisualElement>("life-support-title-row");
+            var lifeTitle = lifeRow?.Q<Label>(className: "section-title");
+            if (lifeTitle != null) lifeTitle.text = LocalizationManager.GetString("food_room.chrome.section_life_support");
+
+            var indE = _root.Q<Label>("ind-electricity");
+            if (indE != null) indE.text = LocalizationManager.GetString("food_room.chrome.ls_electric");
+            var indC = _root.Q<Label>("ind-coretemp");
+            if (indC != null) indC.text = LocalizationManager.GetString("food_room.chrome.ls_core_temp");
+            var indR = _root.Q<Label>("ind-reservoir");
+            if (indR != null) indR.text = LocalizationManager.GetString("food_room.chrome.ls_reservoir");
+            var indN = _root.Q<Label>("ind-nutrient");
+            if (indN != null) indN.text = LocalizationManager.GetString("food_room.chrome.ls_nutrient");
+
+            var maintRow = _root.Q<VisualElement>("life-support-maintenance");
+            var maintCaption = maintRow?.Q<Label>(className: "life-support-label");
+            if (maintCaption != null) maintCaption.text = LocalizationManager.GetString("food_room.chrome.ls_maint_label");
+            var maintVal = _root.Q<Label>("ind-maintenance");
+            if (maintVal != null) maintVal.text = LocalizationManager.GetString("food_room.chrome.ls_maint_value");
+
+            if (_btnStartGrowth != null) _btnStartGrowth.text = LocalizationManager.GetString("food_room.chrome.btn_start");
+            if (_btnHarvest != null) _btnHarvest.text = LocalizationManager.GetString("food_room.chrome.btn_harvest");
         }
 
         private void OnStemCellSlotClick()
@@ -158,7 +247,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             var allowed = new[] { Items.StemCellVegetable, Items.StemCellFungus, Items.StemCellAnimal };
             if (_playerInventoryPanel != null)
             {
-                _playerInventoryPanel.ShowAsPicker(allowed, "Seleziona cellula staminale", OnStemCellSelected, () => { });
+                _playerInventoryPanel.ShowAsPicker(allowed, LocalizationManager.GetString("food_room.picker_stem_title"), OnStemCellSelected, () => { });
                 return;
             }
             SporiumLogger.LogWarning(LogCategory.Core, "FoodRoomPanel: PlayerInventoryPanel non assegnato per picker stem cell.");
@@ -168,7 +257,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         {
             _selectedStemCellTypeId = typeId;
             if (_stemCellLabel != null)
-                _stemCellLabel.text = "CELLULA STAMINALE SELEZIONATA";
+                _stemCellLabel.text = LocalizationManager.GetString("food_room.stem_selected");
             Refresh();
         }
 
@@ -200,7 +289,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (ok)
             {
                 _selectedStemCellTypeId = null;
-                if (_stemCellLabel != null) _stemCellLabel.text = "INSERISCI CELLULA STAMINALE";
+                if (_stemCellLabel != null) _stemCellLabel.text = LocalizationManager.GetString("food_room.stem_insert");
             }
             Refresh();
         }
@@ -279,7 +368,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_overlay != null) _overlay.style.display = DisplayStyle.Flex;
             _selectedChamberType = FoodProductionType.None;
             _selectedStemCellTypeId = null;
-            if (_stemCellLabel != null) _stemCellLabel.text = "INSERISCI CELLULA STAMINALE";
+            if (_stemCellLabel != null) _stemCellLabel.text = LocalizationManager.GetString("food_room.stem_insert");
             /* Counter unità acqua a 0 all'apertura (così al ritorno dopo una purificazione completata si vede 0) */
             if (_foodRoom != null && !_foodRoom.WaterSlot.IsActive)
                 _purifyAmount = 0;
@@ -330,20 +419,27 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             {
                 int totalDays = _config.GetDaysFor(displaySlot.Type);
                 int elapsed = displaySlot.State == SlotState.Ready ? totalDays : (totalDays - displaySlot.DaysRemaining);
-                if (_tankStatus != null) _tankStatus.text = displaySlot.State == SlotState.Ready ? "PRONTO PER LA RACCOLTA" : "COLTIVAZIONE IN CORSO";
-                if (_tankMessage != null) _tankMessage.text = displaySlot.State == SlotState.Ready ? "Raccogli la biomassa dal pannello." : "Proliferazione cellulare in corso…";
-                if (_prodTimer != null) _prodTimer.text = $"TIMER CRESCITA: {elapsed} / {totalDays} giorni";
+                if (_tankStatus != null) _tankStatus.text = displaySlot.State == SlotState.Ready
+                    ? LocalizationManager.GetString("food_room.tank.ready")
+                    : LocalizationManager.GetString("food_room.tank.growing");
+                if (_tankMessage != null) _tankMessage.text = displaySlot.State == SlotState.Ready
+                    ? LocalizationManager.GetString("food_room.tank.msg_ready")
+                    : LocalizationManager.GetString("food_room.tank.msg_growing");
+                if (_prodTimer != null) _prodTimer.text = LocalizationManager.GetString("food_room.timer_growth", new Dictionary<string, string>
+                    { ["elapsed"] = elapsed.ToString(), ["total"] = totalDays.ToString() });
                 int cryPerDay = _config.GetCryPerDayFor(displaySlot.Type);
-                if (_prodEnergy != null) _prodEnergy.text = displaySlot.State == SlotState.Growing ? $"COSTO ENERGIA: +{cryPerDay} CRY/giorno" : "COSTO ENERGIA: 0 CRY";
-                if (_prodQuality != null) _prodQuality.text = "QUALITÀ BIOMASSA: comune";
+                if (_prodEnergy != null) _prodEnergy.text = displaySlot.State == SlotState.Growing
+                    ? LocalizationManager.GetString("food_room.energy_growing", new Dictionary<string, string> { ["cry"] = cryPerDay.ToString() })
+                    : LocalizationManager.GetString("food_room.energy_zero");
+                if (_prodQuality != null) _prodQuality.text = LocalizationManager.GetString("food_room.quality_common");
             }
             else
             {
-                if (_tankStatus != null) _tankStatus.text = "SERBATOI DI CRESCITA INATTIVI";
-                if (_tankMessage != null) _tankMessage.text = "Seleziona un protocollo di sintesi per avviare il ciclo di crescita.";
-                if (_prodTimer != null) _prodTimer.text = "TIMER CRESCITA: inattivo";
-                if (_prodEnergy != null) _prodEnergy.text = "COSTO ENERGIA: 0 CRY";
-                if (_prodQuality != null) _prodQuality.text = "QUALITÀ BIOMASSA: N/D";
+                if (_tankStatus != null) _tankStatus.text = LocalizationManager.GetString("food_room.tank.inactive");
+                if (_tankMessage != null) _tankMessage.text = LocalizationManager.GetString("food_room.tank.msg_idle");
+                if (_prodTimer != null) _prodTimer.text = LocalizationManager.GetString("food_room.timer_inactive");
+                if (_prodEnergy != null) _prodEnergy.text = LocalizationManager.GetString("food_room.energy_zero");
+                if (_prodQuality != null) _prodQuality.text = LocalizationManager.GetString("food_room.quality_na");
             }
 
             if (_indElectricity != null) _indElectricity.text = "87.1%";
@@ -358,7 +454,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_btnStartGrowth != null)
             {
                 _btnStartGrowth.SetEnabled(canStart);
-                _btnStartGrowth.tooltip = (!canStart && anyGrowing) ? "Un processo è già attivo" : null;
+                _btnStartGrowth.tooltip = (!canStart && anyGrowing) ? LocalizationManager.GetString("food_room.tooltip_process_busy") : null;
             }
 
             bool hasWater = _gameManager != null && _gameManager.PlayerInventory != null && _gameManager.PlayerInventory.Has(Items.Water, 1);
@@ -370,7 +466,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             {
                 if (showCollectButton)
                 {
-                    _btnPurify.text = "💧 RACCOGLI";
+                    _btnPurify.text = LocalizationManager.GetString("food_room.btn_collect");
                     if (waterReadyToCollect)
                     {
                         _btnPurify.SetEnabled(true);
@@ -384,7 +480,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 }
                 else
                 {
-                    _btnPurify.text = "💧 POTABILIZZA ACQUA";
+                    _btnPurify.text = LocalizationManager.GetString("food_room.btn_purify");
                     _btnPurify.SetEnabled(canPurify);
                     if (canPurify) _btnPurify.AddToClassList("btn-purify--enabled");
                     else _btnPurify.RemoveFromClassList("btn-purify--enabled");
@@ -410,7 +506,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_bottomHint != null)
             {
                 _bottomHint.style.display = (showProgressBlock || showWaterProgressBlock) ? DisplayStyle.None : DisplayStyle.Flex;
-                _bottomHint.text = "Seleziona una camera di crescita per avviare la coltivazione";
+                _bottomHint.text = LocalizationManager.GetString("food_room.hint_chamber");
             }
 
             if (_cultivationProgressBlock != null)
@@ -431,7 +527,9 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 {
                     var label = _cultivationProgressBlock.Q<Label>("cultivation-progress-label");
                     if (label != null)
-                        label.text = anyReady && !anyGrowing ? "Pronto per la raccolta" : "Coltivazione in corso";
+                        label.text = anyReady && !anyGrowing
+                            ? LocalizationManager.GetString("food_room.bar_food_ready")
+                            : LocalizationManager.GetString("food_room.bar_food_growing");
                 }
             }
 
@@ -449,7 +547,9 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 _waterProgressFill.style.width = new Length(Mathf.Clamp01(totalProgress) * 100f, LengthUnit.Percent);
                 var wLabel = _waterProgressBlock?.Q<Label>("water-progress-label");
                 if (wLabel != null)
-                    wLabel.text = (waterReadyToCollectForBar && !waterInProgress) ? "Pronto per la raccolta" : "Potabilizzazione in corso";
+                    wLabel.text = (waterReadyToCollectForBar && !waterInProgress)
+                        ? LocalizationManager.GetString("food_room.bar_water_ready")
+                        : LocalizationManager.GetString("food_room.bar_water_progress");
             }
 
             /* KitchenHome: active chamber card (usa displaySlot per evidenziare quale camera è attiva/ready) */
@@ -565,6 +665,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
         private void OnDestroy()
         {
+            GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_gameManager?.PlayerInventory != null)
                 _gameManager.PlayerInventory.OnInventoryChanged -= OnPlayerInventoryChanged;
         }
