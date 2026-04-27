@@ -269,6 +269,7 @@ namespace _Project.Systems.SeedStorage
                 return false;
             }
 
+            var movedDetails = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in items)
             {
                 if (!inv.TryRemoveExactItem(item, out var removed) || removed == null)
@@ -277,8 +278,19 @@ namespace _Project.Systems.SeedStorage
                     return false;
                 }
                 PlaceItem(removed);
+                string typeId = removed.TypeId ?? "?";
+                if (movedDetails.TryGetValue(typeId, out int current))
+                    movedDetails[typeId] = current + 1;
+                else
+                    movedDetails[typeId] = 1;
             }
 
+            var dayLog = ServiceContainer.Instance?.Get<DayActivityLog>(suppressWarning: true);
+            if (dayLog != null)
+            {
+                string detail = string.Join(", ", movedDetails.Select(kv => $"{kv.Key} x{kv.Value}"));
+                dayLog.RecordSeedStorageAction("Deposit", items.Count, detail);
+            }
             StorageChanged?.Invoke();
             return true;
         }
@@ -309,6 +321,8 @@ namespace _Project.Systems.SeedStorage
             }
 
             var inv = _gameManager.PlayerInventory;
+            var movedDetails = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            int withdrawnCount = 0;
             foreach (var idx in distinct)
             {
                 var list = _slots[idx];
@@ -317,11 +331,25 @@ namespace _Project.Systems.SeedStorage
                 foreach (var u in list.ToList())
                 {
                     if (u.Item != null)
+                    {
                         inv.Add(u.Item);
+                        withdrawnCount++;
+                        string typeId = u.Item.TypeId ?? "?";
+                        if (movedDetails.TryGetValue(typeId, out int current))
+                            movedDetails[typeId] = current + 1;
+                        else
+                            movedDetails[typeId] = 1;
+                    }
                 }
                 _slots[idx] = null;
             }
 
+            var dayLog = ServiceContainer.Instance?.Get<DayActivityLog>(suppressWarning: true);
+            if (dayLog != null && withdrawnCount > 0)
+            {
+                string detail = string.Join(", ", movedDetails.Select(kv => $"{kv.Key} x{kv.Value}"));
+                dayLog.RecordSeedStorageAction("Withdraw", withdrawnCount, detail);
+            }
             StorageChanged?.Invoke();
             return true;
         }

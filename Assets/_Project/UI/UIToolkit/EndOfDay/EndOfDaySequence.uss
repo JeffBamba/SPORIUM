@@ -1,285 +1,348 @@
-/*
-Sequenza Fine giornata — Stile terminale / olografico
-Dipendenze: SP-Foundation.uss, SP-Panel-Base.uss
-*/
-
 .eod-root {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  flex-grow: 1;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-grow: 1;
 }
 
 .eod-overlay {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
 }
 
-/* Step 1: Conferma modale */
 .eod-modal {
-  min-width: 360px;
-  max-width: 420px;
-  background-color: var(--sp-bg-panel-dark);
-  border-width: 2px;
-  border-color: var(--sp-color-blue-info);
-  border-radius: var(--sp-radius-md);
-  padding: var(--sp-space-xl);
-  flex-direction: column;
-  align-items: center;
+    min-width: 360px;
+    max-width: 420px;
+    background-color: var(--sp-bg-panel-dark);
+    border-width: 2px;
+    border-color: var(--sp-color-blue-info);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-xl);
+    flex-direction: column;
+    align-items: center;
 }
 
 .eod-step1 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.eod-step2, .eod-step3, .eod-step4, .eod-step5, .eod-step6, .eod-step7, .eod-step8 {
-  display: none;
-  flex-direction: column;
-  align-items: stretch;
+.eod-step2 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-/* Full-screen steps (6 Hibernation, 7 Day transition) */
+.eod-step3 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.eod-step4 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.eod-step5 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.eod-step6 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.eod-step7 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.eod-step8 {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .eod-fullscreen {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgb(0, 0, 0);
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(0, 0, 0);
+    align-items: center;
+    justify-content: center;
 }
 
 .eod-hibernation-main {
-  font-size: var(--sp-font-size-22);
-  color: var(--sp-color-green-led);
-  letter-spacing: var(--sp-letter-wide);
-  margin-bottom: var(--sp-space-sm);
+    font-size: var(--sp-font-size-22);
+    color: var(--sp-color-green-led);
+    letter-spacing: var(--sp-letter-wide);
+    margin-bottom: var(--sp-space-sm);
 }
 
 .eod-hibernation-sub {
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-text-muted);
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-text-muted);
 }
 
 .eod-day-from {
-  font-size: var(--sp-font-size-18);
-  color: var(--sp-color-blue-info);
-  letter-spacing: var(--sp-letter-wide);
-  margin-bottom: var(--sp-space-sm);
+    font-size: var(--sp-font-size-18);
+    color: var(--sp-color-blue-info);
+    letter-spacing: var(--sp-letter-wide);
+    margin-bottom: var(--sp-space-sm);
 }
 
 .eod-day-to {
-  font-size: var(--sp-font-size-18);
-  color: var(--sp-color-green-led);
-  letter-spacing: var(--sp-letter-wide);
+    font-size: var(--sp-font-size-18);
+    color: var(--sp-color-green-led);
+    letter-spacing: var(--sp-letter-wide);
 }
 
-/* Pannelli scrollabili (Step 2, 3, 5, 6) — allargati per ridurre scrolling verticale */
 .eod-panel {
-  min-width: 560px;
-  max-width: 720px;
-  max-height: 90%;
-  background-color: var(--sp-bg-panel-dark);
-  border-width: 2px;
-  border-radius: var(--sp-radius-md);
-  padding: var(--sp-space-lg);
+    min-width: 720px;
+    max-width: 900px;
+    max-height: 90%;
+    background-color: var(--sp-bg-panel-dark);
+    border-width: 2px;
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-lg);
 }
 
 .eod-panel--green {
-  border-color: var(--sp-color-green-led);
+    border-color: var(--sp-color-green-led);
 }
 
 .eod-panel--cyan {
-  border-color: var(--sp-color-blue-info);
+    border-color: var(--sp-color-blue-info);
 }
 
 .eod-scroll {
-  flex-grow: 1;
-  min-height: 420px;
-  max-height: 520px;
-  margin-bottom: var(--sp-space-md);
-  -unity-text-align: upper-left;
+    flex-grow: 1;
+    min-height: 520px;
+    max-height: 620px;
+    margin-bottom: var(--sp-space-md);
+    -unity-text-align: upper-left;
 }
 
 .eod-panel-title {
-  font-size: var(--sp-font-size-20);
-  color: var(--sp-color-green-led);
-  -unity-font-style: bold;
-  letter-spacing: var(--sp-letter-wide);
-  margin-bottom: var(--sp-space-md);
+    font-size: var(--sp-font-size-20);
+    color: var(--sp-color-green-led);
+    -unity-font-style: bold;
+    letter-spacing: var(--sp-letter-wide);
+    margin-bottom: var(--sp-space-md);
 }
 
-.eod-step5 .eod-panel-title,
+.eod-snapshot-header {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    margin-bottom: var(--sp-space-sm);
+}
+
+.eod-snapshot-title-inline {
+    margin-bottom: 0;
+    margin-right: var(--sp-space-md);
+}
+
+.eod-snapshot-meta {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.eod-snapshot-meta-line {
+    margin-bottom: 0;
+    margin-right: 6px;
+    white-space: nowrap;
+}
+
+.eod-snapshot-meta-sep {
+    color: var(--sp-color-text-muted);
+    font-size: var(--sp-font-size-12);
+    margin-left: 2px;
+    margin-right: 8px;
+}
+
+.eod-step5 .eod-panel-title {
+    color: var(--sp-color-blue-info);
+}
+
 .eod-step8 .eod-panel-title {
-  color: var(--sp-color-blue-info);
+    color: var(--sp-color-blue-info);
 }
 
 .eod-line {
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-text-muted);
-  margin-bottom: var(--sp-space-xs);
-  white-space: normal;
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-text-muted);
+    margin-bottom: var(--sp-space-xs);
+    white-space: normal;
 }
 
 .eod-block {
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-text);
-  margin-top: var(--sp-space-sm);
-  margin-bottom: var(--sp-space-sm);
-  white-space: normal;
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-text);
+    margin-top: var(--sp-space-sm);
+    margin-bottom: var(--sp-space-sm);
+    white-space: normal;
 }
 
 .eod-footer {
-  font-size: var(--sp-font-size-10);
-  color: var(--sp-color-text-muted);
-  margin-top: var(--sp-space-lg);
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-text-muted);
+    margin-top: var(--sp-space-lg);
 }
 
 .eod-title {
-  font-size: var(--sp-font-size-24);
-  color: var(--sp-color-blue-info);
-  -unity-font-style: bold;
-  letter-spacing: var(--sp-letter-wide);
-  margin-bottom: var(--sp-space-lg);
+    font-size: var(--sp-font-size-24);
+    color: var(--sp-color-blue-info);
+    -unity-font-style: bold;
+    letter-spacing: var(--sp-letter-wide);
+    margin-bottom: var(--sp-space-lg);
 }
 
 .eod-desc {
-  font-size: var(--sp-font-size-14);
-  color: var(--sp-color-text-muted);
-  margin-bottom: var(--sp-space-sm);
-  white-space: normal;
+    font-size: var(--sp-font-size-14);
+    color: var(--sp-color-text-muted);
+    margin-bottom: var(--sp-space-sm);
+    white-space: normal;
 }
 
 .eod-buttons {
-  flex-direction: row;
-  margin-top: var(--sp-space-xl);
-  align-items: center;
-  justify-content: center;
+    flex-direction: row;
+    margin-top: var(--sp-space-xl);
+    align-items: center;
+    justify-content: center;
 }
 
 .eod-btn {
-  min-width: 100px;
-  margin-left: var(--sp-space-md);
-  margin-right: var(--sp-space-md);
-  padding: var(--sp-space-sm) var(--sp-space-lg);
-  font-size: var(--sp-font-size-14);
-  -unity-font-style: bold;
+    min-width: 100px;
+    margin-left: var(--sp-space-md);
+    margin-right: var(--sp-space-md);
+    padding: var(--sp-space-sm) var(--sp-space-lg);
+    font-size: var(--sp-font-size-14);
+    -unity-font-style: bold;
 }
 
 .eod-cta {
-  margin-top: var(--sp-space-md);
-  margin-left: 0;
-  margin-right: 0;
+    margin-top: var(--sp-space-md);
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .eod-btn--yes {
-  background-color: transparent;
-  border-width: 2px;
-  border-color: var(--sp-color-green-led);
-  color: var(--sp-color-green-led);
+    background-color: transparent;
+    border-width: 2px;
+    border-color: var(--sp-color-green-led);
+    color: var(--sp-color-green-led);
 }
 
 .eod-btn--no {
-  background-color: transparent;
-  border-width: 2px;
-  border-color: var(--sp-line-strong);
-  color: var(--sp-color-text-muted);
+    background-color: transparent;
+    border-width: 2px;
+    border-color: var(--sp-line-strong);
+    color: var(--sp-color-text-muted);
 }
 
 .eod-btn--research {
-  background-color: transparent;
-  border-width: 2px;
-  border-color: var(--sp-color-yellow-standard);
-  color: var(--sp-color-yellow-standard);
-  margin-bottom: var(--sp-space-sm);
-  min-width: 280px;
+    background-color: transparent;
+    border-width: 2px;
+    border-color: var(--sp-color-yellow-standard);
+    color: var(--sp-color-yellow-standard);
+    margin-bottom: var(--sp-space-sm);
+    min-width: 280px;
 }
 
-/* Step 8: Dawn Summary — parametri + tooltip */
 .eod-step8 {
-  position: relative;
+    position: relative;
 }
 
 .eod-dawn-params-list {
-  flex-direction: column;
-  margin-top: var(--sp-space-md);
-  margin-bottom: var(--sp-space-lg);
-  min-height: 160px;
+    flex-direction: column;
+    margin-top: var(--sp-space-md);
+    margin-bottom: var(--sp-space-lg);
+    min-height: 160px;
 }
 
 .eod-dawn-row {
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: var(--sp-space-sm);
-  padding: var(--sp-space-xs) 0;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--sp-space-sm);
+    padding: var(--sp-space-xs) 0;
 }
 
 .eod-dawn-icon {
-  width: 24px;
-  margin-right: var(--sp-space-sm);
-  color: var(--sp-color-blue-info);
-  font-size: var(--sp-font-size-14);
+    width: 24px;
+    margin-right: var(--sp-space-sm);
+    color: var(--sp-color-blue-info);
+    font-size: var(--sp-font-size-14);
 }
 
 .eod-dawn-param-text {
-  flex-grow: 1;
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-text);
+    flex-grow: 1;
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-text);
 }
 
 .eod-dawn-qmark {
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-blue-info);
-  margin-left: var(--sp-space-sm);
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-blue-info);
+    margin-left: var(--sp-space-sm);
 }
 
 .eod-dawn-tooltip {
-  position: absolute;
-  min-width: 280px;
-  max-width: 360px;
-  background-color: var(--sp-bg-panel-dark);
-  border-width: 2px;
-  border-color: var(--sp-color-yellow-standard);
-  border-radius: var(--sp-radius-sm);
-  padding: var(--sp-space-md);
-  flex-direction: column;
+    position: absolute;
+    min-width: 280px;
+    max-width: 360px;
+    background-color: var(--sp-bg-panel-dark);
+    border-width: 2px;
+    border-color: var(--sp-color-yellow-standard);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-md);
+    flex-direction: column;
 }
 
 .eod-dawn-tooltip-title {
-  font-size: var(--sp-font-size-12);
-  color: var(--sp-color-yellow-standard);
-  -unity-font-style: bold;
-  letter-spacing: var(--sp-letter-wide);
-  margin-bottom: var(--sp-space-xs);
+    font-size: var(--sp-font-size-12);
+    color: var(--sp-color-yellow-standard);
+    -unity-font-style: bold;
+    letter-spacing: var(--sp-letter-wide);
+    margin-bottom: var(--sp-space-xs);
 }
 
 .eod-dawn-tooltip-desc {
-  font-size: var(--sp-font-size-11);
-  color: var(--sp-color-text);
-  margin-bottom: var(--sp-space-sm);
-  white-space: normal;
+    font-size: var(--sp-font-size-11);
+    color: var(--sp-color-text);
+    margin-bottom: var(--sp-space-sm);
+    white-space: normal;
 }
 
 .eod-dawn-tooltip-tip {
-  font-size: var(--sp-font-size-11);
-  color: var(--sp-color-green-led);
-  white-space: normal;
+    font-size: var(--sp-font-size-11);
+    color: var(--sp-color-green-led);
+    white-space: normal;
 }
 
 .eod-dawn-press-key {
-  font-size: var(--sp-font-size-10);
-  color: var(--sp-color-text-muted);
-  margin-top: var(--sp-space-md);
-  align-self: flex-end;
+    font-size: var(--sp-font-size-10);
+    color: var(--sp-color-text-muted);
+    margin-top: var(--sp-space-md);
+    align-self: flex-end;
 }

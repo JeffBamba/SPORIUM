@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
+using Sporae.Dome.PotSystem.Growth;
 
 namespace _Project
 {
@@ -39,6 +40,20 @@ namespace _Project
             public int Cell003Out;
         }
 
+        /// <summary>Voce avanzamento crescita pianta per recap Snapshot.</summary>
+        public struct PlantStageChangeEntry
+        {
+            public string PotId;
+            public PlantStage NewStage;
+        }
+
+        public struct SeedStorageEntry
+        {
+            public string Action;
+            public int Count;
+            public string Detail;
+        }
+
         private readonly List<string> _potIdsWateringTurnedOn = new();
         private readonly List<string> _potIdsWateringTurnedOff = new();
         private readonly List<string> _potIdsWithDomeActionStarted = new();
@@ -46,6 +61,8 @@ namespace _Project
         private readonly List<HarvestEntry> _harvests = new();
         private readonly List<string> _labActionTypes = new();
         private readonly List<LabActivityEntry> _labEntries = new();
+        private readonly List<PlantStageChangeEntry> _stageChanges = new();
+        private readonly List<SeedStorageEntry> _seedStorageEntries = new();
 
         private readonly DayCycleSystem _dayCycleSystem;
 
@@ -53,12 +70,14 @@ namespace _Project
         {
             _dayCycleSystem = ServiceContainer.Instance.Get<DayCycleSystem>();
             _dayCycleSystem.OnDayChanged += Clear;
+            PotEvents.OnPlantStageChanged += RecordPlantStageChanged;
         }
 
         ~DayActivityLog()
         {
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= Clear;
+            PotEvents.OnPlantStageChanged -= RecordPlantStageChanged;
         }
 
         public void Clear(int _)
@@ -70,6 +89,20 @@ namespace _Project
             _harvests.Clear();
             _labActionTypes.Clear();
             _labEntries.Clear();
+            _stageChanges.Clear();
+            _seedStorageEntries.Clear();
+        }
+
+        private void RecordPlantStageChanged(string potId, PlantStage newStage)
+        {
+            if (string.IsNullOrEmpty(potId))
+                return;
+
+            _stageChanges.Add(new PlantStageChangeEntry
+            {
+                PotId = potId,
+                NewStage = newStage
+            });
         }
 
         /// <summary>
@@ -136,6 +169,19 @@ namespace _Project
             _labEntries.Add(entry);
         }
 
+        public void RecordSeedStorageAction(string action, int count, string detail)
+        {
+            if (string.IsNullOrWhiteSpace(action))
+                return;
+
+            _seedStorageEntries.Add(new SeedStorageEntry
+            {
+                Action = action.Trim(),
+                Count = Math.Max(0, count),
+                Detail = detail ?? string.Empty
+            });
+        }
+
         public IReadOnlyList<string> PotIdsWateringTurnedOnThisDay => _potIdsWateringTurnedOn;
         public IReadOnlyList<string> PotIdsWateringTurnedOffThisDay => _potIdsWateringTurnedOff;
         public IReadOnlyList<string> PotIdsWithDomeActionStartedThisDay => _potIdsWithDomeActionStarted;
@@ -143,5 +189,7 @@ namespace _Project
         public IReadOnlyList<HarvestEntry> HarvestsThisDay => _harvests;
         public IReadOnlyList<string> LabActionTypesThisDay => _labActionTypes;
         public IReadOnlyList<LabActivityEntry> LabEntriesThisDay => _labEntries;
+        public IReadOnlyList<PlantStageChangeEntry> StageChangesThisDay => _stageChanges;
+        public IReadOnlyList<SeedStorageEntry> SeedStorageEntriesThisDay => _seedStorageEntries;
     }
 }

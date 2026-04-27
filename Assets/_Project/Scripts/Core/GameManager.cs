@@ -42,6 +42,8 @@ public class GameManager : MonoBehaviour
     private DeteriorationSystem _deteriorationSystem;
     private DayCycleSystem _dayCycleSystem;
     private PlayerHydrationSystem _playerHydrationSystem;
+    private float _hydrationAtDayStartPercent = 100f;
+    private float _hydrationLostTodayPercent;
     private FoodRoomSystem _foodRoomSystem;
     private SeedStorageSystem _seedStorageSystem;
     private ItemConsumptionHandler _itemConsumptionHandler;
@@ -77,6 +79,7 @@ public class GameManager : MonoBehaviour
     public int ConsecutiveDaysWithoutMeal => _consecutiveDaysWithoutMeal;
     public int StarvationDaysAtMinCapWithoutFood => _starvationDaysAtMinCapWithoutFood;
     public bool AteMealSincePreviousDawn => _ateMealSincePreviousDawn;
+    public float HydrationLostTodayPercent => Mathf.Max(0f, _hydrationLostTodayPercent);
 
     /// <summary>Chiamato quando il player consuma cibo solido o frutta (non solo acqua).</summary>
     public void NotifySolidFoodConsumed()
@@ -308,6 +311,8 @@ public class GameManager : MonoBehaviour
         _playerHydrationSystem = new PlayerHydrationSystem();
         if (isDemo)
             _playerHydrationSystem.SetHydrationPercent(75f);
+        _playerHydrationSystem.OnHydrationChangedDetailed += HandleHydrationChangedDetailed;
+        ResetHydrationDayTracking();
         _foodRoomSystem = new FoodRoomSystem(_playerInventory, this);
         _seedStorageSystem = new SeedStorageSystem(this);
         _itemConsumptionHandler = new ItemConsumptionHandler(_playerInventory, _playerHydrationSystem, this);
@@ -418,6 +423,7 @@ public class GameManager : MonoBehaviour
             return;
 
         _actionSystem.ResetActions(daily);
+        ResetHydrationDayTracking();
 
 #if UNITY_EDITOR
         if (_showDebugLogs)
@@ -583,6 +589,25 @@ public class GameManager : MonoBehaviour
 #endif
         }
     }
+
+    private void HandleHydrationChangedDetailed(float current, float max, HydrationChangeSource source)
+    {
+        float clampedCurrent = Mathf.Clamp(current, 0f, 100f);
+        _hydrationLostTodayPercent = Mathf.Max(0f, _hydrationAtDayStartPercent - clampedCurrent);
+    }
+
+    private void ResetHydrationDayTracking()
+    {
+        if (_playerHydrationSystem == null)
+        {
+            _hydrationAtDayStartPercent = 100f;
+            _hydrationLostTodayPercent = 0f;
+            return;
+        }
+
+        _hydrationAtDayStartPercent = Mathf.Clamp(_playerHydrationSystem.HydrationPercent, 0f, 100f);
+        _hydrationLostTodayPercent = 0f;
+    }
     
     private void OnDestroy()
     {
@@ -596,6 +621,8 @@ public class GameManager : MonoBehaviour
         {
             _dayCycleSystem.OnDayChanged -= HandleDayChanged;
         }
+        if (_playerHydrationSystem != null)
+            _playerHydrationSystem.OnHydrationChangedDetailed -= HandleHydrationChangedDetailed;
         _itemConsumptionHandler?.Unsubscribe();
     }
     

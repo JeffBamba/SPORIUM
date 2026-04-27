@@ -12,6 +12,7 @@ using Sporae.Core.Localization;
 using Sporae.DevTools;
 using Sporae.Dome;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.Dome.PotSystem.Condition;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.FoodRoom;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
@@ -48,6 +49,8 @@ namespace _Project
         private NightEventsGenerator _nightEventsGenerator;
         private WikiUnlockService _wikiUnlockService;
         private DayCycleController _dayCycleController;
+        private MissionManager _missionManager;
+        private DomePotRegistry _potRegistry;
 
         private bool _bound;
         private VisualElement _eodVisualTreeBoundRoot;
@@ -84,6 +87,8 @@ namespace _Project
             _nightEventsGenerator = ServiceContainer.Instance?.Get<NightEventsGenerator>(suppressWarning: true);
             _wikiUnlockService = ServiceContainer.Instance?.Get<WikiUnlockService>(suppressWarning: true);
             _dayCycleController = FindObjectOfType<DayCycleController>();
+            _missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            _potRegistry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
         }
 
         private void OnEnable()
@@ -308,8 +313,27 @@ namespace _Project
             if (el != null) el.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private const string PlaceholderOpen = "<color=#FFA500>";
-        private const string PlaceholderClose = "</color>";
+        private const string ColorGood = "#7FFF7A";
+        private const string ColorWarn = "#FFB347";
+        private const string ColorBad = "#FF6B6B";
+        private const string ColorInfo = "#7FD9FF";
+        private const string ColorMuted = "#9AA7B0";
+
+        private struct SnapshotMetrics
+        {
+            public int Day;
+            public int ActionsUsed;
+            public int ActionsMax;
+            public int CryEarned;
+            public int CrySpent;
+            public int CurrentCry;
+            public int HarvestCount;
+            public int WaterCount;
+            public int StageChangesCount;
+            public int ActiveAlerts;
+            public int ActiveMissionCount;
+            public int CompletedMissionCount;
+        }
 
         private void PopulateSnapshot()
         {
@@ -327,191 +351,516 @@ namespace _Project
                 });
             if (_snapshotPh != null) _snapshotPh.text = phLine;
 
+            var metrics = CollectSnapshotMetrics(day);
+            string trendLabel = BuildTrendLabel(metrics);
+            string trendColor = trendLabel == "MEGLIO" ? ColorGood : trendLabel == "PEGGIO" ? ColorBad : trendLabel == "SIMILE" ? ColorInfo : ColorWarn;
+            string trendRich = $"<color={trendColor}><b>{trendLabel}</b></color>";
+
+            if (_snapshotVault != null)
+            {
+                _snapshotVault.enableRichText = true;
+                _snapshotVault.text = $"Stato Vault: operativo  •  Trend vs ieri: {trendRich}";
+            }
+
+            var conditions = _dayCycleController != null
+                ? _dayCycleController.GetActiveConditionsForReport()
+                : new List<(string PotId, int MoldRiskLevel, bool IsInfested)>();
+
+            var alerts = BuildCriticalAlerts(conditions);
+            string previousNightResearch = BuildPreviousNightResearchSummary(day);
+            string narrative = BuildNarrativeParagraph(metrics, alerts, previousNightResearch);
+
             var sb = new StringBuilder();
-            if (_diaryStatistics != null)
-            {
-                int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
-                sb.AppendLine(LocalizationManager.GetString("eod.snapshot_actions", new Dictionary<string, string>
-                {
-                    ["used"] = _diaryStatistics.ActionsSpent.ToString(),
-                    ["max"] = max.ToString()
-                }));
-                sb.AppendLine(LocalizationManager.GetString("eod.snapshot_cry", new Dictionary<string, string>
-                {
-                    ["earned"] = _diaryStatistics.CryEarned.ToString(),
-                    ["spent"] = _diaryStatistics.CrySpent.ToString()
-                }));
-                if (_gameManager != null)
-                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_balance", new Dictionary<string, string> { ["cry"] = _gameManager.CurrentCRY.ToString() }));
-            }
-            if (_dayActivityLog != null)
-            {
-                var harvests = _dayActivityLog.HarvestsThisDay;
-                var domeEntries = _dayActivityLog.DomeEntriesThisDay;
-                var labEntries = _dayActivityLog.LabEntriesThisDay;
-
-                if (harvests.Count > 0)
-                {
-                    var byPlant = new Dictionary<string, (int total, int level)>();
-                    foreach (var h in harvests)
-                    {
-                        string key = $"{h.PlantCode}|{h.Level}";
-                        if (!byPlant.TryGetValue(key, out var t))
-                            t = (0, h.Level);
-                        byPlant[key] = (t.total + h.Amount, h.Level);
-                    }
-                    var harvestParts = new List<string>();
-                    foreach (var kv in byPlant.OrderBy(x => x.Key))
-                    {
-                        string plantCode = kv.Key.Split('|')[0];
-                        int level = kv.Value.level;
-                        int amount = kv.Value.total;
-                        string displayName = PlantDatabase.Instance?.GetPlantDataByCode(plantCode)?.name ?? plantCode;
-                        harvestParts.Add($"{amount} {displayName} (L{level})");
-                    }
-                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_harvest", new Dictionary<string, string> { ["list"] = string.Join(", ", harvestParts) }));
-                }
-
-                var waterPots = new List<string>();
-                foreach (var e in domeEntries)
-                {
-                    if (e.ActionKind == "Water" && !string.IsNullOrEmpty(e.PotId))
-                        waterPots.Add(LocalizationManager.GetString("eod.snapshot_pot_prefix", new Dictionary<string, string> { ["n"] = FormatPotNumber(e.PotId) }));
-                }
-                if (waterPots.Count > 0)
-                    sb.AppendLine(LocalizationManager.GetString("eod.snapshot_water", new Dictionary<string, string> { ["list"] = string.Join(", ", waterPots.Distinct()) }));
-
-                var bestPerPot = new Dictionary<string, DayActivityLog.DomeActivityEntry>();
-                int actionPriority(string k) => k == "Plant" ? 5 : k == "Water" ? 4 : k == "Light" ? 3 : k == "Fertilize" ? 2 : k == "Pruning" ? 1 : 0;
-                foreach (var e in domeEntries)
-                {
-                    if (string.IsNullOrEmpty(e.PotId)) continue;
-                    if (e.ActionKind == "Water") continue;
-                    if (!bestPerPot.TryGetValue(e.PotId, out var existing) || actionPriority(e.ActionKind) > actionPriority(existing.ActionKind))
-                        bestPerPot[e.PotId] = e;
-                }
-                foreach (var e in bestPerPot.Values)
-                {
-                    string potNum = FormatPotNumber(e.PotId);
-                    string plantName = !string.IsNullOrEmpty(e.PlantDisplayName) ? e.PlantDisplayName : e.PlantCode ?? "?";
-                    string line = e.ActionKind == "Plant"
-                        ? LocalizationManager.GetString("eod.snapshot_plant", new Dictionary<string, string> { ["plant"] = plantName, ["pot"] = potNum })
-                        : e.ActionKind == "Light"
-                        ? LocalizationManager.GetString("eod.snapshot_light", new Dictionary<string, string> { ["pot"] = potNum })
-                        : e.ActionKind == "Fertilize"
-                        ? LocalizationManager.GetString("eod.snapshot_fertilize", new Dictionary<string, string> { ["pot"] = potNum })
-                        : e.ActionKind == "Pruning"
-                        ? LocalizationManager.GetString("eod.snapshot_prune", new Dictionary<string, string> { ["pot"] = potNum })
-                        : e.ActionKind == "Started"
-                        ? LocalizationManager.GetString("eod.snapshot_started", new Dictionary<string, string> { ["pot"] = potNum })
-                        : null;
-                    if (line != null)
-                        sb.AppendLine(line);
-                }
-                foreach (var e in labEntries)
-                {
-                    if (e.LabType == "Extractor" && !string.IsNullOrEmpty(e.InputDescription))
-                    {
-                        var parts = new List<string>();
-                        if (e.SporeOut > 0) parts.Add($"{e.SporeOut} spore");
-                        if (e.Cell001Out > 0) parts.Add($"{e.Cell001Out} Cell001");
-                        if (e.Cell002Out > 0) parts.Add($"{e.Cell002Out} Cell002");
-                        if (e.Cell003Out > 0) parts.Add($"{e.Cell003Out} Cell003");
-                        string extracted = parts.Count > 0 ? string.Join(", ", parts) : LocalizationManager.GetString("eod.lab_extract_fallback");
-                        sb.AppendLine(LocalizationManager.GetString("eod.lab_extractor", new Dictionary<string, string>
-                        {
-                            ["out"] = extracted,
-                            ["input"] = e.InputDescription
-                        }));
-                    }
-                    else if (e.LabType == "Fusion")
-                    {
-                        string sporeDesc = !string.IsNullOrEmpty(e.InputDescription) ? e.InputDescription : LocalizationManager.GetString("eod.lab_two_spores");
-                        sb.AppendLine(LocalizationManager.GetString("eod.lab_fusion", new Dictionary<string, string> { ["desc"] = sporeDesc }));
-                    }
-                    else
-                        sb.AppendLine(LocalizationManager.GetString("eod.lab_generic", new Dictionary<string, string> { ["lab"] = e.LabType }));
-                }
-            }
-
+            sb.AppendLine("<b><color=#7FD9FF>SNAPSHOT OPERATIVO</color></b>");
+            sb.AppendLine(narrative);
             sb.AppendLine();
-            if (_dayCycleController != null)
+            sb.AppendLine("<b><color=#7FD9FF>[ ] ALERT</color></b>");
+            if (alerts.Count > 0)
             {
-                var conditions = _dayCycleController.GetActiveConditionsForReport();
-                if (conditions.Count > 0)
-                {
-                    sb.AppendLine(LocalizationManager.GetString("eod.conditions_header"));
-                    foreach (var c in conditions)
-                    {
-                        string severity = c.IsInfested
-                            ? LocalizationManager.GetString("eod.sev_infest")
-                            : (c.MoldRiskLevel >= 2
-                                ? LocalizationManager.GetString("eod.sev_mold_high")
-                                : LocalizationManager.GetString("eod.sev_mold_low"));
-                        sb.AppendLine(LocalizationManager.GetString("eod.condition_line", new Dictionary<string, string>
-                        {
-                            ["pot"] = FormatPotNumber(c.PotId),
-                            ["sev"] = severity
-                        }));
-                    }
-                }
+                foreach (var alert in alerts)
+                    sb.AppendLine($"• <color={ColorBad}>{alert}</color>");
             }
+            else
+            {
+                sb.AppendLine($"• <color={ColorGood}>Nessun alert critico attivo.</color>");
+            }
+            sb.AppendLine();
+            sb.AppendLine("<b><color=#7FD9FF>[ ] PANORAMICA STANZE</color></b>");
+            AppendDomeSection(sb, conditions);
+            sb.AppendLine();
+            AppendKitchenSection(sb);
+            sb.AppendLine();
+            AppendBiologoSection(sb);
+            sb.AppendLine();
+            AppendInventorySection(sb);
+            sb.AppendLine();
+            AppendSeedStorageSection(sb);
 
             string activityStr = sb.Length > 0 ? sb.ToString().TrimEnd() : LocalizationManager.GetString("eod.activity_none");
             if (_activitySummary != null)
             {
                 _activitySummary.enableRichText = true;
                 _activitySummary.text = "";
-                StartCoroutine(Typewriter(_activitySummary, activityStr));
+                StartCoroutine(TerminalChunkReveal(_activitySummary, activityStr));
             }
+
+            if (_drift != null)
+                _drift.style.display = DisplayStyle.None;
+            if (_notes != null)
+                _notes.style.display = DisplayStyle.None;
+
+            if (_diaryStatistics != null)
+            {
+                _diaryStatistics.StorePreviousSnapshot(new DiaryStatistics.SnapshotMetricsData
+                {
+                    Day = metrics.Day,
+                    ActionsUsed = metrics.ActionsUsed,
+                    ActionsMax = metrics.ActionsMax,
+                    CryEarned = metrics.CryEarned,
+                    CrySpent = metrics.CrySpent,
+                    CurrentCry = metrics.CurrentCry,
+                    HarvestCount = metrics.HarvestCount,
+                    WaterCount = metrics.WaterCount,
+                    StageChangesCount = metrics.StageChangesCount,
+                    ActiveAlerts = metrics.ActiveAlerts,
+                    ActiveMissionCount = metrics.ActiveMissionCount,
+                    CompletedMissionCount = metrics.CompletedMissionCount
+                });
+            }
+        }
+
+        private SnapshotMetrics CollectSnapshotMetrics(int day)
+        {
+            int harvestCount = _dayActivityLog?.HarvestsThisDay?.Count ?? 0;
+            int waterCount = _dayActivityLog?.PotIdsWateringTurnedOnThisDay?.Count ?? 0;
+            int stageChanges = _dayActivityLog?.StageChangesThisDay?.Count ?? 0;
+            int actionsMax = _gameManager?.ActionSystem?.MaxActions ?? 5;
+
+            int alerts = 0;
+            if (_gameManager?.SeedStorageSystem != null && !_gameManager.SeedStorageSystem.IsOn)
+                alerts++;
+            if (_gameManager?.FoodRoomSystem != null && !_gameManager.FoodRoomSystem.PantryIsOn)
+                alerts++;
+            if (_dayCycleController != null)
+                alerts += _dayCycleController.GetActiveConditionsForReport().Count(c => c.IsInfested || c.MoldRiskLevel >= 2);
+
+            return new SnapshotMetrics
+            {
+                Day = day,
+                ActionsUsed = _diaryStatistics?.ActionsSpent ?? 0,
+                ActionsMax = actionsMax,
+                CryEarned = _diaryStatistics?.CryEarned ?? 0,
+                CrySpent = _diaryStatistics?.CrySpent ?? 0,
+                CurrentCry = _gameManager?.CurrentCRY ?? 0,
+                HarvestCount = harvestCount,
+                WaterCount = waterCount,
+                StageChangesCount = stageChanges,
+                ActiveAlerts = alerts,
+                ActiveMissionCount = _missionManager?.CurrentMissions.Count ?? 0,
+                CompletedMissionCount = _missionManager?.CompletedMissions.Count ?? 0
+            };
+        }
+
+        private string BuildTrendLabel(SnapshotMetrics current)
+        {
+            if (_diaryStatistics == null || !_diaryStatistics.TryGetPreviousSnapshot(out var previous))
+                return "N/D";
+
+            float CurrentScore(int cryEarned, int crySpent, int harvestCount, int stageChangesCount, int actionsUsed, int activeAlerts) =>
+                (cryEarned - crySpent) +
+                (harvestCount * 2f) +
+                (stageChangesCount * 1.5f) +
+                (actionsUsed * 0.5f) -
+                (activeAlerts * 2.5f);
+
+            float delta =
+                CurrentScore(current.CryEarned, current.CrySpent, current.HarvestCount, current.StageChangesCount, current.ActionsUsed, current.ActiveAlerts) -
+                CurrentScore(previous.CryEarned, previous.CrySpent, previous.HarvestCount, previous.StageChangesCount, previous.ActionsUsed, previous.ActiveAlerts);
+            if (delta > 1.5f) return "MEGLIO";
+            if (delta < -1.5f) return "PEGGIO";
+            return "SIMILE";
+        }
+
+        private List<string> BuildCriticalAlerts(IReadOnlyList<(string PotId, int MoldRiskLevel, bool IsInfested)> conditions)
+        {
+            var alerts = new List<string>();
+            if (_gameManager?.SeedStorageSystem != null && !_gameManager.SeedStorageSystem.IsOn)
+                alerts.Add("Seed Storage spento: gli item conservati possono deperire.");
+            if (_gameManager?.FoodRoomSystem != null && !_gameManager.FoodRoomSystem.PantryIsOn)
+                alerts.Add("Dispensa refrigerata spenta: il cibo può deteriorarsi.");
+
+            if (conditions != null)
+            {
+                foreach (var c in conditions.Where(x => x.IsInfested || x.MoldRiskLevel >= 2))
+                {
+                    string reason = c.IsInfested ? "infestazione attiva" : "rischio muffa alto";
+                    alerts.Add($"POT {FormatPotNumber(c.PotId)}: {reason}.");
+                }
+            }
+
+            int fixedTomorrowCost = ComputeEstimatedFixedCostsForTomorrow();
+            if (_gameManager != null && _gameManager.CurrentCRY < fixedTomorrowCost)
+                alerts.Add($"CRY insufficienti per coprire i costi fissi stimati di domani ({fixedTomorrowCost}).");
+
+            return alerts;
+        }
+
+        private string BuildPreviousNightResearchSummary(int currentDay)
+        {
+            int previousDay = Mathf.Max(1, currentDay - 1);
+            if (_wikiUnlockService != null && _wikiUnlockService.TryGetNightResearchForDay(previousDay, out var branch))
+            {
+                if (string.Equals(branch, "Historical", System.StringComparison.OrdinalIgnoreCase))
+                    return "Archivio storico";
+                if (string.Equals(branch, "Botanical", System.StringComparison.OrdinalIgnoreCase))
+                    return "Database botanico";
+                if (string.Equals(branch, "Vault", System.StringComparison.OrdinalIgnoreCase))
+                    return "Protocolli Vault";
+                return branch;
+            }
+
+            return "nessuna ricerca registrata";
+        }
+
+        private string BuildNarrativeParagraph(SnapshotMetrics metrics, IReadOnlyList<string> alerts, string previousNightResearch)
+        {
+            var text = new StringBuilder();
+            text.Append($"Giorno {metrics.Day}: hai usato {metrics.ActionsUsed}/{metrics.ActionsMax} azioni, ");
+            text.Append($"con <color={ColorGood}>+{metrics.CryEarned} CRY</color> in entrata e <color={ColorWarn}>-{metrics.CrySpent} CRY</color> in uscita. ");
+            text.Append($"Nel Dome risultano {metrics.HarvestCount} raccolti, {metrics.WaterCount} irrigazioni e {metrics.StageChangesCount} avanzamenti di stadio. ");
+            text.Append($"Missioni: {metrics.ActiveMissionCount} attive / {metrics.CompletedMissionCount} completate totali. ");
+            text.Append($"Ricerca della notte precedente: <color={ColorInfo}>{previousNightResearch}</color>. ");
+            text.Append(alerts.Count > 0
+                ? $"Sono presenti <color={ColorBad}>{alerts.Count} alert</color>."
+                : $"Nessun alert critico rilevato.");
+            return text.ToString();
+        }
+
+        private IEnumerator TerminalChunkReveal(Label label, string fullText)
+        {
+            if (label == null || string.IsNullOrEmpty(fullText))
+                yield break;
+
+            label.text = string.Empty;
+            string[] lines = fullText.Split('\n');
+            var finalOutput = new StringBuilder();
+            float minTick = 0.018f;
+            float maxTick = 0.055f;
+
+            bool IsSectionHeader(string line)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    return false;
+                return line.Contains("<b><color=#7FD9FF>") || line.StartsWith("<b>");
+            }
+
+            string BuildMaskedLine(string source, int visibleCount)
+            {
+                // Mantieni intatti i tag rich text; "rivela" solo il testo effettivo.
+                var outLine = new StringBuilder();
+                int shown = 0;
+                bool inTag = false;
+                for (int i = 0; i < source.Length; i++)
+                {
+                    char ch = source[i];
+                    if (ch == '<')
+                    {
+                        inTag = true;
+                        outLine.Append(ch);
+                        continue;
+                    }
+                    if (inTag)
+                    {
+                        outLine.Append(ch);
+                        if (ch == '>')
+                            inTag = false;
+                        continue;
+                    }
+
+                    if (shown < visibleCount)
+                    {
+                        outLine.Append(ch);
+                        shown++;
+                    }
+                    else
+                        break;
+                }
+
+                return outLine.ToString();
+            }
+
+            int VisibleTextLength(string source)
+            {
+                int len = 0;
+                bool inTag = false;
+                for (int i = 0; i < source.Length; i++)
+                {
+                    char ch = source[i];
+                    if (ch == '<')
+                    {
+                        inTag = true;
+                        continue;
+                    }
+                    if (inTag)
+                    {
+                        if (ch == '>')
+                            inTag = false;
+                        continue;
+                    }
+                    len++;
+                }
+                return len;
+            }
+
+            for (int lineIdx = 0; lineIdx < lines.Length; lineIdx++)
+            {
+                string line = lines[lineIdx];
+                int lineLen = VisibleTextLength(line);
+
+                // Header: quasi istantaneo, blocco unico.
+                if (IsSectionHeader(line) || string.IsNullOrWhiteSpace(line))
+                {
+                    finalOutput.Append(line);
+                    if (lineIdx < lines.Length - 1)
+                        finalOutput.Append('\n');
+                    label.text = finalOutput.ToString();
+                    yield return new WaitForSeconds(UnityEngine.Random.Range(minTick, maxTick));
+                    continue;
+                }
+
+                // Corpo: reveal "DOS" a gruppi (2-3-4-6 char) con piccoli scatti.
+                int visible = 0;
+                while (visible < lineLen)
+                {
+                    int chunk = UnityEngine.Random.Range(2, 7);
+                    visible = Mathf.Min(lineLen, visible + chunk);
+
+                    var preview = new StringBuilder(finalOutput.ToString());
+                    preview.Append(BuildMaskedLine(line, visible));
+                    if (lineIdx < lines.Length - 1)
+                        preview.Append('\n');
+                    label.text = preview.ToString();
+
+                    yield return new WaitForSeconds(UnityEngine.Random.Range(minTick, maxTick));
+                }
+
+                finalOutput.Append(line);
+                if (lineIdx < lines.Length - 1)
+                    finalOutput.Append('\n');
+                label.text = finalOutput.ToString();
+            }
+        }
+
+        private int ComputeEstimatedFixedCostsForTomorrow()
+        {
+            int total = 0;
+            var endDayButton = FindObjectOfType<EndDayButton>();
+            total += endDayButton != null ? endDayButton.GetDailyPowerCost() : (_dayCycleSystem?.DailyPowerCost ?? 20);
+
+            if (_gameManager?.SeedStorageSystem != null)
+                total += _gameManager.SeedStorageSystem.ComputeDailyCryCost();
+
+            if (_gameManager?.FoodRoomSystem != null)
+            {
+                var food = _gameManager.FoodRoomSystem;
+                if (food.FoodSynthIsOn)
+                    total += food.FoodSynthDailyCost;
+                if (food.PantryIsOn)
+                    total += food.PantryDailyCost;
+            }
+
+            return total;
+        }
+
+        private void AppendDomeSection(StringBuilder sb, IReadOnlyList<(string PotId, int MoldRiskLevel, bool IsInfested)> conditions)
+        {
+            sb.AppendLine($"<b><color={ColorInfo}>[ ] Dome</color></b>");
+            string phText = _phSystem != null ? $"{_phSystem.CurrentPh:F1} ({_phSystem.GetBandName()})" : "—";
+            sb.AppendLine($"• Andamento pH: <color={ColorInfo}><b>{phText}</b></color>");
+            sb.AppendLine("• Avvenimenti nella Dome:");
+
+            int lines = 0;
+            if (_potRegistry != null)
+            {
+                var pots = _potRegistry.GetPotsSnapshot();
+                foreach (var pot in pots)
+                {
+                    if (pot == null || pot.PotActions?.PotState == null)
+                        continue;
+
+                    var state = pot.PotActions.PotState;
+                    if (!state.HasPlant || state.Stage == (int)PlantStage.Empty)
+                        continue;
+
+                    string plantName = PlantDatabase.Instance?.GetPlantDataByCode(state.PlantCode)?.name ?? state.PlantCode ?? "Pianta";
+                    string stageNow = ((PlantStage)state.Stage).ToString();
+                    string stagePrev = state.Stage > (int)PlantStage.Seed ? ((PlantStage)(state.Stage - 1)).ToString() : stageNow;
+                    string conditionName = PlantConditionSystem.GetConditionName((PlantCondition)state.ConditionLabel);
+
+                    int stressPct = Mathf.Clamp(Mathf.RoundToInt(state.GetConsecutiveLedDays() / 5f * 100f), 0, 100);
+                    string stressAdvice = stressPct >= 80
+                        ? $"<color={ColorWarn}>Light Stress {stressPct}%: se non cambi LED, rischio light burn domani.</color>"
+                        : stressPct >= 40
+                            ? $"Light Stress {stressPct}%: monitorare LED."
+                            : "Stress luce sotto soglia critica.";
+
+                    sb.AppendLine($"  - {plantName} in POT-{FormatPotNumber(state.PotId)}: {stagePrev} → <color={ColorGood}><b>{stageNow}</b></color>, condizione <color={ColorInfo}>{conditionName}</color>. {stressAdvice}");
+                    lines++;
+                }
+            }
+
+            if (lines == 0)
+                sb.AppendLine($"  - <color={ColorMuted}>Nessun evento Dome rilevante nel giorno appena passato.</color>");
 
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
-            string phDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
-            string phTrendLine = _phSystem != null
-                ? LocalizationManager.GetString("eod.drift_ph", new Dictionary<string, string>
+            string driftText = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
+            sb.AppendLine("• Conseguenze previste:");
+            sb.AppendLine($"  - Deriva pH prevista domani: <color={ColorWarn}><b>{driftText}</b></color>");
+            if (conditions != null && conditions.Count > 0)
+            {
+                var risky = conditions.Where(c => c.IsInfested || c.MoldRiskLevel >= 2)
+                    .Select(c => $"POT-{FormatPotNumber(c.PotId)}")
+                    .Distinct()
+                    .ToList();
+                if (risky.Count > 0)
+                    sb.AppendLine($"  - Alert biologici attivi su: <color={ColorBad}><b>{string.Join(", ", risky)}</b></color>");
+            }
+        }
+
+        private void AppendKitchenSection(StringBuilder sb)
+        {
+            sb.AppendLine($"<b><color={ColorInfo}>[ ] Cucina</color></b>");
+            var food = _gameManager?.FoodRoomSystem;
+            if (food == null)
+            {
+                sb.AppendLine("• Sistema cucina non disponibile.");
+                return;
+            }
+
+            string prep = "nessuna";
+            var growing = food.ProductionSlots.FirstOrDefault(s => s != null && s.State == SlotState.Growing);
+            if (growing != null)
+            {
+                prep = growing.Type == FoodProductionType.Meat ? "Carne sintetica" :
+                    growing.Type == FoodProductionType.Fungus ? "Funghi" :
+                    growing.Type == FoodProductionType.Vegetable ? "Ortaggi" : "Produzione";
+                prep += $" ({growing.DaysRemaining} giorno/i rimanenti)";
+            }
+
+            string waterStatus = !food.WaterSlot.IsActive ? "no" : "sì";
+            int pantryTotal = food.GetPantryQuantity(FoodProductionType.Vegetable) + food.GetPantryQuantity(FoodProductionType.Fungus) + food.GetPantryQuantity(FoodProductionType.Meat);
+            string pantryState = food.PantryIsOn ? $"ON, {pantryTotal} item conservati" : "OFF (rischio deperimento)";
+
+            sb.AppendLine($"• Preparazione in corso: <color={ColorInfo}><b>{prep}</b></color>");
+            sb.AppendLine($"• Potabilizzazione in corso: <color={(food.WaterSlot.IsActive ? ColorWarn : ColorGood)}><b>{waterStatus}</b></color>");
+            sb.AppendLine($"• Dispensa Refrigerata: <color={(food.PantryIsOn ? ColorGood : ColorBad)}><b>{pantryState}</b></color>");
+        }
+
+        private void AppendBiologoSection(StringBuilder sb)
+        {
+            sb.AppendLine($"<b><color={ColorInfo}>[ ] Biologo</color></b>");
+            float hydration = _gameManager?.PlayerHydrationSystem?.HydrationPercent ?? -1f;
+            float hydrationLostToday = _gameManager?.HydrationLostTodayPercent ?? -1f;
+            int actions = _gameManager?.ActionsLeft ?? 0;
+            int maxActions = _gameManager?.ActionSystem?.MaxActions ?? 0;
+            bool ateMeal = _gameManager != null && _gameManager.AteMealSincePreviousDawn;
+            int noMealDays = _gameManager?.ConsecutiveDaysWithoutMeal ?? 0;
+            int daysUntilMalus = Mathf.Max(0, 2 - noMealDays);
+
+            string hydrationText = hydration < 0f ? "—" : $"{hydration:F0}%";
+            string hydrationLostText = hydrationLostToday < 0f ? "—" : $"{hydrationLostToday:F0}%";
+            string eatText = ateMeal ? "ha mangiato oggi" : "non ha mangiato oggi";
+            string malusText = ateMeal ? "nessun malus fame previsto domani" : (daysUntilMalus == 0 ? "malus fame al prossimo giorno se non mangia" : $"mangiare entro {daysUntilMalus} giorno/i per evitare malus");
+
+            sb.AppendLine($"• Condizioni biologo: Idratazione <color={ColorInfo}><b>{hydrationText}</b></color> | Azioni <color={ColorInfo}><b>{actions}/{maxActions}</b></color>");
+            sb.AppendLine($"• Idratazione persa oggi: <color={(hydrationLostToday > 0f ? ColorWarn : ColorGood)}><b>{hydrationLostText}</b></color>");
+            sb.AppendLine($"• Nutrizione: <color={(ateMeal ? ColorGood : ColorWarn)}><b>{eatText}</b></color>");
+            sb.AppendLine($"• Finestra sicurezza fame: <color={(ateMeal ? ColorGood : ColorWarn)}>{malusText}</color>");
+        }
+
+        private void AppendInventorySection(StringBuilder sb)
+        {
+            sb.AppendLine($"<b><color={ColorInfo}>[ ] Inventario</color></b>");
+            string overview = BuildInventorySummary();
+            int deteriorating = CountLowQualityItemsInInventory();
+            sb.AppendLine($"• Overview item: <color={ColorInfo}>{overview}</color>");
+            sb.AppendLine(deteriorating > 0
+                ? $"• Item in deperimento: <color={ColorWarn}><b>{deteriorating}</b></color>"
+                : $"• Item in deperimento: <color={ColorGood}><b>nessuno</b></color>");
+        }
+
+        private void AppendSeedStorageSection(StringBuilder sb)
+        {
+            sb.AppendLine($"<b><color={ColorInfo}>[ ] Seed Storage</color></b>");
+            var ss = _gameManager?.SeedStorageSystem;
+            if (ss == null)
+            {
+                sb.AppendLine("• Sistema non disponibile.");
+                return;
+            }
+
+            int occupied = 0;
+            var occupiedDetails = new List<string>();
+            for (int i = 0; i < SeedStorageSystem.SlotCount; i++)
+            {
+                if (!ss.IsSlotUnlocked(i) || ss.SlotIsEmpty(i))
+                    continue;
+
+                occupied++;
+                string typeId = ss.GetSlotTypeId(i) ?? "?";
+                int qty = ss.GetSlotQuantity(i);
+                occupiedDetails.Add($"S{i + 1}:{typeId} x{qty}");
+            }
+
+            string statusText = ss.IsOn ? "OK" : "OFF (rischio deperimento)";
+            string statusColor = ss.IsOn ? ColorGood : ColorBad;
+            sb.AppendLine($"• Stato: <color={statusColor}><b>{statusText}</b></color>");
+            sb.AppendLine($"• Slot occupati: <color={ColorInfo}><b>{occupied}/{SeedStorageSystem.SlotCount}</b></color>");
+            sb.AppendLine($"• Dettaglio: <color={(occupiedDetails.Count > 0 ? ColorInfo : ColorMuted)}>{(occupiedDetails.Count > 0 ? string.Join(", ", occupiedDetails) : "nessuno")}</color>");
+            AppendSeedStorageDayTransfers(sb);
+        }
+
+        private void AppendSeedStorageDayTransfers(StringBuilder sb)
+        {
+            var entries = _dayActivityLog?.SeedStorageEntriesThisDay;
+            if (entries == null || entries.Count == 0)
+            {
+                sb.AppendLine($"• Operazioni giornata: <color={ColorMuted}>nessuna</color>");
+                return;
+            }
+
+            foreach (var entry in entries)
+            {
+                string verb = string.Equals(entry.Action, "Deposit", System.StringComparison.OrdinalIgnoreCase)
+                    ? "Depositati"
+                    : string.Equals(entry.Action, "Withdraw", System.StringComparison.OrdinalIgnoreCase)
+                        ? "Prelevati"
+                        : entry.Action;
+                sb.AppendLine($"• Operazioni giornata: <color={ColorInfo}>{verb} {entry.Count} item ({entry.Detail})</color>");
+            }
+        }
+
+        private int CountLowQualityItemsInInventory()
+        {
+            var inv = _gameManager?.PlayerInventory;
+            if (inv == null)
+                return 0;
+
+            int count = 0;
+            foreach (var slot in inv.Items)
+            {
+                if (slot == null)
+                    continue;
+
+                foreach (var item in slot.Items)
                 {
-                    ["ph"] = _phSystem.CurrentPh.ToString("F1"),
-                    ["band"] = _phSystem.GetBandName(),
-                    ["drift"] = phDriftStr
-                })
-                : LocalizationManager.GetString("eod.drift_ph_empty");
-
-            var driftSb = new StringBuilder();
-            driftSb.AppendLine(LocalizationManager.GetString("eod.drift_title"));
-            driftSb.AppendLine(phTrendLine);
-            driftSb.AppendLine(LocalizationManager.GetString("eod.drift_breathe"));
-            driftSb.AppendLine(PlaceholderOpen + LocalizationManager.GetString("eod.drift_placeholder") + PlaceholderClose);
-            if (_drift != null)
-            {
-                _drift.enableRichText = true;
-                _drift.text = driftSb.ToString().TrimEnd();
+                    if (item?.ItemConfig == null)
+                        continue;
+                    if (item.Quality <= 1f)
+                        count++;
+                }
             }
-
-            var notesSb = new StringBuilder();
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_header"));
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_inventory", new Dictionary<string, string> { ["v"] = BuildInventorySummary() }));
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_seed", new Dictionary<string, string> { ["v"] = BuildSeedStorageSummary() }));
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_research"));
-            notesSb.AppendLine();
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_food", new Dictionary<string, string> { ["v"] = BuildKitchenFoodSummary() }));
-            notesSb.AppendLine(LocalizationManager.GetString("eod.notes_water", new Dictionary<string, string> { ["v"] = BuildPotableWaterSummary() }));
-            notesSb.AppendLine();
-            notesSb.Append(LocalizationManager.GetString("eod.notes_warning_label"));
-            if (_dayCycleController != null)
-            {
-                var moldPots = _dayCycleController.GetActiveConditionsForReport().Select(c => FormatPotNumber(c.PotId)).Distinct().ToList();
-                if (moldPots.Count > 0)
-                    notesSb.Append(LocalizationManager.GetString("eod.notes_mold", new Dictionary<string, string> { ["list"] = string.Join(", ", moldPots) }));
-                else
-                    notesSb.Append("—");
-            }
-            else
-                notesSb.Append("—");
-            if (_notes != null)
-            {
-                _notes.enableRichText = true;
-                _notes.text = notesSb.ToString();
-            }
+            return count;
         }
 
         private string BuildInventorySummary()
@@ -937,6 +1286,8 @@ namespace _Project
             {
                 _nightResearchChosen = true;
                 _wikiUnlockService?.UnlockCategory(branch);
+                if (_dayCycleSystem != null)
+                    _wikiUnlockService?.RecordNightResearch(_dayCycleSystem.CurrentDay, branch);
             }
             StartCoroutine(TransitionToForecast());
         }

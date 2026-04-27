@@ -515,6 +515,28 @@ namespace Sporae.Core
 
             if (gameManager?.FoodRoomSystem != null && saveData.foodRoomData != null)
                 DeserializeFoodRoom(gameManager.FoodRoomSystem, saveData.foodRoomData);
+
+            var diaryStats = ServiceContainer.Instance?.Get<DiaryStatistics>(suppressWarning: true);
+            if (diaryStats != null && saveData.diaryStatistics != null)
+            {
+                diaryStats.RestorePreviousSnapshot(
+                    saveData.diaryStatistics.hasPreviousSnapshot,
+                    new DiaryStatistics.SnapshotMetricsData
+                    {
+                        Day = saveData.diaryStatistics.prevDay,
+                        ActionsUsed = saveData.diaryStatistics.prevActionsUsed,
+                        ActionsMax = saveData.diaryStatistics.prevActionsMax,
+                        CryEarned = saveData.diaryStatistics.prevCryEarned,
+                        CrySpent = saveData.diaryStatistics.prevCrySpent,
+                        CurrentCry = saveData.diaryStatistics.prevCurrentCry,
+                        HarvestCount = saveData.diaryStatistics.prevHarvestCount,
+                        WaterCount = saveData.diaryStatistics.prevWaterCount,
+                        StageChangesCount = saveData.diaryStatistics.prevStageChangesCount,
+                        ActiveAlerts = saveData.diaryStatistics.prevActiveAlerts,
+                        ActiveMissionCount = saveData.diaryStatistics.prevActiveMissionCount,
+                        CompletedMissionCount = saveData.diaryStatistics.prevCompletedMissionCount
+                    });
+            }
             
             // Inventario
             if (gameManager != null && gameManager.PlayerInventory != null && saveData.inventory != null)
@@ -1080,8 +1102,25 @@ namespace Sporae.Core
         /// </summary>
         private DiaryStatisticsData SerializeDiaryStatistics(DiaryStatistics diaryStats)
         {
-            // Implementa serializzazione quando DiaryStatistics ha dati serializzabili
-            return new DiaryStatisticsData();
+            var data = new DiaryStatisticsData();
+            if (diaryStats == null)
+                return data;
+
+            data.hasPreviousSnapshot = diaryStats.HasPreviousSnapshot;
+            var prev = diaryStats.PreviousSnapshot;
+            data.prevDay = prev.Day;
+            data.prevActionsUsed = prev.ActionsUsed;
+            data.prevActionsMax = prev.ActionsMax;
+            data.prevCryEarned = prev.CryEarned;
+            data.prevCrySpent = prev.CrySpent;
+            data.prevCurrentCry = prev.CurrentCry;
+            data.prevHarvestCount = prev.HarvestCount;
+            data.prevWaterCount = prev.WaterCount;
+            data.prevStageChangesCount = prev.StageChangesCount;
+            data.prevActiveAlerts = prev.ActiveAlerts;
+            data.prevActiveMissionCount = prev.ActiveMissionCount;
+            data.prevCompletedMissionCount = prev.CompletedMissionCount;
+            return data;
         }
         
         /// <summary>
@@ -1314,7 +1353,19 @@ namespace Sporae.Core
         [Serializable]
         private class DiaryStatisticsData
         {
-            // Aggiungi campi quando DiaryStatistics è implementato
+            public bool hasPreviousSnapshot;
+            public int prevDay;
+            public int prevActionsUsed;
+            public int prevActionsMax;
+            public int prevCryEarned;
+            public int prevCrySpent;
+            public int prevCurrentCry;
+            public int prevHarvestCount;
+            public int prevWaterCount;
+            public int prevStageChangesCount;
+            public int prevActiveAlerts;
+            public int prevActiveMissionCount;
+            public int prevCompletedMissionCount;
         }
         
         [Serializable]
