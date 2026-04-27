@@ -48,7 +48,7 @@ MonoBehaviour:
     fertilizerMin: 60
     fertilizerMed: 80
     fertilizerMax: 90
-    durationDays: 2
+    durationDays: 1
     notes: "Pianta Evil pi\xF9 tollerante"
   - stage: 2
     hydrationMin: 30
@@ -78,7 +78,7 @@ MonoBehaviour:
     fertilizerMin: 40
     fertilizerMed: 60
     fertilizerMax: 80
-    durationDays: 3
+    durationDays: 2
     notes: Crescita Evil, Blue LED accelera
   - stage: 4
     hydrationMin: 30

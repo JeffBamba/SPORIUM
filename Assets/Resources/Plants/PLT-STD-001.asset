@@ -47,7 +47,7 @@ MonoBehaviour:
     fertilizerMin: 40
     fertilizerMed: 75
     fertilizerMax: 100
-    durationDays: 2
+    durationDays: 1
     notes: Ampia tolleranza
   - stage: 2
     hydrationMin: 40
@@ -62,7 +62,7 @@ MonoBehaviour:
     fertilizerMin: 40
     fertilizerMed: 75
     fertilizerMax: 100
-    durationDays: 2
+    durationDays: 1
     notes: Germoglio attivo
   - stage: 3
     hydrationMin: 30
@@ -77,7 +77,7 @@ MonoBehaviour:
     fertilizerMin: 40
     fertilizerMed: 60
     fertilizerMax: 80
-    durationDays: 3
+    durationDays: 1
     notes: Accrescimento vegetativo
   - stage: 4
     hydrationMin: 40
@@ -92,7 +92,7 @@ MonoBehaviour:
     fertilizerMin: 20
     fertilizerMed: 40
     fertilizerMax: 60
-    durationDays: 3
+    durationDays: 2
     notes: Fioritura attiva
   - stage: 5
     hydrationMin: 0

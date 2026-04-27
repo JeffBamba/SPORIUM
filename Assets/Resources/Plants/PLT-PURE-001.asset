@@ -48,7 +48,7 @@ MonoBehaviour:
     fertilizerMin: 60
     fertilizerMed: 75
     fertilizerMax: 90
-    durationDays: 2
+    durationDays: 1
     notes: Pianta Pure richiede cura attenta
   - stage: 2
     hydrationMin: 40
@@ -63,7 +63,7 @@ MonoBehaviour:
     fertilizerMin: 60
     fertilizerMed: 75
     fertilizerMax: 90
-    durationDays: 3
+    durationDays: 2
     notes: Germoglio Pure, Blue LED consigliato
   - stage: 3
     hydrationMin: 40
@@ -78,7 +78,7 @@ MonoBehaviour:
     fertilizerMin: 40
     fertilizerMed: 60
     fertilizerMax: 80
-    durationDays: 3
+    durationDays: 2
     notes: Crescita Pure, Blue LED richiesto
   - stage: 4
     hydrationMin: 40
