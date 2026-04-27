@@ -33,17 +33,28 @@
             <ui:Button name="inv-expand" text="MOSTRA TUTTO" class="inv-expand" />
             <ui:VisualElement name="inv-detail" class="inv-detail">
                 <ui:VisualElement name="inv-detail-row" class="inv-detail-row">
-                    <ui:VisualElement name="inv-detail-icon" class="inv-detail-icon" />
+                    <ui:VisualElement name="inv-detail-icon" class="inv-detail-icon" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
                     <ui:VisualElement class="inv-detail-mid">
                         <ui:Label name="inv-detail-id-line" text="CODE — Name" class="inv-detail-id-line" />
                         <ui:Label name="inv-detail-summary" class="inv-detail-summary" />
                     </ui:VisualElement>
-                    <ui:Label name="inv-detail-qty" text="x0" class="inv-detail-qty" />
+                    <ui:Label name="inv-detail-qty" text="x0" class="inv-detail-qty" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
                 </ui:VisualElement>
                 <ui:Label name="inv-detail-meta" class="inv-detail-meta" />
                 <ui:VisualElement class="inv-detail-actions">
-                    <ui:Button name="btn-detail-use" text="USA ITEM" class="inv-detail-btn inv-detail-btn--use" />
-                    <ui:Button name="btn-detail-inspect" text="ISPEZIONE DETTAGLIATA" class="inv-detail-btn inv-detail-btn--inspect" />
+                    <ui:Button name="btn-detail-use" text="USA ITEM" class="inv-detail-btn inv-detail-btn--use" style="display: none;" />
+                    <ui:VisualElement name="inv-detail-decay-wrap" class="inv-detail-decay-wrap">
+                        <ui:VisualElement class="inv-detail-decay-header">
+                            <ui:Label name="inv-detail-decay-condition-lbl" text="Condizione" class="inv-detail-decay-condition-lbl" />
+                            <ui:Label name="inv-detail-decay-pct" text="100%" class="inv-detail-decay-pct" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="inv-detail-decay-row">
+                            <ui:VisualElement name="inv-detail-decay-track" class="inv-detail-decay-track">
+                                <ui:VisualElement name="inv-detail-decay-fill" class="inv-detail-decay-fill" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Button name="btn-detail-inspect" text="Vedi Dettaglio" class="inv-detail-btn inv-detail-btn--inspect" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="inv-footer" class="inv-footer">
@@ -86,7 +97,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="inv-inspect" class="inv-inspect inv-inspect--hidden">
             <ui:VisualElement class="inv-inspect-panel">
-                <ui:Label name="inv-inspect-title" text="ISPEZIONE DETTAGLIATA" class="inv-inspect-title" />
+                <ui:Label name="inv-inspect-title" text="Vedi Dettaglio" class="inv-inspect-title" />
                 <ui:ScrollView name="inv-inspect-scroll" class="inv-inspect-scroll">
                     <ui:Label name="inv-inspect-body" class="inv-inspect-body" />
                 </ui:ScrollView>

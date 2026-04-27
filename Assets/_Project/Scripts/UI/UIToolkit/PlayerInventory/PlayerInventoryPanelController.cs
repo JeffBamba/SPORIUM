@@ -42,6 +42,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private Button _btnExpand;
         private Button _btnDetailUse;
         private Button _btnDetailInspect;
+        private VisualElement _detailDecayWrap;
+        private VisualElement _detailDecayFill;
+        private Label _detailDecayPct;
+        private Label _detailDecayConditionLbl;
         private Label _detailIdLine;
         private Label _detailSummary;
         private Label _detailQty;
@@ -173,6 +177,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _detailPrompt = _root.Q<Label>("inv-detail-prompt");
             _btnDetailUse = _root.Q<Button>("btn-detail-use");
             _btnDetailInspect = _root.Q<Button>("btn-detail-inspect");
+            _detailDecayWrap = _root.Q<VisualElement>("inv-detail-decay-wrap");
+            _detailDecayFill = _root.Q<VisualElement>("inv-detail-decay-fill");
+            _detailDecayPct = _root.Q<Label>("inv-detail-decay-pct");
+            _detailDecayConditionLbl = _root.Q<Label>("inv-detail-decay-condition-lbl");
             _footer = _root.Q<VisualElement>("inv-footer");
             _invTooltip = _root.Q<VisualElement>("inv-tooltip");
             _invTooltipText = _root.Q<Label>("inv-tooltip-text");
@@ -287,6 +295,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (_btnExpand != null) _btnExpand.text = LocalizationManager.GetString("inventory.expand_show", new Dictionary<string, string> { { "n", "0" } });
             if (_btnDetailUse != null) _btnDetailUse.text = LocalizationManager.GetString("inventory.detail.use_item");
             if (_btnDetailInspect != null) _btnDetailInspect.text = LocalizationManager.GetString("inventory.detail.inspect");
+            if (_detailDecayConditionLbl != null)
+                _detailDecayConditionLbl.text = LocalizationManager.GetString("inventory.detail.condition_label");
             if (_confirmTitle != null) _confirmTitle.text = LocalizationManager.GetString("inventory.confirm_action");
             if (_btnConfirmYes != null) _btnConfirmYes.text = LocalizationManager.GetString("inventory.confirm_yes");
             if (_btnConfirmNo != null) _btnConfirmNo.text = LocalizationManager.GetString("inventory.confirm_no");
@@ -659,7 +669,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                             ItemOrNull = it,
                             Qty = 1,
                             DisplayName = dn,
-                            Sub = BuildFruitSub(slot.TypeId, it),
+                            Sub = "",
                             Tooltip = BuildFruitTooltip(slot.TypeId, it),
                             PickerCanSelect = !isPicker || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(slot.TypeId)),
                             IsPerItemRow = true
@@ -688,14 +698,6 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 }
             }
             return list;
-        }
-
-        private static string BuildFruitSub(string typeId, Item it)
-        {
-            bool unknown = ExtractorTooltipTexts.IsUnknownFruit(it);
-            if (typeId == Items.FruitsKnown)
-                return unknown ? "Arctic Hask" : ExtractorTooltipTexts.GetFruitDisplayName(it);
-            return unknown ? "Sconosciuto" : ExtractorTooltipTexts.GetFruitDisplayName(it);
         }
 
         private string BuildFruitTooltip(string typeId, Item it)
@@ -886,6 +888,80 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 _btnDetailUse.SetEnabled(ok);
                 if (!ok) RegisterButtonTooltip(_btnDetailUse, LocalizationManager.GetString("inventory.use_disabled_tt"));
             }
+
+            UpdateDecayBarUi(typeId, item);
+        }
+
+        private void UpdateDecayBarUi(string typeId, Item item)
+        {
+            if (_detailDecayWrap == null || _detailDecayFill == null || _detailDecayPct == null)
+                return;
+
+            var cfg = Resources.Load<ItemConfig>("Items/" + typeId);
+            if (item == null || cfg == null || !ShouldShowDecayBar(cfg, typeId))
+            {
+                _detailDecayWrap.style.display = DisplayStyle.None;
+                return;
+            }
+
+            float conditionPct = ComputeConditionPercent(item, cfg);
+            _detailDecayWrap.style.display = DisplayStyle.Flex;
+            var rounded = Mathf.Clamp(Mathf.RoundToInt(conditionPct), 0, 100);
+            _detailDecayPct.text = $"{rounded}%";
+            _detailDecayFill.style.width = Length.Percent(Mathf.Clamp(conditionPct, 0f, 100f));
+            _detailDecayFill.style.backgroundColor = new StyleColor(GetConditionBarFillColor(rounded));
+        }
+
+        private static bool ShouldShowDecayBar(ItemConfig cfg, string typeId)
+        {
+            if (cfg == null || cfg.MaxQuality <= 0)
+                return false;
+            if (cfg.IsPerishable)
+                return true;
+            if (IsOrganicDeterioratingType(typeId))
+                return true;
+            return Items.IsFruitType(typeId);
+        }
+
+        /// <summary>Condizione residua 0–100%: 100 = Quality a max (fresco), 0 = Quality esaurita.</summary>
+        private static float ComputeConditionPercent(Item item, ItemConfig cfg)
+        {
+            if (item == null || cfg == null || cfg.MaxQuality <= 0)
+                return 0f;
+            float max = Mathf.Max(1f, cfg.MaxQuality);
+            return Mathf.Clamp01(item.Quality / max) * 100f;
+        }
+
+        /// <summary>Colore barra condizione: &gt;50% verde, 50% giallo, sotto 50% rosso (sulla percentuale arrotondata).</summary>
+        private static Color GetConditionBarFillColor(int roundedPercent)
+        {
+            if (roundedPercent > 50)
+                return new Color(0.32f, 0.88f, 0.48f, 0.98f);
+            if (roundedPercent == 50)
+                return new Color(0.95f, 0.82f, 0.22f, 0.98f);
+            return new Color(0.92f, 0.32f, 0.32f, 0.98f);
+        }
+
+        private static string BuildExpectedUseEffectLine(string typeId, Item _)
+        {
+            if (ItemConsumptionHandler.IsConsumable(typeId))
+            {
+                if (typeId == Items.WaterPotable)
+                    return LocalizationManager.GetString("inventory.detail.use_effect_water_potable");
+                if (typeId == Items.Water)
+                    return LocalizationManager.GetString("inventory.detail.use_effect_water_raw");
+                if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat)
+                    return LocalizationManager.GetString("inventory.detail.use_effect_food");
+                if (Items.IsFruitType(typeId))
+                {
+                    bool pure = typeId == Items.FruitArcticPod || typeId == Items.FruitsKnown;
+                    return LocalizationManager.GetString(pure
+                        ? "inventory.detail.use_effect_fruit_pure"
+                        : "inventory.detail.use_effect_fruit_standard");
+                }
+            }
+
+            return LocalizationManager.GetString("inventory.detail.use_effect_context");
         }
 
         private void OnDetailInspectClicked()
@@ -932,33 +1008,49 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             var lines = new List<string>();
             static string K(string txt) => $"<color=#7FAF97>{txt}</color>";
             static string V(string txt) => $"<color=#D8F5E3>{txt}</color>";
-            ItemInventoryCategoryMap.TryGetCategory(typeId, out var c);
-            lines.Add($"{K(LocalizationManager.GetString("inventory.detail.category"))}: {V(c.ToString())}");
 
-            var config = UnityEngine.Resources.Load<ItemConfig>("Items/" + typeId);
-            if (config != null)
-            {
-                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.sell"))}: {V(config.SellPrice + " CRY")} / " +
-                          $"{K(LocalizationManager.GetString("inventory.detail.buy"))}: {V(config.BuyPrice + " CRY")}");
-                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.stability"))}: {V(config.Stability.ToString("0.#"))}");
-            }
+            // 1) Effetto atteso all'uso
+            lines.Add($"{K(LocalizationManager.GetString("inventory.detail.use_effect_label"))}: {V(BuildExpectedUseEffectLine(typeId, it))}");
+
+            // 3) Provenienza operativa
+            var provenance = it != null ? ExtractorTooltipTexts.GetOriginTraceLabel(it) : na;
+            lines.Add($"{K(LocalizationManager.GetString("inventory.detail.provenance"))}: {V(string.IsNullOrWhiteSpace(provenance) ? na : provenance)}");
+
             if (it != null)
             {
+                // 4) Genetica
                 if (it.GeneticTypeValue.HasValue)
                 {
                     lines.Add($"{K(LocalizationManager.GetString("inventory.detail.genetics"))}: " +
                               V(ExtractorTooltipTexts.GeneticTypeToTrattiLabel(it.GeneticTypeValue) + " / " +
                                 ExtractorTooltipTexts.GeneticTypeToPercentMutare(it.GeneticTypeValue) + " mut."));
                 }
-                if (it.SporeStageValue.HasValue)
-                    lines.Add($"{K("Stage")}: {V(it.SporeStageValue.ToString())}");
-                if (!string.IsNullOrWhiteSpace(it.FamilyMetadata))
-                    lines.Add($"{K(LocalizationManager.GetString("inventory.detail.origin"))}: {V(it.FamilyMetadata)}");
+
+                // 6) Poteri
                 if (!string.IsNullOrWhiteSpace(it.ActivePowerLabel) || !string.IsNullOrWhiteSpace(it.PassivePowerLabel))
+                {
                     lines.Add($"{K(LocalizationManager.GetString("inventory.detail.powers"))}: " +
                               V((it.ActivePowerLabel ?? na) + " / " + (it.PassivePowerLabel ?? na)));
-                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.quality"))}: {V(it.Quality.ToString("0.#"))}");
+                }
+
+                // 7) Famiglia / fazione
+                var fam = ExtractorTooltipTexts.GetDisplayFamilyAlignment(it);
+                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.family_alignment"))}: {V(string.IsNullOrWhiteSpace(fam) || fam == "—" ? na : fam)}");
             }
+            else
+            {
+                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.family_alignment"))}: {V(na)}");
+            }
+
+            // 8) Economia config + stabilità
+            var config = Resources.Load<ItemConfig>("Items/" + typeId);
+            if (config != null)
+            {
+                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.sell"))}: {V(config.SellPrice + " CRY")} / " +
+                          $"{K(LocalizationManager.GetString("inventory.detail.buy"))}: {V(config.BuyPrice + " CRY")}");
+                lines.Add($"{K(LocalizationManager.GetString("inventory.detail.stability"))}: {V(config.Stability.ToString("0.#"))}");
+            }
+
             return string.Join("\n", lines);
         }
 

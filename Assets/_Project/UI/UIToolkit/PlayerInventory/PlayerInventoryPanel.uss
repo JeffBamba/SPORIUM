@@ -179,9 +179,9 @@
 }
 
 .inv-terminal--detail-open .inv-list {
-    height: 220px;
-    min-height: 220px;
-    max-height: 220px;
+    height: 268px;
+    min-height: 268px;
+    max-height: 268px;
 }
 
 .inv-list .unity-scroller--vertical {
@@ -380,18 +380,28 @@
     flex-direction: column;
     margin-top: 16px;
     margin-bottom: 0;
-    padding: 16px 0 0 0;
-    border-width: 1px;
+    padding: 16px 0 14px 0;
+    border-width: 0;
     border-radius: 0;
-    border-left-width: 0;
-    border-right-width: 0;
-    border-bottom-width: 0;
     background-color: rgba(10, 17, 20, 0.97);
-    height: 108px;
-    min-height: 108px;
-    max-height: 108px;
+    /* Altezza sufficiente per riga + meta + pulsanti senza taglio (icon 64 + testi + CTA) */
+    height: 158px;
+    min-height: 158px;
+    max-height: 158px;
     flex-shrink: 0;
     overflow: hidden;
+}
+
+/* Con item selezionato: niente linea sopra il box, più spazio lista, dettaglio ancorato in basso sullo spazio libero */
+.inv-terminal--detail-open .inv-detail {
+    margin-top: auto;
+    padding-top: 8px;
+    border-width: 0;
+}
+
+/* Linea verde tra lista / MOSTRA TUTTO e box dettaglio: viene dall’underline del pulsante expand */
+.inv-terminal--detail-open .inv-expand {
+    border-bottom-width: 0;
 }
 
 .inv-detail--cat-spores {
@@ -429,7 +439,7 @@
 .inv-detail-row {
     flex-direction: row;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .inv-detail-icon {
@@ -440,7 +450,7 @@
     margin-right: 16px;
     border-width: 2px;
     border-color: rgba(93, 182, 227, 0.55);
-    background-color: rgba(11, 25, 35, 0.65);
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -482,13 +492,77 @@
     white-space: nowrap;
     margin-bottom: 8px;
     display: flex;
+    /* Allinea con il testo del one-liner (stessa colonna di inv-detail-mid: icona 64 + gap 16) */
+    margin-left: 80px;
+    margin-right: 0;
 }
 
 .inv-detail-actions {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
     padding-top: 0;
     border-top-width: 0;
+    margin-left: 80px;
+    flex-shrink: 0;
+}
+
+.inv-detail-decay-wrap {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 72px;
+    max-width: 220px;
+    margin-right: 10px;
+}
+
+.inv-detail-decay-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.inv-detail-decay-condition-lbl {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: rgba(127, 175, 151, 0.95);
+    -unity-font-style: bold;
+}
+
+.inv-detail-decay-wrap .inv-detail-decay-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.inv-detail-decay-track {
+    flex-grow: 1;
+    height: 8px;
+    min-height: 8px;
+    max-height: 8px;
+    background-color: rgba(20, 32, 36, 0.95);
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.22);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+/* Colore fill impostato a runtime in base alla % condizione */
+.inv-detail-decay-fill {
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    background-color: rgba(90, 220, 120, 0.95);
+    border-top-left-radius: 1px;
+    border-bottom-left-radius: 1px;
+}
+
+.inv-detail-decay-pct {
+    font-size: 10px;
+    min-width: 38px;
+    color: rgba(200, 220, 210, 0.9);
+    -unity-text-align: middle-right;
+    flex-shrink: 0;
 }
 
 .inv-detail-btn {

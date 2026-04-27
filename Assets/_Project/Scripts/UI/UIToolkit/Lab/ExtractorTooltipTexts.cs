@@ -219,6 +219,9 @@ namespace Sporae.UI.UIToolkit.Lab
             return "—";
         }
 
+        /// <summary>Famiglia / fazione (PURE, EVIL, …) per scheda inventario e UI.</summary>
+        public static string GetDisplayFamilyAlignment(Item item) => GetFruitFamilyLabel(item);
+
         public static string GetOriginTraceLabel(Item item)
         {
             if (item == null)
