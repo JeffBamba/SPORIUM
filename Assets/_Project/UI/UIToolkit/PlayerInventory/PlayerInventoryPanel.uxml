@@ -17,14 +17,15 @@
                     <ui:Label name="inv-stat-actions" class="inv-stat" />
                     <ui:Label name="inv-stat-items" class="inv-stat" />
                 </ui:VisualElement>
-                <ui:VisualElement name="inv-filters" class="inv-filters" style="height: 33px;">
+                <ui:VisualElement name="inv-filters" class="inv-filters" style="top: -9px;">
                     <ui:Button name="inv-filter-all" text="TUTTI" class="inv-filter-chip inv-filter-chip--active" />
                     <ui:Button name="inv-filter-spores" text="SPORE" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-seeds" text="SEMI" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-organic" text="ORGANICO" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-reagents" text="REAGENTI" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-plants" text="PIANTE" class="inv-filter-chip" />
-                    <ui:Button name="inv-filter-tools" text="STRUMENTI" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-fruits" text="FRUTTI" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-tools" text="PRODOTTI" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-food" text="CIBO" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-bio" text="BIO-MAT" class="inv-filter-chip" />
                 </ui:VisualElement>

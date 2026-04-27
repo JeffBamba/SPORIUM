@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
+using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project.Scripts.Core
 {
@@ -36,26 +37,68 @@ namespace _Project.Scripts.Core
 
         private void HandleDayChanged(int day)
         {
+            int degradedStillPresent = 0;
+            int spoiledOrganic = 0;
+            int spoiledProtein = 0;
             foreach (
                 var inventorySlot in _inventory.Items
                     .ToList()
                     .Where(item => k_itemsToDeterioration.Contains(item.TypeId)
                                    || (PlantDatabase.Instance != null &&
-                                       PlantDatabase.Instance.IsRegisteredSeedTypeId(item.TypeId)))
+                                       PlantDatabase.Instance.IsRegisteredSeedTypeId(item.TypeId))
+                                   || Items.IsFruitType(item.TypeId))
             )
-                DeteriorateInventorySlot(inventorySlot);
+                DeteriorateInventorySlot(inventorySlot, ref degradedStillPresent, ref spoiledOrganic, ref spoiledProtein);
+
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation == null || !foundation.Enabled)
+                return;
+
+            if (degradedStillPresent > 0)
+            {
+                foundation.PostToastImmediate(
+                    "INV-DET-WARN",
+                    new NotificationPayload().With("n", degradedStillPresent.ToString()));
+            }
+            if (spoiledOrganic > 0)
+            {
+                foundation.PostToastImmediate(
+                    "INV-DET-ORG",
+                    new NotificationPayload().With("n", spoiledOrganic.ToString()));
+            }
+            if (spoiledProtein > 0)
+            {
+                foundation.PostToastImmediate(
+                    "INV-DET-PROT",
+                    new NotificationPayload().With("n", spoiledProtein.ToString()));
+            }
         }
 
-        private void DeteriorateInventorySlot(InventorySlot slot)
+        private void DeteriorateInventorySlot(
+            InventorySlot slot,
+            ref int degradedStillPresent,
+            ref int spoiledOrganic,
+            ref int spoiledProtein)
         {
             foreach (var item in slot.Items.ToList())
             {
                 item.Quality -= 1;
                 if (item.Quality > 0)
+                {
+                    degradedStillPresent++;
                     continue;
+                }
 
-                // Food in inventory now deteriorates into organic residue like other kitchen organics.
-                _inventory.Add(Items.OrganicResidue);
+                if (item.TypeId == Items.FoodMeat)
+                {
+                    _inventory.Add(Items.ProteinResidue);
+                    spoiledProtein++;
+                }
+                else
+                {
+                    _inventory.Add(Items.OrganicResidue);
+                    spoiledOrganic++;
+                }
                 _inventory.Consume(item.TypeId);
             }
         }

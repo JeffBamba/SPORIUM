@@ -97,6 +97,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
 
         private void OnDestroy()
         {
+            if (_isOpen)
+                GameplayUiModalLock.SetMachineModalState(false);
             GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_gameManager?.PlayerInventory != null)
                 _gameManager.PlayerInventory.OnInventoryChanged -= OnInventoryChanged;
@@ -227,6 +229,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (_uiDocument != null) _uiDocument.sortingOrder = 1000;
             if (_overlay != null)
             {
+                GameplayUiModalLock.SetMachineModalState(true);
                 _overlay.style.display = DisplayStyle.Flex;
                 var innerOverlay = _root.Q<VisualElement>("dispensa-overlay");
                 if (innerOverlay != null)
@@ -241,6 +244,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
 
         public void Hide()
         {
+            bool wasOpen = _isOpen;
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.None;
@@ -251,6 +255,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (_uiDocument != null) _uiDocument.sortingOrder = 420;
             _foodRoom?.EndPantryInteraction();
             _isOpen = false;
+            if (wasOpen)
+                GameplayUiModalLock.SetMachineModalState(false);
         }
 
         public bool IsVisible => _isOpen;

@@ -11,6 +11,7 @@ namespace _Project.Sporae.Core
         Organic,
         Reagents,
         Plants,
+        Fruits,
         Tools,
         Food,
         BioMaterials

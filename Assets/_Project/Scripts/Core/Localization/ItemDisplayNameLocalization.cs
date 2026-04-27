@@ -13,7 +13,7 @@ namespace Sporae.Core.Localization
         {
             { Items.FruitFerricPod, ("Frutto di Ferric Fern", "Ferric Fern Fruit") },
             { Items.FruitArcticPod, ("Frutto di Arctic Hask", "Arctic Hask Fruit") },
-            { Items.FruitGlassPod, ("Frutto di GlassCap", "GlassCap Fruit") },
+            { Items.FruitGlassPod, ("Frutto di GlassCap Fungus", "GlassCap Fruit") },
             { Items.Fruits, ("Frutto", "Fruit") },
             { Items.FruitsKnown, ("Frutto conosciuto", "Known fruit") },
             { Items.Water, ("Acqua Sporca", "Dirty Water") },
@@ -27,7 +27,6 @@ namespace Sporae.Core.Localization
             { Items.ReagentX, ("Reagente X", "Reagent X") },
             { Items.ReagentY, ("Reagente Y", "Reagent Y") },
             { Items.OrganicResidue, ("Residui Organici", "Organic Residue") },
-            { Items.OrganicScrap001, ("Scarti organici", "Organic scrap") },
             { Items.WholePlant, ("Pianta intera", "Whole plant") },
             { Items.SporeGeneric, ("Spora", "Spore") },
             { Items.PreSeed, ("Pre-seme", "Pre-seed") },

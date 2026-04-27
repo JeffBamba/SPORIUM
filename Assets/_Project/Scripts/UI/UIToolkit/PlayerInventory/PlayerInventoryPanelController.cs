@@ -81,6 +81,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private bool _uiBound;
         private Action<int> _onActionsChangedUi;
         private float _ignoreScrimClickUntil;
+        /// <summary>True se questo pannello ha impostato <see cref="GameplayUiModalLock.SetMachineModalState"/> in <see cref="Show"/> (browse da HUD). In picker il lock resta al macchinario padre.</summary>
+        private bool _inventoryModalLockOwned;
 
         private string _selectedRowKey;
         private List<RowModel> _allRows = new List<RowModel>();
@@ -227,6 +229,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             RegisterFilter("inv-filter-organic", ItemInventoryCategoryId.Organic);
             RegisterFilter("inv-filter-reagents", ItemInventoryCategoryId.Reagents);
             RegisterFilter("inv-filter-plants", ItemInventoryCategoryId.Plants);
+            RegisterFilter("inv-filter-fruits", ItemInventoryCategoryId.Fruits);
             RegisterFilter("inv-filter-tools", ItemInventoryCategoryId.Tools);
             RegisterFilter("inv-filter-food", ItemInventoryCategoryId.Food);
             RegisterFilter("inv-filter-bio", ItemInventoryCategoryId.BioMaterials);
@@ -268,12 +271,12 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void UpdateFilterChips()
         {
-            var names = new[] { "inv-filter-all", "inv-filter-spores", "inv-filter-seeds", "inv-filter-organic", "inv-filter-reagents", "inv-filter-plants", "inv-filter-tools", "inv-filter-food", "inv-filter-bio" };
+            var names = new[] { "inv-filter-all", "inv-filter-spores", "inv-filter-seeds", "inv-filter-organic", "inv-filter-reagents", "inv-filter-plants", "inv-filter-fruits", "inv-filter-tools", "inv-filter-food", "inv-filter-bio" };
             var cats = new[]
             {
                 ItemInventoryCategoryId.All, ItemInventoryCategoryId.Spores, ItemInventoryCategoryId.Seeds,
                 ItemInventoryCategoryId.Organic, ItemInventoryCategoryId.Reagents, ItemInventoryCategoryId.Plants,
-                ItemInventoryCategoryId.Tools, ItemInventoryCategoryId.Food, ItemInventoryCategoryId.BioMaterials
+                ItemInventoryCategoryId.Fruits, ItemInventoryCategoryId.Tools, ItemInventoryCategoryId.Food, ItemInventoryCategoryId.BioMaterials
             };
             for (int i = 0; i < names.Length; i++)
             {
@@ -321,6 +324,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             Set("inv-filter-organic", "inventory.filter_organic");
             Set("inv-filter-reagents", "inventory.filter_reagents");
             Set("inv-filter-plants", "inventory.filter_plants");
+            Set("inv-filter-fruits", "inventory.filter_fruits");
             Set("inv-filter-tools", "inventory.filter_tools");
             Set("inv-filter-food", "inventory.filter_food");
             Set("inv-filter-bio", "inventory.filter_bio");
@@ -376,6 +380,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void OnDisable()
         {
+            if (_inventoryModalLockOwned)
+            {
+                GameplayUiModalLock.SetMachineModalState(false);
+                _inventoryModalLockOwned = false;
+            }
             GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
             if (_playerInventory != null)
                 _playerInventory.OnInventoryChanged -= OnInventoryChanged;
@@ -424,6 +433,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _listExpanded = false;
             _selectedRowKey = null;
             _selectedModel = default;
+            _inventoryModalLockOwned = true;
+            GameplayUiModalLock.SetMachineModalState(true);
             ShowInternal();
             ApplyModeUi(isPicker: false);
             if (_pickSubtitle != null) { _pickSubtitle.text = ""; _pickSubtitle.style.display = DisplayStyle.None; }
@@ -445,6 +456,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?, Item> onSelectedWithItem, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null)
         {
+            _inventoryModalLockOwned = false;
             _pickerAllowedTypes = allowedTypeIds != null ? new HashSet<string>(allowedTypeIds) : new HashSet<string>();
             _pickerAllowedTypesOrdered = allowedTypeIds != null ? new List<string>(allowedTypeIds) : new List<string>();
             _onSelectedWithStage = onSelectedWithItem;
@@ -487,6 +499,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 _overlay.style.display = DisplayStyle.None;
             }
             gameObject.SetActive(false);
+            if (_inventoryModalLockOwned)
+            {
+                GameplayUiModalLock.SetMachineModalState(false);
+                _inventoryModalLockOwned = false;
+            }
             OnClosed?.Invoke();
         }
 
@@ -1325,6 +1342,8 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 || typeId == Items.FoodVegetable
                 || typeId == Items.FoodFungus
                 || typeId == Items.FoodMeat)
+                return true;
+            if (Items.IsFruitType(typeId))
                 return true;
             return PlantDatabase.Instance != null && PlantDatabase.Instance.IsRegisteredSeedTypeId(typeId);
         }

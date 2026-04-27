@@ -9,7 +9,6 @@ namespace _Project.Sporae.Core
         public const string FruitGlassPod = "fruit-glass-pod";
         public const string Water = "WAT-RAW";
         public const string WholePlant = "whole-plant";
-        public const string OrganicScrap001 = "org-scr-001";
         public const string SporeGeneric = "spore-generic";
         /// <summary>Output della Pipette (Fusione); usato come input nell'Incubatore.</summary>
         public const string PreSeed = "pre-seed";
@@ -40,13 +39,13 @@ namespace _Project.Sporae.Core
         public const string FoodFungus = "FOOD-201";         // Funghi sintetici (+2 Azioni)
         public const string FoodMeat = "FOOD-301";           // Carne sintetica (+3 Azioni)
         public const string WaterPotable = "WAT-POT";        // Acqua Potabile
-        public const string OrganicResidue = "ORG-RES-001";  // Residui Proteici da carne (Food Room)
+        public const string OrganicResidue = "ORG-RES-001";  // Residui organici (deperimento / cucina / Lab)
 
         /// <summary> Tutti i typeId degli item esistenti in game (per inventario iniziale / debug ). </summary>
         public static readonly string[] AllTypeIds =
         {
             FruitFerricPod, FruitArcticPod, FruitGlassPod,
-            Water, WholePlant, OrganicScrap001, SporeGeneric, PreSeed,
+            Water, WholePlant, SporeGeneric, PreSeed,
             Seed001, Seed002, Seed003,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
             AdditiveBasic, AdditiveAcid,
@@ -73,7 +72,7 @@ namespace _Project.Sporae.Core
         public static readonly string[] StarterInventoryTypeIds =
         {
             FruitFerricPod, FruitArcticPod, FruitGlassPod,
-            Water, WholePlant, OrganicScrap001,
+            Water, WholePlant,
             FertilizerStandard, FertilizerPure, FertilizerProhibited,
             AdditiveBasic, AdditiveAcid,
             StemCellVegetable, StemCellFungus, StemCellAnimal, ProteinResidue,

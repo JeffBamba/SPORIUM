@@ -502,6 +502,7 @@
     margin-right: 8px;
     border-radius: 3px;
     border-width: 1px;
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .seedstorage-slot-icon--empty {

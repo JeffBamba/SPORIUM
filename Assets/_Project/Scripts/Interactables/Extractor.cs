@@ -229,13 +229,13 @@ namespace _Project
                 SetSlotPlannedOutputs(idx, 0, 1, 0, 0);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }
-            else if (hasStem && _inventory.Has(Items.OrganicScrap001))
+            else if (hasStem && _inventory.Has(Items.OrganicResidue))
             {
-                inputDesc = ItemDisplayNameLocalization.TryGetByTypeId(Items.OrganicScrap001, out var on) ? on : Items.OrganicScrap001;
+                inputDesc = ItemDisplayNameLocalization.TryGetByTypeId(Items.OrganicResidue, out var on) ? on : Items.OrganicResidue;
                 cell001Out = 1;
                 _slotResultSnapshot[idx] = null;
                 _slotInputFruit[idx] = null;
-                _inventory.Consume(Items.OrganicScrap001, 1);
+                _inventory.Consume(Items.OrganicResidue, 1);
                 SetSlotPlannedOutputs(idx, 0, 1, 0, 0);
                 _slotCoroutines[idx] = StartCoroutine(RunExtraction(idx, 0, 1, 0, 0));
             }

@@ -648,6 +648,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                     }
                     if (_slotSubs[i] != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.slot_locked"); _slotSubs[i].style.display = DisplayStyle.Flex; }
                     SetSlotIconState(i, "locked");
+                    ClearSlotIconSprite(i);
                     SetViaRowVisible(i, false);
                     continue;
                 }
@@ -664,6 +665,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                     if (_slotBodies[i] != null) _slotBodies[i].text = LocalizationManager.GetString("seed_storage.slot_empty");
                     if (_slotSubs[i]   != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.slot_ready"); _slotSubs[i].style.display = DisplayStyle.Flex; }
                     SetSlotIconState(i, "empty");
+                    ClearSlotIconSprite(i);
                     SetFill(i, 0f);
                     if (_slotViaPcts[i] != null) _slotViaPcts[i].text = "—";
                     SetViaRowVisible(i, false);
@@ -678,10 +680,43 @@ namespace Sporae.UI.UIToolkit.SeedStorage
                 if (_slotBodies[i] != null) _slotBodies[i].text = FormatItemName(tid ?? "—");
                 if (_slotSubs[i]   != null) { _slotSubs[i].text = LocalizationManager.GetString("seed_storage.qty", new Dictionary<string, string> { ["n"] = qty.ToString() }); _slotSubs[i].style.display = DisplayStyle.Flex; }
                 SetSlotIconState(i, "occupied");
+                ApplySlotItemSprite(i, tid);
                 SetFill(i, via);
                 if (_slotViaPcts[i] != null) _slotViaPcts[i].text = $"{Mathf.RoundToInt(via * 100f)}%";
                 SetViaRowVisible(i, true);
             }
+        }
+
+        private void ClearSlotIconSprite(int i)
+        {
+            var icon = _slotIcons[i];
+            if (icon != null)
+                icon.style.backgroundImage = null;
+        }
+
+        /// <summary>Icona catalogo per il tipo nello slot (variante spora dal primo <see cref="Item"/>).</summary>
+        private void ApplySlotItemSprite(int i, string typeId)
+        {
+            var icon = _slotIcons[i];
+            if (icon == null)
+                return;
+            if (string.IsNullOrEmpty(typeId))
+            {
+                icon.style.backgroundImage = null;
+                return;
+            }
+            SporeStage? sporeStage = null;
+            if (typeId == Items.SporeGeneric && _seed != null)
+            {
+                var units = _seed.GetSlotUnits(i);
+                if (units != null && units.Count > 0)
+                    sporeStage = units[0].Item?.SporeStageValue;
+            }
+            var spr = GlobalIconResolver.GetItemIcon(typeId, sporeStage);
+            if (spr != null)
+                icon.style.backgroundImage = new StyleBackground(spr);
+            else
+                icon.style.backgroundImage = null;
         }
 
         private void SetSlotIconState(int i, string state)

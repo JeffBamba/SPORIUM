@@ -1023,6 +1023,9 @@ namespace Sporae.Core
             string typeId = itemData.typeId;
             if (string.Equals(typeId, "STR-004", StringComparison.OrdinalIgnoreCase))
                 typeId = Items.AdditiveBasic;
+            // org-scr-001 (Scarti organici) rimosso: unificato a Residui organici.
+            if (string.Equals(typeId, "org-scr-001", StringComparison.OrdinalIgnoreCase))
+                typeId = Items.OrganicResidue;
 
             var item = _Project.Sporae.Core.ItemFabric.CreateItemByType(typeId);
             if (item == null)

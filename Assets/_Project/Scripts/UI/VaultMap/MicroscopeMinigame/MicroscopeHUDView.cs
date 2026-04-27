@@ -156,7 +156,7 @@ namespace _Project
 
             if (hits == 0)
             {
-                _playerInventory.Add(Items.OrganicScrap001, 1);
+                _playerInventory.Add(Items.OrganicResidue, 1);
                 var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
                 if (toastManager != null)
                 {

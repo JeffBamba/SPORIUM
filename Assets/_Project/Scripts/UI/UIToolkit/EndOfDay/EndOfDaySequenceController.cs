@@ -16,6 +16,7 @@ using Sporae.Dome.PotSystem.Condition;
 using Sporae.UI.UIToolkit.HUD;
 using Sporae.UI.UIToolkit.FoodRoom;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.UI.UIToolkit.PlayerInventory;
 
 namespace _Project
 {
@@ -814,7 +815,10 @@ namespace _Project
                 occupied++;
                 string typeId = ss.GetSlotTypeId(i) ?? "?";
                 int qty = ss.GetSlotQuantity(i);
-                occupiedDetails.Add($"S{i + 1}:{typeId} x{qty}");
+                var units = ss.GetSlotUnits(i);
+                var firstItem = units != null && units.Count > 0 ? units[0].Item : null;
+                string displayName = PlayerInventoryPanelController.GetItemDisplayName(typeId, firstItem);
+                occupiedDetails.Add($"S{i + 1}:{displayName} x{qty}");
             }
 
             string statusText = ss.IsOn ? "OK" : "OFF (rischio deperimento)";
@@ -957,7 +961,10 @@ namespace _Project
 
             if (preSeed > 0) seedParts.Add(LocalizationManager.GetString("eod.seed_preseed", new Dictionary<string, string> { ["n"] = preSeed.ToString() }));
             foreach (var kv in seedByTypeId.OrderBy(k => k.Key))
-                seedParts.Add($"{kv.Value} {kv.Key}");
+            {
+                string label = PlayerInventoryPanelController.GetItemDisplayName(kv.Key, null);
+                seedParts.Add($"{kv.Value} {label}");
+            }
             return seedParts.Count > 0 ? string.Join(", ", seedParts) + "." : "—";
         }
 

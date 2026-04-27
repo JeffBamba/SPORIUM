@@ -254,10 +254,10 @@ namespace Sporae.UI.UIToolkit.Lab
                     inputDesc = $"{FormatItemTypeLabel(Items.WholePlant)} x{q}";
                     canAvvia = true;
                 }
-                else if (HasStemCellModule && _storage.Has(Items.OrganicScrap001))
+                else if (HasStemCellModule && _storage.Has(Items.OrganicResidue))
                 {
-                    int q = _storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicScrap001)?.Quantity ?? 0;
-                    inputDesc = $"{FormatItemTypeLabel(Items.OrganicScrap001)} x{q}";
+                    int q = _storage.Items.FirstOrDefault(s => s.TypeId == Items.OrganicResidue)?.Quantity ?? 0;
+                    inputDesc = $"{FormatItemTypeLabel(Items.OrganicResidue)} x{q}";
                     canAvvia = true;
                 }
                 else if (HasStemCellModule && _storage.Has(Items.ProteinResidue))
@@ -353,7 +353,7 @@ namespace Sporae.UI.UIToolkit.Lab
             if (HasStemCellModule)
             {
                 set.Add(Items.WholePlant);
-                set.Add(Items.OrganicScrap001);
+                set.Add(Items.OrganicResidue);
                 set.Add(Items.ProteinResidue);
             }
             return set;

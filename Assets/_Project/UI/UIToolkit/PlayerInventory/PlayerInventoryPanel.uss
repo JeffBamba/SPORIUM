@@ -275,6 +275,10 @@
     border-color: rgba(100, 200, 130, 0.55);
 }
 
+.inv-row--cat-fruits {
+    border-color: rgba(220, 160, 90, 0.55);
+}
+
 .inv-row--cat-tools {
     border-color: rgba(230, 201, 111, 0.5);
 }
@@ -422,6 +426,10 @@
 
 .inv-detail--cat-plants {
     border-color: rgba(100, 200, 130, 0.5);
+}
+
+.inv-detail--cat-fruits {
+    border-color: rgba(220, 160, 90, 0.5);
 }
 
 .inv-detail--cat-tools {

@@ -13,7 +13,7 @@ namespace _Project.Sporae.Core
         public static readonly string[] AllDetailAccentClassNames =
         {
             "inv-detail--cat-spores", "inv-detail--cat-seeds", "inv-detail--cat-organic", "inv-detail--cat-reagents",
-            "inv-detail--cat-plants", "inv-detail--cat-tools", "inv-detail--cat-food", "inv-detail--cat-bio"
+            "inv-detail--cat-plants", "inv-detail--cat-fruits", "inv-detail--cat-tools", "inv-detail--cat-food", "inv-detail--cat-bio"
         };
 
         public static bool TryGetCategory(string typeId, out ItemInventoryCategoryId category)
@@ -28,7 +28,13 @@ namespace _Project.Sporae.Core
                 return true;
             }
 
-            if (typeId == Items.WholePlant || Items.IsFruitType(typeId))
+            if (Items.IsFruitType(typeId))
+            {
+                category = ItemInventoryCategoryId.Fruits;
+                return true;
+            }
+
+            if (typeId == Items.WholePlant)
             {
                 category = ItemInventoryCategoryId.Plants;
                 return true;
@@ -49,19 +55,20 @@ namespace _Project.Sporae.Core
             switch (typeId)
             {
                 case Items.Water:
-                case Items.WaterPotable:
-                case Items.OrganicScrap001:
                     category = ItemInventoryCategoryId.Organic;
+                    return true;
+                case Items.WaterPotable:
+                    category = ItemInventoryCategoryId.Food;
                     return true;
                 case Items.ReagentX:
                 case Items.ReagentY:
-                case Items.AdditiveBasic:
-                case Items.AdditiveAcid:
                     category = ItemInventoryCategoryId.Reagents;
                     return true;
                 case Items.FertilizerStandard:
                 case Items.FertilizerPure:
                 case Items.FertilizerProhibited:
+                case Items.AdditiveBasic:
+                case Items.AdditiveAcid:
                     category = ItemInventoryCategoryId.Tools;
                     return true;
                 case Items.FoodVegetable:
@@ -98,6 +105,7 @@ namespace _Project.Sporae.Core
                 case ItemInventoryCategoryId.Organic: return "inv-row--cat-organic";
                 case ItemInventoryCategoryId.Reagents: return "inv-row--cat-reagents";
                 case ItemInventoryCategoryId.Plants: return "inv-row--cat-plants";
+                case ItemInventoryCategoryId.Fruits: return "inv-row--cat-fruits";
                 case ItemInventoryCategoryId.Tools: return "inv-row--cat-tools";
                 case ItemInventoryCategoryId.Food: return "inv-row--cat-food";
                 case ItemInventoryCategoryId.BioMaterials: return "inv-row--cat-bio";
@@ -114,6 +122,7 @@ namespace _Project.Sporae.Core
                 case ItemInventoryCategoryId.Organic: return "inv-detail--cat-organic";
                 case ItemInventoryCategoryId.Reagents: return "inv-detail--cat-reagents";
                 case ItemInventoryCategoryId.Plants: return "inv-detail--cat-plants";
+                case ItemInventoryCategoryId.Fruits: return "inv-detail--cat-fruits";
                 case ItemInventoryCategoryId.Tools: return "inv-detail--cat-tools";
                 case ItemInventoryCategoryId.Food: return "inv-detail--cat-food";
                 case ItemInventoryCategoryId.BioMaterials: return "inv-detail--cat-bio";

@@ -129,7 +129,7 @@ Riepilogo riferimenti (SceneHierarchy):
 
 1. In **Resources** apri l’asset **LabUpgradesConfig** e spunta **Has Stem Cell Module**.
 2. In Play, apri l’Extractor e inserisci **1 frutto**; **AVVIA** → in Output devono comparire **spore + CELL-002** (es. “spore-generic x1, CELL-002 x1”). **Ritira** → entrambi in inventario.
-3. Con modulo attivo: inserisci **Whole Plant** o **Organic Scrap** (org-scr-001); **AVVIA** → Output **CELL-001**. Ritira.
+3. Con modulo attivo: inserisci **Whole Plant** o **Residui organici** (ORG-RES-001); **AVVIA** → Output **CELL-001**. Ritira.
 4. Inserisci **RES-PROT-001** (aggiungi da console F1 se serve); **AVVIA** → Output **CELL-003**. Ritira.
 
 ---

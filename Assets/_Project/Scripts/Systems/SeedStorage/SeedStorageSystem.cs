@@ -4,6 +4,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.UI.UIToolkit.PlayerInventory;
 using UnityEngine;
 
 namespace _Project.Systems.SeedStorage
@@ -270,6 +271,7 @@ namespace _Project.Systems.SeedStorage
             }
 
             var movedDetails = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var firstItemByType = new Dictionary<string, Item>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in items)
             {
                 if (!inv.TryRemoveExactItem(item, out var removed) || removed == null)
@@ -279,6 +281,8 @@ namespace _Project.Systems.SeedStorage
                 }
                 PlaceItem(removed);
                 string typeId = removed.TypeId ?? "?";
+                if (!firstItemByType.ContainsKey(typeId))
+                    firstItemByType[typeId] = removed;
                 if (movedDetails.TryGetValue(typeId, out int current))
                     movedDetails[typeId] = current + 1;
                 else
@@ -288,7 +292,11 @@ namespace _Project.Systems.SeedStorage
             var dayLog = ServiceContainer.Instance?.Get<DayActivityLog>(suppressWarning: true);
             if (dayLog != null)
             {
-                string detail = string.Join(", ", movedDetails.Select(kv => $"{kv.Key} x{kv.Value}"));
+                string detail = string.Join(", ", movedDetails.Select(kv =>
+                {
+                    firstItemByType.TryGetValue(kv.Key, out var rep);
+                    return $"{PlayerInventoryPanelController.GetItemDisplayName(kv.Key, rep)} x{kv.Value}";
+                }));
                 dayLog.RecordSeedStorageAction("Deposit", items.Count, detail);
             }
             StorageChanged?.Invoke();
@@ -322,6 +330,7 @@ namespace _Project.Systems.SeedStorage
 
             var inv = _gameManager.PlayerInventory;
             var movedDetails = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var firstItemByType = new Dictionary<string, Item>(StringComparer.OrdinalIgnoreCase);
             int withdrawnCount = 0;
             foreach (var idx in distinct)
             {
@@ -335,6 +344,8 @@ namespace _Project.Systems.SeedStorage
                         inv.Add(u.Item);
                         withdrawnCount++;
                         string typeId = u.Item.TypeId ?? "?";
+                        if (!firstItemByType.ContainsKey(typeId))
+                            firstItemByType[typeId] = u.Item;
                         if (movedDetails.TryGetValue(typeId, out int current))
                             movedDetails[typeId] = current + 1;
                         else
@@ -347,7 +358,11 @@ namespace _Project.Systems.SeedStorage
             var dayLog = ServiceContainer.Instance?.Get<DayActivityLog>(suppressWarning: true);
             if (dayLog != null && withdrawnCount > 0)
             {
-                string detail = string.Join(", ", movedDetails.Select(kv => $"{kv.Key} x{kv.Value}"));
+                string detail = string.Join(", ", movedDetails.Select(kv =>
+                {
+                    firstItemByType.TryGetValue(kv.Key, out var rep);
+                    return $"{PlayerInventoryPanelController.GetItemDisplayName(kv.Key, rep)} x{kv.Value}";
+                }));
                 dayLog.RecordSeedStorageAction("Withdraw", withdrawnCount, detail);
             }
             StorageChanged?.Invoke();
