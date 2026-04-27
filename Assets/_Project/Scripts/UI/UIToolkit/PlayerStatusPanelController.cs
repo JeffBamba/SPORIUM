@@ -149,6 +149,12 @@ namespace Sporae.UI.UIToolkit
         
         private void Update()
         {
+            if (_root != null)
+                _root.style.display = GameplayUiModalLock.HidesFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
+
+            if (GameplayUiModalLock.HidesFixedHud)
+                return;
+
             if (_hydrationConnectedToRealSystem) return;
             _mockUpdateTimer += Time.deltaTime;
             if (_mockUpdateTimer >= MOCK_UPDATE_INTERVAL)

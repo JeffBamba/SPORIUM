@@ -20,13 +20,22 @@
                         <ui:Label text="1" class="menu-action-index-label" />
                     </ui:VisualElement>
                 </ui:Button>
+                <ui:Button name="btn-save-main" class="menu-action menu-action--cyan">
+                    <ui:VisualElement class="menu-action-icon-placeholder">
+                        <ui:Label text="I" class="menu-action-icon-placeholder-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Salva" class="menu-action-label" />
+                    <ui:VisualElement class="menu-action-index-box">
+                        <ui:Label text="2" class="menu-action-index-label" />
+                    </ui:VisualElement>
+                </ui:Button>
                 <ui:Button name="btn-load-game" class="menu-action menu-action--blue">
                     <ui:VisualElement class="menu-action-icon-placeholder">
                         <ui:Label text="I" class="menu-action-icon-placeholder-text" />
                     </ui:VisualElement>
                     <ui:Label text="Carica partita" class="menu-action-label" />
                     <ui:VisualElement class="menu-action-index-box">
-                        <ui:Label text="2" class="menu-action-index-label" />
+                        <ui:Label text="3" class="menu-action-index-label" />
                     </ui:VisualElement>
                 </ui:Button>
                 <ui:Button name="btn-demo" class="menu-action menu-action--yellow">
@@ -35,16 +44,16 @@
                     </ui:VisualElement>
                     <ui:Label text="Gioca demo" class="menu-action-label" />
                     <ui:VisualElement class="menu-action-index-box">
-                        <ui:Label text="3" class="menu-action-index-label" />
+                        <ui:Label text="4" class="menu-action-index-label" />
                     </ui:VisualElement>
                 </ui:Button>
-                <ui:Button name="btn-credits" class="menu-action menu-action--violet">
+                <ui:Button name="btn-settings-main" class="menu-action menu-action--violet">
                     <ui:VisualElement class="menu-action-icon-placeholder">
                         <ui:Label text="I" class="menu-action-icon-placeholder-text" />
                     </ui:VisualElement>
-                    <ui:Label text="Credits" class="menu-action-label" />
+                    <ui:Label text="Impostazioni" class="menu-action-label" />
                     <ui:VisualElement class="menu-action-index-box">
-                        <ui:Label text="4" class="menu-action-index-label" />
+                        <ui:Label text="5" class="menu-action-index-label" />
                     </ui:VisualElement>
                 </ui:Button>
                 <ui:Button name="btn-exit" class="menu-action menu-action--red">
@@ -53,7 +62,7 @@
                     </ui:VisualElement>
                     <ui:Label text="Esci da Sporium" class="menu-action-label" />
                     <ui:VisualElement class="menu-action-index-box">
-                        <ui:Label text="5" class="menu-action-index-label" />
+                        <ui:Label text="6" class="menu-action-index-label" />
                     </ui:VisualElement>
                 </ui:Button>
             </ui:VisualElement>
@@ -63,6 +72,7 @@
                     <ui:VisualElement name="loading-progress-track">
                         <ui:VisualElement name="loading-progress-fill" />
                     </ui:VisualElement>
+                    <ui:Label text="" name="loading-continue-hint" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:Button name="btn-settings" style="border-left-color: rgb(88, 172, 212); border-right-color: rgb(88, 172, 212); border-top-color: rgb(88, 172, 212); border-bottom-color: rgb(88, 172, 212); right: 83px; bottom: 61px;">
@@ -96,6 +106,15 @@
                             <ui:Button name="btn-language-auto" class="options-language-button" text="AUTO" />
                             <ui:Button name="btn-language-it" class="options-language-button" text="IT" />
                             <ui:Button name="btn-language-en" class="options-language-button" text="EN" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="options-row-audio" class="options-row">
+                        <ui:VisualElement class="options-row-copy">
+                            <ui:Label text="Audio" name="options-audio-title" class="options-row-title" />
+                            <ui:Label text="Apri il pannello volume audio esistente." name="options-audio-desc" class="options-row-desc" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="options-language-buttons">
+                            <ui:Button name="btn-open-legacy-audio" class="options-language-button" text="AUDIO" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>

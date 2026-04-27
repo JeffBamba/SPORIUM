@@ -24,6 +24,7 @@ namespace _Project.Systems.FoodRoom
         };
         private bool _foodSynthIsOn = true;
         private bool _pantryIsOn = true;
+        private bool _pantryInteractionActionSpent;
 
         private const string ToastKeyFoodProgress = "food-room-progress";
         private const string ToastKeyFoodDone = "food-room-done";
@@ -110,6 +111,10 @@ namespace _Project.Systems.FoodRoom
             string foodTypeId = GetFoodTypeIdByPantryType(type);
             if (string.IsNullOrEmpty(foodTypeId))
                 return false;
+            if (!_inventory.Has(foodTypeId, 1))
+                return false;
+            if (!TryEnsurePantryInteractionActionPaid())
+                return false;
 
             for (int i = 0; i < amount; i++)
             {
@@ -135,6 +140,8 @@ namespace _Project.Systems.FoodRoom
                 return false;
             if (!_pantryByType.TryGetValue(type, out var pantryBucket) || pantryBucket.Count <= 0)
                 return false;
+            if (!TryEnsurePantryInteractionActionPaid())
+                return false;
 
             for (int i = 0; i < amount; i++)
             {
@@ -153,6 +160,31 @@ namespace _Project.Systems.FoodRoom
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Inizio interazione dispensa: la prima movimentazione costa 1 AP,
+        /// tutte le successive nella stessa interazione non consumano AP aggiuntivi.
+        /// </summary>
+        public void BeginPantryInteraction()
+        {
+            _pantryInteractionActionSpent = false;
+        }
+
+        /// <summary>Fine interazione dispensa: reset della finestra costo azione.</summary>
+        public void EndPantryInteraction()
+        {
+            _pantryInteractionActionSpent = false;
+        }
+
+        private bool TryEnsurePantryInteractionActionPaid()
+        {
+            if (_pantryInteractionActionSpent)
+                return true;
+            if (_gameManager == null || !_gameManager.TrySpendAction(1))
+                return false;
+            _pantryInteractionActionSpent = true;
+            return true;
         }
 
         public void ExportPantryState(out bool pantryIsOn, out List<(int typeInt, float quality)> pantryItems)

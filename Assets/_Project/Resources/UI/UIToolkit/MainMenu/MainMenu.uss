@@ -200,6 +200,18 @@
     box-shadow: 0 0 26px rgba(211, 95, 95, 0.38);
 }
 
+.menu-action--cyan {
+    border-top-color: rgba(88, 172, 212, 0.9);
+    border-right-color: rgba(88, 172, 212, 0.9);
+    border-bottom-color: rgba(88, 172, 212, 0.9);
+    border-left-color: rgba(88, 172, 212, 0.9);
+}
+
+.menu-action--cyan:hover {
+    background-color: rgba(88, 172, 212, 0.14);
+    box-shadow: 0 0 26px rgba(88, 172, 212, 0.38);
+}
+
 .menu-action:disabled {
     opacity: 0.45;
 }
@@ -286,22 +298,25 @@
     letter-spacing: 1.1px;
 }
 
-/* Sotto l’action-list (stessa larghezza); niente overlay fullscreen sui bottoni */
 #loading-overlay {
-    width: 500px;
-    margin-top: 16px;
-    flex-shrink: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
     display: none;
-    flex-direction: column;
-    align-items: stretch;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(4, 8, 10, 0.9);
 }
 
 #loading-panel {
-    width: 100%;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 14px;
-    padding-bottom: 14px;
+    width: 92%;
+    max-width: 720px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 18px;
+    padding-bottom: 18px;
     border-top-width: 1px;
     border-right-width: 1px;
     border-bottom-width: 1px;
@@ -321,7 +336,7 @@
 }
 
 #loading-progress-track {
-    height: 12px;
+    height: 14px;
     border-top-width: 1px;
     border-right-width: 1px;
     border-bottom-width: 1px;
@@ -336,6 +351,14 @@
     width: 0%;
     height: 100%;
     background-color: rgba(127, 255, 122, 0.92);
+}
+
+#loading-continue-hint {
+    margin-top: 12px;
+    color: rgba(93, 182, 227, 0.92);
+    font-size: 13px;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
 }
 
 /* --- Save / Load slots (stesso look terminale del main menu) --- */

@@ -35,6 +35,7 @@ namespace _Project
         private VisualElement _step1, _step2, _step3, _step4, _step5, _step6, _step7, _step8;
         private Label _snapshotTitle, _snapshotDate, _snapshotVault, _snapshotPh, _activitySummary, _drift, _notes;
         private Label _diarioText, _forecastToday, _forecastTomorrow, _forecastResearch;
+        private Label _forecastFooter;
         private Label _eodHibernationLine1, _eodHibernationLine2, _eodDayFrom, _eodDayTo;
         private VisualElement _dawnParamsList, _dawnTooltip;
         private Label _dawnTooltipTitle, _dawnTooltipDesc, _dawnTooltipTip;
@@ -163,6 +164,7 @@ namespace _Project
             _forecastToday = _root.Q<Label>("eod-forecast-today");
             _forecastTomorrow = _root.Q<Label>("eod-forecast-tomorrow");
             _forecastResearch = _root.Q<Label>("eod-forecast-research");
+            _forecastFooter = _root.Q<Label>("eod-forecast-footer");
 
             _btnYes = _root.Q<Button>("btn-eod-yes");
             _btnNo = _root.Q<Button>("btn-eod-no");
@@ -1437,6 +1439,11 @@ namespace _Project
 
         private void PopulateForecast()
         {
+            if (_forecastToday != null) _forecastToday.text = string.Empty;
+            if (_forecastTomorrow != null) _forecastTomorrow.text = string.Empty;
+            if (_forecastResearch != null) _forecastResearch.text = string.Empty;
+            if (_forecastFooter != null) _forecastFooter.text = string.Empty;
+
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
             string predictedPhDriftStr = float.IsNaN(predictedPhDrift)
                 ? "—"
@@ -1629,18 +1636,20 @@ namespace _Project
             if (_forecastToday != null)
             {
                 _forecastToday.text = "";
-                yield return Typewriter(_forecastToday, textToday);
+                yield return TerminalChunkReveal(_forecastToday, textToday);
             }
             if (_forecastTomorrow != null)
             {
                 _forecastTomorrow.text = "";
-                yield return Typewriter(_forecastTomorrow, textTomorrow);
+                yield return TerminalChunkReveal(_forecastTomorrow, textTomorrow);
             }
             if (_forecastResearch != null && !string.IsNullOrEmpty(textResearch))
             {
                 _forecastResearch.text = "";
-                yield return Typewriter(_forecastResearch, textResearch);
+                yield return TerminalChunkReveal(_forecastResearch, textResearch);
             }
+            if (_forecastFooter != null)
+                _forecastFooter.text = "Chiudi la giornata e lascia sognare il Vault.";
         }
 
         private void PopulateDawn(int newDay)
@@ -1686,27 +1695,29 @@ namespace _Project
             string globalRisk = ComputeGlobalDawnRiskLabel(topRisks.Count);
             string mutationText = float.IsNaN(mutation) ? "—" : mutation.ToString("P0");
             string condText = float.IsNaN(condensation) ? "—" : condensation.ToString("F0");
+            string phValue = float.IsNaN(ph) ? "—" : ph.ToString("F1");
+            string phBand = _phSystem != null ? _phSystem.GetBandName() : "N/D";
 
             SetDawnRow(
                 "eod-dawn-text-mutation",
-                $"STATO NOTTE: pH {(float.IsNaN(ph) ? "—" : ph.ToString("F1"))} ({(_phSystem != null ? _phSystem.GetBandName() : "N/D")}), deriva {phDriftStr}{phTrend}, mutazione {mutationText}, condensa {condText}, rischio globale {globalRisk}.");
+                $"STATO NOTTE: pH <color={ColorInfo}><b>{phValue}</b></color> ({phBand}), deriva <color={ColorWarn}><b>{phDriftStr}{phTrend}</b></color>, mutazione <color={ColorInfo}><b>{mutationText}</b></color>, condensa <color={ColorInfo}><b>{condText}</b></color>, rischio globale <color={ColorBad}><b>{globalRisk}</b></color>.");
 
             if (topRisks.Count == 0)
             {
-                SetDawnRow("eod-dawn-text-ph", "PRIORITA IMMEDIATE: nessun POT in criticita alta. Mantieni monitoraggio Dome e stabilita pH.");
+                SetDawnRow("eod-dawn-text-ph", $"PRIORITA IMMEDIATE: <color={ColorGood}><b>nessun POT in criticita alta</b></color>. Mantieni monitoraggio Dome e stabilita pH.");
             }
             else
             {
-                SetDawnRow("eod-dawn-text-ph", $"PRIORITA IMMEDIATE: {string.Join(" | ", topRisks.Take(3))}");
+                SetDawnRow("eod-dawn-text-ph", $"PRIORITA IMMEDIATE: <color={ColorWarn}><b>{string.Join(" | ", topRisks.Take(3))}</b></color>");
             }
 
             if (topOpportunities.Count == 0)
             {
-                SetDawnRow("eod-dawn-text-condensation", "FINESTRA OPPORTUNITA: nessun avanzamento evidente. Punta prima su stabilizzazione e prevenzione.");
+                SetDawnRow("eod-dawn-text-condensation", $"FINESTRA OPPORTUNITA: <color={ColorMuted}><b>nessun avanzamento evidente</b></color>. Punta prima su stabilizzazione e prevenzione.");
             }
             else
             {
-                SetDawnRow("eod-dawn-text-condensation", $"FINESTRA OPPORTUNITA: {string.Join(" | ", topOpportunities.Take(2))}");
+                SetDawnRow("eod-dawn-text-condensation", $"FINESTRA OPPORTUNITA: <color={ColorInfo}><b>{string.Join(" | ", topOpportunities.Take(2))}</b></color>");
             }
 
             if (actionPlan.Count == 0)
@@ -1715,10 +1726,10 @@ namespace _Project
             }
             else
             {
-                SetDawnRow("eod-dawn-text-grate", $"PIANO AVVIO TURNO: {string.Join(" ", actionPlan.Take(3).Select((x, i) => $"{i + 1}) {x}"))}");
+                SetDawnRow("eod-dawn-text-grate", $"PIANO AVVIO TURNO: <color={ColorGood}><b>{string.Join(" ", actionPlan.Take(3).Select((x, i) => $"{i + 1}) {x}"))}</b></color>");
             }
 
-            SetDawnRow("eod-dawn-text-cry", $"ECONOMIA: baseline CRY stimata {cryForecast} (costi fissi). G-rate +{grate}.");
+            SetDawnRow("eod-dawn-text-cry", $"ECONOMIA: baseline CRY stimata <color={ColorInfo}><b>{cryForecast}</b></color> (costi fissi). G-rate <color={ColorGood}><b>+{grate}</b></color>.");
 
             var press = _root.Q<Label>("eod-dawn-press-key");
             if (press != null)
@@ -1877,7 +1888,11 @@ namespace _Project
         private void SetDawnRow(string labelName, string text)
         {
             var label = _root.Q<Label>(labelName);
-            if (label != null) label.text = text;
+            if (label != null)
+            {
+                label.enableRichText = true;
+                label.text = text;
+            }
         }
 
         private void RegisterDawnTooltipsOnce()

@@ -229,6 +229,15 @@ namespace Sporae.UI.UIToolkit.HUD
             }
         }
 
+        private void Update()
+        {
+            if (_root == null)
+                return;
+            _root.style.display = GameplayUiModalLock.HidesFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
+            if (GameplayUiModalLock.HidesFixedHud)
+                HideTooltipImmediate();
+        }
+
         private void OnGameLanguageChanged(GameLanguage _)
         {
             ApplyMissionLocalizationChrome();

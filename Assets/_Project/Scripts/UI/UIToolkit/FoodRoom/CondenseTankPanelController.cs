@@ -134,6 +134,8 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_btnCollectDirtyWater != null) _btnCollectDirtyWater.clicked += OnCollectDirtyWater;
 
             _uiBound = true;
+            if (_waterProgressBlock != null)
+                _waterProgressBlock.style.display = DisplayStyle.None;
             ApplyLocalizedCondenseStaticChrome();
         }
 

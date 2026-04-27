@@ -614,8 +614,7 @@ namespace Sporae.UI.UIToolkit.HUD
             EnsureInGameMainMenuController();
             if (_mainMenuUIToolkit != null)
             {
-                _mainMenuUIToolkit.ShowInGameMenu();
-                _mainMenuUIToolkit.OpenOptionsOverlay();
+                _mainMenuUIToolkit.ToggleInGameMenu();
                 return;
             }
             SporiumLogger.LogWarning(LogCategory.UI, "[CompactBottomBar] MainMenuUIToolkitController non disponibile: impossibile aprire il nuovo menu.");

@@ -51,9 +51,9 @@
                 <ui:ScrollView name="eod-forecast-scroll" class="eod-scroll">
                     <ui:Label name="eod-forecast-title" text="RIEPILOGO NOTTE — SISTEMA PREVISIONI" class="eod-panel-title" />
                     <ui:Label name="eod-forecast-today" text="[OGGI] …" class="eod-block" />
-                    <ui:Label name="eod-forecast-tomorrow" text="[PREVISIONE DOMANI] …" class="eod-block" />
+                    <ui:Label name="eod-forecast-tomorrow" text="" class="eod-block" />
                     <ui:Label name="eod-forecast-research" class="eod-block" />
-                    <ui:Label name="eod-forecast-footer" text="Chiudi la giornata e lascia sognare il Vault." class="eod-footer" />
+                    <ui:Label name="eod-forecast-footer" text="" class="eod-footer" />
                 </ui:ScrollView>
                 <ui:Button name="btn-eod-sleep" text="Riposo → Giorno successivo" class="eod-btn eod-btn--yes eod-cta" />
             </ui:VisualElement>

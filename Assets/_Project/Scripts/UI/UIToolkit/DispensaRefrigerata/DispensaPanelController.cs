@@ -232,6 +232,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
                 if (innerOverlay != null)
                     innerOverlay.style.display = DisplayStyle.Flex;
             }
+            _foodRoom?.BeginPantryInteraction();
             _isOpen = true;
             ApplyLocalizedDispensaStaticChrome();
             PushLoc("dispensa.log.panel_linked");
@@ -248,6 +249,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
                     innerOverlay.style.display = DisplayStyle.None;
             }
             if (_uiDocument != null) _uiDocument.sortingOrder = 420;
+            _foodRoom?.EndPantryInteraction();
             _isOpen = false;
         }
 
@@ -266,8 +268,10 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (_foodRoom == null) return;
             if (_foodRoom.GetPantryQuantity(type) <= 0)
                 return;
-            _foodRoom.TryTransferFromPantry(type, 1, out _);
-            PushLoc("dispensa.log.removed", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
+            if (_foodRoom.TryTransferFromPantry(type, 1, out _))
+                PushLoc("dispensa.log.removed", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
+            else
+                PushLoc("dispensa.log.ap_blocked");
             Refresh();
         }
 
@@ -283,8 +287,10 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             string typeId = GetFoodTypeId(type);
             if (string.IsNullOrEmpty(typeId) || GetInventoryQuantity(typeId) <= 0)
                 return;
-            _foodRoom.TryTransferToPantry(type, 1, out _);
-            PushLoc("dispensa.log.stored", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
+            if (_foodRoom.TryTransferToPantry(type, 1, out _))
+                PushLoc("dispensa.log.stored", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
+            else
+                PushLoc("dispensa.log.ap_blocked");
             Refresh();
         }
 
