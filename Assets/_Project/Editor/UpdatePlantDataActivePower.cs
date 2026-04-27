@@ -21,8 +21,8 @@ namespace _Project.Editor
             var activePowers = new System.Collections.Generic.Dictionary<string, string>
             {
                 { "PLT-STD-001", "Purificatrice: −10% rischio muffe Dome" },
-                { "PLT-PURE-001", "Arctic Purification: rigenera +5 global pH e cura muffe Dome ogni 2 giorni" },
-                { "PLT-EVIL-001", "Allucinogeno: +10% probabilità di mutazione Spore globali" }
+                { "PLT-PURE-001", "Arctic Purification: rigenera pH della Dome con scala +1/Lv (fino a +5) e cura muffe ogni 2 giorni" },
+                { "PLT-EVIL-001", "Allucinogeno: altera il pH Dome con scala -1/Lv (fino a -5) e aumenta la probabilità di mutazione Spore globali" }
             };
             
             int updated = 0;

@@ -138,11 +138,22 @@ public class GameManager : MonoBehaviour
         if (!demoSession)
         {
             _demoTutorialDayActive = false;
+            _dailyActionsFromBreakfast = 5;
+            if (_actionSystem != null && _actionSystem.MaxActions < 5)
+                _actionSystem.RestoreState(_actionSystem.ActionsLeft, 5);
+            SeedActionBudgetLedgerForDawn(
+                rawBreakfast: 5,
+                penaltySteps: Mathf.Max(0, _consecutiveDaysWithoutMeal - 2),
+                wasOverrideBreakfast: false);
             return;
         }
 
         _demoTutorialDayActive = tutorialDayActive;
         _dailyActionsFromBreakfast = _demoTutorialDayActive ? 1 : 5;
+        SeedActionBudgetLedgerForDawn(
+            rawBreakfast: Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5),
+            penaltySteps: Mathf.Max(0, _consecutiveDaysWithoutMeal - 2),
+            wasOverrideBreakfast: false);
     }
 
     /// <summary>Per UI colazione: quante azioni assegnare all’alba successiva (1–5).</summary>
@@ -286,7 +297,7 @@ public class GameManager : MonoBehaviour
         else
         {
             _demoTutorialDayActive = false;
-            _dailyActionsFromBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+            _dailyActionsFromBreakfast = 5;
         }
 
         // Inizializza sistemi

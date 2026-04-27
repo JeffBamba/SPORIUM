@@ -1590,12 +1590,10 @@ public class DayCycleController : MonoBehaviour
         pot.IncrementConsecutiveLedDays();
         int consecutiveDays = pot.GetConsecutiveLedDays();
         
-        // Calcola scaling effetti
-        float effectMultiplier = GetLedEffectMultiplier(consecutiveDays);
         float malusMultiplier = GetLedMalusMultiplier(consecutiveDays);
         
-        // Applica effetti crescita e pH
-        ApplyLedEffects(pot, pot.LedSystemState, effectMultiplier, malusMultiplier, consecutiveDays);
+        // Applica effetti LED (luce/crescita/stress/burn); drift pH da LED disabilitato
+        ApplyLedEffects(pot, pot.LedSystemState, malusMultiplier, consecutiveDays);
         
         // Consumo CRY notturno
         int cryCost = GetNightlyCryCost(pot.LedSystemState, consecutiveDays);
@@ -1642,17 +1640,6 @@ public class DayCycleController : MonoBehaviour
     }
     
     /// <summary>
-    /// BLK-02.07: Calcola moltiplicatore effetti LED in base a giorni consecutivi
-    /// </summary>
-    private float GetLedEffectMultiplier(int consecutiveDays)
-    {
-        if (consecutiveDays == 1) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay1;
-        if (consecutiveDays >= 2 && consecutiveDays <= 3) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDays2_3;
-        if (consecutiveDays >= 4) return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay4Plus;
-        return Sporae.DevTools.DifficultyCalibrationConfig.LedMultiplierDay1;
-    }
-    
-    /// <summary>
     /// BLK-02.07: Calcola moltiplicatore malus LED in base a giorni consecutivi
     /// </summary>
     private float GetLedMalusMultiplier(int consecutiveDays)
@@ -1679,32 +1666,11 @@ public class DayCycleController : MonoBehaviour
     }
     
     /// <summary>
-    /// BLK-02.07: Applica effetti LED (pH, crescita, stress)
+    /// BLK-02.07: Applica effetti LED (crescita luce, stress/burn). Drift pH da LED non applicato.
     /// </summary>
-    private void ApplyLedEffects(PotStateModel pot, LedSystemState state, float effectMultiplier, float malusMultiplier, int consecutiveDays)
+    private void ApplyLedEffects(PotStateModel pot, LedSystemState state, float malusMultiplier, int consecutiveDays)
     {
         if (state == LedSystemState.Off) return;
-        
-        // Converti LedSystemState a LedType per compatibilità
-        LedType ledType = state == LedSystemState.Blue ? LedType.Blue : LedType.Red;
-        
-        // Effetti pH (con scaling)
-        if (_phSystem != null)
-        {
-            float basePhDelta = ledType == LedType.Blue ? Sporae.DevTools.DifficultyCalibrationConfig.PhDriftLedBlue : Sporae.DevTools.DifficultyCalibrationConfig.PhDriftLedRed;
-            float phDelta = basePhDelta * effectMultiplier;
-            string actionName = ledType == LedType.Blue ? "BlueLED" : "RedLED";
-            
-            // Aggiungi moltiplicatore al nome azione per tooltip
-            if (consecutiveDays >= 4)
-                actionName += "_x2";
-            else if (consecutiveDays >= 2)
-                actionName += "_x1.5";
-            
-            _phSystem.RegisterActionDrift(phDelta, actionName, pot.PotId);
-            if (enableDebugLogs)
-                SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: LED {state} giorno {consecutiveDays} - pH {(phDelta > 0 ? "+" : "")}{phDelta:F1} (mult: {effectMultiplier:F1})");
-        }
         
         // Effetti crescita (Light Exposure)
         // BUG FIX: Se LightExposure è stato impostato manualmente, preserva il valore base
@@ -2120,8 +2086,7 @@ public class DayCycleController : MonoBehaviour
             var plantData = pot.GetPlantData();
             if (plantData == null) continue;
             float d = plantData.GetDailyPhDrift();
-            if (HasArcticPurificationActive(pot, plantData))
-                d += 5f;
+            d += GetActiveBotanicalPhDriftByPlantLevel(pot, plantData);
             d = LabHybridGameplayModifiers.ScaleDailyPhDrift(d, pot);
             total += d;
         }
@@ -2197,10 +2162,10 @@ public class DayCycleController : MonoBehaviour
                 continue;
             }
             
-            // Calcola drift pH per questa pianta (+ Arctic Purification +5/g se attivo, anche su ibridi con metadata).
+            // Calcola drift pH per questa pianta
+            // (base species + potere attivo botanico scalato per livello, anche su ibridi con metadata).
             float plantDrift = plantData.GetDailyPhDrift();
-            if (HasArcticPurificationActive(pot, plantData))
-                plantDrift += 5f;
+            plantDrift += GetActiveBotanicalPhDriftByPlantLevel(pot, plantData);
             plantDrift = LabHybridGameplayModifiers.ScaleDailyPhDrift(plantDrift, pot);
             totalPhDrift += plantDrift;
             plantCount++;
@@ -2260,20 +2225,27 @@ public class DayCycleController : MonoBehaviour
         }
     }
 
-    private static bool HasArcticPurificationActive(PotStateModel pot, PlantData plantData)
+    /// <summary>
+    /// Drift pH del potere attivo botanico scalato col livello pianta.
+    /// Regola gameplay:
+    /// - Arctic Hask: +1 pH/g per livello (Lv1..Lv5 => +1..+5)
+    /// - Glasscap:    -1 pH/g per livello (Lv1..Lv5 => -1..-5)
+    /// </summary>
+    private static float GetActiveBotanicalPhDriftByPlantLevel(PotStateModel pot, PlantData plantData)
     {
         if (pot == null && plantData == null)
-            return false;
+            return 0f;
 
-        if (BotanicalPlantCodes.IsArcticHask(plantData != null ? plantData.PlantCode : pot?.PlantCode))
-            return true;
+        int level = Mathf.Clamp(pot != null ? pot.PlantLevel : 1, 1, 5);
+        string plantCode = plantData != null ? plantData.PlantCode : pot?.PlantCode;
 
-        string active = !string.IsNullOrWhiteSpace(pot?.ActivePowerLabel)
-            ? pot.ActivePowerLabel
-            : plantData?.ActivePower;
+        if (BotanicalPlantCodes.IsArcticHask(plantCode))
+            return level;
 
-        return !string.IsNullOrWhiteSpace(active)
-               && active.IndexOf("Arctic Purification", StringComparison.OrdinalIgnoreCase) >= 0;
+        if (BotanicalPlantCodes.IsGlasscap(plantCode))
+            return -level;
+
+        return 0f;
     }
     
     /// <summary>

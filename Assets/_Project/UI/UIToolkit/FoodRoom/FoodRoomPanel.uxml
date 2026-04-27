@@ -9,10 +9,17 @@
             <ui:VisualElement name="food-room-panel" class="sp-panel sp-panel--large food-room-panel" style="height: 761px; width: 1024px;">
                 <ui:VisualElement name="header" class="sp-panel__header sp-header food-room-header">
                     <ui:VisualElement name="header-left" class="header-left">
-                        <ui:Label name="status" text="ENV-010 • SUPPORTO VITALE ATTIVO" class="sp-label header-status" />
+                        <ui:VisualElement name="food-synth-status-row" class="food-synth-status-row">
+                            <ui:Label name="status" text="ENV-010 • SUPPORTO VITALE ATTIVO" class="sp-label header-status" />
+                            <ui:VisualElement name="food-synth-power-row" class="food-synth-power-row">
+                                <ui:VisualElement name="food-synth-power-indicator" class="food-synth-power-indicator food-synth-power-indicator--on" />
+                                <ui:Label name="food-synth-status-text" text="SINTETIZZATORE ATTIVO" class="food-synth-status-text food-synth-status-text--on" />
+                                <ui:Label name="food-synth-cost" text="MANTENIMENTO: 5 CRY/giorno" class="food-synth-cost" style="font-size: 11px;" />
+                                <ui:Button name="btn-food-synth-power" text="SPEGNI" class="sp-button food-synth-power-button" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
                         <ui:VisualElement name="title-row" class="title-row">
-                            <ui:Label name="icon-flask" text="⚗" class="header-icon" />
-                            <ui:Label name="title" text="SINTESI ALIMENTARE BIOLOGICA" class="sp-header__title header-title" />
+                            <ui:Label name="title" text="SINTESI ALIMENTARE BIOLOGICA" class="sp-header__title header-title" style="font-size: 18px;" />
                         </ui:VisualElement>
                         <ui:Label name="subtitle" text="Coltivazione di biomassa nei serbatoi • Non cotto, ma coltivato • La sopravvivenza sa di scienza. I confini etici si vendono a parte." class="sp-header__subtitle header-subtitle" style="font-size: 12px;" />
                     </ui:VisualElement>
@@ -25,69 +32,49 @@
                                 <ui:Label text="⚡" class="section-icon" />
                                 <ui:Label text="CAMERE DI CRESCITA" class="sp-title section-title" />
                             </ui:VisualElement>
-                            <ui:VisualElement name="chambers-list" class="chambers-list" style="width: 304px;">
+                            <ui:VisualElement name="chambers-list" class="chambers-list">
                                 <ui:VisualElement name="chamber-vegetal" class="chamber-card chamber-vegetal">
                                     <ui:Label text="🌿" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
-                                        <ui:Label text="SINTESI VEGETALE" class="chamber-name" />
-                                        <ui:Label text="1 giorno · 3 unità · +1 azione" class="chamber-details" style="font-size: 10px; color: rgba(236, 204, 0, 0.75);" />
-                                        <ui:Label text="Tecnicamente commestibile, presumibilmente sicuro." class="chamber-desc" style="font-size: 12px; width: 218px;" />
+                                        <ui:Label text="SINTESI VEGETALE" class="chamber-name" style="font-size: 13px;" />
+                                        <ui:Label text="1 giorno · 3 unità · +1 azione" class="chamber-details" style="font-size: 10px; -unity-font-style: bold;" />
+                                        <ui:Label text="Tecnicamente commestibile, presumibilmente sicuro." class="chamber-desc" style="font-size: 9px;" />
                                         <ui:VisualElement name="chamber-vegetal-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-vegetal-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-vegetal-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-vegetal-cost" text="5 CRY" class="chamber-cost" />
+                                    <ui:Label name="chamber-vegetal-cost" text="5 CRY" class="chamber-cost" style="font-size: 12px;" />
                                 </ui:VisualElement>
                                 <ui:VisualElement name="chamber-fungal" class="chamber-card chamber-fungal">
                                     <ui:Label text="🍄" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
-                                        <ui:Label text="SINTESI FUNGINA" class="chamber-name" />
-                                        <ui:Label text="2 giorni · 2 unità · +2 azioni" class="chamber-details" style="font-size: 10px; color: rgba(255, 219, 129, 0.75);" />
-                                        <ui:Label text="Cresciuto al buio. Come la tua coscienza." class="chamber-desc" style="font-size: 12px; width: 244px;" />
+                                        <ui:Label text="SINTESI FUNGINA" class="chamber-name" style="font-size: 13px;" />
+                                        <ui:Label text="2 giorni · 2 unità · +2 azioni" class="chamber-details" style="font-size: 10px; -unity-font-style: bold;" />
+                                        <ui:Label text="Cresciuto al buio. Come la tua coscienza." class="chamber-desc" style="font-size: 9px; width: 185px;" />
                                         <ui:VisualElement name="chamber-fungal-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-fungal-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-fungal-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-fungal-cost" text="10 CRY" class="chamber-cost" />
+                                    <ui:Label name="chamber-fungal-cost" text="10 CRY" class="chamber-cost" style="font-size: 12px;" />
                                 </ui:VisualElement>
-                                <ui:VisualElement name="chamber-meat" class="chamber-card chamber-meat">
+                                <ui:VisualElement name="chamber-meat" class="chamber-card chamber-meat chamber-card--last">
                                     <ui:Label text="🥩" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
-                                        <ui:Label text="SINTESI DI CARNE" class="chamber-name" />
-                                        <ui:Label text="3 giorni · 1 unità · +3 azioni · 3× RES-PROT-001" class="chamber-details" style="font-size: 10px; color: rgba(255, 223, 93, 0.75);" />
-                                        <ui:Label text="Non ha mai conosciuto una madre. Non la conoscerà mai." class="chamber-desc" style="font-size: 12px; width: 204px;" />
+                                        <ui:Label text="SINTESI DI CARNE" class="chamber-name" style="font-size: 13px;" />
+                                        <ui:Label text="3 giorni · 1 unità · +3 azioni · 3× RES-PROT-001" class="chamber-details" style="font-size: 10px; -unity-font-style: bold; width: 165px;" />
+                                        <ui:Label text="Non ha mai conosciuto una madre. Non la conoscerà mai." class="chamber-desc" style="font-size: 9px;" />
                                         <ui:VisualElement name="chamber-meat-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-meat-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-meat-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-meat-cost" text="20 CRY" class="chamber-cost" />
+                                    <ui:Label name="chamber-meat-cost" text="20 CRY" class="chamber-cost" style="font-size: 12px;" />
                                 </ui:VisualElement>
-                            </ui:VisualElement>
-                        </ui:VisualElement>
-                        <ui:VisualElement name="hydration-section" class="section-hydration">
-                            <ui:VisualElement name="hydration-title-row" class="section-title-row teal">
-                                <ui:Label text="💧" class="section-icon" />
-                                <ui:Label text="LINEA IDRATAZIONE" class="sp-title section-title" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="hydration-line-box" class="hydration-line-box" style="width: 307px;">
-                                <ui:VisualElement name="hydration-text-block" class="hydration-text-block">
-                                    <ui:Label name="hydration-label" text="GREZZA → ACQUA POTABILE" class="hydration-label" />
-                                    <ui:Label name="hydration-flavor" text="Ogni goccia riciclata, nessuna ricordata." class="hydration-flavor" style="font-size: 12px;" />
-                                </ui:VisualElement>
-                                <ui:Label text="💧" class="hydration-drop-icon" />
-                                <ui:VisualElement name="hydration-units-row" class="hydration-units-row">
-                                    <ui:Label text="Unità" class="hydration-units-label" />
-                                    <ui:Button name="btn-purify-minus" text="−" class="sp-button hydration-units-btn" />
-                                    <ui:Label name="hydration-units-value" text="1" class="hydration-units-value" />
-                                    <ui:Button name="btn-purify-plus" text="+" class="sp-button hydration-units-btn" />
-                                </ui:VisualElement>
-                                <ui:VisualElement name="hydration-status-row" class="hydration-status-row" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                         <ui:VisualElement name="residual-protein-panel" class="residual-protein-panel">
@@ -101,49 +88,6 @@
                             <ui:Label name="residual-protein-hint" text="Per il Lab di clonazione. Eticamente ambigua, scientificamente inevitabile." class="residual-protein-hint" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="center-column" class="center-column">
-                        <ui:VisualElement name="tank-display" class="tank-display">
-                            <ui:VisualElement name="tank-circle" class="tank-circle">
-                                <ui:VisualElement name="tank-circle-spinner" class="tank-circle-spinner" />
-                            </ui:VisualElement>
-                            <ui:Label name="tank-status" text="SERBATOI DI CRESCITA INATTIVI" class="tank-status" />
-                            <ui:Label name="tank-message" text="Seleziona un protocollo di sintesi per avviare il ciclo di crescita." class="tank-message" />
-                        </ui:VisualElement>
-                    </ui:VisualElement>
-                    <ui:VisualElement name="right-column" class="right-column">
-                        <ui:VisualElement name="system-comment" class="system-comment" style="top: 33px;">
-                            <ui:Label text="⚠" class="comment-icon" />
-                            <ui:Label name="comment-text" text="Avviso: la variabilità del sapore supera la tolleranza etica. Valore nutrizionale verificato. Gusto non garantito. Consumo a discrezione dell&apos;operatore." class="comment-text" style="font-size: 12px; width: 204px; -unity-font-style: normal;" />
-                        </ui:VisualElement>
-                        <ui:VisualElement name="life-support-indicators" class="life-support-indicators" style="top: 64px;">
-                            <ui:VisualElement name="life-support-title-row" class="section-title-row yellow">
-                                <ui:Label text="⚡" class="section-icon" />
-                                <ui:Label text="INDICATORI SUPPORTO VITALE" class="sp-title section-title" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="life-support-grid" class="life-support-grid">
-                                <ui:VisualElement class="life-support-row">
-                                    <ui:Label name="ind-electricity" text="LIVELLO ELETTRICO" class="life-support-label" />
-                                    <ui:Label name="ind-electricity-val" text="87.3%" class="life-support-value" />
-                                </ui:VisualElement>
-                                <ui:VisualElement class="life-support-row">
-                                    <ui:Label name="ind-coretemp" text="TEMP. NUCLEO CULINARIO" class="life-support-label" />
-                                    <ui:Label name="ind-coretemp-val" text="42.8°C" class="life-support-value" />
-                                </ui:VisualElement>
-                                <ui:VisualElement class="life-support-row">
-                                    <ui:Label name="ind-reservoir" text="SERBATOIO DIGESTIVO" class="life-support-label" />
-                                    <ui:Label name="ind-reservoir-val" text="64% PIENO" class="life-support-value" />
-                                </ui:VisualElement>
-                                <ui:VisualElement class="life-support-row">
-                                    <ui:Label name="ind-nutrient" text="FLUSSO NUTRIENTI" class="life-support-label" />
-                                    <ui:Label name="ind-nutrient-val" text="2.4 L/min" class="life-support-value" />
-                                </ui:VisualElement>
-                            </ui:VisualElement>
-                            <ui:VisualElement name="life-support-maintenance" class="life-support-maintenance">
-                                <ui:Label text="ULTIMA MANUTENZIONE" class="life-support-label" />
-                                <ui:Label name="ind-maintenance" text="174 giorni fa — filtri in ritardo" class="life-support-value maintenance-value" />
-                            </ui:VisualElement>
-                        </ui:VisualElement>
-                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="bottom-bar" class="sp-panel__footer bottom-bar">
                     <ui:Label name="bottom-hint" text="Seleziona una camera di crescita per avviare la coltivazione" class="sp-text--dim bottom-hint" style="left: 12px;" />
@@ -154,16 +98,8 @@
                             <ui:VisualElement name="cultivation-progress-shine" class="cultivation-progress-shine" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement name="water-progress-block" class="water-progress-block">
-                        <ui:Label name="water-progress-label" text="Potabilizzazione in corso" class="water-progress-label" />
-                        <ui:VisualElement name="water-progress-track" class="water-progress-track">
-                            <ui:VisualElement name="water-progress-fill" class="water-progress-fill" />
-                            <ui:VisualElement name="water-progress-shine" class="water-progress-shine" />
-                        </ui:VisualElement>
-                    </ui:VisualElement>
                     <ui:VisualElement name="bottom-buttons" class="bottom-buttons">
                         <ui:Button name="btn-start-growth" text="▶ PROCESSO ALIMENTARE" class="sp-button sp-button--primary btn-action btn-start" />
-                        <ui:Button name="btn-purify-bottom" text="💧 POTABILIZZA ACQUA" class="sp-button sp-button--secondary btn-action btn-purify" />
                         <ui:Button name="btn-harvest" text="✓ RACCOLTA" class="sp-button sp-button--primary btn-action btn-harvest" />
                     </ui:VisualElement>
                 </ui:VisualElement>

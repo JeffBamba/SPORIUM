@@ -164,7 +164,7 @@ namespace Sporae.Core
                     {
                         currentDay = 1,
                         currentCRY = 250,
-                        actionsLeft = 4,
+                        actionsLeft = 5,
                         maxActions = 5,
                         condensationAmount = 0f,
                         dehydrationZeroDayStreak = 0,
@@ -459,10 +459,30 @@ namespace Sporae.Core
                 // Ripristina azioni usando ActionSystem
                 if (gameManager.ActionSystem != null)
                 {
+                    bool inferredDemoFromMissionsForActions = saveData.missions?.entries != null &&
+                        saveData.missions.entries.Exists(e =>
+                            string.Equals(e.configName, DemoBreakfastMission.DemoBreakfastMissionConfigName, StringComparison.Ordinal));
+                    var demoSessionForActions = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
+                    bool isDemoSessionForActions = saveData.gameState.isDemoSession || inferredDemoFromMissionsForActions || (demoSessionForActions?.IsDemo ?? false);
+
                     int maxActions = saveData.gameState.maxActions > 0
                         ? Mathf.Clamp(saveData.gameState.maxActions, 1, 5)
                         : gameManager.ActionSystem.MaxActions;
-                    gameManager.ActionSystem.RestoreState(saveData.gameState.actionsLeft, maxActions);
+
+                    int actionsLeft = saveData.gameState.actionsLeft;
+
+                    // Migrazione legacy full game: vecchi save possono avere cap 4.
+                    // In full game il cap baseline è 5, quindi riallineiamo il massimo a 5.
+                    // Manteniamo il valore di left se era sotto cap, altrimenti ripristiniamo pieno (5/5).
+                    if (!isDemoSessionForActions && maxActions < 5)
+                    {
+                        bool wasAtOrAboveOldCap = actionsLeft >= maxActions;
+                        maxActions = 5;
+                        if (wasAtOrAboveOldCap)
+                            actionsLeft = 5;
+                    }
+
+                    gameManager.ActionSystem.RestoreState(actionsLeft, maxActions);
                 }
 
                 if (gameManager.CondensationSystem != null)
@@ -636,6 +656,7 @@ namespace Sporae.Core
                 waterPotableOutput = foodRoom.WaterSlot.PotableWaterOutput,
                 waterCurrentProgress = foodRoom.WaterSlot.CurrentUnitProgress,
                 waterIsActive = foodRoom.WaterSlot.IsActive,
+                foodSynthIsOn = foodRoom.FoodSynthIsOn,
                 pantryIsOn = pantryIsOn,
                 pantryItems = new List<FoodRoomPantryItemSaveData>()
             };
@@ -690,6 +711,7 @@ namespace Sporae.Core
                 data.waterPotableOutput,
                 data.waterCurrentProgress,
                 data.waterIsActive,
+                data.foodSynthIsOn,
                 data.pantryIsOn,
                 pantryItems);
         }
@@ -1165,6 +1187,7 @@ namespace Sporae.Core
             public int waterPotableOutput;
             public float waterCurrentProgress;
             public bool waterIsActive;
+            public bool foodSynthIsOn = true;
             public bool pantryIsOn = true;
             public List<FoodRoomPantryItemSaveData> pantryItems;
         }

@@ -427,15 +427,15 @@ namespace Sporae.DevTools
                 _phSystem.ApplyInstantDelta(-5f, "Action_Watering_Over");
                 AddLog("Simulato Overwatering: pH -5");
             }
-            if (GUILayout.Button("LED Blu", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
+            if (GUILayout.Button("pH +5 (debug)", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 _phSystem.ApplyInstantDelta(+5f, "Action_LED_Blue");
-                AddLog("Simulato LED Blu: pH +5");
+                AddLog("Debug: istantaneo pH +5 (non è il LED gameplay)");
             }
-            if (GUILayout.Button("LED Rosso", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
+            if (GUILayout.Button("pH -5 (debug)", buttonStyle, GUILayout.Width(156))) // Scalato del 30% (120 * 1.3)
             {
                 _phSystem.ApplyInstantDelta(-5f, "Action_LED_Red");
-                AddLog("Simulato LED Rosso: pH -5");
+                AddLog("Debug: istantaneo pH -5 (non è il LED gameplay)");
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(7); // Scalato del 30% (5 * 1.3)

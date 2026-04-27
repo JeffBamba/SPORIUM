@@ -26,7 +26,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             var cryoCtrl = ServiceContainer.Instance?.Get<CryoMachineController>(suppressWarning: true);
             var cryoSlots = cryoCtrl?.GetPassiveSlotsSnapshot();
 
-            var task4Active = new List<(string potId, string plantCode, string displayName, string activeLabel)>();
+            var task4Active = new List<(string potId, string plantCode, string displayName, string activeLabel, int plantLevel)>();
             if (registry != null)
             {
                 var pots = registry.GetActivePotsSnapshot();
@@ -43,7 +43,7 @@ namespace Sporae.Dome.PotSystem.Botanical
                     string displayName = !string.IsNullOrWhiteSpace(state.CustomPlantName)
                         ? state.CustomPlantName
                         : (BotanicalPlantCodes.GetSpeciesUiDisplayName(code) ?? code);
-                    task4Active.Add((potId, code, displayName, state.ActivePowerLabel));
+                    task4Active.Add((potId, code, displayName, state.ActivePowerLabel, Mathf.Clamp(state.PlantLevel, 1, 5)));
                 }
             }
 
@@ -52,8 +52,8 @@ namespace Sporae.Dome.PotSystem.Botanical
             bool any = false;
             for (int i = 0; i < task4Active.Count; i++)
             {
-                var (potId, plantCode, displayName, activeLabel) = task4Active[i];
-                if (AppendGlobalEffectBlockForActivePot(lines, potId, plantCode, displayName, activeLabel))
+                var (potId, plantCode, displayName, activeLabel, plantLevel) = task4Active[i];
+                if (AppendGlobalEffectBlockForActivePot(lines, potId, plantCode, displayName, activeLabel, plantLevel))
                     any = true;
             }
 
@@ -119,7 +119,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             }
         }
 
-        private static int CompareTask4PotEntries((string potId, string plantCode, string displayName, string activeLabel) a, (string potId, string plantCode, string displayName, string activeLabel) b)
+        private static int CompareTask4PotEntries((string potId, string plantCode, string displayName, string activeLabel, int plantLevel) a, (string potId, string plantCode, string displayName, string activeLabel, int plantLevel) b)
         {
             int oa = Task4SpeciesSortOrder(a.plantCode);
             int ob = Task4SpeciesSortOrder(b.plantCode);
@@ -136,7 +136,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             return 99;
         }
 
-        private static bool AppendGlobalEffectBlockForActivePot(List<string> lines, string potId, string plantCode, string displayName, string activeLabel)
+        private static bool AppendGlobalEffectBlockForActivePot(List<string> lines, string potId, string plantCode, string displayName, string activeLabel, int plantLevel)
         {
             string species = string.IsNullOrWhiteSpace(displayName)
                 ? (BotanicalPlantCodes.GetSpeciesUiDisplayName(plantCode) ?? plantCode)
@@ -153,8 +153,11 @@ namespace Sporae.Dome.PotSystem.Botanical
             if (string.IsNullOrWhiteSpace(NormalizeTooltipCopy(effectiveActive)))
                 return false;
 
-            lines.Add($"  <color=#C8F5C8>{species} - {potId}</color>");
+            lines.Add($"  <color=#C8F5C8>{species} - {potId} (Lv {Mathf.Clamp(plantLevel, 1, 5)})</color>");
             AppendWrappedBulletLines(lines, "Attivo", effectiveActive);
+            string scaleText = BuildActivePhScaleTooltipText(plantCode, plantLevel);
+            if (!string.IsNullOrWhiteSpace(scaleText))
+                lines.Add($"      <color=#8FA0A6>{scaleText}</color>");
             return true;
         }
 
@@ -248,6 +251,26 @@ namespace Sporae.Dome.PotSystem.Botanical
         private static bool IsGlobalDomeBotanicalCode(string code) =>
             BotanicalPlantCodes.IsFerricFern(code) || BotanicalPlantCodes.IsArcticHask(code) || BotanicalPlantCodes.IsGlasscap(code);
 
+        private static int GetActiveBotanicalPhDeltaByLevel(string plantCode, int plantLevel)
+        {
+            int level = Mathf.Clamp(plantLevel, 1, 5);
+            if (BotanicalPlantCodes.IsArcticHask(plantCode))
+                return level;
+            if (BotanicalPlantCodes.IsGlasscap(plantCode))
+                return -level;
+            return 0;
+        }
+
+        private static string BuildActivePhScaleTooltipText(string plantCode, int plantLevel)
+        {
+            int delta = GetActiveBotanicalPhDeltaByLevel(plantCode, plantLevel);
+            if (delta == 0)
+                return null;
+
+            string sign = delta > 0 ? "+" : string.Empty;
+            return $"Scala con livello: {(delta > 0 ? "+1" : "-1")} pH/g per Lv (attuale {sign}{delta}/g).";
+        }
+
         public static void AppendStatusEffectLinesForPot(List<string> outLines, string potId, PhSystem phSystem)
         {
             if (outLines == null || string.IsNullOrEmpty(potId)) return;
@@ -274,12 +297,17 @@ namespace Sporae.Dome.PotSystem.Botanical
             if (BotanicalPlantCodes.IsArcticHask(self.PlantCode))
             {
                 emitted = true;
-                outLines.Add("§INFO§  • +5 pH/g da questo vaso (oltre al drift famiglia)§END§");
+                int delta = GetActiveBotanicalPhDeltaByLevel(self.PlantCode, self.PlantLevel);
+                outLines.Add($"§INFO§  • Potere attivo pH: {delta:+#;-#;0}/g da questo vaso (oltre al drift famiglia)§END§");
+                outLines.Add("§INFO§  • Scala con livello: +1 pH/g per Lv§END§");
                 outLines.Add("§INFO§  • Ogni 2 giorni: −1 livello rischio muffa su ogni vaso attivo§END§");
             }
             if (BotanicalPlantCodes.IsGlasscap(self.PlantCode))
             {
                 emitted = true;
+                int delta = GetActiveBotanicalPhDeltaByLevel(self.PlantCode, self.PlantLevel);
+                outLines.Add($"§INFO§  • Potere attivo pH: {delta:+#;-#;0}/g da questo vaso (oltre al drift famiglia)§END§");
+                outLines.Add("§INFO§  • Scala con livello: -1 pH/g per Lv§END§");
                 float m = 0.10f * BotanicalPowerScaling.MultiplierForPlantLevel(Mathf.Max(1, self.PlantLevel));
                 outLines.Add($"§INFO§  • +{Mathf.RoundToInt(m * 100f)}% IM globale (additivo, clamp)§END§");
             }
@@ -297,7 +325,7 @@ namespace Sporae.Dome.PotSystem.Botanical
             if (otherHask > 0)
             {
                 any = true;
-                outLines.Add($"§INFO§  • Altri Arctic Hask attivi ({otherHask}): +5 pH/g per vaso; pulizia muffa globale ogni 2 giorni se c'\u00E8 almeno un Hask attivo§END§");
+                outLines.Add($"§INFO§  • Altri Arctic Hask attivi ({otherHask}): pH attivo scalato per livello (+1/Lv per vaso); pulizia muffa globale ogni 2 giorni se c'\u00E8 almeno un Hask attivo§END§");
             }
             if (snap.GlasscapPassiveSlotCount > 0)
             {
@@ -348,12 +376,17 @@ namespace Sporae.Dome.PotSystem.Botanical
             if (BotanicalPlantCodes.IsArcticHask(self.PlantCode))
             {
                 em = true;
-                lines.Add("• +5 pH/g (vaso)");
+                int delta = GetActiveBotanicalPhDeltaByLevel(self.PlantCode, self.PlantLevel);
+                lines.Add($"• pH attivo {delta:+#;-#;0}/g (vaso)");
+                lines.Add("• Scala +1 pH/g per Lv");
                 lines.Add("• −1 muffa tutti i vasi / 2 giorni");
             }
             if (BotanicalPlantCodes.IsGlasscap(self.PlantCode))
             {
                 em = true;
+                int delta = GetActiveBotanicalPhDeltaByLevel(self.PlantCode, self.PlantLevel);
+                lines.Add($"• pH attivo {delta:+#;-#;0}/g (vaso)");
+                lines.Add("• Scala -1 pH/g per Lv");
                 float m = 0.10f * BotanicalPowerScaling.MultiplierForPlantLevel(Mathf.Max(1, self.PlantLevel));
                 lines.Add($"• IM globale +{Mathf.RoundToInt(m * 100f)}%");
             }
@@ -396,7 +429,12 @@ namespace Sporae.Dome.PotSystem.Botanical
             {
                 lines.Add(new BotanicalHudTooltipLine("── Poteri (vaso attivo) ──", BotanicalHudTooltipPalette.TipPhCyan, true));
                 if (hasActiveCopy)
+                {
                     lines.Add(new BotanicalHudTooltipLine($"  Attivo: {activeTxt}", BotanicalHudTooltipPalette.TipMuted));
+                    string activeScale = BuildActivePhScaleTooltipText(state.PlantCode, state.PlantLevel);
+                    if (!string.IsNullOrWhiteSpace(activeScale))
+                        lines.Add(new BotanicalHudTooltipLine($"  {activeScale}", BotanicalHudTooltipPalette.TipMuted));
+                }
                 else if (t4)
                     lines.Add(new BotanicalHudTooltipLine("  (nessun testo Attivo su PlantData)", BotanicalHudTooltipPalette.TipMuted));
             }

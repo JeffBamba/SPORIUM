@@ -32,7 +32,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         [Header("Game Metrics")]
         [SerializeField] private int _actionsLeft = 3;
-        [SerializeField] private int _maxActions = 4;
+        [SerializeField] private int _maxActions = 5;
         [SerializeField] private float _phLevel = 0f;
         [SerializeField] private float _condensation = 78f;
         [SerializeField] private float _mutationIndex = 0.42f;
@@ -718,11 +718,20 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     if (plantMods != null)
                     {
-                        foreach (var p in plantMods)
+                        var sortedPlantMods = new List<PhSystem.DailyPlantModifier>(plantMods);
+                        sortedPlantMods.Sort((a, b) =>
+                        {
+                            int potCompare = GetPotSortKey(a.PotId).CompareTo(GetPotSortKey(b.PotId));
+                            if (potCompare != 0)
+                                return potCompare;
+                            return string.CompareOrdinal(a.PotId, b.PotId);
+                        });
+
+                        foreach (var p in sortedPlantMods)
                         {
                             string plantName = GetPhModifierPlantLabel(p.PlantCode, p.PotId);
                             string driftStr = p.DailyDrift.ToString("+#0.0;-#0.0;0", culture);
-                            Color valueColor = p.DailyDrift >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
+                            Color valueColor = GetPlantPhDriftColor(p.PlantCode, p.DailyDrift);
                             var icon = GlobalIconResolver.GetPlantIcon(p.PlantCode);
                             AddPhModifierRow(_phTooltipModifiersList, plantName, driftStr, valueColor, icon);
                         }
@@ -843,6 +852,24 @@ namespace Sporae.UI.UIToolkit.HUD
             return LocalizationManager.GetString($"topbar.ph_rotate.{index}");
         }
 
+        private static int GetPotSortKey(string potId)
+        {
+            if (string.IsNullOrWhiteSpace(potId))
+                return int.MaxValue;
+
+            int value = 0;
+            bool foundDigit = false;
+            for (int i = 0; i < potId.Length; i++)
+            {
+                char c = potId[i];
+                if (c < '0' || c > '9')
+                    continue;
+                foundDigit = true;
+                value = value * 10 + (c - '0');
+            }
+            return foundDigit ? value : int.MaxValue;
+        }
+
         private static string GetPlantDisplayName(string plantCode)
         {
             if (string.IsNullOrEmpty(plantCode) || plantCode == "Unknown")
@@ -892,6 +919,18 @@ namespace Sporae.UI.UIToolkit.HUD
                 ? "—"
                 : potId;
             return $"{species} - {pot}";
+        }
+
+        private static Color GetPlantPhDriftColor(string plantCode, float drift)
+        {
+            // Mapping richiesto: PURE in blu, EVIL in rosso.
+            if (BotanicalPlantCodes.IsArcticHask(plantCode))
+                return new Color(0.365f, 0.714f, 0.89f); // blue
+            if (BotanicalPlantCodes.IsGlasscap(plantCode))
+                return new Color(1f, 0.27f, 0.27f); // red
+
+            // Fallback legacy per altre specie.
+            return drift >= 0 ? new Color(1f, 0.27f, 0.27f) : new Color(0.365f, 0.714f, 0.89f);
         }
         
         /// <summary>

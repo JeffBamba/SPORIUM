@@ -360,10 +360,8 @@ namespace Sporae.DevTools
         private float DrawPhDriftSection(float width, float startY)
         {
             float y = startY;
-            y += DrawSectionDescription("Modifica quanto ogni azione influisce sul pH globale. Valori negativi rendono il pH più acido, valori positivi più basico. LED Blue e Spray aumentano il pH (basico), LED Red e Overwatering lo diminuiscono (acido).", width, y);
+            y += DrawSectionDescription("Modifica quanto ogni azione influisce sul pH globale. Valori negativi = più acido, positivi = più basico. Spray (additivi) e Overwatering sono qui; i LED non spostano più il pH.", width, y);
             y += DrawSlider("pH Drift Overwatering", ref DifficultyCalibrationConfig.PhDriftOverwatering, -10f, 0f, width, y);
-            y += DrawSlider("pH Drift LED Blue", ref DifficultyCalibrationConfig.PhDriftLedBlue, 0f, 10f, width, y);
-            y += DrawSlider("pH Drift LED Red", ref DifficultyCalibrationConfig.PhDriftLedRed, -10f, 0f, width, y);
             y += DrawSlider("pH Drift Spray", ref DifficultyCalibrationConfig.PhDriftSpray, 0f, 10f, width, y);
             return y - startY;
         }
@@ -371,10 +369,7 @@ namespace Sporae.DevTools
         private float DrawLedSection(float width, float startY)
         {
             float y = startY;
-            y += DrawSectionDescription("Controlla gli effetti del LED sul pH e i malus per uso prolungato. I moltiplicatori aumentano l'effetto pH del LED nei giorni consecutivi. I malus si applicano quando il LED è acceso troppo a lungo, causando Burn Stress.", width, y);
-            y += DrawSlider("LED Multiplier Giorno 1", ref DifficultyCalibrationConfig.LedMultiplierDay1, 0.5f, 2.0f, width, y);
-            y += DrawSlider("LED Multiplier Giorni 2-3", ref DifficultyCalibrationConfig.LedMultiplierDays2_3, 1.0f, 3.0f, width, y);
-            y += DrawSlider("LED Multiplier Giorno 4+", ref DifficultyCalibrationConfig.LedMultiplierDay4Plus, 1.5f, 4.0f, width, y);
+            y += DrawSectionDescription("Parametri LED: moltiplicatori giornalieri (ex drift pH) non sono più usati dal gameplay. I malus sotto alimentano solo log di debug in DayCycle; stress/burn reale usa giorni consecutivi LED e MaxDaysForFullStress.", width, y);
             y += DrawSlider("LED Malus Base (≤3 giorni)", ref DifficultyCalibrationConfig.LedMalusBase, 0.5f, 2.0f, width, y);
             y += DrawSlider("LED Malus Growth (≥4 giorni)", ref DifficultyCalibrationConfig.LedMalusGrowth, 1.0f, 3.0f, width, y);
             y += DrawSlider("LED Malus Increment/Giorno", ref DifficultyCalibrationConfig.LedMalusIncrementPerDay, 0.1f, 0.5f, width, y);
@@ -533,15 +528,10 @@ namespace Sporae.DevTools
             
             sb.AppendLine("--- pH DRIFT AZIONI ---");
             ExportParam(sb, "PhDriftOverwatering", allParams);
-            ExportParam(sb, "PhDriftLedBlue", allParams);
-            ExportParam(sb, "PhDriftLedRed", allParams);
             ExportParam(sb, "PhDriftSpray", allParams);
             sb.AppendLine();
             
             sb.AppendLine("--- SISTEMA LED ---");
-            ExportParam(sb, "LedMultiplierDay1", allParams);
-            ExportParam(sb, "LedMultiplierDays2_3", allParams);
-            ExportParam(sb, "LedMultiplierDay4Plus", allParams);
             ExportParam(sb, "LedMalusBase", allParams);
             ExportParam(sb, "LedMalusGrowth", allParams);
             ExportParam(sb, "LedMalusIncrementPerDay", allParams);

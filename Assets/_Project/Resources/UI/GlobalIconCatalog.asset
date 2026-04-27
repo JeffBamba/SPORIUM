@@ -46,7 +46,7 @@ MonoBehaviour:
   - CategoryKey: protein
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   - CategoryKey: food
-    Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
+    Icon: {fileID: 21300000, guid: f79d74233b7b6164d8b6a55ac595f27e, type: 3}
   - CategoryKey: preseed
     Icon: {fileID: 21300000, guid: e2c36b22fa421f74383f11b0311980d3, type: 3}
   - CategoryKey: misc

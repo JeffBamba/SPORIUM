@@ -25,7 +25,7 @@ MonoBehaviour:
     fondamentale per la stabilizzazione del pH e il mantenimento dell'equilibrio
     biologico. Non \xE8 determinabile se la specie sia stata progettata per ripristinare
     ecosistemi esistenti o per prepararne di nuovi."
-  activePower: 'Arctic Purification: rigenera +5pH e cura muffe Dome ogni 2 giorni'
+  activePower: 'Arctic Purification: rigenera pH della Dome con scala +1/Lv (fino a +5) e cura muffe ogni 2 giorni'
   family: 1
   rarity: 0
   dailyPhDrift: 2

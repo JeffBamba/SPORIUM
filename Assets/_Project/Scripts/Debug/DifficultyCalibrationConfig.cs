@@ -55,16 +55,16 @@ namespace Sporae.DevTools
         // pH DRIFT DA AZIONI (DayCycleController)
         // ============================================
         public static float PhDriftOverwatering = -5f;         // default -5
-        public static float PhDriftLedBlue = 5f;                // default +5
-        public static float PhDriftLedRed = -5f;               // default -5
+        public static float PhDriftLedBlue = 0f;                // LED non applicano drift pH (legacy field)
+        public static float PhDriftLedRed = 0f;
         public static float PhDriftSpray = 5f;                 // default +5
         
         // ============================================
-        // SISTEMA LED - MOLTIPLICATORI (DayCycleController)
+        // SISTEMA LED — legacy: ex moltiplicatori drift pH su giorni consecutivi (non più usati in gameplay)
         // ============================================
-        public static float LedMultiplierDay1 = 1.0f;          // default 1.0
-        public static float LedMultiplierDays2_3 = 1.5f;       // default 1.5
-        public static float LedMultiplierDay4Plus = 2.0f;      // default 2.0
+        public static float LedMultiplierDay1 = 1.0f;
+        public static float LedMultiplierDays2_3 = 1.5f;
+        public static float LedMultiplierDay4Plus = 2.0f;
         public static float LedMalusBase = 1.0f;               // default 1.0 (≤3 giorni)
         public static float LedMalusGrowth = 1.5f;             // default 1.5 (≥4 giorni)
         public static float LedMalusIncrementPerDay = 0.2f;    // default 0.2
@@ -186,8 +186,8 @@ namespace Sporae.DevTools
             
             // pH DRIFT AZIONI
             PhDriftOverwatering = -5f;
-            PhDriftLedBlue = 5f;
-            PhDriftLedRed = -5f;
+            PhDriftLedBlue = 0f;
+            PhDriftLedRed = 0f;
             PhDriftSpray = 5f;
             
             // LED

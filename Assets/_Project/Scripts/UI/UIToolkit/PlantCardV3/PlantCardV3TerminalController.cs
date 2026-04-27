@@ -1759,7 +1759,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
         {
             if (_apLabel != null)
             {
-                const int maxActionsDisplay = 4;
+                const int maxActionsDisplay = 5;
                 int left = _gameManager != null ? Math.Min(_gameManager.ActionsLeft, maxActionsDisplay) : 0;
                 _apLabel.text = $"AZIONI: {left}/{maxActionsDisplay}";
             }
@@ -5768,11 +5768,13 @@ AppendRawLine("§TITLE§✓ Coda azioni svuotata§END§");
             return label + new string('.', pad) + ": ";
         }
 
-        /// <summary>Evidenzia nel testo del Potere Attivo le parti numeriche/effetti (es. +5 global pH, cura muffe).</summary>
+        /// <summary>Evidenzia nel testo del Potere Attivo le parti numeriche/effetti principali.</summary>
         private static string FormatActivePowerHighlight(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return raw;
             string s = raw;
+            s = s.Replace("scala +1/Lv (fino a +5)", "§TITLE§scala +1/Lv (fino a +5)§END§");
+            s = s.Replace("scala -1/Lv (fino a -5)", "§TITLE§scala -1/Lv (fino a -5)§END§");
             s = s.Replace("+5 global pH", "§TITLE§+5 global pH§END§");
             s = s.Replace("cura muffe Dome ogni 2 giorni", "§TITLE§cura muffe Dome ogni 2 giorni§END§");
             s = s.Replace("−10% rischio muffe Dome", "§TITLE§−10% rischio muffe Dome§END§");

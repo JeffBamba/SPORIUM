@@ -86,7 +86,7 @@ namespace Sporae.UI.UIToolkit.Lab
             sb.AppendLine($"Tratti: {WrapValue("Stabili")}");
             sb.AppendLine($"% di mutare: {WrapValue("25%")}");
             sb.AppendLine($"Origine: {WrapValue("Arctic Hask Lvl 4")}");
-            sb.AppendLine($"Potere attivo: {WrapValue("Arctic Purification: rigenera +5 global pH e cura muffe Dome ogni 2 giorni")}");
+            sb.AppendLine($"Potere attivo: {WrapValue("Arctic Purification: rigenera pH Dome con scala +1/Lv (fino a +5) e cura muffe Dome ogni 2 giorni")}");
             sb.AppendLine($"Potere passivo: {WrapValue("Permafrost Core: sostiene il recupero del pH e la purezza ambientale.")}");
             sb.AppendLine($"Tratti conosciuti: {WrapValue("BalancedGrowth, NeutralYield, Resilience")}");
             return sb.ToString();

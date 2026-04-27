@@ -217,6 +217,8 @@ namespace _Project
             {
                 if (Mathf.Abs(a.Delta) < 0.01f)
                     continue;
+                if (IsLedPhContributionActionName(a.ActionName))
+                    continue;
                 list.Add(new DailyActionModifier
                 {
                     ActionDisplayName = GetActionDisplayName(a.ActionName),
@@ -225,6 +227,15 @@ namespace _Project
                 });
             }
             return list;
+        }
+
+        /// <summary>True se l'azione era il drift pH da LED (rimosso dal gameplay; esclude voci residue da save).</summary>
+        private static bool IsLedPhContributionActionName(string actionName)
+        {
+            if (string.IsNullOrEmpty(actionName))
+                return false;
+            return actionName.StartsWith("BlueLED", System.StringComparison.Ordinal)
+                || actionName.StartsWith("RedLED", System.StringComparison.Ordinal);
         }
         
         /// <summary>

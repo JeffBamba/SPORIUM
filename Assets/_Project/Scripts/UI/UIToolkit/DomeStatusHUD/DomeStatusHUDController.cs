@@ -1365,21 +1365,20 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         {
             if (state == null || plantData == null) return 0f;
             float drift = plantData.GetDailyPhDrift();
-            if (HasArcticPurificationActive(state, plantData))
-                drift += 5f;
+            drift += GetActiveBotanicalPhDeltaByLevel(state, plantData);
             return LabHybridGameplayModifiers.ScaleDailyPhDrift(drift, state);
         }
 
-        private static bool HasArcticPurificationActive(PotStateModel state, PlantData plantData)
+        private static int GetActiveBotanicalPhDeltaByLevel(PotStateModel state, PlantData plantData)
         {
-            if (state == null && plantData == null) return false;
-            if (BotanicalPlantCodes.IsArcticHask(plantData != null ? plantData.PlantCode : state?.PlantCode))
-                return true;
-            string active = !string.IsNullOrWhiteSpace(state?.ActivePowerLabel)
-                ? state.ActivePowerLabel
-                : plantData?.ActivePower;
-            return !string.IsNullOrWhiteSpace(active) &&
-                   active.IndexOf("Arctic Purification", System.StringComparison.OrdinalIgnoreCase) >= 0;
+            if (state == null && plantData == null) return 0;
+            int level = Mathf.Clamp(state != null ? state.PlantLevel : 1, 1, 5);
+            string code = plantData != null ? plantData.PlantCode : state?.PlantCode;
+            if (BotanicalPlantCodes.IsArcticHask(code))
+                return level;
+            if (BotanicalPlantCodes.IsGlasscap(code))
+                return -level;
+            return 0;
         }
 
         private static string TruncateString(string s, int maxLen)

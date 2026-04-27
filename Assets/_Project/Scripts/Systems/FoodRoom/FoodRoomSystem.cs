@@ -22,6 +22,7 @@ namespace _Project.Systems.FoodRoom
             { FoodProductionType.Fungus, new List<Item>() },
             { FoodProductionType.Meat, new List<Item>() }
         };
+        private bool _foodSynthIsOn = true;
         private bool _pantryIsOn = true;
 
         private const string ToastKeyFoodProgress = "food-room-progress";
@@ -32,6 +33,8 @@ namespace _Project.Systems.FoodRoom
 
         public IReadOnlyList<FoodProductionSlot> ProductionSlots => _productionSlots;
         public WaterProductionSlot WaterSlot => _waterSlot;
+        public bool FoodSynthIsOn => _foodSynthIsOn;
+        public int FoodSynthDailyCost => PantryDailyCryCost;
         public bool PantryIsOn => _pantryIsOn;
         public int PantryDailyCost => PantryDailyCryCost;
 
@@ -63,6 +66,22 @@ namespace _Project.Systems.FoodRoom
             if (!_pantryByType.TryGetValue(type, out var list))
                 return 0;
             return list.Count;
+        }
+
+        public bool SetFoodSynthPower(bool isOn)
+        {
+            if (_foodSynthIsOn == isOn)
+                return false;
+
+            _foodSynthIsOn = isOn;
+            var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
+            if (foundation != null && foundation.Enabled)
+            {
+                foundation.PostToastImmediate(isOn ? "KTCH-FOOD-ON" : "KTCH-FOOD-OFF");
+            }
+
+            RefreshFoodToasts();
+            return true;
         }
 
         public bool SetPantryPower(bool isOn)
@@ -182,6 +201,7 @@ namespace _Project.Systems.FoodRoom
         public bool StartProduction(FoodProductionType type, string stemCellTypeId = null)
         {
             if (type == FoodProductionType.None) return false;
+            if (!_foodSynthIsOn) return false;
             if (!_gameManager.TrySpendAction(1))
                 return false;
             if (stemCellTypeId != null && !_inventory.Consume(stemCellTypeId, 1))
@@ -311,7 +331,13 @@ namespace _Project.Systems.FoodRoom
 
         public void ProcessDailyProduction(int currentDay)
         {
-            int days = _config != null ? _config.GetDaysFor(FoodProductionType.Meat) : 3;
+            if (!_foodSynthIsOn)
+            {
+                RefreshFoodToasts();
+                RefreshWaterToasts();
+                return;
+            }
+
             for (int i = 0; i < _productionSlots.Count; i++)
             {
                 var slot = _productionSlots[i];
@@ -339,10 +365,14 @@ namespace _Project.Systems.FoodRoom
         public void ProcessDailyCosts()
         {
             int totalCry = 0;
-            foreach (var slot in _productionSlots)
+            if (_foodSynthIsOn)
             {
-                if (slot.State == SlotState.Growing || slot.State == SlotState.Ready)
-                    totalCry += _config != null ? _config.GetCryPerDayFor(slot.Type) : 1;
+                totalCry += FoodSynthDailyCost;
+                foreach (var slot in _productionSlots)
+                {
+                    if (slot.State == SlotState.Growing || slot.State == SlotState.Ready)
+                        totalCry += _config != null ? _config.GetCryPerDayFor(slot.Type) : 1;
+                }
             }
             if (_pantryIsOn)
                 totalCry += PantryDailyCryCost;
@@ -482,6 +512,7 @@ namespace _Project.Systems.FoodRoom
             int waterPotableOutput,
             float waterCurrentProgress,
             bool waterActive,
+            bool foodSynthIsOn,
             bool pantryIsOn,
             List<(int typeInt, float quality)> pantryItems)
         {
@@ -507,6 +538,7 @@ namespace _Project.Systems.FoodRoom
             _waterSlot.CurrentUnitProgress = waterCurrentProgress;
             _waterSlot.IsActive = waterActive;
 
+            _foodSynthIsOn = foodSynthIsOn;
             _pantryIsOn = pantryIsOn;
             foreach (var key in _pantryByType.Keys)
                 _pantryByType[key].Clear();

@@ -3,6 +3,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using Sporae.DevTools;
+using Sporae.UI.UIToolkit.FoodRoom;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 
 namespace _Project
@@ -14,6 +15,8 @@ namespace _Project
     [RequireComponent(typeof(Interactable))]
     public class KitchenCondensationCollectPoint : MonoBehaviour
     {
+        [SerializeField] private CondenseTankPanelController _condenseTankPanel;
+
         private Interactable _interactable;
 
         private void Awake()
@@ -35,6 +38,12 @@ namespace _Project
 
         private void OnInteract()
         {
+            if (_condenseTankPanel != null)
+            {
+                _condenseTankPanel.Show();
+                return;
+            }
+
             GameManager gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
             if (gm == null || gm.CondensationSystem == null)
                 return;

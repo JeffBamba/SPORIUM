@@ -25,7 +25,7 @@ MonoBehaviour:
     tasso di mutazione. I registri suggeriscono un'origine sperimentale legata a
     studi sulla percezione e sull'alterazione cognitiva. L'utilizzo \xE8 associato
     a benefici operativi instabili e a un'elevata perdita di controllo del sistema."
-  activePower: "Allucinogeno: +10% probabilit\xE0 di mutazione Spore globali"
+  activePower: "Allucinogeno: altera il pH Dome con scala -1/Lv (fino a -5) e aumenta la probabilit\xE0 di mutazione Spore globali"
   family: 2
   rarity: 0
   dailyPhDrift: -2

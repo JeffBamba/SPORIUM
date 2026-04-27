@@ -744,19 +744,24 @@ namespace Sporae.DevTools
                 AddLog($"⚠️ Seme lab-like (piantura diretta) fallito: {plantCode}");
                 return;
             }
+            
+            // Usa il path canonico runtime della PLANT (stesso flow di gioco/terminale):
+            // registra side-effect, eventi e integrazioni day-cycle/pH come in produzione.
+            string seedTypeId = plantData.SeedItemConfig != null ? plantData.SeedItemConfig.TypeId : seedItem.TypeId;
+            bool planted;
+            using (_selectedPot.BeginAutomationContext())
+            {
+                planted = _selectedPot.DoPlant(seedTypeId, irrigate: false, seedItem: seedItem);
+            }
 
             int currentDay = _dayCycleSystem?.CurrentDay ?? 1;
-            potState.PlantSeed(currentDay, plantCode);
-            potState.ApplySeedMetadata(seedItem, plantData);
-            potState.PlantLevel = Mathf.Clamp(seedItem.PlantLevelMetadata, 1, 5);
-            
-            var potGrowthController = _selectedPot.GetComponent<PotGrowthController>();
-            potGrowthController?.UpdateVisuals();
-            
-            PotEvents.EmitPlantStageChanged(potState.PotId, PlantStage.Seed);
-            PotEvents.EmitChanged(_selectedPot.PotSlot);
-            
-            AddLog($"✅ {potState.PotId}: Piantato {plantData.name} ({plantCode}) — {gen}, liv.meta {lvlMeta}, trait% {traitPct}, giorno {currentDay}");
+            if (!planted)
+            {
+                AddLog($"⚠️ {potState.PotId}: piantagione fallita via flow runtime (seedTypeId={seedTypeId ?? "NULL"})");
+                return;
+            }
+
+            AddLog($"✅ {potState.PotId}: Piantato {plantData.name} ({plantCode}) via flow runtime — {gen}, liv.meta {lvlMeta}, trait% {traitPct}, giorno {currentDay}");
         }
         
         private void AddLog(string message)
