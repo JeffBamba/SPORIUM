@@ -1,0 +1,200 @@
+INVENTORY DATABASE - Sistema Inventario Player
+Presentazione Visiva
+L'inventario si apre come un monitor CRT vintage che occupa il centro dello schermo con effetto overlay scuro (backdrop blur con vignette). Il monitor ha:
+
+Cornice spessa bezel color metallo scuro (#0A0F11) con bordi squadrati pixel-perfect
+Schermo CRT interno con effetti fisici realistici:
+Curvatura vignettatura radiale agli angoli
+Scanlines orizzontali sottili (effetto righe TV)
+Bagliore fosforescente verde (#7FFF7A) al centro dello schermo
+LED verde pulsante in basso a destra del monitor (stato ON)
+Il contenuto interno è un terminale scientifico con:
+
+Header superiore: "VAULT-07 TERMINAL" con LED verde pulsante + pulsante [CLOSE] rosso
+Titolo grande "INVENTORY DATABASE" in verde LED (#7FFF7A) con glow effect
+Statistiche rapide: acqua potabile (H₂O), azioni disponibili, numero item totali
+Sistema di Filtraggio per Categorie
+Subito sotto il titolo c'è una barra di filtri orizzontale con 9 categorie rappresentate da chip cliccabili:
+
+TUTTI (📦 grigio) - Mostra tutto
+SPORE (🧫 blu) - Spore genetiche (STABLE/STANDARD/UNSTABLE)
+SEMI (🌱 verde) - Semi ottenuti da crafting genetico
+ORGANICO (💧 blu) - Risorse organiche (acqua, materiali vegetali)
+REAGENTI (⚗️ rosso) - Reagenti chimici e catalyst
+PIANTE (🌿 verde chiaro) - Piante sradicate, frutti, materiale botanico
+STRUMENTI (🧴 giallo) - Fertilizzanti, spray, LED per la crescita
+CIBO (🍎 giallo chiaro) - Cibo consumabile (sintetico e naturale)
+BIO MATERIALI (💀 viola) - Biomateriali (cellule staminali, cloni)
+Comportamento filtro:
+
+Chip selezionato = bordo pieno + background semitrasparente + glow del suo colore
+Chip non selezionato = trasparente con colore sbiadito (60% opacity)
+Click su un filtro = filtra la lista sottostante mostrando solo item di quella categoria
+Il filtro ALL è attivo di default
+Griglia Item (Scrollabile)
+Sotto i filtri c'è una lista verticale scrollabile di tutti gli item:
+
+Struttura Riga Item:
+Ogni item è una riga orizzontale composta da:
+
+Icona grande (40×40px) a sinistra
+
+Tutte le icone sono gia nel catalogo item (o lo saranno a breve)
+Nome item al centro (font mono, colore personalizzato per tipo)
+
+Es: "Raw Water", "Raw Spore", "Arctic Hask Seed"
+Badge quantità (es: "×85", "×12") - quadrato con bordo + glow del colore dell'item
+
+Due pulsanti azione a destra:
+
+VIEW - Apre pannello di ispezione dettagliata
+USE - Usa l'item (chiede conferma)
+Stati visivi riga:
+
+Default: background trasparente con gradiente verticale del colore item (8% opacity)
+Selected (click sulla riga): background gradiente 20% + bordo pieno + glow intenso
+Hover: aumento luminosità
+Animazioni:
+
+Item appaiono con stagger (delay 0.02s tra uno e l'altro) quando cambi filtro
+Fade-in da sinistra
+Quando usi un item, il pulsante USE lampeggia verde
+Paginazione/Espansione
+Se la lista filtrata ha più di 12 item, mostra solo i primi 12 e in fondo appare:
+
+Pulsante EXPAND centrale:
+
+Testo: ▼ SHOW ALL (X MORE) con X = numero item nascosti
+Click = espande mostrando tutta la lista
+Quando espanso diventa: ▲ SHOW LESS
+Pannello Dettagli Item Selezionato
+Quando clicki su una riga item, sotto la griglia appare un pannello dettagli espandibile (animazione altezza) che mostra:
+
+Icona grande (64×64px) in un quadrato con bordo + glow
+Codice item (es: WAT-RAW, SPO-STA) in grigio
+Nome completo in verde
+Badge quantità a destra
+Descrizione testuale sotto (2-3 righe, font piccolo mono)
+Due pulsanti azione grandi:
+USE ITEM - stesso comportamento del pulsante USE nella riga
+DETAILED INSPECT - apre overlay specifico (vedi sotto)
+Sistema Azioni Item
+1. Pulsante USE
+Quando clicki USE su un item:
+
+Si apre dialog di conferma centrale (box giallo con warning ⚠️)
+Titolo: "CONFIRM ACTION"
+Testo: "Use this item?" + nome dell'item
+Due pulsanti grandi:
+YES (verde) - conferma e consuma l'item
+NO (rosso) - annulla
+Backdrop blur scuro dietro
+Feedback dopo conferma:
+
+Pulsante USE lampeggia verde per 800ms
+Quantità item si aggiorna (-1)
+Dialog si chiude
+2. Pulsante VIEW / DETAILED INSPECT
+Apre overlay specializzato in base al tipo di item:
+
+A. Piante Sradicate (PLT-101)
+→ Apre UprootedPlantCard con scheda dettagliata della pianta
+
+B. Frutti (codici FRG-*)
+→ Apre FruitInspect con 3 opzioni:
+
+Consume (mangia il frutto)
+Sell (Consiglia al player di accedere al Black Market)
+C. Spore (codici SPO-*)
+→ Apre SporeInspect con 2 opzioni di navigazione:
+
+ANALYZE → chiude inventario e Setta questa Spore come Spore nell'input dello Spore Extractor e invita il player (con msg VO) ad andare in lab)
+
+La lista item ha scrollbar custom verde LED:
+
+Track trasparente
+Thumb (cursore) verde con bordo (#7FFF7A)
+Hover = aumento luminosità
+Footer Terminale
+In basso fisso del monitor:
+
+Versione sistema: VAULT-07-TERMINAL-ACCESS-INV-DB-v2.3.1
+Istruzioni: PRESS ESC TO EXIT • CLICK ITEM FOR DETAILS
+Chiusura Inventario
+Modi per chiudere:
+
+Click su backdrop scuro esterno
+Click su pulsante [CLOSE] rosso in alto a destra
+Pressione ESC (implicito)
+Animazione chiusura:
+
+Monitor si rimpicciolisce (scale 0.9)
+Fade out
+Backdrop dissolve
+Item di Default (Esempio Dataset)
+L'inventario parte popolato con ~30 item esempio che coprono tutte le categorie:
+
+Resources:
+
+Raw Water (💧) - acqua grezza per irrigazione Dome
+Drinking Water (🚰) - acqua potabile purificata
+Spores (3 qualità):
+
+Standard Spore (⚪ giallo) - qualità media, mutazione moderata
+Stable Spore (🔵 verde) - alta qualità, bassa mutazione, genetica ottimale
+Unstable Spore (🟣 rosso) - bassa qualità, alta mutazione, imprevedibile
+Seeds:
+
+Generic Seed (🌱) - semi generici da 2 spore
+Hybrid Seeds (🧬) - ibridi temporanei PURE/EVIL
+Reagents:
+
+Nutrient Medium (⚗️) - base biologica
+Alpha/Beta/Delta Catalyst (💎🔶🔷) - attivatori per semi
+Botanical:
+
+Piante sradicate (🌿)
+Frutti Hask (🍎)
+Fibre vegetali (🍃)
+Resine pure (🍃)
+Tools:
+
+Fertilizzanti (Standard/Pure/Forbidden) (🌿💚❤️)
+Spray antifungale (💨)
+LED Blue/Red (🔵🔴) - per fasi crescita
+Food:
+
+Vegetali Sintetici (🥬) - +1 Action
+Funghi Sintetici (🍄) - +2 Actions
+Carne Sintetica (🍖) - +3 Actions
+Frutti Dome (🍏) - effetti variabili
+Biomaterial:
+Stem Cells (🧫) - base clonazione
+Scarto organico (🧫) - compost/clonazione
+
+Logica di Integrazione
+L'inventario è globale e centralizzato, accessibile da:
+
+PlayerStatus panel (Icona Inventario)
+Navigazione diretta:
+
+Da SporeInspect → Microscopio Laboratory (portando il codice spore selezionata)
+Da SporeInspect → Pipette Grafting (portando il codice spore selezionata)
+Da FruitInspect → Spore Extractor / Black Market
+Passaggio dati: Le funzioni onNavigateToMicroscope e onNavigateToPipette ricevono il codice item (es: SPO-STA) per pre-caricare l'item nel tool di destinazione.
+
+Palette Colori Sistema
+Verde LED primario (#7FFF7A) - stabilità, qualità, sistema OK, LED status
+Blu (#5DB6E3) - risorse, acqua, informazioni
+Rosso (#D35F5F) - reagenti critici, warning, instabilità
+Giallo (#E6C96F) - qualità standard, notifiche moderate, tools
+Viola (#C080FF) - biomateriali, clonazione
+Background scuro (#1A2325, #1F2A2D) con trasparenze
+Note Comportamentali
+Quando cambi filtro, la lista si ricarica con animazione stagger
+Il pannello dettagli si chiude automaticamente quando selezioni un altro item
+Il dialog di conferma USE blocca l'interazione con il resto dell'inventario (z-index alto)
+Gli effetti glow sono proporzionali allo stato (selected > hover > default)
+Font sempre monospaziato per estetica terminale
+Tracking widest per look sci-fi
+Tabular nums per allineamento perfetto delle quantità

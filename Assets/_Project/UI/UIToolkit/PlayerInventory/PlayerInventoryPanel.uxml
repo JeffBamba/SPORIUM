@@ -1,23 +1,100 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/PlayerInventory/PlayerInventoryPanel.uss?fileID=7433441132597879392&amp;guid=418ea00968294ab44afe85d568b65094&amp;type=3#PlayerInventoryPanel" />
     <ui:VisualElement name="inv-overlay" class="inv-overlay">
-        <ui:VisualElement name="inv-panel" class="inv-panel">
-            <ui:VisualElement name="inv-header" class="inv-header">
-                <ui:VisualElement name="inv-header-left" class="inv-header-left">
-                    <ui:Label name="inv-title" text="INVENTARIO" class="inv-title" />
-                    <ui:Label name="inv-subtitle" text="Oggetti nel tuo inventario" class="inv-subtitle" />
-                </ui:VisualElement>
-                <ui:Button name="btn-close" class="inv-close-button">
-                    <ui:Label text="×" class="inv-close-x" style="margin-top: -4px; right: 2px; top: 1px;" />
-                </ui:Button>
+        <ui:VisualElement name="inv-scrim" class="inv-scrim" />
+        <ui:VisualElement name="inv-terminal" class="inv-terminal inv-terminal-size-default" style="border-left-color: rgb(83, 224, 75); border-right-color: rgb(83, 224, 75); border-top-color: rgb(83, 224, 75); border-bottom-color: rgb(83, 224, 75); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px;">
+            <ui:VisualElement name="inv-r1" class="inv-r1">
+                <ui:Label name="inv-vault-label" text="VAULT-07 TERMINAL" class="inv-vault-label" />
+                <ui:Button name="btn-close" text="[CHIUDI]" class="inv-close-txt" />
             </ui:VisualElement>
-            <ui:ScrollView name="inv-list" class="inv-list" />
+            <ui:VisualElement name="inv-top-chrome" class="inv-top-chrome">
+                <ui:VisualElement name="inv-browse-titles" class="inv-browse-titles">
+                    <ui:Label name="inv-db-title" text="INVENTORY DATABASE" class="inv-db-title" />
+                    <ui:Label name="inv-subtitle" class="inv-sub-pick" />
+                </ui:VisualElement>
+                <ui:VisualElement name="inv-stats" class="inv-stats">
+                    <ui:Label name="inv-stat-h2o" class="inv-stat" />
+                    <ui:Label name="inv-stat-actions" class="inv-stat" />
+                    <ui:Label name="inv-stat-items" class="inv-stat" />
+                </ui:VisualElement>
+                <ui:VisualElement name="inv-filters" class="inv-filters" style="height: 33px;">
+                    <ui:Button name="inv-filter-all" text="TUTTI" class="inv-filter-chip inv-filter-chip--active" />
+                    <ui:Button name="inv-filter-spores" text="SPORE" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-seeds" text="SEMI" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-organic" text="ORGANICO" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-reagents" text="REAGENTI" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-plants" text="PIANTE" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-tools" text="STRUMENTI" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-food" text="CIBO" class="inv-filter-chip" />
+                    <ui:Button name="inv-filter-bio" text="BIO-MAT" class="inv-filter-chip" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:ScrollView name="inv-list" class="inv-list" style="top: 25px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
+            <ui:Button name="inv-expand" text="MOSTRA TUTTO" class="inv-expand" />
+            <ui:VisualElement name="inv-detail" class="inv-detail">
+                <ui:VisualElement name="inv-detail-row" class="inv-detail-row">
+                    <ui:VisualElement name="inv-detail-icon" class="inv-detail-icon" />
+                    <ui:VisualElement class="inv-detail-mid">
+                        <ui:Label name="inv-detail-id-line" text="CODE — Name" class="inv-detail-id-line" />
+                        <ui:Label name="inv-detail-summary" class="inv-detail-summary" />
+                    </ui:VisualElement>
+                    <ui:Label name="inv-detail-qty" text="x0" class="inv-detail-qty" />
+                </ui:VisualElement>
+                <ui:Label name="inv-detail-meta" class="inv-detail-meta" />
+                <ui:VisualElement class="inv-detail-actions">
+                    <ui:Button name="btn-detail-use" text="USA ITEM" class="inv-detail-btn inv-detail-btn--use" />
+                    <ui:Button name="btn-detail-inspect" text="ISPEZIONE DETTAGLIATA" class="inv-detail-btn inv-detail-btn--inspect" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="inv-footer" class="inv-footer">
+                <ui:Label name="inv-footer-version" class="inv-footer-txt" style="font-size: 10px;" />
+                <ui:Label name="inv-footer-hint" class="inv-footer-txt" style="font-size: 10px;" />
+            </ui:VisualElement>
             <ui:Button name="btn-cancel" class="inv-cancel">
-                <ui:Label text="ANNULLA" class="inv-cancel-text" />
+                <ui:Label name="inv-cancel-lbl" text="ANNULLA" class="inv-cancel-text" />
             </ui:Button>
+            <ui:VisualElement name="inv-monitor-leds" class="inv-monitor-leds">
+                <ui:VisualElement class="inv-monitor-led inv-monitor-led--on" />
+                <ui:VisualElement class="inv-monitor-led" />
+            </ui:VisualElement>
+            <ui:VisualElement name="inv-builder-reference" class="inv-builder-reference">
+                <ui:Label text="builder-reference" class="inv-br-label" style="font-size: 10px;" />
+                <ui:VisualElement class="inv-row inv-row--cat-spores inv-builder-sample-row">
+                    <ui:VisualElement class="inv-row-iconbox" />
+                    <ui:VisualElement class="inv-row-mid">
+                        <ui:VisualElement class="inv-row-topline">
+                            <ui:Label text="Esempio" class="inv-row-name" />
+                            <ui:Label text="x1" class="inv-row-qty-badge" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="inv-row-btns">
+                        <ui:Button text="VEDI" class="inv-chip-btn" />
+                        <ui:Button text="USA" class="inv-chip-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="inv-tooltip" class="sp-tooltip" style="position: absolute; display: none; background-color: rgba(13, 18, 23, 0.96); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-color: rgba(127, 204, 127, 0.9); border-right-color: rgba(127, 204, 127, 0.9); border-bottom-color: rgba(127, 204, 127, 0.9); border-left-color: rgba(127, 204, 127, 0.9); padding: 10px; min-width: 280px; max-width: 320px; flex-direction: column;">
-            <ui:Label name="inv-tooltip-text" enable-rich-text="true" class="sp-tooltip-text" style="white-space: normal; color: rgb(242, 245, 250); font-size: 12px; -unity-text-align: upper-left;" />
+        <ui:VisualElement name="inv-confirm" class="inv-confirm inv-confirm--hidden">
+            <ui:VisualElement class="inv-confirm-panel">
+                <ui:Label name="inv-confirm-title" text="CONFERMA" class="inv-confirm-title" />
+                <ui:Label name="inv-confirm-body" class="inv-confirm-body" />
+                <ui:VisualElement class="inv-confirm-btns">
+                    <ui:Button name="btn-confirm-yes" text="SÌ" class="inv-confirm-yes" />
+                    <ui:Button name="btn-confirm-no" text="NO" class="inv-confirm-no" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="inv-inspect" class="inv-inspect inv-inspect--hidden">
+            <ui:VisualElement class="inv-inspect-panel">
+                <ui:Label name="inv-inspect-title" text="ISPEZIONE DETTAGLIATA" class="inv-inspect-title" />
+                <ui:ScrollView name="inv-inspect-scroll" class="inv-inspect-scroll">
+                    <ui:Label name="inv-inspect-body" class="inv-inspect-body" />
+                </ui:ScrollView>
+                <ui:Button name="btn-inspect-close" text="[CHIUDI]" class="inv-inspect-close" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="inv-tooltip" class="inv-tooltip-floating">
+            <ui:Label name="inv-tooltip-text" class="inv-tooltip-txt" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

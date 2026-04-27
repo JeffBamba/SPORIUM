@@ -107,6 +107,20 @@ namespace _Project.Sporae.Core
             return true;
         }
 
+        /// <summary>
+        /// Rimuove un'istanza specifica e notifica <see cref="OnItemConsumed"/> (idratazione/cibo come <see cref="ConsumeItem"/>).
+        /// Necessario quando più righe UI condividono lo stesso <c>typeId</c> (spore/frutti con metadata diversi).
+        /// </summary>
+        public bool ConsumeItemInstance(Item item)
+        {
+            if (item == null)
+                return false;
+            if (!TryRemoveExactItem(item, out _))
+                return false;
+            OnItemConsumed?.Invoke(item.TypeId, 1);
+            return true;
+        }
+
         public event System.Action<string, int> OnItemConsumed;
 
         /// <summary>Rimuove e restituisce il primo item dello slot indicato (preserva metadata).</summary>

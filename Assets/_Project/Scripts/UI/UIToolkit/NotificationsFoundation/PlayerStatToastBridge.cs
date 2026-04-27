@@ -104,11 +104,16 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 return;
             }
 
-            // Toast guadagno idratazione: solo quando si beve (acqua). Cibo/frutta aumentano H ma non questo messaggio.
+            // Toast consumo idratante: emesso per acqua/cibo/frutta anche con delta 0 (es. barra già al 100%),
+            // così il feedback di bevuta/mangiata è sempre visibile.
             float delta = currentPercent - _lastHydrationPercent;
-            if (delta >= 0.5f && source == HydrationChangeSource.Water)
+            bool isConsumableHydrationSource =
+                source == HydrationChangeSource.Water ||
+                source == HydrationChangeSource.Food ||
+                source == HydrationChangeSource.Fruit;
+            if (isConsumableHydrationSource)
             {
-                int deltaInt   = Mathf.RoundToInt(delta);
+                int deltaInt   = Mathf.Max(0, Mathf.RoundToInt(delta));
                 int currentInt = Mathf.RoundToInt(currentPercent);
                 var gainPayload = new NotificationPayload()
                     .With("delta", deltaInt.ToString())

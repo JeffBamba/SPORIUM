@@ -346,6 +346,11 @@ namespace Sporae.UI.UIToolkit
         {
             if (_playerInventoryPanel == null)
                 _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
+            if (_playerInventoryPanel == null)
+            {
+                _playerInventoryPanel = Resources.FindObjectsOfTypeAll<PlayerInventoryPanelController>()
+                    .FirstOrDefault(p => p != null && p.gameObject.scene.IsValid());
+            }
             if (_playerInventoryPanel != null)
             {
                 _playerInventoryPanel.Toggle();

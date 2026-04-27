@@ -80,6 +80,11 @@ REGOLE DI QUALITÀ (immutate + estese)
 - Documenta dove vivono le decisioni (ADR/docs).
 - PR piccole, narrative chiare, rollback semplice.
 - SEMPRE fornire lista STEP MANUALI + CHECK DI SISTEMA finale.
+- Metadata UI (titolo campo + valore):
+  - Quando mostri metadati in UI (es. `CATEGORIA: Plants`, `QUALITÀ: 14`) applica sempre la palette ufficiale Sporae concordata.
+  - Titolo/label e valore NON devono mai avere lo stesso colore.
+  - Usa una gerarchia cromatica leggibile e consistente tra pannelli (label = colore semantico secondario, value = colore primario/alto contrasto).
+  - Evita blocchi testuali monocromatici nei metadati.
 
 COMPORTAMENTO IN CASO DI LACUNE
 - Se mancano accessi a GitHub/Notion o cartelle: continua con analisi locale, indica assunti e segna TODO/Follow-up.
