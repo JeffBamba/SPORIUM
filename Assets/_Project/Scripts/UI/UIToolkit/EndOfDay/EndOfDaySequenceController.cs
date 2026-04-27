@@ -51,11 +51,13 @@ namespace _Project
         private DayCycleController _dayCycleController;
         private MissionManager _missionManager;
         private DomePotRegistry _potRegistry;
+        private DemoSessionState _demoSessionState;
 
         private bool _bound;
         private VisualElement _eodVisualTreeBoundRoot;
         private bool _awaitingDawn;
         private bool _nightResearchChosen;
+        private bool _researchLockedByNoActions;
         private int _dayBeforeTransition;
         private Dictionary<string, (string title, string desc, string tip)> _dawnTooltipData;
         private bool _dawnTooltipsRegistered;
@@ -89,6 +91,7 @@ namespace _Project
             _dayCycleController = FindObjectOfType<DayCycleController>();
             _missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
             _potRegistry = ServiceContainer.Instance?.Get<DomePotRegistry>(suppressWarning: true);
+            _demoSessionState = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
         }
 
         private void OnEnable()
@@ -1015,16 +1018,17 @@ namespace _Project
 
         private void PopulateDiario()
         {
-            var sb = new StringBuilder();
-            if (_dayActivityLog != null)
-            {
-                var h = _dayActivityLog.HarvestsThisDay;
-                if (h.Count > 0) sb.AppendLine(LocalizationManager.GetString("eod.diario_harvest"));
-                var w = _dayActivityLog.PotIdsWateringTurnedOnThisDay;
-                if (w.Count > 0) sb.AppendLine(LocalizationManager.GetString("eod.diario_water"));
-            }
-            sb.AppendLine(LocalizationManager.GetString("eod.diario_footer"));
-            string full = sb.ToString();
+            int day = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
+            string full = BuildDiarioNarrative(day);
+
+            var title = _root.Q<Label>("eod-diario-title");
+            if (title != null)
+                title.text = "DIARIO S.P.O.R.A.E // FRAMMENTO PERSONALE";
+
+            var close = _root.Q<Label>("eod-diario-close");
+            if (close != null)
+                close.text = "Fine frammento. O forse inizio febbre.";
+
             if (_diarioText != null)
             {
                 _diarioText.text = "";
@@ -1032,45 +1036,579 @@ namespace _Project
             }
         }
 
+        private string BuildDiarioNarrative(int day)
+        {
+            float distortion = ComputeDiaryDistortion(day);
+            float phAlignment = ComputeDiaryPhAlignment();
+            bool isLateDistortion = distortion >= 0.7f;
+            bool isMediumDistortion = distortion >= 0.4f;
+
+            var paragraphs = new List<string>
+            {
+                BuildDiaryOpening(day, distortion, phAlignment),
+                BuildDiaryBody(day, isMediumDistortion, isLateDistortion, phAlignment),
+                BuildDiaryLoreFragment(day, distortion, phAlignment),
+                BuildDiaryClosing(distortion, phAlignment)
+            };
+
+            return string.Join("\n\n", paragraphs.Where(p => !string.IsNullOrWhiteSpace(p)));
+        }
+
+        private float ComputeDiaryDistortion(int day)
+        {
+            // Se disponibile, il beat demo (1..8) offre una progressione narrativa più aderente.
+            if (_demoSessionState != null && _demoSessionState.IsDemo)
+            {
+                float beat01 = Mathf.Clamp01((_demoSessionState.CurrentBeat - 1) / 7f);
+                return Mathf.Clamp01(0.15f + beat01 * 0.85f);
+            }
+
+            // Fallback full game: incremento morbido con i giorni.
+            return Mathf.Clamp01((day - 1) / 24f);
+        }
+
+        private float ComputeDiaryPhAlignment()
+        {
+            // -1 = ultra acido/EVIL, +1 = ultra basico/PURE
+            if (_phSystem == null)
+                return 0f;
+            return Mathf.Clamp(_phSystem.CurrentPh / 100f, -1f, 1f);
+        }
+
+        private string BuildDiaryOpening(int day, float distortion, float phAlignment)
+        {
+            int v = Variant(day, 13);
+            bool evil = phAlignment <= -0.35f;
+            bool pure = phAlignment >= 0.35f;
+
+            if (evil)
+            {
+                string[] evilLines =
+                {
+                    "Registro serale. L'aria sa di ferro e giudizio: il Vault oggi ha ringhiato piano.",
+                    "Chiudo il turno con i nervi stretti. Le pareti acide hanno imparato i miei dubbi.",
+                    "Fine giornata. Il Dome sembra un dente scoperto e io ci metto ancora le mani.",
+                    "Scrivo per non mordere. Oggi il buio aveva intenzioni molto precise."
+                };
+                return evilLines[v % evilLines.Length];
+            }
+
+            if (pure)
+            {
+                string[] pureLines =
+                {
+                    "Registro serale. Oggi il Vault ha respirato meno storto del solito.",
+                    "Fine turno. Per un momento i corridoi hanno smesso di sembrare una minaccia.",
+                    "Chiudo la giornata con una calma fragile, ma almeno reale.",
+                    "Stasera la luce non consola, pero chiarisce: gia tanto."
+                };
+                return pureLines[v % pureLines.Length];
+            }
+
+            if (distortion < 0.35f)
+            {
+                string[] lines =
+                {
+                    "Registro serale. Il Vault finge ordine, io fingo di credergli.",
+                    "Ho chiuso la giornata con le mani sporche e la coscienza lucidata male.",
+                    "La routine dice che sono vivo. Il resto e un dettaglio amministrativo.",
+                    "Fine turno. Le luci verdi mentono con gentilezza professionale."
+                };
+                return lines[v % lines.Length];
+            }
+
+            if (distortion < 0.75f)
+            {
+                string[] lines =
+                {
+                    "Registro serale. Oggi il Vault ha parlato sottovoce, ma usava la mia voce.",
+                    "Chiudo il turno e mi resta addosso un ronzio che non viene dai macchinari.",
+                    "La giornata e finita, dice il sistema. Io non sono ancora convinto.",
+                    "I corridoi fanno eco ai miei passi con qualche parola di troppo."
+                };
+                return lines[v % lines.Length];
+            }
+
+            string[] lateLines =
+            {
+                "Registro serale. Credo di aver lavorato io, ma il Vault firma al posto mio.",
+                "Chiudo il turno. I monitor sorridono, e non ho mai insegnato loro i denti.",
+                "Fine giornata, almeno sulla carta. Nella testa e ancora alba tossica.",
+                "Scrivo per ricordare; ogni riga cancella la precedente con cortesia militare."
+            };
+            return lateLines[v % lateLines.Length];
+        }
+
+        private string BuildDiaryBody(int day, bool mediumDistortion, bool lateDistortion, float phAlignment)
+        {
+            bool evil = phAlignment <= -0.35f;
+            bool pure = phAlignment >= 0.35f;
+            bool ultraEvil = phAlignment <= -0.8f;
+            bool ultraPure = phAlignment >= 0.8f;
+
+            bool hadDomeWork = (_dayActivityLog?.DomeEntriesThisDay?.Count ?? 0) > 0;
+            bool hadWatering = (_dayActivityLog?.PotIdsWateringTurnedOnThisDay?.Count ?? 0) > 0;
+            bool hadHarvest = (_dayActivityLog?.HarvestsThisDay?.Count ?? 0) > 0;
+            bool hadStageChanges = (_dayActivityLog?.StageChangesThisDay?.Count ?? 0) > 0;
+            bool hadLab = (_dayActivityLog?.LabEntriesThisDay?.Count ?? 0) > 0;
+            bool hadSeedStorageOps = (_dayActivityLog?.SeedStorageEntriesThisDay?.Count ?? 0) > 0;
+            bool pantryOff = _gameManager?.FoodRoomSystem != null && !_gameManager.FoodRoomSystem.PantryIsOn;
+            bool seedStorageOff = _gameManager?.SeedStorageSystem != null && !_gameManager.SeedStorageSystem.IsOn;
+            bool ateMeal = _gameManager != null && _gameManager.AteMealSincePreviousDawn;
+            float hydrationLoss = _gameManager?.HydrationLostTodayPercent ?? 0f;
+            int activeMissions = _missionManager?.CurrentMissions.Count ?? 0;
+            int actionsLeft = _gameManager?.ActionsLeft ?? 0;
+            int actionsMax = _gameManager?.ActionSystem?.MaxActions ?? 0;
+
+            var beats = new List<string>();
+            if (hadDomeWork || hadWatering)
+            {
+                if (evil)
+                    beats.Add(Pick(day, 31,
+                        "Mi sono occupato delle piante con prudenza chirurgica: oggi ogni foglia sembrava trattenere il fiato prima di colpire.",
+                        "Nel Dome ho fatto il mio giro con la sensazione di essere osservato dai vasi, non il contrario.",
+                        "Ho rimesso ordine tra i pot, ma era un ordine da trincea, non da serra."));
+                else if (pure)
+                    beats.Add(Pick(day, 31,
+                        "Mi sono occupato delle piante con pazienza: oggi hanno risposto senza aggredire il silenzio.",
+                        "Nel Dome ho fatto il mio giro da custode stanco, ma senza guerra aperta.",
+                        "Ho rimesso ordine tra i pot e, per qualche minuto, ha funzionato davvero."));
+                else
+                    beats.Add(Pick(day, 31,
+                        "Mi sono occupato delle piante come si parla a un testimone: con calma e senza fare domande sbagliate.",
+                        "Nel Dome ho fatto il mio giro da custode stanco: mani operative, testa altrove.",
+                        "Ho rimesso ordine tra i vasi. O almeno ho negoziato una tregua con loro."));
+            }
+
+            if (hadHarvest || hadStageChanges)
+            {
+                if (evil)
+                    beats.Add(Pick(day, 37,
+                        "Qualcosa e cresciuto, ma con un appetito che non mi piace nominare.",
+                        "Ho visto la vita cambiare forma come una minaccia educata.",
+                        "Gli stadi avanzano anche quando il buon senso arretra."));
+                else if (pure)
+                    beats.Add(Pick(day, 37,
+                        "Qualcosa e cresciuto davvero, quasi con grazia.",
+                        "Ho visto la vita cambiare forma senza pretendere sangue in anticipo.",
+                        "Gli stadi avanzano e, per oggi, la biologia sembra ancora una promessa."));
+                else
+                    beats.Add(Pick(day, 37,
+                        "Qualcosa e cresciuto davvero. In questo posto e quasi una forma di ironia cosmica.",
+                        "Ho visto vita cambiare forma in silenzio: nessun applauso, solo lavoro in piu domani.",
+                        "Alcuni stadi sono avanzati. La biologia non fa promesse, ma oggi ha strizzato l'occhio."));
+            }
+
+            if (hadLab)
+                beats.Add(Pick(day, 41,
+                    "In laboratorio ho smontato il caos in pezzi piu piccoli e li ho chiamati metodo.",
+                    "Ho passato ore tra reagenti e congetture: il profumo dell'apocalisse filtrata.",
+                    "Il banco del Lab oggi sembrava un altare tecnico. Nessun santo in vista."));
+
+            if (hadSeedStorageOps)
+                beats.Add(Pick(day, 43,
+                    "Ho messo mano alle scorte come chi conta munizioni durante una tregua fragile.",
+                    "Tra depositi e prelievi ho fatto archeologia preventiva sul domani.",
+                    "Le riserve hanno cambiato posto, come i pensieri quando arriva la notte."));
+
+            if (pantryOff || seedStorageOff)
+                beats.Add(Pick(day, 47,
+                    "Ho lasciato qualche sistema in bilico. In questo mondo, il bilico e solo un altro nome per il rischio.",
+                    "Una parte del Vault oggi ha lavorato a luci spente: scelta tecnica, conseguenze poetiche.",
+                    "Quando una stanza tace troppo, di solito sta preparando il conto."));
+
+            if (!ateMeal)
+                beats.Add(Pick(day, 53,
+                    "Ho rimandato il pasto. Il corpo protesta in dialetto, la disciplina traduce male.",
+                    "La fame e tornata puntuale, piu affidabile di certe procedure operative.",
+                    "Stasera lo stomaco scrive note a margine che non voglio rileggere."));
+
+            if (hydrationLoss >= 20f)
+                beats.Add(Pick(day, 59,
+                    "Ho lasciato troppa acqua per strada, e ogni passo nel corridoio lo ha fatto notare.",
+                    "Mi sento asciutto come i filtri vecchi: funziono, ma graffio.",
+                    "La sete oggi ha avuto l'ultima parola. Io ho firmato in fondo."));
+
+            if (activeMissions > 0)
+                beats.Add(Pick(day, 61,
+                    "Le missioni attive restano appese come neon che non vogliono spegnersi.",
+                    "Ci sono ancora consegne in sospeso: piccole guerre burocratiche contro la fine del mondo.",
+                    "L'elenco delle cose da fare cresce piu in fretta del mio ottimismo."));
+
+            if (actionsMax > 0)
+            {
+                if (actionsLeft <= Mathf.Max(1, actionsMax / 3))
+                    beats.Add(Pick(day, 63,
+                        "A fine turno avevo poche mosse rimaste, ma abbastanza per fingere controllo davanti ai monitor.",
+                        "Le energie oggi si sono consumate presto: il Vault prende sempre la sua quota in anticipo.",
+                        "Sono arrivato a sera corto di margine, lungo di conseguenze."));
+                else
+                    beats.Add(Pick(day, 65,
+                        "Ho chiuso con un filo di margine operativo: un lusso temporaneo che non intendo sprecare.",
+                        "Stavolta sono arrivato a sera senza svuotarmi del tutto. Piccola vittoria, nessuna fanfara.",
+                        "Mi resta abbastanza respiro per domani, che qui equivale a una benedizione burocratica."));
+            }
+
+            if (beats.Count == 0)
+            {
+                beats.Add(Pick(day, 67,
+                    "Giornata stranamente quieta. La quiete, qui sotto, ha sempre secondi fini.",
+                    "Poche azioni visibili, molte crepe invisibili. Routine standard dello Sporium.",
+                    "Oggi il silenzio ha fatto quasi tutto il lavoro e si e preso il merito."));
+            }
+
+            if (ultraEvil)
+                beats.Add(Pick(day, 69,
+                    "Il pH oggi pende verso l'ultra acido: i pensieri arrivano a denti stretti e non chiedono permesso.",
+                    "La deriva acida spinge tutto verso il nero: anche le battute finiscono in minaccia.",
+                    "Se continuo a scrivere in questo tono e perche il Vault lo preferisce violento."));
+            else if (ultraPure)
+                beats.Add(Pick(day, 69,
+                    "Il pH oggi si avvicina all'ultra basico: non e pace, ma e una tregua leggibile.",
+                    "Con la deriva verso il puro riesco ancora a distinguere i fatti dalle ombre.",
+                    "Quando il Dome respira piu basico, la mente smette almeno di mordersi da sola."));
+
+            if (mediumDistortion)
+            {
+                if (evil)
+                    beats.Add(Pick(day, 71,
+                        "Continuo a chiamarle note operative, ma oggi suonano come verbali di interrogatorio.",
+                        "Ci sono dettagli che ricordo due volte e dettagli che provano a ricordarmi loro.",
+                        "Le verita qui non hanno bordi: hanno schegge."));
+                else if (pure)
+                    beats.Add(Pick(day, 71,
+                        "Continuo a chiamarle note operative, ma almeno oggi non urlano.",
+                        "Ci sono dettagli confusi, ma riesco ancora a tenerli in fila.",
+                        "Le verita qui restano scomode, non necessariamente ostili."));
+                else
+                    beats.Add(Pick(day, 71,
+                        "Continuo a chiamarle note operative, ma sembrano confessioni con il camice addosso.",
+                        "Ci sono dettagli che ricordo due volte e dettagli che non ricordano me.",
+                        "Le verita qui hanno bordi morbidi: tagliano comunque."));
+            }
+
+            if (lateDistortion)
+            {
+                if (evil)
+                    beats.Add(Pick(day, 73,
+                        "A volte penso che il Biologo sia solo un alias utile al Vault quando vuole farsi male da solo.",
+                        "Non giuro che sia andata cosi: giuro solo che la versione peggiore suona piu vera.",
+                        "Se queste righe mentono, e per insegnarmi come si sopravvive al prossimo morso."));
+                else if (pure)
+                    beats.Add(Pick(day, 73,
+                        "A volte penso che il Biologo sia un ruolo. Oggi, almeno, il ruolo non mi ha divorato.",
+                        "Non giuro che sia andata cosi, ma questa versione non mi odia apertamente.",
+                        "Se queste righe mentono, lo fanno per lasciarmi un appiglio fino a domani."));
+                else
+                    beats.Add(Pick(day, 73,
+                        "A volte penso che il Biologo sia un ruolo, non una persona. E oggi il ruolo ha recitato bene.",
+                        "Non giuro che sia andata davvero cosi. Giuro solo che stanotte ci credo.",
+                        "Se queste righe mentono, lo fanno per proteggere qualcuno. Spero non me."));
+            }
+
+            return string.Join(" ", beats);
+        }
+
+        private string BuildDiaryLoreFragment(int day, float distortion, float phAlignment)
+        {
+            bool evil = phAlignment <= -0.35f;
+            bool pure = phAlignment >= 0.35f;
+            bool late = distortion >= 0.7f;
+
+            if (evil)
+            {
+                var lines = new List<string>
+                {
+                    Pick(day, 79,
+                        "Nei registri pre-caduta chiamavano questa zona Cintura Verde 9. Oggi di verde e rimasto solo il led delle procedure d'emergenza.",
+                        "Dicono che prima della Pioggia Nera le serre fossero trasparenti. Io conosco solo vetri opachi e filtri saturi.",
+                        "Prima del collasso, qui sopra passavano treni alimentari. Adesso passano solo storie che cambiano ogni volta."),
+                    Pick(day, 83,
+                        "Il Protocollo Helix prometteva raccolti eterni e citta autosufficienti. Poi hanno acceso i reattori sbagliati e spento le coscienze giuste.",
+                        "Nel dossier ORPHEUS si legge che il pH del mondo e impazzito in 43 giorni. Nessuno scrive cosa e successo al giorno 44.",
+                        "Le cronache ufficiali parlano di evento climatico. Le cronache non ufficiali parlano di fame organizzata."),
+                    Pick(day, 89,
+                        "Quando l'acido sale, i ricordi diventano armi improprie: utili, imprecise, pericolose.",
+                        "Ogni frammento di storia ha due versioni: quella archiviata e quella che non ti lascia dormire.",
+                        "Mi ripeto che queste sono note operative. Ma ogni riga sembra una deposizione senza tribunale.")
+                };
+
+                if (late)
+                    lines.Add(Pick(day, 97,
+                        "Se domani rileggo questo pezzo e non mi riconosco, vuol dire che il Vault ha gia corretto la mia autobiografia.",
+                        "Ho il sospetto che la memoria qui venga sterilizzata come un banco da laboratorio: finche non resta nulla di umano.",
+                        "Le menzogne utili sopravvivono meglio della verita. Non e un'aforisma: e una policy."));
+
+                return string.Join(" ", lines);
+            }
+
+            if (pure)
+            {
+                var lines = new List<string>
+                {
+                    Pick(day, 79,
+                        "Nei vecchi archivi la chiamavano Fascia Aurora: colture in quota, acqua pulita, turni di ricerca aperti ai civili.",
+                        "Prima del collasso, la rete agro-biologica era una promessa concreta: meno frontiere, piu serre condivise.",
+                        "La storia ufficiale dice che c'era un piano per salvare tutti. La parte non ufficiale dice che il piano costava troppo."),
+                    Pick(day, 83,
+                        "Il Programma S.P.O.R.A.E nasceva per curare il suolo, non per amministrare rovine. Da qualche parte quella versione deve ancora esistere.",
+                        "Nei manuali antichi il Biologo era chiamato Custode di Cicli, non Operatore di Emergenza. Mi piace ricordarlo.",
+                        "Le prime cupole erano scuole e laboratori insieme. Oggi sono fortezze con badge e silenzi."),
+                    Pick(day, 89,
+                        "Quando il pH sale verso il basico, la mente trova un corridoio piu largo tra paura e lucidita.",
+                        "In queste notti meno tossiche riesco ancora a credere che ricostruire non sia solo propaganda.",
+                        "Ci sono giorni in cui la memoria non graffia: insegna.")
+                };
+
+                if (late)
+                    lines.Add(Pick(day, 97,
+                        "Forse e questa la vera menzogna gentile del Vault: lasciarti vedere un futuro quel tanto che basta per tornare al turno.",
+                        "Anche quando tutto sembra piu chiaro, il dubbio resta: sto ricordando il mondo com'era o come avrei voluto fosse?",
+                        "Se domani torno nel fango, almeno stanotte so ancora nominare la speranza senza vergognarmi."));
+
+                return string.Join(" ", lines);
+            }
+
+            var neutralLines = new List<string>
+            {
+                Pick(day, 79,
+                    "Le mappe pre-caduta raccontano un pianeta ordinato. Le mappe post-caduta raccontano solo dove non morire subito.",
+                    "Prima, il mondo produceva eccedenza. Poi ha prodotto confini, razionamenti e memoriali.",
+                    "I vecchi atlanti hanno colori allegri. I nuovi hanno note a margine e aree proibite."),
+                Pick(day, 83,
+                    "Di quello che e successo davvero esistono versioni ufficiali, versioni utili e versioni sopravvissute.",
+                    "Ogni generazione ha ricevuto una storia diversa sul collasso. Nessuna include i nomi dei responsabili.",
+                    "S.P.O.R.A.E doveva essere un ponte tra scienza e comunità. Noi ne usiamo i resti come stampella."),
+                Pick(day, 89,
+                    "A meta deriva, la verita resta una bestia nervosa: si lascia avvicinare solo da chi non la idealizza.",
+                    "Non so se queste note siano confessione o propaganda interna. So che mi tengono in asse.",
+                    "Tra verita e menzogna, scelgo ogni notte la versione che mi fa arrivare a domani.")
+            };
+
+            if (late)
+                neutralLines.Add(Pick(day, 97,
+                    "Quando il rumore aumenta, il passato sembra un corridoio senza uscite d'emergenza.",
+                    "Forse la storia non e persa: e solo frammentata nei posti sbagliati.",
+                    "Se qualcuno trovera questo diario, sapra almeno che abbiamo provato a restare umani."));
+
+            return string.Join(" ", neutralLines);
+        }
+
+        private string BuildDiaryClosing(float distortion, float phAlignment)
+        {
+            if (phAlignment <= -0.35f)
+            {
+                if (distortion < 0.35f)
+                    return "Promemoria per domani: tenere le mani ferme, anche quando la testa vuole rompere tutto.";
+                if (distortion < 0.75f)
+                    return "Promemoria per domani: non confondere paranoia e istinto. Qui spesso vestono uguale.";
+                return "Promemoria per domani: se la notte mi parla col coltello, rispondo con sarcasmo e guanti spessi.";
+            }
+
+            if (phAlignment >= 0.35f)
+            {
+                if (distortion < 0.35f)
+                    return "Promemoria per domani: conservare questa chiarezza prima che il Vault la metabolizzi.";
+                if (distortion < 0.75f)
+                    return "Promemoria per domani: seguire i segnali buoni senza innamorarsi delle illusioni pulite.";
+                return "Promemoria per domani: difendere la parte lucida, anche se trema.";
+            }
+
+            if (distortion < 0.35f)
+                return "Promemoria per domani: sopravvivere con stile mediocre e sarcasmo sufficiente.";
+            if (distortion < 0.75f)
+                return "Promemoria per domani: distinguere i fatti dai racconti, poi scegliere i racconti piu utili.";
+            return "Promemoria per domani: se trovo la verita, la metto in quarantena prima che contagi il resto.";
+        }
+
+        private static int Variant(int day, int salt)
+        {
+            int raw = day * 97 + salt * 31;
+            return raw < 0 ? -raw : raw;
+        }
+
+        private static string Pick(int day, int salt, params string[] options)
+        {
+            if (options == null || options.Length == 0)
+                return string.Empty;
+            int idx = Variant(day, salt) % options.Length;
+            return options[idx];
+        }
+
         private void PopulateForecast()
         {
-            var sbToday = new StringBuilder(LocalizationManager.GetString("eod.forecast_today"));
-            if (_diaryStatistics != null)
-            {
-                int max = _gameManager?.ActionSystem?.MaxActions ?? 5;
-                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_actions_today", new Dictionary<string, string>
-                {
-                    ["used"] = _diaryStatistics.ActionsSpent.ToString(),
-                    ["max"] = max.ToString()
-                }));
-                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_cry_today", new Dictionary<string, string>
-                {
-                    ["earned"] = _diaryStatistics.CryEarned.ToString(),
-                    ["spent"] = _diaryStatistics.CrySpent.ToString()
-                }));
-            }
-            if (_phSystem != null)
-                sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_ph_line", new Dictionary<string, string>
-                {
-                    ["ph"] = _phSystem.CurrentPh.ToString("F1"),
-                    ["band"] = _phSystem.GetBandName()
-                }));
-            sbToday.AppendLine(LocalizationManager.GetString("eod.forecast_reputations"));
-            string textToday = sbToday.ToString();
-
             float predictedPhDrift = _dayCycleController != null ? _dayCycleController.GetPredictedPhDriftForNextDay() : float.NaN;
-            string predictedPhDriftStr = float.IsNaN(predictedPhDrift) ? "—" : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
+            string predictedPhDriftStr = float.IsNaN(predictedPhDrift)
+                ? "—"
+                : predictedPhDrift.ToString("+#0.0;-#0.0;0", System.Globalization.CultureInfo.InvariantCulture);
+            float currentPh = _phSystem != null ? _phSystem.CurrentPh : float.NaN;
+            float tomorrowPh = float.IsNaN(currentPh) || float.IsNaN(predictedPhDrift) ? float.NaN : currentPh + predictedPhDrift;
 
             int maxActionsForecast = _gameManager?.ActionSystem?.MaxActions ?? 5;
-            var sbTomorrow = new StringBuilder(LocalizationManager.GetString("eod.forecast_tomorrow"));
-            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_actions_avail", new Dictionary<string, string> { ["n"] = maxActionsForecast.ToString() }));
-            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_ph_drift", new Dictionary<string, string> { ["v"] = predictedPhDriftStr }));
-            sbTomorrow.AppendLine(LocalizationManager.GetString("eod.forecast_risks"));
-            sbTomorrow.Append(LocalizationManager.GetString("eod.forecast_missions"));
-            string textTomorrow = sbTomorrow.ToString();
+            var sbTomorrow = new StringBuilder();
+            sbTomorrow.AppendLine("<b><color=#7FD9FF>COSA SUCCEDE DOMANI</color></b>");
+            sbTomorrow.AppendLine($"• Azioni disponibili: <b><color={ColorInfo}>{maxActionsForecast}</color></b>");
+            sbTomorrow.AppendLine($"• Deriva pH prevista: <color={ColorWarn}><b>{predictedPhDriftStr}</b></color>");
+            if (!float.IsNaN(tomorrowPh))
+                sbTomorrow.AppendLine($"• pH atteso a fine giornata: <color={ColorInfo}><b>{tomorrowPh:F1}</b></color>");
 
-            string textResearch = _nightResearchChosen ? LocalizationManager.GetString("eod.forecast_research_done") : "";
-            StartCoroutine(RunForecastTypewriter(textToday, textTomorrow, textResearch));
+            var conditions = _dayCycleController != null
+                ? _dayCycleController.GetActiveConditionsForReport()
+                : new List<(string PotId, int MoldRiskLevel, bool IsInfested)>();
+
+            var potForecast = BuildTomorrowPotForecastLines(conditions, out var actionPlan);
+            sbTomorrow.AppendLine();
+            sbTomorrow.AppendLine("<b><color=#7FD9FF>POT PRIORITARI</color></b>");
+            if (potForecast.Count == 0)
+            {
+                sbTomorrow.AppendLine($"• <color={ColorMuted}>Nessun rischio alto rilevato. Mantieni parametri stabili e controlla almeno un ciclo completo nel Dome.</color>");
+            }
+            else
+            {
+                foreach (var line in potForecast)
+                    sbTomorrow.AppendLine($"• {line}");
+            }
+
+            sbTomorrow.AppendLine();
+            sbTomorrow.AppendLine("<b><color=#7FD9FF>MISSIONI E OBIETTIVI</color></b>");
+            if (_missionManager != null && _missionManager.CurrentMissions.Count > 0)
+            {
+                foreach (var mission in _missionManager.CurrentMissions.Take(3))
+                {
+                    string title = mission?.Config != null && !string.IsNullOrWhiteSpace(mission.Config.Title)
+                        ? mission.Config.Title
+                        : "Missione senza titolo";
+                    sbTomorrow.AppendLine($"• <color={ColorInfo}>{title}</color>");
+                }
+                sbTomorrow.AppendLine($"• <color={ColorMuted}>Nota: scadenze missione non ancora tracciate dal sistema missioni corrente.</color>");
+            }
+            else
+            {
+                sbTomorrow.AppendLine($"• <color={ColorMuted}>Nessuna missione attiva da monitorare.</color>");
+            }
+
+            var sbActions = new StringBuilder();
+            sbActions.AppendLine("<b><color=#7FD9FF>PIANO OPERATIVO CONSIGLIATO</color></b>");
+            if (actionPlan.Count == 0)
+            {
+                sbActions.AppendLine($"• <color={ColorInfo}>Apri il turno con un controllo Dome generale e verifica pH dopo le prime interazioni.</color>");
+            }
+            else
+            {
+                int step = 1;
+                foreach (var action in actionPlan.Take(5))
+                    sbActions.AppendLine($"• {step++}) {action}");
+            }
+
+            string textResearch = _nightResearchChosen
+                ? "Ricerca notturna: completata (frammento lore aggiunto ai registri)."
+                : "Ricerca notturna: nessuna selezione (nessun bonus informativo per domani).";
+
+            StartCoroutine(RunForecastTypewriter(sbTomorrow.ToString(), sbActions.ToString(), textResearch));
+        }
+
+        private List<string> BuildTomorrowPotForecastLines(
+            IReadOnlyList<(string PotId, int MoldRiskLevel, bool IsInfested)> conditions,
+            out List<string> actionPlan)
+        {
+            actionPlan = new List<string>();
+            var forecast = new List<(int Score, string Line, string Action)>();
+
+            Dictionary<string, (int MoldRiskLevel, bool IsInfested)> byPot = new();
+            if (conditions != null)
+            {
+                foreach (var c in conditions)
+                    byPot[c.PotId ?? string.Empty] = (c.MoldRiskLevel, c.IsInfested);
+            }
+
+            if (_potRegistry == null)
+                return new List<string>();
+
+            var pots = _potRegistry.GetPotsSnapshot();
+            foreach (var pot in pots)
+            {
+                var state = pot?.PotActions?.PotState;
+                if (state == null || !state.HasPlant || state.Stage == (int)PlantStage.Empty)
+                    continue;
+
+                string potLabel = $"POT-{FormatPotNumber(state.PotId)}";
+                int score = 0;
+                var fragments = new List<string>();
+                string primaryAction = null;
+
+                if (byPot.TryGetValue(state.PotId ?? string.Empty, out var cond))
+                {
+                    if (cond.IsInfested)
+                    {
+                        score += 100;
+                        fragments.Add($"<color={ColorBad}>infestazione attiva</color>");
+                        primaryAction ??= $"Priorita alta: tratta {potLabel} per contenere infestazione.";
+                    }
+                    else if (cond.MoldRiskLevel >= 2)
+                    {
+                        score += 70;
+                        fragments.Add($"<color={ColorWarn}>rischio muffa alto</color>");
+                        primaryAction ??= $"Riduci rischio muffa su {potLabel} (potatura/parametri entro range).";
+                    }
+                }
+
+                int stressPct = Mathf.Clamp(Mathf.RoundToInt(state.GetConsecutiveLedDays() / 5f * 100f), 0, 100);
+                if (stressPct >= 80)
+                {
+                    score += 60;
+                    fragments.Add($"<color={ColorWarn}>light stress {stressPct}%</color>");
+                    primaryAction ??= $"Spegni o alterna LED su {potLabel} per evitare light burn.";
+                }
+
+                if (state.ConditionScore <= 25)
+                {
+                    score += 65;
+                    fragments.Add($"<color={ColorBad}>condizione critica ({state.ConditionScore})</color>");
+                    primaryAction ??= $"Recupera {potLabel}: correggi acqua/luce/fertilizzante subito a inizio turno.";
+                }
+                else if (state.ConditionScore <= 40)
+                {
+                    score += 35;
+                    fragments.Add($"<color={ColorWarn}>condizione in calo ({state.ConditionScore})</color>");
+                    primaryAction ??= $"Stabilizza {potLabel} prima delle attività secondarie.";
+                }
+
+                var plantData = PlantDatabase.Instance?.GetPlantDataByCode(state.PlantCode);
+                if (plantData != null)
+                {
+                    var stageReq = plantData.GetStageRequirements((PlantStage)state.Stage);
+                    if (stageReq != null)
+                    {
+                        int daysToStage = Mathf.Max(0, stageReq.durationDays - state.DaysInCurrentStage);
+                        if (daysToStage <= 1)
+                        {
+                            score += 40;
+                            fragments.Add($"<color={ColorGood}>vicino al cambio stadio</color>");
+                            primaryAction ??= $"Mantieni {potLabel} nel range ottimale: possibile transizione stadio domani.";
+                        }
+                    }
+                }
+
+                if (score <= 0)
+                    continue;
+
+                string line = $"{potLabel}: {string.Join(", ", fragments)}.";
+                forecast.Add((score, line, primaryAction));
+            }
+
+            var top = forecast
+                .OrderByDescending(f => f.Score)
+                .Take(5)
+                .ToList();
+
+            var actionSeen = new HashSet<string>();
+            foreach (var item in top)
+            {
+                if (!string.IsNullOrWhiteSpace(item.Action) && actionSeen.Add(item.Action))
+                    actionPlan.Add(item.Action);
+            }
+
+            return top.Select(f => f.Line).ToList();
         }
 
         private IEnumerator Typewriter(Label label, string fullText)
@@ -1108,9 +1646,9 @@ namespace _Project
         private void PopulateDawn(int newDay)
         {
             var title = _root.Q<Label>("eod-dawn-title");
-            if (title != null) title.text = LocalizationManager.GetString("eod.dawn_title");
+            if (title != null) title.text = "BRIEF OPERATIVO ALBA";
             var sub = _root.Q<Label>("eod-dawn-subtitle");
-            if (sub != null) sub.text = LocalizationManager.GetString("eod.dawn_sub", new Dictionary<string, string> { ["day"] = newDay.ToString() });
+            if (sub != null) sub.text = $"GIORNO {newDay} — COSA FARE SUBITO";
 
             int dailyCost = 20;
             var endDayBtn = FindObjectOfType<EndDayButton>();
@@ -1136,15 +1674,55 @@ namespace _Project
                 ? ""
                 : (phDrift < 0 ? LocalizationManager.GetString("eod.dawn_trend_acid") : LocalizationManager.GetString("eod.dawn_trend_alk"));
 
-            SetDawnRow("eod-dawn-text-mutation", float.IsNaN(mutation)
-                ? LocalizationManager.GetString("eod.dawn_mutation_empty")
-                : LocalizationManager.GetString("eod.dawn_mutation", new Dictionary<string, string> { ["v"] = mutation.ToString("P0") }));
-            SetDawnRow("eod-dawn-text-ph", LocalizationManager.GetString("eod.dawn_ph_drift", new Dictionary<string, string> { ["v"] = phDriftStr, ["trend"] = phTrend }));
-            SetDawnRow("eod-dawn-text-condensation", float.IsNaN(condensation)
-                ? LocalizationManager.GetString("eod.dawn_cond_empty")
-                : LocalizationManager.GetString("eod.dawn_cond", new Dictionary<string, string> { ["v"] = condensation.ToString("F0") }));
-            SetDawnRow("eod-dawn-text-grate", LocalizationManager.GetString("eod.dawn_grate", new Dictionary<string, string> { ["n"] = grate.ToString() }));
-            SetDawnRow("eod-dawn-text-cry", LocalizationManager.GetString("eod.dawn_cry", new Dictionary<string, string> { ["cry"] = cryForecast.ToString() }));
+            var conditions = _dayCycleController != null
+                ? _dayCycleController.GetActiveConditionsForReport()
+                : new List<(string PotId, int MoldRiskLevel, bool IsInfested)>();
+            BuildDawnActionBrief(
+                conditions,
+                out var topRisks,
+                out var topOpportunities,
+                out var actionPlan);
+
+            string globalRisk = ComputeGlobalDawnRiskLabel(topRisks.Count);
+            string mutationText = float.IsNaN(mutation) ? "—" : mutation.ToString("P0");
+            string condText = float.IsNaN(condensation) ? "—" : condensation.ToString("F0");
+
+            SetDawnRow(
+                "eod-dawn-text-mutation",
+                $"STATO NOTTE: pH {(float.IsNaN(ph) ? "—" : ph.ToString("F1"))} ({(_phSystem != null ? _phSystem.GetBandName() : "N/D")}), deriva {phDriftStr}{phTrend}, mutazione {mutationText}, condensa {condText}, rischio globale {globalRisk}.");
+
+            if (topRisks.Count == 0)
+            {
+                SetDawnRow("eod-dawn-text-ph", "PRIORITA IMMEDIATE: nessun POT in criticita alta. Mantieni monitoraggio Dome e stabilita pH.");
+            }
+            else
+            {
+                SetDawnRow("eod-dawn-text-ph", $"PRIORITA IMMEDIATE: {string.Join(" | ", topRisks.Take(3))}");
+            }
+
+            if (topOpportunities.Count == 0)
+            {
+                SetDawnRow("eod-dawn-text-condensation", "FINESTRA OPPORTUNITA: nessun avanzamento evidente. Punta prima su stabilizzazione e prevenzione.");
+            }
+            else
+            {
+                SetDawnRow("eod-dawn-text-condensation", $"FINESTRA OPPORTUNITA: {string.Join(" | ", topOpportunities.Take(2))}");
+            }
+
+            if (actionPlan.Count == 0)
+            {
+                SetDawnRow("eod-dawn-text-grate", "PIANO AVVIO TURNO: 1) check Dome completo, 2) correggi pH/LED dove serve, 3) poi missioni.");
+            }
+            else
+            {
+                SetDawnRow("eod-dawn-text-grate", $"PIANO AVVIO TURNO: {string.Join(" ", actionPlan.Take(3).Select((x, i) => $"{i + 1}) {x}"))}");
+            }
+
+            SetDawnRow("eod-dawn-text-cry", $"ECONOMIA: baseline CRY stimata {cryForecast} (costi fissi). G-rate +{grate}.");
+
+            var press = _root.Q<Label>("eod-dawn-press-key");
+            if (press != null)
+                press.text = "Premi Continua per iniziare il turno";
 
             string phDesc = float.IsNaN(phDrift)
                 ? LocalizationManager.GetString("eod.tt_ph_desc_neutral")
@@ -1157,29 +1735,143 @@ namespace _Project
             var tooltips = new Dictionary<string, (string title, string desc, string tip)>
             {
                 ["mutation"] = (
-                    LocalizationManager.GetString("eod.tt_mutation_title"),
-                    LocalizationManager.GetString("eod.tt_mutation_desc"),
-                    LocalizationManager.GetString("eod.tt_mutation_tip")),
+                    "[STATO NOTTE]",
+                    "Riepilogo sintetico delle variabili che influenzano il prossimo turno (pH, mutazione, condensazione, rischio globale).",
+                    "Usalo come orientamento iniziale: le decisioni vere sono nelle priorita POT."),
                 ["ph"] = (
-                    LocalizationManager.GetString("eod.tt_ph_title"),
-                    phDesc,
-                    LocalizationManager.GetString("eod.tt_ph_tip")),
+                    "[PRIORITA IMMEDIATE]",
+                    "Elenco dei POT con rischio piu alto da trattare prima di tutto il resto.",
+                    "Se ignori questa riga, aumentano probabilita di peggioramento o blocco crescita."),
                 ["condensation"] = (
-                    LocalizationManager.GetString("eod.tt_cond_title"),
-                    LocalizationManager.GetString("eod.tt_cond_desc"),
-                    LocalizationManager.GetString("eod.tt_cond_tip")),
+                    "[FINESTRA OPPORTUNITA]",
+                    "POT o condizioni favorevoli che possono convertire il turno in progresso.",
+                    "Dopo aver messo in sicurezza i rischi, sfrutta queste opportunita."),
                 ["grate"] = (
-                    LocalizationManager.GetString("eod.tt_grate_title"),
-                    LocalizationManager.GetString("eod.tt_grate_desc"),
-                    LocalizationManager.GetString("eod.tt_grate_tip")),
+                    "[PIANO AVVIO TURNO]",
+                    "Sequenza consigliata delle prime azioni per evitare errori di priorita.",
+                    "E una guida operativa: adattala alle missioni in corso."),
                 ["cry"] = (
-                    LocalizationManager.GetString("eod.tt_cry_title"),
-                    LocalizationManager.GetString("eod.tt_cry_desc"),
-                    LocalizationManager.GetString("eod.tt_cry_tip"))
+                    "[ECONOMIA BASELINE]",
+                    "Stima CRY legata ai costi fissi. Non include tutte le spese variabili del turno.",
+                    "Evita di aprire il giorno in deficit quando hai sistemi ad alto consumo.")
             };
 
             _dawnTooltipData = tooltips;
             RegisterDawnTooltipsOnce();
+        }
+
+        private string ComputeGlobalDawnRiskLabel(int criticalPots)
+        {
+            if (criticalPots >= 3) return "ALTO";
+            if (criticalPots >= 1) return "MEDIO";
+            return "BASSO";
+        }
+
+        private void BuildDawnActionBrief(
+            IReadOnlyList<(string PotId, int MoldRiskLevel, bool IsInfested)> conditions,
+            out List<string> topRisks,
+            out List<string> topOpportunities,
+            out List<string> actionPlan)
+        {
+            topRisks = new List<string>();
+            topOpportunities = new List<string>();
+            actionPlan = new List<string>();
+
+            if (_potRegistry == null)
+                return;
+
+            Dictionary<string, (int MoldRiskLevel, bool IsInfested)> byPot = new();
+            if (conditions != null)
+            {
+                foreach (var c in conditions)
+                    byPot[c.PotId ?? string.Empty] = (c.MoldRiskLevel, c.IsInfested);
+            }
+
+            var riskRows = new List<(int Score, string Line, string Action)>();
+            var opportunityRows = new List<(int Score, string Line, string Action)>();
+            var pots = _potRegistry.GetPotsSnapshot();
+
+            foreach (var pot in pots)
+            {
+                var state = pot?.PotActions?.PotState;
+                if (state == null || !state.HasPlant || state.Stage == (int)PlantStage.Empty)
+                    continue;
+
+                string potLabel = $"POT-{FormatPotNumber(state.PotId)}";
+                int riskScore = 0;
+                var riskTags = new List<string>();
+                string riskAction = null;
+
+                if (byPot.TryGetValue(state.PotId ?? string.Empty, out var cond))
+                {
+                    if (cond.IsInfested)
+                    {
+                        riskScore += 100;
+                        riskTags.Add("infestazione");
+                        riskAction ??= $"Tratta subito {potLabel} (infestazione).";
+                    }
+                    else if (cond.MoldRiskLevel >= 2)
+                    {
+                        riskScore += 70;
+                        riskTags.Add("muffa alta");
+                        riskAction ??= $"Riduci muffa su {potLabel} con intervento mirato.";
+                    }
+                }
+
+                int stressPct = Mathf.Clamp(Mathf.RoundToInt(state.GetConsecutiveLedDays() / 5f * 100f), 0, 100);
+                if (stressPct >= 80)
+                {
+                    riskScore += 60;
+                    riskTags.Add($"stress LED {stressPct}%");
+                    riskAction ??= $"Ribilancia LED su {potLabel} per evitare danni.";
+                }
+
+                if (state.ConditionScore <= 25)
+                {
+                    riskScore += 65;
+                    riskTags.Add($"condizione critica {state.ConditionScore}");
+                    riskAction ??= $"Recupera parametri vitali su {potLabel}.";
+                }
+                else if (state.ConditionScore <= 40)
+                {
+                    riskScore += 35;
+                    riskTags.Add($"condizione bassa {state.ConditionScore}");
+                }
+
+                if (riskScore > 0)
+                    riskRows.Add((riskScore, $"{potLabel}: {string.Join(", ", riskTags)}", riskAction));
+
+                var plantData = PlantDatabase.Instance?.GetPlantDataByCode(state.PlantCode);
+                if (plantData == null)
+                    continue;
+
+                var req = plantData.GetStageRequirements((PlantStage)state.Stage);
+                if (req == null)
+                    continue;
+
+                int daysToStage = Mathf.Max(0, req.durationDays - state.DaysInCurrentStage);
+                if (daysToStage <= 1 && state.ConditionScore >= 40)
+                {
+                    int oppScore = 50 - daysToStage * 10 + state.ConditionScore / 4;
+                    string line = $"{potLabel}: vicino al cambio stadio (≈{daysToStage} giorno/i)";
+                    string action = $"Mantieni {potLabel} in range: possibile avanzamento domani.";
+                    opportunityRows.Add((oppScore, line, action));
+                }
+            }
+
+            foreach (var row in riskRows.OrderByDescending(r => r.Score).Take(3))
+            {
+                topRisks.Add(row.Line);
+                if (!string.IsNullOrWhiteSpace(row.Action) && !actionPlan.Contains(row.Action))
+                    actionPlan.Add(row.Action);
+            }
+
+            foreach (var row in opportunityRows.OrderByDescending(o => o.Score).Take(2))
+            {
+                topOpportunities.Add(row.Line);
+                if (!string.IsNullOrWhiteSpace(row.Action) && !actionPlan.Contains(row.Action))
+                    actionPlan.Add(row.Action);
+            }
         }
 
         private void SetDawnRow(string labelName, string text)
@@ -1270,9 +1962,15 @@ namespace _Project
         {
             int actionsLeft = _gameManager?.ActionsLeft ?? 0;
             if (actionsLeft >= 1)
+            {
+                PrepareResearchStep(allowResearch: true);
                 ShowStep(4);
+            }
             else
-                ShowStep(5);
+            {
+                PrepareResearchStep(allowResearch: false);
+                ShowStep(4);
+            }
         }
 
         private void OnResearchHistoricalClicked() => OnResearchChosen("Historical");
@@ -1282,6 +1980,12 @@ namespace _Project
 
         private void OnResearchChosen(string branch)
         {
+            if (_researchLockedByNoActions)
+            {
+                StartCoroutine(TransitionToForecast());
+                return;
+            }
+
             if (!string.IsNullOrEmpty(branch))
             {
                 _nightResearchChosen = true;
@@ -1296,6 +2000,50 @@ namespace _Project
         {
             yield return new WaitForSeconds(_nightResearchTransitionDelay);
             ShowStep(5);
+        }
+
+        private void PrepareResearchStep(bool allowResearch)
+        {
+            _researchLockedByNoActions = !allowResearch;
+
+            var title = _root.Q<Label>("eod-research-title");
+            var subtitle = _root.Q<Label>("eod-research-subtitle");
+
+            if (allowResearch)
+            {
+                if (title != null)
+                    title.text = "SELEZIONE RICERCA NOTTURNA";
+                if (subtitle != null)
+                    subtitle.text = "Scegli un ramo di ricerca da approfondire durante la notte.";
+
+                SetButtonVisible(_btnResearchHistorical, true);
+                SetButtonVisible(_btnResearchBotanical, true);
+                SetButtonVisible(_btnResearchVault, true);
+                SetButtonVisible(_btnResearchSkip, true);
+                if (_btnResearchSkip != null)
+                    _btnResearchSkip.text = "Salta la ricerca";
+                return;
+            }
+
+            if (title != null)
+                title.text = "RICERCA NOTTURNA NON DISPONIBILE";
+            if (subtitle != null)
+                subtitle.text = "Non si possono effettuare letture di ricerca stanotte: non hai piu punti azione disponibili.";
+
+            SetButtonVisible(_btnResearchHistorical, false);
+            SetButtonVisible(_btnResearchBotanical, false);
+            SetButtonVisible(_btnResearchVault, false);
+            SetButtonVisible(_btnResearchSkip, true);
+            if (_btnResearchSkip != null)
+                _btnResearchSkip.text = "Continua → Previsione";
+        }
+
+        private static void SetButtonVisible(Button button, bool visible)
+        {
+            if (button == null)
+                return;
+            button.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            button.SetEnabled(visible);
         }
 
         private void OnSleepClicked()
