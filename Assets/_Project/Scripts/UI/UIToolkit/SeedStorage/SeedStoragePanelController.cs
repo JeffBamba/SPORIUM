@@ -30,6 +30,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         private UIDocument    _document;
         private VisualElement _root;
         private VisualElement _overlay;
+        private VisualElement _panel;
 
         // Left panel
         private ScrollView    _invScroll;
@@ -88,6 +89,9 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         private bool _systemsBound;
 
         public bool IsOpen { get; private set; }
+        public event Action PanelShown;
+        public event Action PanelHidden;
+        public event Action<bool> PowerToggled;
 
         // ─── Category helpers ────────────────────────────────────────────────────
 
@@ -213,6 +217,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             var ve = _document.rootVisualElement;
             _root    = ve.Q<VisualElement>("seedstorage-root");
             _overlay = ve.Q<VisualElement>("seedstorage-overlay");
+            _panel   = ve.Q<VisualElement>("seedstorage-panel");
 
             _invScroll    = ve.Q<ScrollView>("seedstorage-inv-scroll");
             _catBotanical = ve.Q<VisualElement>("seedstorage-cat-botanical");
@@ -329,6 +334,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             GameplayUiModalLock.SetMachineModalState(true);
             ApplyLocalizedSeedStorageStaticChrome();
             Refresh();
+            PanelShown?.Invoke();
         }
 
         public void Hide()
@@ -336,6 +342,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             if (_root != null) _root.style.display = DisplayStyle.None;
             IsOpen = false;
             GameplayUiModalLock.SetMachineModalState(false);
+            PanelHidden?.Invoke();
         }
 
         // ─── Actions ─────────────────────────────────────────────────────────────
@@ -344,6 +351,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
         {
             if (_seed == null) return;
             _seed.SetPower(!_seed.IsOn);
+            PowerToggled?.Invoke(_seed.IsOn);
             AppendLog(_seed.IsOn
                 ? LocalizationManager.GetString("seed_storage.log.power_on")
                 : LocalizationManager.GetString("seed_storage.log.power_off"));
@@ -389,7 +397,7 @@ namespace Sporae.UI.UIToolkit.SeedStorage
 
         private void ToggleWithdrawSlot(int index)
         {
-            if (_seed == null || !_seed.IsSlotUnlocked(index) || _seed.SlotIsEmpty(index)) return;
+            if (_seed == null || !_seed.IsOn || !_seed.IsSlotUnlocked(index) || _seed.SlotIsEmpty(index)) return;
             if (_withdrawSlots.Contains(index)) _withdrawSlots.Remove(index);
             else _withdrawSlots.Add(index);
             RefreshSlotChrome();
@@ -433,10 +441,37 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             if (_apLabel        != null) _apLabel.text        = LocalizationManager.GetString("seed_storage.ap", new Dictionary<string, string> { ["n"] = _gameManager.ActionsLeft.ToString() });
             if (_btnPower       != null) _btnPower.text       = on ? LocalizationManager.GetString("seed_storage.btn_off") : LocalizationManager.GetString("seed_storage.btn_on");
 
+            ApplyOfflineVisualState(on);
             RebuildInventoryRows();
             RebuildSlots();
             RefreshSlotChrome();
             RefreshButtonStates();
+        }
+
+        private void ApplyOfflineVisualState(bool isOn)
+        {
+            if (isOn == false)
+            {
+                _depositSelectionTypeIds.Clear();
+                _withdrawSlots.Clear();
+            }
+
+            _panel?.EnableInClassList("seedstorage-panel--offline", !isOn);
+            _invScroll?.SetEnabled(isOn);
+            _catBotanical?.SetEnabled(isOn);
+            _catSeeds?.SetEnabled(isOn);
+            _catSpores?.SetEnabled(isOn);
+            _btnDeposit?.SetEnabled(isOn);
+            _btnWithdraw?.SetEnabled(isOn);
+
+            for (int i = 0; i < _slotEls.Length; i++)
+                _slotEls[i]?.SetEnabled(isOn);
+            for (int i = 0; i < _slotUnlockBtns.Length; i++)
+                _slotUnlockBtns[i]?.SetEnabled(isOn);
+
+            // Restano sempre operativi anche da offline.
+            _btnPower?.SetEnabled(true);
+            _btnClose?.SetEnabled(true);
         }
 
         private int CountOccupied()
@@ -575,6 +610,9 @@ namespace Sporae.UI.UIToolkit.SeedStorage
             string capturedId = typeId;
             row.RegisterCallback<ClickEvent>(_ =>
             {
+                if (_seed == null || !_seed.IsOn)
+                    return;
+
                 if (_depositSelectionTypeIds.Contains(capturedId))
                 {
                     _depositSelectionTypeIds.Remove(capturedId);

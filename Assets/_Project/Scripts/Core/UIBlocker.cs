@@ -61,6 +61,7 @@ public static class UIBlocker
                 _results.RemoveAll(r => TryIsViewportBackground(r.gameObject));
                 // DEBUG: rimuovi anche pannello full-screen che copre la Game View (es. BackgroundSettingsPanel)
                 _results.RemoveAll(r => TryIsPassThroughPanel(r.gameObject));
+                _results.RemoveAll(r => r.gameObject != null && r.gameObject.name == "MainMenuPanelSettings");
             }
 
             bool isOverUI = _results.Count > 0;

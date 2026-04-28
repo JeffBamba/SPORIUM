@@ -19,6 +19,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
         private VisualElement _root;
         private VisualElement _overlay;
+        private VisualElement _panel;
         private Button _btnClose;
 
         private VisualElement _stemCellSlot;
@@ -90,6 +91,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         {
             /* Nascondi tutto il root (food-room-root), non solo l'overlay: altrimenti il root resta visibile e copre la game view con il box grigio */
             _overlay = _root.Q<VisualElement>("food-room-root");
+            _panel = _root.Q<VisualElement>("food-room-panel");
             _btnClose = _root.Q<Button>("btn-close");
             if (_btnClose != null) _btnClose.clicked += Hide;
 
@@ -352,6 +354,8 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                     ? LocalizationManager.GetString("food_room.synth.btn_off")
                     : LocalizationManager.GetString("food_room.synth.btn_on");
 
+            ApplyOfflineVisualState(synthOn);
+
             bool hasFreeSlot = false;
             foreach (var s in _foodRoom.ProductionSlots)
                 if (s.State == SlotState.Free) { hasFreeSlot = true; break; }
@@ -367,6 +371,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             bool canHarvest = false;
             foreach (var s in _foodRoom.ProductionSlots)
                 if (s.State == SlotState.Ready) { canHarvest = true; break; }
+            canHarvest = synthOn && canHarvest;
             if (_btnHarvest != null) _btnHarvest.SetEnabled(canHarvest);
 
             /* Bottom: hint normale o barra "Cultivation in Progress" (mostrata quando c'è un processo in corso O ready per harvest) */
@@ -430,6 +435,23 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                     _stemCellSlot.RemoveFromClassList("stem-cell-slot--filled");
             }
 
+        }
+
+        private void ApplyOfflineVisualState(bool synthOn)
+        {
+            _panel?.EnableInClassList("food-room-panel--offline", !synthOn);
+
+            _stemCellSlot?.SetEnabled(synthOn);
+            _chamberVegetal?.SetEnabled(synthOn);
+            _chamberFungal?.SetEnabled(synthOn);
+            _chamberMeat?.SetEnabled(synthOn);
+            _btnStartGrowth?.SetEnabled(synthOn && _btnStartGrowth.enabledSelf);
+            _btnHarvest?.SetEnabled(synthOn && _btnHarvest.enabledSelf);
+            _btnAdvanceDay?.SetEnabled(synthOn);
+
+            // Restano sempre operativi anche in OFF.
+            _btnFoodSynthPower?.SetEnabled(true);
+            _btnClose?.SetEnabled(true);
         }
 
         private void Update()

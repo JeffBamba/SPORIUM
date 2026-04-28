@@ -57,7 +57,8 @@ namespace _Project.UI.UIToolkit.VoOverlay
             bool lockWorldInputWhileVisible = false,
             bool enableCameraFocus = false,
             float cameraFocusOrthographicSize = 0f,
-            IReadOnlyList<string> highlightColorHexes = null)
+            IReadOnlyList<string> highlightColorHexes = null,
+            float holdAfterTypingSeconds = 0f)
         {
             UseMultiSentenceWhenSplit = useMultiSentenceWhenSplit;
             AdvanceMode = advanceMode;
@@ -73,6 +74,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
             LockWorldInputWhileVisible = lockWorldInputWhileVisible;
             EnableCameraFocus = enableCameraFocus;
             CameraFocusOrthographicSize = cameraFocusOrthographicSize;
+            HoldAfterTypingSeconds = Mathf.Max(0f, holdAfterTypingSeconds);
         }
 
         public bool UseMultiSentenceWhenSplit { get; }
@@ -91,6 +93,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
         public bool LockWorldInputWhileVisible { get; }
         public bool EnableCameraFocus { get; }
         public float CameraFocusOrthographicSize { get; }
+        public float HoldAfterTypingSeconds { get; }
 
         /// <summary>Blocco unico (nessun click tra frasi); un solo «continua» a fine blocco se <see cref="ForceContinueAtEnd"/>.</summary>
         public static VoLinePresentationOptions ForDemoBeat(VoSentenceAdvanceMode advanceMode) =>
@@ -695,8 +698,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
             }
             else
             {
-                float typingTime = Time.realtimeSinceStartup - messageStartTime;
-                float remaining  = Mathf.Max(0f, _totalMessageDuration - typingTime - _enterExitDuration);
+                float remaining = opt.HoldAfterTypingSeconds > 0f
+                    ? opt.HoldAfterTypingSeconds
+                    : Mathf.Max(0f, _totalMessageDuration - (Time.realtimeSinceStartup - messageStartTime) - _enterExitDuration);
                 yield return new WaitForSecondsRealtime(remaining);
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();
@@ -772,8 +776,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
             }
             else
             {
-                float typingTime = Time.realtimeSinceStartup - messageStartTime;
-                float remaining  = Mathf.Max(0f, _totalMessageDuration - typingTime - _enterExitDuration);
+                float remaining = opt.HoldAfterTypingSeconds > 0f
+                    ? opt.HoldAfterTypingSeconds
+                    : Mathf.Max(0f, _totalMessageDuration - (Time.realtimeSinceStartup - messageStartTime) - _enterExitDuration);
                 yield return new WaitForSecondsRealtime(remaining);
                 yield return StartCoroutine(ExitAnimRoutine());
                 Hide();

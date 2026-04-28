@@ -99,7 +99,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
         private void Update()
         {
-            bool hideFixedHud = GameplayUiModalLock.HidesFixedHud;
+            bool hideFixedHud = GameplayUiModalLock.HidesContextHud;
             if (_root != null)
                 _root.style.display = hideFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
             if (hideFixedHud && _toastTooltip != null)

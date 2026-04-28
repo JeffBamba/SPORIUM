@@ -204,6 +204,8 @@ namespace _Project.UI.UIToolkit.MainMenu
             _btnOpenLegacyAudio = _root.Q<Button>("btn-open-legacy-audio");
             if (_optionsOverlay != null)
                 _optionsOverlay.style.display = DisplayStyle.None;
+            if (_root != null && !_isMainMenuScene)
+                _root.pickingMode = PickingMode.Ignore;
             ApplyLocalizedStaticText();
         }
 
@@ -560,6 +562,7 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (_root == null || _isMainMenuScene) return;
             GameplayUiModalLock.SetHideFixedHud(true);
             _root.style.display = DisplayStyle.Flex;
+            _root.pickingMode = PickingMode.Position;
         }
 
         public void HideInGameMenu()
@@ -567,6 +570,7 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (_root == null || _isMainMenuScene) return;
             GameplayUiModalLock.SetHideFixedHud(false);
             _root.style.display = DisplayStyle.None;
+            _root.pickingMode = PickingMode.Ignore;
         }
 
         public void ToggleInGameMenu()

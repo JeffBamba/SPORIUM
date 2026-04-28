@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f77a4d38197c3fe4282b741843e0fda6, type: 3}
   m_Name: DemoAlphaNarrativeConfig
   m_EditorClassIdentifier: 
-  Beat1WakeLine: "\u201CProtocollo 01 riattivato.\u201D\r\nBuongiorno, Biologo. \xC8
-    trascorso un periodo di inattivit\xE0 indefinito, ma non preoccuparti: la natura
-    non ha fretta.\r\nOra, apri l'armadio e vestiti, Gli umani funzionano meglio
-    quando non vanno in giro nudi."
+  Beat1WakeLine: "Protocollo 01 riattivato.\nVault-07...\nOperativo.\n\nLa Cupola tiene
+    ancora......\n\nTu no da quello che vedo.\nMa\u2026 stai comunque respirando.\n\nBuone
+    notizie: il sistema funziona.\nCattive notizie: ora devi farlo anche tu.\n\nQuindi
+    ascolta bene, Biologo:\napri quell'armadio e vestiti.\nLa fine del mondo \xE8
+    gi\xE0 abbastanza complicata\u2026\nsenza affrontarla in mutande. :)"
   Beat1WakeRegister: 0
   Beat1WakeSentenceAdvance: 0
   Beat1MissionHighlightWords:
@@ -29,8 +30,13 @@ MonoBehaviour:
   - Apri l'Inventario
   - mangia
   - bevi
-  Beat2PostBreakfastPart1Line: "Molto meglio. Hai di nuovo un colorito\u2026 quasi umano.\nVedi quel serbatoio al centro? \xC8 la condensa della Dome: qui la ripuliamo e la chiamiamo acqua potabile."
-  Beat2PostBreakfastPart2Line: "E la Cucina fa l'altro miracolo: fibre e cellule dentro, cibo fuori\u2014carburante per le tue azioni.\nSe non vuoi ritrovarti l'inventario pieno di compost, metti tutto nella Dispensa Refrigerata. Te lo ricordi, s\xEC?"
+  Beat2PostBreakfastPart1Line: "Molto meglio. Hai di nuovo un colorito\u2026 quasi
+    umano.\nVedi quel serbatoio al centro? \xC8 la condensa della Dome: qui la ripuliamo
+    e la chiamiamo acqua potabile."
+  Beat2PostBreakfastPart2Line: "E la Cucina fa l'altro miracolo: fibre e cellule
+    dentro, cibo fuori\u2014carburante per le tue azioni.\nSe non vuoi ritrovarti
+    l'inventario pieno di compost, metti tutto nella Dispensa Refrigerata. Te lo
+    ricordi, s\xEC?"
   Beat2PostBreakfastRegister: 0
   Beat2PostBreakfastSentenceAdvance: 0
   Beat2PostBreakfastPart1HighlightWords:
@@ -47,9 +53,33 @@ MonoBehaviour:
   - '#A8FF98'
   - '#E6C96F'
   - '#D4A5FF'
-  Beat3SeedStorageIntroLine: "Bene. Adesso puoi fare l'unica cosa che ti rende pi\xF9 utile di un sacco di carne: lavorare.\nSali al piano +1. Stanza di destra: Seed Storage.\nVai a controllare le promesse congelate\u2026 e prova a trovare un motivo decente per la tua esistenza mentre ci sei."
+  Beat3SeedStorageIntroLine: "Bene. Adesso puoi fare l'unica cosa che ti rende pi\xF9
+    utile di un sacco di carne: lavorare.\nSali al piano +1. Stanza di destra: Seed
+    Storage.\nVai a controllare le promesse congelate\u2026 e prova a trovare un
+    motivo decente per la tua esistenza mentre ci sei."
   Beat3SeedStorageIntroRegister: 0
   Beat3SeedStorageIntroSentenceAdvance: 0
   Beat3SeedStorageIntroHighlightWords:
   - Seed Storage
+  Beat3SeedStorageAnomalyPart1Line: 'Qui congeliamo semi e spore vitali: quando il
+    nodo resta attivo, il patrimonio botanico sopravvive ai cicli peggiori.'
+  Beat3SeedStorageAnomalyPart2Line: 'ASPETTA... NO?! STORAGE OFF! SOLO RESIDUI ORGANICI!
+
+    CONTENUTO
+    PERSO. Qualcuno ha spento il sistema troppo a lungo.'
+  Beat3SeedStorageAnomalyPowerOnRequestLine: Riaccendi subito il Seed Storage. Se
+    lo lasci morto, qui dentro resta solo scarto.
+  Beat3SeedStorageCryHoverRequestLine: "Quello che hai visto qui dentro ha un costo,
+    e la parte peggiore \xE8 che non ricordi nemmeno di averlo causato.\nChiudi il
+    pannello e passa il mouse sul box CRY in basso a sinistra: ti faccio vedere i
+    costi fissi di mantenimento."
+  Beat3CryTooltipCostsExplainLine: "Quello nel box CRY \xE8 il conto che corre ogni
+    giorno: energia minima, supporti vitali e macchine attive.\nQuesti sono costi
+    fissi: li paghi anche quando non produci nulla."
+  Beat3CryTooltipIncomeExplainLine: 'Per sostenere la Dome devi far entrare CRY:
+    completa missioni, vendi ai mercanti, tratta nel black market e usa il trading
+    per trasformare eccedenze in margine.
+
+    Se tieni in equilibrio entrate e mantenimento,
+    resti operativo.'
   MissionHighlightColorHex: '#E6C96F'

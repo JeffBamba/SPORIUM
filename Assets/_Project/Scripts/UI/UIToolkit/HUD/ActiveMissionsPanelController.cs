@@ -233,8 +233,8 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             if (_root == null)
                 return;
-            _root.style.display = GameplayUiModalLock.HidesFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
-            if (GameplayUiModalLock.HidesFixedHud)
+            _root.style.display = GameplayUiModalLock.HidesContextHud ? DisplayStyle.None : DisplayStyle.Flex;
+            if (GameplayUiModalLock.HidesContextHud)
                 HideTooltipImmediate();
         }
 
@@ -335,7 +335,8 @@ namespace Sporae.UI.UIToolkit.HUD
 
             var demoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
             bool skipGenericCompletionVo = demoSession != null && demoSession.IsDemo
-                && DemoBreakfastMission.IsDemoBreakfastConfig(mission.Config);
+                && (DemoBreakfastMission.IsDemoBreakfastConfig(mission.Config)
+                    || DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config));
 
             var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
             if (vo != null && !skipGenericCompletionVo)

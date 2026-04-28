@@ -4,6 +4,9 @@ using UnityEngine;
 using _Project.UI.UIToolkit.VoOverlay;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.UI.UIToolkit.HUD;
+using Sporae.UI.UIToolkit.SeedStorage;
+using _Project.Systems.SeedStorage;
 
 namespace _Project.Sporae.Core
 {
@@ -14,14 +17,22 @@ namespace _Project.Sporae.Core
     [DefaultExecutionOrder(-40)]
     public sealed class DemoStoryDirector : MonoBehaviour
     {
+        public enum DemoDebugCheckpoint
+        {
+            Beat1WakeAndWardrobe = 1,
+            Beat2Breakfast = 2,
+            Beat3SeedStorage = 3
+        }
+
         private const string NarrativeConfigResourcePath = "Demo/DemoAlphaNarrativeConfig";
         private const string WardrobeMissionResourcePath = "Missions/M_Demo_Wardrobe";
         private const string BreakfastMissionResourcePath = "Missions/M_Demo_Breakfast";
         private const string SeedStorageMissionResourcePath = "Missions/M_Demo_SeedStorage";
         private const float Beat1VoStartDelaySeconds = 5f;
+        private const float Beat1Group1HoldSeconds = 2f;
+        private const float Beat1Group2HoldSeconds = 3f;
         private const float KitchenMissionTriggerDelaySeconds = 2f;
         private const string KitchenRoomId = "kitchen";
-        private const string StorageRoomId = "storage";
 
         private DemoSessionState _session;
         private RoomTracker _roomTracker;
@@ -29,6 +40,13 @@ namespace _Project.Sporae.Core
         private Coroutine _kitchenDelayRoutine;
         private MissionManager _missionManagerSubscribed;
         private bool _postBreakfastNarrativeLaunched;
+        private SeedStoragePanelController _seedStoragePanel;
+        private CompactBottomBarController _compactBottomBar;
+        private bool _beat3SeedStorageAutoplayStarted;
+        private bool _waitingForSeedStoragePowerOn;
+        private bool _waitingForCryHover;
+        private bool _seedStoragePowerOnObserved;
+        private bool _cryHoverObserved;
 
         private void Awake()
         {
@@ -46,7 +64,7 @@ namespace _Project.Sporae.Core
             StartCoroutine(BindRoomTrackerRoutine());
             StartCoroutine(RunBeat1WakeIntro());
             StartCoroutine(BindMissionManagerForPostBreakfastRoutine());
-            StartCoroutine(DeferredResolveSeedStorageIfAlreadyInRoomRoutine());
+            StartCoroutine(BindSeedStorageAndCompactHudRoutine());
         }
 
         private void OnDestroy()
@@ -64,6 +82,15 @@ namespace _Project.Sporae.Core
                 StopCoroutine(_kitchenDelayRoutine);
                 _kitchenDelayRoutine = null;
             }
+
+            if (_seedStoragePanel != null)
+            {
+                _seedStoragePanel.PanelShown -= HandleSeedStoragePanelShown;
+                _seedStoragePanel.PowerToggled -= HandleSeedStoragePowerToggled;
+            }
+
+            if (_compactBottomBar != null)
+                _compactBottomBar.CryTooltipShown -= HandleCryTooltipShown;
         }
 
         /// <summary>Beat 1 — Wake: imposta traccia e prima riga VO (integrazione Task 1+2).</summary>
@@ -84,37 +111,110 @@ namespace _Project.Sporae.Core
             yield return new WaitForSeconds(Beat1VoStartDelaySeconds);
 
             var config = Resources.Load<DemoAlphaNarrativeConfig>(NarrativeConfigResourcePath);
-            string line = config != null && !string.IsNullOrWhiteSpace(config.Beat1WakeLine)
-                ? config.Beat1WakeLine
-                : DemoAlphaNarrativeDefaults.Beat1WakeLine;
             VoRegister reg = config != null ? config.Beat1WakeRegister : DemoAlphaNarrativeDefaults.Beat1WakeRegister;
-            var advance = config != null
-                ? config.Beat1WakeSentenceAdvance
-                : DemoAlphaNarrativeDefaults.Beat1WakeSentenceAdvance;
             var highlightWords = config != null
                 ? config.Beat1MissionHighlightWords
                 : null;
             string highlightHex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
                 ? config.MissionHighlightColorHex
                 : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            SporiumLogger.LogInfo(LogCategory.Core, "[Demo] Beat 1 — VO Wake a gruppi.");
+#endif
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "Protocollo 01 riattivato.\nVault-07...",
+                reg,
+                Beat1Group1HoldSeconds);
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "Operativo.",
+                reg,
+                1.2f,
+                new[] { "Operativo" },
+                new[] { "#7FFF7A" });
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "La Cupola tiene ancora......",
+                reg,
+                Beat1Group2HoldSeconds);
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "Tu no da quello che vedo.\nMa… stai comunque respirando.",
+                reg,
+                2.0f);
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "Buone notizie: il sistema funziona.\nCattive notizie: ora devi farlo anche tu",
+                reg,
+                2.0f);
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "Quindi ascolta bene, Biologo:\napri quell'armadio e vestiti.",
+                reg,
+                2.4f,
+                highlightWords,
+                null,
+                highlightHex,
+                hideAfterHold: false);
+
+            yield return PlayBeat1TimedLine(
+                vo,
+                "La fine del mondo è già abbastanza complicata…\nsenza affrontarla in mutande. :)",
+                reg,
+                2.6f,
+                null,
+                null,
+                highlightHex,
+                hideAfterHold: true);
+
+            AppendDemoWardrobeMissionIfPossible();
+        }
+
+        private static IEnumerator PlayBeat1TimedLine(
+            VoOverlayController vo,
+            string line,
+            VoRegister register,
+            float holdSecondsAfterTyping,
+            IReadOnlyList<string> highlightWords = null,
+            IReadOnlyList<string> highlightColorHexes = null,
+            string fallbackHighlightHex = null,
+            bool hideAfterHold = false)
+        {
+            if (vo == null || string.IsNullOrWhiteSpace(line))
+                yield break;
+
             var presentation = new VoLinePresentationOptions(
                 useMultiSentenceWhenSplit: false,
-                advanceMode: advance,
+                advanceMode: VoSentenceAdvanceMode.AutoReadingPause,
                 minReadSeconds: 0.55f,
                 readSecondsPerChar: 0.042f,
                 continueHintText: "Clicca o Spazio per continuare",
                 highlightWords: highlightWords,
-                highlightColorHex: highlightHex,
-                forceContinueAtEnd: true,
+                highlightColorHex: string.IsNullOrWhiteSpace(fallbackHighlightHex)
+                    ? DemoAlphaNarrativeDefaults.MissionHighlightColorHex
+                    : fallbackHighlightHex,
+                forceContinueAtEnd: false,
                 lockWorldInputWhileVisible: true,
                 enableCameraFocus: true,
                 cameraFocusOrthographicSize: 0f,
-                highlightColorHexes: null);
+                highlightColorHexes: highlightColorHexes,
+                holdAfterTypingSeconds: holdSecondsAfterTyping);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            SporiumLogger.LogInfo(LogCategory.Core, "[Demo] Beat 1 — VO Wake (prima riga).");
-#endif
-            vo.ShowLine(line, reg, null, AppendDemoWardrobeMissionIfPossible, hideAfterTypingWithoutIdle: false, presentation);
+            bool done = false;
+            vo.ShowLine(line, register, null, () => done = true, hideAfterTypingWithoutIdle: false, presentation);
+
+            while (!done)
+                yield return null;
+
+            if (hideAfterHold)
+                vo.Hide();
         }
 
         private void AppendDemoWardrobeMissionIfPossible()
@@ -161,9 +261,6 @@ namespace _Project.Sporae.Core
         {
             if (_session == null || !_session.IsDemo)
                 return;
-
-            if (string.Equals(roomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
-                DemoSeedStorageMission.NotifyEnteredStorageRoom();
 
             if (_kitchenBeatTriggered)
                 return;
@@ -417,29 +514,210 @@ namespace _Project.Sporae.Core
             if (!mm.AppendIfMissing(cfg))
                 return;
 
-            var rt = ServiceContainer.Instance?.Get<RoomTracker>(suppressWarning: true);
-            if (rt != null && string.Equals(rt.CurrentRoomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
-                DemoSeedStorageMission.NotifyEnteredStorageRoom();
         }
 
-        private IEnumerator DeferredResolveSeedStorageIfAlreadyInRoomRoutine()
+        private IEnumerator BindSeedStorageAndCompactHudRoutine()
         {
-            for (var i = 0; i < 90; i++)
+            while (_session != null && _session.IsDemo)
             {
-                yield return null;
-                if (_session == null || !_session.IsDemo)
+                if (_seedStoragePanel == null)
+                {
+                    _seedStoragePanel = ServiceContainer.Instance?.Get<SeedStoragePanelController>(suppressWarning: true);
+                    if (_seedStoragePanel != null)
+                    {
+                        _seedStoragePanel.PanelShown -= HandleSeedStoragePanelShown;
+                        _seedStoragePanel.PanelShown += HandleSeedStoragePanelShown;
+                        _seedStoragePanel.PowerToggled -= HandleSeedStoragePowerToggled;
+                        _seedStoragePanel.PowerToggled += HandleSeedStoragePowerToggled;
+                        if (_seedStoragePanel.IsOpen && !_beat3SeedStorageAutoplayStarted &&
+                            _session != null && _session.IsDemo && _session.CurrentBeat >= 3)
+                        {
+                            _beat3SeedStorageAutoplayStarted = true;
+                            StartCoroutine(RunBeat3SeedStorageAnomalyAutoplay());
+                        }
+                    }
+                }
+
+                if (_compactBottomBar == null)
+                {
+                    _compactBottomBar = ServiceContainer.Instance?.Get<CompactBottomBarController>(suppressWarning: true);
+                    if (_compactBottomBar != null)
+                    {
+                        _compactBottomBar.CryTooltipShown -= HandleCryTooltipShown;
+                        _compactBottomBar.CryTooltipShown += HandleCryTooltipShown;
+                    }
+                }
+
+                if (_seedStoragePanel != null && _compactBottomBar != null)
                     yield break;
 
-                var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
-                var rt = ServiceContainer.Instance?.Get<RoomTracker>(suppressWarning: true);
-                if (mm != null && rt != null &&
-                    DemoSeedStorageMission.HasActiveDemoSeedStorageMission(mm) &&
-                    string.Equals(rt.CurrentRoomId, StorageRoomId, System.StringComparison.OrdinalIgnoreCase))
-                {
-                    DemoSeedStorageMission.NotifyEnteredStorageRoom();
-                    yield break;
-                }
+                yield return null;
             }
+        }
+
+        private void HandleSeedStoragePanelShown()
+        {
+            if (_session == null || !_session.IsDemo || _session.CurrentBeat < 3)
+                return;
+
+            if (_beat3SeedStorageAutoplayStarted)
+                return;
+
+            _beat3SeedStorageAutoplayStarted = true;
+            StartCoroutine(RunBeat3SeedStorageAnomalyAutoplay());
+        }
+
+        private void HandleSeedStoragePowerToggled(bool isOn)
+        {
+            if (!_waitingForSeedStoragePowerOn)
+                return;
+            if (isOn)
+                _seedStoragePowerOnObserved = true;
+        }
+
+        private void HandleCryTooltipShown()
+        {
+            if (_waitingForCryHover)
+                _cryHoverObserved = true;
+        }
+
+        private IEnumerator RunBeat3SeedStorageAnomalyAutoplay()
+        {
+            var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
+            SeedStorageSystem seedStorage = gm?.SeedStorageSystem;
+            seedStorage?.EnsureDemoBeat3AnomalyState();
+
+            var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
+            if (vo == null)
+            {
+                _waitingForSeedStoragePowerOn = true;
+                yield break;
+            }
+
+            var config = Resources.Load<DemoAlphaNarrativeConfig>(NarrativeConfigResourcePath);
+            VoRegister reg = config != null
+                ? config.Beat3SeedStorageIntroRegister
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroRegister;
+            var advance = config != null
+                ? config.Beat3SeedStorageIntroSentenceAdvance
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroSentenceAdvance;
+
+            string part1 = config != null && !string.IsNullOrWhiteSpace(config.Beat3SeedStorageAnomalyPart1Line)
+                ? config.Beat3SeedStorageAnomalyPart1Line
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageAnomalyPart1Line;
+            string part2 = config != null && !string.IsNullOrWhiteSpace(config.Beat3SeedStorageAnomalyPart2Line)
+                ? config.Beat3SeedStorageAnomalyPart2Line
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageAnomalyPart2Line;
+            string powerOnRequest = config != null && !string.IsNullOrWhiteSpace(config.Beat3SeedStorageAnomalyPowerOnRequestLine)
+                ? config.Beat3SeedStorageAnomalyPowerOnRequestLine
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageAnomalyPowerOnRequestLine;
+
+            string missionHex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
+                ? config.MissionHighlightColorHex
+                : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
+
+            yield return PlayVoBlock(
+                vo,
+                part1,
+                reg,
+                advance,
+                new[] { "Seed Storage", "semi", "spore" },
+                new[] { missionHex, missionHex, missionHex });
+            yield return PlayVoBlock(
+                vo,
+                part2,
+                VoRegister.RegisterB,
+                advance,
+                new[] { "STORAGE OFF", "Solo residui organici", "Contenuto perso" },
+                new[] { "#FF9F43", "#FF5A5A", "#FF3B30" });
+            yield return PlayVoBlock(
+                vo,
+                powerOnRequest,
+                reg,
+                advance,
+                new[] { "Riaccendi", "Seed Storage" },
+                new[] { missionHex, missionHex });
+
+            _waitingForSeedStoragePowerOn = true;
+            _seedStoragePowerOnObserved = seedStorage != null && seedStorage.IsOn;
+            while (!_seedStoragePowerOnObserved)
+                yield return null;
+            _waitingForSeedStoragePowerOn = false;
+
+            while (_seedStoragePanel != null && _seedStoragePanel.IsOpen)
+                yield return null;
+
+            DemoSeedStorageMission.NotifyRecoveredAndPanelClosed();
+
+            string cryHoverRequest = config != null && !string.IsNullOrWhiteSpace(config.Beat3SeedStorageCryHoverRequestLine)
+                ? config.Beat3SeedStorageCryHoverRequestLine
+                : DemoAlphaNarrativeDefaults.Beat3SeedStorageCryHoverRequestLine;
+            yield return PlayVoBlock(
+                vo,
+                cryHoverRequest,
+                reg,
+                advance,
+                new[] { "box CRY", "costo fisso" },
+                new[] { missionHex, missionHex });
+
+            _waitingForCryHover = true;
+            _cryHoverObserved = false;
+            while (!_cryHoverObserved)
+                yield return null;
+            _waitingForCryHover = false;
+
+            string cryCostsExplain = config != null && !string.IsNullOrWhiteSpace(config.Beat3CryTooltipCostsExplainLine)
+                ? config.Beat3CryTooltipCostsExplainLine
+                : DemoAlphaNarrativeDefaults.Beat3CryTooltipCostsExplainLine;
+            yield return PlayVoBlock(
+                vo,
+                cryCostsExplain,
+                reg,
+                advance,
+                new[] { "CRY", "costi fissi", "ogni giorno" },
+                new[] { missionHex, missionHex, missionHex });
+
+            string cryIncomeExplain = config != null && !string.IsNullOrWhiteSpace(config.Beat3CryTooltipIncomeExplainLine)
+                ? config.Beat3CryTooltipIncomeExplainLine
+                : DemoAlphaNarrativeDefaults.Beat3CryTooltipIncomeExplainLine;
+            yield return PlayVoBlock(
+                vo,
+                cryIncomeExplain,
+                reg,
+                advance,
+                new[] { "missioni", "mercanti", "black market", "trading", "CRY" },
+                new[] { missionHex, missionHex, missionHex, missionHex, missionHex });
+        }
+
+        private static IEnumerator PlayVoBlock(
+            VoOverlayController vo,
+            string line,
+            VoRegister register,
+            VoSentenceAdvanceMode advanceMode,
+            IReadOnlyList<string> highlightWords = null,
+            IReadOnlyList<string> highlightColorHexes = null)
+        {
+            if (vo == null || string.IsNullOrWhiteSpace(line))
+                yield break;
+
+            var presentation = new VoLinePresentationOptions(
+                useMultiSentenceWhenSplit: false,
+                advanceMode: advanceMode,
+                minReadSeconds: 0.55f,
+                readSecondsPerChar: 0.042f,
+                continueHintText: "Clicca o Spazio per continuare",
+                highlightWords: highlightWords,
+                highlightColorHex: DemoAlphaNarrativeDefaults.MissionHighlightColorHex,
+                forceContinueAtEnd: true,
+                lockWorldInputWhileVisible: true,
+                enableCameraFocus: false,
+                cameraFocusOrthographicSize: 0f,
+                highlightColorHexes: highlightColorHexes);
+
+            bool done = false;
+            vo.ShowLine(line, register, null, () => done = true, false, presentation);
+            while (!done)
+                yield return null;
         }
 
         private static IReadOnlyList<string> ResolvePostBreakfastPart1HighlightWords(DemoAlphaNarrativeConfig config)
@@ -487,6 +765,73 @@ namespace _Project.Sporae.Core
             if (config?.Beat3SeedStorageIntroHighlightWords != null && config.Beat3SeedStorageIntroHighlightWords.Count > 0)
                 return config.Beat3SeedStorageIntroHighlightWords;
             return DemoAlphaNarrativeDefaults.Beat3SeedStorageIntroHighlightWords;
+        }
+
+        /// <summary>
+        /// Entry point debug per saltare direttamente a un checkpoint demo.
+        /// Mantiene il binario runtime reale (stesse missioni/flag), ma evita
+        /// di rifare sempre l'intera sequenza durante i test.
+        /// </summary>
+        public bool DebugJumpToCheckpoint(DemoDebugCheckpoint checkpoint)
+        {
+            if (_session == null || !_session.IsDemo)
+                return false;
+
+            var flags = ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true);
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            if (mm == null)
+                return false;
+
+            switch (checkpoint)
+            {
+                case DemoDebugCheckpoint.Beat1WakeAndWardrobe:
+                    _session.SetBeat(1);
+                    _kitchenBeatTriggered = false;
+                    _postBreakfastNarrativeLaunched = false;
+                    _beat3SeedStorageAutoplayStarted = false;
+                    _waitingForSeedStoragePowerOn = false;
+                    _waitingForCryHover = false;
+                    _seedStoragePowerOnObserved = false;
+                    _cryHoverObserved = false;
+                    flags?.ClearFlag(WardrobeMission.DemoWardrobeFlagKey);
+                    flags?.ClearFlag(DemoBreakfastMission.DemoBreakfastCompletedFlagKey);
+                    flags?.ClearFlag(DemoSeedStorageMission.DemoSeedStorageFlagKey);
+                    AppendDemoWardrobeMissionIfPossible();
+                    return true;
+
+                case DemoDebugCheckpoint.Beat2Breakfast:
+                    _session.SetBeat(2);
+                    _kitchenBeatTriggered = true;
+                    _postBreakfastNarrativeLaunched = false;
+                    _beat3SeedStorageAutoplayStarted = false;
+                    _waitingForSeedStoragePowerOn = false;
+                    _waitingForCryHover = false;
+                    _seedStoragePowerOnObserved = false;
+                    _cryHoverObserved = false;
+                    flags?.SetFlag(WardrobeMission.DemoWardrobeFlagKey);
+                    flags?.ClearFlag(DemoBreakfastMission.DemoBreakfastCompletedFlagKey);
+                    flags?.ClearFlag(DemoSeedStorageMission.DemoSeedStorageFlagKey);
+                    AppendDemoBreakfastMissionIfPossible();
+                    return true;
+
+                case DemoDebugCheckpoint.Beat3SeedStorage:
+                    _session.SetBeat(3);
+                    _kitchenBeatTriggered = true;
+                    _postBreakfastNarrativeLaunched = true;
+                    _beat3SeedStorageAutoplayStarted = false;
+                    _waitingForSeedStoragePowerOn = false;
+                    _waitingForCryHover = false;
+                    _seedStoragePowerOnObserved = false;
+                    _cryHoverObserved = false;
+                    flags?.SetFlag(WardrobeMission.DemoWardrobeFlagKey);
+                    flags?.SetFlag(DemoBreakfastMission.DemoBreakfastCompletedFlagKey);
+                    flags?.ClearFlag(DemoSeedStorageMission.DemoSeedStorageFlagKey);
+                    AppendDemoSeedStorageMissionIfPossible();
+                    return true;
+
+                default:
+                    return false;
+            }
         }
     }
 }

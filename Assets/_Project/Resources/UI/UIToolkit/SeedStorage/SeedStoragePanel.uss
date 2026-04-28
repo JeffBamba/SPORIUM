@@ -40,6 +40,10 @@
     border-radius: 4px;
 }
 
+.seedstorage-panel--offline {
+    border-color: rgb(110, 70, 55);
+}
+
 /* BODY */
 
 .seedstorage-body {
@@ -132,6 +136,11 @@
     border-width: 1px;
     border-color: rgb(0, 185, 200);
     border-radius: 2px;
+}
+
+.seedstorage-inv-row:disabled {
+    opacity: 0.35;
+    cursor: default;
 }
 
 /* Icon box placeholder for inventory items (replaces colored dot) */
@@ -240,6 +249,15 @@
     color: rgb(175, 215, 225);
     border-color: rgb(0, 145, 165);
     opacity: 1;
+}
+
+.seedstorage-transfer-btn:disabled,
+.seedstorage-retrieve-btn:disabled,
+.seedstorage-slot-unlock-btn:disabled {
+    opacity: 0.28;
+    color: rgb(85, 100, 110);
+    border-color: rgb(42, 52, 58);
+    background-color: rgb(12, 16, 20);
 }
 
 /* ======================== RIGHT COLUMN ======================== */
@@ -452,6 +470,32 @@
 .seedstorage-slot--selected {
     border-color: rgb(80, 200, 255);
     background-color: rgb(10, 28, 46);
+}
+
+.seedstorage-slot:disabled {
+    opacity: 0.38;
+    border-color: rgb(58, 62, 68);
+    background-color: rgb(12, 14, 18);
+}
+
+.seedstorage-slot:disabled .seedstorage-slot-tag {
+    color: rgb(120, 120, 120);
+    background-color: rgb(28, 30, 34);
+}
+
+.seedstorage-slot:disabled .seedstorage-slot-body,
+.seedstorage-slot:disabled .seedstorage-slot-sub,
+.seedstorage-slot:disabled .seedstorage-via-label,
+.seedstorage-slot:disabled .seedstorage-via-pct {
+    color: rgb(110, 115, 120);
+}
+
+.seedstorage-slot:disabled .seedstorage-viability {
+    background-color: rgb(28, 32, 38);
+}
+
+.seedstorage-slot:disabled .seedstorage-viability-fill {
+    background-color: rgb(90, 90, 90);
 }
 
 /* SLOT TAG (top-left label) */

@@ -1,18 +1,14 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <Style src="SeedStoragePanel.uss" />
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/SeedStorage/SeedStoragePanel.uss?fileID=7433441132597879392&amp;guid=b2ced34242de23645a200dd5d1aa694d&amp;type=3#SeedStoragePanel" />
     <ui:VisualElement name="seedstorage-root" class="seedstorage-root">
         <ui:VisualElement name="seedstorage-overlay" class="seedstorage-overlay">
             <ui:VisualElement name="seedstorage-panel" class="seedstorage-panel">
-
                 <ui:VisualElement class="seedstorage-body">
-
-                    <!-- ======================== SINISTRA: INVENTARIO GIOCATORE ======================== -->
                     <ui:VisualElement class="seedstorage-col-left">
                         <ui:VisualElement class="seedstorage-left-header">
                             <ui:Label name="seedstorage-left-title" text="INVENTARIO GIOCATORE" class="seedstorage-left-title" />
                             <ui:Label name="seedstorage-left-subtitle" text="DEPOSITO LOCALE" class="seedstorage-left-subtitle" />
                         </ui:VisualElement>
-
                         <ui:ScrollView name="seedstorage-inv-scroll" class="seedstorage-inv-scroll">
                             <ui:Label name="seedstorage-cat-label-botanical" text="BOTANICA" class="seedstorage-category-label" />
                             <ui:VisualElement name="seedstorage-cat-botanical" class="seedstorage-category">
@@ -22,7 +18,6 @@
                                     <ui:Label text="(x4)" class="seedstorage-inv-qty" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
                             <ui:Label name="seedstorage-cat-label-seeds" text="SEMI" class="seedstorage-category-label" />
                             <ui:VisualElement name="seedstorage-cat-seeds" class="seedstorage-category">
                                 <ui:VisualElement class="seedstorage-inv-row">
@@ -31,7 +26,6 @@
                                     <ui:Label text="(x1)" class="seedstorage-inv-qty" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
                             <ui:Label name="seedstorage-cat-label-spores" text="SPORE" class="seedstorage-category-label" />
                             <ui:VisualElement name="seedstorage-cat-spores" class="seedstorage-category">
                                 <ui:VisualElement class="seedstorage-inv-row">
@@ -41,16 +35,11 @@
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:ScrollView>
-
                         <ui:Label name="seedstorage-tip" text="Seleziona uno o più item per depositare, o uno slot per prelevare." class="seedstorage-tip" />
                         <ui:Button name="btn-deposit" text="→  TRASFERISCI ALLO STORAGE  (1 AP)" class="seedstorage-transfer-btn" />
                         <ui:Button name="btn-withdraw" text="←  PRELEVA DALLO STORAGE  (1 AP)" class="seedstorage-retrieve-btn" />
                     </ui:VisualElement>
-
-                    <!-- ======================== DESTRA: INTERFACCIA SEED STORAGE ======================== -->
                     <ui:VisualElement class="seedstorage-col-right">
-
-                        <!-- Intestazione destra -->
                         <ui:VisualElement class="seedstorage-right-header">
                             <ui:VisualElement class="seedstorage-right-title-row">
                                 <ui:VisualElement class="seedstorage-right-title-group">
@@ -62,37 +51,29 @@
                                     <ui:Button name="btn-close" text="×" class="seedstorage-close-btn" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
-                            <!-- Barra di stato -->
                             <ui:VisualElement class="seedstorage-status-bar">
                                 <ui:VisualElement name="seedstorage-power-indicator" class="seedstorage-power-indicator seedstorage-power-indicator--on" />
                                 <ui:Label name="seedstorage-status-text" text="CONNESSIONE: STABILE" class="seedstorage-status-text seedstorage-status-text--on" />
-                                <ui:Label class="seedstorage-status-sep" text="|" />
+                                <ui:Label text="|" class="seedstorage-status-sep" />
                                 <ui:Label name="seedstorage-metric-temp" text="❄ TEMP: -18°C" class="seedstorage-status-metric" />
-                                <ui:Label class="seedstorage-status-sep" text="|" />
+                                <ui:Label text="|" class="seedstorage-status-sep" />
                                 <ui:Label name="seedstorage-metric-humidity" text="⚡ ALIMENTAZIONE: ON" class="seedstorage-status-metric" />
-                                <ui:Label class="seedstorage-status-sep" text="|" />
+                                <ui:Label text="|" class="seedstorage-status-sep" />
                                 <ui:Label name="seedstorage-metric-viability" text="STATO SISTEMA: NOMINALE" class="seedstorage-status-system" />
                             </ui:VisualElement>
-
-                            <!-- Barra metriche -->
                             <ui:VisualElement class="seedstorage-metrics-bar">
                                 <ui:Label name="seedstorage-occupied" text="OCCUPATI: 0/6" class="seedstorage-metric-item" />
-                                <ui:Label class="seedstorage-metrics-sep" text="·" />
+                                <ui:Label text="·" class="seedstorage-metrics-sep" />
                                 <ui:Label name="seedstorage-available" text="DISPONIBILI: 6" class="seedstorage-metric-item" />
-                                <ui:Label class="seedstorage-metrics-sep" text="·" />
+                                <ui:Label text="·" class="seedstorage-metrics-sep" />
                                 <ui:Label name="seedstorage-capacity-metric" text="CAPIENZA MAX: 6" class="seedstorage-metric-item" />
                                 <ui:VisualElement class="seedstorage-metrics-spacer" />
                                 <ui:Label name="seedstorage-daily-cost" text="COSTO GIORN.: 0 CRY" class="seedstorage-metric-item seedstorage-metric-cost" />
-                                <ui:Label class="seedstorage-metrics-sep" text="·" />
+                                <ui:Label text="·" class="seedstorage-metrics-sep" />
                                 <ui:Label name="seedstorage-ap" text="AP: 3" class="seedstorage-metric-item seedstorage-metric-ap" />
                             </ui:VisualElement>
                         </ui:VisualElement>
-
-                        <!-- Griglia slot: 2 colonne × 3 righe -->
                         <ui:VisualElement class="seedstorage-slots-grid">
-
-                            <!-- Riga 1 -->
                             <ui:VisualElement class="seedstorage-slots-row">
                                 <ui:VisualElement name="slot-0" class="seedstorage-slot seedstorage-slot--empty">
                                     <ui:Label name="slot-0-title" text="SLOT 1" class="seedstorage-slot-tag" />
@@ -129,8 +110,6 @@
                                     </ui:VisualElement>
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
-                            <!-- Riga 2 -->
                             <ui:VisualElement class="seedstorage-slots-row">
                                 <ui:VisualElement name="slot-2" class="seedstorage-slot seedstorage-slot--empty">
                                     <ui:Label name="slot-2-title" text="SLOT 3" class="seedstorage-slot-tag" />
@@ -162,8 +141,6 @@
                                     <ui:Button name="slot-3-unlock-btn" text="+ SBLOCCA: +3 CRY/giorno" class="seedstorage-slot-unlock-btn" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
-                            <!-- Riga 3 -->
                             <ui:VisualElement class="seedstorage-slots-row">
                                 <ui:VisualElement name="slot-4" class="seedstorage-slot seedstorage-slot--locked">
                                     <ui:Label name="slot-4-title" text="SLOT 5" class="seedstorage-slot-tag seedstorage-slot-tag--locked" />
@@ -190,18 +167,7 @@
                                     <ui:Button name="slot-5-unlock-btn" text="+ SBLOCCA: +3 CRY/giorno" class="seedstorage-slot-unlock-btn" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
-
                         </ui:VisualElement>
-
-                        <!-- Log di sistema -->
-                        <ui:VisualElement class="seedstorage-log">
-                            <ui:Label name="seedstorage-log-title" text="■  LOG DI SISTEMA" class="seedstorage-log-title" />
-                            <ui:ScrollView name="seedstorage-log-scroll" class="seedstorage-log-scroll">
-                                <ui:Label text="&gt; Sistema inizializzato — Camere crioniche stabili" class="seedstorage-log-line" />
-                                <ui:Label text="&gt; Connessione stabilita — Terminale pronto" class="seedstorage-log-line" />
-                            </ui:ScrollView>
-                        </ui:VisualElement>
-
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

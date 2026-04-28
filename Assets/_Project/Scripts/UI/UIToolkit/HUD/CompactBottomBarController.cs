@@ -84,6 +84,7 @@ namespace Sporae.UI.UIToolkit.HUD
         // State
         private string _activeRoom = string.Empty;
         private static readonly string[] RoomIds = { "dome", "lab", "kitchen", "dormitory", "visitor", "storage", "restricted1", "restricted2" };
+        public event Action CryTooltipShown;
 
         // ── Room metadata cache (populated from RoomAreaTag via RoomTracker/scene) ──
         private readonly Dictionary<string, RoomAreaTag> _roomTags = new();
@@ -114,6 +115,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private void Start()
         {
             ResolveServices();
+            ServiceContainer.Instance?.Register(this);
             BuildUI();
             TryBindMainMenuScreens();
             if (_mainMenuScreens != null)
@@ -205,6 +207,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     _cryTooltip.BringToFront();
                     _cryTooltip.style.display = DisplayStyle.Flex;
+                    CryTooltipShown?.Invoke();
                 });
                 _cryBadge.RegisterCallback<MouseLeaveEvent>(_ => _cryTooltip.style.display = DisplayStyle.None);
             }

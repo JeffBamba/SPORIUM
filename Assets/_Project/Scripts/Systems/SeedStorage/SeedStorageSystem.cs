@@ -23,6 +23,7 @@ namespace _Project.Systems.SeedStorage
 
         private bool _isOn = true;
         private bool _extendedSlotsUnlocked;
+        private bool _demoBeat3AnomalyApplied;
 
         private readonly List<StoredUnit>[] _slots = new List<StoredUnit>[SlotCount];
 
@@ -31,6 +32,7 @@ namespace _Project.Systems.SeedStorage
 
         public bool IsOn => _isOn;
         public bool ExtendedSlotsUnlocked => _extendedSlotsUnlocked;
+        public bool DemoBeat3AnomalyApplied => _demoBeat3AnomalyApplied;
 
         public SeedStorageSystem(GameManager gameManager)
         {
@@ -230,6 +232,41 @@ namespace _Project.Systems.SeedStorage
             if (_extendedSlotsUnlocked)
                 return false;
             _extendedSlotsUnlocked = true;
+            StorageChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// Imposta lo stato "anomaly" del beat 3 demo:
+        /// storage spento e slot sbloccati riempiti da residui organici.
+        /// </summary>
+        public bool EnsureDemoBeat3AnomalyState(int residuesPerUnlockedSlot = 1)
+        {
+            if (_demoBeat3AnomalyApplied)
+                return false;
+
+            residuesPerUnlockedSlot = Mathf.Max(1, residuesPerUnlockedSlot);
+            _isOn = false;
+
+            for (int i = 0; i < SlotCount; i++)
+            {
+                if (!IsSlotUnlocked(i))
+                    continue;
+
+                var list = new List<StoredUnit>(residuesPerUnlockedSlot);
+                for (int k = 0; k < residuesPerUnlockedSlot; k++)
+                {
+                    var residue = ItemFabric.CreateItemByType(Items.OrganicResidue);
+                    if (residue == null)
+                        continue;
+                    list.Add(new StoredUnit(residue, null));
+                }
+
+                _slots[i] = list.Count > 0 ? list : null;
+            }
+
+            _demoBeat3AnomalyApplied = true;
+            PowerChanged?.Invoke(_isOn);
             StorageChanged?.Invoke();
             return true;
         }
@@ -434,6 +471,7 @@ namespace _Project.Systems.SeedStorage
                 _slots[i] = null;
             _isOn = true;
             _extendedSlotsUnlocked = false;
+            _demoBeat3AnomalyApplied = false;
             StorageChanged?.Invoke();
         }
 
@@ -441,6 +479,7 @@ namespace _Project.Systems.SeedStorage
         {
             _isOn = isOn;
             _extendedSlotsUnlocked = extended;
+            _demoBeat3AnomalyApplied = false;
             for (int i = 0; i < SlotCount; i++)
             {
                 if (slots != null && i < slots.Length && slots[i] != null && slots[i].Count > 0)

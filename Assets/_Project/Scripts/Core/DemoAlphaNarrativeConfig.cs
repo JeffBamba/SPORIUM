@@ -81,6 +81,31 @@ namespace _Project.Sporae.Core
         [Tooltip("Opzionale: highlight nel VO beat 3 (es. «Seed Storage»).")]
         public List<string> Beat3SeedStorageIntroHighlightWords = new List<string>();
 
+        [Header("Beat 3 — Seed Storage anomaly (panel aperto, autoplay)")]
+        [TextArea(3, 12)]
+        [Tooltip("Primo blocco VO all'apertura panel: tono sicuro, introduzione Seed Storage.")]
+        public string Beat3SeedStorageAnomalyPart1Line;
+
+        [TextArea(3, 12)]
+        [Tooltip("Secondo blocco VO: switch sorpresa/incredulita su storage OFF e contenuto perduto.")]
+        public string Beat3SeedStorageAnomalyPart2Line;
+
+        [TextArea(2, 8)]
+        [Tooltip("Terzo blocco VO: richiesta esplicita di accendere il Seed Storage.")]
+        public string Beat3SeedStorageAnomalyPowerOnRequestLine;
+
+        [TextArea(2, 8)]
+        [Tooltip("VO dopo chiusura panel: richiede hover sul box CRY della compact bottom bar.")]
+        public string Beat3SeedStorageCryHoverRequestLine;
+
+        [TextArea(3, 10)]
+        [Tooltip("VO dopo hover CRY: spiega cosa sono i costi fissi e l'impatto giornaliero.")]
+        public string Beat3CryTooltipCostsExplainLine;
+
+        [TextArea(3, 10)]
+        [Tooltip("VO dopo hover CRY: spiega come guadagnare CRY (mercanti, black market, missioni, trading).")]
+        public string Beat3CryTooltipIncomeExplainLine;
+
         // ─── Colore highlight condiviso ─────────────────────────────────────
 
         [Header("Highlight — colore condiviso")]

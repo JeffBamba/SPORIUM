@@ -22,6 +22,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
 
         private VisualElement _root;
         private VisualElement _overlay;
+        private VisualElement _panel;
         private Button _btnClose;
 
         private VisualElement _powerIndicator;
@@ -44,6 +45,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
         private VisualElement _invFungal;
         private VisualElement _invMeat;
         private VisualElement _invVegetal;
+        private Button _btnStore;
+        private Button _btnRetrieve;
         private Label _invFungalQty;
         private Label _invMeatQty;
         private Label _invVegetalQty;
@@ -59,6 +62,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
         private bool _isOpen;
         private string _lastLogMsgKey = "dispensa.log.chambers_ready";
         private IReadOnlyDictionary<string, string> _lastLogMsgArgs;
+        private FoodProductionType _selectedChamberType = FoodProductionType.None;
+        private FoodProductionType _selectedInventoryType = FoodProductionType.None;
 
         private void Awake()
         {
@@ -133,6 +138,7 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (_root == null) return;
 
             _overlay = _root.Q<VisualElement>("dispensa-root");
+            _panel = _root.Q<VisualElement>("dispensa-panel");
             _btnClose = _root.Q<Button>("btn-close");
             if (_btnClose != null) _btnClose.clicked += Hide;
 
@@ -162,6 +168,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             _invFungal = _root.Q<VisualElement>("inv-fungal");
             _invMeat = _root.Q<VisualElement>("inv-meat");
             _invVegetal = _root.Q<VisualElement>("inv-vegetal");
+            _btnStore = _root.Q<Button>("btn-dispensa-store");
+            _btnRetrieve = _root.Q<Button>("btn-dispensa-retrieve");
             _invFungalQty = _root.Q<Label>("inv-fungal-qty");
             _invMeatQty = _root.Q<Label>("inv-meat-qty");
             _invVegetalQty = _root.Q<Label>("inv-vegetal-qty");
@@ -171,9 +179,11 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             _logLine1 = _root.Q<Label>("log-line-1");
             _logLine2 = _root.Q<Label>("log-line-2");
 
-            if (_invFungal != null) _invFungal.RegisterCallback<ClickEvent>(_ => OnInventoryRowClicked(FoodProductionType.Fungus));
-            if (_invMeat != null) _invMeat.RegisterCallback<ClickEvent>(_ => OnInventoryRowClicked(FoodProductionType.Meat));
-            if (_invVegetal != null) _invVegetal.RegisterCallback<ClickEvent>(_ => OnInventoryRowClicked(FoodProductionType.Vegetable));
+            if (_invFungal != null) _invFungal.RegisterCallback<ClickEvent>(_ => OnInventoryRowSelected(FoodProductionType.Fungus));
+            if (_invMeat != null) _invMeat.RegisterCallback<ClickEvent>(_ => OnInventoryRowSelected(FoodProductionType.Meat));
+            if (_invVegetal != null) _invVegetal.RegisterCallback<ClickEvent>(_ => OnInventoryRowSelected(FoodProductionType.Vegetable));
+            if (_btnStore != null) _btnStore.clicked += OnStoreClicked;
+            if (_btnRetrieve != null) _btnRetrieve.clicked += OnRetrieveClicked;
 
             _uiBound = true;
             ApplyLocalizedDispensaStaticChrome();
@@ -214,6 +224,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (invM != null) invM.text = LocalizationManager.GetString("dispensa.food.meat");
             var invV = _invVegetal?.Q<Label>(className: "dispensa-inv-name");
             if (invV != null) invV.text = LocalizationManager.GetString("dispensa.food.vegetable");
+            if (_btnStore != null) _btnStore.text = LocalizationManager.GetString("dispensa.btn.store");
+            if (_btnRetrieve != null) _btnRetrieve.text = LocalizationManager.GetString("dispensa.btn.retrieve");
         }
 
         public void Show()
@@ -237,6 +249,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             }
             _foodRoom?.BeginPantryInteraction();
             _isOpen = true;
+            _selectedInventoryType = FoodProductionType.None;
+            _selectedChamberType = FoodProductionType.None;
             ApplyLocalizedDispensaStaticChrome();
             PushLoc("dispensa.log.panel_linked");
             Refresh();
@@ -255,6 +269,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             if (_uiDocument != null) _uiDocument.sortingOrder = 420;
             _foodRoom?.EndPantryInteraction();
             _isOpen = false;
+            _selectedInventoryType = FoodProductionType.None;
+            _selectedChamberType = FoodProductionType.None;
             if (wasOpen)
                 GameplayUiModalLock.SetMachineModalState(false);
         }
@@ -272,29 +288,50 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
         private void OnChamberClicked(FoodProductionType type)
         {
             if (_foodRoom == null) return;
-            if (_foodRoom.GetPantryQuantity(type) <= 0)
-                return;
-            if (_foodRoom.TryTransferFromPantry(type, 1, out _))
-                PushLoc("dispensa.log.removed", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
-            else
-                PushLoc("dispensa.log.ap_blocked");
+            _selectedChamberType = type;
             Refresh();
         }
 
-        private void OnInventoryRowClicked(FoodProductionType type)
+        private void OnInventoryRowSelected(FoodProductionType type)
         {
             if (_foodRoom == null) return;
+            _selectedInventoryType = type;
+            Refresh();
+        }
+
+        private void OnStoreClicked()
+        {
+            if (_foodRoom == null) return;
+            if (_selectedInventoryType == FoodProductionType.None)
+                return;
             if (!_foodRoom.PantryIsOn)
             {
                 SporiumLogger.LogInfo(LogCategory.UI, "[DispensaPanel] Impossibile inserire: refrigerazione OFF.");
                 PushLoc("dispensa.log.insert_blocked");
+                Refresh();
                 return;
             }
+            var type = _selectedInventoryType;
             string typeId = GetFoodTypeId(type);
             if (string.IsNullOrEmpty(typeId) || GetInventoryQuantity(typeId) <= 0)
                 return;
             if (_foodRoom.TryTransferToPantry(type, 1, out _))
                 PushLoc("dispensa.log.stored", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
+            else
+                PushLoc("dispensa.log.ap_blocked");
+            Refresh();
+        }
+
+        private void OnRetrieveClicked()
+        {
+            if (_foodRoom == null) return;
+            if (_selectedChamberType == FoodProductionType.None)
+                return;
+            var type = _selectedChamberType;
+            if (_foodRoom.GetPantryQuantity(type) <= 0)
+                return;
+            if (_foodRoom.TryTransferFromPantry(type, 1, out _))
+                PushLoc("dispensa.log.removed", new Dictionary<string, string> { { "name", GetFoodTypeUiName(type) } });
             else
                 PushLoc("dispensa.log.ap_blocked");
             Refresh();
@@ -344,6 +381,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
                 _infoCost.text = LocalizationManager.GetString("dispensa.maintenance",
                     new Dictionary<string, string> { { "cry", _foodRoom.PantryDailyCost.ToString() } });
 
+            ApplyOfflineVisualState(isOn);
+
             int vegStored = _foodRoom.GetPantryQuantity(FoodProductionType.Vegetable);
             int fungStored = _foodRoom.GetPantryQuantity(FoodProductionType.Fungus);
             int meatStored = _foodRoom.GetPantryQuantity(FoodProductionType.Meat);
@@ -370,6 +409,8 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             SetInvRowInteractive(_invVegetal, isOn && invVeg > 0);
             SetInvRowInteractive(_invFungal, isOn && invFung > 0);
             SetInvRowInteractive(_invMeat, isOn && invMeat > 0);
+            UpdateSelectionVisuals(invVeg, invFung, invMeat);
+            RefreshTransferButtons(isOn, invVeg, invFung, invMeat, vegStored, fungStored, meatStored);
 
             if (_logLine1 != null)
                 _logLine1.text = isOn
@@ -377,6 +418,69 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
                     : LocalizationManager.GetString("dispensa.footer.system_offline");
             if (_logLine2 != null)
                 _logLine2.text = "› " + LocalizationManager.GetString(_lastLogMsgKey, _lastLogMsgArgs);
+        }
+
+        private void ApplyOfflineVisualState(bool isOn)
+        {
+            _panel?.EnableInClassList("dispensa-panel--offline", !isOn);
+
+            _chamberFungal?.SetEnabled(isOn);
+            _chamberMeat?.SetEnabled(isOn);
+            _chamberVegetal?.SetEnabled(isOn);
+            _invFungal?.SetEnabled(isOn);
+            _invMeat?.SetEnabled(isOn);
+            _invVegetal?.SetEnabled(isOn);
+
+            // Restano sempre operativi anche in OFF.
+            _btnPower?.SetEnabled(true);
+            _btnClose?.SetEnabled(true);
+        }
+
+        private void RefreshTransferButtons(
+            bool isOn,
+            int invVeg,
+            int invFung,
+            int invMeat,
+            int pantryVeg,
+            int pantryFung,
+            int pantryMeat)
+        {
+            bool canStore = isOn && _selectedInventoryType switch
+            {
+                FoodProductionType.Vegetable => invVeg > 0,
+                FoodProductionType.Fungus => invFung > 0,
+                FoodProductionType.Meat => invMeat > 0,
+                _ => false
+            };
+            bool canRetrieve = isOn && _selectedChamberType switch
+            {
+                FoodProductionType.Vegetable => pantryVeg > 0,
+                FoodProductionType.Fungus => pantryFung > 0,
+                FoodProductionType.Meat => pantryMeat > 0,
+                _ => false
+            };
+
+            if (_btnStore != null)
+            {
+                _btnStore.EnableInClassList("dispensa-transfer-btn--active", canStore);
+                _btnStore.SetEnabled(canStore);
+            }
+            if (_btnRetrieve != null)
+            {
+                _btnRetrieve.EnableInClassList("dispensa-retrieve-btn--active", canRetrieve);
+                _btnRetrieve.SetEnabled(canRetrieve);
+            }
+        }
+
+        private void UpdateSelectionVisuals(int invVeg, int invFung, int invMeat)
+        {
+            UpdateInvSelection(_invVegetal, _selectedInventoryType == FoodProductionType.Vegetable && invVeg > 0);
+            UpdateInvSelection(_invFungal, _selectedInventoryType == FoodProductionType.Fungus && invFung > 0);
+            UpdateInvSelection(_invMeat, _selectedInventoryType == FoodProductionType.Meat && invMeat > 0);
+
+            UpdateChamberSelection(_chamberVegetal, _selectedChamberType == FoodProductionType.Vegetable);
+            UpdateChamberSelection(_chamberFungal, _selectedChamberType == FoodProductionType.Fungus);
+            UpdateChamberSelection(_chamberMeat, _selectedChamberType == FoodProductionType.Meat);
         }
 
         private static void SetChamberQtyUi(Label qtyLabel, VisualElement card, VisualElement dot, int stored)
@@ -392,9 +496,20 @@ namespace Sporae.UI.UIToolkit.DispensaRefrigerata
             }
             if (card != null)
             {
-                card.RemoveFromClassList("selected");
-                if (stored > 0) card.AddToClassList("selected");
+                card.EnableInClassList("dispensa-chamber-card--filled", stored > 0);
             }
+        }
+
+        private static void UpdateInvSelection(VisualElement row, bool selected)
+        {
+            if (row == null) return;
+            row.EnableInClassList("dispensa-inv-row--selected", selected);
+        }
+
+        private static void UpdateChamberSelection(VisualElement card, bool selected)
+        {
+            if (card == null) return;
+            card.EnableInClassList("selected", selected);
         }
 
         private static void SetInvRowInteractive(VisualElement row, bool interactive)

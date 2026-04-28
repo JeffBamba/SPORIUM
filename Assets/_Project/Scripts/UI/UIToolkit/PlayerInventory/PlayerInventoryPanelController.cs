@@ -83,6 +83,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private float _ignoreScrimClickUntil;
         /// <summary>True se questo pannello ha impostato <see cref="GameplayUiModalLock.SetMachineModalState"/> in <see cref="Show"/> (browse da HUD). In picker il lock resta al macchinario padre.</summary>
         private bool _inventoryModalLockOwned;
+        private int _closeLastHandledFrame = -1;
 
         private string _selectedRowKey;
         private List<RowModel> _allRows = new List<RowModel>();
@@ -197,6 +198,21 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _btnInspectClose = _root.Q<Button>("btn-inspect-close");
             _builderRef = _root.Q<VisualElement>("inv-builder-reference");
 
+            if (_overlay != null)
+            {
+                _overlay.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    string targetName = (evt.target as VisualElement)?.name ?? "<null>";
+                    bool overCloseButton = _btnClose != null && _btnClose.worldBound.Contains(evt.position);
+
+                    if (evt.button == 0 && overCloseButton && targetName != "btn-close" && Time.frameCount != _closeLastHandledFrame)
+                    {
+                        _closeLastHandledFrame = Time.frameCount;
+                        OnCloseClicked();
+                    }
+                }, TrickleDown.TrickleDown);
+            }
+
             if (_scrim != null)
                 _scrim.RegisterCallback<ClickEvent>(_ =>
                 {
@@ -213,7 +229,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     if (!string.IsNullOrEmpty(_selectedRowKey))
                         ClearDetailSelection(rebuild: false);
                 });
-            if (_btnClose != null) _btnClose.clicked += Hide;
+            if (_btnClose != null)
+            {
+                _btnClose.clicked += OnCloseClicked;
+            }
             if (_btnCancel != null) _btnCancel.clicked += OnCancelClicked;
             if (_btnExpand != null) _btnExpand.clicked += OnExpandClicked;
             if (_btnDetailUse != null) _btnDetailUse.clicked += OnDetailUseClicked;
@@ -382,6 +401,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         {
             if (_inventoryModalLockOwned)
             {
+                GameplayUiModalLock.SetInventoryContextHudVisible(false);
                 GameplayUiModalLock.SetMachineModalState(false);
                 _inventoryModalLockOwned = false;
             }
@@ -422,6 +442,12 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             Hide();
         }
 
+        private void OnCloseClicked()
+        {
+            _closeLastHandledFrame = Time.frameCount;
+            Hide();
+        }
+
         public void Show()
         {
             _pickerAllowedTypes = null;
@@ -434,6 +460,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _selectedRowKey = null;
             _selectedModel = default;
             _inventoryModalLockOwned = true;
+            GameplayUiModalLock.SetInventoryContextHudVisible(true);
             GameplayUiModalLock.SetMachineModalState(true);
             ShowInternal();
             ApplyModeUi(isPicker: false);
@@ -501,6 +528,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             gameObject.SetActive(false);
             if (_inventoryModalLockOwned)
             {
+                GameplayUiModalLock.SetInventoryContextHudVisible(false);
                 GameplayUiModalLock.SetMachineModalState(false);
                 _inventoryModalLockOwned = false;
             }

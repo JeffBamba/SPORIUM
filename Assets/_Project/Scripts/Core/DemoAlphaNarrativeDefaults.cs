@@ -8,7 +8,18 @@ namespace _Project.Sporae.Core
     {
         /// <summary>Placeholder beat 1 — ambiguo, no spoiler; sostituibile da asset.</summary>
         public const string Beat1WakeLine =
-            "Feed ambiente… sincronizzazione mattina. Chi parla non è una sola voce. Muoviti quando vuoi.";
+            "Protocollo 01 riattivato.\n" +
+            "Vault-07...\n" +
+            "Operativo.\n\n" +
+            "La Cupola tiene ancora......\n\n" +
+            "Tu no da quello che vedo.\n" +
+            "Ma... stai comunque respirando.\n\n" +
+            "Buone notizie: il sistema funziona.\n" +
+            "Cattive notizie: ora devi farlo anche tu.\n\n" +
+            "Quindi ascolta bene, Biologo:\n" +
+            "apri quell'armadio e vestiti.\n" +
+            "La fine del mondo e' gia abbastanza complicata...\n" +
+            "senza affrontarla in mutande. :)";
 
         public const VoRegister Beat1WakeRegister = VoRegister.RegisterA;
 
@@ -80,5 +91,27 @@ namespace _Project.Sporae.Core
         public const VoSentenceAdvanceMode Beat3SeedStorageIntroSentenceAdvance = VoSentenceAdvanceMode.ClickToContinue;
 
         public static IReadOnlyList<string> Beat3SeedStorageIntroHighlightWords { get; } = new[] { "Seed Storage" };
+
+        public const string Beat3SeedStorageAnomalyPart1Line =
+            "Qui congeliamo semi e spore vitali: quando il nodo resta attivo, il patrimonio botanico sopravvive ai cicli peggiori.";
+
+        public const string Beat3SeedStorageAnomalyPart2Line =
+            "ASPETTA... NO?! STORAGE OFF! SOLO RESIDUI ORGANICI!\n" +
+            "CONTENUTO PERSO. Qualcuno ha spento il sistema troppo a lungo.";
+
+        public const string Beat3SeedStorageAnomalyPowerOnRequestLine =
+            "Riaccendi subito il Seed Storage. Se lo lasci morto, qui dentro resta solo scarto.";
+
+        public const string Beat3SeedStorageCryHoverRequestLine =
+            "Quello che hai visto qui dentro ha un costo, e la parte peggiore è che non ricordi nemmeno di averlo causato.\n" +
+            "Chiudi il pannello e passa il mouse sul box CRY in basso a sinistra: ti faccio vedere i costi fissi di mantenimento.";
+
+        public const string Beat3CryTooltipCostsExplainLine =
+            "Quello nel box CRY e' il conto che corre ogni giorno: energia minima, supporti vitali e macchine attive.\n" +
+            "Questi sono costi fissi: li paghi anche quando non produci nulla.";
+
+        public const string Beat3CryTooltipIncomeExplainLine =
+            "Per sostenere la Dome devi far entrare CRY: completa missioni, vendi ai mercanti, tratta nel black market e usa il trading per trasformare eccedenze in margine.\n" +
+            "Se tieni in equilibrio entrate e mantenimento, resti operativo.";
     }
 }

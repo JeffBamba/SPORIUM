@@ -32,6 +32,10 @@
     border-radius: 1px;
 }
 
+.dispensa-panel--offline {
+    border-color: rgba(179, 98, 98, 0.62);
+}
+
 /* HEADER */
 
 .dispensa-header {
@@ -275,6 +279,16 @@
     border-color: rgba(102, 208, 250, 0.95);
 }
 
+.dispensa-chamber-card--filled {
+    border-color: rgba(88, 182, 133, 0.66);
+}
+
+.dispensa-chamber-card:disabled {
+    opacity: 0.35;
+    background-color: rgba(16, 18, 20, 0.85);
+    border-color: rgba(92, 98, 106, 0.45);
+}
+
 .dispensa-chamber-icon {
     width: 28px;
     margin-right: 12px;
@@ -358,6 +372,17 @@
     opacity: 0.46;
 }
 
+.dispensa-inv-row--selected {
+    background-color: rgba(13, 33, 47, 0.94);
+    border-color: rgba(102, 208, 250, 0.95);
+}
+
+.dispensa-inv-row:disabled {
+    opacity: 0.3;
+    background-color: rgba(14, 16, 18, 0.82);
+    border-color: rgba(92, 98, 106, 0.4);
+}
+
 .dispensa-inv-icon {
     width: 24px;
     margin-right: 10px;
@@ -401,6 +426,43 @@
     border-width: 1px;
     border-color: rgba(78, 166, 205, 0.35);
     border-radius: 1px;
+}
+
+/* TRANSFER ACTIONS (seedstorage-like UX) */
+
+.dispensa-transfer-actions {
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.dispensa-transfer-btn,
+.dispensa-retrieve-btn {
+    height: 30px;
+    margin-top: 4px;
+    padding: 4px 10px;
+    background-color: rgba(10, 20, 28, 0.9);
+    color: rgba(90, 130, 148, 0.95);
+    border-width: 1px;
+    border-color: rgba(45, 87, 108, 0.8);
+    border-radius: 1px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+    opacity: 0.52;
+}
+
+.dispensa-transfer-btn--active {
+    background-color: rgba(12, 40, 56, 0.95);
+    color: rgba(200, 235, 245, 0.98);
+    border-color: rgba(0, 185, 200, 0.95);
+    opacity: 1;
+}
+
+.dispensa-retrieve-btn--active {
+    background-color: rgba(10, 30, 40, 0.95);
+    color: rgba(176, 220, 232, 0.98);
+    border-color: rgba(0, 150, 170, 0.95);
+    opacity: 1;
 }
 
 .dispensa-log-title {

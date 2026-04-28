@@ -46,6 +46,13 @@
     overflow: visible;
 }
 
+.food-room-panel--offline {
+    border-left-color: rgb(124, 86, 86);
+    border-right-color: rgb(124, 86, 86);
+    border-top-color: rgb(124, 86, 86);
+    border-bottom-color: rgb(124, 86, 86);
+}
+
 .food-room-header .header-left {
     flex-grow: 1;
     flex-direction: column;
@@ -318,6 +325,12 @@
     background-color: rgba(180, 127, 255, 0.1);
 }
 
+.stem-cell-slot:disabled {
+    opacity: 0.35;
+    border-color: rgb(90, 90, 90);
+    background-color: rgba(22, 22, 22, 0.85);
+}
+
 .stem-cell-placeholder-icon {
     font-size: var(--sp-font-size-24);
     color: var(--sp-color-green-led);
@@ -385,6 +398,12 @@
     border-width: var(--sp-border-2);
     border-color: var(--sp-color-green-led);
     background-color: rgba(61, 168, 130, 0.08);
+}
+
+.chamber-card:disabled {
+    opacity: 0.35;
+    border-color: rgb(90, 90, 90);
+    background-color: rgba(20, 20, 20, 0.85);
 }
 
 .chamber-vegetal.active {

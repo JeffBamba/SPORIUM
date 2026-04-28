@@ -48,7 +48,8 @@ namespace _Project.Sporae.Core
     }
 
     /// <summary>
-    /// Missione demo «Vai al Seed Storage»: completata entrando nella stanza con room id <c>storage</c>.
+    /// Missione demo «Vai al Seed Storage»: completata quando il player
+    /// riaccende il Seed Storage e chiude il pannello.
     /// </summary>
     public static class DemoSeedStorageMission
     {
@@ -57,7 +58,7 @@ namespace _Project.Sporae.Core
 
         public static event Action ProgressChanged;
 
-        private static bool _enteredStorage;
+        private static bool _seedStorageRecoveredAndClosed;
 
         public static bool HasActiveDemoSeedStorageMission(MissionManager missionManager)
         {
@@ -75,17 +76,27 @@ namespace _Project.Sporae.Core
         }
 
         /// <summary>
-        /// Chiamato quando il player entra nell’area Seed Storage (RoomTracker room id <c>storage</c>).
+        /// Legacy placeholder: non completa più la missione.
         /// </summary>
         public static void NotifyEnteredStorageRoom()
+        {
+            // Intenzionalmente no-op: il completamento ora avviene su
+            // Seed Storage ON + chiusura pannello (flow beat 3 aggiornato).
+        }
+
+        /// <summary>
+        /// Completa la missione demo Seed Storage quando il player ha riacceso
+        /// il sistema e ha chiuso il panel.
+        /// </summary>
+        public static void NotifyRecoveredAndPanelClosed()
         {
             var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
             if (mm == null || !HasActiveDemoSeedStorageMission(mm))
                 return;
-            if (_enteredStorage)
+            if (_seedStorageRecoveredAndClosed)
                 return;
 
-            _enteredStorage = true;
+            _seedStorageRecoveredAndClosed = true;
             ProgressChanged?.Invoke();
             ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true)
                 ?.SetFlag(DemoSeedStorageFlagKey);
@@ -98,12 +109,12 @@ namespace _Project.Sporae.Core
         {
             if (!IsDemoSeedStorageConfig(cfg))
                 return -1f;
-            return _enteredStorage ? 1f : 0f;
+            return _seedStorageRecoveredAndClosed ? 1f : 0f;
         }
 
         public static void RestoreProgressState(bool completed)
         {
-            _enteredStorage = completed;
+            _seedStorageRecoveredAndClosed = completed;
             ProgressChanged?.Invoke();
         }
     }

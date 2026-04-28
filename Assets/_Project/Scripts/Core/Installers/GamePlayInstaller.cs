@@ -133,7 +133,12 @@ namespace _Project.Sporae.Core.Installers
             if (demoSession.IsDemo)
             {
                 var demoGo = new GameObject("DemoStoryDirector");
-                demoGo.AddComponent<DemoStoryDirector>();
+                var demoDirector = demoGo.AddComponent<DemoStoryDirector>();
+                ServiceContainer.Instance.Register(demoDirector);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                var demoDebugGo = new GameObject("DemoDebugConsole");
+                demoDebugGo.AddComponent<DemoDebugConsole>();
+#endif
             }
 
             var playerStatToasts = new GameObject("PlayerStatToastBridge");

@@ -45,6 +45,7 @@ namespace Sporae.UI.UIToolkit
         private Button _inventoryButton;
         private Button _reputationButton;
         private Button _diaryButton;
+        private int _inventoryLastHandledFrame = -1;
         
         // Mock data update (per test) - disattivato quando collegato a PlayerHydrationSystem
         private float _mockUpdateTimer = 0f;
@@ -150,9 +151,9 @@ namespace Sporae.UI.UIToolkit
         private void Update()
         {
             if (_root != null)
-                _root.style.display = GameplayUiModalLock.HidesFixedHud ? DisplayStyle.None : DisplayStyle.Flex;
+                _root.style.display = GameplayUiModalLock.HidesContextHud ? DisplayStyle.None : DisplayStyle.Flex;
 
-            if (GameplayUiModalLock.HidesFixedHud)
+            if (GameplayUiModalLock.HidesContextHud)
                 return;
 
             if (_hydrationConnectedToRealSystem) return;
@@ -182,6 +183,24 @@ namespace Sporae.UI.UIToolkit
                 SporiumLogger.LogError(LogCategory.UI, "Root VisualElement non trovato! Assicurati che il file UXML sia collegato.");
                 return;
             }
+
+            _root.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                string targetName = (evt.target as VisualElement)?.name ?? "<null>";
+                bool overInventoryButton = _inventoryButton != null && _inventoryButton.worldBound.Contains(evt.position);
+                bool inventoryCurrentlyVisible = _playerInventoryPanel != null && _playerInventoryPanel.IsVisible;
+
+                if (evt.button == 0 && overInventoryButton && !inventoryCurrentlyVisible && Time.frameCount != _inventoryLastHandledFrame)
+                {
+                    OnInventoryClick();
+                    return;
+                }
+
+                if (evt.button == 0 && overInventoryButton && targetName != "inventory-btn" && Time.frameCount != _inventoryLastHandledFrame)
+                {
+                    OnInventoryClick();
+                }
+            }, TrickleDown.TrickleDown);
             
             if (_enableDebugLogs)
                 SporiumLogger.LogInfo(LogCategory.UI, "Player Status Panel UI inizializzato");
@@ -344,6 +363,10 @@ namespace Sporae.UI.UIToolkit
         
         private void OnInventoryClick()
         {
+            if (Time.frameCount == _inventoryLastHandledFrame)
+                return;
+
+            _inventoryLastHandledFrame = Time.frameCount;
             if (_playerInventoryPanel == null)
                 _playerInventoryPanel = FindObjectOfType<PlayerInventoryPanelController>();
             if (_playerInventoryPanel == null)
