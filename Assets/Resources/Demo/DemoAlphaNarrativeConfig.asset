@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f77a4d38197c3fe4282b741843e0fda6, type: 3}
   m_Name: DemoAlphaNarrativeConfig
   m_EditorClassIdentifier: 
-  Beat1WakeLine: "Protocollo 01 riattivato.\nVault-07...\nOperativo.\n\nLa Cupola tiene
-    ancora......\n\nTu no da quello che vedo.\nMa\u2026 stai comunque respirando.\n\nBuone
-    notizie: il sistema funziona.\nCattive notizie: ora devi farlo anche tu.\n\nQuindi
-    ascolta bene, Biologo:\napri quell'armadio e vestiti.\nLa fine del mondo \xE8
-    gi\xE0 abbastanza complicata\u2026\nsenza affrontarla in mutande. :)"
+  Beat1WakeLine: "\"Protocollo 01 riattivato.\nVault-07...\"\n[Operativo]\n\"La Cupola
+    tiene ancora......\"\n\n\"Tu non tanto da quello che vedo.\nMa\u2026 stai comunque
+    respirando!\"\n\nQuindi, buone notizie: il sistema funziona, le cattive invece
+    sono che ora devi farlo anche tu.\n\nQuindi ascolta bene, Biologo:\napri quell'armadio
+    e vestiti.\nLa fine del mondo \xE8 gi\xE0 abbastanza complicata\u2026\nsenza
+    affrontarla in mutande. :)"
   Beat1WakeRegister: 0
   Beat1WakeSentenceAdvance: 0
   Beat1MissionHighlightWords:

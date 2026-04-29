@@ -4,14 +4,14 @@
         <ui:VisualElement name="extd-frame" class="extd-frame">
             <ui:VisualElement name="extd-art" class="extd-art" style="width: 46px;" />
             <ui:VisualElement name="extd-content" class="extd-content">
-                <ui:Label name="extd-machine-label" text="ESTRATTORE" class="extd-machine-label" style="font-size: 250px; -unity-font-style: bold; -unity-text-align: upper-center;" />
+                <ui:Label name="extd-machine-label" text="ESTRATTORE" class="extd-machine-label" style="font-size: 280px; -unity-font-style: bold; -unity-text-align: upper-center;" />
                 <ui:VisualElement name="extd-progress-wrap" class="extd-progress-wrap" style="-unity-slice-scale: 1px;">
                     <ui:VisualElement name="extd-progress-track" class="extd-progress-track" style="height: 150px;">
                         <ui:VisualElement name="extd-progress-fill" class="extd-progress-fill" />
                     </ui:VisualElement>
                     <ui:Label name="extd-progress-label" text="0%" class="extd-progress-label" />
                 </ui:VisualElement>
-                <ui:Label name="extd-output-label" text="INSERISCI FRUTTO" class="extd-output-label" style="font-size: 220px; -unity-text-align: upper-center;" />
+                <ui:Label name="extd-output-label" text="INSERISCI FRUTTO" class="extd-output-label" style="font-size: 260px; -unity-text-align: upper-center; -unity-font-style: bold;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

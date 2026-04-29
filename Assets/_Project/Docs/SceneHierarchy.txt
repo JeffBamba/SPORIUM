@@ -945,127 +945,6 @@
           [Component] RectTransform
           [Component] CanvasRenderer
           [Component] TextMeshProUGUI
-  - UI_SeedStorage
-    [Component] RectTransform
-    [Component] SeedStorageUI
-    [Component] HUDItemContainer
-    [Component] DragDropUI
-    - Panel
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] VerticalLayoutGroup
-      [Component] ToggleGroup
-      - CapacityLabel
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-      - Item
-        [Component] RectTransform
-        [Component] HUDInventoryItem
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-        - Name
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-        - Amount
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - Item (1)
-        [Component] RectTransform
-        [Component] HUDInventoryItem
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-        - Name
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-        - Amount
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - Item (2)
-        [Component] RectTransform
-        [Component] HUDInventoryItem
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-        - Name
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-        - Amount
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - Item (3)
-        [Component] RectTransform
-        [Component] HUDInventoryItem
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-        - Name
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-        - Amount
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - Item (4)
-        [Component] RectTransform
-        [Component] HUDInventoryItem
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] LayoutElement
-        - Name
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-        - Amount
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-    - Button
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] Button
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-    - Button (1)
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] Button
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-    - Button (2)
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] Button
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-    - Button (3)
-      [Component] RectTransform
-      [Component] CanvasRenderer
-      [Component] Image
-      [Component] Button
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
   - UI_VisitorDialog
     [Component] RectTransform
     [Component] CanvasRenderer
@@ -2492,7 +2371,6 @@
         [Component] TextMeshProUGUI
     - ExtractorDisplayAnchor
       [Component] Transform
-      [Component] Light2D
     - ExtractorDisplayAnchor_ProtoSpore
       [Component] Transform
   - Catallizatore
@@ -2645,11 +2523,15 @@
       [Component] Canvas
       [Component] CanvasScaler
       [Component] GraphicRaycaster
-      - Text (TMP)
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] TextMeshProUGUI
-  - WalkAreaPerspective (1)
+  - RoomZone_Visitor (1)
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] RoomLight2DZone
+  - Light_visitor_main
+    [Component] Transform
+    [Component] Light2D
+    [Component] Light2DFlicker
+  - WalkAreaPerspective_seed
     [Component] Transform
     [Component] PerspectiveWalkArea2D
     [Component] BoxCollider2D
@@ -2662,32 +2544,22 @@
       [Component] Transform
     - FarRight
       [Component] Transform
-    - Light_VisitorRoom_main
-      [Component] Transform
-      [Component] Light2D
-      [Component] Light2DFlicker
-    - Light_VisitorRoom_main (1)
-      [Component] Transform
-      [Component] Light2D
-      [Component] Light2DFlicker
-    - Light_VisitorRoom
-      [Component] Transform
-      [Component] Light2D
-      [Component] Light2DFlicker
-    - Light_VisitorRoom (1)
-      [Component] Transform
-      [Component] Light2D
-  - RoomZone_Visitor (1)
-    [Component] Transform
-    [Component] BoxCollider2D
-    [Component] RoomLight2DZone
-  - Light_visitor_main
-    [Component] Transform
-    [Component] Light2D
-    [Component] Light2DFlicker
 - ROOM_Visitor
   [Component] Transform
   [Component] VisitorEventController
+  - WalkAreaPerspective_visitor
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    [Component] RoomAreaTag
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
   - Visitor_AppearPoint
     [Component] Transform
   - Visitor_DisappearPoint
@@ -2719,19 +2591,6 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] RoomLight2DZone
-  - WalkAreaPerspective
-    [Component] Transform
-    [Component] PerspectiveWalkArea2D
-    [Component] BoxCollider2D
-    [Component] RoomAreaTag
-    - NearLeft
-      [Component] Transform
-    - NearRight
-      [Component] Transform
-    - FarLeft
-      [Component] Transform
-    - FarRight
-      [Component] Transform
   - RoomZone_Visitor
     [Component] Transform
     [Component] BoxCollider2D
@@ -2742,16 +2601,7 @@
     [Component] RoomLight2DZone
   - WalkColliders
     [Component] Transform
-    - WALL_Left
-      [Component] Transform
-      [Component] EdgeCollider2D
     - WALL_railing_esterno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Left Interno
-      [Component] Transform
-      [Component] EdgeCollider2D
-    - WALL_Right
       [Component] Transform
       [Component] EdgeCollider2D
 - ROOM_Kitchen
@@ -2760,7 +2610,19 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] RoomLight2DZone
-  - Light_KitchenRoom_Main
+  - Light_Bed_Main
+    [Component] Transform
+    [Component] Light2D
+  - Light_abajour
+    [Component] Transform
+    [Component] Light2D
+  - Light_abajour (2)
+    [Component] Transform
+    [Component] Light2D
+  - Light_abajour (3)
+    [Component] Transform
+    [Component] Light2D
+  - Light_abajour (1)
     [Component] Transform
     [Component] Light2D
   - Mask_KitchenRoom_Floor
@@ -2783,16 +2645,27 @@
     [Component] Interactable
     [Component] FoodSynthMachine
     [Component] BoxCollider2D
+    [Component] SpriteRenderer
+    - Base
+      [Component] Transform
+      [Component] SpriteRenderer
+      - Arm_Animated
+        [Component] Transform
+        [Component] SpriteRenderer
+        [Component] Animator
+      - Display_Animated
+        [Component] Transform
+        [Component] SpriteRenderer
+        [Component] Animator
   - DispensaRefrigerata
     [Component] Transform
     [Component] Interactable
-    [Component] FoodSynthMachine
+    [Component] DispensaRefrigerataOpener
     [Component] BoxCollider2D
-  - KitchenCondensationCollectPoint
+  - DispensaPanel
     [Component] Transform
-    [Component] BoxCollider2D
-    [Component] Interactable
-    [Component] KitchenCondensationCollectPoint
+    [Component] UIDocument
+    [Component] DispensaPanelController
   - WalkAreaPerspective_cucina
     [Component] Transform
     [Component] PerspectiveWalkArea2D
@@ -2806,6 +2679,12 @@
       [Component] Transform
     - FarRight
       [Component] Transform
+  - CondenseTankPanel
+    [Component] Transform
+    [Component] UIDocument
+    [Component] CondenseTankPanelController
+    [Component] Interactable
+    [Component] CondenseTankMachine
 - ROOM_Bed
   [Component] Transform
   - BlackMarket
@@ -2846,7 +2725,7 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] RoomLight2DZone
-  - Light_BedRoom_Main
+  - Light_kitchen_Main
     [Component] Transform
     [Component] Light2D
     [Component] Light2DFlicker
@@ -2864,7 +2743,7 @@
   - Light_BedRoom_Main (4)
     [Component] Transform
     [Component] Light2D
-  - Light_BedRoom_side
+  - Light_tank_side
     [Component] Transform
     [Component] Light2D
   - Mask_BedRoom_Floor
@@ -2897,6 +2776,7 @@
   [Component] CinemachineVirtualCamera
   [Component] CinemachinePixelPerfect
   [Component] CinemachineConfiner2D
+  [Component] VaultCameraRuntimeBootstrap
   - cm
     [Component] Transform
     [Component] CinemachinePipeline
