@@ -7,6 +7,10 @@ namespace _Project.World.VaultMap
     /// <summary>
     /// Room trigger that enables/disables a set of Light2D when the player enters/exits.
     /// Intended for VaultMap "per-room lighting" to enhance immersion (player lit + shadows).
+    /// Several <see cref="RoomLight2DZone"/> may reference the same <see cref="Light2D"/>
+    /// (overlapping floor strips or copy-paste in the scene). A shared per-light reference count
+    /// ensures that exiting one zone does not turn off the light while the player is still
+    /// inside another zone that uses the same lamp.
     /// </summary>
     [DisallowMultipleComponent]
     public class RoomLight2DZone : MonoBehaviour
@@ -38,6 +42,37 @@ namespace _Project.World.VaultMap
 
         private int _insideCount = 0;
 
+        private static readonly Dictionary<int, int> s_ReferenceCountPerLightInstanceId = new();
+
+        private static int GetSharedRefCount(Light2D light)
+        {
+            if (light == null)
+                return 0;
+
+            int id = light.GetInstanceID();
+            return s_ReferenceCountPerLightInstanceId.TryGetValue(id, out int c) ? c : 0;
+        }
+
+        private static void AddReference(Light2D light, int delta)
+        {
+            if (light == null)
+                return;
+
+            int id = light.GetInstanceID();
+            int next = Mathf.Max(0, GetSharedRefCount(light) + delta);
+
+            if (next == 0)
+            {
+                s_ReferenceCountPerLightInstanceId.Remove(id);
+                light.enabled = false;
+            }
+            else
+            {
+                s_ReferenceCountPerLightInstanceId[id] = next;
+                light.enabled = true;
+            }
+        }
+
         private void Reset()
         {
             triggerCollider = GetComponent<Collider2D>();
@@ -63,8 +98,20 @@ namespace _Project.World.VaultMap
 
         private void Start()
         {
-            if (disableLightsOnStart)
-                SetLightsEnabled(false);
+            if (!disableLightsOnStart || _insideCount != 0)
+                return;
+
+            foreach (Light2D light in lights)
+            {
+                if (light == null)
+                    continue;
+
+                // Do not darken a lamp already claimed by enter-triggers fired before Start (spawn inside zone).
+                if (GetSharedRefCount(light) > 0)
+                    continue;
+
+                light.enabled = false;
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -73,8 +120,14 @@ namespace _Project.World.VaultMap
                 return;
 
             _insideCount++;
-            if (_insideCount == 1 && enableOnEnter)
-                SetLightsEnabled(true);
+            if (_insideCount != 1 || !enableOnEnter)
+                return;
+
+            foreach (Light2D light in lights)
+            {
+                if (light != null)
+                    AddReference(light, 1);
+            }
         }
 
         private void OnTriggerExit2D(Collider2D other)
@@ -83,8 +136,14 @@ namespace _Project.World.VaultMap
                 return;
 
             _insideCount = Mathf.Max(0, _insideCount - 1);
-            if (_insideCount == 0 && disableOnExit)
-                SetLightsEnabled(false);
+            if (_insideCount != 0 || !disableOnExit)
+                return;
+
+            foreach (Light2D light in lights)
+            {
+                if (light != null)
+                    AddReference(light, -1);
+            }
         }
 
         private bool PassesFilter(Collider2D other)
@@ -105,15 +164,40 @@ namespace _Project.World.VaultMap
             return true;
         }
 
+        /// <summary>
+        /// Direct override — does not use shared reference counting. Prefer triggers for authored lights.
+        /// </summary>
         public void SetLightsEnabled(bool enabled)
         {
             for (int i = 0; i < lights.Count; i++)
             {
-                Light2D l = lights[i];
-                if (l != null)
-                    l.enabled = enabled;
+                Light2D light = lights[i];
+                if (light == null)
+                    continue;
+
+                int id = light.GetInstanceID();
+                if (!enabled)
+                    s_ReferenceCountPerLightInstanceId.Remove(id);
+
+                light.enabled = enabled;
             }
+        }
+
+        private void OnDestroy()
+        {
+            if (_insideCount <= 0)
+                return;
+
+            for (int t = 0; t < _insideCount; t++)
+            {
+                foreach (Light2D light in lights)
+                {
+                    if (light != null)
+                        AddReference(light, -1);
+                }
+            }
+
+            _insideCount = 0;
         }
     }
 }
-

@@ -67,6 +67,9 @@ namespace _Project.Player
         [Tooltip("If left null, the mover will try to auto-pick a walk area by click/trigger.")]
         [SerializeField] private PerspectiveWalkArea2D currentWalkArea;
 
+        /// <summary>Area UV corrente — usata anche da HUD / effetti stanza quando il livello deve sapere dov'è il player.</summary>
+        public PerspectiveWalkArea2D CurrentWalkArea => currentWalkArea;
+
         [Header("Movement (World Space)")]
         [SerializeField] private float moveSpeed = 4f;
         [SerializeField] private float stopDistance = 0.06f;
