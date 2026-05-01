@@ -34,7 +34,13 @@ namespace _Project.Sporae.Core
             if (config == null)
                 return false;
 
-            bool alreadyPresent = _currentMissions.Any(m => m != null && m.Config == config);
+            // Must treat completed list as "present": otherwise a loaded save can have the mission
+            // only in _completedMissions while DemoStoryDirector (or other callers) re-appends the same
+            // config to _currentMissions. Save serialization visits current first and dedupes by name,
+            // which would drop the completed entry and erase mission progress on the next save.
+            bool alreadyPresent =
+                _currentMissions.Any(m => m != null && m.Config == config)
+                || _completedMissions.Any(m => m != null && m.Config == config);
             if (alreadyPresent)
                 return false;
 
