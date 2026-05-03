@@ -1,7 +1,7 @@
-using UnityEngine;
-using UnityEngine.UIElements;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
+using UnityEngine;
+using UnityEngine.UIElements;
 using Sporae.Core.Localization;
 using Sporae.DevTools;
 
@@ -150,6 +150,7 @@ namespace Sporae.UI.UIToolkit.CryoMachine
         private void SetVisible(bool visible)
         {
             _isOpen = visible;
+            GameplayUiModalLock.SetMachineModalState(visible);
 
             if (_overlay != null)
                 _overlay.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;

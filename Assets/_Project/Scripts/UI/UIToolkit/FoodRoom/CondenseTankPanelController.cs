@@ -397,6 +397,12 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
             if (!IsVisible) return;
 
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Hide();
+                return;
+            }
+
             Refresh();
             bool showWaterBar = _waterProgressBlock != null && _waterProgressBlock.resolvedStyle.display == DisplayStyle.Flex;
             if (showWaterBar && waterActive && _waterProgressTrack != null && _waterProgressShine != null)

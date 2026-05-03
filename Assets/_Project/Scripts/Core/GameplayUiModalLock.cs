@@ -9,6 +9,10 @@ namespace _Project.Sporae.Core
         private static bool _machineModalOpen;
         private static bool _inventoryContextHudVisible;
 
+        /// <summary>
+        /// True mentre un modale gameplay blocca movimento/interazione mondo (macchinari HUD, armadio, VO, ecc.).
+        /// Il menu in-game non deve consumare <c>Esc</c> nello stesso frame se questo valore è true.
+        /// </summary>
         public static bool BlocksWorldInput { get; private set; }
         public static bool HidesFixedHud => _manualHideFixedHud || _machineModalOpen;
         public static bool HidesContextHud => _manualHideFixedHud || (_machineModalOpen && !_inventoryContextHudVisible);

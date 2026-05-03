@@ -479,6 +479,15 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
             if (!IsVisible) return;
 
+            if (_playerInventoryPanel != null && _playerInventoryPanel.IsVisible)
+                return;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Hide();
+                return;
+            }
+
             /* Progress bar shine: move left-to-right when cultivation in progress */
             bool showProgressBar = _cultivationProgressBlock != null && _cultivationProgressBlock.resolvedStyle.display == DisplayStyle.Flex;
             if (showProgressBar && anyGrowing && _cultivationProgressTrack != null && _cultivationProgressShine != null)

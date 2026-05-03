@@ -146,8 +146,16 @@ namespace _Project.UI.UIToolkit.MainMenu
             if (_isMainMenuScene)
                 return;
 
-            if (Input.GetKeyDown(KeyCode.Escape))
-                ToggleInGameMenu();
+            if (!Input.GetKeyDown(KeyCode.Escape))
+                return;
+
+            // Pannelli modali gameplay impostano <see cref="GameplayUiModalLock.BlocksWorldInput"/> e gestiscono ESC
+            // in Update con ordine di esecuzione successivo (es. -38, 0). Senza questo guard lo stesso KeyDown
+            // chiuderebbe il pannello e togglerebbe il menu in-game nello stesso frame.
+            if (GameplayUiModalLock.BlocksWorldInput)
+                return;
+
+            ToggleInGameMenu();
         }
 
         private void BuildMenuUiToolkit()

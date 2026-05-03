@@ -1,0 +1,568 @@
+.bedroom-pc-display-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+.bedroom-pc-window {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.bedroom-pc-frame-stack {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    min-width: 1920px;
+    min-height: 1080px;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.bedroom-pc-frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.bedroom-pc-inner {
+    position: absolute;
+    left: 200px;
+    top: 160px;
+    right: 200px;
+    bottom: 220px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    background-color: rgba(0, 0, 0, 0);
+    overflow: hidden;
+}
+
+.bedroom-pc-screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    min-width: 0;
+    min-height: 0;
+    padding: 32px 42px 24px 42px;
+    flex-direction: column;
+    background-color: rgb(3, 24, 10);
+    border-width: 2px;
+    border-color: rgba(73, 255, 82, 0.78);
+    overflow: hidden;
+}
+
+.bedroom-pc-scanlines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.18;
+    background-color: rgba(79, 255, 90, 0.08);
+}
+
+.bedroom-pc-glow-vignette {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    width: 100%;
+    height: 100%;
+    border-width: 14px;
+    border-color: rgba(0, 0, 0, 0.28);
+}
+
+.bedroom-pc-header {
+    height: 28px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.bedroom-pc-header-label {
+    color: rgb(79, 255, 90);
+    font-size: 13px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(79, 255, 90, 0.22);
+}
+
+.bedroom-pc-footer-label {
+    color: rgb(79, 255, 90);
+    font-size: 13px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(79, 255, 90, 0.22);
+}
+
+.bedroom-pc-header-label-left {
+    width: 33%;
+    -unity-text-align: middle-left;
+}
+
+.bedroom-pc-header-label-center {
+    width: 34%;
+    -unity-text-align: middle-center;
+}
+
+.bedroom-pc-header-label-right {
+    width: 33%;
+    -unity-text-align: middle-right;
+}
+
+.bedroom-pc-divider {
+    height: 2px;
+    background-color: rgba(79, 255, 90, 0.88);
+}
+
+.bedroom-pc-divider-top {
+    margin-bottom: 34px;
+}
+
+.bedroom-pc-divider-bottom {
+    margin-top: 26px;
+}
+
+.bedroom-pc-home {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.bedroom-pc-home-exit-hint {
+    margin-top: 28px;
+    padding-left: 12px;
+    padding-right: 12px;
+    color: rgba(79, 255, 90, 0.78);
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    letter-spacing: 0.5px;
+}
+
+.bedroom-pc-hidden {
+    display: none;
+}
+
+.bedroom-pc-app-grid {
+    width: 86%;
+    min-height: 210px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.bedroom-pc-app-tile {
+    width: 156px;
+    height: 210px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.bedroom-pc-app-tile:hover .bedroom-pc-icon-box {
+    background-color: rgba(79, 255, 90, 0.13);
+    border-color: rgb(118, 255, 124);
+}
+
+.bedroom-pc-app-tile:hover .bedroom-pc-app-label {
+    color: rgb(146, 255, 148);
+}
+
+.bedroom-pc-icon-box {
+    width: 132px;
+    height: 132px;
+    margin-bottom: 14px;
+    border-width: 3px;
+    border-color: rgba(79, 255, 90, 0.86);
+    border-radius: 8px;
+    background-color: rgba(4, 34, 12, 0.74);
+    align-items: center;
+    justify-content: center;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.bedroom-pc-icon-placeholder {
+    background-color: rgba(4, 34, 12, 0.74);
+}
+
+.bedroom-pc-icon-placeholder-label {
+    color: rgba(79, 255, 90, 0.38);
+    font-size: 22px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-app-label {
+    color: rgb(79, 255, 90);
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.bedroom-pc-app-label-single {
+    margin-top: 10px;
+}
+
+.bedroom-pc-sleep-button {
+    width: 520px;
+    height: 56px;
+    margin-top: 20px;
+    border-width: 3px;
+    border-color: rgba(79, 255, 90, 0.9);
+    border-radius: 4px;
+    background-color: rgba(8, 47, 16, 0.72);
+    color: rgb(79, 255, 90);
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-sleep-button:hover {
+    background-color: rgba(79, 255, 90, 0.17);
+    color: rgb(146, 255, 148);
+}
+
+.bedroom-pc-detail {
+    flex-grow: 1;
+    width: 100%;
+    flex-direction: column;
+}
+
+.bedroom-pc-detail-header {
+    height: 38px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.bedroom-pc-back-button {
+    width: 132px;
+    height: 34px;
+    margin-right: 24px;
+    padding: 0;
+    border-width: 2px;
+    border-radius: 2px;
+    border-color: rgba(79, 255, 90, 0.82);
+    background-color: rgba(8, 47, 16, 0.58);
+    color: rgb(79, 255, 90);
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-back-button:hover {
+    background-color: rgba(79, 255, 90, 0.17);
+    color: rgb(146, 255, 148);
+}
+
+.bedroom-pc-detail-title {
+    flex-grow: 1;
+    color: rgb(79, 255, 90);
+    font-size: 21px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(79, 255, 90, 0.22);
+}
+
+.bedroom-pc-detail-status {
+    width: 132px;
+    color: rgb(79, 255, 90);
+    font-size: 13px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+}
+
+.bedroom-pc-detail-content {
+    flex-grow: 1;
+    min-height: 0;
+    flex-direction: column;
+    padding: 16px 18px 14px 18px;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: rgba(79, 255, 90, 0.72);
+    background-color: rgba(1, 14, 5, 0.58);
+}
+
+.bedroom-pc-detail-content--control {
+    padding: 7px 10px 7px 10px;
+}
+
+.bedroom-pc-detail-primary {
+    flex-shrink: 0;
+    color: rgb(146, 255, 148);
+    font-size: 11px;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.bedroom-pc-detail-secondary {
+    flex-shrink: 0;
+    margin-top: 8px;
+    color: rgba(146, 255, 148, 0.82);
+    font-size: 10px;
+    white-space: normal;
+}
+
+.bedroom-pc-control-list {
+    flex-grow: 1;
+    min-height: 0;
+    margin-top: 8px;
+    flex-direction: column;
+}
+
+.bedroom-pc-control-grid-row {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0;
+    flex-direction: row;
+    align-items: stretch;
+    margin-bottom: 6px;
+}
+
+.bedroom-pc-control-grid-row:last-child {
+    margin-bottom: 0;
+}
+
+.bedroom-pc-control-grid-row > .bedroom-pc-control-row {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: 6px;
+}
+
+.bedroom-pc-control-grid-row > .bedroom-pc-control-recap {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: 6px;
+}
+
+.bedroom-pc-control-grid-row > .bedroom-pc-control-row:last-child {
+    margin-right: 0;
+}
+
+.bedroom-pc-control-grid-row > .bedroom-pc-control-recap:last-child {
+    margin-right: 0;
+}
+
+.bedroom-pc-control-row {
+    min-height: 0;
+    max-height: none;
+    padding: 10px 8px 10px 8px;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: rgba(79, 255, 90, 0.62);
+    background-color: rgba(4, 34, 12, 0.54);
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.bedroom-pc-control-icon {
+    align-self: center;
+    width: 36px;
+    height: 36px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: rgba(79, 255, 90, 0.72);
+    background-color: rgba(4, 34, 12, 0.74);
+    align-items: center;
+    justify-content: center;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.bedroom-pc-control-icon-label {
+    color: rgba(79, 255, 90, 0.35);
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-control-info {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.bedroom-pc-control-title {
+    color: rgb(146, 255, 148);
+    font-size: 12px;
+    -unity-font-style: bold;
+    white-space: normal;
+    min-height: 16px;
+}
+
+.bedroom-pc-control-line {
+    margin-top: 2px;
+    flex-direction: row;
+}
+
+.bedroom-pc-control-label {
+    color: rgba(146, 255, 148, 0.82);
+    font-size: 11px;
+    width: 42px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-control-value {
+    color: rgb(190, 255, 186);
+    font-size: 11px;
+    flex-grow: 1;
+    white-space: normal;
+}
+
+.bedroom-pc-control-toggle {
+    align-self: center;
+    width: 64px;
+    min-height: 26px;
+    height: 26px;
+    margin-left: 6px;
+    flex-shrink: 0;
+    padding: 0;
+    border-width: 2px;
+    border-radius: 2px;
+    border-color: rgba(79, 255, 90, 0.82);
+    background-color: rgba(8, 47, 16, 0.62);
+    color: rgb(79, 255, 90);
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.bedroom-pc-control-toggle--on {
+    border-color: rgb(79, 255, 90);
+    background-color: rgba(18, 96, 28, 0.92);
+    color: rgb(190, 255, 186);
+}
+
+.bedroom-pc-control-toggle--off {
+    border-color: rgb(255, 79, 79);
+    background-color: rgba(96, 18, 18, 0.92);
+    color: rgb(255, 174, 164);
+}
+
+.bedroom-pc-control-toggle--on:hover {
+    background-color: rgba(79, 255, 90, 0.28);
+    color: rgb(218, 255, 209);
+}
+
+.bedroom-pc-control-toggle--off:hover {
+    background-color: rgba(255, 79, 79, 0.28);
+    color: rgb(255, 216, 210);
+}
+
+.bedroom-pc-control-toggle:disabled {
+    border-color: rgba(146, 255, 148, 0.28);
+    background-color: rgba(6, 22, 10, 0.76);
+    color: rgba(146, 255, 148, 0.36);
+}
+
+.bedroom-pc-control-value--on {
+    color: rgb(190, 255, 186);
+}
+
+.bedroom-pc-control-value--off {
+    color: rgb(255, 174, 164);
+}
+
+.bedroom-pc-control-recap {
+    min-height: 0;
+    max-height: none;
+    padding: 10px 10px 10px 10px;
+    border-width: 2px;
+    border-radius: 3px;
+    border-color: rgba(146, 255, 148, 0.9);
+    background-color: rgba(8, 47, 16, 0.72);
+    flex-direction: column;
+    justify-content: center;
+}
+
+.bedroom-pc-control-recap-label {
+    color: rgba(146, 255, 148, 0.82);
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.bedroom-pc-control-recap-value {
+    color: rgb(190, 255, 186);
+    font-size: 15px;
+    margin-top: 3px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.bedroom-pc-footer {
+    height: 28px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.bedroom-pc-footer-left {
+    width: 30%;
+    -unity-text-align: middle-left;
+}
+
+.bedroom-pc-footer-center {
+    width: 32%;
+    -unity-text-align: middle-center;
+}
+
+.bedroom-pc-footer-right {
+    width: 38%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.bedroom-pc-signal-bars {
+    width: 34px;
+    height: 18px;
+    margin-left: 14px;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.bedroom-pc-signal-bar {
+    width: 5px;
+    background-color: rgba(79, 255, 90, 0.95);
+}
+
+.bedroom-pc-signal-bar-1 {
+    height: 5px;
+}
+
+.bedroom-pc-signal-bar-2 {
+    height: 8px;
+}
+
+.bedroom-pc-signal-bar-3 {
+    height: 12px;
+}
+
+.bedroom-pc-signal-bar-4 {
+    height: 16px;
+}

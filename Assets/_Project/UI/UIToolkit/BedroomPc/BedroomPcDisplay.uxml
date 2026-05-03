@@ -1,0 +1,169 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/UI/UIToolkit/BedroomPc/BedroomPcDisplay.uss?fileID=7433441132597879392&amp;guid=cc370e8ff33d57a469154d9230d84e15&amp;type=3#BedroomPcDisplay" />
+    <ui:VisualElement name="bedroom-pc-display-root" class="bedroom-pc-display-root">
+        <ui:VisualElement name="bedroom-pc-window" class="bedroom-pc-window">
+            <ui:VisualElement name="bedroom-pc-frame-stack" class="bedroom-pc-frame-stack">
+                <ui:VisualElement name="bedroom-pc-frame" picking-mode="Ignore" class="bedroom-pc-frame" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/PC-bedroom.png?fileID=2800000&amp;guid=8d521efefc29b3a4e92a2a06d1259cd5&amp;type=3#PC-bedroom&quot;);" />
+                <ui:VisualElement name="bedroom-pc-inner" class="bedroom-pc-inner" style="left: 324px; right: 328px; top: 98px; bottom: 133px;">
+                    <ui:VisualElement name="bedroom-pc-screen" class="bedroom-pc-screen" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
+                        <ui:VisualElement picking-mode="Ignore" class="bedroom-pc-scanlines" />
+                        <ui:VisualElement picking-mode="Ignore" class="bedroom-pc-glow-vignette" style="background-image: url(&quot;project://database/Assets/_Project/Art/crt-overlay-medium-1920x1080.png?fileID=2800000&amp;guid=a35e315d8bb3324478a8ff5fe5d20e41&amp;type=3#crt-overlay-medium-1920x1080&quot;);" />
+                        <ui:VisualElement class="bedroom-pc-header">
+                            <ui:Label name="bedroom-pc-terminal-label" text="TERMINALE 01" class="bedroom-pc-header-label bedroom-pc-header-label-left" />
+                            <ui:Label name="bedroom-pc-os-label" text="OS v2.7.4" class="bedroom-pc-header-label bedroom-pc-header-label-center" />
+                            <ui:Label name="bedroom-pc-time-label" text="GIORNO 01   14:32" class="bedroom-pc-header-label bedroom-pc-header-label-right" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="bedroom-pc-divider bedroom-pc-divider-top" />
+                        <ui:VisualElement name="bedroom-pc-home" class="bedroom-pc-home" style="background-image: none;">
+                            <ui:VisualElement class="bedroom-pc-app-grid">
+                                <ui:Button name="bedroom-pc-app-control" class="bedroom-pc-app-tile">
+                                    <ui:VisualElement name="bedroom-pc-icon-control" class="bedroom-pc-icon-box bedroom-pc-icon-placeholder" style="background-image: resource(&apos;UI/Icone_panels/Pannello di Controllo&apos;); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; -unity-background-scale-mode: scale-to-fit; background-color: rgba(4, 34, 12, 0.74);" />
+                                    <ui:Label text="PANNELLO DI" class="bedroom-pc-app-label" />
+                                    <ui:Label text="CONTROLLO" class="bedroom-pc-app-label" />
+                                </ui:Button>
+                                <ui:Button name="bedroom-pc-app-research" class="bedroom-pc-app-tile">
+                                    <ui:VisualElement name="bedroom-pc-icon-research" class="bedroom-pc-icon-box bedroom-pc-icon-placeholder" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-image: resource(&apos;UI/Icone_panels/Centro di Ricerca&apos;);" />
+                                    <ui:Label text="CENTRO DI" class="bedroom-pc-app-label" />
+                                    <ui:Label text="RICERCA" class="bedroom-pc-app-label" />
+                                </ui:Button>
+                                <ui:Button name="bedroom-pc-app-blackmarket" class="bedroom-pc-app-tile">
+                                    <ui:VisualElement name="bedroom-pc-icon-blackmarket" class="bedroom-pc-icon-box bedroom-pc-icon-placeholder" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-image: resource(&apos;UI/Icone_panels/BlackMarket&apos;);" />
+                                    <ui:Label text="BLACK MARKET" class="bedroom-pc-app-label bedroom-pc-app-label-single" />
+                                </ui:Button>
+                                <ui:Button name="bedroom-pc-app-faq" class="bedroom-pc-app-tile">
+                                    <ui:VisualElement name="bedroom-pc-icon-faq" class="bedroom-pc-icon-box bedroom-pc-icon-placeholder">
+                                        <ui:Label text="PNG" class="bedroom-pc-icon-placeholder-label" />
+                                    </ui:VisualElement>
+                                    <ui:Label text="FAQ - BOT" class="bedroom-pc-app-label bedroom-pc-app-label-single" />
+                                </ui:Button>
+                            </ui:VisualElement>
+                            <ui:Label name="bedroom-pc-home-exit-hint" text="PREMI [ESC] PER CHIUDERE IL TERMINALE" class="bedroom-pc-home-exit-hint" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="bedroom-pc-detail" class="bedroom-pc-detail bedroom-pc-hidden">
+                            <ui:VisualElement class="bedroom-pc-detail-header">
+                                <ui:Button name="bedroom-pc-back-button" text="&lt; INDIETRO" class="bedroom-pc-back-button" />
+                                <ui:Label name="bedroom-pc-detail-title" text="PANNELLO" class="bedroom-pc-detail-title" />
+                                <ui:Label name="bedroom-pc-detail-status" text="READY" class="bedroom-pc-detail-status" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="bedroom-pc-detail-content" class="bedroom-pc-detail-content">
+                                <ui:Label name="bedroom-pc-detail-primary" text="-" class="bedroom-pc-detail-primary" />
+                                <ui:VisualElement name="bedroom-pc-control-list" class="bedroom-pc-control-list bedroom-pc-hidden">
+                                    <ui:VisualElement class="bedroom-pc-control-grid-row">
+                                        <ui:VisualElement class="bedroom-pc-control-row">
+                                            <ui:VisualElement name="bedroom-pc-control-seed-icon" class="bedroom-pc-control-icon bedroom-pc-icon-placeholder">
+                                                <ui:Label text="PNG" class="bedroom-pc-control-icon-label" />
+                                            </ui:VisualElement>
+                                            <ui:VisualElement class="bedroom-pc-control-info">
+                                                <ui:Label name="bedroom-pc-control-seed-title" text="SEED STORAGE" class="bedroom-pc-control-title" />
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="STATO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-seed-state" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="COSTO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-seed-cost" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                            </ui:VisualElement>
+                                            <ui:Button name="bedroom-pc-control-seed-toggle" text="-" class="bedroom-pc-control-toggle" />
+                                        </ui:VisualElement>
+                                        <ui:VisualElement class="bedroom-pc-control-row">
+                                            <ui:VisualElement name="bedroom-pc-control-food-icon" class="bedroom-pc-control-icon bedroom-pc-icon-placeholder">
+                                                <ui:Label text="PNG" class="bedroom-pc-control-icon-label" />
+                                            </ui:VisualElement>
+                                            <ui:VisualElement class="bedroom-pc-control-info">
+                                                <ui:Label name="bedroom-pc-control-food-title" text="SINTETIZZATORE ALIMENTARE" class="bedroom-pc-control-title" />
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="STATO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-food-state" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="COSTO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-food-cost" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                            </ui:VisualElement>
+                                            <ui:Button name="bedroom-pc-control-food-toggle" text="-" class="bedroom-pc-control-toggle" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="bedroom-pc-control-grid-row">
+                                        <ui:VisualElement class="bedroom-pc-control-row">
+                                            <ui:VisualElement name="bedroom-pc-control-pantry-icon" class="bedroom-pc-control-icon bedroom-pc-icon-placeholder">
+                                                <ui:Label text="PNG" class="bedroom-pc-control-icon-label" />
+                                            </ui:VisualElement>
+                                            <ui:VisualElement class="bedroom-pc-control-info">
+                                                <ui:Label name="bedroom-pc-control-pantry-title" text="DISPENSA REFRIGERATA" class="bedroom-pc-control-title" />
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="STATO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-pantry-state" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="COSTO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-pantry-cost" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                            </ui:VisualElement>
+                                            <ui:Button name="bedroom-pc-control-pantry-toggle" text="-" class="bedroom-pc-control-toggle" />
+                                        </ui:VisualElement>
+                                        <ui:VisualElement class="bedroom-pc-control-row">
+                                            <ui:VisualElement name="bedroom-pc-control-cryo-icon" class="bedroom-pc-control-icon bedroom-pc-icon-placeholder">
+                                                <ui:Label text="PNG" class="bedroom-pc-control-icon-label" />
+                                            </ui:VisualElement>
+                                            <ui:VisualElement class="bedroom-pc-control-info">
+                                                <ui:Label name="bedroom-pc-control-cryo-title" text="CRYO MACHINE" class="bedroom-pc-control-title" />
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="STATO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-cryo-state" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="COSTO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-cryo-cost" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                            </ui:VisualElement>
+                                            <ui:Button name="bedroom-pc-control-cryo-toggle" text="-" class="bedroom-pc-control-toggle" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:VisualElement class="bedroom-pc-control-grid-row">
+                                        <ui:VisualElement class="bedroom-pc-control-row">
+                                            <ui:VisualElement name="bedroom-pc-control-compost-icon" class="bedroom-pc-control-icon bedroom-pc-icon-placeholder">
+                                                <ui:Label text="PNG" class="bedroom-pc-control-icon-label" />
+                                            </ui:VisualElement>
+                                            <ui:VisualElement class="bedroom-pc-control-info">
+                                                <ui:Label name="bedroom-pc-control-compost-title" text="COMPOST PROCESSOR" class="bedroom-pc-control-title" />
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="STATO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-compost-state" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                                <ui:VisualElement class="bedroom-pc-control-line">
+                                                    <ui:Label text="COSTO" class="bedroom-pc-control-label" />
+                                                    <ui:Label name="bedroom-pc-control-compost-cost" text="-" class="bedroom-pc-control-value" />
+                                                </ui:VisualElement>
+                                            </ui:VisualElement>
+                                            <ui:Button name="bedroom-pc-control-compost-toggle" text="-" class="bedroom-pc-control-toggle" />
+                                        </ui:VisualElement>
+                                        <ui:VisualElement class="bedroom-pc-control-recap">
+                                            <ui:Label text="TOTALE COSTI MACCHINARI" class="bedroom-pc-control-recap-label" />
+                                            <ui:Label name="bedroom-pc-control-total-cost" text="0 CRY/GIORNO" class="bedroom-pc-control-recap-value" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                                <ui:Label name="bedroom-pc-detail-secondary" text="-" class="bedroom-pc-detail-secondary" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="bedroom-pc-divider bedroom-pc-divider-bottom" />
+                        <ui:VisualElement class="bedroom-pc-footer">
+                            <ui:Label name="bedroom-pc-user-label" text="UTENTE: OPERATORE" class="bedroom-pc-footer-label bedroom-pc-footer-left" />
+                            <ui:Label name="bedroom-pc-session-label" text="SESSIONE ATTIVA" class="bedroom-pc-footer-label bedroom-pc-footer-center" />
+                            <ui:VisualElement class="bedroom-pc-footer-right">
+                                <ui:Label name="bedroom-pc-connection-label" text="CONNESSIONE: STABILE" class="bedroom-pc-footer-label" />
+                                <ui:VisualElement class="bedroom-pc-signal-bars">
+                                    <ui:VisualElement class="bedroom-pc-signal-bar bedroom-pc-signal-bar-1" />
+                                    <ui:VisualElement class="bedroom-pc-signal-bar bedroom-pc-signal-bar-2" />
+                                    <ui:VisualElement class="bedroom-pc-signal-bar bedroom-pc-signal-bar-3" />
+                                    <ui:VisualElement class="bedroom-pc-signal-bar bedroom-pc-signal-bar-4" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,3 +1,4 @@
+using _Project.Sporae.Core;
 using UnityEngine;
 
 namespace _Project
@@ -81,8 +82,11 @@ namespace _Project
         
         private void Update()
         {
-            if (_handleEscapeInput && Input.GetKeyDown(KeyCode.Escape))
-                Toggle();
+            if (!_handleEscapeInput || !Input.GetKeyDown(KeyCode.Escape))
+                return;
+            if (GameplayUiModalLock.BlocksWorldInput)
+                return;
+            Toggle();
         }
     }
 }

@@ -119,6 +119,7 @@ namespace _Project
             _resultGroup.SetActive(false);
             
             gameObject.SetActive(true);
+            GameplayUiModalLock.SetBlockWorldInput(true);
             _controller.StartRun();
         }
         
@@ -129,11 +130,13 @@ namespace _Project
             _resultGroup.SetActive(false);
             
             gameObject.SetActive(true);
+            GameplayUiModalLock.SetBlockWorldInput(true);
         }
 
         public void ShowResult()
         {
             gameObject.SetActive(true);
+            GameplayUiModalLock.SetBlockWorldInput(true);
             
             _tutorialGroup.SetActive(false);
             _minigameGroup.SetActive(false);
@@ -187,6 +190,7 @@ namespace _Project
 
         private void Hide()
         {
+            GameplayUiModalLock.SetBlockWorldInput(false);
             gameObject.SetActive(false);
         }
     }

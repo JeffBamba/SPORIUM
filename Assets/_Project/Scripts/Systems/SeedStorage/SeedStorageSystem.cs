@@ -15,9 +15,9 @@ namespace _Project.Systems.SeedStorage
     public sealed class SeedStorageSystem
     {
         public const int SlotCount = 6;
-        private const int Tier1SlotCount = 3;
-        private const int CryTier1Occupied = 1;
-        private const int CryTier2Occupied = 3;
+        public const int Tier1SlotCount = 3;
+        public const int CryTier1Occupied = 1;
+        public const int CryTier2Occupied = 3;
 
         private readonly GameManager _gameManager;
 

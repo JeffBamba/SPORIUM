@@ -39,6 +39,47 @@ namespace _Project.Systems.FoodRoom
         public bool PantryIsOn => _pantryIsOn;
         public int PantryDailyCost => PantryDailyCryCost;
 
+        public int CountActiveFoodSynthSlots()
+        {
+            int count = 0;
+            foreach (var slot in _productionSlots)
+            {
+                if (slot.State == SlotState.Growing || slot.State == SlotState.Ready)
+                    count++;
+            }
+            return count;
+        }
+
+        public int CountPantryItems()
+        {
+            int count = 0;
+            foreach (var kvp in _pantryByType)
+            {
+                if (kvp.Value != null)
+                    count += kvp.Value.Count;
+            }
+            return count;
+        }
+
+        public int ComputeFoodSynthDailyCryCost()
+        {
+            if (!_foodSynthIsOn)
+                return 0;
+
+            int total = FoodSynthDailyCost;
+            foreach (var slot in _productionSlots)
+            {
+                if (slot.State == SlotState.Growing || slot.State == SlotState.Ready)
+                    total += _config != null ? _config.GetCryPerDayFor(slot.Type) : 1;
+            }
+            return total;
+        }
+
+        public int ComputePantryDailyCryCost()
+        {
+            return _pantryIsOn ? PantryDailyCost : 0;
+        }
+
         public FoodRoomSystem(Inventory inventory, GameManager gameManager)
         {
             _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));

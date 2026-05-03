@@ -24,6 +24,7 @@ Ricognizione completa prima del codice: riuso, niente duplicati, vincoli del rep
 1. Leggi **`AGENTS.md`** in root.
 2. Allinea a regole/skill per dominio (vedi regola `sviluppa.mdc` sezione **2bis**): UI Toolkit, DEV REPORT, gameplay, piani `.cursor/plans/`.
 3. **HUD fissa vs pannelli macchina / inventario:** con modale macchinario o inventario aperto la HUD fissa è **nascosta** (`GameplayUiModalLock.HidesFixedHud`; macchinari → `SetMachineModalState`). Riferimento: `Assets/Docs/REPORT/DEV_REPORT_0093_FIX_HUD_VO_E_INVENTARIO_DEMO_2026-04-23.md`. Per task su questi pannelli: progetta e testa come se **non** ci fosse TopBar né altre strip HUD visibili contemporaneamente.
+4. **Tipografia UI Toolkit (vincolo SVILUPPA):** in nuovi pannelli o modifiche a `.uss` / UXML / stili da codice, **`font-size` minimo 10px** — mai 9px, 8px, 7px, ecc. Se trovi valori sotto 10 in file toccati dal task, correggi portandoli ad almeno 10 (o rivaluta gerarchia tipografica).
 
 ---
 
@@ -70,6 +71,7 @@ Esegui nell’ordine le fasi **1–11** descritte in `.cursor/rules/sviluppa.mdc
 
 ## Qualità (promemoria)
 
+- **Font UI Toolkit:** minimo **10px** (regola `sviluppa.mdc`, sez. 2bis + qualità).
 - Contratti pubblici stabili o breaking versionati.
 - Linter/CI; test happy path + edge; PR piccole.
 - Se mancano GitHub/Notion: analisi locale + assunti + TODO.

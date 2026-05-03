@@ -273,6 +273,9 @@ namespace Sporae.UI.UIToolkit.Lab
             if (!gameObject.activeInHierarchy)
                 return;
 
+            if (Input.GetKeyDown(KeyCode.Escape) && TryConsumeLabTerminalEscape())
+                return;
+
             if (_analysisRunning)
             {
                 float elapsed = Time.unscaledTime - _analysisStartTime;
@@ -320,6 +323,36 @@ namespace Sporae.UI.UIToolkit.Lab
                 _root.pickingMode = PickingMode.Ignore;
 
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Esc: durante analisi in corso annulla il flusso progetto; sulla scheda scelta tipo torna al board;
+        /// altrimenti chiude il terminale (stesso effetto del pulsante chiudi).
+        /// </summary>
+        private bool TryConsumeLabTerminalEscape()
+        {
+            if (_overlay == null || _overlay.style.display != DisplayStyle.Flex)
+                return false;
+
+            if (_analysisRunning)
+            {
+                CancelProjectTypeSelection();
+                return true;
+            }
+
+            if (_projectActive && _analysisCompleted && _analysisScreenOpen)
+            {
+                _analysisScreenOpen = false;
+                _selectedProjectType = SeedProjectType.None;
+                _analysisFocusedProjectType = SeedProjectType.None;
+                _initialProjectType = SeedProjectType.None;
+                _projectDirectionChangedMessage = string.Empty;
+                RefreshDisplay();
+                return true;
+            }
+
+            Hide();
+            return true;
         }
 
         private void TryBindUI()

@@ -206,7 +206,8 @@ namespace _Project
         public void Show()
         {
             _inventoryPage.SetActive(true);
-            
+            GameplayUiModalLock.SetBlockWorldInput(true);
+
             // Mostra background blocker se presente
             if (_backgroundBlocker != null)
             {
@@ -231,7 +232,8 @@ namespace _Project
         public void Hide()
         {
             _inventoryPage.SetActive(false);
-            
+            GameplayUiModalLock.SetBlockWorldInput(false);
+
             // Nascondi background blocker se presente
             if (_backgroundBlocker != null)
             {
