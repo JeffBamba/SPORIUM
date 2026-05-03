@@ -17,7 +17,7 @@ namespace Sporae.DevTools
         StageUp,
         ConditionImproved,
         SystemEnabled,
-        Mission,       // Missioni assegnate / completate — colore cyan mission recap #00FFC6
+        Mission,       // Nuova missione (recap) — colore cyan #00FFC6; completamento usa Success (verde)
         
         // Warning (Severity: 2)
         Warning,

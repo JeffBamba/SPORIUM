@@ -18,6 +18,10 @@ namespace _Project.Sporae.Core
         
         public bool Check()
         {
+            // Enumerable.All su sequenza vuota è true: senza obiettivi la missione non deve auto-completarsi.
+            if (_optionCheckers == null || _optionCheckers.Count == 0)
+                return false;
+
             return _optionCheckers.All(CheckOptions);
         }
         
@@ -26,6 +30,9 @@ namespace _Project.Sporae.Core
             Config = config;
             
             _checkers = ServiceContainer.Instance.Get<GoalCheckers>();
+
+            if (config.Goals == null)
+                return;
 
             foreach (var goal in config.Goals)
                 CreateOptionChecker(goal);
@@ -36,6 +43,12 @@ namespace _Project.Sporae.Core
             var optionChecker = new OptionChecker() {
                 Checkers = new()
             };
+
+            if (goal.Options == null)
+            {
+                _optionCheckers.Add(optionChecker);
+                return;
+            }
 
             foreach (var option in goal.Options)
             {
@@ -49,7 +62,11 @@ namespace _Project.Sporae.Core
         
         private bool CheckOptions(OptionChecker optionChecker)
         {
+            if (optionChecker.Checkers == null || optionChecker.Checkers.Count == 0)
+                return false;
+
             return optionChecker.Checkers
+                .Where(checker => checker != null)
                 .Select(checker => checker.Check())
                 .Any(result => result);
         }

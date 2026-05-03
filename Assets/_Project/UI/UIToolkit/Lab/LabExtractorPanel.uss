@@ -55,7 +55,7 @@
 }
 
 .lab-ext-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.85);
     margin-bottom: 12px;
     white-space: normal;
@@ -85,7 +85,7 @@
 
 .lab-ext-label {
     width: 90px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(192, 200, 197, 0.8);
 }
@@ -101,14 +101,14 @@
 }
 
 .lab-ext-slot-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
 }
 
 .lab-ext-btn {
     min-width: 80px;
     height: 32px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     border-width: 1px;
     border-color: rgba(93, 182, 227, 0.6);
@@ -140,7 +140,7 @@
 }
 
 .lab-ext-progress {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(127, 255, 122, 0.9);
     margin-bottom: 8px;
     -unity-text-align: middle-center;

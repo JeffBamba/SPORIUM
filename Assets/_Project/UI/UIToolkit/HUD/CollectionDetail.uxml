@@ -9,51 +9,51 @@
             <ui:VisualElement name="cdetail-icon" class="cdetail-icon cdetail-icon-box" />
             <ui:VisualElement name="cdetail-title-col" class="cdetail-title-col">
                 <ui:Label name="cdetail-name" text="ITEM NAME" class="cdetail-name" style="font-size: 13px;" />
-                <ui:Label name="cdetail-typeid" text="ITEM_TYPE_ID" class="cdetail-typeid" style="font-size: 11px;" />
+                <ui:Label name="cdetail-typeid" text="ITEM_TYPE_ID" class="cdetail-typeid" style="font-size: 13px;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-sep" class="cdetail-sep" />
         <ui:VisualElement name="cdetail-row-qty" class="cdetail-row">
-            <ui:Label text="Quantità" class="cdetail-key" style="font-size: 12px;" />
-            <ui:Label name="cdetail-qty" text="1" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Quantità" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-qty" text="1" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-room" class="cdetail-row">
-            <ui:Label text="Raccolta in" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-room" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Raccolta in" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-room" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-genetic" class="cdetail-row">
-            <ui:Label text="Tratti" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-genetic" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Tratti" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-genetic" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-mutate" class="cdetail-row">
-            <ui:Label text="% mutare" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-mutate" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="% mutare" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-mutate" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-stage" class="cdetail-row">
-            <ui:Label text="Stadio" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-stage" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Stadio" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-stage" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-family" class="cdetail-row">
-            <ui:Label text="Famiglia" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-family" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Famiglia" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-family" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-source" class="cdetail-row">
-            <ui:Label text="Origine" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-source" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Origine" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-source" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-quality" class="cdetail-row">
-            <ui:Label text="Qualità" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-quality" text="—" class="cdetail-value" style="font-size: 11px;" />
+            <ui:Label text="Qualità" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-quality" text="—" class="cdetail-value" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-active" class="cdetail-row">
-            <ui:Label text="Potere attivo" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-active" text="—" class="cdetail-value cdetail-value-wrap" style="font-size: 11px;" />
+            <ui:Label text="Potere attivo" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-active" text="—" class="cdetail-value cdetail-value-wrap" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-row-passive" class="cdetail-row">
-            <ui:Label text="Potere passivo" class="cdetail-key" style="font-size: 11px;" />
-            <ui:Label name="cdetail-val-passive" text="—" class="cdetail-value cdetail-value-wrap" style="font-size: 11px;" />
+            <ui:Label text="Potere passivo" class="cdetail-key" style="font-size: 13px;" />
+            <ui:Label name="cdetail-val-passive" text="—" class="cdetail-value cdetail-value-wrap" style="font-size: 13px;" />
         </ui:VisualElement>
         <ui:VisualElement name="cdetail-sep2" class="cdetail-sep" />
-        <ui:Label text="Tasto destro per chiudere" class="cdetail-hint" style="font-size: 11px;" />
+        <ui:Label text="Tasto destro per chiudere" class="cdetail-hint" style="font-size: 13px;" />
     </ui:VisualElement>
 </ui:UXML>

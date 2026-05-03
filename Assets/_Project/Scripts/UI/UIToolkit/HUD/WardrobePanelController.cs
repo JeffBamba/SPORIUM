@@ -18,7 +18,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private const string VisualTreeResourcePath = "UI/UIToolkit/Wardrobe/WardrobePanel";
         private const string PanelSettingsResourcePath = "UI/UIToolkit/MainMenu/MainMenuPanelSettings";
 
-        /// <summary>Sopra missioni/TopBar, sotto VO overlay (650).</summary>
+        /// <summary>Sopra missioni/TopBar, sotto VO overlay (1100).</summary>
         private const int SortingOrder = 500;
 
         private UIDocument _document;

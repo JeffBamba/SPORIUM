@@ -93,7 +93,7 @@
 }
 
 .pcv3-title {
-    font-size: 12px;
+    font-size: 13px;
     -unity-font-style: normal;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
@@ -124,7 +124,7 @@
 }
 
 .pcv3-pill-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 7px rgba(127, 255, 122, 0.9);
     -unity-text-outline-width: 0.6px;
@@ -132,7 +132,7 @@
 }
 
 .pcv3-close {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     background-color: rgba(0, 0, 0, 0);
     border-left-width: 0;
@@ -180,7 +180,7 @@
 }
 
 .pcv3-vital-title {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -241,7 +241,7 @@
 }
 
 .pcv3-hud-plant-name {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 0.5px;
@@ -286,7 +286,7 @@
 }
 
 .pcv3-hud-live-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(0, 255, 100);
     letter-spacing: 1px;
     -unity-font-style: bold;
@@ -304,7 +304,7 @@
 }
 
 .pcv3-hud-plant-code-level-row .pcv3-hud-plant-code {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
     margin-bottom: 0;
@@ -312,33 +312,33 @@
 }
 
 .pcv3-hud-plant-code-level-row .pcv3-hud-plant-level {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     margin-bottom: 0;
     margin-right: 8px;
 }
 
 .pcv3-hud-plant-code-level-row .pcv3-hud-plant-family {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     margin-bottom: 0;
 }
 
 .pcv3-hud-plant-code {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
     margin-bottom: 2px;
 }
 
 .pcv3-hud-plant-level {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     margin-bottom: 6px;
 }
 
 .pcv3-hud-plant-family {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     margin-bottom: 6px;
 }
@@ -356,7 +356,7 @@
 }
 
 .pcv3-hud-plant-oneliner {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.9);
     white-space: normal;
     -unity-text-align: center;
@@ -387,7 +387,7 @@
 }
 
 .pcv3-a9-title {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -395,7 +395,7 @@
 }
 
 .pcv3-a9-suggestions {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(245, 247, 250);
     white-space: normal;
     margin-bottom: 4px;
@@ -403,7 +403,7 @@
 }
 
 .pcv3-a9-commands-title {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -529,7 +529,7 @@
 }
 
 .pcv3-hud-pot-slot-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-text-align: middle-center;
     width: 100%;
@@ -630,7 +630,7 @@
 }
 
 .pcv3-potcard-headertext {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(20, 20, 20);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
@@ -659,14 +659,14 @@
 }
 
 .pcv3-potcard-title {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3-potcard-badge {
-    font-size: 11px;
+    font-size: 13px;
     padding-left: 6px;
     padding-right: 6px;
     padding-top: 3px;
@@ -764,7 +764,7 @@
 }
 
 .pcv3-potcard-desc {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(168, 213, 176);
     -unity-font-style: italic;
     letter-spacing: 0.5px;
@@ -786,14 +786,14 @@
 }
 
 .pcv3-potcard-stat-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
     width: 100px;
 }
 
 .pcv3-potcard-stat-value {
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.5px;
     color: rgb(127, 255, 122);
 }
@@ -807,13 +807,13 @@
 }
 
 .pcv3-potcard-standby {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(180, 180, 180, 0.7);
 }
 
 .pcv3-potcard-subtext {
     margin-top: 4px;
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(180, 180, 180, 0.45);
 }
 
@@ -836,7 +836,7 @@
     border-right-color: rgb(127, 255, 122);
     border-top-color: rgb(127, 255, 122);
     border-bottom-color: rgb(127, 255, 122);
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 1.1px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.5);
@@ -1190,7 +1190,7 @@
 }
 
 .pcv3-console-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(153, 255, 153);
     white-space: pre;
     -unity-text-align: upper-justified;
@@ -1198,7 +1198,7 @@
 
 .pcv3-detail-placeholder {
     padding: 14px;
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(230, 201, 111);
 }
 
@@ -1226,7 +1226,7 @@
 }
 
 .pcv3-detail-specimen-id {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.9px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
@@ -1249,12 +1249,12 @@
 }
 
 .pcv3-detail-phdrift-label {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(168, 213, 176);
 }
 
 .pcv3-detail-phdrift-value {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
 }
@@ -1269,7 +1269,7 @@
 }
 
 .pcv3-detail-species-level {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
@@ -1277,7 +1277,7 @@
 }
 
 .pcv3-detail-description {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(168, 213, 176);
     -unity-font-style: italic;
     letter-spacing: 0.5px;
@@ -1309,13 +1309,13 @@
 }
 
 .pcv3-detail-growth-rate {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
 
 .pcv3-detail-ph-current {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
@@ -1337,7 +1337,7 @@
 }
 
 .pcv3-detail-condition-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     -unity-text-align: middle-center;
@@ -1360,7 +1360,7 @@
 }
 
 .pcv3-detail-stage-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     text-shadow: 0 0 4px rgba(93, 182, 227, 0.6);
     -unity-text-align: middle-center;
@@ -1388,7 +1388,7 @@
 }
 
 .pcv3-detail-vitals-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 1px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
@@ -1403,7 +1403,7 @@
 }
 
 .pcv3-detail-live-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
 }
@@ -1422,13 +1422,13 @@
 }
 
 .pcv3-detail-param-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     letter-spacing: 0.5px;
 }
 
 .pcv3-detail-param-range {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(168, 213, 176);
     letter-spacing: 0.3px;
 }
@@ -1485,7 +1485,7 @@
 }
 
 .pcv3-detail-param-value {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
     letter-spacing: 0.5px;
@@ -1519,7 +1519,7 @@
 }
 
 .pcv3-detail-env-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(230, 201, 111);
     letter-spacing: 1px;
     text-shadow: 0 0 4px rgba(230, 201, 111, 0.6);
@@ -1541,7 +1541,7 @@
 }
 
 .pcv3-detail-env-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(230, 201, 111);
     letter-spacing: 0.5px;
 }
@@ -1579,7 +1579,7 @@
 }
 
 .pcv3-detail-research-title {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
@@ -1593,7 +1593,7 @@
 }
 
 .pcv3-detail-research-text {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(168, 213, 176);
     letter-spacing: 0.5px;
     line-height: 1.5;
@@ -1620,7 +1620,7 @@
 }
 
 .pcv3-detail-diary-title {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
@@ -1654,7 +1654,7 @@
     border-top-color: rgba(181, 128, 209, 0.6);
     border-bottom-color: rgba(181, 128, 209, 0.6);
     color: rgba(230, 230, 230, 0.9);
-    font-size: 11px;
+    font-size: 13px;
     -unity-text-align: middle-left;
 }
 
@@ -1706,14 +1706,14 @@
 .pcv3-detail-diary-row-prefix {
     width: 16px;
     color: rgba(181, 128, 209, 0.9);
-    font-size: 12px;
+    font-size: 13px;
     text-shadow: 0 0 4px rgba(181, 128, 209, 0.45);
 }
 
 .pcv3-detail-diary-row-text {
     flex-grow: 1;
     color: rgba(230, 230, 230, 0.85);
-    font-size: 11px;
+    font-size: 13px;
     white-space: normal;
     line-height: 1.4;
 }
@@ -1776,17 +1776,17 @@
 }
 
 .pcv3d-led {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
 }
 
 .pcv3d-specimen {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
 }
 
 .pcv3d-family {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     -unity-text-align: middle-right;
 }
@@ -1803,12 +1803,12 @@
 }
 
 .pcv3d-species-level {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(139, 168, 150);
 }
 
 .pcv3d-one-liner {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(168, 197, 176);
     -unity-font-style: italic;
     line-height: 1.5;
@@ -1833,7 +1833,7 @@
 }
 
 .pcv3d-line {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(200, 222, 208);
     white-space: nowrap;
 }
@@ -1859,7 +1859,7 @@
 
 .pcv3d-vital-label {
     width: 160px;
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(200, 222, 208);
     white-space: nowrap;
 }
@@ -1871,12 +1871,12 @@
 }
 
 .pcv3d-bar-bracket {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(200, 222, 208);
 }
 
 .pcv3d-bar-filled {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     text-shadow: 0 0 4px rgba(127, 255, 122, 0.6);
 }
@@ -1897,13 +1897,13 @@
 }
 
 .pcv3d-bar-empty {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(51, 51, 51);
 }
 
 .pcv3d-vital-value {
     width: 44px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-text-align: middle-right;
     white-space: nowrap;
 }
@@ -1953,7 +1953,7 @@
 }
 
 .pcv3d-block-title {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     letter-spacing: 0.8px;
     margin-bottom: 8px;
@@ -1965,7 +1965,7 @@
 }
 
 .pcv3d-block-text {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(168, 197, 176);
     white-space: normal;
     line-height: 1.5;
@@ -1993,7 +1993,7 @@
     color: rgb(200, 222, 208);
     padding-left: 10px;
     padding-right: 10px;
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .pcv3d-diary-log {
@@ -2031,13 +2031,13 @@
 .pcv3d-diary-prefix {
     width: 16px;
     color: rgb(181, 128, 209);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .pcv3d-diary-text {
     flex-grow: 1;
     color: rgb(200, 222, 208);
-    font-size: 11px;
+    font-size: 13px;
     white-space: normal;
     line-height: 1.4;
 }
@@ -2065,7 +2065,7 @@
 .pcv3-prompt-prefix {
     width: 16px;
     color: rgb(85, 217, 255);
-    font-size: 12px;
+    font-size: 13px;
     -unity-text-align: middle-left;
 }
 
@@ -2087,7 +2087,7 @@
     border-top-width: 0;
     border-bottom-width: 0;
     color: rgb(127, 255, 122);
-    font-size: 12px;
+    font-size: 13px;
     -unity-text-align: middle-left;
     white-space: nowrap;
     overflow: hidden;

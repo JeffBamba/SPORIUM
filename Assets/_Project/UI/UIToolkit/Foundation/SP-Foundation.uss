@@ -29,8 +29,10 @@
     --sp-radius-md: 10px;
     --sp-radius-lg: 14px;
     --sp-font-size-8: 8px;
-    --sp-font-size-10: 10px;
-    --sp-font-size-12: 12px;
+    --sp-font-size-9: 12px;
+    --sp-font-size-10: 13px;
+    --sp-font-size-11: 13px;
+    --sp-font-size-12: 13px;
     --sp-font-size-14: 14px;
     --sp-font-size-16: 16px;
     --sp-font-size-20: 20px;

@@ -12,7 +12,7 @@ namespace Sporae.UI.UIToolkit.HUD
 {
     /// <summary>
     /// Mission recap HUD (UI Toolkit): header collassabile, card missioni e tooltip contestuale.
-    /// Spec: 280px, verde ciano CRT, tooltip HoverCard a destra, sezioni OBJECTIVE/TASK/REWARD/DEADLINE.
+    /// Spec: larghezza pannello ~360px (USS), verde ciano CRT, tooltip HoverCard a destra, sezioni OBJECTIVE/TASK/REWARD/DEADLINE.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-38)]
@@ -144,6 +144,8 @@ namespace Sporae.UI.UIToolkit.HUD
             DemoBreakfastMission.ProgressChanged += OnDemoBreakfastProgressChanged;
             WardrobeMission.ProgressChanged += OnWardrobeMissionProgressChanged;
             DemoSeedStorageMission.ProgressChanged += OnDemoSeedStorageProgressChanged;
+            DemoPcAccessMission.ProgressChanged += OnDemoPcAccessProgressChanged;
+            DemoPcSeedPowerMission.ProgressChanged += OnDemoPcSeedPowerProgressChanged;
 
             ServiceContainer.Instance?.Register(this);
         }
@@ -206,6 +208,8 @@ namespace Sporae.UI.UIToolkit.HUD
             DemoBreakfastMission.ProgressChanged -= OnDemoBreakfastProgressChanged;
             WardrobeMission.ProgressChanged -= OnWardrobeMissionProgressChanged;
             DemoSeedStorageMission.ProgressChanged -= OnDemoSeedStorageProgressChanged;
+            DemoPcAccessMission.ProgressChanged -= OnDemoPcAccessProgressChanged;
+            DemoPcSeedPowerMission.ProgressChanged -= OnDemoPcSeedPowerProgressChanged;
 
             if (_filterActiveButton != null)
                 _filterActiveButton.UnregisterCallback<ClickEvent>(HandleFilterActiveClicked);
@@ -277,6 +281,16 @@ namespace Sporae.UI.UIToolkit.HUD
             HandleMissionsChanged();
         }
 
+        private void OnDemoPcAccessProgressChanged()
+        {
+            HandleMissionsChanged();
+        }
+
+        private void OnDemoPcSeedPowerProgressChanged()
+        {
+            HandleMissionsChanged();
+        }
+
         private void HandleMissionAdded(MissionChecker mission)
         {
             if (mission?.Config == null)
@@ -318,7 +332,7 @@ namespace Sporae.UI.UIToolkit.HUD
             var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
             if (toastManager != null)
             {
-                toastManager.ShowMission(LocalizationManager.GetString("missions.toast.done", new Dictionary<string, string> { { "title", title } }), "MIS-DONE");
+                toastManager.ShowSuccess(LocalizationManager.GetString("missions.toast.done", new Dictionary<string, string> { { "title", title } }), "MIS-DONE");
             }
             else
             {
@@ -336,7 +350,9 @@ namespace Sporae.UI.UIToolkit.HUD
             var demoSession = ServiceContainer.Instance?.Get<DemoSessionState>(suppressWarning: true);
             bool skipGenericCompletionVo = demoSession != null && demoSession.IsDemo
                 && (DemoBreakfastMission.IsDemoBreakfastConfig(mission.Config)
-                    || DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config));
+                    || DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config)
+                    || DemoPcAccessMission.IsDemoPcAccessConfig(mission.Config)
+                    || DemoPcSeedPowerMission.IsDemoPcSeedPowerConfig(mission.Config));
 
             var vo = ServiceContainer.Instance?.Get<VoOverlayController>(suppressWarning: true);
             if (vo != null && !skipGenericCompletionVo)
@@ -539,19 +555,16 @@ namespace Sporae.UI.UIToolkit.HUD
                 .ToList();
             SyncMissionMeta(allKnownMissions);
 
+            // Titolo breve "MISSIONI": la modalità attive/completate è sui pulsanti filtro (niente ripetizione nel titolo).
+            string headerTitle = LocalizationManager.GetString("missions.panel.active");
             if (_countLabel != null)
             {
-                _titleLabel.text = _filterMode == MissionFilterMode.Completed
-                    ? LocalizationManager.GetString("missions.panel.completed")
-                    : LocalizationManager.GetString("missions.panel.active");
+                _titleLabel.text = headerTitle;
                 _countLabel.text = $"[{missionRows.Count}]";
             }
             else
             {
-                string title = _filterMode == MissionFilterMode.Completed
-                    ? LocalizationManager.GetString("missions.panel.completed")
-                    : LocalizationManager.GetString("missions.panel.active");
-                _titleLabel.text = $"{title} [{missionRows.Count}]";
+                _titleLabel.text = $"{headerTitle} [{missionRows.Count}]";
             }
 
             RebuildList(missionRows);
@@ -926,7 +939,9 @@ namespace Sporae.UI.UIToolkit.HUD
         private MissionFaction GuessFaction(MissionConfig cfg)
         {
             if (cfg != null && (WardrobeMission.IsDemoWardrobeConfig(cfg) || DemoBreakfastMission.IsDemoBreakfastConfig(cfg) ||
-                                DemoSeedStorageMission.IsDemoSeedStorageConfig(cfg)))
+                                DemoSeedStorageMission.IsDemoSeedStorageConfig(cfg) ||
+                                DemoPcAccessMission.IsDemoPcAccessConfig(cfg) ||
+                                DemoPcSeedPowerMission.IsDemoPcSeedPowerConfig(cfg)))
                 return MissionFaction.Routine;
 
             string key = $"{cfg?.Title} {cfg?.Description}".ToLowerInvariant();
@@ -993,6 +1008,18 @@ namespace Sporae.UI.UIToolkit.HUD
             if (mission?.Config != null && DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config))
             {
                 float p = DemoSeedStorageMission.GetObjectiveProgress01(mission.Config);
+                if (p >= 0f)
+                    return Mathf.Clamp01(p);
+            }
+            if (mission?.Config != null && DemoPcAccessMission.IsDemoPcAccessConfig(mission.Config))
+            {
+                float p = DemoPcAccessMission.GetObjectiveProgress01(mission.Config);
+                if (p >= 0f)
+                    return Mathf.Clamp01(p);
+            }
+            if (mission?.Config != null && DemoPcSeedPowerMission.IsDemoPcSeedPowerConfig(mission.Config))
+            {
+                float p = DemoPcSeedPowerMission.GetObjectiveProgress01(mission.Config);
                 if (p >= 0f)
                     return Mathf.Clamp01(p);
             }

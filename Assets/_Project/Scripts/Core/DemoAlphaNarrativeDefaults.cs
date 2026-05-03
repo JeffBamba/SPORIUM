@@ -100,18 +100,17 @@ namespace _Project.Sporae.Core
             "CONTENUTO PERSO. Qualcuno ha spento il sistema troppo a lungo.";
 
         public const string Beat3SeedStorageAnomalyPowerOnRequestLine =
-            "Riaccendi subito il Seed Storage. Se lo lasci morto, qui dentro resta solo scarto.";
+            "Chiudi questo pannello adesso: qui dentro e' solo allarme e promemoria, non il posto dove rimetti ordine.";
 
         public const string Beat3SeedStorageCryHoverRequestLine =
-            "Quello che hai visto qui dentro ha un costo, e la parte peggiore è che non ricordi nemmeno di averlo causato.\n" +
-            "Chiudi il pannello e passa il mouse sul box CRY in basso a sinistra: ti faccio vedere i costi fissi di mantenimento.";
+            "Quello che hai visto ha un costo giornaliero in CRY: mantenimento, macchine accese, niente sconti di coscienza.\n" +
+            "Ti arriva una nuova missione: «Accedi al PC». Scendi in Camera da letto, apri il terminale sul tavolo e il Pannello di controllo remoto.";
 
         public const string Beat3CryTooltipCostsExplainLine =
-            "Quello nel box CRY e' il conto che corre ogni giorno: energia minima, supporti vitali e macchine attive.\n" +
-            "Questi sono costi fissi: li paghi anche quando non produci nulla.";
+            "Ogni riga e' un contratto semplice: acceso paghi CRY e ottieni la funzione; spento risparmi e rinunci al servizio.\n" +
+            "Il totale in basso somma solo cio' che lasci in marcia: meccanica sporca, ma chiara.";
 
         public const string Beat3CryTooltipIncomeExplainLine =
-            "Per sostenere la Dome devi far entrare CRY: completa missioni, vendi ai mercanti, tratta nel black market e usa il trading per trasformare eccedenze in margine.\n" +
-            "Se tieni in equilibrio entrate e mantenimento, resti operativo.";
+            "Nuova missione: «Accendi il Seed Storage». Dalla riga del deposito porta ACCESO se serve, poi esci dal PC: la routine si chiude quando lo schermo torna buio.";
     }
 }

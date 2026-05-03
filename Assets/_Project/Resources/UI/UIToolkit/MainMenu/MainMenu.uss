@@ -71,7 +71,7 @@
 
 #brand-build-line {
     color: rgba(127, 255, 122, 0.75);
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1.3px;
     margin-top: 2px;
 }
@@ -111,7 +111,7 @@
 
 .menu-action-icon-placeholder-text {
     color: rgba(231, 244, 255, 0.75);
-    font-size: 10px;
+    font-size: 13px;
 }
 
 .menu-action-label {
@@ -137,7 +137,7 @@
 
 .menu-action-index-label {
     color: rgba(231, 244, 255, 0.8);
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .menu-action--green {
@@ -252,7 +252,7 @@
 
 #settings-icon-placeholder-text {
     color: rgba(230, 201, 111, 0.95);
-    font-size: 10px;
+    font-size: 13px;
 }
 
 #footer-left {
@@ -263,13 +263,13 @@
 
 #footer-terminal-id {
     color: rgba(93, 182, 227, 0.88);
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
 }
 
 #footer-station {
     color: rgba(93, 182, 227, 0.78);
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     margin-top: 2px;
 }
@@ -294,7 +294,7 @@
 
 #footer-live-text {
     color: rgba(127, 255, 122, 0.9);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1.1px;
 }
 
@@ -416,7 +416,7 @@
 
 .save-slots-subtitle {
     color: rgba(93, 182, 227, 0.88);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
 }
 
@@ -556,7 +556,7 @@
 
 .options-subtitle {
     color: rgba(93, 182, 227, 0.88);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
 }
 
@@ -615,7 +615,7 @@
 
 .options-row-desc {
     color: rgba(166, 199, 217, 0.86);
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
 }
 

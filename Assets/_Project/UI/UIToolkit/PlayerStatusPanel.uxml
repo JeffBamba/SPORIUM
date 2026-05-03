@@ -9,7 +9,7 @@
         <ui:VisualElement name="scanlines-overlay" class="scanlines-overlay" style="position: absolute; height: 250px; width: 217px;" />
         <ui:VisualElement name="top-section" class="top-section">
             <ui:VisualElement name="biologo-portrait" class="portrait-image" style="min-width: 55px; min-height: 60px; height: 60px; width: 55px; background-image: url(&quot;project://database/Assets/_Project/Art/player_preview.png?fileID=2800000&amp;guid=12c2939bb3cd7ad42a3ffd0223d1182d&amp;type=3#player_preview&quot;); -unity-background-scale-mode: scale-and-crop; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
-            <ui:Label name="header-label" text="BIOLOGO" class="header-label" style="left: 1px; top: -6px; font-size: 11px; color: rgb(122, 199, 255);" />
+            <ui:Label name="header-label" text="BIOLOGO" class="header-label" style="left: 1px; top: -6px; font-size: 13px; color: rgb(122, 199, 255);" />
             <ui:Label name="header-label" text="STATUS" class="header-label" style="left: -69px; top: 7px; width: 51px; color: rgb(227, 244, 255); -unity-font-style: bold; font-size: 14px; margin-right: 19px;" />
         </ui:VisualElement>
         <ui:Button name="reputation-btn" text="REP" class="header-button" style="width: 30px; top: -63px; right: -122px; min-width: auto; height: 30px; left: 138px; border-left-color: rgb(227, 209, 93); border-right-color: rgb(227, 209, 93); border-top-color: rgb(227, 209, 93); border-bottom-color: rgb(227, 209, 93); color: rgb(227, 209, 94); margin-left: 11px;" />
@@ -17,9 +17,9 @@
             <ui:VisualElement name="hydration-bar-header" class="stat-bar-header">
                 <ui:VisualElement name="hydration-header-left" class="stat-header-left">
                     <ui:VisualElement name="hydration-box-icon" picking-mode="Ignore" class="hydration-box-icon" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/Icone%20ITEMS%20&amp;%20Actions/Icona%20Condenza_sil.png?fileID=2800000&amp;guid=b53d0a1fe4e7701428546650dca34697&amp;type=3#Icona Condenza_sil&quot;); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; background-color: rgba(149, 184, 226, 0);" />
-                    <ui:Label name="hydration-label" text="IDRATAZIONE" class="stat-label" style="right: 6px; color: rgb(149, 184, 226); font-size: 12px;" />
+                    <ui:Label name="hydration-label" text="IDRATAZIONE" class="stat-label" style="right: 6px; color: rgb(149, 184, 226); font-size: 13px;" />
                 </ui:VisualElement>
-                <ui:Label name="hydration-value" text="30%" class="stat-value" style="font-size: 12px;" />
+                <ui:Label name="hydration-value" text="30%" class="stat-value" style="font-size: 13px;" />
             </ui:VisualElement>
             <ui:VisualElement name="segmented-bar" class="stat-bar segmented-bar">
                 <ui:VisualElement name="hydration-segment-0" class="bar-segment" />
@@ -38,7 +38,7 @@
         </ui:VisualElement>
         <ui:Button name="diary-btn" class="diary-button" style="white-space: nowrap; text-overflow: ellipsis; top: -31px; border-left-color: rgb(183, 148, 246); border-right-color: rgb(183, 148, 246); border-top-color: rgb(183, 148, 246); border-bottom-color: rgb(183, 148, 246);">
             <ui:VisualElement name="diary-icon" class="diary-icon" style="left: -38px; background-color: rgb(183, 148, 246);" />
-            <ui:Label name="diary-label" text="Diario SPORAE" class="diary-label" style="white-space: nowrap; -unity-text-align: middle-left; left: -42px; color: rgb(183, 148, 246); font-size: 12px;" />
+            <ui:Label name="diary-label" text="Diario SPORAE" class="diary-label" style="white-space: nowrap; -unity-text-align: middle-left; left: -42px; color: rgb(183, 148, 246); font-size: 13px;" />
         </ui:Button>
         <ui:Button name="inventory-btn" text="INV" class="header-button" style="width: 30px; top: 21px; right: 10px; min-width: auto; height: 30px; left: 186px; position: absolute; color: rgb(68, 208, 65); border-left-color: rgb(69, 209, 65); border-right-color: rgb(69, 209, 65); border-top-color: rgb(69, 209, 65); border-bottom-color: rgb(69, 209, 65); background-image: none; margin-left: 11px;" />
     </ui:VisualElement>

@@ -76,7 +76,7 @@
 }
 
 .nf-header-title {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: var(--sp-color-blue-info);
     unity-font-style: bold;
@@ -108,7 +108,7 @@
 }
 
 .nf-badge-text {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--sp-color-blue-info);
 }
 
@@ -189,7 +189,7 @@
 }
 
 .nf-row-code {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: var(--sp-color-blue-info);
 }
@@ -606,7 +606,7 @@
 }
 
 .nf-row-item-title {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: var(--sp-color-green-led);
     unity-font-style: bold;
@@ -666,7 +666,7 @@
 }
 
 .nf-row-room {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--sp-color-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;

@@ -179,7 +179,7 @@ namespace _Project.UI.UIToolkit.MainMenu
             _document = uiGo.GetComponent<UIDocument>();
             _document.panelSettings = panelSettings;
             _document.visualTreeAsset = vta;
-            // Sopra TopBar/CompactBottomBar (200), Foundation (150), DomeStatus (55), PlantCard terminal (600); sotto EoD (2500) e modali full (es. 1000).
+            // Sopra TopBar/CompactBottomBar (200), Foundation (150), DomeStatus (55), PlantCard terminal (600); sotto modali macchina (1000), VO narrativa (1100) e EoD (2500).
             _document.sortingOrder = 700;
 
             _root = _document.rootVisualElement;

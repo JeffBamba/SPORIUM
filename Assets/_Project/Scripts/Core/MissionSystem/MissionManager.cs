@@ -55,6 +55,19 @@ namespace _Project.Sporae.Core
             OnMissionsChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Rimuove la missione da attive e completate (solo recovery/demo; es. stato incoerente tra save e flag).
+        /// </summary>
+        public void RemoveMissionEverywhere(MissionConfig config)
+        {
+            if (config == null)
+                return;
+            int n1 = _currentMissions.RemoveAll(m => m != null && m.Config == config);
+            int n2 = _completedMissions.RemoveAll(m => m != null && m.Config == config);
+            if (n1 > 0 || n2 > 0)
+                OnMissionsChanged?.Invoke();
+        }
+
         /// <summary>Svuota la lista missioni (per restore da save).</summary>
         public void Clear()
         {

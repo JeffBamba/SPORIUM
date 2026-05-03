@@ -103,7 +103,7 @@
     border-top-right-radius: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -122,7 +122,7 @@
 }
 
 .dome-tab-btn__label {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
     -unity-font-style: bold;
     -unity-text-align: middle-left;
@@ -309,7 +309,7 @@
 }
 
 .dome-pot-chevron {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(105, 130, 120);
     -unity-text-align: middle-center;
     width: 12px;
@@ -330,7 +330,7 @@
 }
 
 .dome-pot-badge {
-    font-size: 10px;
+    font-size: 13px;
     -unity-font-style: bold;
     letter-spacing: 1px;
     -unity-text-align: middle-center;
@@ -460,12 +460,12 @@
 .dome-pot-card--empty .dome-pot-name {
     color: rgb(70, 95, 110);
     -unity-font-style: normal;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
 }
 
 .dome-pot-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(200, 205, 203);
     overflow: hidden;
     white-space: nowrap;
@@ -474,7 +474,7 @@
 }
 
 .dome-pot-card--empty .dome-pot-sub {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(65, 88, 100);
     letter-spacing: 1px;
 }
@@ -501,7 +501,7 @@
 }
 
 .dome-pot-cond {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     white-space: nowrap;
     -unity-font-style: bold;
@@ -524,7 +524,7 @@
 }
 
 .dome-pot-indicator {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     -unity-text-align: middle-center;
     width: 14px;
@@ -633,7 +633,7 @@
 }
 
 .dome-pot-stat-label {
-    font-size: 10px;
+    font-size: 13px;
     -unity-font-style: bold;
     letter-spacing: 0;
     white-space: normal;
@@ -644,7 +644,7 @@
 }
 
 .dome-pot-stat-value {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -652,7 +652,7 @@
 }
 
 .dome-pot-ph-line {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(105, 130, 120);
     letter-spacing: 1px;
     margin-bottom: 3px;
@@ -660,7 +660,7 @@
 }
 
 .dome-pot-footer {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(85, 110, 100);
     letter-spacing: 1px;
     white-space: normal;
@@ -683,7 +683,7 @@
 }
 
 .dome-cryo-id {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     -unity-font-style: bold;
     width: 58px;
@@ -708,7 +708,7 @@
 }
 
 .dome-cryo-detail {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     overflow: hidden;
     white-space: nowrap;
@@ -772,7 +772,7 @@
 }
 
 .dome-hud-builder-ph-label {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(199, 202, 199);
     margin-top: 0;
     margin-bottom: 0;
@@ -782,7 +782,7 @@
 }
 
 .dome-hud-builder-ph-value {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(204, 204, 204);
     white-space: normal;
     margin: 0;
@@ -790,7 +790,7 @@
 }
 
 .dome-hud-builder-ph-caption {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(136, 136, 136);
     margin-top: 2px;
     white-space: normal;
@@ -820,7 +820,7 @@
 }
 
 .dome-hud-builder-ph-box-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(200, 203, 200);
     -unity-font-style: bold;
     margin-bottom: 2px;
@@ -831,7 +831,7 @@
 }
 
 .dome-hud-builder-ph-line {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     margin-left: 15px;
     margin-bottom: 2px;
@@ -842,7 +842,7 @@
 }
 
 .dome-hud-builder-ph-line-bold {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(199, 202, 199);
     -unity-font-style: bold;
     margin-left: 15px;
@@ -853,7 +853,7 @@
 }
 
 .dome-hud-builder-ph-drift-value {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     margin: 0;
@@ -880,7 +880,7 @@
 }
 
 .dome-hud-builder-ph-cyan-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(80, 200, 220);
     -unity-font-style: bold;
     margin-bottom: 2px;
@@ -891,7 +891,7 @@
 }
 
 .dome-hud-builder-ph-line-cyan {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(180, 210, 215);
     margin-left: 15px;
     white-space: normal;
@@ -916,7 +916,7 @@
 }
 
 .dome-hud-builder-ph-tip-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(218, 179, 108);
     -unity-font-style: bold;
     margin-bottom: 2px;
@@ -927,7 +927,7 @@
 }
 
 .dome-hud-builder-ph-tip-body {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(218, 179, 108);
     white-space: normal;
     margin: 0;
@@ -998,7 +998,7 @@
 }
 
 .dome-hud-tooltip-line--subtitle {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(136, 136, 136);
     letter-spacing: 1px;
     margin-bottom: 6px;
@@ -1014,7 +1014,7 @@
 }
 
 .dome-hud-tooltip-line--section {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     margin-top: 2px;
     margin-bottom: 4px;
@@ -1023,14 +1023,14 @@
 }
 
 .dome-hud-tooltip-line--kv {
-    font-size: 11px;
+    font-size: 13px;
     margin-left: 15px;
     margin-bottom: 2px;
     padding-left: 0;
 }
 
 .dome-hud-tooltip-line {
-    font-size: 12px;
+    font-size: 13px;
     white-space: normal;
     margin-bottom: 2px;
 }
@@ -1040,7 +1040,7 @@
 }
 
 .dome-hud-tooltip-line--poteri-h {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     margin-top: 6px;
     margin-bottom: 4px;
@@ -1049,7 +1049,7 @@
 }
 
 .dome-hud-tooltip-line--subiti-h {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     margin-top: 6px;
     margin-bottom: 4px;
@@ -1124,7 +1124,7 @@
 }
 
 .dome-hud-builder-hint {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(90, 115, 105);
     letter-spacing: 1px;
     white-space: normal;

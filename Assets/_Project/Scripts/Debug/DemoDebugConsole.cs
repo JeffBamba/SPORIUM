@@ -53,8 +53,6 @@ namespace Sporae.DevTools
             _director = ServiceContainer.Instance?.Get<DemoStoryDirector>(suppressWarning: true);
             _missionManager = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
             _flags = ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true);
-            if (_director == null)
-                _director = FindFirstObjectByType<DemoStoryDirector>();
         }
 
         private void OnGUI()
@@ -77,7 +75,7 @@ namespace Sporae.DevTools
 
             if (isDemo && _director != null)
             {
-                GUILayout.Label("Jump rapido a beat/milestone:");
+                GUILayout.Label("Jump rapido a beat/milestone (interrompe subito VO e narrativa del beat attuale):");
                 foreach (var row in _checkpoints)
                 {
                     if (GUILayout.Button(row.label, GUILayout.Height(28f)))
@@ -124,7 +122,17 @@ namespace Sporae.DevTools
             else if (DemoSeedStorageMission.IsDemoSeedStorageConfig(mission.Config))
             {
                 _flags.SetFlag(DemoSeedStorageMission.DemoSeedStorageFlagKey);
-                DemoSeedStorageMission.NotifyRecoveredAndPanelClosed();
+                DemoSeedStorageMission.NotifySeedStoragePanelClosed();
+            }
+            else if (DemoPcAccessMission.IsDemoPcAccessConfig(mission.Config))
+            {
+                _flags.SetFlag(DemoPcAccessMission.DemoPcAccessFlagKey);
+                DemoPcAccessMission.NotifyControlPanelOpened();
+            }
+            else if (DemoPcSeedPowerMission.IsDemoPcSeedPowerConfig(mission.Config))
+            {
+                _flags.SetFlag(DemoPcSeedPowerMission.DemoPcSeedPowerFlagKey);
+                DemoPcSeedPowerMission.NotifySeedPowerRoutineComplete();
             }
 
             _missionManager.Check();
@@ -138,8 +146,12 @@ namespace Sporae.DevTools
             _flags.ClearFlag(WardrobeMission.DemoWardrobeFlagKey);
             _flags.ClearFlag(DemoBreakfastMission.DemoBreakfastCompletedFlagKey);
             _flags.ClearFlag(DemoSeedStorageMission.DemoSeedStorageFlagKey);
+            _flags.ClearFlag(DemoPcAccessMission.DemoPcAccessFlagKey);
+            _flags.ClearFlag(DemoPcSeedPowerMission.DemoPcSeedPowerFlagKey);
             WardrobeMission.RestoreProgressState(false);
             DemoSeedStorageMission.RestoreProgressState(false);
+            DemoPcAccessMission.RestoreProgressState(false);
+            DemoPcSeedPowerMission.RestoreProgressState(false);
         }
     }
 }

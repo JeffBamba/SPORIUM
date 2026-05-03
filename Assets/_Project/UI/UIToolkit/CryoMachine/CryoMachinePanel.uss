@@ -44,7 +44,7 @@
 }
 
 .cryo-subtitle {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(0, 180, 200, 0.65);
     letter-spacing: 1px;
 }
@@ -76,7 +76,7 @@
 /* ── DESCRIPTION ─────────────────────────────────────────────────────────── */
 
 .cryo-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(160, 200, 210, 0.6);
     white-space: normal;
     padding: 10px 16px 8px 16px;
@@ -117,7 +117,7 @@
 }
 
 .cryo-slot-id {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(0, 190, 220);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -126,7 +126,7 @@
 /* ── BADGE ───────────────────────────────────────────────────────────────── */
 
 .cryo-badge {
-    font-size: 9px;
+    font-size: 12px;
     -unity-font-style: bold;
     padding: 2px 5px;
     border-radius: 2px;
@@ -156,7 +156,7 @@
 }
 
 .cryo-slot-empty-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(100, 140, 160, 0.55);
     -unity-font-style: italic;
     -unity-text-align: middle-center;
@@ -169,27 +169,27 @@
 }
 
 .cryo-info-level {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(240, 240, 100);
     -unity-font-style: bold;
     margin-bottom: 2px;
 }
 
 .cryo-info-family {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(180, 220, 230, 0.7);
     margin-bottom: 6px;
 }
 
 .cryo-power-label {
-    font-size: 9px;
+    font-size: 12px;
     color: rgba(0, 180, 210, 0.55);
     letter-spacing: 0.8px;
     margin-bottom: 3px;
 }
 
 .cryo-info-power {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(120, 220, 200, 0.9);
     white-space: normal;
 }
@@ -197,7 +197,7 @@
 /* ── FOOTER ──────────────────────────────────────────────────────────────── */
 
 .cryo-footer {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(0, 160, 190, 0.5);
     -unity-text-align: middle-center;
     padding: 8px 16px 12px 16px;

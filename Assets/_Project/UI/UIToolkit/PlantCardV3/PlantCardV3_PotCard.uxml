@@ -2,8 +2,8 @@
     <Style src="project://database/Assets/_Project/UI/UIToolkit/PlantCardV3/PlantCardV3_Terminal.uss?fileID=7433441132597879392&amp;guid=b37f4bda32a0604459559f294aa66d24&amp;type=3#PlantCardV3_Terminal" />
     <ui:VisualElement name="pcv3-potcard" class="pcv3-potcard" style="width: 400px; height: 271px;">
         <ui:VisualElement name="pcv3-potcard-topbar" class="pcv3-potcard-topbar" style="height: 26px; background-color: rgb(127, 255, 122);">
-            <ui:Label name="pcv3-potcard-title" text="POT-001 -- ARCTIC MASK" class="pcv3-potcard-title" style="-unity-text-align: middle-left; font-size: 10px; color: rgb(0, 0, 0);" />
-            <ui:Label name="pcv3-potcard-badge" text="PURE-001" class="pcv3-potcard-badge" style="-unity-text-align: middle-left; font-size: 10px; color: rgb(0, 0, 0);" />
+            <ui:Label name="pcv3-potcard-title" text="POT-001 -- ARCTIC MASK" class="pcv3-potcard-title" style="-unity-text-align: middle-left; font-size: 13px; color: rgb(0, 0, 0);" />
+            <ui:Label name="pcv3-potcard-badge" text="PURE-001" class="pcv3-potcard-badge" style="-unity-text-align: middle-left; font-size: 13px; color: rgb(0, 0, 0);" />
         </ui:VisualElement>
         <ui:VisualElement name="pcv3-potcard-content" class="pcv3-potcard-content">
             <ui:VisualElement name="pcv3-potcard-plantbox" class="pcv3-potcard-plantbox" style="width: 140px; border-left-color: rgba(127, 255, 122, 0); border-right-color: rgba(127, 255, 122, 0); border-top-color: rgba(127, 255, 122, 0); border-bottom-color: rgba(127, 255, 122, 0); border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px;">

@@ -48,8 +48,8 @@ namespace _Project.Sporae.Core
     }
 
     /// <summary>
-    /// Missione demo «Vai al Seed Storage»: completata quando il player
-    /// riaccende il Seed Storage e chiude il pannello.
+    /// Missione demo «Vai al Seed Storage»: completata alla chiusura del pannello
+    /// Seed Storage dopo la sequenza beat 3 in stanza (VO + visita).
     /// </summary>
     public static class DemoSeedStorageMission
     {
@@ -58,7 +58,7 @@ namespace _Project.Sporae.Core
 
         public static event Action ProgressChanged;
 
-        private static bool _seedStorageRecoveredAndClosed;
+        private static bool _seedStoragePanelClosedDone;
 
         public static bool HasActiveDemoSeedStorageMission(MissionManager missionManager)
         {
@@ -80,27 +80,27 @@ namespace _Project.Sporae.Core
         /// </summary>
         public static void NotifyEnteredStorageRoom()
         {
-            // Intenzionalmente no-op: il completamento ora avviene su
-            // Seed Storage ON + chiusura pannello (flow beat 3 aggiornato).
         }
 
         /// <summary>
-        /// Completa la missione demo Seed Storage quando il player ha riacceso
-        /// il sistema e ha chiuso il panel.
+        /// Completa la missione demo Seed Storage quando il player chiude il pannello Seed Storage.
         /// </summary>
-        public static void NotifyRecoveredAndPanelClosed()
+        public static void NotifySeedStoragePanelClosed()
         {
             var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
             if (mm == null || !HasActiveDemoSeedStorageMission(mm))
                 return;
-            if (_seedStorageRecoveredAndClosed)
+            if (_seedStoragePanelClosedDone)
                 return;
 
-            _seedStorageRecoveredAndClosed = true;
+            _seedStoragePanelClosedDone = true;
             ProgressChanged?.Invoke();
             ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true)
                 ?.SetFlag(DemoSeedStorageFlagKey);
         }
+
+        /// <inheritdoc cref="NotifySeedStoragePanelClosed"/>
+        public static void NotifyRecoveredAndPanelClosed() => NotifySeedStoragePanelClosed();
 
         public static bool IsDemoSeedStorageConfig(MissionConfig cfg) =>
             cfg != null && string.Equals(cfg.name, DemoSeedStorageMissionConfigName, StringComparison.Ordinal);
@@ -109,12 +109,124 @@ namespace _Project.Sporae.Core
         {
             if (!IsDemoSeedStorageConfig(cfg))
                 return -1f;
-            return _seedStorageRecoveredAndClosed ? 1f : 0f;
+            return _seedStoragePanelClosedDone ? 1f : 0f;
         }
 
         public static void RestoreProgressState(bool completed)
         {
-            _seedStorageRecoveredAndClosed = completed;
+            _seedStoragePanelClosedDone = completed;
+            ProgressChanged?.Invoke();
+        }
+    }
+
+    /// <summary>Missione demo «Accedi al PC»: completata aprendo il pannello di controllo sul PC in Camera.</summary>
+    public static class DemoPcAccessMission
+    {
+        public const string DemoPcAccessFlagKey = "demo_pc_access_done";
+        public const string DemoPcAccessMissionConfigName = "M_Demo_PcAccess";
+
+        public static event Action ProgressChanged;
+
+        private static bool _controlPanelReached;
+
+        public static bool HasActive(MissionManager missionManager)
+        {
+            if (missionManager?.CurrentMissions == null)
+                return false;
+            foreach (var m in missionManager.CurrentMissions)
+            {
+                if (m?.Config == null || m.IsCompleted)
+                    continue;
+                if (IsDemoPcAccessConfig(m.Config))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static void NotifyControlPanelOpened()
+        {
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            if (mm == null || !HasActive(mm))
+                return;
+            if (_controlPanelReached)
+                return;
+
+            _controlPanelReached = true;
+            ProgressChanged?.Invoke();
+            ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true)
+                ?.SetFlag(DemoPcAccessFlagKey);
+        }
+
+        public static bool IsDemoPcAccessConfig(MissionConfig cfg) =>
+            cfg != null && string.Equals(cfg.name, DemoPcAccessMissionConfigName, StringComparison.Ordinal);
+
+        public static float GetObjectiveProgress01(MissionConfig cfg)
+        {
+            if (!IsDemoPcAccessConfig(cfg))
+                return -1f;
+            return _controlPanelReached ? 1f : 0f;
+        }
+
+        public static void RestoreProgressState(bool completed)
+        {
+            _controlPanelReached = completed;
+            ProgressChanged?.Invoke();
+        }
+    }
+
+    /// <summary>Missione demo «Accendi il Seed Storage»: completata uscendo dal PC dopo l'accensione da pannello di controllo.</summary>
+    public static class DemoPcSeedPowerMission
+    {
+        public const string DemoPcSeedPowerFlagKey = "demo_pc_seed_power_done";
+        public const string DemoPcSeedPowerMissionConfigName = "M_Demo_PcSeedPower";
+
+        public static event Action ProgressChanged;
+
+        private static bool _routineDone;
+
+        public static bool HasActive(MissionManager missionManager)
+        {
+            if (missionManager?.CurrentMissions == null)
+                return false;
+            foreach (var m in missionManager.CurrentMissions)
+            {
+                if (m?.Config == null || m.IsCompleted)
+                    continue;
+                if (IsDemoPcSeedPowerConfig(m.Config))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static void NotifySeedPowerRoutineComplete()
+        {
+            var mm = ServiceContainer.Instance?.Get<MissionManager>(suppressWarning: true);
+            if (mm == null || !HasActive(mm))
+                return;
+            if (_routineDone)
+                return;
+
+            _routineDone = true;
+            ProgressChanged?.Invoke();
+            ServiceContainer.Instance?.Get<MissionFlagTracker>(suppressWarning: true)
+                ?.SetFlag(DemoPcSeedPowerFlagKey);
+        }
+
+        public static bool IsDemoPcSeedPowerConfig(MissionConfig cfg) =>
+            cfg != null && string.Equals(cfg.name, DemoPcSeedPowerMissionConfigName, StringComparison.Ordinal);
+
+        public static float GetObjectiveProgress01(MissionConfig cfg)
+        {
+            if (!IsDemoPcSeedPowerConfig(cfg))
+                return -1f;
+            return _routineDone ? 1f : 0f;
+        }
+
+        public static void RestoreProgressState(bool completed)
+        {
+            _routineDone = completed;
             ProgressChanged?.Invoke();
         }
     }

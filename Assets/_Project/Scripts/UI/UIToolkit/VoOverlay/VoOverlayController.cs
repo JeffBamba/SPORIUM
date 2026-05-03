@@ -116,7 +116,11 @@ namespace _Project.UI.UIToolkit.VoOverlay
         private const string VisualTreeResourcePath = "UI/UIToolkit/VoOverlay/VoOverlay";
         private const string PanelSettingsResourcePath = "UI/UIToolkit/MainMenu/MainMenuPanelSettings";
 
-        private const int SortingOrder = 650;
+        /// <summary>
+        /// Sopra PlantCard terminal (600), MainMenu gameplay (700) e modali full-screen macchina (1000);
+        /// sotto EndOfDay (2500).
+        /// </summary>
+        private const int SortingOrder = 1100;
 
         // CRT glitch — ~3 volte al secondo
         private const float BlockGlitchRangePx = 0.65f;
@@ -470,6 +474,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
             StopAllRunningRoutines();
             ReleasePresentationRuntime();
+
+            if (_document != null)
+                _document.sortingOrder = SortingOrder;
 
             _hideAfterTypingWithoutIdle = hideAfterTypingWithoutIdle;
             _activeRegister = register;

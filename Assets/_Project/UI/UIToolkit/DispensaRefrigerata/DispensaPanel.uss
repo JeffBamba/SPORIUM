@@ -59,7 +59,7 @@
 
 .dispensa-code {
     margin-right: 10px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: rgba(127, 178, 204, 0.92);
     -unity-font-style: bold;
@@ -82,7 +82,7 @@
 
 .dispensa-status-text {
     margin-right: 12px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: rgba(127, 178, 204, 0.9);
     -unity-font-style: bold;
@@ -101,7 +101,7 @@
     height: 22px;
     padding: 0 8px;
     margin-left: 0;
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(183, 223, 238, 0.88);
     background-color: rgba(11, 31, 44, 0.85);
@@ -154,7 +154,7 @@
 
 .dispensa-subtitle {
     margin-top: 2px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(111, 158, 180, 0.86);
 }
@@ -176,12 +176,12 @@
 
 .dispensa-info-icon {
     margin-right: 6px;
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(138, 188, 209, 0.85);
 }
 
 .dispensa-info-text {
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(138, 188, 209, 0.82);
 }
@@ -207,7 +207,7 @@
 
 .dispensa-info-cost {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(234, 212, 110, 0.93);
 }
@@ -247,7 +247,7 @@
 }
 
 .dispensa-section-title {
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: 2px;
     color: rgba(117, 198, 236, 0.95);
     -unity-font-style: bold;
@@ -315,7 +315,7 @@
 
 .dispensa-chamber-qty {
     margin-top: 2px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(124, 163, 182, 0.72);
     -unity-font-style: italic;
@@ -345,7 +345,7 @@
 
 .dispensa-inventory-title {
     margin-bottom: 8px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: rgba(117, 198, 236, 0.95);
     -unity-font-style: bold;
@@ -405,7 +405,7 @@
 
 .dispensa-inv-qty {
     margin-top: 1px;
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(126, 173, 196, 0.9);
     -unity-font-style: bold;
 }
@@ -445,7 +445,7 @@
     border-width: 1px;
     border-color: rgba(45, 87, 108, 0.8);
     border-radius: 1px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     -unity-font-style: bold;
     opacity: 0.52;
@@ -467,7 +467,7 @@
 
 .dispensa-log-title {
     margin-bottom: 6px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: rgba(117, 198, 236, 0.8);
     -unity-font-style: bold;
@@ -479,6 +479,6 @@
 
 .dispensa-log-line {
     margin-bottom: 2px;
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(133, 185, 208, 0.92);
 }

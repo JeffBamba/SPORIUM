@@ -12,6 +12,9 @@ namespace Sporae.UI.UIToolkit.BedroomPc
     [RequireComponent(typeof(UIDocument))]
     public sealed class BedroomPcDisplayController : MonoBehaviour
     {
+        /// <summary>Stesso livello di Dispensa/FoodRoom in modalità schermo pieno (1000), sotto VO overlay (1100).</summary>
+        private const int SortingOrder = 1000;
+
         [Header("References")]
         [SerializeField] private UIDocument _uiDocument;
 
@@ -32,6 +35,18 @@ namespace Sporae.UI.UIToolkit.BedroomPc
         public event Action ResearchCenterRequested;
         public event Action BlackMarketRequested;
         public event Action FaqBotRequested;
+
+        /// <summary>PC visibile (Show).</summary>
+        public event Action PcShown;
+
+        /// <summary>PC nascosto (Hide / ESC).</summary>
+        public event Action PcHidden;
+
+        /// <summary>Pannello di controllo remoto aperto (lista macchinari).</summary>
+        public event Action ControlPanelShown;
+
+        /// <summary>Toggle Seed Storage dal pannello di controllo (dopo SetPower).</summary>
+        public event Action<bool> SeedStoragePowerSetFromControlPanel;
 
         private VisualElement _root;
         private Label _terminal;
@@ -81,12 +96,17 @@ namespace Sporae.UI.UIToolkit.BedroomPc
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
+            if (_uiDocument != null)
+                _uiDocument.sortingOrder = SortingOrder;
 
             BindUi();
             ApplyStaticText();
 
             if (_hideOnAwake)
                 Hide();
+
+            if (ServiceContainer.Instance != null)
+                ServiceContainer.Instance.Register(this);
         }
 
         private void OnEnable()
@@ -116,6 +136,10 @@ namespace Sporae.UI.UIToolkit.BedroomPc
                 GameplayUiModalLock.SetMachineModalState(false);
         }
 
+        public bool IsPcVisible => _visible;
+
+        public bool IsControlPanelVisible => _controlPanelVisible;
+
         public void Show()
         {
             BindUi();
@@ -128,6 +152,7 @@ namespace Sporae.UI.UIToolkit.BedroomPc
 
             _visible = true;
             GameplayUiModalLock.SetMachineModalState(true);
+            PcShown?.Invoke();
         }
 
         public void Hide()
@@ -135,11 +160,15 @@ namespace Sporae.UI.UIToolkit.BedroomPc
             if (_root == null)
                 BindUi();
 
+            bool wasVisible = _visible;
+
             if (_root != null)
                 _root.style.display = DisplayStyle.None;
 
             _visible = false;
             GameplayUiModalLock.SetMachineModalState(false);
+            if (wasVisible)
+                PcHidden?.Invoke();
         }
 
         private void BindUi()
@@ -307,6 +336,7 @@ namespace Sporae.UI.UIToolkit.BedroomPc
             _controlPanelVisible = true;
             EnsureMachineServices();
             RefreshControlPanel();
+            ControlPanelShown?.Invoke();
         }
 
         private void EnsureMachineServices()
@@ -425,8 +455,11 @@ namespace Sporae.UI.UIToolkit.BedroomPc
         private void ToggleSeedStoragePower()
         {
             EnsureMachineServices();
-            _seedStorage?.SetPower(!_seedStorage.IsOn);
+            if (_seedStorage == null)
+                return;
+            _seedStorage.SetPower(!_seedStorage.IsOn);
             RefreshControlPanel();
+            SeedStoragePowerSetFromControlPanel?.Invoke(_seedStorage.IsOn);
         }
 
         private void ToggleFoodSynthPower()

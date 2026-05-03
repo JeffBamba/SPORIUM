@@ -68,19 +68,16 @@ MonoBehaviour:
 
     CONTENUTO
     PERSO. Qualcuno ha spento il sistema troppo a lungo.'
-  Beat3SeedStorageAnomalyPowerOnRequestLine: Riaccendi subito il Seed Storage. Se
-    lo lasci morto, qui dentro resta solo scarto.
-  Beat3SeedStorageCryHoverRequestLine: "Quello che hai visto qui dentro ha un costo,
-    e la parte peggiore \xE8 che non ricordi nemmeno di averlo causato.\nChiudi il
-    pannello e passa il mouse sul box CRY in basso a sinistra: ti faccio vedere i
-    costi fissi di mantenimento."
-  Beat3CryTooltipCostsExplainLine: "Quello nel box CRY \xE8 il conto che corre ogni
-    giorno: energia minima, supporti vitali e macchine attive.\nQuesti sono costi
-    fissi: li paghi anche quando non produci nulla."
-  Beat3CryTooltipIncomeExplainLine: 'Per sostenere la Dome devi far entrare CRY:
-    completa missioni, vendi ai mercanti, tratta nel black market e usa il trading
-    per trasformare eccedenze in margine.
-
-    Se tieni in equilibrio entrate e mantenimento,
-    resti operativo.'
+  Beat3SeedStorageAnomalyPowerOnRequestLine: "Chiudi questo pannello adesso: qui
+    dentro e' solo allarme e promemoria, non il posto dove rimetti ordine."
+  Beat3SeedStorageCryHoverRequestLine: "Quello che hai visto ha un costo giornaliero
+    in CRY: mantenimento, macchine accese, niente sconti di coscienza.\nTi arriva
+    una nuova missione: «Accedi al PC». Scendi in Camera da letto, apri il terminale
+    sul tavolo e il Pannello di controllo remoto."
+  Beat3CryTooltipCostsExplainLine: "Ogni riga e' un contratto semplice: acceso paghi
+    CRY e ottieni la funzione; spento risparmi e rinunci al servizio.\nIl totale
+    in basso somma solo cio' che lasci in marcia: meccanica sporca, ma chiara."
+  Beat3CryTooltipIncomeExplainLine: "Nuova missione: «Accendi il Seed Storage». Dalla
+    riga del deposito porta ACCESO se serve, poi esci dal PC: la routine si chiude
+    quando lo schermo torna buio."
   MissionHighlightColorHex: '#E6C96F'

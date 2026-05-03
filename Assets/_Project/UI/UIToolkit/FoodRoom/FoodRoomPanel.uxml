@@ -14,14 +14,14 @@
                             <ui:VisualElement name="food-synth-power-row" class="food-synth-power-row">
                                 <ui:VisualElement name="food-synth-power-indicator" class="food-synth-power-indicator food-synth-power-indicator--on" />
                                 <ui:Label name="food-synth-status-text" text="SINTETIZZATORE ATTIVO" class="food-synth-status-text food-synth-status-text--on" />
-                                <ui:Label name="food-synth-cost" text="MANTENIMENTO: 5 CRY/giorno" class="food-synth-cost" style="font-size: 11px;" />
+                                <ui:Label name="food-synth-cost" text="MANTENIMENTO: 5 CRY/giorno" class="food-synth-cost" style="font-size: 13px;" />
                                 <ui:Button name="btn-food-synth-power" text="SPEGNI" class="sp-button food-synth-power-button" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                         <ui:VisualElement name="title-row" class="title-row">
                             <ui:Label name="title" text="SINTESI ALIMENTARE BIOLOGICA" class="sp-header__title header-title" style="font-size: 18px;" />
                         </ui:VisualElement>
-                        <ui:Label name="subtitle" text="Coltivazione di biomassa nei serbatoi • Non cotto, ma coltivato • La sopravvivenza sa di scienza. I confini etici si vendono a parte." class="sp-header__subtitle header-subtitle" style="font-size: 12px;" />
+                        <ui:Label name="subtitle" text="Coltivazione di biomassa nei serbatoi • Non cotto, ma coltivato • La sopravvivenza sa di scienza. I confini etici si vendono a parte." class="sp-header__subtitle header-subtitle" style="font-size: 13px;" />
                     </ui:VisualElement>
                     <ui:Button name="btn-close" text="✕" class="sp-header__right sp-button sp-button--danger btn-close-red" />
                 </ui:VisualElement>
@@ -37,43 +37,43 @@
                                     <ui:Label text="🌿" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
                                         <ui:Label text="SINTESI VEGETALE" class="chamber-name" style="font-size: 13px;" />
-                                        <ui:Label text="1 giorno · 3 unità · +1 azione" class="chamber-details" style="font-size: 10px; -unity-font-style: bold;" />
-                                        <ui:Label text="Tecnicamente commestibile, presumibilmente sicuro." class="chamber-desc" style="font-size: 9px;" />
+                                        <ui:Label text="1 giorno · 3 unità · +1 azione" class="chamber-details" style="font-size: 13px; -unity-font-style: bold;" />
+                                        <ui:Label text="Tecnicamente commestibile, presumibilmente sicuro." class="chamber-desc" style="font-size: 12px;" />
                                         <ui:VisualElement name="chamber-vegetal-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-vegetal-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-vegetal-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-vegetal-cost" text="5 CRY" class="chamber-cost" style="font-size: 12px;" />
+                                    <ui:Label name="chamber-vegetal-cost" text="5 CRY" class="chamber-cost" style="font-size: 13px;" />
                                 </ui:VisualElement>
                                 <ui:VisualElement name="chamber-fungal" class="chamber-card chamber-fungal">
                                     <ui:Label text="🍄" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
                                         <ui:Label text="SINTESI FUNGINA" class="chamber-name" style="font-size: 13px;" />
-                                        <ui:Label text="2 giorni · 2 unità · +2 azioni" class="chamber-details" style="font-size: 10px; -unity-font-style: bold;" />
-                                        <ui:Label text="Cresciuto al buio. Come la tua coscienza." class="chamber-desc" style="font-size: 9px; width: 185px;" />
+                                        <ui:Label text="2 giorni · 2 unità · +2 azioni" class="chamber-details" style="font-size: 13px; -unity-font-style: bold;" />
+                                        <ui:Label text="Cresciuto al buio. Come la tua coscienza." class="chamber-desc" style="font-size: 12px; width: 185px;" />
                                         <ui:VisualElement name="chamber-fungal-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-fungal-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-fungal-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-fungal-cost" text="10 CRY" class="chamber-cost" style="font-size: 12px;" />
+                                    <ui:Label name="chamber-fungal-cost" text="10 CRY" class="chamber-cost" style="font-size: 13px;" />
                                 </ui:VisualElement>
                                 <ui:VisualElement name="chamber-meat" class="chamber-card chamber-meat chamber-card--last">
                                     <ui:Label text="🥩" class="chamber-icon" />
                                     <ui:VisualElement class="chamber-body">
                                         <ui:Label text="SINTESI DI CARNE" class="chamber-name" style="font-size: 13px;" />
-                                        <ui:Label text="3 giorni · 1 unità · +3 azioni · 3× RES-PROT-001" class="chamber-details" style="font-size: 10px; -unity-font-style: bold; width: 165px;" />
-                                        <ui:Label text="Non ha mai conosciuto una madre. Non la conoscerà mai." class="chamber-desc" style="font-size: 9px;" />
+                                        <ui:Label text="3 giorni · 1 unità · +3 azioni · 3× RES-PROT-001" class="chamber-details" style="font-size: 13px; -unity-font-style: bold; width: 165px;" />
+                                        <ui:Label text="Non ha mai conosciuto una madre. Non la conoscerà mai." class="chamber-desc" style="font-size: 12px;" />
                                         <ui:VisualElement name="chamber-meat-progress" class="chamber-progress" style="display: none;">
                                             <ui:Label text="COLTIVAZIONE" class="chamber-progress-label" />
                                             <ui:VisualElement name="chamber-meat-progress-bar" class="chamber-progress-bar" />
                                             <ui:Label name="chamber-meat-progress-pct" text="0%" class="chamber-progress-pct" />
                                         </ui:VisualElement>
                                     </ui:VisualElement>
-                                    <ui:Label name="chamber-meat-cost" text="20 CRY" class="chamber-cost" style="font-size: 12px;" />
+                                    <ui:Label name="chamber-meat-cost" text="20 CRY" class="chamber-cost" style="font-size: 13px;" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>

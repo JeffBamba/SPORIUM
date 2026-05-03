@@ -90,20 +90,20 @@ namespace _Project.Sporae.Core
         [Tooltip("Secondo blocco VO: switch sorpresa/incredulita su storage OFF e contenuto perduto.")]
         public string Beat3SeedStorageAnomalyPart2Line;
 
-        [TextArea(2, 8)]
-        [Tooltip("Terzo blocco VO: richiesta esplicita di accendere il Seed Storage.")]
+        [TextArea(2, 6)]
+        [Tooltip("Terzo blocco VO con panel Seed Storage aperto: invito a chiudere (dettagli dopo la chiusura).")]
         public string Beat3SeedStorageAnomalyPowerOnRequestLine;
 
-        [TextArea(2, 8)]
-        [Tooltip("VO dopo chiusura panel: richiede hover sul box CRY della compact bottom bar.")]
+        [TextArea(3, 10)]
+        [Tooltip("VO subito dopo chiusura panel Seed Storage: importanza CRY + nuova missione «Accedi al PC».")]
         public string Beat3SeedStorageCryHoverRequestLine;
 
         [TextArea(3, 10)]
-        [Tooltip("VO dopo hover CRY: spiega cosa sono i costi fissi e l'impatto giornaliero.")]
+        [Tooltip("VO con pannello di controllo aperto: pro/contro accendere o spegnere i macchinari.")]
         public string Beat3CryTooltipCostsExplainLine;
 
         [TextArea(3, 10)]
-        [Tooltip("VO dopo hover CRY: spiega come guadagnare CRY (mercanti, black market, missioni, trading).")]
+        [Tooltip("VO sul PC dopo: nuova missione «Accendi il Seed Storage», ACCESO dal pannello, poi esci dal PC.")]
         public string Beat3CryTooltipIncomeExplainLine;
 
         // ─── Colore highlight condiviso ─────────────────────────────────────

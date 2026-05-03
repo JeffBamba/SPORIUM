@@ -654,6 +654,20 @@ namespace Sporae.Core
                     m.IsCompleted &&
                     DemoSeedStorageMission.IsDemoSeedStorageConfig(m.Config));
             DemoSeedStorageMission.RestoreProgressState(seedStorageCompleted);
+
+            bool pcAccessCompleted = mm?.CompletedMissions != null &&
+                mm.CompletedMissions.Any(m =>
+                    m != null &&
+                    m.IsCompleted &&
+                    DemoPcAccessMission.IsDemoPcAccessConfig(m.Config));
+            DemoPcAccessMission.RestoreProgressState(pcAccessCompleted);
+
+            bool pcSeedPowerCompleted = mm?.CompletedMissions != null &&
+                mm.CompletedMissions.Any(m =>
+                    m != null &&
+                    m.IsCompleted &&
+                    DemoPcSeedPowerMission.IsDemoPcSeedPowerConfig(m.Config));
+            DemoPcSeedPowerMission.RestoreProgressState(pcSeedPowerCompleted);
         }
         
         private void ApplyPlayerOutfitIndex(int savedIndex)

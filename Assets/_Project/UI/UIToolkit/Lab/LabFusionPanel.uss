@@ -55,7 +55,7 @@
 }
 
 .lab-fus-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.85);
     margin-bottom: 12px;
     white-space: normal;
@@ -73,7 +73,7 @@
 /* USS does not support :last-child - last item keeps margin-bottom */
 
 .lab-fus-hint {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.8);
 }
 
@@ -90,7 +90,7 @@
 
 .lab-fus-label {
     width: 120px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(192, 200, 197, 0.8);
 }
@@ -106,14 +106,14 @@
 }
 
 .lab-fus-slot-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
 }
 
 .lab-fus-btn {
     min-width: 70px;
     height: 32px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     border-width: 1px;
     border-color: rgba(181, 128, 209, 0.6);

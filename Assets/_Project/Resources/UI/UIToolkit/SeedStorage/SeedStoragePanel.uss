@@ -77,7 +77,7 @@
 }
 
 .seedstorage-left-subtitle {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(100, 160, 175);
     letter-spacing: 1px;
     margin-top: 2px;
@@ -99,7 +99,7 @@
 /* CATEGORY LABELS */
 
 .seedstorage-category-label {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(0, 220, 200);
     -unity-font-style: bold;
     letter-spacing: 2px;
@@ -167,7 +167,7 @@
 /* Item display name */
 .seedstorage-inv-name {
     flex-grow: 1;
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(210, 232, 240);
     white-space: nowrap;
     overflow: hidden;
@@ -176,7 +176,7 @@
 
 /* Quantity "(x4)" on right */
 .seedstorage-inv-qty {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(0, 200, 185);
     -unity-font-style: bold;
     flex-shrink: 0;
@@ -184,14 +184,14 @@
 }
 
 .seedstorage-inv-empty {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(80, 110, 125);
     -unity-font-style: italic;
     padding-left: 4px;
 }
 
 .seedstorage-inv-placeholder {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(100, 140, 155);
     -unity-font-style: italic;
     padding: 2px 4px;
@@ -200,7 +200,7 @@
 /* TIP + BUTTONS */
 
 .seedstorage-tip {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(90, 120, 135);
     -unity-font-style: italic;
     margin-top: 10px;
@@ -217,7 +217,7 @@
     border-width: 1px;
     border-color: rgb(30, 55, 68);
     border-radius: 2px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     letter-spacing: 1px;
     opacity: 0.55;
@@ -231,7 +231,7 @@
     border-width: 1px;
     border-color: rgb(30, 55, 68);
     border-radius: 2px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     opacity: 0.55;
 }
@@ -296,7 +296,7 @@
 }
 
 .seedstorage-right-subtitle {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(100, 160, 175);
     letter-spacing: 1px;
     margin-top: 2px;
@@ -333,7 +333,7 @@
 }
 
 .seedstorage-status-text {
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     letter-spacing: 1px;
 }
@@ -350,17 +350,17 @@
     color: rgb(50, 80, 90);
     margin-left: 10px;
     margin-right: 10px;
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .seedstorage-status-metric {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(160, 195, 210);
     letter-spacing: 1px;
 }
 
 .seedstorage-status-system {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(120, 160, 175);
     letter-spacing: 1px;
 }
@@ -374,7 +374,7 @@
 }
 
 .seedstorage-metric-item {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(180, 210, 220);
     letter-spacing: 1px;
 }
@@ -410,7 +410,7 @@
     border-width: 1px;
     border-color: rgb(0, 140, 155);
     border-radius: 2px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     letter-spacing: 1px;
 }
@@ -501,7 +501,7 @@
 /* SLOT TAG (top-left label) */
 
 .seedstorage-slot-tag {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(0, 220, 200);
     -unity-font-style: bold;
     letter-spacing: 2px;
@@ -567,13 +567,13 @@
 }
 
 .seedstorage-slot-body {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(215, 238, 245);
     white-space: normal;
 }
 
 .seedstorage-slot-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(100, 140, 155);
     white-space: normal;
     margin-top: 2px;
@@ -589,7 +589,7 @@
 }
 
 .seedstorage-via-label {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(100, 140, 155);
     letter-spacing: 1px;
     min-width: 58px;
@@ -610,7 +610,7 @@
 }
 
 .seedstorage-via-pct {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(70, 215, 90);
     -unity-font-style: bold;
     min-width: 32px;
@@ -628,7 +628,7 @@
     border-width: 1px;
     border-color: rgb(140, 110, 35);
     border-radius: 2px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
 }
 
@@ -643,7 +643,7 @@
 }
 
 .seedstorage-log-title {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(0, 185, 200);
     -unity-font-style: bold;
     letter-spacing: 2px;
@@ -655,7 +655,7 @@
 }
 
 .seedstorage-log-line {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(110, 160, 145);
     white-space: normal;
     margin-bottom: 2px;

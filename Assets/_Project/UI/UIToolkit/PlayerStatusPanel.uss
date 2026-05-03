@@ -20,7 +20,7 @@
 }
 
 .header-label {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
@@ -65,14 +65,14 @@
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
 }
 
 .stat-value {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(192, 200, 197);
     -unity-font-style: normal;
     -unity-text-align: middle-right;
@@ -165,7 +165,7 @@
 .header-button {
     min-width: 40px;
     height: 24px;
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(192, 200, 197);
     background-color: rgba(10, 18, 22, 0.8);
     border-width: 1px;
@@ -237,7 +237,7 @@
 }
 
 .low-text {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(230, 201, 111);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
@@ -283,7 +283,7 @@
 }
 
 .diary-label {
-    font-size: 9px;
+    font-size: 12px;
     color: rgb(192, 200, 197);
     -unity-font-style: normal;
     -unity-text-align: middle-center;

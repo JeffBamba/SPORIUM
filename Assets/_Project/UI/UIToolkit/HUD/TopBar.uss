@@ -107,7 +107,7 @@
 }
 
 .metric-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
@@ -151,7 +151,7 @@
 }
 
 .metric-value-ph {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     -unity-font-style: normal;
     -unity-text-align: middle-left;
@@ -328,7 +328,7 @@
 
 /* Applicare anche la classe ph-band in UXML se serve override; colore reale da TopBarController. */
 .ph-band {
-    font-size: 12px;
+    font-size: 13px;
     -unity-font-style: normal;
     -unity-text-align: middle-left;
     margin-top: 0;
@@ -429,37 +429,37 @@
 }
 
 .condensation-tooltip-root #condensation-tooltip-level-caption {
-    font-size: 12px;
+    font-size: 13px;
     -unity-font-style: normal;
     color: rgb(199, 202, 199);
 }
 
 .condensation-tooltip-root #condensation-tooltip-level {
-    font-size: 12px;
+    font-size: 13px;
     -unity-font-style: bold;
     color: rgb(93, 182, 227);
 }
 
 .condensation-tooltip-root #condensation-tooltip-text {
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: normal;
     color: rgb(199, 202, 199);
 }
 
 .condensation-tooltip-root #condensation-tooltip-tip-caption {
-    font-size: 12px;
+    font-size: 13px;
     -unity-font-style: bold;
     color: rgb(93, 182, 227);
 }
 
 .condensation-tooltip-root #condensation-tooltip-tip {
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: normal;
     color: rgb(93, 182, 227);
 }
 
 .condensation-tooltip-root #condensation-collect-button {
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
 }
 

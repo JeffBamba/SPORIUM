@@ -16,7 +16,7 @@
                             <ui:Label name="pcv3-ap-label" text="AZIONI: 0/0" class="pcv3-pill-text" style="-unity-text-align: middle-left;" />
                         </ui:VisualElement>
                         <ui:VisualElement name="pcv3-queued-box" class="pcv3-pill pcv3-pill-queued" style="right: -22px; height: 30px; border-left-color: rgba(205, 255, 203, 0.7); border-right-color: rgba(205, 255, 203, 0.7); border-top-color: rgba(205, 255, 203, 0.7); border-bottom-color: rgba(205, 255, 203, 0.7);">
-                            <ui:Label name="pcv3-queued-label" text="IN CODA: 0" class="pcv3-pill-text" style="-unity-text-align: middle-left; font-size: 10px; justify-content: flex-start; top: -2px;" />
+                            <ui:Label name="pcv3-queued-label" text="IN CODA: 0" class="pcv3-pill-text" style="-unity-text-align: middle-left; font-size: 13px; justify-content: flex-start; top: -2px;" />
                         </ui:VisualElement>
                         <ui:Button name="pcv3-close-button" text="[ESC] ESCI" class="pcv3-close" />
                     </ui:VisualElement>
@@ -93,7 +93,7 @@
                                     <ui:Label name="pcv3-hud-plant-family" text="FAMILY ---" class="pcv3-hud-plant-family" />
                                 </ui:VisualElement>
                                 <ui:Label name="pcv3-hud-plant-oneliner" text="---" class="pcv3-hud-plant-oneliner" />
-                                <ui:Label name="pcv3-hud-effects" class="pcv3-hud-plant-oneliner" style="font-size: 9px; margin-top: 4px; white-space: normal;" />
+                                <ui:Label name="pcv3-hud-effects" class="pcv3-hud-plant-oneliner" style="font-size: 12px; margin-top: 4px; white-space: normal;" />
                             </ui:VisualElement>
                             <ui:VisualElement name="pcv3-hud-live-pill" class="pcv3-hud-live-pill">
                                 <ui:VisualElement name="pcv3-hud-live-dot" class="pcv3-hud-live-dot" />
@@ -154,7 +154,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="pcv3-forecast-condition-tooltip" class="pcv3-forecast-condition-tooltip" style="position: absolute; left: 0; top: 0; width: 450px; max-width: 450px; min-height: 200px; padding: 8px; display: none; background-color: rgba(13, 21, 25, 0.95); border-width: 1px; border-color: rgb(0, 204, 102); flex-direction: column;">
-            <ui:Label name="pcv3-forecast-condition-tooltip-text" enable-rich-text="true" style="white-space: normal; color: rgb(245, 247, 250); font-size: 12px; -unity-text-align: upper-left; margin: 4px;" />
+            <ui:Label name="pcv3-forecast-condition-tooltip-text" enable-rich-text="true" style="white-space: normal; color: rgb(245, 247, 250); font-size: 13px; -unity-text-align: upper-left; margin: 4px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

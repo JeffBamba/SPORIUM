@@ -86,7 +86,7 @@
     margin-left: 8px;
     min-width: 38px;
     color: rgba(110, 184, 212, 0.8);
-    font-size: 12px;
+    font-size: 13px;
     -unity-text-align: middle-right;
 }
 

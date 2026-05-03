@@ -106,7 +106,7 @@
     top: 0;
     bottom: 0;
     color: rgb(93, 182, 227);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -185,7 +185,7 @@
 }
 
 .cbb-day-label {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -227,7 +227,7 @@
 }
 
 .cbb-cry-label {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(93, 182, 227);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -446,7 +446,7 @@
 }
 
 .cbb-cry-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(91, 176, 217);
     -unity-font-style: bold;
     -unity-text-align: upper-left;
@@ -501,7 +501,7 @@
 }
 
 .cbb-cry-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(199, 202, 199);
     -unity-font-style: bold;
     margin-bottom: 4px;
@@ -520,7 +520,7 @@
 }
 
 .cbb-cry-key {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(199, 202, 199);
     flex-grow: 1;
     margin-right: 8px;
@@ -528,14 +528,14 @@
 }
 
 .cbb-cry-value {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(204, 204, 204);
     -unity-text-align: middle-right;
     white-space: normal;
 }
 
 .cbb-cry-balance-num {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(204, 204, 204);
     -unity-font-style: bold;
 }
@@ -553,7 +553,7 @@
 }
 
 .cbb-cry-plh {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(136, 136, 136);
 }
 
@@ -572,7 +572,7 @@
 }
 
 .cbb-cry-section-header {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(200, 203, 200);
     -unity-font-style: bold;
     margin-bottom: 6px;
@@ -589,7 +589,7 @@
 }
 
 .cbb-cry-section-header-accent {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(80, 200, 220);
     -unity-font-style: bold;
     margin-bottom: 6px;
@@ -610,14 +610,14 @@
 }
 
 .cbb-cry-tip-header {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(226, 175, 103);
     -unity-font-style: bold;
     margin-bottom: 2px;
 }
 
 .cbb-cry-tip-value {
-    font-size: 11px;
+    font-size: 13px;
     color: rgb(226, 175, 103);
     white-space: normal;
 }
@@ -646,7 +646,7 @@
 }
 
 .cbb-room-tooltip .cbb-tooltip-title {
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
     letter-spacing: 1px;
@@ -655,7 +655,7 @@
 }
 
 .cbb-room-tooltip .cbb-tooltip-floor {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(127, 255, 122, 0.65);
     -unity-font-style: normal;
     letter-spacing: 0.5px;
@@ -663,7 +663,7 @@
 }
 
 .cbb-room-tooltip .cbb-tooltip-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(200, 220, 200, 0.8);
     white-space: normal;
     margin-top: 4px;

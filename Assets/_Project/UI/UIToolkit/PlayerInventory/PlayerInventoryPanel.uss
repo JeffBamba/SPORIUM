@@ -60,7 +60,7 @@
 }
 
 .inv-vault-label {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: rgb(127, 255, 122);
     -unity-font-style: bold;
@@ -72,7 +72,7 @@
     border-width: 0;
     padding: 0 4px;
     color: rgb(211, 95, 95);
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     -unity-font-style: bold;
     flex-shrink: 0;
@@ -100,7 +100,7 @@
 
 .inv-sub-pick {
     display: none;
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(200, 210, 205, 0.75);
     white-space: normal;
 }
@@ -121,7 +121,7 @@
 }
 
 .inv-stat {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgb(127, 255, 122);
     margin-right: 24px;
@@ -144,7 +144,7 @@
     border-color: rgba(127, 255, 122, 0.22);
     border-radius: 2px;
     color: rgba(200, 210, 205, 0.55);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 0.5px;
 }
 
@@ -220,7 +220,7 @@
     padding-top: 8px;
     padding-bottom: 8px;
     color: rgb(127, 255, 122);
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 1px;
     height: 26px;
     min-height: 26px;
@@ -315,14 +315,14 @@
 }
 
 .inv-row-name {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 0.5px;
     color: rgba(255, 255, 255, 0.92);
     -unity-font-style: bold;
 }
 
 .inv-row-qty-badge {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(200, 210, 205, 0.75);
     margin-left: 6px;
     border-width: 1px;
@@ -331,7 +331,7 @@
 }
 
 .inv-row-sub {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(180, 190, 188, 0.65);
     margin-top: 2px;
 }
@@ -346,7 +346,7 @@
 .inv-chip-btn {
     padding: 4px 12px;
     margin-left: 8px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.5px;
     border-width: 1px;
     border-color: rgba(93, 182, 227, 0.45);
@@ -372,7 +372,7 @@
 
 .inv-select {
     padding: 6px 10px;
-    font-size: 10px;
+    font-size: 13px;
     border-width: 1px;
     border-color: rgba(93, 182, 227, 0.6);
     color: rgb(93, 182, 227);
@@ -476,7 +476,7 @@
 }
 
 .inv-detail-summary {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(104, 224, 133, 0.95);
     margin-top: 12px;
     margin-bottom: 12px;
@@ -484,7 +484,7 @@
 }
 
 .inv-detail-qty {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(170, 230, 255, 0.95);
     border-width: 1px;
     border-color: rgba(93, 182, 227, 0.7);
@@ -495,7 +495,7 @@
 }
 
 .inv-detail-meta {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(190, 200, 198, 0.85);
     white-space: nowrap;
     margin-bottom: 8px;
@@ -532,7 +532,7 @@
 }
 
 .inv-detail-decay-condition-lbl {
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.5px;
     color: rgba(127, 175, 151, 0.95);
     -unity-font-style: bold;
@@ -566,7 +566,7 @@
 }
 
 .inv-detail-decay-pct {
-    font-size: 10px;
+    font-size: 13px;
     min-width: 38px;
     color: rgba(200, 220, 210, 0.9);
     -unity-text-align: middle-right;
@@ -578,7 +578,7 @@
     margin-bottom: 2px;
     padding: 6px 16px;
     min-width: 118px;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.5px;
     -unity-font-style: bold;
     background-color: rgba(12, 20, 22, 0.85);
@@ -609,7 +609,7 @@
 }
 
 .inv-footer-txt {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(150, 165, 160, 0.65);
     max-width: 48%;
     white-space: normal;
@@ -627,7 +627,7 @@
 }
 
 .inv-cancel-text {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(220, 120, 120, 0.9);
 }
@@ -635,7 +635,7 @@
 .inv-empty {
     padding: 20px;
     -unity-text-align: middle-center;
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(180, 190, 188, 0.65);
 }
 
@@ -747,7 +747,7 @@
 }
 
 .inv-inspect-body {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(220, 230, 227, 0.9);
     white-space: normal;
 }
@@ -774,7 +774,7 @@
 }
 
 .inv-tooltip-txt {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(240, 245, 250, 0.95);
     white-space: normal;
 }
@@ -791,7 +791,7 @@
 }
 
 .inv-br-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(150, 160, 155, 0.6);
     margin-bottom: 4px;
 }

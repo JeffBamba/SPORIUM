@@ -110,8 +110,8 @@
                         </ui:VisualElement>
 
                         <ui:VisualElement name="dispensa-transfer-actions" class="dispensa-transfer-actions">
-                            <ui:Button name="btn-dispensa-store" text="→ TRASFERISCI IN DISPENSA (1 AP)" class="dispensa-transfer-btn" />
-                            <ui:Button name="btn-dispensa-retrieve" text="← PRELEVA DALLA DISPENSA (1 AP)" class="dispensa-retrieve-btn" />
+                            <ui:Button name="btn-dispensa-store" text="← DEPOSITA IN DISPENSA (1 AP)" class="dispensa-transfer-btn" />
+                            <ui:Button name="btn-dispensa-retrieve" text="→ TRASFERISCI IN INVENTARIO (1 AP)" class="dispensa-retrieve-btn" />
                         </ui:VisualElement>
 
                         <ui:VisualElement name="dispensa-log-box" class="dispensa-log-box">

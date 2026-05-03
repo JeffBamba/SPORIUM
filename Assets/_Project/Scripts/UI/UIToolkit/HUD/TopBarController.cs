@@ -709,7 +709,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 {
                     var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                     var iconBox = new VisualElement { name = "ph-modifier-icon", style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f), borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f) } };
-                    var nameLabel = new Label { text = LocalizationManager.GetString("topbar.ph_modifier_none"), enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
+                    var nameLabel = new Label { text = LocalizationManager.GetString("topbar.ph_modifier_none"), enableRichText = true, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 12 } };
                     row.Add(iconBox);
                     row.Add(nameLabel);
                     _phTooltipModifiersList.Add(row);
@@ -806,7 +806,7 @@ namespace Sporae.UI.UIToolkit.HUD
                     {
                         var emptyRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
                         var emptyIcon = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.1f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.3f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.3f) } };
-                        var emptyLabel = new Label { text = LocalizationManager.GetString("topbar.ph_cryo_empty"), enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 11 } };
+                        var emptyLabel = new Label { text = LocalizationManager.GetString("topbar.ph_cryo_empty"), enableRichText = false, style = { color = new Color(0.52f, 0.52f, 0.52f), fontSize = 12 } };
                         emptyRow.Add(emptyIcon);
                         emptyRow.Add(emptyLabel);
                         _phTooltipPassiveList.Add(emptyRow);
@@ -948,12 +948,12 @@ namespace Sporae.UI.UIToolkit.HUD
             }
             var nameLabel = new Label { text = nameText, enableRichText = false };
             nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f); // quasi bianco come da reference
-            nameLabel.style.fontSize = 11;
+            nameLabel.style.fontSize = 12;
             nameLabel.style.marginRight = 8;
             nameLabel.style.flexGrow = 1;
             var valueLabel = new Label { text = valueText, enableRichText = false };
             valueLabel.style.color = valueColor;
-            valueLabel.style.fontSize = 11;
+            valueLabel.style.fontSize = 12;
             row.Add(iconBox);
             row.Add(nameLabel);
             row.Add(valueLabel);
@@ -969,11 +969,11 @@ namespace Sporae.UI.UIToolkit.HUD
             var iconBox = new VisualElement { style = { width = 20, height = 20, minWidth = 20, minHeight = 20, marginRight = 8, backgroundColor = new Color(0.31f, 0.78f, 0.86f, 0.2f), borderLeftWidth = 1, borderRightWidth = 1, borderTopWidth = 1, borderBottomWidth = 1, borderLeftColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderRightColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderTopColor = new Color(0.31f, 0.78f, 0.86f, 0.6f), borderBottomColor = new Color(0.31f, 0.78f, 0.86f, 0.6f) } };
             var nameLabel = new Label { text = $"<b>{slotId}</b>  {plantName}", enableRichText = true };
             nameLabel.style.color = new Color(0.94f, 0.95f, 0.96f);
-            nameLabel.style.fontSize = 11;
+            nameLabel.style.fontSize = 12;
             nameLabel.style.flexGrow = 1;
             var valueLabel = new Label { text = powerLabel, enableRichText = false };
             valueLabel.style.color = new Color(0.31f, 0.78f, 0.86f);
-            valueLabel.style.fontSize = 11;
+            valueLabel.style.fontSize = 12;
             row.Add(iconBox);
             row.Add(nameLabel);
             row.Add(valueLabel);
@@ -1836,9 +1836,9 @@ namespace Sporae.UI.UIToolkit.HUD
             public const float Title = 13f;
             public const float Caption = 12f;
             public const float Level = 12f;
-            public const float Body = 11f;
-            public const float Tip = 11f;
-            public const float Button = 11f;
+            public const float Body = 12f;
+            public const float Tip = 12f;
+            public const float Button = 12f;
         }
 
         /// <summary>Riapplica tipografia dopo USS e dopo assegnazione rich text (il testo ricco può ignorare la font-size del Label).</summary>
@@ -2137,7 +2137,7 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 var detail = new Label($"— {entry.Detail}");
                 detail.style.color = new StyleColor(new Color(0.55f, 0.58f, 0.55f, 1f));
-                detail.style.fontSize = 11f;
+                detail.style.fontSize = 12f;
                 detail.style.marginLeft = 6f;
                 detail.enableRichText = true;
                 row.Add(detail);

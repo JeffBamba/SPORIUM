@@ -1,8 +1,8 @@
 /* Mission Recap Panel
  * Terminal/CRT aesthetic. Spec reference:
  *  - posizione: top 96px, left 24px
- *  - larghezza 280px fissa
- *  - header "MISSIONS" 10px + count 9px, verde ciano #00FFC6
+ *  - larghezza pannello ~360px (header titolo + conteggio + filtri senza overlap)
+ *  - header titolo + conteggio tipografia in px (vedi .active-missions-title / .active-missions-count), verde ciano #00FFC6
  *  - card bordo 2px pixel-style, sfondo trasparente, hover glow ciano
  *  - tooltip 320px, #0B0D10 @ 95%, bordo 2px status color, scanline CRT, sezioni OBJECTIVE/TASK/REWARD/DEADLINE
  */
@@ -12,7 +12,7 @@
     position: absolute;
     left: 24px;
     top: 136px;
-    width: 280px;
+    width: 360px;
     flex-direction: column;
     transition-property: opacity, translate;
     transition-duration: 400ms;
@@ -57,19 +57,21 @@
 .active-missions-header-left {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .active-missions-header-right {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .active-missions-filter-button {
-    min-width: 44px;
-    height: 22px;
-    margin-right: 6px;
-    padding-left: 6px;
-    padding-right: 6px;
+    min-width: 40px;
+    height: 20px;
+    margin-right: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
     padding-top: 1px;
     padding-bottom: 1px;
     background-color: rgba(8, 14, 16, 0.65);
@@ -82,8 +84,8 @@
     border-top-color: rgba(0, 255, 198, 0.3);
     border-bottom-color: rgba(0, 255, 198, 0.3);
     color: rgba(0, 255, 198, 0.7);
-    font-size: 8px;
-    letter-spacing: 1.4px;
+    font-size: 11px;
+    letter-spacing: 1px;
     -unity-font-style: bold;
 }
 
@@ -113,7 +115,7 @@
 }
 
 .active-missions-title {
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 2.4px;
     -unity-font-style: bold;
     color: rgb(0, 255, 198);
@@ -122,7 +124,7 @@
 
 .active-missions-count {
     margin-left: 8px;
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1.2px;
     color: rgba(0, 255, 198, 0.85);
     text-shadow: 0 0 4px rgba(0, 255, 198, 0.35);
@@ -171,7 +173,7 @@
 .active-missions-empty {
     margin-top: 2px;
     padding-left: 10px;
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1.2px;
     color: rgba(93, 182, 227, 0.4);
     -unity-font-style: italic;
@@ -222,7 +224,7 @@
 
 .active-mission-card-title {
     flex-grow: 1;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1.1px;
     -unity-font-style: bold;
 }
@@ -234,12 +236,12 @@
 
 .active-mission-card-timer-icon {
     margin-right: 3px;
-    font-size: 9px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.7);
 }
 
 .active-mission-card-timer {
-    font-size: 9px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.85);
 }
 
@@ -272,7 +274,7 @@
 }
 
 .active-mission-card-progress-percent {
-    font-size: 9px;
+    font-size: 13px;
     -unity-font-style: bold;
     color: rgb(240, 245, 243);
     -unity-text-align: middle-center;
@@ -492,7 +494,7 @@
 }
 
 .am-tooltip-title {
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 0.8px;
     -unity-font-style: bold;
 }
@@ -519,7 +521,7 @@
 
 .am-tooltip-faction {
     margin-top: 2px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 0.6px;
     color: rgba(192, 200, 197, 0.8);
 }
@@ -530,7 +532,7 @@
 }
 
 .am-tooltip-section-label {
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1.6px;
     -unity-font-style: bold;
     color: rgb(0, 255, 198);
@@ -539,7 +541,7 @@
 .am-tooltip-objective {
     margin-top: 4px;
     margin-left: 16px;
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(192, 200, 197);
     white-space: normal;
 }
@@ -550,7 +552,7 @@
 
 .am-tooltip-task-summary {
     margin-left: 16px;
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(230, 201, 111);
 }
 
@@ -568,7 +570,7 @@
 .am-tooltip-reward {
     margin-top: 4px;
     margin-left: 16px;
-    font-size: 11px;
+    font-size: 13px;
     white-space: normal;
 }
 
@@ -594,7 +596,7 @@
 }
 
 .am-tooltip-rep {
-    font-size: 10px;
+    font-size: 13px;
     color: rgb(127, 255, 122);
 }
 
@@ -606,7 +608,7 @@
 }
 
 .am-tooltip-deadline-text {
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1.2px;
     -unity-font-style: bold;
     color: rgb(230, 201, 111);

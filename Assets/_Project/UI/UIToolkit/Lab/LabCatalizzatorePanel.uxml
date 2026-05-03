@@ -30,7 +30,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="lab-cat-output-tooltip" class="sp-tooltip" style="position: absolute; display: none; background-color: rgba(13, 18, 23, 0.96); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-color: rgba(127, 204, 127, 0.9); border-right-color: rgba(127, 204, 127, 0.9); border-bottom-color: rgba(127, 204, 127, 0.9); border-left-color: rgba(127, 204, 127, 0.9); padding: 10px; min-width: 260px; max-width: 320px; flex-direction: column;">
-            <ui:Label name="lab-cat-output-tooltip-text" enable-rich-text="true" class="sp-tooltip-text" style="white-space: normal; color: rgb(242, 245, 250); font-size: 12px; -unity-text-align: upper-left;" />
+            <ui:Label name="lab-cat-output-tooltip-text" enable-rich-text="true" class="sp-tooltip-text" style="white-space: normal; color: rgb(242, 245, 250); font-size: 13px; -unity-text-align: upper-left;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

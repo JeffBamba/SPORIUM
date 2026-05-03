@@ -55,7 +55,7 @@
 }
 
 .lab-inc-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.85);
     margin-bottom: 12px;
     white-space: normal;
@@ -63,7 +63,7 @@
 }
 
 .lab-inc-reagent-desc {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.7);
     margin-top: 4px;
     white-space: normal;
@@ -108,7 +108,7 @@
 /* USS does not support :last-child */
 
 .lab-inc-x-label {
-    font-size: 10px;
+    font-size: 13px;
     color: rgba(192, 200, 197, 0.82);
 }
 
@@ -155,7 +155,7 @@
 
 .lab-inc-label {
     width: 100px;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgba(192, 200, 197, 0.8);
 }
@@ -171,7 +171,7 @@
 }
 
 .lab-inc-slot-text {
-    font-size: 12px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
 }
 
@@ -188,7 +188,7 @@
 .lab-inc-reagent-btn {
     min-width: 60px;
     height: 32px;
-    font-size: 11px;
+    font-size: 13px;
     border-width: 1px;
     border-color: rgba(230, 201, 111, 0.5);
     background-color: rgba(230, 201, 111, 0.1);
@@ -212,7 +212,7 @@
 .lab-inc-btn {
     min-width: 70px;
     height: 32px;
-    font-size: 11px;
+    font-size: 13px;
     -unity-font-style: bold;
     border-width: 1px;
     border-color: rgba(230, 201, 111, 0.6);

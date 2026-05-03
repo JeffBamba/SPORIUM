@@ -59,8 +59,8 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="inv-footer" class="inv-footer">
-                <ui:Label name="inv-footer-version" class="inv-footer-txt" style="font-size: 10px;" />
-                <ui:Label name="inv-footer-hint" class="inv-footer-txt" style="font-size: 10px;" />
+                <ui:Label name="inv-footer-version" class="inv-footer-txt" style="font-size: 13px;" />
+                <ui:Label name="inv-footer-hint" class="inv-footer-txt" style="font-size: 13px;" />
             </ui:VisualElement>
             <ui:Button name="btn-cancel" class="inv-cancel">
                 <ui:Label name="inv-cancel-lbl" text="ANNULLA" class="inv-cancel-text" />
@@ -70,7 +70,7 @@
                 <ui:VisualElement class="inv-monitor-led" />
             </ui:VisualElement>
             <ui:VisualElement name="inv-builder-reference" class="inv-builder-reference">
-                <ui:Label text="builder-reference" class="inv-br-label" style="font-size: 10px;" />
+                <ui:Label text="builder-reference" class="inv-br-label" style="font-size: 13px;" />
                 <ui:VisualElement class="inv-row inv-row--cat-spores inv-builder-sample-row">
                     <ui:VisualElement class="inv-row-iconbox" />
                     <ui:VisualElement class="inv-row-mid">

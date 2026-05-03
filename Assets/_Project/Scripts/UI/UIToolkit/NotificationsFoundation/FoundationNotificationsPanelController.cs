@@ -181,11 +181,11 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             if (_chevron != null)
                 _chevron.style.display = badgeCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // Header: danger/warning vincono; altrimenti se c’è almeno un toast codice MIS-* usa cyan mission recap.
+            // Header: danger/warning vincono; altrimenti se c’è un toast MIS-* informativo (≠ success) usa cyan mission recap.
             var headerSev = _service.GetHeaderSeverity();
             if ((int)headerSev >= (int)NotificationSeverity.Warning)
                 ApplySeverityClass(_headerButton, headerSev);
-            else if (AnyVisibleMissionCode())
+            else if (AnyVisibleMissionCyanAccent())
                 ApplyMissionPanelClass(_headerButton);
             else
                 ApplySeverityClass(_headerButton, headerSev);
@@ -205,13 +205,17 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             }
         }
 
-        private bool AnyVisibleMissionCode()
+        /// <summary>MIS-* con severità diversa da Success (es. nuova missione) usano l’accento ciano recap; completamento = verde success.</summary>
+        private bool AnyVisibleMissionCyanAccent()
         {
             if (_service == null) return false;
             foreach (var e in _service.GetVisibleRows())
             {
-                if (!string.IsNullOrEmpty(e.Code) && e.Code.StartsWith("MIS-", StringComparison.Ordinal))
-                    return true;
+                if (string.IsNullOrEmpty(e.Code) || !e.Code.StartsWith("MIS-", StringComparison.Ordinal))
+                    continue;
+                if (e.Severity == NotificationSeverity.Success)
+                    continue;
+                return true;
             }
             return false;
         }
@@ -373,7 +377,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     if (Code != null && Code.parent != null) Code.parent.style.display = DisplayStyle.Flex;
                     if (ItemLayout != null) ItemLayout.style.display = DisplayStyle.None;
 
-                    if (IsMissionNotificationCode(entry.Code))
+                    if (IsMissionNotificationCode(entry.Code) && entry.Severity != NotificationSeverity.Success)
                         ApplyMissionRowClass(Root);
                     else
                         ApplySeverityClass(Root, entry.Severity);
@@ -445,7 +449,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             private static string IconFor(NotificationSeverity severity, string code)
             {
                 if (IsMissionNotificationCode(code))
-                    return "★";
+                    return severity == NotificationSeverity.Success ? "+" : "★";
                 return severity switch
                 {
                     NotificationSeverity.Info => "i",
