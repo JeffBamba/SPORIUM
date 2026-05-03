@@ -56,8 +56,8 @@
             <ui:VisualElement name="grate-display" class="metric-module" style="margin-right: 88px;">
                 <ui:VisualElement name="icon-grate" class="metric-icon" />
                 <ui:VisualElement name="metric-stack" class="metric-stack">
-                    <ui:Label text="G-RATE" class="metric-label" style="bottom: -7px;" />
-                    <ui:Label name="grate-value" text="144" class="metric-value-large" style="top: -4px;" />
+                    <ui:Label text="CONOSCIENZA" class="metric-label" style="bottom: -7px;" />
+                    <ui:Label name="grate-value" text="SCARSA" class="metric-value-large" style="top: -4px; font-size: 14px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

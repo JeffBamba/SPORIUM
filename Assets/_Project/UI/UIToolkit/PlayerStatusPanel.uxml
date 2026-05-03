@@ -8,7 +8,7 @@
         <ui:VisualElement name="corner-bottom-right" class="pixel-corner corner-bottom-right" />
         <ui:VisualElement name="scanlines-overlay" class="scanlines-overlay" style="position: absolute; height: 250px; width: 217px;" />
         <ui:VisualElement name="top-section" class="top-section">
-            <ui:VisualElement name="biologo-portrait" class="portrait-image" style="min-width: 55px; min-height: 60px; height: 60px; width: 55px; background-image: url(&quot;project://database/Assets/_Project/Art/player_preview.png?fileID=2800000&amp;guid=12c2939bb3cd7ad42a3ffd0223d1182d&amp;type=3#player_preview&quot;);" />
+            <ui:VisualElement name="biologo-portrait" class="portrait-image" style="min-width: 55px; min-height: 60px; height: 60px; width: 55px; background-image: url(&quot;project://database/Assets/_Project/Art/player_preview.png?fileID=2800000&amp;guid=12c2939bb3cd7ad42a3ffd0223d1182d&amp;type=3#player_preview&quot;); -unity-background-scale-mode: scale-and-crop; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
             <ui:Label name="header-label" text="BIOLOGO" class="header-label" style="left: 1px; top: -6px; font-size: 11px; color: rgb(122, 199, 255);" />
             <ui:Label name="header-label" text="STATUS" class="header-label" style="left: -69px; top: 7px; width: 51px; color: rgb(227, 244, 255); -unity-font-style: bold; font-size: 14px; margin-right: 19px;" />
         </ui:VisualElement>
