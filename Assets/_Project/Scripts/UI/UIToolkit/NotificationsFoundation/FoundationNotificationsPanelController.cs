@@ -130,15 +130,23 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             _list = _root.Q<VisualElement>("nf-list");
             _headerTitleLabel = _root.Q<Label>("nf-header-title");
 
-            _toastTooltip = new VisualElement();
-            _toastTooltip.AddToClassList("nf-toast-tooltip");
+            _toastTooltip = _root.Q<VisualElement>("nf-toast-tooltip");
+            _toastTooltipLabel = _root.Q<Label>("nf-toast-tooltip-text");
+            if (_toastTooltip == null)
+            {
+                _toastTooltip = new VisualElement();
+                _toastTooltip.AddToClassList("nf-toast-tooltip");
+                _root.Add(_toastTooltip);
+            }
+            if (_toastTooltipLabel == null)
+            {
+                _toastTooltipLabel = new Label();
+                _toastTooltipLabel.AddToClassList("nf-toast-tooltip__text");
+                _toastTooltip.Add(_toastTooltipLabel);
+            }
             _toastTooltip.style.display = DisplayStyle.None;
             _toastTooltip.pickingMode = PickingMode.Ignore;
-            _toastTooltipLabel = new Label();
-            _toastTooltipLabel.AddToClassList("nf-toast-tooltip__text");
             _toastTooltipLabel.style.whiteSpace = WhiteSpace.Normal;
-            _toastTooltip.Add(_toastTooltipLabel);
-            _root.Add(_toastTooltip);
 
             _rows[0] = RowUI.Bind(_root, 0, _toastTooltip, _toastTooltipLabel);
             _rows[1] = RowUI.Bind(_root, 1, _toastTooltip, _toastTooltipLabel);
@@ -288,6 +296,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             public void Hide()
             {
                 if (Root == null) return;
+                HideTooltipIfOwnedByCurrentEntry();
                 if (Root.style.display == DisplayStyle.None) return;
 
                 Root.UnregisterCallback<MouseEnterEvent>(OnRowMouseEnter);
@@ -314,6 +323,8 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             public void Show(NotificationEntry entry, Sprite placeholderSprite = null)
             {
                 if (Root == null) return;
+                if (HasCurrent && CurrentEntryId != entry.Id)
+                    HideTooltipIfOwnedByCurrentEntry();
                 Root.style.display = DisplayStyle.Flex;
 
                 var isItemLayout = entry.Spec != null && entry.Spec.IsItemLayout && entry.Payload != null;
@@ -327,6 +338,10 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     {
                         Root.RegisterCallback<MouseEnterEvent>(OnRowMouseEnter);
                         Root.RegisterCallback<MouseLeaveEvent>(OnRowMouseLeave);
+                    }
+                    else
+                    {
+                        HideTooltipIfOwnedByCurrentEntry();
                     }
                 }
 
@@ -406,15 +421,23 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             private void OnRowMouseEnter(MouseEnterEvent evt)
             {
-                if (ToastTooltip == null || ToastTooltipLabel == null || string.IsNullOrWhiteSpace(TooltipText)) return;
+                if (ToastTooltip == null || ToastTooltipLabel == null || Root == null || !HasCurrent || string.IsNullOrWhiteSpace(TooltipText)) return;
                 ToastTooltipLabel.text = TooltipText.Replace("\\n", "\n");
                 ToastTooltip.style.display = DisplayStyle.Flex;
+                ToastTooltip.userData = CurrentEntryId;
                 var rowWorld = Root.worldBound;
                 var rootParent = ToastTooltip.parent;
                 if (rootParent != null)
                 {
-                    var localPos = rootParent.WorldToLocal(new Vector2(rowWorld.x, rowWorld.yMax + 4f));
-                    ToastTooltip.style.left = localPos.x;
+                    const float tooltipGapPx = 12f;
+                    const float fallbackTooltipWidthPx = 260f;
+                    float tooltipWidth = ToastTooltip.resolvedStyle.width;
+                    if (float.IsNaN(tooltipWidth) || tooltipWidth <= 1f)
+                        tooltipWidth = fallbackTooltipWidthPx;
+
+                    var localPos = rootParent.WorldToLocal(new Vector2(rowWorld.x, rowWorld.y));
+                    float minLeft = 8f - rootParent.worldBound.x;
+                    ToastTooltip.style.left = Mathf.Max(minLeft, localPos.x - tooltipWidth - tooltipGapPx);
                     ToastTooltip.style.top = localPos.y;
                     ToastTooltip.style.position = Position.Absolute;
                 }
@@ -422,8 +445,18 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             private void OnRowMouseLeave(MouseLeaveEvent evt)
             {
-                if (ToastTooltip != null)
+                HideTooltipIfOwnedByCurrentEntry();
+            }
+
+            private void HideTooltipIfOwnedByCurrentEntry()
+            {
+                if (ToastTooltip == null || !HasCurrent)
+                    return;
+                if (ToastTooltip.userData is int ownerId && ownerId == CurrentEntryId)
+                {
                     ToastTooltip.style.display = DisplayStyle.None;
+                    ToastTooltip.userData = null;
+                }
             }
             
             private static bool IsMissionNotificationCode(string code) =>
@@ -462,5 +495,4 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         }
     }
 }
-
 

@@ -68,16 +68,20 @@ MonoBehaviour:
 
     CONTENUTO
     PERSO. Qualcuno ha spento il sistema troppo a lungo.'
-  Beat3SeedStorageAnomalyPowerOnRequestLine: "Chiudi questo pannello adesso: qui
-    dentro e' solo allarme e promemoria, non il posto dove rimetti ordine."
-  Beat3SeedStorageCryHoverRequestLine: "Quello che hai visto ha un costo giornaliero
-    in CRY: mantenimento, macchine accese, niente sconti di coscienza.\nTi arriva
-    una nuova missione: «Accedi al PC». Scendi in Camera da letto, apri il terminale
-    sul tavolo e il Pannello di controllo remoto."
-  Beat3CryTooltipCostsExplainLine: "Ogni riga e' un contratto semplice: acceso paghi
-    CRY e ottieni la funzione; spento risparmi e rinunci al servizio.\nIl totale
-    in basso somma solo cio' che lasci in marcia: meccanica sporca, ma chiara."
-  Beat3CryTooltipIncomeExplainLine: "Nuova missione: «Accendi il Seed Storage». Dalla
-    riga del deposito porta ACCESO se serve, poi esci dal PC: la routine si chiude
-    quando lo schermo torna buio."
+  Beat3SeedStorageAnomalyPowerOnRequestLine: 'Chiudi questo pannello adesso: qui
+    dentro e'' solo allarme e promemoria, non il posto dove rimetti ordine.'
+  Beat3SeedStorageCryHoverRequestLine: 'Quello che hai visto ha un costo giornaliero
+    in CRY: mantenimento, macchine accese, niente sconti di coscienza.
+
+    Scendi
+    in Camera da letto, apri il terminale sul tavolo e il Pannello di controllo remoto
+    e vediamo di far ripartire questa macchina!'
+  Beat3CryTooltipCostsExplainLine: 'Ogni riga e'' un contratto semplice: acceso paghi
+    CRY e ottieni la funzione; spento risparmi e rinunci al servizio.
+
+    Il totale
+    in basso somma solo cio'' che paghi al giorno: meccanica sporca, ma chiara.'
+  Beat3CryTooltipIncomeExplainLine: "Dal Pannello di Controllo riaccendi il SeedStorage:
+    ho la sensazione che ti servir\xE0 presto. Poi esci dal PC che i siti porno non
+    sono piu online da un pezzo."
   MissionHighlightColorHex: '#E6C96F'

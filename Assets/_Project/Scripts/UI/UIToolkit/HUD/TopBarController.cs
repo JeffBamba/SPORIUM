@@ -161,6 +161,11 @@ namespace Sporae.UI.UIToolkit.HUD
         private Color _actionsBaseColor = new Color(0.902f, 0.788f, 0.435f, 1f); // default giallo
         private const float ActionsPulseSeed = 17.73f;
         private const int ActionsVisualSlots = 5;
+        private const float ActionsLossWarningBlinkInterval = 0.42f;
+        private const string ActionsLossWarningClass = "action-loss-warning";
+        private int _actionsLossWarningSegmentIndex = -1;
+        private float _actionsLossWarningNextBlinkTime;
+        private bool _actionsLossWarningBlinkOn;
         
         private void Awake()
         {
@@ -1137,6 +1142,8 @@ namespace Sporae.UI.UIToolkit.HUD
                 _iconActionsGlyph.style.unityBackgroundImageTintColor = new StyleColor(pulsed);
                 _actionsLabel.style.color = new StyleColor(pulsed);
             }
+
+            UpdateActionsLossWarningBlink();
             
             // Overlay barre refresh CRT sul ph-tooltip (1, 2 o 3 barre, velocità randomica)
             if (_phTooltip != null && _phTooltip.style.display == DisplayStyle.Flex && _phTooltipCrtBars != null)
@@ -1298,6 +1305,90 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_actionsBar != null)
             {
                 _actionsBar.SetColors(fillColor, new Color(0.118f, 0.157f, 0.165f, 1f), fillColor);
+                _actionsBar.UpdateValue(visibleCurrent, ActionsVisualSlots);
+                UpdateActionsLossWarningBlink(force: true);
+            }
+        }
+
+        private void UpdateActionsLossWarningBlink(bool force = false)
+        {
+            if (_actionsBar == null || !ShouldBlinkLastActionSegment())
+            {
+                ClearActionsLossWarningVisual();
+                return;
+            }
+
+            int targetIndex = Mathf.Clamp(_actionsLeft, 1, ActionsVisualSlots) - 1;
+            if (targetIndex < 0 || targetIndex >= _actionsBar.SegmentCount)
+            {
+                ClearActionsLossWarningVisual();
+                return;
+            }
+
+            if (_actionsLossWarningSegmentIndex != targetIndex)
+            {
+                ClearActionsLossWarningVisual(refreshBar: false);
+                _actionsLossWarningSegmentIndex = targetIndex;
+                _actionsLossWarningNextBlinkTime = 0f;
+                _actionsLossWarningBlinkOn = false;
+            }
+
+            if (!force && Time.unscaledTime < _actionsLossWarningNextBlinkTime)
+                return;
+
+            _actionsLossWarningBlinkOn = force ? true : !_actionsLossWarningBlinkOn;
+            _actionsLossWarningNextBlinkTime = Time.unscaledTime + ActionsLossWarningBlinkInterval;
+            ApplyActionsLossWarningVisual(_actionsLossWarningBlinkOn);
+        }
+
+        private bool ShouldBlinkLastActionSegment()
+        {
+            if (_gameManager == null || _actionSystem == null || _actionsLeft <= 0)
+                return false;
+
+            // The next no-meal dawn applies the first cap loss when the streak reaches 3.
+            return !_gameManager.AteMealSincePreviousDawn && _gameManager.ConsecutiveDaysWithoutMeal >= 2;
+        }
+
+        private void ApplyActionsLossWarningVisual(bool blinkOn)
+        {
+            var segment = _actionsBar?.GetSegment(_actionsLossWarningSegmentIndex);
+            if (segment == null)
+                return;
+
+            segment.AddToClassList(ActionsLossWarningClass);
+
+            Color emptyColor = new Color(0.118f, 0.157f, 0.165f, 1f);
+            Color background = blinkOn
+                ? Color.Lerp(_actionsBaseColor, Color.white, 0.18f)
+                : Color.Lerp(_actionsBaseColor, emptyColor, 0.62f);
+            Color border = blinkOn
+                ? Color.Lerp(_actionsBaseColor, Color.white, 0.28f)
+                : Color.Lerp(_actionsBaseColor, emptyColor, 0.35f);
+
+            segment.style.backgroundColor = new StyleColor(background);
+            segment.style.borderTopColor = new StyleColor(border);
+            segment.style.borderRightColor = new StyleColor(border);
+            segment.style.borderBottomColor = new StyleColor(border);
+            segment.style.borderLeftColor = new StyleColor(border);
+        }
+
+        private void ClearActionsLossWarningVisual(bool refreshBar = true)
+        {
+            bool hadActiveSegment = _actionsLossWarningSegmentIndex >= 0;
+            if (_actionsLossWarningSegmentIndex >= 0)
+            {
+                var previous = _actionsBar?.GetSegment(_actionsLossWarningSegmentIndex);
+                previous?.RemoveFromClassList(ActionsLossWarningClass);
+            }
+
+            _actionsLossWarningSegmentIndex = -1;
+            _actionsLossWarningBlinkOn = false;
+            _actionsLossWarningNextBlinkTime = 0f;
+
+            if (hadActiveSegment && refreshBar && _actionsBar != null)
+            {
+                int visibleCurrent = Mathf.Clamp(_actionsLeft, 0, ActionsVisualSlots);
                 _actionsBar.UpdateValue(visibleCurrent, ActionsVisualSlots);
             }
         }
@@ -2095,6 +2186,21 @@ namespace Sporae.UI.UIToolkit.HUD
                         Amount = delta
                     }));
                 }
+
+                if (ShouldBlinkLastActionSegment())
+                {
+                    _actionsTooltipBreakdownList.Add(BuildBreakdownRow(new ActionBudgetEntry
+                    {
+                        Source = ActionBudgetSource.Malnutrition,
+                        Label = LocalizationManager.GetString("topbar.actions_tt.next_dawn_meal_loss_label"),
+                        Detail = LocalizationManager.GetString("topbar.actions_tt.next_dawn_meal_loss_detail",
+                            new Dictionary<string, string>
+                            {
+                                { "days", _gameManager.ConsecutiveDaysWithoutMeal.ToString() }
+                            }),
+                        Amount = -1
+                    }));
+                }
             }
 
             if (_actionsTooltipTotal != null)
@@ -2111,7 +2217,7 @@ namespace Sporae.UI.UIToolkit.HUD
         {
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
+            row.style.alignItems = Align.FlexStart;
             row.style.marginBottom = 2f;
 
             var dot = new VisualElement();
@@ -2127,25 +2233,34 @@ namespace Sporae.UI.UIToolkit.HUD
             dot.style.backgroundColor = new StyleColor(GetBreakdownColor(entry.Source));
             row.Add(dot);
 
+            var textWrap = new VisualElement();
+            textWrap.style.flexDirection = FlexDirection.Column;
+            textWrap.style.flexGrow = 1f;
+            textWrap.style.flexShrink = 1f;
+            textWrap.style.marginRight = 8f;
+            row.Add(textWrap);
+
             var label = new Label($"{GetSourceIcon(entry.Source)}  {entry.Label}");
             label.style.color = new StyleColor(new Color(0.78f, 0.80f, 0.78f, 1f));
             label.style.fontSize = 12f;
+            label.style.whiteSpace = WhiteSpace.Normal;
             label.enableRichText = true;
-            row.Add(label);
+            textWrap.Add(label);
 
             if (!string.IsNullOrEmpty(entry.Detail))
             {
-                var detail = new Label($"— {entry.Detail}");
+                var detail = new Label(entry.Detail);
                 detail.style.color = new StyleColor(new Color(0.55f, 0.58f, 0.55f, 1f));
                 detail.style.fontSize = 12f;
-                detail.style.marginLeft = 6f;
+                detail.style.whiteSpace = WhiteSpace.Normal;
                 detail.enableRichText = true;
-                row.Add(detail);
+                textWrap.Add(detail);
             }
 
             var value = new Label(entry.Amount > 0 ? $"+{entry.Amount}" : entry.Amount.ToString());
-            value.style.marginLeft = StyleKeyword.Auto;
             value.style.marginRight = 8f;
+            value.style.minWidth = 28f;
+            value.style.unityTextAlign = TextAnchor.UpperRight;
             value.style.color = new StyleColor(entry.Amount >= 0 ? _greenStable : _redCritical);
             value.style.fontSize = 12f;
             value.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -2501,5 +2616,3 @@ namespace Sporae.UI.UIToolkit.HUD
         #pragma warning restore 0414
     }
 }
-
-

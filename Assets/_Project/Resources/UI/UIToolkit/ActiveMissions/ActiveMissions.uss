@@ -115,17 +115,21 @@
 }
 
 .active-missions-title {
+    height: 20px;
     font-size: 13px;
     letter-spacing: 2.4px;
     -unity-font-style: bold;
+    -unity-text-align: middle-left;
     color: rgb(0, 255, 198);
     text-shadow: 0 0 6px rgba(0, 255, 198, 0.55);
 }
 
 .active-missions-count {
+    height: 20px;
     margin-left: 8px;
     font-size: 13px;
     letter-spacing: 1.2px;
+    -unity-text-align: middle-left;
     color: rgba(0, 255, 198, 0.85);
     text-shadow: 0 0 4px rgba(0, 255, 198, 0.35);
 }
@@ -287,6 +291,11 @@
 
 /* ================= STATUS VARIANTS ================= */
 .am-status-active.active-mission-card {
+    background-color: rgba(4, 22, 15, 0.82);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
     border-left-color: rgba(0, 255, 198, 0.4);
     border-right-color: rgba(0, 255, 198, 0.4);
     border-top-color: rgba(0, 255, 198, 0.4);
@@ -294,6 +303,7 @@
 }
 
 .am-status-active.active-mission-card:hover {
+    background-color: rgba(6, 32, 22, 0.9);
     border-left-color: rgba(0, 255, 198, 0.85);
     border-right-color: rgba(0, 255, 198, 0.85);
     border-top-color: rgba(0, 255, 198, 0.85);
@@ -369,6 +379,11 @@
 }
 
 .am-status-completed.active-mission-card {
+    background-color: rgba(6, 24, 12, 0.82);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
     border-left-color: rgba(127, 255, 122, 0.33);
     border-right-color: rgba(127, 255, 122, 0.33);
     border-top-color: rgba(127, 255, 122, 0.33);
@@ -376,6 +391,7 @@
 }
 
 .am-status-completed.active-mission-card:hover {
+    background-color: rgba(10, 34, 17, 0.9);
     border-left-color: rgba(127, 255, 122, 0.62);
     border-right-color: rgba(127, 255, 122, 0.62);
     border-top-color: rgba(127, 255, 122, 0.62);

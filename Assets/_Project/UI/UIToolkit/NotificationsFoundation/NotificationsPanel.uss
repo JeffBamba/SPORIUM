@@ -676,7 +676,9 @@
 /* Mini-tooltip al passaggio del mouse sulla toast (stile Foundation) */
 .nf-toast-tooltip {
     position: absolute;
-    display: none;
+    left: -272px;
+    top: 50px;
+    width: 260px;
     min-width: 180px;
     max-width: 260px;
     padding: var(--sp-space-sm);

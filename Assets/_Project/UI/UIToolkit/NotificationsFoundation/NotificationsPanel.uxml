@@ -124,5 +124,8 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="nf-toast-tooltip" picking-mode="Ignore" class="nf-toast-tooltip">
+            <ui:Label name="nf-toast-tooltip-text" text="Tooltip notifica - testo di esempio visibile in UI Builder." class="nf-toast-tooltip__text" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

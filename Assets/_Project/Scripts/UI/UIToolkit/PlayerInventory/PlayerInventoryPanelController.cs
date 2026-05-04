@@ -1149,7 +1149,13 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (!ItemConsumptionHandler.IsConsumable(m.TypeId)) return;
             if (_confirm != null) _confirm.RemoveFromClassList("inv-confirm--hidden");
             if (_confirm != null) _confirm.style.display = DisplayStyle.Flex;
-            if (_confirmBody != null) _confirmBody.text = LocalizationManager.GetString("inventory.confirm_use", new Dictionary<string, string> { { "name", m.DisplayName } });
+            if (_confirmBody != null)
+            {
+                string key = m.TypeId == Items.Water
+                    ? "inventory.confirm_use_dirty_water"
+                    : "inventory.confirm_use";
+                _confirmBody.text = LocalizationManager.GetString(key, new Dictionary<string, string> { { "name", m.DisplayName } });
+            }
         }
 
         private void OnConfirmUseYes()

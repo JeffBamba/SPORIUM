@@ -18,6 +18,7 @@ namespace Sporae.UI.UIToolkit.HUD
         
         public int Value { get; private set; }
         public int MaxValue { get; private set; }
+        public int SegmentCount => _segments?.Count ?? 0;
         
         public SegmentedBarUI(VisualElement barContainer, int segmentCount, Color fillColor, Color emptyColor, Color borderColor)
         {
@@ -84,6 +85,14 @@ namespace Sporae.UI.UIToolkit.HUD
                     segment.style.borderLeftColor = new StyleColor(_borderColor);
                 }
             }
+        }
+
+        public VisualElement GetSegment(int index)
+        {
+            if (_segments == null || index < 0 || index >= _segments.Count)
+                return null;
+
+            return _segments[index];
         }
         
         /// <summary>

@@ -39,7 +39,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         [Header("HUD collapse")]
         [Tooltip("Se true, all'avvio mostra tab POT/CRYO e card; se false, resta solo la barra con toggle (come header notifiche).")]
-        [SerializeField] private bool _startHudExpanded = true;
+        [SerializeField] private bool _startHudExpanded = false;
 
         // ── Services ──────────────────────────────────────────────────
         private DomePotRegistry _potRegistry;
@@ -91,6 +91,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         private readonly PotStateModel[] _cachedStates    = new PotStateModel[4];
         private readonly PlantData[]     _cachedPlantData = new PlantData[4];
         private readonly CryoSlot[]      _cachedCryoSlots = new CryoSlot[3];
+        private readonly bool[]          _potHadPlantLastRefresh = new bool[4];
 
         // ── State ──────────────────────────────────────────────────────
         private readonly bool[] _expandedPots = new bool[4];
@@ -175,7 +176,10 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
 
         private void HandlePotStateChanged(PotSlot pot)
         {
-            RefreshData();
+            bool openedFromPlanting = RefreshData(openOnNewlyPlanted: true);
+            if (openedFromPlanting)
+                OpenHudBodyOnPots();
+
             // Collapse expanded cards whose pot became empty
             for (int i = 0; i < 4; i++)
             {
@@ -302,6 +306,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     _potCondRows[i].style.display = DisplayStyle.None;
             }
 
+            if (Application.isPlaying)
+                _startHudExpanded = false;
+
             // SwitchTab prima, poi ApplyHudBodyExpandedState: se collassato, sovrascrive la visibilità sezioni
             SwitchTab(false);
             _hudBodyExpanded = _startHudExpanded;
@@ -335,6 +342,13 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         private void ToggleHudBodyExpanded()
         {
             _hudBodyExpanded = !_hudBodyExpanded;
+            ApplyHudBodyExpandedState();
+        }
+
+        private void OpenHudBodyOnPots()
+        {
+            _hudBodyExpanded = true;
+            SwitchTab(false);
             ApplyHudBodyExpandedState();
         }
 
@@ -397,10 +411,12 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         private void SwitchTab(bool cryo)
         {
             _showingCryo = cryo;
+
+            bool showBody = _hudBodyExpanded;
             if (_sectionPots != null)
-                _sectionPots.style.display = cryo ? DisplayStyle.None : DisplayStyle.Flex;
+                _sectionPots.style.display = showBody && !cryo ? DisplayStyle.Flex : DisplayStyle.None;
             if (_sectionCryo != null)
-                _sectionCryo.style.display = cryo ? DisplayStyle.Flex : DisplayStyle.None;
+                _sectionCryo.style.display = showBody && cryo ? DisplayStyle.Flex : DisplayStyle.None;
             if (_tabPots != null)
                 _tabPots.EnableInClassList("dome-tab-active", !cryo);
             if (_tabCryo != null)
@@ -413,17 +429,19 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         // Refresh
         // ─────────────────────────────────────────────────────────────
 
-        private void RefreshData()
+        private bool RefreshData(bool openOnNewlyPlanted = false)
         {
-            if (_hudRoot == null) return;
-            RefreshPots();
+            if (_hudRoot == null) return false;
+            bool newlyPlanted = RefreshPots(openOnNewlyPlanted);
             RefreshCryo();
             UpdateTabCounters();
+            return newlyPlanted;
         }
 
-        private void RefreshPots()
+        private bool RefreshPots(bool trackNewlyPlanted)
         {
             var pots = _potRegistry?.GetActivePotsSnapshot();
+            bool newlyPlanted = false;
 
             for (int i = 0; i < 4; i++)
             {
@@ -436,6 +454,10 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 _cachedPlantData[i] = plantData;
 
                 bool hasPlant  = state?.HasPlant ?? false;
+                if (trackNewlyPlanted && hasPlant && !_potHadPlantLastRefresh[i])
+                    newlyPlanted = true;
+                _potHadPlantLastRefresh[i] = hasPlant;
+
                 string potLabel = pot?.PotId ?? $"POT-00{i + 1}";
 
                 // ── Badge ──
@@ -719,6 +741,8 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 // ── Sync expand state visually ──
                 ApplyPotExpandState(i);
             }
+
+            return newlyPlanted;
         }
 
         private void RefreshCryo()
