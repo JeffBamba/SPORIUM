@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
+using Sporae.Core;
 using UnityEngine;
 using Sporae.DevTools;
 
@@ -58,7 +59,7 @@ namespace _Project.BlackMarket
             if (index < 0 || index >= _displayCatalog.Count) return;
             var selectedItem = _displayCatalog[index];
 
-            if (!_economySystem.Spend(selectedItem.BuyPrice))
+            if (!_economySystem.Spend(selectedItem.BuyPrice, CrySpendLedgerCategory.BlackMarketBuy))
                 return;
 
             if (selectedItem.TypeId == "black-market")

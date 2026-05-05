@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using _Project;
 using _Project.Sporae.Core;
 using _Project.UI.UIToolkit.VoOverlay;
@@ -12,6 +14,8 @@ using Sporae.Dome.PotSystem.Fertilizer;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
+using Sporae.UI.UIToolkit.HUD;
+using Sporae.UI.UIToolkit;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -63,13 +67,18 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private VisualElement _riskBar;
         private Label _fertilizerMeterLabel;
         private VisualElement _fertilizerBar;
-        private VisualElement _needRowPrimary;
+        private VisualElement _needRowSummary;
+        private VisualElement _needRowHydration;
         private VisualElement _needRowPh;
         private VisualElement _needRowFert;
         private VisualElement _needRowCond;
+        private Label _mainNeedSubtitleLabel;
+        private Label _needTitleHydration;
         private Label _needTitlePh;
         private Label _needTitleFert;
         private Label _needTitleCond;
+
+        private static readonly CultureInfo ItPhCulture = CultureInfo.GetCultureInfo("it-IT");
         private VisualElement _riskCalmBlock;
         private VisualElement _riskDetailBlock;
         private Button _closeButton;
@@ -121,12 +130,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
         private void OnEnable()
         {
+            ResolveServices();
             PotEvents.OnPotStateChanged += HandlePotStateChanged;
             PotEvents.OnPotAction += HandlePotAction;
             PotEvents.OnPotActionFailed += HandlePotActionFailed;
             PotEvents.OnPlantStageChanged += HandlePlantStageChanged;
             PotEvents.OnPlantDied += HandlePlantDied;
             PotEvents.OnPotSelected += HandlePotSelected;
+            if (_phSystem != null)
+                _phSystem.OnPhChanged += HandlePhSystemChanged;
             if (_isVisible)
                 RequestRealtimeRefresh(playVo: false);
         }
@@ -139,6 +151,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PotEvents.OnPlantStageChanged -= HandlePlantStageChanged;
             PotEvents.OnPlantDied -= HandlePlantDied;
             PotEvents.OnPotSelected -= HandlePotSelected;
+            if (_phSystem != null)
+                _phSystem.OnPhChanged -= HandlePhSystemChanged;
             if (_deferredRefreshRoutine != null)
             {
                 StopCoroutine(_deferredRefreshRoutine);
@@ -163,6 +177,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             if (Input.GetKeyDown(KeyCode.Escape))
                 Hide();
+
+            if (_phSystem != null && _phValueLabel != null)
+                ApplyLivePhDisplay();
         }
 
         public void Show()
@@ -266,6 +283,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _lifeStateLabel = _document.rootVisualElement.Q<Label>("pcv4-life-state");
             _stageDetailLabel = _document.rootVisualElement.Q<Label>("pcv4-stage-detail");
             _mainNeedLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need");
+            _mainNeedSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need-subtitle");
             _hydrationLabel = _document.rootVisualElement.Q<Label>("pcv4-hydration-label");
             _phValueLabel = _document.rootVisualElement.Q<Label>("pcv4-ph-value");
             _phAffinityLabel = _document.rootVisualElement.Q<Label>("pcv4-ph-affinity");
@@ -288,10 +306,12 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _hydrationBar = _document.rootVisualElement.Q<VisualElement>("pcv4-hydration-bar");
             _fertilizerMeterLabel = _document.rootVisualElement.Q<Label>("pcv4-fertilizer-label");
             _fertilizerBar = _document.rootVisualElement.Q<VisualElement>("pcv4-fertilizer-bar");
-            _needRowPrimary = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-primary");
+            _needRowSummary = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-summary");
+            _needRowHydration = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-hydration");
             _needRowPh = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-ph");
             _needRowFert = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-fert");
             _needRowCond = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-cond");
+            _needTitleHydration = _document.rootVisualElement.Q<Label>("pcv4-need-title-hydration");
             _needTitlePh = _document.rootVisualElement.Q<Label>("pcv4-need-title-ph");
             _needTitleFert = _document.rootVisualElement.Q<Label>("pcv4-need-title-fert");
             _needTitleCond = _document.rootVisualElement.Q<Label>("pcv4-need-title-cond");
@@ -345,7 +365,10 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PotSlot pot = ResolveTargetPot();
             PotStateModel state = pot != null ? pot.PotActions?.PotState : null;
             PlantData plantData = state != null ? state.GetPlantData() : null;
-            _lastModel = PlantCard4vCareViewModel.Build(pot, state, plantData, _potSystemConfig, _phSystem, _pendingVoReaction);
+            int phraseSalt = ResolveCurrentDay() * 17;
+            if (pot != null && !string.IsNullOrEmpty(pot.PotId))
+                phraseSalt ^= pot.PotId.GetHashCode();
+            _lastModel = PlantCard4vCareViewModel.Build(pot, state, plantData, _potSystemConfig, _phSystem, _pendingVoReaction, phraseSalt);
             _pendingVoReaction = null;
             BindModel(_lastModel);
             if (playVo && _isVisible)
@@ -387,7 +410,17 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (_lifeStateLabel != null) _lifeStateLabel.text = model.LifeState;
             if (_stageDetailLabel != null) _stageDetailLabel.text = model.StageDetail;
             if (_mainNeedLabel != null) _mainNeedLabel.text = model.MainNeed;
-            ApplyNeedTitleSignal(_mainNeedLabel, model.HydrationNeedSignal);
+            if (_mainNeedSubtitleLabel != null)
+            {
+                _mainNeedSubtitleLabel.text = model.MainNeedSubtitle ?? string.Empty;
+                _mainNeedSubtitleLabel.style.display = string.IsNullOrWhiteSpace(model.MainNeedSubtitle)
+                    ? DisplayStyle.None
+                    : DisplayStyle.Flex;
+            }
+
+            ApplyNeedTitleSignal(_mainNeedLabel, WorstNeedSignal(
+                model.HydrationNeedSignal, model.PhNeedSignal, model.FertilizerNeedSignal, model.ConditionNeedSignal));
+            ApplyNeedTitleSignal(_needTitleHydration, model.HydrationNeedSignal);
             ApplyNeedTitleSignal(_needTitlePh, model.PhNeedSignal);
             ApplyNeedTitleSignal(_needTitleFert, model.FertilizerNeedSignal);
             ApplyNeedTitleSignal(_needTitleCond, model.ConditionNeedSignal);
@@ -420,6 +453,44 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             BindRiskPanelVisibility(model);
             BindSecondaryRisk(model);
             BindActionButtons(model);
+            ApplyLivePhDisplay();
+        }
+
+        private static PlantCard4vNeedSignal WorstNeedSignal(
+            PlantCard4vNeedSignal a,
+            PlantCard4vNeedSignal b,
+            PlantCard4vNeedSignal c,
+            PlantCard4vNeedSignal d)
+        {
+            PlantCard4vNeedSignal WorstPair(PlantCard4vNeedSignal x, PlantCard4vNeedSignal y)
+            {
+                int Rank(PlantCard4vNeedSignal s) => s switch
+                {
+                    PlantCard4vNeedSignal.Warning => 2,
+                    PlantCard4vNeedSignal.Attention => 1,
+                    _ => 0
+                };
+                return Rank(x) >= Rank(y) ? x : y;
+            }
+
+            return WorstPair(WorstPair(a, b), WorstPair(c, d));
+        }
+
+        /// <summary>Aggiorna il numero pH oscillato come TopBar; chiamare anche dopo BindModel.</summary>
+        private void ApplyLivePhDisplay()
+        {
+            if (_phSystem == null || _phValueLabel == null)
+                return;
+            float valuePh = PhLiveDisplayMath.ComputeOscillatedDisplayPh(_phSystem.CurrentPh, Time.time);
+            PhSystem.PhBand band = _phSystem.EvaluateBand(valuePh);
+            Color bandColor = PhGradientDisplayColors.GetColorForPhBand(band);
+            _phValueLabel.text = valuePh.ToString("F1", ItPhCulture);
+            _phValueLabel.style.color = new StyleColor(bandColor);
+            if (_phAffinityLabel != null)
+            {
+                _phAffinityLabel.text = PlantCard4vCareViewModel.FormatPhBandShort(band);
+                _phAffinityLabel.style.color = new StyleColor(bandColor);
+            }
         }
 
         private void ShowEmptyPotToast(string potId)
@@ -479,7 +550,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (model == null)
                 return;
 
-            ApplyNeedRowTooltip(_needRowPrimary, model.HydrationRowTooltip);
+            ApplyNeedRowTooltip(_needRowSummary, model.SummaryRowTooltip);
+            ApplyNeedRowTooltip(_needRowHydration, model.HydrationRowTooltip);
             ApplyNeedRowTooltip(_needRowPh, model.PhRowTooltip);
             ApplyNeedRowTooltip(_needRowFert, model.FertilizerRowTooltip);
             ApplyNeedRowTooltip(_needRowCond, model.ConditionRowTooltip);
@@ -511,7 +583,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 return;
 
             _needTooltipHoverRegistered = true;
-            RegisterNeedRowPointerHandlers(_needRowPrimary);
+            RegisterNeedRowPointerHandlers(_needRowSummary);
+            RegisterNeedRowPointerHandlers(_needRowHydration);
             RegisterNeedRowPointerHandlers(_needRowPh);
             RegisterNeedRowPointerHandlers(_needRowFert);
             RegisterNeedRowPointerHandlers(_needRowCond);
@@ -654,6 +727,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             button.text = string.Empty;
             button.RemoveFromClassList("pcv4-action--primary");
             button.RemoveFromClassList("pcv4-action--active-system");
+            button.RemoveFromClassList("pcv4-action--irrigation-on");
+            button.RemoveFromClassList("pcv4-action--led-red-on");
+            button.RemoveFromClassList("pcv4-action--led-blue-on");
             button.RemoveFromClassList("pcv4-action--muted");
             button.RemoveFromClassList("pcv4-action--disabled");
 
@@ -683,7 +759,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (highlightActiveSystem && enabled && !button.ClassListContains("pcv4-action--primary"))
             {
                 button.RemoveFromClassList("pcv4-action--muted");
-                button.AddToClassList("pcv4-action--active-system");
+                if (action == PlantCard4vActionKind.Water)
+                    button.AddToClassList("pcv4-action--irrigation-on");
+                else if (button == _lightRedButton && model.LedState == LedSystemState.Red)
+                    button.AddToClassList("pcv4-action--led-red-on");
+                else if (button == _lightBlueButton && model.LedState == LedSystemState.Blue)
+                    button.AddToClassList("pcv4-action--led-blue-on");
+                else
+                    button.AddToClassList("pcv4-action--active-system");
             }
         }
 
@@ -1062,7 +1145,39 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _voOverlay?.SetPlantCard4vDocked(false);
 
             StopPlantCardVoTyping();
-            _voTextTypeRoutine = StartCoroutine(TypeVoIntoLabelCoroutine(line));
+            _voTextTypeRoutine = StartCoroutine(TypeVoIntoLabelCoroutine(NormalizeVoTextForCard(line)));
+        }
+
+        /// <summary>Unisce capi e spazi così il wrapping USS è fluido (no blocchi tipo titolo centrato).</summary>
+        private static string NormalizeVoTextForCard(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return line;
+            var compact = line.Replace("\r\n", "\n").Trim();
+            var sb = new StringBuilder(compact.Length);
+            bool pendingSpace = false;
+            for (int i = 0; i < compact.Length; i++)
+            {
+                char c = compact[i];
+                if (c == '\n')
+                {
+                    pendingSpace = true;
+                    continue;
+                }
+
+                if (char.IsWhiteSpace(c))
+                {
+                    pendingSpace = true;
+                    continue;
+                }
+
+                if (pendingSpace && sb.Length > 0)
+                    sb.Append(' ');
+                pendingSpace = false;
+                sb.Append(c);
+            }
+
+            return sb.ToString();
         }
 
         private void StopPlantCardVoTyping()
@@ -1162,6 +1277,12 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             // Apri la card solo se c'è una pianta da curare; altrimenti solo toast (gestito in SetVisible).
             Show();
+        }
+
+        private void HandlePhSystemChanged(float newPh, float delta)
+        {
+            if (_isVisible)
+                RequestRealtimeRefresh(playVo: false);
         }
     }
 }

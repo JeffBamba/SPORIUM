@@ -591,18 +591,17 @@ namespace _Project
         }
 
         /// <summary>
-        /// Determina la banda pH corrente (usa CurrentPh che include oscillazione)
+        /// Banda pH per un valore sulla scala dome (-100..+100), stesse soglie di <see cref="EvaluateState"/>.
+        /// Utile per UI che mostra un valore oscillato (TopBar / PlantCard4v).
         /// </summary>
-        public PhBand EvaluateState()
+        public PhBand EvaluateBand(float ph)
         {
-            float ph = CurrentPh;
-            // Usa soglie configurabili se disponibili, altrimenti default
             float ultraAcidThreshold = -80f;
             float stableAcidThreshold = -30f;
             float stableBasicThreshold = 30f;
             float ultraBasicThreshold = 80f;
-            
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             try
             {
                 ultraAcidThreshold = DifficultyCalibrationConfig.PhThresholdUltraAcid;
@@ -614,14 +613,19 @@ namespace _Project
             {
                 // Se config non disponibile, usa default
             }
-            #endif
-            
+#endif
+
             if (ph <= ultraAcidThreshold) return PhBand.UltraAcid;
             if (ph <= stableAcidThreshold) return PhBand.StableAcid;
-            if (ph <= stableBasicThreshold - 1f) return PhBand.Neutral; // -1 per evitare overlap
-            if (ph <= ultraBasicThreshold - 1f) return PhBand.StableBasic; // -1 per evitare overlap
+            if (ph <= stableBasicThreshold - 1f) return PhBand.Neutral;
+            if (ph <= ultraBasicThreshold - 1f) return PhBand.StableBasic;
             return PhBand.UltraBasic;
         }
+
+        /// <summary>
+        /// Determina la banda pH corrente (usa CurrentPh)
+        /// </summary>
+        public PhBand EvaluateState() => EvaluateBand(CurrentPh);
 
         /// <summary>
         /// Ottiene il nome della banda pH

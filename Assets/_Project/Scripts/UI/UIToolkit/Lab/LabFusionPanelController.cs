@@ -344,8 +344,9 @@ namespace Sporae.UI.UIToolkit.Lab
                     RefreshDisplay();
                 },
                 () => { },
-                SporeStage.Matured
-            );
+                SporeStage.Matured,
+                null,
+                presentFullInventoryUi: true);
         }
 
         private void OnFusionClicked()

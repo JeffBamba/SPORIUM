@@ -343,8 +343,8 @@ namespace Sporae.UI.UIToolkit.Lab
                 },
                 () => { },
                 null,
-                "extractor"
-            );
+                "extractor",
+                presentFullInventoryUi: true);
         }
 
         private HashSet<string> ExtractorAllowedTypes()

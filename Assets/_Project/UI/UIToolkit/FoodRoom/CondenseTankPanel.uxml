@@ -68,7 +68,10 @@
                                 <ui:VisualElement name="condensation-progress-fill" class="condensation-progress-fill" />
                             </ui:VisualElement>
                             <ui:VisualElement name="condensation-status-row" class="condensation-status-row">
-                                <ui:Label name="condensation-status-text" text="Accumulo insufficiente." class="condensation-status-text" />
+                                <ui:VisualElement name="condensation-status-text-col" class="condensation-status-text-col">
+                                    <ui:Label name="condensation-status-text" text="Accumulo insufficiente." class="condensation-status-text" />
+                                    <ui:Label name="condensation-forecast" text="Previsione raccolta: —" class="condensation-forecast" />
+                                </ui:VisualElement>
                                 <ui:Button name="btn-collect-dirty-water" text="RACCOGLI ACQUA SPORCA" class="sp-button sp-button--secondary condensation-collect-button" />
                             </ui:VisualElement>
                         </ui:VisualElement>

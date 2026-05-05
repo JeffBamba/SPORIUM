@@ -24,7 +24,7 @@ namespace Sporae.Core
             return amount >= 0 && CurrentCRY >= amount;
         }
 
-        public bool Add(int amount)
+        public bool Add(int amount, CryIncomeLedgerCategory ledgerCategory = CryIncomeLedgerCategory.Other)
         {
             if (amount <= 0) 
                 return false;
@@ -34,6 +34,7 @@ namespace Sporae.Core
                 return true;
             
             _diaryStatistics.CryEarned += amount;
+            _diaryStatistics.RegisterCryIncomeLedger(amount, ledgerCategory);
             
             int newAmount = Math.Min(CurrentCRY + amount, MaxCRY);
             CurrentCRY = newAmount;
@@ -41,12 +42,13 @@ namespace Sporae.Core
             return true;
         }
 
-        public bool Spend(int amount)
+        public bool Spend(int amount, CrySpendLedgerCategory ledgerCategory = CrySpendLedgerCategory.Other)
         {
             if (!CanAfford(amount))
                 return false;
             
             _diaryStatistics.CrySpent += amount;
+            _diaryStatistics.RegisterCrySpendLedger(amount, ledgerCategory);
             
             CurrentCRY -= amount;
             OnCRYChanged?.Invoke(CurrentCRY);

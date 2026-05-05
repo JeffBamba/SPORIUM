@@ -95,22 +95,22 @@
                 <ui:Label name="cry-section-detail-header" text="DETTAGLIO PLH" class="cbb-cry-section-header" style="color: rgb(91, 176, 217); font-size: 13px;" />
                 <ui:VisualElement name="cry-tooltip-row-maint" class="cbb-cry-row">
                     <ui:Label name="cry-row-maint-label" text="Manutenzione Dome — PLH" class="cbb-cry-key" style="font-size: 13px;" />
-                    <ui:Label text="-120 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
+                    <ui:Label name="cry-value-maint" text="-120 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="cry-tooltip-row-sales" class="cbb-cry-row">
                     <ui:Label name="cry-row-sales-label" text="Vendite piante — PLH" class="cbb-cry-key" style="font-size: 13px;" />
-                    <ui:Label text="+200 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
+                    <ui:Label name="cry-value-sales" text="+200 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="cry-tooltip-row-reagents" class="cbb-cry-row">
                     <ui:Label name="cry-row-reagents-label" text="Acquisti reagenti — PLH" class="cbb-cry-key" style="font-size: 13px;" />
-                    <ui:Label text="-50 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
+                    <ui:Label name="cry-value-reagents" text="-50 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="cbb-cry-ph-section cbb-cry-ph-section-accent">
                 <ui:Label name="cry-section-forecast-header" text="PREVISIONE DOMANI" class="cbb-cry-section-header-accent" style="font-size: 13px;" />
                 <ui:VisualElement name="cry-tooltip-row-forecast" class="cbb-cry-row">
                     <ui:Label name="cry-row-forecast-label" text="Entrate stimate — PLH" class="cbb-cry-key" style="font-size: 13px;" />
-                    <ui:Label text="+100 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
+                    <ui:Label name="cry-value-forecast" text="+100 CRY" class="cbb-cry-value cbb-cry-plh" style="font-size: 13px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="cbb-cry-ph-section-tip" style="border-left-color: rgb(224, 174, 102); border-right-color: rgb(224, 174, 102); border-top-color: rgb(224, 174, 102); border-bottom-color: rgb(224, 174, 102);">

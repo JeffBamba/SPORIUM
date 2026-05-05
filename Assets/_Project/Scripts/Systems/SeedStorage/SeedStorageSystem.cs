@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
+using Sporae.Core;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using Sporae.UI.UIToolkit.PlayerInventory;
@@ -462,7 +463,7 @@ namespace _Project.Systems.SeedStorage
                 return;
             var eco = _gameManager.EconomySystem;
             if (eco != null && eco.CanAfford(cost))
-                eco.Spend(cost);
+                eco.Spend(cost, CrySpendLedgerCategory.DomeUpkeep);
         }
 
         public void ClearAllSlotsForNewGame()

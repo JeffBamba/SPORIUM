@@ -396,8 +396,9 @@ namespace Sporae.UI.UIToolkit.Lab
                     RefreshDisplay();
                 },
                 () => { },
-                SporeStage.Raw
-            );
+                SporeStage.Raw,
+                null,
+                presentFullInventoryUi: true);
         }
 
         private static HashSet<string> CatalizzatoreAllowedTypes()

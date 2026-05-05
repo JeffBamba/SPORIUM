@@ -73,6 +73,14 @@
                     <ui:Label name="ph-tooltip-label-current" enable-rich-text="true" text="VALORE ATTUALE" class="ph-tooltip-label" style="color: rgb(199, 202, 199); font-size: 13px; -unity-font-style: normal; margin-right: 8px;" />
                     <ui:Label name="ph-tooltip-value-current" enable-rich-text="true" text="pH 7.0 — Neutro" class="ph-tooltip-value" style="white-space: normal; font-size: 13px; -unity-text-align: upper-left; right: -217px; color: rgb(204, 204, 204);" />
                 </ui:VisualElement>
+                <ui:VisualElement name="ph-tooltip-ph-legend-row" class="ph-tooltip-ph-legend-row">
+                    <ui:Label name="ph-tooltip-legend-acid" text="ACIDO" class="ph-tooltip-ph-legend-end ph-tooltip-ph-legend-end--acid" />
+                    <ui:VisualElement name="ph-tooltip-ph-legend-bar-wrap" class="ph-tooltip-ph-legend-bar-wrap">
+                        <ui:VisualElement class="ph-tooltip-ph-legend-acid-side" />
+                        <ui:VisualElement class="ph-tooltip-ph-legend-basic-side" />
+                    </ui:VisualElement>
+                    <ui:Label name="ph-tooltip-legend-basic" text="BASICO" class="ph-tooltip-ph-legend-end ph-tooltip-ph-legend-end--basic" />
+                </ui:VisualElement>
                 <ui:Label name="ph-tooltip-current-oscillate-caption" enable-rich-text="true" text="Il Valore Oscilla come la tua coscienza" class="ph-tooltip-value" style="white-space: normal; font-size: 13px; color: rgb(136, 136, 136); margin-top: 2px; margin-left: 0;" />
             </ui:VisualElement>
             <ui:VisualElement name="ph-tooltip-section-modifiers-total" class="ph-tooltip-section" style="flex-direction: column; margin-bottom: 4px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: rgba(199, 202, 199, 0.45); border-right-color: rgba(199, 202, 199, 0.45); border-bottom-color: rgba(199, 202, 199, 0.45); border-left-color: rgba(199, 202, 199, 0.45); border-top-left-radius: 6px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; padding: 4px; background-color: rgb(30, 40, 42);">

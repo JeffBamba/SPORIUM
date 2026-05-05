@@ -54,11 +54,19 @@ Questo passo serve a **non** proporre raccomandazioni già superate o in conflit
 2. Se i dati mancano o lo scope è troppo vasto: **dichiara cosa non hai verificato**; non riempire con ipotesi.
 3. Allinea raccomandazioni ai vincoli progetto quando pertinenti: `architecture-runtime-services`, `feature-both-demo-full-parity`, regole UI se il task tocca UIToolkit.
 
+## Prosa discorsiva per sezione / area (obbligatorio)
+
+Senza **paragrafi in prosa** l’analisi **non è completa**: servono a spiegare **in parole semplici** cosa è progredito, cosa resta delicato e cosa conta per gioco/prodotto anche per **chi non è tecnico**.
+
+- **Cosa:** dopo i dati, tabelle e bullet di **una** sezione o **un’**area di analisi, **prima** del titolo della sezione successiva, includere **almeno un paragrafo breve** (prosa continua, non solo elenchi): cosa **migliora**, cosa **resta critico o aperto**, linguaggio **chiaro**.
+- **Dove:** in coda a ogni blocco di evidenze di quell’area — vedi template sotto (etichetta suggerita: *In sintesi per lettore non tecnico* o equivalente).
+- **Ambito:** vale per ogni **`##`** di contenuto analitico del template (es. Allineamento DEV REPORT, Executive summary, Statistiche, Metodologia, Metriche, sotto-architetture `###`, Code smell, Piano, Fuori scope, Progressi vs baseline, Performance, Status Demo/Full). Per sezioni solo elenco (es. **Riferimenti file**) aggiungere **almeno una** frase di contesto che colleghi l’elenco al messaggio dell’analisi.
+
 ## Documento di riferimento (struttura)
 
-Per tono e sezioni ispirati al template storico del repo (non copiare numeri obsoleti da lì):
+Per tono, sezioni e **chiusura narrativa di ogni area** ispirati al template storico del repo (non copiare numeri obsoleti da lì). La struttura attesa combina **evidenze strutturate + paragrafo narrativo** prima di passare all’area successiva.
 
-- `ANALISI_TECNICA_COMPLETA_SPORIUM.md` (root repo, esempio di struttura completa)
+- `ANALISI_TECNICA_COMPLETA_SPORIUM.md` (root repo, esempio di struttura completa — da integrare mentalmente con la regola *paragrafo per sezione/area* sopra)
 
 ## Dove salvare l’output
 
@@ -83,6 +91,8 @@ Usa titoli chiari; emoji opzionali (il vecchio doc ne usava molte — ok ridurle
 
 *(Obbligatorio: vedi Fase A nella skill.)*
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve in prosa: cosa il team ha appena consegnato che conta per questa analisi e cosa resta allineato o in tensione con il codice odierno.)*
+
 ---
 
 ## Executive summary
@@ -90,16 +100,20 @@ Usa titoli chiari; emoji opzionali (il vecchio doc ne usava molte — ok ridurle
 - Sintesi in 5–10 righe.
 - Valutazione qualitativa (senza inventare punteggi se non hai criteri oggettivi condivisi; se usi una scala, definiscila).
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: messaggio complessivo in linguaggio semplice.)*
+
 ---
 
 ## Statistiche e contesto progress (gameplay / prodotto)
 
-Blocco discorsivo **obbligatorio** (oltre alle tabelle metriche più sotto), allineato allo spirito dei DEV REPORT: dare subito **numeri veri o N/D** e **cosa significa per chi gioca**. Stesse regole anti-invenzione della skill dev-report.
+Blocco strutturato + prosa: obbligatori **i bullet sotto** e, in coda alla sezione, il paragrafo *In sintesi per lettore non tecnico* (vedi **Prosa discorsiva**). Allineato allo spirito dei DEV REPORT: **numeri veri o N/D** e **cosa significa per chi gioca**. Stesse regole anti-invenzione della skill dev-report.
 
 - **Righe di codice:** sintesi (es. totale `.cs` in scope + comando) o **N/D** / non misurato.
 - **Sistemi funzionanti:** elenco di sistemi o macro-flussi **osservabili dal repo o dai DEV REPORT letti**; ciò che richiede Play → **NON MISURABILE IN QUESTA SESSIONE** o **da validare in Editor**.
 - **Bug risolti:** solo se ricostruibili da report/commit di sessione; altrimenti **non quantificabile qui** (non inventare conteggi).
 - **Progresso gameplay / prodotto:** 3–8 bullet in linguaggio non tecnico (cosa sblocca o migliora l’esperienza), coerente con Fase A.
+
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: cosa significano i numeri/N/D per chi gioca o per le milestone prodotto, senza ripetere solo la tabella.)*
 
 ---
 
@@ -107,6 +121,8 @@ Blocco discorsivo **obbligatorio** (oltre alle tabelle metriche più sotto), all
 
 - Elenco comandi eseguiti (o da eseguire) e cosa hanno misurato.
 - Per ogni metrica numerica: **fonte** (es. output `rg --count`, `wc`, Unity non misurabile da CLI → dichiaralo).
+
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: perché queste misure sono state raccolte e cosa si può dedurre in modo semplice.)*
 
 ---
 
@@ -116,11 +132,13 @@ Blocco discorsivo **obbligatorio** (oltre alle tabelle metriche più sotto), all
 |---------|--------|---------------|------|
 | ... | ... | `rg ...` | ... |
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: lettura d’insieme delle metriche, senza jargon non spiegato.)*
+
 ---
 
 ## Architettura e sistemi
 
-Per ogni area concordata nello scope (es. Core, Dome, UI Toolkit, Save, …):
+Per ogni area concordata nello scope (es. Core, Dome, UI Toolkit, Save, …): duplicare il blocco seguente **per ogni** `###` — il paragrafo *In sintesi* chiude quell’area **prima** del successivo `###` o della sezione **Code smell**.
 
 ### Nome area
 
@@ -129,11 +147,15 @@ Per ogni area concordata nello scope (es. Core, Dome, UI Toolkit, Save, …):
 - **Rischi / debito** (con evidenza).
 - **Raccomandazioni** (priorità P0/P1/P2, allineate alle regole progetto).
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve per quest’area: cosa funziona bene in pratica, dove il rischio si fa sentire nel prodotto, cosa fare per prime — in parole semplici.)*
+
 ---
 
 ## Code smell e anti-pattern
 
 Tabella o elenco: problema → evidenza → impatto → azione suggerita.
+
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: quali “spigoli” del codice pesano di più sull’esperienza o sulla velocità del team.)*
 
 ---
 
@@ -142,17 +164,23 @@ Tabella o elenco: problema → evidenza → impatto → azione suggerita.
 1. …
 2. …
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: ordine delle priorità spiegato come scelte di investimento, non come lista tecnica.)*
+
 ---
 
 ## Fuori scope / incertezze
 
 - Cosa non è stato ispezionato e perché.
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: cosa non si sa ancora e perché può influenzare decisioni.)*
+
 ---
 
 ## Riferimenti file
 
 Elenco path toccati dall’analisi (per navigazione rapida).
+
+*(Obbligatorio: almeno una frase di contesto che dica in cosa questi file sono rilevanti per il messaggio dell’analisi.)*
 
 ---
 
@@ -165,6 +193,8 @@ Elenco path toccati dall’analisi (per navigazione rapida).
 | … | … | … | Progresso / Invariato / Regressione / N.A. |
 
 - Sintesi in 3–6 bullet: **cosa è migliorato**, **cosa è peggiorato o invariato**, **cosa resta aperto**.
+
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: arco del progresso raccontato come storia del prodotto, non solo tabella.)*
 
 ---
 
@@ -184,6 +214,8 @@ Elenco path toccati dall’analisi (per navigazione rapida).
 
 - **Profiler Unity / frame budget / memoria runtime:** se non hai catturato dati in questa sessione, sezione o riga dedicata: **NON MISURABILE IN QUESTA SESSIONE (Profiler)** — proponi solo ipotesi da verificare in Play, etichettate come **DA VALIDARE IN EDITOR**.
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: impatto su fluidità, caricamenti o scalabilità spiegato in termini di esperienza; cosa è certo vs cosa va provato in Editor.)*
+
 ---
 
 ## Status sviluppo: Demo e Full Game vs GDD (Notion)
@@ -196,10 +228,13 @@ Elenco path toccati dall’analisi (per navigazione rapida).
 
 - **Gap noti** solo se tracciabili (piani, codice, flag demo). Se il GDD Notion non è stato letto: dichiaralo e non compilare percentuali fittizie.
 
+**In sintesi per lettore non tecnico (obbligatorio):** *(paragrafo breve: cosa significa per demo vs gioco completo in linguaggio di prodotto, inclusi limiti se il GDD non è stato consultato.)*
+
 ```
 
 ## Checklist prima di consegnare
 
+- [ ] **Prosa per area:** ogni sezione del template (e ogni `###` sotto Architettura) include **almeno un paragrafo breve in prosa** dopo evidenze/dati e **prima** della sezione successiva, per lettori non tecnici (vedi **Prosa discorsiva per sezione / area**).
 - [ ] **Statistiche e contesto progress:** sezione presente (righe, sistemi, bug se ricostruibili, progresso gameplay in linguaggio chiaro; **N/D** dove non misurabile).
 - [ ] **Fase A:** letti e documentati gli **ultimi 5** `DEV_REPORT_*.md` (o tutti se in cartella ce ne sono meno di cinque), con sezione dedicata nel markdown.
 - [ ] **Fase B:** individuata **baseline** analisi precedente **o** dichiarato esplicitamente che non c’è; tabella **Progressi** compilata senza assumere verità del doc vecchio senza ricalcolo.

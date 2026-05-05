@@ -10,6 +10,7 @@ using _Project.UI.UIToolkit.MainMenu;
 using Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core;
 using Sporae.Core.Localization;
 
 namespace Sporae.UI.UIToolkit.HUD
@@ -66,6 +67,10 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _cryEarnedToday;
         private Label _crySpentToday;
         private Label _cryNetToday;
+        private Label _cryValueMaint;
+        private Label _cryValueSales;
+        private Label _cryValueReagents;
+        private Label _cryValueForecast;
 
         // Room zone
         private readonly Dictionary<string, VisualElement> _roomButtons = new();
@@ -199,6 +204,10 @@ namespace Sporae.UI.UIToolkit.HUD
             _cryEarnedToday  = _cryTooltip?.Q<Label>("cry-earned-today");
             _crySpentToday   = _cryTooltip?.Q<Label>("cry-spent-today");
             _cryNetToday     = _cryTooltip?.Q<Label>("cry-net-today");
+            _cryValueMaint   = _cryTooltip?.Q<Label>("cry-value-maint");
+            _cryValueSales   = _cryTooltip?.Q<Label>("cry-value-sales");
+            _cryValueReagents = _cryTooltip?.Q<Label>("cry-value-reagents");
+            _cryValueForecast = _cryTooltip?.Q<Label>("cry-value-forecast");
 
             // CRY badge hover
             if (_cryBadge != null && _cryTooltip != null)
@@ -284,7 +293,7 @@ namespace Sporae.UI.UIToolkit.HUD
                 SetLabel("cry-row-sales-label", "cbb.cry.sales_row");
                 SetLabel("cry-row-reagents-label", "cbb.cry.reagents_row");
                 SetLabel("cry-section-forecast-header", "cbb.cry.forecast_header");
-                SetLabel("cry-row-forecast-label", "cbb.cry.forecast_income");
+                SetLabel("cry-row-forecast-label", "cbb.cry.forecast_balance_row");
                 SetLabel("cry-tip-header", "cbb.cry.tip_header");
                 SetLabel("cry-tooltip-tip", "cbb.cry.tip_body");
             }
@@ -381,7 +390,48 @@ namespace Sporae.UI.UIToolkit.HUD
                     _cryNetToday.RemoveFromClassList("cbb-cry-red");
                     _cryNetToday.AddToClassList(net >= 0 ? "cbb-cry-green" : "cbb-cry-red");
                 }
+
+                RefreshCryPlBreakdownAndForecast();
             }
+        }
+
+        /// <summary>Dettaglio P/L e saldo stimato domani (solo costi fissi), allineato a Brief Alba / controllo fine giornata.</summary>
+        private void RefreshCryPlBreakdownAndForecast()
+        {
+            if (_diaryStatistics == null)
+                return;
+
+            int upkeep = _diaryStatistics.CrySpendDomeUpkeep;
+            int sales = _diaryStatistics.CryIncomeBlackMarket + _diaryStatistics.CryIncomeMission;
+            int buys = _diaryStatistics.CrySpendBlackMarket;
+            int otherSpend = _diaryStatistics.CrySpendOther;
+
+            if (_cryValueMaint != null)
+                _cryValueMaint.text = $"-{upkeep:N0} CRY";
+            if (_cryValueSales != null)
+                _cryValueSales.text = $"+{sales:N0} CRY";
+            if (_cryValueReagents != null)
+            {
+                int spendDetail = buys + otherSpend;
+                _cryValueReagents.text = spendDetail <= 0 ? $"0 CRY" : $"-{spendDetail:N0} CRY";
+            }
+
+            int fixedTomorrow = 0;
+            if (_dayCycleSystem != null)
+                fixedTomorrow += Mathf.Max(0, _dayCycleSystem.DailyPowerCost);
+            if (_gameManager?.SeedStorageSystem != null)
+                fixedTomorrow += _gameManager.SeedStorageSystem.ComputeDailyCryCost();
+            if (_gameManager?.FoodRoomSystem != null)
+            {
+                var fr = _gameManager.FoodRoomSystem;
+                fixedTomorrow += fr.ComputeFoodSynthDailyCryCost();
+                fixedTomorrow += fr.ComputePantryDailyCryCost();
+            }
+
+            int cryNow = _economySystem != null ? _economySystem.CurrentCRY : 0;
+            int forecastBalance = cryNow - fixedTomorrow;
+            if (_cryValueForecast != null)
+                _cryValueForecast.text = $"{forecastBalance:N0} CRY";
         }
 
         // ── Location label (RoomTracker + RoomAreaTag.DisplayName) ──

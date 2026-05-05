@@ -187,6 +187,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _statActions = _root.Q<Label>("inv-stat-actions");
             _statItems = _root.Q<Label>("inv-stat-items");
             _list = _root.Q<ScrollView>("inv-list");
+            if (_list != null)
+            {
+                // Scroll nativo UIToolkit (evita conflitti con handler manuale su scrollOffset).
+                _list.mouseWheelScrollSize = 220f;
+            }
             _btnClose = _root.Q<Button>("btn-close");
             _btnCancel = _root.Q<Button>("btn-cancel");
             _btnExpand = _root.Q<Button>("inv-expand");
@@ -908,7 +913,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 bView.AddToClassList("inv-chip-btn");
                 var useOk = ItemConsumptionHandler.IsConsumable(m.TypeId) || IsPlantCarePickerApplyable(m);
                 var bUse = new Button(() => { SelectRow(m, row, allowToggleOff: false); RequestUse(m); })
-                { text = LocalizationManager.GetString("inventory.row.use") };
+                { text = ResolveRowPrimaryActionLabel(m.TypeId) };
                 bUse.AddToClassList("inv-chip-btn");
                 bUse.SetEnabled(useOk);
                 if (!useOk) RegisterButtonTooltip(bUse, LocalizationManager.GetString("inventory.use_disabled_tt"));
@@ -991,6 +996,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (_btnDetailUse != null)
             {
                 var ok = ItemConsumptionHandler.IsConsumable(typeId) || IsPlantCarePickerApplyable(m);
+                _btnDetailUse.text = ResolveDetailPrimaryActionLabel(typeId);
                 _btnDetailUse.SetEnabled(ok);
                 if (!ok) RegisterButtonTooltip(_btnDetailUse, LocalizationManager.GetString("inventory.use_disabled_tt"));
             }
@@ -1057,13 +1063,16 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 if (typeId == Items.Water)
                     return LocalizationManager.GetString("inventory.detail.use_effect_water_raw");
                 if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat)
-                    return LocalizationManager.GetString("inventory.detail.use_effect_food");
+                {
+                    int n = GameManager.GetActionRecoveryForConsumedFood(typeId);
+                    return LocalizationManager.GetString("inventory.detail.use_effect_synth_food",
+                        new Dictionary<string, string> { { "n", n.ToString() } });
+                }
                 if (Items.IsFruitType(typeId))
                 {
-                    bool pure = typeId == Items.FruitArcticPod || typeId == Items.FruitsKnown;
-                    return LocalizationManager.GetString(pure
-                        ? "inventory.detail.use_effect_fruit_pure"
-                        : "inventory.detail.use_effect_fruit_standard");
+                    int n = GameManager.GetActionRecoveryForConsumedFood(typeId);
+                    return LocalizationManager.GetString("inventory.detail.use_effect_fruit_actions",
+                        new Dictionary<string, string> { { "n", n.ToString() } });
                 }
             }
 
@@ -1158,6 +1167,28 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
 
             return string.Join("\n", lines);
+        }
+
+        private static string ResolveDetailPrimaryActionLabel(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId))
+                return LocalizationManager.GetString("inventory.detail.use_item");
+            if (typeId == Items.WaterPotable)
+                return LocalizationManager.GetString("inventory.detail.drink_item");
+            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat)
+                return LocalizationManager.GetString("inventory.detail.eat_item");
+            return LocalizationManager.GetString("inventory.detail.use_item");
+        }
+
+        private static string ResolveRowPrimaryActionLabel(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId))
+                return LocalizationManager.GetString("inventory.row.use");
+            if (typeId == Items.WaterPotable)
+                return LocalizationManager.GetString("inventory.row.drink");
+            if (typeId == Items.FoodVegetable || typeId == Items.FoodFungus || typeId == Items.FoodMeat)
+                return LocalizationManager.GetString("inventory.row.eat");
+            return LocalizationManager.GetString("inventory.row.use");
         }
 
         private string BuildDetailUsageBlock(string typeId, Item it)
@@ -1436,6 +1467,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                         new Dictionary<string, string> { { "days", days.ToString() } })));
                 }
             }
+            if (typeId == Items.AdditiveBasic)
+                lines.Add(LocalizationManager.GetString("inventory.detail.additive_basic_line"));
+            if (typeId == Items.AdditiveAcid)
+                lines.Add(LocalizationManager.GetString("inventory.detail.additive_acid_line"));
             return string.Join("\n", lines);
         }
 

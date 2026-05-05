@@ -145,13 +145,8 @@ namespace Sporae.UI.UIToolkit.HUD
         // Condensation threshold tracking
         private float _previousCondensation = -1f; // -1 indica valore iniziale non ancora impostato
         
-        // pH marker smooth animation (segue oscillazione idle)
+        // pH marker smooth animation (segue oscillazione idle) — costanti condivise con PlantCard4v in <see cref="PhLiveDisplayMath"/>
         private float _phMarkerLeftPercent = 50f;
-        private const float PhCursorOscillationAmplitude = 7.02f;  // +20% forbice (era 5.85)
-        private const float PhCursorStepSize = 5f;              // scatti netti: step 5 sulla scala -100..+100 (compatibile con ampiezza ±7)
-        private const float PhValueOscillationAmplitude = 0.5f;   // forbice valore numerico: max ±0,5 (oscillazione visibile ma non 3 punti)
-        private const float PhCursorOscillationSpeed = 0.25f;
-        private const float PhCursorOscillationSeed = 47.3f;
         
         // Colors
         private readonly Color _greenStable = new Color(0.498f, 1f, 0.478f, 1f); // #7FFF7A
@@ -470,6 +465,10 @@ namespace Sporae.UI.UIToolkit.HUD
                 if (le != null) le.text = LocalizationManager.GetString("topbar.ph_tooltip.label_effects");
                 var ltip = _phTooltip.Q<Label>("ph-tooltip-label-tip");
                 if (ltip != null) ltip.text = LocalizationManager.GetString("topbar.ph_tooltip.label_tip");
+                var legA = _phTooltip.Q<Label>("ph-tooltip-legend-acid");
+                if (legA != null) legA.text = LocalizationManager.GetString("topbar.ph_tooltip.legend_acid");
+                var legB = _phTooltip.Q<Label>("ph-tooltip-legend-basic");
+                if (legB != null) legB.text = LocalizationManager.GetString("topbar.ph_tooltip.legend_basic");
             }
 
             if (_actionsTooltip != null)
@@ -666,10 +665,7 @@ namespace Sporae.UI.UIToolkit.HUD
             float currentPh = _phSystem.CurrentPh;
             int currentDay = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
 
-            // Stesso valore oscillante (fake) della top bar — Perlin identico, forbice ridotta per il numero
-            float noise = Mathf.PerlinNoise(Time.time * PhCursorOscillationSpeed, PhCursorOscillationSeed);
-            float offsetValue = (noise * 2f - 1f) * PhValueOscillationAmplitude;
-            float valuePh = Mathf.Clamp(currentPh + offsetValue, -100f, 100f);
+            float valuePh = PhLiveDisplayMath.ComputeOscillatedDisplayPh(currentPh, Time.time);
             string bandNameDisplay = GetPhBandNameForDisplay(valuePh);
 
             // CURRENT VALUE: valore con oscillazione ridotta (±0,5)
@@ -1192,15 +1188,8 @@ namespace Sporae.UI.UIToolkit.HUD
             if (_phSystem != null && _phMarker != null && _phSlider != null)
             {
                 float currentPh = _phSystem.CurrentPh;
-                // Oscillazione: valore numerico con forbice ridotta (±0,5); cursore con forbice +20% e scatti netti
-                float noise = Mathf.PerlinNoise(Time.time * PhCursorOscillationSpeed, PhCursorOscillationSeed);
-                float offsetValue = (noise * 2f - 1f) * PhValueOscillationAmplitude;
-                float offsetCursor = (noise * 2f - 1f) * PhCursorOscillationAmplitude;
-                float valuePh = Mathf.Clamp(currentPh + offsetValue, -100f, 100f);
-                float cursorPh = Mathf.Clamp(currentPh + offsetCursor, -100f, 100f);
-                // Cursore a scatti netti: quantizza a step fissi
-                float cursorPhStepped = Mathf.Round(cursorPh / PhCursorStepSize) * PhCursorStepSize;
-                cursorPhStepped = Mathf.Clamp(cursorPhStepped, -100f, 100f);
+                float valuePh = PhLiveDisplayMath.ComputeOscillatedDisplayPh(currentPh, Time.time);
+                float cursorPhStepped = PhLiveDisplayMath.ComputeCursorPhStepped(currentPh, Time.time);
                 // Valore numerico: oscillazione ridotta (max ±0,5)
                 if (_phBandLabel != null)
                 {

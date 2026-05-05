@@ -165,7 +165,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             var effectiveSeverity = severityOverride ?? spec.DefaultSeverity;
             var msg = BuildMessage(spec, payload);
             var now = Time.realtimeSinceStartup;
-            var expires = now + ToastDurationSeconds;
+            var expires = now + ResolveToastDurationSeconds(effectiveSeverity);
 
             for (int i = 0; i < _activeToasts.Count; i++)
             {
@@ -203,7 +203,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
             var effectiveSeverity = severityOverride ?? spec.DefaultSeverity;
             var msg = BuildMessage(spec, payload);
             var now = Time.realtimeSinceStartup;
-            var expires = now + ToastDurationSeconds;
+            var expires = now + ResolveToastDurationSeconds(effectiveSeverity);
             var id = _nextId++;
             var createdAt = DateTime.UtcNow;
             var entry = new NotificationEntry(id, code, null, spec, effectiveSeverity, msg, createdAt, expires, payload);
@@ -453,12 +453,19 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
 
             float? expires = null;
             if (emission.Kind == EmissionKind.Toast || emission.Kind == EmissionKind.Item)
-                expires = realtimeSinceStartup + ToastDurationSeconds;
+                expires = realtimeSinceStartup + ResolveToastDurationSeconds(emission.Severity);
 
             var entry = new NotificationEntry(id, emission.Code, emission.DedupKey, emission.Spec, emission.Severity, emission.Message, createdAt, expires, emission.Payload);
 
             _activeToasts.Add(entry);
             OnChanged?.Invoke();
+        }
+
+        private float ResolveToastDurationSeconds(NotificationSeverity severity)
+        {
+            if (severity == NotificationSeverity.Success)
+                return ToastDurationSeconds + 5f;
+            return ToastDurationSeconds;
         }
 
         private string BuildMessage(NotificationTypeSpec spec, NotificationPayload payload)

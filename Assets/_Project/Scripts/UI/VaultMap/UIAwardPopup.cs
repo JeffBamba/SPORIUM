@@ -1,5 +1,6 @@
 ﻿using System;
 using _Project.Sporae.Core;
+using Sporae.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -35,7 +36,7 @@ namespace _Project
         {
             _missionManager.Remove(_config);
             
-            _gameManager.EconomySystem.Add(_reward.CryReward);
+            _gameManager.EconomySystem.Add(_reward.CryReward, CryIncomeLedgerCategory.MissionReward);
             foreach (var slot in _reward.Rewards)
                 _gameManager.PlayerInventory.Add(slot.Item.TypeId, slot.Quantity);
             

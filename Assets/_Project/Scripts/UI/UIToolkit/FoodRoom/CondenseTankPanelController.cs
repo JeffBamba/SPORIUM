@@ -21,6 +21,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         private Button _btnPurify;
         private Button _btnPurifyMinus;
         private Button _btnPurifyPlus;
+        private Button _btnCollectDirtyWater;
         private Label _hydrationUnitsValue;
         private Label _hydrationStatusText;
         private Label _bottomHint;
@@ -31,7 +32,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
         private Label _condensationValue;
         private Label _condensationStatusText;
         private VisualElement _condensationProgressFill;
-        private Button _btnCollectDirtyWater;
+        private Label _condensationForecast;
 
         private int _purifyAmount;
         private const int PurifyAmountMax = 99;
@@ -124,6 +125,7 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             _waterProgressShine = _root.Q<VisualElement>("water-progress-shine");
             _condensationValue = _root.Q<Label>("condensation-value");
             _condensationStatusText = _root.Q<Label>("condensation-status-text");
+            _condensationForecast = _root.Q<Label>("condensation-forecast");
             _condensationProgressFill = _root.Q<VisualElement>("condensation-progress-fill");
             _btnCollectDirtyWater = _root.Q<Button>("btn-collect-dirty-water");
 
@@ -347,6 +349,17 @@ namespace Sporae.UI.UIToolkit.FoodRoom
                 _condensationStatusText.text = condensation > 0f
                     ? LocalizationManager.GetString("condense_tank.condensation.status_ready")
                     : LocalizationManager.GetString("condense_tank.condensation.status_empty");
+            }
+            if (_condensationForecast != null)
+            {
+                if (condensation <= 0f)
+                    _condensationForecast.text = string.Empty;
+                else
+                {
+                    GameManager.GetCondensationRawWaterRewardRange(condensation, out int fMin, out int fMax);
+                    _condensationForecast.text = LocalizationManager.GetString("condense_tank.condensation.forecast",
+                        new Dictionary<string, string> { { "min", fMin.ToString() }, { "max", fMax.ToString() } });
+                }
             }
             if (_btnCollectDirtyWater != null)
                 _btnCollectDirtyWater.SetEnabled(condensation > 0f);

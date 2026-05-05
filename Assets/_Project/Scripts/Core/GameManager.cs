@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
     public float HydrationLostTodayPercent => Mathf.Max(0f, _hydrationLostTodayPercent);
 
     /// <summary>Chiamato quando il player consuma cibo solido o frutta (non solo acqua).</summary>
-    public void NotifySolidFoodConsumed()
+    public void NotifySolidFoodConsumed(string foodTypeId = null)
     {
         _ateMealSincePreviousDawn = true;
 
@@ -106,16 +106,34 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        int rawBreakfast = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
-        bool isStarvationPenalizedNow = _actionSystem.MaxActions < rawBreakfast;
-        if (!isStarvationPenalizedNow)
-            return;
+        int recovery = GetActionRecoveryForConsumedFood(foodTypeId);
+        if (recovery > 0)
+        {
+            _consecutiveDaysWithoutMeal = 0;
+            _starvationDaysAtMinCapWithoutFood = 0;
+            _actionSystem.AddActions(recovery);
+            _actionBudgetLedger.AddOrReplace(
+                ActionBudgetSource.Item,
+                "Apporto calorico",
+                recovery,
+                string.IsNullOrEmpty(foodTypeId) ? null : foodTypeId);
+        }
+    }
 
-        // Recupero immediato: se mangi mentre sei penalizzato dalla fame, torni subito al cap pieno.
-        _consecutiveDaysWithoutMeal = 0;
-        _starvationDaysAtMinCapWithoutFood = 0;
-        _actionSystem.ResetActions(rawBreakfast);
-        SeedActionBudgetLedgerForDawn(rawBreakfast, penaltySteps: 0, wasOverrideBreakfast: false);
+    /// <summary>Rigenerazione azioni immediate per tipo cibo (allineato a commenti in <see cref="Items"/>).</summary>
+    public static int GetActionRecoveryForConsumedFood(string typeId)
+    {
+        if (string.IsNullOrEmpty(typeId))
+            return 1;
+        if (typeId == Items.FoodVegetable)
+            return 1;
+        if (typeId == Items.FoodFungus)
+            return 2;
+        if (typeId == Items.FoodMeat)
+            return 3;
+        if (Items.IsFruitType(typeId))
+            return 2;
+        return 1;
     }
 
     /// <summary>Imposta streak da save (solo load).</summary>
@@ -144,18 +162,22 @@ public class GameManager : MonoBehaviour
             _dailyActionsFromBreakfast = 5;
             if (_actionSystem != null && _actionSystem.MaxActions < 5)
                 _actionSystem.RestoreState(_actionSystem.ActionsLeft, 5);
+            const int rawFull = 5;
+            int dailyAfterHunger = Mathf.Max(1, Mathf.Min(5, rawFull - _consecutiveDaysWithoutMeal));
             SeedActionBudgetLedgerForDawn(
-                rawBreakfast: 5,
-                penaltySteps: Mathf.Max(0, _consecutiveDaysWithoutMeal - 2),
+                rawBreakfast: rawFull,
+                penaltySteps: Mathf.Max(0, rawFull - dailyAfterHunger),
                 wasOverrideBreakfast: false);
             return;
         }
 
         _demoTutorialDayActive = tutorialDayActive;
         _dailyActionsFromBreakfast = _demoTutorialDayActive ? 1 : 5;
+        int rawBf = Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5);
+        int dailyDemo = Mathf.Max(1, Mathf.Min(5, rawBf - _consecutiveDaysWithoutMeal));
         SeedActionBudgetLedgerForDawn(
-            rawBreakfast: Mathf.Clamp(_dailyActionsFromBreakfast, 1, 5),
-            penaltySteps: Mathf.Max(0, _consecutiveDaysWithoutMeal - 2),
+            rawBreakfast: rawBf,
+            penaltySteps: Mathf.Max(0, rawBf - dailyDemo),
             wasOverrideBreakfast: false);
     }
 
@@ -395,7 +417,7 @@ public class GameManager : MonoBehaviour
             _dailyActionsFromBreakfast = 5;
         }
 
-        _economySystem.Spend(_dailyPowerCost);
+        _economySystem.Spend(_dailyPowerCost, CrySpendLedgerCategory.DomeUpkeep);
 
         if (_playerHydrationSystem != null)
         {
@@ -446,8 +468,8 @@ public class GameManager : MonoBehaviour
             _consecutiveDaysWithoutMeal = 0;
 
         int raw = GetRawBreakfastBudgetForDawn(out bool wasOverrideBreakfast);
-        int penalty = Mathf.Max(0, _consecutiveDaysWithoutMeal - 2);
-        daily = Mathf.Max(1, Mathf.Min(5, raw - penalty));
+        daily = Mathf.Max(1, Mathf.Min(5, raw - _consecutiveDaysWithoutMeal));
+        int penalty = Mathf.Max(0, raw - daily);
 
         if (daily == 1 && !ateYesterday)
             _starvationDaysAtMinCapWithoutFood++;
@@ -489,7 +511,7 @@ public class GameManager : MonoBehaviour
         if (!_economySystem.CanAfford(amount))
             return false;
 
-        _economySystem.Spend(amount);
+        _economySystem.Spend(amount, CrySpendLedgerCategory.Other);
         
         return true;
     }
@@ -520,7 +542,7 @@ public class GameManager : MonoBehaviour
             return false;
 
         _actionSystem.SpendAction(amountAction);
-        _economySystem.Spend(amountCry);
+        _economySystem.Spend(amountCry, CrySpendLedgerCategory.Other);
         
         return true;
     }
@@ -541,17 +563,35 @@ public class GameManager : MonoBehaviour
         
         return reward;
     }
+
+    /// <summary>Intervallo WAT-RAW se si raccoglie alla percentuale indicata (stesso modello di <see cref="CollectCondensation"/>).</summary>
+    public static void GetCondensationRawWaterRewardRange(float condensationPercent01To100, out int minInclusive, out int maxInclusive)
+    {
+        float p = condensationPercent01To100;
+        if (p < 50f)
+        {
+            minInclusive = 5;
+            maxInclusive = 10;
+        }
+        else if (p < 80f)
+        {
+            minInclusive = 15;
+            maxInclusive = 25;
+        }
+        else
+        {
+            minInclusive = 30;
+            maxInclusive = 40;
+        }
+    }
     
     /// <summary>
     /// FASE 4: Calcola reward scalato basato su percentuale condensazione.
     /// </summary>
     private int CalculateScaledReward(float percentage)
     {
-        if (percentage < 50f)
-            return UnityEngine.Random.Range(5, 11);      // 5-10 WAT-RAW
-        if (percentage < 80f)
-            return UnityEngine.Random.Range(15, 26);     // 15-25 WAT-RAW
-        return UnityEngine.Random.Range(30, 41);         // 30-40 WAT-RAW
+        GetCondensationRawWaterRewardRange(percentage, out int min, out int max);
+        return UnityEngine.Random.Range(min, max + 1);
     }
 
     public float GetMaxCondensation()

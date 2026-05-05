@@ -2185,6 +2185,7 @@ MonoBehaviour:
   _potId: POT-001
   _targetPot: {fileID: 1935198926}
   _potSystemConfig: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
+  _playerInventoryPanel: {fileID: 0}
   _openOnOwnPotSelected: 1
   _showOnStart: 0
   _voCharsPerSecond: 33
@@ -3104,7 +3105,7 @@ Transform:
   m_GameObject: {fileID: 161258402}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.72, y: -1.36, z: 0}
+  m_LocalPosition: {x: -13.2, y: 1.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8470,7 +8471,7 @@ Transform:
   m_GameObject: {fileID: 372963412}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -19.26, y: -1.25, z: 0}
+  m_LocalPosition: {x: -18.35, y: 1.27, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14691,7 +14692,7 @@ MonoBehaviour:
   m_PanelSettings: {fileID: 11400000, guid: 042ecd5ecc4509a4e969c8d7297902d6, type: 2}
   m_ParentUI: {fileID: 0}
   sourceAsset: {fileID: 9197481963319205126, guid: 96549b3f25abb754aa14564fff9db903, type: 3}
-  m_SortingOrder: 620
+  m_SortingOrder: 0
 --- !u!1001 &617977431
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20973,7 +20974,7 @@ Transform:
   m_GameObject: {fileID: 878555310}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15.29, y: 3.68, z: 0}
+  m_LocalPosition: {x: 16.37, y: 5.57, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -37260,7 +37261,7 @@ Transform:
   m_GameObject: {fileID: 1650496498}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.64, y: 1.12, z: 0}
+  m_LocalPosition: {x: -0.02, y: 3.73, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -40440,7 +40441,7 @@ Transform:
   m_GameObject: {fileID: 1789348873}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.57, y: -0.3, z: 0}
+  m_LocalPosition: {x: -6.82, y: -1.49, z: 0}
   m_LocalScale: {x: 0.46083, y: 0.46083, z: 0.46083}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -40479,7 +40480,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _interactDistance: 0.75
   _clickRadius: 0.35
-  _promptDistance: 1.5
+  _promptDistance: 2
   _repeatInteractionWhileInRange: 0
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}

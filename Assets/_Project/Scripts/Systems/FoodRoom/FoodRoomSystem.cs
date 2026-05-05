@@ -5,6 +5,7 @@ using _Project;
 using _Project.Sporae.Core;
 using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
+using Sporae.Core;
 using Sporae.Core.Localization;
 
 namespace _Project.Systems.FoodRoom
@@ -450,7 +451,7 @@ namespace _Project.Systems.FoodRoom
             if (_pantryIsOn)
                 totalCry += PantryDailyCryCost;
             if (totalCry > 0 && _gameManager != null && _gameManager.EconomySystem != null && _gameManager.EconomySystem.CanAfford(totalCry))
-                _gameManager.EconomySystem.Spend(totalCry);
+                _gameManager.EconomySystem.Spend(totalCry, CrySpendLedgerCategory.DomeUpkeep);
         }
 
         /// <summary>

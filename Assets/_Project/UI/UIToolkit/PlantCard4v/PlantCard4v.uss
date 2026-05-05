@@ -239,7 +239,7 @@
 
 .pcv4-stack-card {
     flex-grow: 1;
-    min-height: 440px;
+    min-height: 477px;
     padding-top: 15px;
     padding-right: 16px;
     padding-bottom: 15px;
@@ -247,6 +247,8 @@
 }
 
 .pcv4-condition-card {
+    position: relative;
+    bottom: -32px;
     min-height: 188px;
     margin-top: 16px;
     padding-top: 14px;
@@ -292,6 +294,10 @@
     flex-shrink: 1;
     min-height: 0;
     margin-top: 0;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
     padding-top: 15px;
     padding-right: 12px;
     padding-bottom: 12px;
@@ -375,16 +381,46 @@
 
 .pcv4-need-item {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     min-height: 73px;
     padding-top: 10px;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(116, 193, 193, 0.18);
 }
 
 .pcv4-need-item--primary {
     min-height: 116px;
+}
+
+.pcv4-need-item--meter {
+    min-height: 104px;
+    padding-bottom: 14px;
+}
+
+.pcv4-need-item--summary {
+    min-height: 88px;
+    align-items: flex-start;
+}
+
+#pcv4-need-row-summary {
+    position: relative;
+    top: -11px;
+}
+
+#pcv4-need-row-ph {
+    min-height: 90px;
+}
+
+#pcv4-need-row-cond {
+    min-height: 80px;
+}
+
+.pcv4-need-summary-subtitle {
+    font-size: 13px;
+    color: rgba(186, 206, 196, 0.82);
+    margin-top: 4px;
+    white-space: normal;
 }
 
 .pcv4-large-icon {
@@ -437,6 +473,7 @@
 }
 
 .pcv4-need-copy {
+    flex-direction: column;
     flex-grow: 1;
     min-width: 0;
 }
@@ -513,7 +550,9 @@
 }
 
 .pcv4-meter-block--tight {
-    margin-top: 0;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    flex-shrink: 0;
 }
 
 .pcv4-meter-block--risk {
@@ -531,12 +570,16 @@
 
 .pcv4-segment-bar {
     flex-direction: row;
+    align-items: center;
     height: 10px;
     margin-top: 6px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
 }
 
 .pcv4-segment-bar--wide {
     width: 250px;
+    max-width: 100%;
 }
 
 .pcv4-segment-bar--risk {
@@ -546,10 +589,20 @@
 .pcv4-segment {
     width: 22px;
     height: 8px;
+    flex-shrink: 0;
     margin-right: 3px;
     border-width: 1px;
     border-color: rgba(154, 176, 155, 0.32);
     background-color: rgba(8, 19, 17, 0.92);
+}
+
+.pcv4-segment-bar--risk .pcv4-segment {
+    width: 17px;
+    margin-right: 2px;
+}
+
+.pcv4-segment-bar .pcv4-segment:last-child {
+    margin-right: 0;
 }
 
 .pcv4-segment--on {
@@ -709,8 +762,11 @@
 }
 
 .pcv4-vo-panel {
+    position: relative;
+    bottom: -40px;
     height: 112px;
     margin-top: 16px;
+    margin-bottom: 7px;
     flex-direction: row;
     align-items: center;
     padding-top: 14px;
@@ -725,6 +781,7 @@
 }
 
 .pcv4-vo-title {
+    display: none;
     font-size: 13px;
     color: rgb(126, 218, 223);
 }
@@ -742,10 +799,15 @@
 }
 
 .pcv4-vo-text {
+    flex-grow: 1;
+    width: 100%;
+    min-width: 0;
     min-height: 72px;
     font-size: 15px;
-    color: rgba(205, 232, 223, 0.45);
+    color: rgba(205, 232, 223, 0.82);
     white-space: normal;
+    -unity-font-style: normal;
+    -unity-text-align: upper-left;
 }
 
 .pcv4-repeat-vo {
@@ -839,9 +901,24 @@
     background-color: rgba(12, 68, 79, 0.62);
 }
 
+.pcv4-action--irrigation-on {
+    border-color: rgba(74, 214, 168, 0.88);
+    background-color: rgba(8, 52, 48, 0.82);
+}
+
+.pcv4-action--led-red-on {
+    border-color: rgba(232, 96, 96, 0.78);
+    background-color: rgba(48, 14, 18, 0.82);
+}
+
+.pcv4-action--led-blue-on {
+    border-color: rgba(96, 164, 242, 0.82);
+    background-color: rgba(12, 28, 52, 0.82);
+}
+
 .pcv4-action--active-system {
-    border-color: rgba(91, 215, 232, 0.92);
-    background-color: rgba(12, 68, 79, 0.62);
+    border-color: rgba(170, 140, 220, 0.55);
+    background-color: rgba(28, 18, 44, 0.72);
 }
 
 .pcv4-action--muted {
@@ -870,9 +947,24 @@
     background-color: rgba(16, 92, 106, 0.74);
 }
 
+.pcv4-action--irrigation-on:hover {
+    border-color: rgb(94, 235, 188);
+    background-color: rgba(12, 72, 62, 0.88);
+}
+
+.pcv4-action--led-red-on:hover {
+    border-color: rgb(245, 128, 118);
+    background-color: rgba(62, 18, 22, 0.88);
+}
+
+.pcv4-action--led-blue-on:hover {
+    border-color: rgb(130, 188, 255);
+    background-color: rgba(18, 38, 68, 0.88);
+}
+
 .pcv4-action--active-system:hover {
-    border-color: rgb(91, 215, 232);
-    background-color: rgba(16, 92, 106, 0.74);
+    border-color: rgba(196, 168, 238, 0.75);
+    background-color: rgba(36, 26, 54, 0.78);
 }
 
 .pcv4-action--muted:hover {

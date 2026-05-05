@@ -3,6 +3,7 @@ using System.Linq;
 using _Project.Sporae.Core;
 using Sporae.Core;
 using UnityEngine;
+using Sporae.Core;
 using Sporae.DevTools;
 
 namespace _Project.BlackMarket
@@ -65,7 +66,7 @@ namespace _Project.BlackMarket
                 
             int quantity = selectedItem.Quantity;
             if (_storage.Consume(selectedItem.TypeId, quantity))
-                _economySystem.Add(price * quantity);
+                _economySystem.Add(price * quantity, CryIncomeLedgerCategory.BlackMarketSell);
         }
 
         private void HandleSellOne(UIBlackMarketSellItem item)
@@ -84,7 +85,7 @@ namespace _Project.BlackMarket
                 price = selectedItem.Items.ElementAt(0).ItemConfig.SellPrice;
             
             if (_storage.Consume(selectedItem.TypeId, 1))
-                _economySystem.Add(price);
+                _economySystem.Add(price, CryIncomeLedgerCategory.BlackMarketSell);
         }
         
         private void UpdateStorage()

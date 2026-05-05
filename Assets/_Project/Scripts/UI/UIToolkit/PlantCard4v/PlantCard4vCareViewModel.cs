@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using _Project;
 using _Project.Sporae.Core;
@@ -101,6 +102,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public PlantCard4vNeedSignal ConditionNeedSignal { get; private set; }
 
         public string HydrationRowTooltip { get; private set; }
+        /// <summary>Tooltip riga riepilogo bisogni (somma delle aree).</summary>
+        public string SummaryRowTooltip { get; private set; }
         public string PhRowTooltip { get; private set; }
         public string FertilizerRowTooltip { get; private set; }
         public string ConditionRowTooltip { get; private set; }
@@ -120,12 +123,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PlantData plantData,
             PotSystemConfig config,
             PhSystem phSystem,
-            PlantCard4vVoReactionRequest reactionRequest = null)
+            PlantCard4vVoReactionRequest reactionRequest = null,
+            int phraseVariantSalt = 0)
         {
             var model = new PlantCard4vCareViewModel();
-            model.BuildInternal(pot, state, plantData, config, phSystem, reactionRequest);
+            model.BuildInternal(pot, state, plantData, config, phSystem, reactionRequest, phraseVariantSalt);
             return model;
         }
+
+        private int _phraseVariantSalt;
 
         private void BuildInternal(
             PotSlot pot,
@@ -133,8 +139,10 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PlantData plantData,
             PotSystemConfig config,
             PhSystem phSystem,
-            PlantCard4vVoReactionRequest reactionRequest = null)
+            PlantCard4vVoReactionRequest reactionRequest = null,
+            int phraseVariantSalt = 0)
         {
+            _phraseVariantSalt = phraseVariantSalt;
             PotId = pot != null && !string.IsNullOrWhiteSpace(pot.PotId) ? pot.PotId : (state != null ? state.PotId : "POT-???");
             ShortPotId = BuildShortPotId(PotId);
             IsEmpty = state == null || state.IsEmpty || !state.HasPlant;
@@ -152,7 +160,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PlantSubtitle = ResolvePlantSubtitle(state, plantData);
             SpeciesLine = ResolveSpeciesLine(state, plantData);
             LifeState = FormatLifeState((PlantStage)state.Stage, IsDead);
-            StageDetail = $"FASE {Mathf.Max(0, state.Stage)} - {FormatStageDetail((PlantStage)state.Stage)}";
+            StageDetail = $"FASE {Mathf.Max(0, state.Stage)} - {FormatStageDetail((PlantStage)state.Stage, _phraseVariantSalt)}";
             IsHarvestReady = state.Stage == (int)PlantStage.HarvestReady && state.AmountFruits > 0f;
 
             int maxHydration = config != null ? Mathf.Max(1, config.MaxHydration) : 10;
@@ -177,7 +185,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             ResolveNeedRiskAndActions(state, plantData, stageReq, config, phSystem, currentPh);
             ResolveNeedRowSignalsAndTooltips(state, plantData, stageReq, phSystem, currentPh);
             ResolveFooterHardwareStatus(state);
-            FooterStateLine = $"{FormatLifeState((PlantStage)state.Stage, IsDead)} - {BuildFooterForStage((PlantStage)state.Stage, IsDead)}";
+            FooterStateLine = $"{FormatLifeState((PlantStage)state.Stage, IsDead)} - {BuildFooterForStage((PlantStage)state.Stage, IsDead, _phraseVariantSalt)}";
 
             if (reactionRequest != null && state != null && !IsEmpty
                 && PlantCard4vBiologistReactionVo.TryBuildLine(
@@ -242,7 +250,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PhNeedSignal = PlantCard4vNeedSignal.Ok;
             FertilizerNeedSignal = PlantCard4vNeedSignal.Ok;
             ConditionNeedSignal = PlantCard4vNeedSignal.Ok;
-            HydrationRowTooltip = MainNeedSubtitle;
+            HydrationRowTooltip = "Vaso vuoto: nessuna idratazione da monitorare.";
+            SummaryRowTooltip = $"{MainNeed}\n{MainNeedSubtitle}";
             PhRowTooltip = "Nessun dato: vaso senza coltura attiva.";
             FertilizerRowTooltip = "Nessun dato: vaso senza coltura attiva.";
             ConditionRowTooltip = "Nessun dato: vaso senza coltura attiva.";
@@ -294,9 +303,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 HydrationNeedSignal = PlantCard4vNeedSignal.Ok;
             }
 
-            HydrationRowTooltip = string.IsNullOrWhiteSpace(MainNeedSubtitle)
-                ? MainNeed
-                : $"{MainNeed}\n{MainNeedSubtitle}";
+            HydrationRowTooltip = BuildHydrationRowTooltip(state, stageReq, HydrationPercent, IsWateringActive);
 
             if (plantData != null && phSystem != null && !plantData.IsPhInOptimalRange(currentPh))
             {
@@ -350,6 +357,95 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             }
 
             ConditionRowTooltip = $"Condizione tessuti: {ConditionText}. Rischio muffa: {MoldText}.";
+
+            if (ShouldPreserveNarrativeMainNeed(state))
+            {
+                SummaryRowTooltip = string.IsNullOrWhiteSpace(MainNeedSubtitle)
+                    ? MainNeed
+                    : $"{MainNeed}\n{MainNeedSubtitle}";
+            }
+            else
+                ComposeAggregateSummaryNeedFields();
+        }
+
+        private static bool ShouldPreserveNarrativeMainNeed(PotStateModel state)
+        {
+            if (state == null)
+                return true;
+            if ((PlantCondition)state.ConditionLabel == PlantCondition.Morta)
+                return true;
+            if (state.IsInfested)
+                return true;
+            if (state.Stage == (int)PlantStage.HarvestReady && state.AmountFruits > 0f)
+                return true;
+            return false;
+        }
+
+        private static string BuildHydrationRowTooltip(
+            PotStateModel state,
+            StageRequirements stageReq,
+            int hydrationPercent,
+            bool wateringActive)
+        {
+            if (state == null)
+                return "Idratazione: stato non disponibile.";
+            if (stageReq == null)
+                return $"Idratazione substrato {hydrationPercent}%.";
+
+            if (hydrationPercent < stageReq.hydrationMin)
+            {
+                return wateringActive
+                    ? $"Idratazione {hydrationPercent}% sotto il minimo di fase ({stageReq.hydrationMin}%): irrigazione attiva, attendi stabilizzazione."
+                    : $"Idratazione {hydrationPercent}% sotto il minimo ({stageReq.hydrationMin}%): serve reintegro idrico controllato.";
+            }
+
+            if (hydrationPercent > stageReq.hydrationMax)
+                return $"Idratazione {hydrationPercent}% sopra il massimo ({stageReq.hydrationMax}%): rischio stress da eccesso d'acqua.";
+
+            return $"Idratazione {hydrationPercent}% nel range di fase ({stageReq.hydrationMin}–{stageReq.hydrationMax}%): regime idrico coerente.";
+        }
+
+        /// <summary>
+        /// Sovrascrive MainNeed/MainNeedSubtitle con un riepilogo sintetico delle quattro aree (non ripete il dettaglio idrico).
+        /// </summary>
+        private void ComposeAggregateSummaryNeedFields()
+        {
+            var urgent = new List<string>();
+            var watch = new List<string>();
+
+            void Add(PlantCard4vNeedSignal signal, string label)
+            {
+                if (signal == PlantCard4vNeedSignal.Warning)
+                    urgent.Add(label);
+                else if (signal == PlantCard4vNeedSignal.Attention)
+                    watch.Add(label);
+            }
+
+            Add(HydrationNeedSignal, "idratazione");
+            Add(PhNeedSignal, "pH cupola");
+            Add(FertilizerNeedSignal, "nutrimento");
+            Add(ConditionNeedSignal, "condizioni");
+
+            if (urgent.Count == 0 && watch.Count == 0)
+            {
+                MainNeed = "Quadro generale: parametri coerenti";
+                MainNeedSubtitle = "Le richieste della fase risultano soddisfatte nelle quattro aree monitorate.";
+            }
+            else if (urgent.Count > 0)
+            {
+                MainNeed = "Priorità operative urgenti";
+                MainNeedSubtitle = string.Join(", ", urgent)
+                    + (watch.Count > 0 ? $". Da monitorare: {string.Join(", ", watch)}." : ".");
+            }
+            else
+            {
+                MainNeed = "Richieste da monitorare";
+                MainNeedSubtitle = string.Join(", ", watch) + ".";
+            }
+
+            SummaryRowTooltip = string.IsNullOrWhiteSpace(MainNeedSubtitle)
+                ? MainNeed
+                : $"{MainNeed}\n{MainNeedSubtitle}";
         }
 
         private static string BuildFertilizerRowTooltip(PotStateModel state, StageRequirements stageReq)
@@ -387,7 +483,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PhDomeBandShort = FormatPhBandShort(phSystem.EvaluateState());
         }
 
-        private static string FormatPhBandShort(PhSystem.PhBand band)
+        public static string FormatPhBandShort(PhSystem.PhBand band)
         {
             return band switch
             {
@@ -602,7 +698,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             var lightAction = ResolveLightSecondary(state, plantData, stageReq);
             if (lightAction != PlantCard4vActionKind.None)
             {
-                MainNeed = "Sta cercando orientamento";
+                int rot = PhraseRot(_phraseVariantSalt);
+                MainNeed = PickLightGuidanceMainNeed(rot);
                 if (TryBuildActiveLightRisk(state, plantData, out string lightRisk, out string lightCause, out int lightRiskSegments))
                 {
                     MainRisk = lightRisk;
@@ -611,7 +708,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskSegments = lightRiskSegments;
                     MainNeedSubtitle = lightCause;
                     SetPlantCardVo(
-                        "La luce sta lasciando tracce. Il Pot non e' ancora in zona burn, ma ci si sta avvicinando.",
+                        PickLightStressVoPrimary(rot),
                         VoParamTopic.Light,
                         "light_need",
                         state,
@@ -626,9 +723,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskCause = $"Stress luce {LightStressPercent}%";
                     RiskLevelText = "NESSUN RISCHIO LUCE";
                     RiskSegments = 0;
-                    MainNeedSubtitle = "Spettro o durata LED non allineati alla fase: regola l'illuminazione o spegni per ridurre stress.";
+                    MainNeedSubtitle = PickLightGuidanceCalmSubtitle(rot);
                     SetPlantCardVo(
-                        "Non e' stress. Sta solo cercando orientamento.",
+                        PickLightGuidanceCalmVoPrimary(rot),
                         VoParamTopic.Light,
                         "light_need",
                         state,
@@ -923,12 +1020,60 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             };
         }
 
-        private static string FormatStageDetail(PlantStage stage)
+        private static int PhraseRot(int salt) => Mathf.Abs(salt) % 1009;
+
+        private static string PickLightGuidanceMainNeed(int rot)
         {
+            return (rot % 3) switch
+            {
+                0 => "Luce da ottimizzare",
+                1 => "Calibra lo spettro LED",
+                _ => "Aggiusta fotoperiodo e colore",
+            };
+        }
+
+        private static string PickLightGuidanceCalmSubtitle(int rot)
+        {
+            return (rot % 3) switch
+            {
+                0 => "Idratazione in range: regola LED per avvicinare lo stress luce alla fascia 20–80%.",
+                1 => "Il substrato è in equilibrio: il segnale principale è la luce da affinare per questa fase.",
+                _ => "Nessuna emergenza idrica: concentrati su durata e colore dell’illuminazione.",
+            };
+        }
+
+        private static string PickLightGuidanceCalmVoPrimary(int rot)
+        {
+            return (rot % 3) switch
+            {
+                0 => "Nessun allarme. Il profilo luce si può rifinire senza fretta.",
+                1 => "Stato idrico buono: resta da scegliere meglio la luce per questa fase.",
+                _ => "Tutto stabile sul bagnato; la leva utile adesso è solo la luce.",
+            };
+        }
+
+        private static string PickLightStressVoPrimary(int rot)
+        {
+            return (rot % 3) switch
+            {
+                0 => "La luce sta lasciando tracce. Il Pot non e' ancora in zona burn, ma ci si sta avvicinando.",
+                1 => "Lo spettro attuale spinge lo stress: serve un intervento sulla luce prima che salga oltre soglia.",
+                _ => "LED e fotoperiodo chiedono una correzione: il trend stress non è neutro.",
+            };
+        }
+
+        private static string FormatStageDetail(PlantStage stage, int salt)
+        {
+            int r = PhraseRot(salt);
             return stage switch
             {
                 PlantStage.Seed => "IMPIANTO",
-                PlantStage.Sprout => "ORIENTAMENTO",
+                PlantStage.Sprout => (r % 3) switch
+                {
+                    0 => "RADICAMENTO",
+                    1 => "ASSETTAZIONE LUCI",
+                    _ => "PROTOCOLLO FOTOPERIODO",
+                },
                 PlantStage.Growth => "CRESCITA ATTIVA",
                 PlantStage.Flowering => "RIPRODUZIONE",
                 PlantStage.HarvestReady => "RACCOLTA TERMINALE",
@@ -937,15 +1082,21 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             };
         }
 
-        private static string BuildFooterForStage(PlantStage stage, bool dead)
+        private static string BuildFooterForStage(PlantStage stage, bool dead, int salt)
         {
             if (dead)
                 return "Non risponde piu'.";
 
+            int r = PhraseRot(salt);
             return stage switch
             {
                 PlantStage.Seed => "E' piccolo, ma non dorme.",
-                PlantStage.Sprout => "Sta prendendo orientamento.",
+                PlantStage.Sprout => (r % 3) switch
+                {
+                    0 => "Sta fissando radici e tolleranze.",
+                    1 => "Piccoli aggiustamenti ora evitano stress dopo.",
+                    _ => "Segnali buoni: resta coerente con luce e acqua.",
+                },
                 PlantStage.Growth => "Ogni giorno un po' piu' forte.",
                 PlantStage.Flowering => "Un linguaggio che solo tu capisci.",
                 PlantStage.HarvestReady => "Ha completato il suo ciclo.",

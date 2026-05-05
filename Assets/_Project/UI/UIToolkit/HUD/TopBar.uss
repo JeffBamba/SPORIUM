@@ -347,6 +347,50 @@
     background-color: rgb(80, 80, 80);
 }
 
+.ph-tooltip-ph-legend-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+.ph-tooltip-ph-legend-end {
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(180, 184, 180);
+    min-width: 42px;
+}
+
+.ph-tooltip-ph-legend-end--acid {
+    -unity-text-align: middle-left;
+}
+
+.ph-tooltip-ph-legend-end--basic {
+    -unity-text-align: middle-right;
+}
+
+.ph-tooltip-ph-legend-bar-wrap {
+    flex-grow: 1;
+    flex-direction: row;
+    height: 10px;
+    margin-left: 6px;
+    margin-right: 6px;
+    min-width: 64px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.ph-tooltip-ph-legend-acid-side {
+    flex-grow: 1;
+    background-color: rgb(200, 60, 60);
+}
+
+.ph-tooltip-ph-legend-basic-side {
+    flex-grow: 1;
+    background-color: rgb(80, 200, 220);
+}
+
 .ph-tooltip-modifier-icon {
     width: 20px;
     height: 20px;

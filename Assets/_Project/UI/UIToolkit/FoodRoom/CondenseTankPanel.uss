@@ -321,6 +321,20 @@
     color: var(--sp-color-text-dim);
 }
 
+.condensation-status-text-col {
+    flex-grow: 1;
+    flex-direction: column;
+    margin-right: var(--sp-space-md);
+    min-width: 0;
+}
+
+.condensation-forecast {
+    margin-top: var(--sp-space-xs);
+    font-size: var(--sp-font-size-9);
+    color: rgba(93, 182, 227, 0.92);
+    white-space: normal;
+}
+
 .condensation-collect-button {
     min-width: 190px;
     color: var(--sp-color-green-led);

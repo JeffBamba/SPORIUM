@@ -37,7 +37,7 @@ namespace _Project.Sporae.Core
             if (string.IsNullOrEmpty(typeId) || quantity <= 0) return;
 
             if (IsSolidFood(typeId))
-                _gameManager?.NotifySolidFoodConsumed();
+                _gameManager?.NotifySolidFoodConsumed(typeId);
 
             if (typeId == Items.FoodVegetable)
             {

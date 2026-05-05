@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +64,7 @@ namespace _Project
         private int _dayBeforeTransition;
         private Dictionary<string, (string title, string desc, string tip)> _dawnTooltipData;
         private bool _dawnTooltipsRegistered;
+        private uint _eodDiarioNarrativeSalt;
 
         private void Awake()
         {
@@ -193,6 +195,20 @@ namespace _Project
             if (!_bound)
                 SporiumLogger.LogWarning(LogCategory.UI,
                     "EndOfDaySequenceController: TryBind incompleto (btn-eod-yes/no assenti). Riprova al frame successivo.");
+            else
+                ConfigureEodScrollViews();
+        }
+
+        private void ConfigureEodScrollViews()
+        {
+            void Fast(ScrollView sv)
+            {
+                if (sv == null) return;
+                sv.mouseWheelScrollSize = 450f;
+            }
+            Fast(_root?.Q<ScrollView>("eod-snapshot-scroll"));
+            Fast(_root?.Q<ScrollView>("eod-diario-scroll"));
+            Fast(_root?.Q<ScrollView>("eod-forecast-scroll"));
         }
 
         private void DetachEodButtonHandlers()
@@ -227,6 +243,7 @@ namespace _Project
 
         public void StartSequence()
         {
+            GameplayUiModalLock.SetHideFixedHud(true);
             _nightResearchChosen = false;
             _awaitingDawn = false;
             gameObject.SetActive(true);
@@ -272,6 +289,7 @@ namespace _Project
         /// <summary>Chiude la sequenza e torna al vault (es. su NO in Step 1).</summary>
         public void Hide()
         {
+            GameplayUiModalLock.SetHideFixedHud(false);
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.None;
@@ -698,7 +716,7 @@ namespace _Project
                     if (!state.HasPlant || state.Stage == (int)PlantStage.Empty)
                         continue;
 
-                    string plantName = PlantDatabase.Instance?.GetPlantDataByCode(state.PlantCode)?.name ?? state.PlantCode ?? "Pianta";
+                    string plantName = FormatSnapshotPlantDisplayName(state);
                     string stageNow = ((PlantStage)state.Stage).ToString();
                     string stagePrev = state.Stage > (int)PlantStage.Seed ? ((PlantStage)(state.Stage - 1)).ToString() : stageNow;
                     string conditionName = PlantConditionSystem.GetConditionName((PlantCondition)state.ConditionLabel);
@@ -1025,10 +1043,37 @@ namespace _Project
             return potId;
         }
 
+        private static string FormatSnapshotPlantDisplayName(PotStateModel state)
+        {
+            if (state == null)
+                return "Pianta";
+            if (!string.IsNullOrWhiteSpace(state.CustomPlantName))
+                return state.CustomPlantName;
+            var plantData = PlantDatabase.Instance != null ? PlantDatabase.Instance.GetPlantDataByCode(state.PlantCode) : null;
+            string mapped = PlantSpeciesDisplayNames.FromPlantData(plantData);
+            if (!string.IsNullOrWhiteSpace(mapped))
+                return mapped;
+            return string.IsNullOrWhiteSpace(state.PlantCode) ? "Pianta" : state.PlantCode;
+        }
+
         private void PopulateDiario()
         {
             int day = _dayCycleSystem != null ? _dayCycleSystem.CurrentDay : 1;
-            string full = BuildDiarioNarrative(day);
+            const string prefsKey = "eod_diario_last_sig_v1";
+            string lastSig = PlayerPrefs.GetString(prefsKey, string.Empty);
+            string full = string.Empty;
+            for (int attempt = 0; attempt < 14; attempt++)
+            {
+                unchecked { _eodDiarioNarrativeSalt += 2654435769u + (uint)(attempt * 104729u); }
+                full = BuildDiarioNarrative(day);
+                string sig = StableDiarioSignature(full);
+                if (!string.Equals(sig, lastSig, StringComparison.Ordinal) || attempt == 13)
+                {
+                    PlayerPrefs.SetString(prefsKey, sig);
+                    PlayerPrefs.Save();
+                    break;
+                }
+            }
 
             var title = _root.Q<Label>("eod-diario-title");
             if (title != null)
@@ -1057,7 +1102,7 @@ namespace _Project
                 BuildDiaryOpening(day, distortion, phAlignment),
                 BuildDiaryBody(day, isMediumDistortion, isLateDistortion, phAlignment),
                 BuildDiaryLoreFragment(day, distortion, phAlignment),
-                BuildDiaryClosing(distortion, phAlignment)
+                BuildDiaryClosing(day, distortion, phAlignment)
             };
 
             return string.Join("\n\n", paragraphs.Where(p => !string.IsNullOrWhiteSpace(p)));
@@ -1086,7 +1131,8 @@ namespace _Project
 
         private string BuildDiaryOpening(int day, float distortion, float phAlignment)
         {
-            int v = Variant(day, 13);
+            int mix = day + (int)(_eodDiarioNarrativeSalt % 1009u);
+            int v = Variant(mix, 13);
             bool evil = phAlignment <= -0.35f;
             bool pure = phAlignment >= 0.35f;
 
@@ -1097,7 +1143,10 @@ namespace _Project
                     "Registro serale. L'aria sa di ferro e giudizio: il Vault oggi ha ringhiato piano.",
                     "Chiudo il turno con i nervi stretti. Le pareti acide hanno imparato i miei dubbi.",
                     "Fine giornata. Il Dome sembra un dente scoperto e io ci metto ancora le mani.",
-                    "Scrivo per non mordere. Oggi il buio aveva intenzioni molto precise."
+                    "Scrivo per non mordere. Oggi il buio aveva intenzioni molto precise.",
+                    "La giornata deposita acciaio sullo stomaco: rumore di protocolli che chiudono prima delle persone.",
+                    "Metto ordine nel log serale come chi ricompone vetri senza guanti.",
+                    "Fuori dalla cupola non esiste fuori: solo questo ritmo metallico che chiama colloquio."
                 };
                 return evilLines[v % evilLines.Length];
             }
@@ -1109,7 +1158,10 @@ namespace _Project
                     "Registro serale. Oggi il Vault ha respirato meno storto del solito.",
                     "Fine turno. Per un momento i corridoi hanno smesso di sembrare una minaccia.",
                     "Chiudo la giornata con una calma fragile, ma almeno reale.",
-                    "Stasera la luce non consola, pero chiarisce: gia tanto."
+                    "Stasera la luce non consola, pero chiarisce: gia tanto.",
+                    "Per una volta i sensori smettono di gridare e io quasi credo alla quiete.",
+                    "Segno l'ora di uscita sentendo meno peso sul petto: piccolo miracolo da laboratorio.",
+                    "Il basico oggi sembra educazione, non punizione: lo annoto prima che cambi idea."
                 };
                 return pureLines[v % pureLines.Length];
             }
@@ -1121,7 +1173,10 @@ namespace _Project
                     "Registro serale. Il Vault finge ordine, io fingo di credergli.",
                     "Ho chiuso la giornata con le mani sporche e la coscienza lucidata male.",
                     "La routine dice che sono vivo. Il resto e un dettaglio amministrativo.",
-                    "Fine turno. Le luci verdi mentono con gentilezza professionale."
+                    "Fine turno. Le luci verdi mentono con gentilezza professionale.",
+                    "Quello che chiamano stabilita io lo chiamo tregua con contratto scaduto.",
+                    "Le checklist sono piene, il cervello no: firmo comunque.",
+                    "Chiudo il cancello mentale e lascio il rumore nel corridoio."
                 };
                 return lines[v % lines.Length];
             }
@@ -1133,7 +1188,10 @@ namespace _Project
                     "Registro serale. Oggi il Vault ha parlato sottovoce, ma usava la mia voce.",
                     "Chiudo il turno e mi resta addosso un ronzio che non viene dai macchinari.",
                     "La giornata e finita, dice il sistema. Io non sono ancora convinto.",
-                    "I corridoi fanno eco ai miei passi con qualche parola di troppo."
+                    "I corridoi fanno eco ai miei passi con qualche parola di troppo.",
+                    "Ho fatto il possibile; il possibile qui puzza di muffa e ottimismo obbligatorio.",
+                    "Tra una procedura e l'altra ho perso il filo, ma non il timer.",
+                    "Metto via il badge e tengo la tensione in tasca."
                 };
                 return lines[v % lines.Length];
             }
@@ -1143,7 +1201,10 @@ namespace _Project
                 "Registro serale. Credo di aver lavorato io, ma il Vault firma al posto mio.",
                 "Chiudo il turno. I monitor sorridono, e non ho mai insegnato loro i denti.",
                 "Fine giornata, almeno sulla carta. Nella testa e ancora alba tossica.",
-                "Scrivo per ricordare; ogni riga cancella la precedente con cortesia militare."
+                "Scrivo per ricordare; ogni riga cancella la precedente con cortesia militare.",
+                "La fatica non chiede permesso: occupa il letto prima di me.",
+                "Non so piu se sto registrando eventi o sintomi.",
+                "Se domani riparte tutto uguale, almeno stanotte ho nominato il dubbio."
             };
             return lateLines[v % lateLines.Length];
         }
@@ -1403,31 +1464,71 @@ namespace _Project
             return string.Join(" ", neutralLines);
         }
 
-        private string BuildDiaryClosing(float distortion, float phAlignment)
+        private string BuildDiaryClosing(int day, float distortion, float phAlignment)
         {
             if (phAlignment <= -0.35f)
             {
                 if (distortion < 0.35f)
-                    return "Promemoria per domani: tenere le mani ferme, anche quando la testa vuole rompere tutto.";
+                    return Pick(day, 101,
+                        "Promemoria per domani: tenere le mani ferme, anche quando la testa vuole rompere tutto.",
+                        "Promemoria per domani: non dare alla rabbia il comando dei protocolli.",
+                        "Promemoria per domani: respirare prima di firmare qualsiasi cosa acida.");
                 if (distortion < 0.75f)
-                    return "Promemoria per domani: non confondere paranoia e istinto. Qui spesso vestono uguale.";
-                return "Promemoria per domani: se la notte mi parla col coltello, rispondo con sarcasmo e guanti spessi.";
+                    return Pick(day, 103,
+                        "Promemoria per domani: non confondere paranoia e istinto. Qui spesso vestono uguale.",
+                        "Promemoria per domani: tenere il dubbio come strumento, non come arma propria.",
+                        "Promemoria per domani: verificare due volte i messaggi che suonano troppo veri.");
+                return Pick(day, 105,
+                    "Promemoria per domani: se la notte mi parla col coltello, rispondo con sarcasmo e guanti spessi.",
+                    "Promemoria per domani: spegnere il cervello rumoroso prima che bruci i fusibili.",
+                    "Promemoria per domani: camminare dritto anche quando il pavimento suggerisce curve.");
             }
 
             if (phAlignment >= 0.35f)
             {
                 if (distortion < 0.35f)
-                    return "Promemoria per domani: conservare questa chiarezza prima che il Vault la metabolizzi.";
+                    return Pick(day, 107,
+                        "Promemoria per domani: conservare questa chiarezza prima che il Vault la metabolizzi.",
+                        "Promemoria per domani: annotare i momenti buoni come prove, non come leggende.",
+                        "Promemoria per domani: non sprecare la lucidita su rumore inutile.");
                 if (distortion < 0.75f)
-                    return "Promemoria per domani: seguire i segnali buoni senza innamorarsi delle illusioni pulite.";
-                return "Promemoria per domani: difendere la parte lucida, anche se trema.";
+                    return Pick(day, 109,
+                        "Promemoria per domani: seguire i segnali buoni senza innamorarsi delle illusioni pulite.",
+                        "Promemoria per domani: tenere un piede nel dubbio anche quando il cielo sembra aperto.",
+                        "Promemoria per domani: preferire il miglioramento piccolo al miracolo rumoroso.");
+                return Pick(day, 111,
+                    "Promemoria per domani: difendere la parte lucida, anche se trema.",
+                    "Promemoria per domani: proteggere la calma come risorsa tattica.",
+                    "Promemoria per domani: scegliere la gentilezza verso me stesso senza piegarsi.");
             }
 
             if (distortion < 0.35f)
-                return "Promemoria per domani: sopravvivere con stile mediocre e sarcasmo sufficiente.";
+                return Pick(day, 113,
+                    "Promemoria per domani: sopravvivere con stile mediocre e sarcasmo sufficiente.",
+                    "Promemoria per domani: mantenere il minimo sindacale di ironia per non arrugginire.",
+                    "Promemoria per domani: portarsi dietro una battuta di scorta per i corridoi lunghi.");
             if (distortion < 0.75f)
-                return "Promemoria per domani: distinguere i fatti dai racconti, poi scegliere i racconti piu utili.";
-            return "Promemoria per domani: se trovo la verita, la metto in quarantena prima che contagi il resto.";
+                return Pick(day, 115,
+                    "Promemoria per domani: distinguere i fatti dai racconti, poi scegliere i racconti piu utili.",
+                    "Promemoria per domani: tenere due versioni della giornata e decidere quale salvare.",
+                    "Promemoria per domani: non dare credito alle narrazioni troppo comode.");
+            return Pick(day, 117,
+                "Promemoria per domani: se trovo la verita, la metto in quarantena prima che contagi il resto.",
+                "Promemoria per domani: avvicinarmi alla verita come a un campione biochimico instabile.",
+                "Promemoria per domani: preferire domande piccole a certezze fragili.");
+        }
+
+        private static string StableDiarioSignature(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "0";
+            unchecked
+            {
+                int hash = 23;
+                foreach (char c in text)
+                    hash = hash * 31 + c;
+                return hash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture) + ":" + text.Length;
+            }
         }
 
         private static int Variant(int day, int salt)
@@ -2093,6 +2194,7 @@ namespace _Project
 
         private void OnDestroy()
         {
+            GameplayUiModalLock.SetHideFixedHud(false);
             DetachEodButtonHandlers();
         }
     }

@@ -398,8 +398,9 @@ namespace Sporae.UI.UIToolkit.Lab
                     // L'Incubatore usa direttamente l'inventario del giocatore; la selezione serve solo a confermare/disporre il picker
                     RefreshDisplay();
                 },
-                () => { }
-            );
+                () => { },
+                null,
+                presentFullInventoryUi: true);
         }
 
         private static HashSet<string> IncubatorAllowedTypes()
@@ -438,8 +439,9 @@ namespace Sporae.UI.UIToolkit.Lab
                     }
                     RefreshDisplay();
                 },
-                () => { }
-            );
+                () => { },
+                null,
+                presentFullInventoryUi: true);
         }
 
         private void HandleDayChanged(int day)
