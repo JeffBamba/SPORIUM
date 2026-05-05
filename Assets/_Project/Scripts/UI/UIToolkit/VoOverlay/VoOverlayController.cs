@@ -137,6 +137,9 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
         // Cursore lampeggiante durante il typing
         private const string CursorChar = "▌";
+        private const string PlantCard4vRootClass = "vo-overlay-root--plantcard4v";
+        private const string PlantCard4vWrapClass = "vo-text-wrap--plantcard4v";
+        private const string PlantCard4vHintClass = "vo-continue-hint--plantcard4v";
 
         [Header("Audio (opzionali)")]
         [SerializeField] private AudioClip _blockStartClip;
@@ -176,6 +179,7 @@ namespace _Project.UI.UIToolkit.VoOverlay
 
         private bool _idleGlitchActive;
         private bool _animatingEnterExit;
+        private bool _plantCard4vDocked;
 
         // Stato cursore
         private bool                 _cursorVisible = true;
@@ -360,6 +364,44 @@ namespace _Project.UI.UIToolkit.VoOverlay
             if (_textWrap     != null) { _textWrap.style.translate = new Translate(0f, 0f); _textWrap.style.opacity = 1f; }
             if (_organicHost  != null) _organicHost.style.display = DisplayStyle.None;
             if (_sentencesHost != null) _sentencesHost.style.display = DisplayStyle.None;
+            ApplyPlantCard4vDock();
+        }
+
+        public void SetPlantCard4vDocked(bool docked)
+        {
+            _plantCard4vDocked = docked;
+            if (_document != null && (_root == null || _textWrap == null))
+                BindVisuals();
+            ApplyPlantCard4vDock();
+        }
+
+        private void ApplyPlantCard4vDock()
+        {
+            if (_root != null)
+            {
+                if (_plantCard4vDocked)
+                    _root.AddToClassList(PlantCard4vRootClass);
+                else
+                    _root.RemoveFromClassList(PlantCard4vRootClass);
+                _root.pickingMode = _plantCard4vDocked ? PickingMode.Ignore : PickingMode.Position;
+            }
+
+            if (_textWrap != null)
+            {
+                if (_plantCard4vDocked)
+                    _textWrap.AddToClassList(PlantCard4vWrapClass);
+                else
+                    _textWrap.RemoveFromClassList(PlantCard4vWrapClass);
+                _textWrap.pickingMode = _plantCard4vDocked ? PickingMode.Ignore : PickingMode.Position;
+            }
+
+            if (_continueHint != null)
+            {
+                if (_plantCard4vDocked)
+                    _continueHint.AddToClassList(PlantCard4vHintClass);
+                else
+                    _continueHint.RemoveFromClassList(PlantCard4vHintClass);
+            }
         }
 
         // ─── Enter / Exit animations ─────────────────────────────────────────

@@ -250,6 +250,7 @@ public class PotSlot : MonoBehaviour
 
         // Notifica la selezione (per eventuali listener, es. log o altri sistemi).
         OnPotSelected?.Invoke(this);
+        PotEvents.EmitSelected(this);
     }
     
     /// <summary>

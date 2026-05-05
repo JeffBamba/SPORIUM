@@ -35,6 +35,40 @@
     border-left-width: 0;
 }
 
+.vo-overlay-root--plantcard4v {
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 105px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.vo-text-wrap--plantcard4v {
+    width: 42%;
+    min-width: 420px;
+    max-width: 660px;
+    height: 58px;
+    align-self: center;
+    background-color: rgba(0, 0, 0, 0);
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    justify-content: center;
+}
+
+.vo-text-wrap--plantcard4v .vo-body {
+    font-size: 15px;
+    letter-spacing: 0;
+    -unity-text-align: middle-left;
+}
+
+.vo-continue-hint--plantcard4v {
+    left: 0;
+    right: 0;
+    bottom: 120px;
+}
+
 .vo-sentences-host {
     flex-direction: column;
     align-items: center;

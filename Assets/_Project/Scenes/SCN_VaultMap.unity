@@ -2137,6 +2137,74 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4076337093215459100, guid: d78b5f6450ce44a44976a32e1644c211, type: 3}
   m_PrefabInstance: {fileID: 92011583}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &97533438
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 97533439}
+  - component: {fileID: 97533441}
+  - component: {fileID: 97533440}
+  m_Layer: 0
+  m_Name: POT VIEW-001
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &97533439
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 97533438}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -968.3741, y: -420.3781, z: 0}
+  m_LocalScale: {x: 1.6710184, y: 1.6710184, z: 1.6710184}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 170435553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &97533440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 97533438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30d30f0fb80cf994897babf19d00fced, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _potId: POT-001
+  _targetPot: {fileID: 1935198926}
+  _potSystemConfig: {fileID: 11400000, guid: b1e4e47a7804dd94699a7610f2def75a, type: 2}
+  _openOnOwnPotSelected: 1
+  _showOnStart: 0
+  _internalVoRegister: 1
+  _voCharsPerSecond: 33
+--- !u!114 &97533441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 97533438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: 042ecd5ecc4509a4e969c8d7297902d6, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 8c9ce7978fbe5464a8099e4f6ff455ae, type: 3}
+  m_SortingOrder: 550
 --- !u!1 &109682189
 GameObject:
   m_ObjectHideFlags: 0
@@ -3286,6 +3354,7 @@ RectTransform:
   - {fileID: 1475634570}
   - {fileID: 876695317}
   - {fileID: 1299462518}
+  - {fileID: 97533439}
   - {fileID: 1810938231}
   - {fileID: 617360272}
   - {fileID: 1723587288}
@@ -44435,6 +44504,17 @@ MonoBehaviour:
   _blueLight: {fileID: 551342801}
   _redLight: {fileID: 478114283}
   showDebugLogs: 0
+--- !u!114 &1935198926 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 871008503983651716, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
+  m_PrefabInstance: {fileID: 4711991808757503066}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935198915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab98878e29cfb724ba52e441cb8e4ed6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1938280430
 GameObject:
   m_ObjectHideFlags: 0
@@ -49435,15 +49515,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4806303643697327106, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7328423360637404467, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7607455735724014979, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.738
+      value: -3.58
       objectReference: {fileID: 0}
     - target: {fileID: 7607455735724014979, guid: f42b34f9275d0a64385fdec527fadb3c, type: 3}
       propertyPath: m_LocalPosition.y

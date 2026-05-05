@@ -133,6 +133,11 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                     "Dati pianta consultati",
                     "Plant data accessed",
                     "Hai aperto i dettagli di una pianta.\nQui vedi stadio, deriva pH, requisiti e azioni disponibili."),
+                Spec("POT-EMPTY", NotificationCategory.Pot, NotificationSeverity.Warning, NotificationChannel.Gameplay, false, false, false, 3f,
+                    "notif.pot_empty",
+                    "POT vuoto ({potId}) — usa il Terminale POT per piantare un seme.",
+                    "Empty POT ({potId}) — use the POT Terminal to plant a seed.",
+                    "La PlantCard4v è una vista di cura ravvicinata.\nLa procedura PLANT resta nel Terminale POT."),
                 Spec("LAB-001", NotificationCategory.Room, NotificationSeverity.Info, NotificationChannel.Gameplay, false, false, false, 8f,
                     "notif.lab001",
                     "Laboratorio accesso effettuato",
@@ -854,5 +859,4 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
         }
     }
 }
-
 
