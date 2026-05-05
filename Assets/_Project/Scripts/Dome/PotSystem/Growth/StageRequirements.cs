@@ -66,15 +66,15 @@ namespace Sporae.Dome.PotSystem.Growth
         public int lightMax = 100;
         
         [Header("Fertilizer Requirements (BLK-03.01-T1)")]
-        [Tooltip("Range minimo fertilizzante (%) - VALORI FISSI per tutti gli stadi")]
+        [Tooltip("Range minimo fertilizzante (%). Per stadio: vedi curve su PlantData (es. 75 early, 50 Growth, 25 Flowering/Harvest).")]
         [Range(0, 100)]
         public int fertilizerMin = 0;
         
-        [Tooltip("Fertilizzante ottimale/mediano (%) - VALORI FISSI per tutti gli stadi")]
+        [Tooltip("Fertilizzante ottimale/mediano (%)")]
         [Range(0, 100)]
         public int fertilizerMed = 50;
         
-        [Tooltip("Range massimo fertilizzante (%) - VALORI FISSI per tutti gli stadi")]
+        [Tooltip("Range massimo fertilizzante (%)")]
         [Range(0, 100)]
         public int fertilizerMax = 100;
         

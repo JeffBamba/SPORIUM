@@ -1,12 +1,20 @@
 using System.Globalization;
 using _Project;
 using _Project.Sporae.Core;
+using UnityEngine;
 using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Growth;
-using UnityEngine;
 
 namespace Sporae.UI.UIToolkit.PlantCard4v
 {
+    /// <summary>Colore semantico titolo riga Bisogni principali (verde / giallo / rosso).</summary>
+    public enum PlantCard4vNeedSignal
+    {
+        Ok,
+        Attention,
+        Warning
+    }
+
     public enum PlantCard4vActionKind
     {
         None,
@@ -27,6 +35,17 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
     {
         private static readonly CultureInfo ItCulture = CultureInfo.GetCultureInfo("it-IT");
 
+        /// <summary>Macro-area usata per evitare due frasi VO sullo stesso parametro.</summary>
+        private enum VoParamTopic
+        {
+            None,
+            Water,
+            Light,
+            Ph,
+            Fertilizer,
+            Condition,
+        }
+
         public string PotId { get; private set; }
         public string ShortPotId { get; private set; }
         public string PlantName { get; private set; }
@@ -44,9 +63,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string SecondaryRiskCause { get; private set; }
         public string HydrationText { get; private set; }
         public int HydrationPercent { get; private set; }
+        /// <summary>Livello fertilizzante 0–100 (substrato).</summary>
+        public int FertilizerPercent { get; private set; }
+        /// <summary>Etichetta barra fertilizzante (stile idratazione).</summary>
+        public string FertilizerMeterLabel { get; private set; }
         public int LightStressPercent { get; private set; }
-        /// <summary>Drift giornaliero accodato della cupola (PhSystem).</summary>
+        /// <summary>Drift giornaliero accodato della cupola (PhSystem), per tooltip/dettaglio.</summary>
         public string PhDomeDriftText { get; private set; }
+        /// <summary>pH cupola corrente (-100…+100), stessa scala della TopBar DRIFT pH.</summary>
+        public string PhDomeAmbientValueText { get; private set; }
         /// <summary>Banda pH ambiente (Acido/Neutro/Basico) da EvaluateState.</summary>
         public string PhDomeBandShort { get; private set; }
         /// <summary>Preferenza chimica della pianta (range ottimale) — Acido/Basico/Neutro.</summary>
@@ -65,6 +90,21 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string VoHintLine { get; private set; }
         public string VoHintId { get; private set; }
         public string FooterStateLine { get; private set; }
+        /// <summary>Stato LED per footer (testo sintetico).</summary>
+        public string FooterLightStatusText { get; private set; }
+        /// <summary>Stato irrigazione per footer.</summary>
+        public string FooterIrrigationStatusText { get; private set; }
+
+        public PlantCard4vNeedSignal HydrationNeedSignal { get; private set; }
+        public PlantCard4vNeedSignal PhNeedSignal { get; private set; }
+        public PlantCard4vNeedSignal FertilizerNeedSignal { get; private set; }
+        public PlantCard4vNeedSignal ConditionNeedSignal { get; private set; }
+
+        public string HydrationRowTooltip { get; private set; }
+        public string PhRowTooltip { get; private set; }
+        public string FertilizerRowTooltip { get; private set; }
+        public string ConditionRowTooltip { get; private set; }
+
         public PlantCard4vActionKind PrimaryAction { get; private set; }
         public PlantCard4vActionKind SecondaryAction { get; private set; }
         public int RiskSegments { get; private set; }
@@ -79,14 +119,21 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PotStateModel state,
             PlantData plantData,
             PotSystemConfig config,
-            PhSystem phSystem)
+            PhSystem phSystem,
+            PlantCard4vVoReactionRequest reactionRequest = null)
         {
             var model = new PlantCard4vCareViewModel();
-            model.BuildInternal(pot, state, plantData, config, phSystem);
+            model.BuildInternal(pot, state, plantData, config, phSystem, reactionRequest);
             return model;
         }
 
-        private void BuildInternal(PotSlot pot, PotStateModel state, PlantData plantData, PotSystemConfig config, PhSystem phSystem)
+        private void BuildInternal(
+            PotSlot pot,
+            PotStateModel state,
+            PlantData plantData,
+            PotSystemConfig config,
+            PhSystem phSystem,
+            PlantCard4vVoReactionRequest reactionRequest = null)
         {
             PotId = pot != null && !string.IsNullOrWhiteSpace(pot.PotId) ? pot.PotId : (state != null ? state.PotId : "POT-???");
             ShortPotId = BuildShortPotId(PotId);
@@ -97,7 +144,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             if (IsEmpty)
             {
-                BuildEmpty(phSystem);
+                BuildEmpty(state, phSystem);
                 return;
             }
 
@@ -122,14 +169,34 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PreferredLightLine = ResolvePreferredLightLine(stageReq);
             MoldLevelLine = $"Lvl {Mathf.Clamp(state.MoldRiskLevel, 0, 99)}";
             FertilizerText = ResolveFertilizerText(state, stageReq);
+            FertilizerPercent = Mathf.Clamp(state.FertilizerLevel, 0, 100);
+            FertilizerMeterLabel = $"FERTILIZZANTE {FertilizerPercent}%";
             ConditionText = ResolveConditionText(state);
             MoldText = ResolveMoldText(state);
 
             ResolveNeedRiskAndActions(state, plantData, stageReq, config, phSystem, currentPh);
+            ResolveNeedRowSignalsAndTooltips(state, plantData, stageReq, phSystem, currentPh);
+            ResolveFooterHardwareStatus(state);
             FooterStateLine = $"{FormatLifeState((PlantStage)state.Stage, IsDead)} - {BuildFooterForStage((PlantStage)state.Stage, IsDead)}";
+
+            if (reactionRequest != null && state != null && !IsEmpty
+                && PlantCard4vBiologistReactionVo.TryBuildLine(
+                    reactionRequest,
+                    state,
+                    plantData,
+                    stageReq,
+                    config,
+                    phSystem,
+                    currentPh,
+                    out string reactLine,
+                    out string reactHintId))
+            {
+                VoHintLine = reactLine;
+                VoHintId = reactHintId;
+            }
         }
 
-        private void BuildEmpty(PhSystem phSystem)
+        private void BuildEmpty(PotStateModel state, PhSystem phSystem)
         {
             PlantName = "VASO VUOTO";
             PlantSubtitle = "PROCEDURA PLANT ASSENTE";
@@ -153,15 +220,155 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PreferredLightLine = "---";
             MoldLevelLine = "Lvl 0";
             FertilizerText = "---";
+            FertilizerPercent = 0;
+            FertilizerMeterLabel = "FERTILIZZANTE 0%";
             ConditionText = "---";
             MoldText = "---";
-            VoHintLine = "Solo polvere e promesse. Prima serve una procedura di impianto.";
-            VoHintId = "empty";
+            SetPlantCardVo(
+                "Solo polvere e promesse. Prima serve una procedura di impianto.",
+                VoParamTopic.None,
+                "empty",
+                state,
+                null,
+                null,
+                phSystem,
+                0f);
             FooterStateLine = "VUOTO - Tracce di vita assenti.";
             PrimaryAction = PlantCard4vActionKind.TerminalPlant;
             SecondaryAction = PlantCard4vActionKind.None;
             RiskSegments = 0;
             ShowRiskDetailPanel = true;
+            HydrationNeedSignal = PlantCard4vNeedSignal.Warning;
+            PhNeedSignal = PlantCard4vNeedSignal.Ok;
+            FertilizerNeedSignal = PlantCard4vNeedSignal.Ok;
+            ConditionNeedSignal = PlantCard4vNeedSignal.Ok;
+            HydrationRowTooltip = MainNeedSubtitle;
+            PhRowTooltip = "Nessun dato: vaso senza coltura attiva.";
+            FertilizerRowTooltip = "Nessun dato: vaso senza coltura attiva.";
+            ConditionRowTooltip = "Nessun dato: vaso senza coltura attiva.";
+            FooterLightStatusText = "---";
+            FooterIrrigationStatusText = "---";
+        }
+
+        private void ResolveFooterHardwareStatus(PotStateModel state)
+        {
+            if (state == null)
+            {
+                FooterLightStatusText = "---";
+                FooterIrrigationStatusText = "---";
+                return;
+            }
+
+            FooterLightStatusText = state.LedSystemState switch
+            {
+                LedSystemState.Blue => "LED blu ON",
+                LedSystemState.Red => "LED rossa ON",
+                _ => "Luce spenta"
+            };
+            FooterIrrigationStatusText = state.WateringSystemOn
+                ? "Irrigazione ON"
+                : "Irrigazione OFF";
+        }
+
+        private void ResolveNeedRowSignalsAndTooltips(
+            PotStateModel state,
+            PlantData plantData,
+            StageRequirements stageReq,
+            PhSystem phSystem,
+            float currentPh)
+        {
+            if (stageReq == null)
+            {
+                HydrationNeedSignal = PlantCard4vNeedSignal.Ok;
+            }
+            else if (HydrationPercent < stageReq.hydrationMin)
+            {
+                HydrationNeedSignal = IsWateringActive ? PlantCard4vNeedSignal.Attention : PlantCard4vNeedSignal.Warning;
+            }
+            else if (HydrationPercent > stageReq.hydrationMax)
+            {
+                HydrationNeedSignal = PlantCard4vNeedSignal.Warning;
+            }
+            else
+            {
+                HydrationNeedSignal = PlantCard4vNeedSignal.Ok;
+            }
+
+            HydrationRowTooltip = string.IsNullOrWhiteSpace(MainNeedSubtitle)
+                ? MainNeed
+                : $"{MainNeed}\n{MainNeedSubtitle}";
+
+            if (plantData != null && phSystem != null && !plantData.IsPhInOptimalRange(currentPh))
+            {
+                PhNeedSignal = PlantCard4vNeedSignal.Warning;
+                bool low = currentPh < plantData.OptimalPhMin;
+                PhRowTooltip = low
+                    ? $"pH cupola fuori dall'intervallo ottimale della specie ({plantData.OptimalPhMin:0} / {plantData.OptimalPhMax:0}): valore troppo basso. Drift accodato {PhDomeDriftText}, banda ambiente {PhDomeBandShort}. Preferenza chimica pianta: {PlantPhPreferenceLabel}."
+                    : $"pH cupola fuori dall'intervallo ottimale della specie ({plantData.OptimalPhMin:0} / {plantData.OptimalPhMax:0}): valore troppo alto. Drift accodato {PhDomeDriftText}, banda ambiente {PhDomeBandShort}. Preferenza chimica pianta: {PlantPhPreferenceLabel}.";
+            }
+            else if (phSystem != null && Mathf.Abs(phSystem.GetTotalDailyDrift()) >= 0.8f)
+            {
+                PhNeedSignal = PlantCard4vNeedSignal.Attention;
+                PhRowTooltip = $"Drift giornaliero accodato {PhDomeDriftText} (si applica a fine giornata). Banda ambiente: {PhDomeBandShort}. Preferenza specie: {PlantPhPreferenceLabel}. Monitora additivi se il trend peggiora.";
+            }
+            else
+            {
+                PhNeedSignal = PlantCard4vNeedSignal.Ok;
+                PhRowTooltip = $"Drift giornaliero accodato {PhDomeDriftText}. Banda ambiente {PhDomeBandShort}. Preferenza chimica specie: {PlantPhPreferenceLabel}. Parametri entro tolleranza operativa.";
+            }
+
+            switch (FertilizerText)
+            {
+                case "BASSO":
+                    FertilizerNeedSignal = PlantCard4vNeedSignal.Warning;
+                    break;
+                case "ALTO":
+                    FertilizerNeedSignal = PlantCard4vNeedSignal.Attention;
+                    break;
+                default:
+                    FertilizerNeedSignal = PlantCard4vNeedSignal.Ok;
+                    break;
+            }
+
+            FertilizerRowTooltip = BuildFertilizerRowTooltip(state, stageReq);
+            if (!string.IsNullOrWhiteSpace(FertilizerText) && FertilizerText != "---")
+                FertilizerRowTooltip += $" Indicatore: {FertilizerText}.";
+
+            switch (ConditionText)
+            {
+                case "CRITICA":
+                case "MORTA":
+                    ConditionNeedSignal = PlantCard4vNeedSignal.Warning;
+                    break;
+                case "STRESSATA":
+                case "DEBOLE":
+                    ConditionNeedSignal = PlantCard4vNeedSignal.Attention;
+                    break;
+                default:
+                    ConditionNeedSignal = PlantCard4vNeedSignal.Ok;
+                    break;
+            }
+
+            ConditionRowTooltip = $"Condizione tessuti: {ConditionText}. Rischio muffa: {MoldText}.";
+        }
+
+        private static string BuildFertilizerRowTooltip(PotStateModel state, StageRequirements stageReq)
+        {
+            if (state == null)
+                return "---";
+
+            bool dead = (PlantCondition)state.ConditionLabel == PlantCondition.Morta;
+            string stageName = FormatLifeState((PlantStage)state.Stage, dead);
+
+            if (stageReq == null)
+                return $"Fase {stageName}: livello fertilizzante nel substrato {state.FertilizerLevel}%.";
+
+            int min = stageReq.fertilizerMin;
+            int max = stageReq.fertilizerMax;
+            return $"Fase {stageName}: nutrimento nel substrato {state.FertilizerLevel}%. " +
+                   $"Per questa fase il range consigliato è {min}–{max}%. " +
+                   "Sotto il minimo la crescita può rallentare o bloccarsi; oltre il massimo il surplus è sprecato e può generare stress. " +
+                   "Scegli un fertilizzante genetico compatibile o attendi l'assorbimento.";
         }
 
         private void ResolveDomePhRow(PhSystem phSystem)
@@ -170,9 +377,11 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             {
                 PhDomeDriftText = "---";
                 PhDomeBandShort = "---";
+                PhDomeAmbientValueText = "---";
                 return;
             }
 
+            PhDomeAmbientValueText = phSystem.CurrentPh.ToString("F1", ItCulture);
             float drift = phSystem.GetTotalDailyDrift();
             PhDomeDriftText = drift.ToString("+0.0;-0.0;0.0", ItCulture);
             PhDomeBandShort = FormatPhBandShort(phSystem.EvaluateState());
@@ -235,8 +444,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "La vita non e' infinita";
                 RiskCause = "Pianta morta - rimozione via Terminale POT";
                 RiskLevelText = "STATO FINALE";
-                VoHintLine = "Non risponde piu'. Anche il contenimento, a volte, arriva tardi.";
-                VoHintId = "dead";
+                SetPlantCardVo(
+                    "Non risponde piu'. Anche il contenimento, a volte, arriva tardi.",
+                    VoParamTopic.Condition,
+                    "dead",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.TerminalUproot;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 8;
@@ -251,8 +467,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "Infestazione attiva";
                 RiskCause = "Muffa materializzata nel Pot";
                 RiskLevelText = "RISCHIO CRITICO";
-                VoHintLine = "La superficie e' viva nel modo sbagliato. Il contenimento sta cedendo.";
-                VoHintId = "infested";
+                SetPlantCardVo(
+                    "La superficie e' viva nel modo sbagliato. Il contenimento sta cedendo.",
+                    VoParamTopic.Condition,
+                    "infested",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.Prune;
                 SecondaryAction = PlantCard4vActionKind.Additive;
                 RiskSegments = 8;
@@ -267,8 +490,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "Muffa critica";
                 RiskCause = "Overwatering prolungato";
                 RiskLevelText = "RISCHIO ALTO";
-                VoHintLine = "Troppa acqua. Il substrato sta diventando una seconda coltura.";
-                VoHintId = "mold_critical";
+                SetPlantCardVo(
+                    "Troppa acqua. Il substrato sta diventando una seconda coltura.",
+                    VoParamTopic.Condition,
+                    "mold_critical",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.Prune;
                 SecondaryAction = PlantCard4vActionKind.Additive;
                 RiskSegments = 7;
@@ -283,8 +513,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "Frutto maturo in attesa";
                 RiskCause = "Raccolta manuale non autorizzata";
                 RiskLevelText = "PROCEDURA TERMINALE";
-                VoHintLine = "Ha dato tutto. Ora serve la macchina, non la mano.";
-                VoHintId = "harvest_ready";
+                SetPlantCardVo(
+                    "Ha dato tutto. Ora serve la macchina, non la mano.",
+                    VoParamTopic.Condition,
+                    "harvest_ready",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.TerminalHarvest;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 3;
@@ -301,8 +538,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     MainRisk = "Assorbimento in attesa";
                     RiskCause = "Sistema a goccia attivo";
                     RiskLevelText = "PROCEDURA ATTIVA";
-                    VoHintLine = "L'acqua e' in viaggio. Il resto dei parametri dira' se basta.";
-                    VoHintId = "water_active";
+                    SetPlantCardVo(
+                        "L'acqua e' in viaggio. Il resto dei parametri dira' se basta.",
+                        VoParamTopic.Water,
+                        "water_active",
+                        state,
+                        plantData,
+                        stageReq,
+                        phSystem,
+                        currentPh);
                     PrimaryAction = ResolveNextCareAction(state, plantData, stageReq, phSystem, currentPh);
                     SecondaryAction = PlantCard4vActionKind.None;
                     RiskSegments = 2;
@@ -315,8 +559,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "Disidratazione lenta";
                 RiskCause = $"Idratazione sotto range ({stageReq.hydrationMin}%)";
                 RiskLevelText = "STRESS MEDIO";
-                VoHintLine = "Il substrato e' troppo secco. Non sta morendo, ma sta aspettando.";
-                VoHintId = "water_low";
+                SetPlantCardVo(
+                    "Il substrato e' troppo secco. Non sta morendo, ma sta aspettando.",
+                    VoParamTopic.Water,
+                    "water_low",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.Water;
                 SecondaryAction = ResolveLightSecondary(state, plantData, stageReq);
                 SetSecondaryLightRiskIfActive(state, plantData);
@@ -332,8 +583,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = "Muffa in preparazione";
                 RiskCause = $"Idratazione sopra range ({stageReq.hydrationMax}%)";
                 RiskLevelText = "STRESS MEDIO";
-                VoHintLine = "Troppa acqua. La superficie comincia a diventare viva nel modo sbagliato.";
-                VoHintId = "water_high";
+                SetPlantCardVo(
+                    "Troppa acqua. La superficie comincia a diventare viva nel modo sbagliato.",
+                    VoParamTopic.Water,
+                    "water_high",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = state.WateringSystemOn ? PlantCard4vActionKind.Water : PlantCard4vActionKind.Prune;
                 SecondaryAction = state.WateringSystemOn ? PlantCard4vActionKind.Prune : PlantCard4vActionKind.Additive;
                 RiskSegments = 4;
@@ -352,7 +610,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskLevelText = "RISCHIO LUCE";
                     RiskSegments = lightRiskSegments;
                     MainNeedSubtitle = lightCause;
-                    VoHintLine = "La luce sta lasciando tracce. Il Pot non e' ancora in zona burn, ma ci si sta avvicinando.";
+                    SetPlantCardVo(
+                        "La luce sta lasciando tracce. Il Pot non e' ancora in zona burn, ma ci si sta avvicinando.",
+                        VoParamTopic.Light,
+                        "light_need",
+                        state,
+                        plantData,
+                        stageReq,
+                        phSystem,
+                        currentPh);
                 }
                 else
                 {
@@ -361,9 +627,16 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskLevelText = "NESSUN RISCHIO LUCE";
                     RiskSegments = 0;
                     MainNeedSubtitle = "Spettro o durata LED non allineati alla fase: regola l'illuminazione o spegni per ridurre stress.";
-                    VoHintLine = "Non e' stress. Sta solo cercando orientamento.";
+                    SetPlantCardVo(
+                        "Non e' stress. Sta solo cercando orientamento.",
+                        VoParamTopic.Light,
+                        "light_need",
+                        state,
+                        plantData,
+                        stageReq,
+                        phSystem,
+                        currentPh);
                 }
-                VoHintId = "light_need";
                 PrimaryAction = lightAction;
                 SecondaryAction = PlantCard4vActionKind.None;
                 ShowRiskDetailPanel = true;
@@ -380,10 +653,17 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 MainRisk = tooLow ? "pH troppo acido" : "pH troppo basico";
                 RiskCause = $"Affinita' {plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0}";
                 RiskLevelText = "SQUILIBRIO pH";
-                VoHintLine = tooLow
-                    ? "L'ambiente la sta tirando verso il basso. Il pH e' fuori tono."
-                    : "L'ambiente e' troppo duro. Il pH e' fuori tono.";
-                VoHintId = tooLow ? "ph_low" : "ph_high";
+                SetPlantCardVo(
+                    tooLow
+                        ? "L'ambiente la sta tirando verso il basso. Il pH e' fuori tono."
+                        : "L'ambiente e' troppo duro. Il pH e' fuori tono.",
+                    VoParamTopic.Ph,
+                    tooLow ? "ph_low" : "ph_high",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.Additive;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 5;
@@ -391,15 +671,22 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 return;
             }
 
-            if (stageReq != null && state.Stage > (int)PlantStage.Sprout && state.FertilizerLevel < stageReq.fertilizerMin)
+            if (stageReq != null && !FertilizerCarePolicy.ShouldTreatFertilizerAsOptional((PlantStage)state.Stage, stageReq) && state.FertilizerLevel < stageReq.fertilizerMin)
             {
                 MainNeed = "Ha bisogno di nutrienti";
                 MainNeedSubtitle = $"Fertilizzazione sotto il minimo ({stageReq.fertilizerMin}%): la fase corrente richiede piu' input nutritivo.";
                 MainRisk = "Crescita rallentata";
                 RiskCause = $"Fertilizzante sotto range ({stageReq.fertilizerMin}%)";
                 RiskLevelText = "RISCHIO BASSO";
-                VoHintLine = "Sta provando a costruire tessuto nuovo con troppo poco materiale.";
-                VoHintId = "fert_low";
+                SetPlantCardVo(
+                    "Sta provando a costruire tessuto nuovo con troppo poco materiale.",
+                    VoParamTopic.Fertilizer,
+                    "fert_low",
+                    state,
+                    plantData,
+                    stageReq,
+                    phSystem,
+                    currentPh);
                 PrimaryAction = PlantCard4vActionKind.Fertilize;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 3;
@@ -412,8 +699,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             MainRisk = "Nessuna anomalia critica";
             RiskCause = "Contenimento nei limiti";
             RiskLevelText = "RISCHIO BASSO";
-            VoHintLine = "Per ora tiene. Non tutto cio' che vive chiede di essere toccato.";
-            VoHintId = "stable";
+            SetPlantCardVo(
+                "Per ora tiene. Non tutto cio' che vive chiede di essere toccato.",
+                VoParamTopic.None,
+                "stable",
+                state,
+                plantData,
+                stageReq,
+                phSystem,
+                currentPh);
             PrimaryAction = PlantCard4vActionKind.None;
             SecondaryAction = PlantCard4vActionKind.None;
             RiskSegments = 0;
@@ -434,7 +728,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (plantData != null && phSystem != null && !plantData.IsPhInOptimalRange(currentPh))
                 return PlantCard4vActionKind.Additive;
 
-            if (stageReq != null && state.Stage > (int)PlantStage.Sprout && state.FertilizerLevel < stageReq.fertilizerMin)
+            if (stageReq != null && !FertilizerCarePolicy.ShouldTreatFertilizerAsOptional((PlantStage)state.Stage, stageReq) && state.FertilizerLevel < stageReq.fertilizerMin)
                 return PlantCard4vActionKind.Fertilize;
 
             return PlantCard4vActionKind.None;
@@ -658,6 +952,148 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PlantStage.Resting => "Non disturbarlo.",
                 _ => "Tracce di vita assenti."
             };
+        }
+
+        private void SetPlantCardVo(
+            string primarySentence,
+            VoParamTopic primaryTopic,
+            string voIdBase,
+            PotStateModel state,
+            PlantData plantData,
+            StageRequirements stageReq,
+            PhSystem phSystem,
+            float currentPh)
+        {
+            string secondary = PickSecondaryVoSentence(primaryTopic, state, plantData, stageReq, phSystem, currentPh, out VoParamTopic secTopic);
+            string trend = FormatVoTrendSentence(state);
+            VoHintLine = JoinVoSentences(primarySentence, secondary, trend);
+            int fd = state != null ? state.ForecastDirection : 1;
+            VoHintId = $"{voIdBase}|{(int)secTopic}|{fd}";
+        }
+
+        private string PickSecondaryVoSentence(
+            VoParamTopic primaryTopic,
+            PotStateModel state,
+            PlantData plantData,
+            StageRequirements stageReq,
+            PhSystem phSystem,
+            float currentPh,
+            out VoParamTopic pickedTopic)
+        {
+            VoParamTopic[] order =
+            {
+                VoParamTopic.Light,
+                VoParamTopic.Water,
+                VoParamTopic.Ph,
+                VoParamTopic.Fertilizer,
+                VoParamTopic.Condition,
+            };
+
+            foreach (VoParamTopic topic in order)
+            {
+                if (primaryTopic != VoParamTopic.None && topic == primaryTopic)
+                    continue;
+                string line = BuildVoSentenceForTopic(topic, state, plantData, stageReq, phSystem, currentPh);
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    pickedTopic = topic;
+                    return line;
+                }
+            }
+
+            pickedTopic = VoParamTopic.Condition;
+            return "Il resto della suite sensoriale non aggiunge urgenze oltre al punto principale.";
+        }
+
+        private string BuildVoSentenceForTopic(
+            VoParamTopic topic,
+            PotStateModel state,
+            PlantData plantData,
+            StageRequirements stageReq,
+            PhSystem phSystem,
+            float currentPh)
+        {
+            switch (topic)
+            {
+                case VoParamTopic.Water:
+                    if (state == null) return null;
+                    if (stageReq != null)
+                    {
+                        if (HydrationPercent < stageReq.hydrationMin)
+                        {
+                            return state.WateringSystemOn
+                                ? "Sul fronte acqua il substrato e' ancora sotto soglia ma l'irrigazione e' gia' attiva."
+                                : "Sul fronte acqua il substrato resta sotto il minimo di fase: serve reintegro controllato.";
+                        }
+                        if (HydrationPercent > stageReq.hydrationMax)
+                            return "Sul fronte acqua sei sopra il massimo di fase: vigila su ristagni e miceti.";
+                        return $"Sul fronte acqua sei al {HydrationPercent}%, nel range {stageReq.hydrationMin}-{stageReq.hydrationMax}% previsto.";
+                    }
+                    return $"Sul fronte acqua la lettura e' {HydrationPercent}%: segui il protocollo POT.";
+
+                case VoParamTopic.Light:
+                    if (state == null) return null;
+                    string led = state.LedSystemState == LedSystemState.Off
+                        ? "spento"
+                        : (state.LedSystemState == LedSystemState.Blue ? "blu" : "rosso");
+                    if (LightStressPercent > 80)
+                        return $"Sul fronte luce il LED e' {led} e lo stress e' al {LightStressPercent}%, vicino alla saturazione.";
+                    if (LightStressPercent < 20)
+                        return $"Sul fronte luce il LED e' {led} e lo stress e' al {LightStressPercent}%, sotto la soglia di beneficio.";
+                    return $"Sul fronte luce il LED e' {led} e lo stress e' al {LightStressPercent}%, nella fascia operativa 20-80%.";
+
+                case VoParamTopic.Ph:
+                    if (plantData == null || phSystem == null) return null;
+                    if (!plantData.IsPhInOptimalRange(currentPh))
+                        return $"Sul fronte chimico il pH cupola ({currentPh.ToString("0.0", ItCulture)}) esce dalla finestra {plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0} della specie.";
+                    return $"Sul fronte chimico il pH ({currentPh.ToString("0.0", ItCulture)}) resta nella tolleranza {plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0}.";
+
+                case VoParamTopic.Fertilizer:
+                    if (state == null || stageReq == null) return null;
+                    if (FertilizerCarePolicy.ShouldTreatFertilizerAsOptional((PlantStage)state.Stage, stageReq))
+                        return null;
+                    if (state.FertilizerLevel < stageReq.fertilizerMin)
+                        return $"Sul fronte nutrimento sei al {state.FertilizerLevel}%, sotto il minimo {stageReq.fertilizerMin}% di questa fase.";
+                    if (state.FertilizerLevel > stageReq.fertilizerMax)
+                        return $"Sul fronte nutrimento sei al {state.FertilizerLevel}%, sopra il tetto {stageReq.fertilizerMax}%.";
+                    return $"Sul fronte nutrimento sei al {state.FertilizerLevel}%, nel target {stageReq.fertilizerMin}-{stageReq.fertilizerMax}%.";
+
+                case VoParamTopic.Condition:
+                    if (state == null) return null;
+                    return $"Sul fronte tessuti la condizione segnala {ConditionText} con muffa {MoldText}.";
+
+                default:
+                    return null;
+            }
+        }
+
+        private static string FormatVoTrendSentence(PotStateModel state)
+        {
+            if (state == null || state.IsEmpty || !state.HasPlant)
+                return "Chi legge il trend oggi non ha biomassa registrata: occorre una coltura attiva.";
+
+            var d = (ForecastDirection)state.ForecastDirection;
+            return d switch
+            {
+                ForecastDirection.Up => "Chi legge il trend la vede verso il miglioramento rispetto a ieri.",
+                ForecastDirection.Down => "Chi legge il trend la vede verso il peggioramento rispetto a ieri.",
+                _ => "Chi legge il trend la vede stabile rispetto a ieri.",
+            };
+        }
+
+        private static string JoinVoSentences(string primary, string secondary, string trend)
+        {
+            static string Norm(string s)
+            {
+                s = (s ?? string.Empty).Trim();
+                if (s.Length == 0) return string.Empty;
+                char last = s[s.Length - 1];
+                if (last != '.' && last != '?' && last != '!' && last != ';')
+                    s += ".";
+                return s;
+            }
+
+            return $"{Norm(primary)}\n{Norm(secondary)}\n{Norm(trend)}".Trim();
         }
 
         private static string BuildShortPotId(string potId)

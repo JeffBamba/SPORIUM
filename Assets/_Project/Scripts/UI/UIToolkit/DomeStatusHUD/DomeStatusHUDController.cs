@@ -151,10 +151,9 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         private void Update()
         {
             // Nasconde l'HUD quando un pannello modale è aperto (es. SeedStorage, TerminalPot).
+            bool hideDome = GameplayUiModalLock.HidesFixedHud || GameplayUiModalLock.SuppressDomeStatusHud;
             if (_hudRoot != null)
-                _hudRoot.style.display = GameplayUiModalLock.HidesFixedHud
-                    ? DisplayStyle.None
-                    : DisplayStyle.Flex;
+                _hudRoot.style.display = hideDome ? DisplayStyle.None : DisplayStyle.Flex;
 
             _refreshTimer += Time.deltaTime;
             if (_refreshTimer >= RefreshInterval)
@@ -666,7 +665,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     {
                         var stageEnum = (PlantStage)state.Stage;
                         StageRequirements reqF = careData?.GetStageRequirements(stageEnum);
-                        if (IsFertilizerOptionalForStage(stageEnum))
+                        if (FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stageEnum, reqF))
                         {
                             _potStatFert[i].text = LocalizationManager.GetString("dome_hud.fertilizer.not_needed");
                             _potStatFert[i].style.color = new StyleColor(TipMuted);
@@ -988,9 +987,6 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
         private const int LightStressOkMinHud = 20;
         private const int LightStressOkMaxHud = 80;
 
-        private static bool IsFertilizerOptionalForStage(PlantStage stage) =>
-            stage == PlantStage.Seed || stage == PlantStage.Sprout;
-
         private int GetLightStressPercent(PotStateModel state)
         {
             if (state == null) return 0;
@@ -1089,7 +1085,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                     { ["led"] = ledReqText }), TipMuted));
                 string fertReqCore = LocalizationManager.GetString("dome_hud.tooltip.fert_req", new Dictionary<string, string>
                     { ["min"] = req.fertilizerMin.ToString(), ["max"] = req.fertilizerMax.ToString() });
-                if (IsFertilizerOptionalForStage(stageEnum))
+                if (FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stageEnum, req))
                     fertReqCore += LocalizationManager.GetString("dome_hud.tooltip.fert_optional_suffix");
                 lines.Add(new TooltipLine(fertReqCore, TipMuted));
                 lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.duration", new Dictionary<string, string>
@@ -1100,7 +1096,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.current_hydration", new Dictionary<string, string>
                     { ["pct"] = hydPct.ToString() }),
                     RangeColor(hydPct, req.hydrationMin, req.hydrationMax)));
-                if (IsFertilizerOptionalForStage(stageEnum))
+                if (FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stageEnum, req))
                 {
                     lines.Add(new TooltipLine(
                         LocalizationManager.GetString("dome_hud.tooltip.fert_not_stage"),
@@ -1127,7 +1123,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
                 lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.state_title"), TipPhSection, bold: true));
                 lines.Add(new TooltipLine(LocalizationManager.GetString("dome_hud.tooltip.current_hydration", new Dictionary<string, string>
                     { ["pct"] = hydPct.ToString() }), TipMuted));
-                if (IsFertilizerOptionalForStage(stageEnum))
+                if (FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stageEnum, req))
                 {
                     lines.Add(new TooltipLine(
                         LocalizationManager.GetString("dome_hud.tooltip.fert_not_stage"),
@@ -1340,7 +1336,7 @@ namespace Sporae.UI.UIToolkit.DomeStatusHUD
             }
 
             // Fertilizer
-            if (!IsFertilizerOptionalForStage(stageEnum) && req != null)
+            if (!FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stageEnum, req) && req != null)
             {
                 if (state.FertilizerLevel < req.fertilizerMin)
                     drivers.Add((LocalizationManager.GetString("dome_hud.driver.fert_low", new Dictionary<string, string>

@@ -45,8 +45,8 @@ MonoBehaviour:
     lightMin: 0
     lightMed: 50
     lightMax: 100
-    fertilizerMin: 60
-    fertilizerMed: 80
+    fertilizerMin: 75
+    fertilizerMed: 82
     fertilizerMax: 90
     durationDays: 1
     notes: "Pianta Evil pi\xF9 tollerante"
@@ -60,8 +60,8 @@ MonoBehaviour:
     lightMin: 0
     lightMed: 50
     lightMax: 100
-    fertilizerMin: 60
-    fertilizerMed: 75
+    fertilizerMin: 75
+    fertilizerMed: 82
     fertilizerMax: 90
     durationDays: 2
     notes: Germoglio Evil, tollerante
@@ -75,9 +75,9 @@ MonoBehaviour:
     lightMin: 50
     lightMed: 75
     lightMax: 100
-    fertilizerMin: 40
-    fertilizerMed: 60
-    fertilizerMax: 80
+    fertilizerMin: 50
+    fertilizerMed: 65
+    fertilizerMax: 90
     durationDays: 2
     notes: Crescita Evil, Blue LED accelera
   - stage: 4
@@ -90,9 +90,9 @@ MonoBehaviour:
     lightMin: 50
     lightMed: 75
     lightMax: 100
-    fertilizerMin: 20
-    fertilizerMed: 40
-    fertilizerMax: 60
+    fertilizerMin: 25
+    fertilizerMed: 42
+    fertilizerMax: 70
     durationDays: 3
     notes: Fioritura Evil, Red LED richiesto
   - stage: 5
@@ -105,9 +105,9 @@ MonoBehaviour:
     lightMin: 0
     lightMed: 50
     lightMax: 100
-    fertilizerMin: 0
-    fertilizerMed: 0
-    fertilizerMax: 0
+    fertilizerMin: 25
+    fertilizerMed: 40
+    fertilizerMax: 100
     durationDays: 3
     notes: Raccolta Evil, tollerante a condizioni variabili
   - stage: 6

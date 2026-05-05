@@ -584,52 +584,52 @@ namespace Sporae.DevTools
                 bool canEndDay = _dayCycleSystem.CanEndDay();
                 
                 GUI.enabled = canEndDay;
-                if (GUILayout.Button($"Fine giornata (Giorno {currentDay})", buttonStyle, GUILayout.Width(260)))
+                // Stessa chiamata del letto dopo “dormi”: EndDay() → fade → OnFaded → CurrentDay++ → OnDayChanged (vasi, economy, ecc.).
+                if (GUILayout.Button($"Fine giornata — stesso core del letto (giorno {currentDay})", buttonStyle, GUILayout.Width(360)))
                 {
-                    var eodController = UnityEngine.Object.FindObjectOfType<EndOfDaySequenceController>();
-                    if (eodController != null)
-                    {
-                        eodController.StartSequence();
-                        AddLog($"✅ Sequenza Fine giornata avviata (conferma dalla UI).");
-                    }
+                    if (_dayCycleSystem.EndDay())
+                        AddLog("✅ EndDay avviato: identico al letto (fade → giorno+1 → HandleDayChanged / pipeline vasi). Attendi la dissolvenza.");
                     else
-                    {
-                        if (_dayCycleSystem.EndDay())
-                            AddLog($"✅ Fine giornata attivata (fallback). Nuovo giorno: {_dayCycleSystem.CurrentDay}");
-                        else
-                            AddLog("❌ Fine giornata non riuscita — CRY insufficienti");
-                    }
+                        AddLog("❌ Fine giornata non avviata — CRY insufficienti (CanEndDay).");
                 }
                 GUI.enabled = true;
-                
-                // Pulsante per impostare giorno manualmente
-                _dayInputValue = GUILayout.TextField(_dayInputValue, GUILayout.Width(100));
-                if (GUILayout.Button("Set Day", buttonStyle, GUILayout.Width(104)))
+
+                var eodController = UnityEngine.Object.FindObjectOfType<EndOfDaySequenceController>();
+                GUI.enabled = eodController != null;
+                if (GUILayout.Button("Solo sequenza EoD (UI)", buttonStyle, GUILayout.Width(200)))
                 {
-                    if (int.TryParse(_dayInputValue, out int newDay))
-                    {
-                        // Nota: DayCycleSystem potrebbe non avere un metodo SetDay pubblico
-                        // In questo caso, loggiamo solo
-                        AddLog($"⚠️ Set Day non implementato direttamente (Giorno corrente: {currentDay})");
-                    }
+                    eodController.StartSequence();
+                    AddLog("ℹ️ Aperta solo la UI EoD (ricerca notturna, report…). Per il core gioco usa il pulsante principale.");
                 }
+                GUI.enabled = true;
             }
             else
             {
                 GUI.enabled = false;
-                GUILayout.Button("Fine giornata (N/D)", buttonStyle, GUILayout.Width(260));
+                GUILayout.Button("Fine giornata (N/D)", buttonStyle, GUILayout.Width(360));
                 GUI.enabled = true;
                 
-                // Prova a recuperare DayCycleSystem se non disponibile
                 if (GUILayout.Button("Retry", buttonStyle, GUILayout.Width(78)))
                 {
                     TryGetDayCycleSystem();
                 }
             }
             GUILayout.EndHorizontal();
+            if (_dayCycleSystem != null)
+            {
+                GUILayout.BeginHorizontal();
+                int currentDayForSet = _dayCycleSystem.CurrentDay;
+                _dayInputValue = GUILayout.TextField(_dayInputValue, GUILayout.Width(100));
+                if (GUILayout.Button("Set Day", buttonStyle, GUILayout.Width(104)))
+                {
+                    if (int.TryParse(_dayInputValue, out int newDay))
+                    {
+                        AddLog($"⚠️ Set Day non implementato direttamente (Giorno corrente: {currentDayForSet})");
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
             GUILayout.Space(7);
-            
-            // === SEZIONE CONDENSATION ===
             GUILayout.Label("=== Condensation System ===", labelStyle);
             if (_condensationSystem != null)
             {

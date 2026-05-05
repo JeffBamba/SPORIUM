@@ -457,14 +457,20 @@
 }
 
 .pcv4-need-title {
-    font-size: 15px;
-    color: rgb(191, 216, 203);
+    font-size: 18px;
     white-space: normal;
 }
 
-.pcv4-need-title--primary {
-    font-size: 19px;
-    color: rgb(234, 210, 137);
+.pcv4-need-title--signal-ok {
+    color: rgb(130, 200, 120);
+}
+
+.pcv4-need-title--signal-attention {
+    color: rgb(231, 190, 80);
+}
+
+.pcv4-need-title--signal-warning {
+    color: rgb(226, 95, 70);
 }
 
 .pcv4-need-subtitle--risk {
@@ -736,7 +742,7 @@
 }
 
 .pcv4-vo-text {
-    min-height: 36px;
+    min-height: 72px;
     font-size: 15px;
     color: rgba(205, 232, 223, 0.45);
     white-space: normal;
@@ -833,6 +839,11 @@
     background-color: rgba(12, 68, 79, 0.62);
 }
 
+.pcv4-action--active-system {
+    border-color: rgba(91, 215, 232, 0.92);
+    background-color: rgba(12, 68, 79, 0.62);
+}
+
 .pcv4-action--muted {
     border-color: rgba(116, 193, 193, 0.42);
     background-color: rgba(8, 26, 26, 0.78);
@@ -855,6 +866,11 @@
 }
 
 .pcv4-action--primary:hover {
+    border-color: rgb(91, 215, 232);
+    background-color: rgba(16, 92, 106, 0.74);
+}
+
+.pcv4-action--active-system:hover {
     border-color: rgb(91, 215, 232);
     background-color: rgba(16, 92, 106, 0.74);
 }
@@ -962,12 +978,63 @@
     flex-shrink: 0;
 }
 
-.pcv4-footer-state {
-    top: -21px;
-    height: 29px;
-    margin-top: -9px;
+.pcv4-footer-bar {
     flex-shrink: 0;
-    font-size: 13px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding-top: 2px;
+    padding-bottom: 12px;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.pcv4-footer-inline {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: auto;
+    font-size: 12px;
+    color: rgb(175, 200, 188);
+    white-space: nowrap;
+    -unity-text-align: middle-left;
+}
+
+.pcv4-footer-state {
     color: rgb(146, 190, 91);
+}
+
+.pcv4-footer-sep {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: auto;
+    font-size: 12px;
+    color: rgba(120, 160, 150, 0.55);
+    margin-left: 10px;
+    margin-right: 10px;
+    white-space: nowrap;
     -unity-text-align: middle-center;
+}
+
+.pcv4-need-tooltip-flyout {
+    z-index: 250;
+    flex-direction: column;
+    flex-shrink: 0;
+    max-width: 380px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: rgba(91, 215, 232, 0.55);
+    background-color: rgba(4, 18, 22, 0.94);
+    white-space: normal;
+}
+
+.pcv4-need-tooltip-flyout > Label {
+    font-size: 12px;
+    color: rgb(214, 228, 220);
+    white-space: normal;
 }

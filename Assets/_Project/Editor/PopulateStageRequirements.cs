@@ -196,9 +196,9 @@ namespace _Project.Editor
                     hydrationMax = 60,
                     durationDays = 2,
                     notes = "Ampia tolleranza",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 40,
-                    fertilizerMed = 75,
+                    // Seed / Sprout: nutrimento alto (≥75%) per essere in range.
+                    fertilizerMin = 75,
+                    fertilizerMed = 88,
                     fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
@@ -213,9 +213,8 @@ namespace _Project.Editor
                     hydrationMax = 60,
                     durationDays = 2,
                     notes = "Germoglio attivo",
-                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
-                    fertilizerMin = 40,
-                    fertilizerMed = 75,
+                    fertilizerMin = 75,
+                    fertilizerMed = 88,
                     fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
@@ -230,10 +229,10 @@ namespace _Project.Editor
                     hydrationMax = 75,
                     durationDays = 3,
                     notes = "Accrescimento vegetativo",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 40,
-                    fertilizerMed = 60,
-                    fertilizerMax = 80,
+                    // Crescita vegetativa (matura): soglia intermedia 50%.
+                    fertilizerMin = 50,
+                    fertilizerMed = 65,
+                    fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (Blue LED richiesto, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -247,10 +246,9 @@ namespace _Project.Editor
                     hydrationMax = 70,
                     durationDays = 3,
                     notes = "Fioritura attiva",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 20,
-                    fertilizerMed = 40,
-                    fertilizerMax = 60,
+                    fertilizerMin = 25,
+                    fertilizerMed = 45,
+                    fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -264,10 +262,9 @@ namespace _Project.Editor
                     hydrationMax = 100,
                     durationDays = 3,
                     notes = "Finestra di raccolta multi-giorno",
-                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
-                    fertilizerMin = 0,
-                    fertilizerMed = 0,
-                    fertilizerMax = 0,
+                    fertilizerMin = 25,
+                    fertilizerMed = 40,
+                    fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
                     lightMed = 50,
@@ -318,9 +315,8 @@ namespace _Project.Editor
                     hydrationMax = 65,
                     durationDays = 2,
                     notes = "Pianta Pure richiede cura attenta",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 60,
-                    fertilizerMed = 75,
+                    fertilizerMin = 75,
+                    fertilizerMed = 82,
                     fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
@@ -335,9 +331,8 @@ namespace _Project.Editor
                     hydrationMax = 65,
                     durationDays = 3,
                     notes = "Germoglio Pure, Blue LED consigliato",
-                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
-                    fertilizerMin = 60,
-                    fertilizerMed = 75,
+                    fertilizerMin = 75,
+                    fertilizerMed = 82,
                     fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (Blue LED consigliato, range ottimale)
                     lightMin = 50,
@@ -352,10 +347,9 @@ namespace _Project.Editor
                     hydrationMax = 70,
                     durationDays = 3,
                     notes = "Crescita Pure, Blue LED richiesto",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 40,
-                    fertilizerMed = 60,
-                    fertilizerMax = 80,
+                    fertilizerMin = 50,
+                    fertilizerMed = 65,
+                    fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (Blue LED richiesto, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -369,10 +363,9 @@ namespace _Project.Editor
                     hydrationMax = 65,
                     durationDays = 3,
                     notes = "Fioritura Pure, Red LED richiesto",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 20,
-                    fertilizerMed = 40,
-                    fertilizerMax = 60,
+                    fertilizerMin = 25,
+                    fertilizerMed = 42,
+                    fertilizerMax = 70,
                     // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -386,10 +379,9 @@ namespace _Project.Editor
                     hydrationMax = 70,
                     durationDays = 3,
                     notes = "Raccolta Pure, mantenere idratazione ottimale",
-                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
-                    fertilizerMin = 0,
-                    fertilizerMed = 0,
-                    fertilizerMax = 0,
+                    fertilizerMin = 25,
+                    fertilizerMed = 40,
+                    fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
                     lightMed = 50,
@@ -440,9 +432,8 @@ namespace _Project.Editor
                     hydrationMax = 55,
                     durationDays = 2,
                     notes = "Pianta Evil più tollerante",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 60,
-                    fertilizerMed = 75,
+                    fertilizerMin = 75,
+                    fertilizerMed = 82,
                     fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
@@ -457,9 +448,8 @@ namespace _Project.Editor
                     hydrationMax = 60,
                     durationDays = 2,
                     notes = "Germoglio Evil, tollerante",
-                    // BLK-03.01-T1: Range fertilizzante fissi (stesso di Seed)
-                    fertilizerMin = 60,
-                    fertilizerMed = 75,
+                    fertilizerMin = 75,
+                    fertilizerMed = 82,
                     fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
@@ -474,10 +464,9 @@ namespace _Project.Editor
                     hydrationMax = 70,
                     durationDays = 3,
                     notes = "Crescita Evil, Blue LED accelera",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 40,
-                    fertilizerMed = 60,
-                    fertilizerMax = 80,
+                    fertilizerMin = 50,
+                    fertilizerMed = 65,
+                    fertilizerMax = 90,
                     // BLK-03.01-T2: Range luce (Blue LED accelera, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -491,10 +480,9 @@ namespace _Project.Editor
                     hydrationMax = 65,
                     durationDays = 3,
                     notes = "Fioritura Evil, Red LED richiesto",
-                    // BLK-03.01-T1: Range fertilizzante fissi
-                    fertilizerMin = 20,
-                    fertilizerMed = 40,
-                    fertilizerMax = 60,
+                    fertilizerMin = 25,
+                    fertilizerMed = 42,
+                    fertilizerMax = 70,
                     // BLK-03.01-T2: Range luce (Red LED richiesto, range ottimale)
                     lightMin = 50,
                     lightMed = 75,
@@ -508,10 +496,9 @@ namespace _Project.Editor
                     hydrationMax = 100,
                     durationDays = 3,
                     notes = "Raccolta Evil, tollerante a condizioni variabili",
-                    // BLK-03.01-T1: Range fertilizzante fissi (non richiesto)
-                    fertilizerMin = 0,
-                    fertilizerMed = 0,
-                    fertilizerMax = 0,
+                    fertilizerMin = 25,
+                    fertilizerMed = 40,
+                    fertilizerMax = 100,
                     // BLK-03.01-T2: Range luce (LED non richiesto, range generico)
                     lightMin = 0,
                     lightMed = 50,

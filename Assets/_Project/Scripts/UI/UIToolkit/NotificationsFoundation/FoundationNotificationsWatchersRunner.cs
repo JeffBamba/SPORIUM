@@ -182,7 +182,7 @@ namespace Sporae.UI.UIToolkit.NotificationsFoundation
                 {
                     PlantStage stage = (PlantStage)state.Stage;
                     var stageReq = plantData.GetStageRequirements(stage);
-                    bool fertilizerOptional = (stage == PlantStage.Seed || stage == PlantStage.Sprout);
+                    bool fertilizerOptional = FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(stage, stageReq);
 
                     bool fertilizerInRange = stageReq != null && stageReq.IsFertilizerInRange(state.FertilizerLevel);
                     if (!fertilizerOptional)

@@ -601,9 +601,8 @@ public class DayCycleController : MonoBehaviour
         
         // DEBUG: Log calcolo punti giornalieri (per capire perché DaysConsecutiveOptimal non incrementa)
         PlantStage currentStageForOptimal = (PlantStage)pot.Stage;
-        // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
-        // perché il fertilizzante è opzionale per questi stadi
-        int requiredOptimalPoints = (currentStageForOptimal == PlantStage.Seed || currentStageForOptimal == PlantStage.Sprout) ? 2 : 3;
+        // Tre pilastri (acqua, luce, fertilizzante nel range) per giornate "ottimali" in tutti gli stadi con banda fertilizzante attiva.
+        int requiredOptimalPoints = 3;
         int oldDaysConsecutiveOptimal = pot.DaysConsecutiveOptimal;
         
         // Log critico: Calcolo punti giornalieri completo
@@ -632,9 +631,6 @@ public class DayCycleController : MonoBehaviour
         );
         
         // BLK-03.01-T2: Aggiorna tracking giorni consecutivi ottimali
-        // DEBUG_SAFE_FIX: Per Seed e Sprout, consideriamo ottimali anche i giorni con solo water + light (2 punti)
-        // perché il fertilizzante è opzionale per questi stadi
-        
         if (pointsResult.TotalPoints >= requiredOptimalPoints)
         {
             pot.DaysConsecutiveOptimal++;
@@ -1017,25 +1013,12 @@ public class DayCycleController : MonoBehaviour
                 optimalDaysOk = pot.DaysConsecutiveOptimal >= currentStageReq.durationDays;
             }
             
-            // BLK-03.01-T2: Verifica anche fertilizzante nel range
-            // DEBUG_SAFE_FIX: Per Seed e Sprout (stadi pre-Growth), rendiamo il fertilizzante opzionale (non bloccante se è 0%)
-            // DEBUG_SAFE_FIX: Il fertilizzante over range NON blocca, solo under range blocca
-            bool fertilizerOk = false;
-            if (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout)
-            {
-                // Per Seed e Sprout: fertilizzante opzionale - OK se è nel range OPPURE se è 0% (non ancora applicato) OPPURE se è over range
-                fertilizerOk = currentStageReq.IsFertilizerInRange(pot.FertilizerLevel) || pot.FertilizerLevel == 0 || pot.FertilizerLevel > currentStageReq.fertilizerMax;
-            }
-            else
-            {
-                // Per Growth e stadi successivi: fertilizzante OK se è >= min (over range è OK, solo under range blocca)
-                fertilizerOk = pot.FertilizerLevel >= currentStageReq.fertilizerMin;
-            }
-            
-            // BLK-03.01-T2: Verifica punti accumulati
-            // BUG FIX: Per Seed e Sprout, richiediamo solo 2 punti (water + light), fertilizzante opzionale
+            // BLK-03.01-T2: Fertilizzante — stessi criteri per tutti gli stadi (soglie per stadio su PlantData).
+            bool fertilizerOk = FertilizerCarePolicy.IsFertilizerSufficientForStageAdvancement(pot.FertilizerLevel, currentStageReq);
+
+            // BLK-03.01-T2: Verifica punti accumulati (acqua + luce + fertilizzante)
             int totalPoints = pot.GrowthPointsWater + pot.GrowthPointsLight + pot.GrowthPointsFertilizer;
-            int requiredPoints = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout) ? 2 : 3;  // Seed/Sprout: 2 punti (water+light), altri: 3 punti
+            int requiredPoints = 3;
             bool pointsOk = totalPoints >= requiredPoints;
             
             // BLK-03.01-T2: Avanzamento richiede tutti i requisiti E non deve essere bloccato dalla condizione
@@ -1094,7 +1077,7 @@ public class DayCycleController : MonoBehaviour
                          $"LED: {pot.LedSystemState} (richiesto: {currentStageReq.GetRequiredLed()}) [{ledOk}], " +
                          $"Durata: {pot.DaysInCurrentStage}/{effectiveRequiredDays} giorni (mod: {daysModifier}) [{durationOk}], " +
                          $"OptimalDays: {pot.DaysConsecutiveOptimal}/{optimalDaysRequired} [{optimalDaysOk}], " +
-                         $"Fertilizer: {pot.FertilizerLevel}% (range: {currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}, opzionale per Seed: {currentStage == PlantStage.Seed}) [{fertilizerOk}], " +
+                         $"Fertilizer: {pot.FertilizerLevel}% (range: {currentStageReq.fertilizerMin}-{currentStageReq.fertilizerMax}) [{fertilizerOk}], " +
                          $"Points: {totalPoints}/{requiredPoints} [{pointsOk}], " +
                          $"Condition: {currentCondition} (blocks: {ConditionGrowthModifier.BlocksAdvancement(currentCondition)})");
             }

@@ -9,6 +9,7 @@ namespace _Project.Sporae.Core
         private static bool _machineModalOpen;
         private static bool _machineModalKeepsFixedHudVisible;
         private static bool _inventoryContextHudVisible;
+        private static bool _suppressDomeStatusHud;
 
         /// <summary>
         /// True mentre un modale gameplay blocca movimento/interazione mondo (macchinari HUD, armadio, VO, ecc.).
@@ -17,6 +18,11 @@ namespace _Project.Sporae.Core
         public static bool BlocksWorldInput { get; private set; }
         public static bool HidesFixedHud => _manualHideFixedHud || (_machineModalOpen && !_machineModalKeepsFixedHudVisible);
         public static bool HidesContextHud => _manualHideFixedHud || (_machineModalOpen && !_inventoryContextHudVisible);
+
+        /// <summary>
+        /// Nasconde solo l'HUD Dome Status (pots/cryo) senza togliere TopBar / CompactBottom — es. PlantCard4v.
+        /// </summary>
+        public static bool SuppressDomeStatusHud => _suppressDomeStatusHud;
 
         public static void SetBlockWorldInput(bool block)
         {
@@ -33,6 +39,11 @@ namespace _Project.Sporae.Core
             _inventoryContextHudVisible = visible;
         }
 
+        public static void SetSuppressDomeStatusHud(bool suppress)
+        {
+            _suppressDomeStatusHud = suppress;
+        }
+
         public static void SetMachineModalState(bool isOpen, bool keepFixedHudVisible = false)
         {
             BlocksWorldInput = isOpen;
@@ -42,6 +53,7 @@ namespace _Project.Sporae.Core
             {
                 _inventoryContextHudVisible = false;
                 _machineModalKeepsFixedHudVisible = false;
+                _suppressDomeStatusHud = false;
             }
         }
     }

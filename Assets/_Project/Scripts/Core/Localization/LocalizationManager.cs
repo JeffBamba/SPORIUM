@@ -862,6 +862,8 @@ namespace Sporae.Core.Localization
             { "gameplay.pot.empty_pot", ("Vaso vuoto", "Empty pot") },
             { "gameplay.pot.fertilizer_unavailable", ("Fertilizzante '{id}' non disponibile", "Fertilizer '{id}' unavailable") },
             { "gameplay.pot.plantdata_missing", ("PlantData non trovato", "PlantData not found") },
+            { "plantcard4.picker_additive", ("Scegli additivo pH da applicare", "Choose pH additive to apply") },
+            { "plantcard4.picker_fertilizer", ("Scegli fertilizzante compatibile", "Choose compatible fertilizer") },
             { "eod.inv_spores", ("{n} spore", "{n} spore(s)") },
             { "eod.inv_spores_detail", ("{n} spore (Puri: {pure}, Malvagi: {evil}, Standard: {standard})", "{n} spore(s) (Pure: {pure}, Evil: {evil}, Standard: {standard})") },
             { "eod.inv_seeds", ("{n} semi", "{n} seed(s)") },

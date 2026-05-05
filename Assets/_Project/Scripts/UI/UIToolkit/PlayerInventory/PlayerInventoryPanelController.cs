@@ -78,6 +78,9 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private SporeStage? _pickerFilterSporeStage;
         private Action _onCancel;
         private string _pickerContext;
+        /// <summary>Picker PlantCard4v: stessa UI della browse (filtri, stats, dettaglio, VEDI/USA) ma con callback applicazione a vaso.</summary>
+        private bool _pickerPresentFullInventoryUi;
+        private bool _pickerRestoreInventoryContextHudAfterClose;
         private bool _uiBound;
         private Action<int> _onActionsChangedUi;
         private float _ignoreScrimClickUntil;
@@ -107,12 +110,28 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private static bool IsPickerMode(HashSet<string> t) => t != null && t.Count > 0;
 
+        /// <summary>Picker “Lab”: lista ristretta, niente filtri/stats. False per PlantCard4v (inventario completo).</summary>
+        private bool IsStrictLabPickerUi() => IsPickerMode(_pickerAllowedTypes) && !_pickerPresentFullInventoryUi;
+
+        private bool IsPlantCarePickerApplyable(RowModel m)
+        {
+            if (string.IsNullOrEmpty(m.Key)) return false;
+            if (string.IsNullOrEmpty(_pickerContext) || !_pickerContext.StartsWith("plantcard4_", StringComparison.Ordinal))
+                return false;
+            return _pickerAllowedTypes != null && _pickerAllowedTypes.Contains(m.TypeId);
+        }
+
+        /// <summary>
+        /// Default runtime order: sopra overlay cura (es. PlantCard4v ~550 in scena), sotto VO/full-screen (~700+).
+        /// </summary>
+        private const int DefaultPanelSortingOrder = 620;
+
         private void Awake()
         {
             if (_uiDocument == null)
                 _uiDocument = GetComponent<UIDocument>();
             if (_uiDocument != null)
-                _uiDocument.sortingOrder = 450;
+                _uiDocument.sortingOrder = DefaultPanelSortingOrder;
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
             if (_root != null)
                 TryBindUI();
@@ -131,7 +150,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                     HideUseConfirm();
                     return;
                 }
-                if (IsPickerMode(_pickerAllowedTypes))
+                if (IsStrictLabPickerUi())
                 {
                     _onCancel?.Invoke();
                     Hide();
@@ -217,7 +236,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                 _scrim.RegisterCallback<ClickEvent>(_ =>
                 {
                     if (Time.unscaledTime < _ignoreScrimClickUntil) return;
-                    if (IsPickerMode(_pickerAllowedTypes))
+                    if (IsStrictLabPickerUi())
                     {
                         _onCancel?.Invoke();
                         Hide();
@@ -352,7 +371,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         private void DetailPanelEnterAwaiting()
         {
             if (_detail == null) return;
-            if (IsPickerMode(_pickerAllowedTypes)) return;
+            if (IsStrictLabPickerUi()) return;
             _detail.style.display = DisplayStyle.None;
             _terminal?.RemoveFromClassList("inv-terminal--detail-open");
             foreach (var catCls in ItemInventoryCategoryMap.AllDetailAccentClassNames)
@@ -450,11 +469,14 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         public void Show()
         {
+            _pickerPresentFullInventoryUi = false;
+            _pickerRestoreInventoryContextHudAfterClose = false;
             _pickerAllowedTypes = null;
             _pickerAllowedTypesOrdered = null;
             _onSelectedWithStage = null;
             _pickerFilterSporeStage = null;
             _onCancel = null;
+            _pickerContext = null;
             _activeFilter = ItemInventoryCategoryId.All;
             _listExpanded = false;
             _selectedRowKey = null;
@@ -463,7 +485,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             GameplayUiModalLock.SetInventoryContextHudVisible(true);
             GameplayUiModalLock.SetMachineModalState(true);
             ShowInternal();
-            ApplyModeUi(isPicker: false);
+            ApplyModeUi(false);
             if (_pickSubtitle != null) { _pickSubtitle.text = ""; _pickSubtitle.style.display = DisplayStyle.None; }
             if (_dbTitle != null) _dbTitle.style.display = DisplayStyle.Flex;
             Rebuild();
@@ -475,15 +497,17 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             else Show();
         }
 
-        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string> onSelected, Action onCancel, string pickerContext = null) =>
-            ShowAsPicker(allowedTypeIds, subtitle, (id, _, __) => onSelected(id), onCancel, null, pickerContext);
+        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string> onSelected, Action onCancel, string pickerContext = null, bool presentFullInventoryUi = false) =>
+            ShowAsPicker(allowedTypeIds, subtitle, (id, _, __) => onSelected(id), onCancel, null, pickerContext, presentFullInventoryUi);
 
-        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?> onSelectedWithStage, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null) =>
-            ShowAsPicker(allowedTypeIds, subtitle, (id, st, _) => onSelectedWithStage(id, st), onCancel, filterSporeStage, pickerContext);
+        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?> onSelectedWithStage, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null, bool presentFullInventoryUi = false) =>
+            ShowAsPicker(allowedTypeIds, subtitle, (id, st, _) => onSelectedWithStage(id, st), onCancel, filterSporeStage, pickerContext, presentFullInventoryUi);
 
-        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?, Item> onSelectedWithItem, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null)
+        public void ShowAsPicker(IEnumerable<string> allowedTypeIds, string subtitle, Action<string, SporeStage?, Item> onSelectedWithItem, Action onCancel, SporeStage? filterSporeStage = null, string pickerContext = null, bool presentFullInventoryUi = false)
         {
             _inventoryModalLockOwned = false;
+            _pickerPresentFullInventoryUi = presentFullInventoryUi;
+            _pickerRestoreInventoryContextHudAfterClose = presentFullInventoryUi;
             _pickerAllowedTypes = allowedTypeIds != null ? new HashSet<string>(allowedTypeIds) : new HashSet<string>();
             _pickerAllowedTypesOrdered = allowedTypeIds != null ? new List<string>(allowedTypeIds) : new List<string>();
             _onSelectedWithStage = onSelectedWithItem;
@@ -492,28 +516,49 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             _pickerContext = pickerContext;
             _selectedRowKey = null;
             _selectedModel = default;
-            _listExpanded = true;
-            ShowInternal();
-            ApplyModeUi(isPicker: true);
-            if (_pickSubtitle != null)
+            if (presentFullInventoryUi)
             {
-                _pickSubtitle.text = string.IsNullOrEmpty(subtitle) ? LocalizationManager.GetString("inventory.subtitle") : subtitle;
-                _pickSubtitle.style.display = DisplayStyle.Flex;
+                _activeFilter = ItemInventoryCategoryId.All;
+                _listExpanded = false;
+                GameplayUiModalLock.SetInventoryContextHudVisible(true);
             }
-            if (_dbTitle != null) _dbTitle.style.display = DisplayStyle.None;
+            else
+                _listExpanded = true;
+
+            ShowInternal();
+            ApplyModeUi(IsStrictLabPickerUi());
+            if (presentFullInventoryUi)
+            {
+                if (_dbTitle != null) _dbTitle.style.display = DisplayStyle.Flex;
+                if (_pickSubtitle != null)
+                {
+                    _pickSubtitle.text = string.IsNullOrEmpty(subtitle) ? string.Empty : subtitle;
+                    _pickSubtitle.style.display = string.IsNullOrEmpty(_pickSubtitle.text) ? DisplayStyle.None : DisplayStyle.Flex;
+                }
+            }
+            else
+            {
+                if (_pickSubtitle != null)
+                {
+                    _pickSubtitle.text = string.IsNullOrEmpty(subtitle) ? LocalizationManager.GetString("inventory.subtitle") : subtitle;
+                    _pickSubtitle.style.display = DisplayStyle.Flex;
+                }
+                if (_dbTitle != null) _dbTitle.style.display = DisplayStyle.None;
+            }
+
             Rebuild();
         }
 
-        private void ApplyModeUi(bool isPicker)
+        private void ApplyModeUi(bool minimalLabPicker)
         {
-            if (_stats != null) _stats.style.display = isPicker ? DisplayStyle.None : DisplayStyle.Flex;
-            if (_filters != null) _filters.style.display = isPicker ? DisplayStyle.None : DisplayStyle.Flex;
-            if (_footer != null) _footer.style.display = isPicker ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_stats != null) _stats.style.display = minimalLabPicker ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_filters != null) _filters.style.display = minimalLabPicker ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_footer != null) _footer.style.display = minimalLabPicker ? DisplayStyle.None : DisplayStyle.Flex;
             if (_detail != null)
-                _detail.style.display = isPicker ? DisplayStyle.None :
+                _detail.style.display = minimalLabPicker ? DisplayStyle.None :
                     (!string.IsNullOrEmpty(_selectedRowKey) ? DisplayStyle.Flex : DisplayStyle.None);
-            if (_btnExpand != null) _btnExpand.style.display = DisplayStyle.None;
-            if (_btnCancel != null) _btnCancel.style.display = isPicker ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_btnExpand != null && minimalLabPicker) _btnExpand.style.display = DisplayStyle.None;
+            if (_btnCancel != null) _btnCancel.style.display = minimalLabPicker ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         public void Hide()
@@ -521,6 +566,23 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             HideUseConfirm();
             HideInspectModal();
             if (_invTooltip != null) _invTooltip.style.display = DisplayStyle.None;
+            if (_pickerRestoreInventoryContextHudAfterClose)
+            {
+                GameplayUiModalLock.SetInventoryContextHudVisible(false);
+                _pickerRestoreInventoryContextHudAfterClose = false;
+            }
+
+            if (IsPickerMode(_pickerAllowedTypes))
+            {
+                _pickerAllowedTypes = null;
+                _pickerAllowedTypesOrdered = null;
+                _onSelectedWithStage = null;
+                _pickerFilterSporeStage = null;
+                _onCancel = null;
+                _pickerContext = null;
+                _pickerPresentFullInventoryUi = false;
+            }
+
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.None;
@@ -549,11 +611,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             TryBindGameManager();
             TryBindInventory();
             _list.Clear();
-            bool isPicker = IsPickerMode(_pickerAllowedTypes);
+            bool strictLabPicker = IsStrictLabPickerUi();
             if (_playerInventory == null)
             {
                 _list.Add(MkEmpty(LocalizationManager.GetString("inventory.empty")));
-                if (!isPicker) DetailPanelEnterAwaiting();
+                if (!strictLabPicker) DetailPanelEnterAwaiting();
                 return;
             }
 
@@ -562,7 +624,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             {
                 _list.Add(MkEmpty(LocalizationManager.GetString("inventory.empty")));
                 UpdateStats();
-                if (!isPicker) DetailPanelEnterAwaiting();
+                if (!strictLabPicker) DetailPanelEnterAwaiting();
                 return;
             }
 
@@ -571,10 +633,10 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             {
                 _list.Add(MkEmpty(LocalizationManager.GetString("inventory.empty")));
                 UpdateStats();
-                if (!isPicker) DetailPanelEnterAwaiting();
+                if (!strictLabPicker) DetailPanelEnterAwaiting();
                 return;
             }
-            bool usePaging = !isPicker && !(_listExpanded || visible.Count <= MaxCollapsedItemRows);
+            bool usePaging = !strictLabPicker && !(_listExpanded || visible.Count <= MaxCollapsedItemRows);
             var toRender = usePaging ? visible.Take(MaxCollapsedItemRows).ToList() : visible;
             if (usePaging && _btnExpand != null)
             {
@@ -584,7 +646,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
             else if (_btnExpand != null)
             {
-                if (!isPicker && _listExpanded && visible.Count > MaxCollapsedItemRows)
+                if (!strictLabPicker && _listExpanded && visible.Count > MaxCollapsedItemRows)
                 {
                     _btnExpand.text = LocalizationManager.GetString("inventory.expand_less");
                     _btnExpand.style.display = DisplayStyle.Flex;
@@ -594,11 +656,11 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
 
             foreach (var m in toRender)
-                _list.Add(BuildRowElement(m, isPicker));
+                _list.Add(BuildRowElement(m, strictLabPicker));
 
             UpdateFilterChips();
             UpdateStats();
-            if (isPicker)
+            if (strictLabPicker)
             {
                 if (_detail != null) _detail.style.display = DisplayStyle.None;
             }
@@ -651,7 +713,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private bool PassesFilter(RowModel m)
         {
-            if (IsPickerMode(_pickerAllowedTypes)) return true;
+            if (IsStrictLabPickerUi()) return true;
             if (_activeFilter == ItemInventoryCategoryId.All) return true;
             ItemInventoryCategoryMap.TryGetCategory(m.TypeId, out var c);
             return c == _activeFilter;
@@ -661,9 +723,9 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
         {
             var list = new List<RowModel>();
             if (_playerInventory == null) return list;
-            bool isPicker = IsPickerMode(_pickerAllowedTypes);
+            bool strictLab = IsStrictLabPickerUi();
             var slots = _playerInventory.Items.Where(s => s != null && s.Items != null && s.Items.Count > 0 && IsSlotVisibleInList(s)).ToList();
-            if (isPicker && _pickerAllowedTypesOrdered != null && _pickerAllowedTypesOrdered.Count > 0)
+            if (strictLab && _pickerAllowedTypesOrdered != null && _pickerAllowedTypesOrdered.Count > 0)
             {
                 var reordered = new List<InventorySlot>();
                 var by = slots.ToDictionary(s => s.TypeId, s => s);
@@ -696,7 +758,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                             DisplayName = title,
                             Sub = GetSporeSubText(it.SporeStageValue, gen),
                             Tooltip = BuildSporeItemTooltip(title, it),
-                            PickerCanSelect = !isPicker || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(Items.SporeGeneric)),
+                            PickerCanSelect = !strictLab || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(Items.SporeGeneric)),
                             IsPerItemRow = true
                         };
                         list.Add(st);
@@ -716,7 +778,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                             DisplayName = dn,
                             Sub = "",
                             Tooltip = BuildFruitTooltip(slot.TypeId, it),
-                            PickerCanSelect = !isPicker || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(slot.TypeId)),
+                            PickerCanSelect = !strictLab || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(slot.TypeId)),
                             IsPerItemRow = true
                         });
                     }
@@ -737,8 +799,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
                         Tooltip = slot.TypeId == Items.PreSeed
                             ? BuildPreSeedItemTooltip(first)
                             : BuildGenericItemTooltip(slot.TypeId, dn, qty, first),
-                        PickerCanSelect = !isPicker || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(slot.TypeId)),
-                        IsPerItemRow = false
+                        PickerCanSelect = !strictLab || (_pickerAllowedTypes != null && _pickerAllowedTypes.Contains(slot.TypeId)),
                     });
                 }
             }
@@ -845,7 +906,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             {
                 var bView = new Button(() => SelectRow(m, row, allowToggleOff: true)) { text = LocalizationManager.GetString("inventory.row.view") };
                 bView.AddToClassList("inv-chip-btn");
-                var useOk = ItemConsumptionHandler.IsConsumable(m.TypeId);
+                var useOk = ItemConsumptionHandler.IsConsumable(m.TypeId) || IsPlantCarePickerApplyable(m);
                 var bUse = new Button(() => { SelectRow(m, row, allowToggleOff: false); RequestUse(m); })
                 { text = LocalizationManager.GetString("inventory.row.use") };
                 bUse.AddToClassList("inv-chip-btn");
@@ -869,7 +930,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void SelectRow(RowModel m, VisualElement row, bool allowToggleOff)
         {
-            if (IsPickerMode(_pickerAllowedTypes)) return;
+            if (IsStrictLabPickerUi()) return;
             if (allowToggleOff && _selectedRowKey == m.Key)
             {
                 ClearDetailSelection(rebuild: false);
@@ -929,7 +990,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             }
             if (_btnDetailUse != null)
             {
-                var ok = ItemConsumptionHandler.IsConsumable(typeId);
+                var ok = ItemConsumptionHandler.IsConsumable(typeId) || IsPlantCarePickerApplyable(m);
                 _btnDetailUse.SetEnabled(ok);
                 if (!ok) RegisterButtonTooltip(_btnDetailUse, LocalizationManager.GetString("inventory.use_disabled_tt"));
             }
@@ -1146,7 +1207,7 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
 
         private void RequestUse(RowModel m)
         {
-            if (!ItemConsumptionHandler.IsConsumable(m.TypeId)) return;
+            if (!ItemConsumptionHandler.IsConsumable(m.TypeId) && !IsPlantCarePickerApplyable(m)) return;
             if (_confirm != null) _confirm.RemoveFromClassList("inv-confirm--hidden");
             if (_confirm != null) _confirm.style.display = DisplayStyle.Flex;
             if (_confirmBody != null)
@@ -1163,6 +1224,16 @@ namespace Sporae.UI.UIToolkit.PlayerInventory
             if (string.IsNullOrEmpty(_selectedRowKey)) { HideUseConfirm(); return; }
             var m = _selectedModel;
             if (_playerInventory == null) { HideUseConfirm(); return; }
+
+            if (IsPlantCarePickerApplyable(m))
+            {
+                var st = m.ItemOrNull != null && m.TypeId == Items.SporeGeneric ? m.ItemOrNull.SporeStageValue : (SporeStage?)null;
+                HideUseConfirm();
+                _onSelectedWithStage?.Invoke(m.TypeId, st, m.ItemOrNull);
+                Hide();
+                return;
+            }
+
             if (m.IsPerItemRow && m.ItemOrNull != null)
                 _playerInventory.ConsumeItemInstance(m.ItemOrNull);
             else

@@ -2289,10 +2289,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             else if (lightStress > 50)
                 drivers.Add((LocalizationManager.GetString("plant_terminal.driver_light_high"), false));
 
-            bool isSeedOrSprout = currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout;
-            if (!isSeedOrSprout && state.FertilizerLevel < stageReq.fertilizerMin)
+            bool isFertilizerLow = state.FertilizerLevel < stageReq.fertilizerMin;
+            if (!FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(currentStage, stageReq) && isFertilizerLow)
                 drivers.Add((LocalizationManager.GetString("plant_terminal.driver_fertilizer_low"), false));
-            else if (!isSeedOrSprout && state.FertilizerLevel > stageReq.fertilizerMax)
+            else if (!FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(currentStage, stageReq) && state.FertilizerLevel > stageReq.fertilizerMax)
                 drivers.Add((LocalizationManager.GetString("plant_terminal.driver_fertilizer_high"), false));
 
             if (state.IsInfested)
@@ -3697,10 +3697,10 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             sb.AppendLine($"  <color={ColorSectionChild}>Attuale:</color> <color={lightValColor}>{lightStressPercent}%</color>");
             sb.AppendLine();
 
-            bool isFertilizerOptional = (currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout);
+            bool isFertilizerOptional = FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(currentStage, stageReq);
             string fertilizerStatus = fertilizerOk ? $"<color={ColorOk}>OK</color>" : $"<color={ColorBad}>NON OK</color>";
             string fertilizerLabel = isFertilizerOptional
-                ? $"• <color={ColorSectionParent}>Fertilizzante</color> (opzionale): {fertilizerStatus}"
+                ? $"• <color={ColorSectionParent}>Fertilizzante</color> (non richiesto in questa fase): {fertilizerStatus}"
                 : $"• <color={ColorSectionParent}>Fertilizzante</color>: {fertilizerStatus}";
             sb.AppendLine(fertilizerLabel);
             sb.AppendLine($"  <color={ColorSectionChild}>Range ideale: {stageReq.fertilizerMin}% - {stageReq.fertilizerMax}%</color>");
@@ -3708,7 +3708,7 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             sb.AppendLine($"  <color={ColorSectionChild}>Attuale:</color> <color={fertValColor}>{state.FertilizerLevel}%</color>");
             if (isFertilizerOptional)
             {
-                sb.AppendLine("  <color=#FFFF00>Nota: Negli stadi Seed e Sprout, il fertilizzante è opzionale per avanzare.</color>");
+                sb.AppendLine("  <color=#FFFF00>Nota: in questa fase il dato non impone una banda fertilizzante (min/max = 0).</color>");
             }
             sb.AppendLine();
 
@@ -3786,9 +3786,6 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
             bool waterOk = stageReq.IsHydrationInRange(hydrationPercent);
             bool lightOk = lightStressPercent >= LightStressOkMin && lightStressPercent <= LightStressOkMax;
             bool fertilizerOk = stageReq.IsFertilizerInRange(state.FertilizerLevel);
-            bool isSeedOrSprout = currentStage == PlantStage.Seed || currentStage == PlantStage.Sprout;
-            if (isSeedOrSprout)
-                fertilizerOk = true; // Opzionale: non bloccare consiglio
             bool waterOn = state.WateringSystemOn;
             bool ledOn = state.LedSystemState != LedSystemState.Off;
 
@@ -3820,10 +3817,8 @@ namespace Sporae.UI.UIToolkit.PlantCardV3
                     lines.Add($"§WARN§Stress da luce sopra l'80%: rischio burn. Spegni il LED — comando §CMD§LED OFF {state.PotId}§END§ — o aspetta senza tenerlo acceso troppo a lungo.§END§");
             }
 
-            if (!isSeedOrSprout && !stageReq.IsFertilizerInRange(state.FertilizerLevel))
+            if (!FertilizerCarePolicy.ShouldTreatFertilizerAsOptional(currentStage, stageReq) && !stageReq.IsFertilizerInRange(state.FertilizerLevel))
                 lines.Add("§WARN§Fertilizzante fuori range. §CMD§FERTILIZE [POT-ID]§END§ se vuoi dare una mano. La pianta non ti ringrazierà, ma potrebbe crescere.§END§");
-            else if (isSeedOrSprout && !stageReq.IsFertilizerInRange(state.FertilizerLevel))
-                lines.Add("§INFO§Fertilizzante opzionale in Seed/Sprout: non è richiesto per avanzare.§END§");
 
             if (allParamsOk && canAdvanceByDays)
                 lines.Add("§TITLE§Tutto in range e giorni sufficienti. La pianta potrebbe avanzare di stadio. Il miracolo della scienza. O della negligenza controllata.§END§");

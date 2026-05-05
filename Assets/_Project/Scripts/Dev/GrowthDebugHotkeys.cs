@@ -81,9 +81,26 @@ namespace Sporae.Dev
         /// </summary>
         private void SimulateEndDay()
         {
-            SporiumLogger.LogInfo(LogCategory.Dome, "🔄 Simulazione End Day...");
-            _dayCycleSystem.EndDay();
-            SporiumLogger.LogInfo(LogCategory.Dome, $"✅ End Day completato. Nuovo giorno: {_dayCycleSystem.CurrentDay}");
+            if (_dayCycleSystem == null)
+            {
+                SporiumLogger.LogWarning(LogCategory.Dome, "DayCycleSystem non disponibile.");
+                return;
+            }
+
+            if (!_dayCycleSystem.CanEndDay())
+            {
+                SporiumLogger.LogWarning(LogCategory.Dome, "End Day: CanEndDay false (CRY insufficienti). Nessun avanzamento.");
+                return;
+            }
+
+            SporiumLogger.LogInfo(LogCategory.Dome, "🔄 End Day — stesso DayCycleSystem.EndDay() del letto (fade → giorno+1 al termine).");
+            if (!_dayCycleSystem.EndDay())
+            {
+                SporiumLogger.LogWarning(LogCategory.Dome, "EndDay() ha restituito false.");
+                return;
+            }
+
+            SporiumLogger.LogInfo(LogCategory.Dome, $"✅ Fade avviato. Giorno attuale finché non finisce il fade: {_dayCycleSystem.CurrentDay} (poi +1 e OnDayChanged).");
         }
         
         /// <summary>

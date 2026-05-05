@@ -17,7 +17,7 @@
                     <ui:Label name="inv-stat-actions" class="inv-stat" />
                     <ui:Label name="inv-stat-items" class="inv-stat" />
                 </ui:VisualElement>
-                <ui:VisualElement name="inv-filters" class="inv-filters" style="top: -9px;">
+                <ui:VisualElement name="inv-filters" class="inv-filters">
                     <ui:Button name="inv-filter-all" text="TUTTI" class="inv-filter-chip inv-filter-chip--active" />
                     <ui:Button name="inv-filter-spores" text="SPORE" class="inv-filter-chip" />
                     <ui:Button name="inv-filter-seeds" text="SEMI" class="inv-filter-chip" />
@@ -30,7 +30,7 @@
                     <ui:Button name="inv-filter-bio" text="BIO-MAT" class="inv-filter-chip" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:ScrollView name="inv-list" class="inv-list" style="top: 25px; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
+            <ui:ScrollView name="inv-list" class="inv-list" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;" />
             <ui:Button name="inv-expand" text="MOSTRA TUTTO" class="inv-expand" />
             <ui:VisualElement name="inv-detail" class="inv-detail">
                 <ui:VisualElement name="inv-detail-row" class="inv-detail-row">
