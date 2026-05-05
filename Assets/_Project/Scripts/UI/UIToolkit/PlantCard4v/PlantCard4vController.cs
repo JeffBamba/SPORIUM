@@ -4,6 +4,7 @@ using _Project.Sporae.Core;
 using _Project.UI.UIToolkit.VoOverlay;
 using Sporae.DevTools;
 using Sporae.Dome;
+using Sporae.Dome.PotSystem.Condition;
 using Sporae.Dome.PotSystem.Growth;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using UnityEngine;
@@ -34,15 +35,16 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private Label _lifeStateLabel;
         private Label _stageDetailLabel;
         private Label _mainNeedLabel;
+        private Label _mainNeedSubtitleLabel;
         private Label _hydrationLabel;
         private Label _phValueLabel;
         private Label _phAffinityLabel;
         private Label _fertilizerLabel;
         private Label _conditionLabel;
-        private Label _moldLabel;
         private Label _conditionSummaryLabel;
         private Label _conditionPhAffinitySummaryLabel;
         private Label _conditionMoldSummaryLabel;
+        private Label _preferredLightLabel;
         private Label _mainRiskLabel;
         private Label _riskCauseLabel;
         private Label _riskLevelLabel;
@@ -55,17 +57,22 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private Label _plantGlyphLabel;
         private VisualElement _hydrationBar;
         private VisualElement _riskBar;
+        private VisualElement _riskCalmBlock;
+        private VisualElement _riskDetailBlock;
         private Button _closeButton;
         private Button _repeatVoButton;
         private Button _waterButton;
-        private Button _lightButton;
+        private Button _lightRedButton;
+        private Button _lightBlueButton;
         private Button _additiveButton;
         private Button _pruneButton;
         private Button _fertilizeButton;
         private Label _waterActionTitleLabel;
         private Label _waterActionSubtitleLabel;
-        private Label _lightActionTitleLabel;
-        private Label _lightActionSubtitleLabel;
+        private Label _lightRedActionTitleLabel;
+        private Label _lightRedActionSubtitleLabel;
+        private Label _lightBlueActionTitleLabel;
+        private Label _lightBlueActionSubtitleLabel;
         private Label _additiveActionTitleLabel;
         private Label _additiveActionSubtitleLabel;
         private Label _pruneActionTitleLabel;
@@ -81,9 +88,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private int _lastVoDay = -1;
         private bool _isVisible;
         private bool _plantCardVoActive;
-        private bool _emptyToastShownThisOpen;
         private Coroutine _deferredRefreshRoutine;
         private bool _deferredRefreshPlayVo;
+        private Coroutine _emptyPotToastRetryRoutine;
 
         private void Awake()
         {
@@ -121,6 +128,11 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 _deferredRefreshRoutine = null;
                 _deferredRefreshPlayVo = false;
             }
+            if (_emptyPotToastRetryRoutine != null)
+            {
+                StopCoroutine(_emptyPotToastRetryRoutine);
+                _emptyPotToastRetryRoutine = null;
+            }
             if (_isVisible)
                 ApplyPlantCard4vPresentation(false);
         }
@@ -146,23 +158,47 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
         private void SetVisible(bool visible, bool playVo)
         {
-            _isVisible = visible;
-            if (_root != null)
-                _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-
-            ApplyPlantCard4vPresentation(visible);
-
-            if (visible)
+            bool effectiveVisible = visible;
+            if (effectiveVisible)
             {
-                _emptyToastShownThisOpen = false;
+                PotSlot pot = ResolveTargetPot();
+                if (pot != null && IsPotWithoutCarePlant(pot))
+                {
+                    string id = string.IsNullOrWhiteSpace(pot.PotId) ? _potId : pot.PotId;
+                    ShowEmptyPotToast(string.IsNullOrWhiteSpace(id) ? "POT" : id);
+                    effectiveVisible = false;
+                    playVo = false;
+                }
+            }
+
+            _isVisible = effectiveVisible;
+            if (_root != null)
+                _root.style.display = effectiveVisible ? DisplayStyle.Flex : DisplayStyle.None;
+
+            ApplyPlantCard4vPresentation(effectiveVisible);
+
+            if (effectiveVisible)
+            {
                 Refresh(playVo);
             }
             else
             {
-                _emptyToastShownThisOpen = false;
                 if (_voTextLabel != null)
                     _voTextLabel.text = string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Allineato a PlantCard4vCareViewModel: nessun dato di cura senza pianta nel vaso.
+        /// pot null = non ancora risolto: non blocca l'apertura.
+        /// </summary>
+        private static bool IsPotWithoutCarePlant(PotSlot pot)
+        {
+            if (pot == null)
+                return false;
+
+            PotStateModel state = pot.PotActions != null ? pot.PotActions.PotState : null;
+            return state == null || state.IsEmpty || !state.HasPlant;
         }
 
         private void ApplyPlantCard4vPresentation(bool visible)
@@ -171,7 +207,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             if (visible)
             {
-                GameplayUiModalLock.SetInventoryContextHudVisible(false);
+                // true = stesso comportamento "inventario": il pannello Notifications resta visibile
+                // durante il modale, così il toast POT-EMPTY (vaso senza pianta) non viene emesso "al buio".
+                GameplayUiModalLock.SetInventoryContextHudVisible(true);
                 GameplayUiModalLock.SetMachineModalState(true, keepFixedHudVisible: true);
                 _voOverlay?.SetPlantCard4vDocked(true);
                 return;
@@ -208,15 +246,16 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _lifeStateLabel = _document.rootVisualElement.Q<Label>("pcv4-life-state");
             _stageDetailLabel = _document.rootVisualElement.Q<Label>("pcv4-stage-detail");
             _mainNeedLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need");
+            _mainNeedSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need-subtitle");
             _hydrationLabel = _document.rootVisualElement.Q<Label>("pcv4-hydration-label");
             _phValueLabel = _document.rootVisualElement.Q<Label>("pcv4-ph-value");
             _phAffinityLabel = _document.rootVisualElement.Q<Label>("pcv4-ph-affinity");
             _fertilizerLabel = _document.rootVisualElement.Q<Label>("pcv4-fertilizer-value");
             _conditionLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-value");
-            _moldLabel = _document.rootVisualElement.Q<Label>("pcv4-mold-value");
             _conditionSummaryLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-summary-value");
             _conditionPhAffinitySummaryLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-ph-affinity");
             _conditionMoldSummaryLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-mold-risk");
+            _preferredLightLabel = _document.rootVisualElement.Q<Label>("pcv4-preferred-light");
             _mainRiskLabel = _document.rootVisualElement.Q<Label>("pcv4-main-risk");
             _riskCauseLabel = _document.rootVisualElement.Q<Label>("pcv4-risk-cause");
             _riskLevelLabel = _document.rootVisualElement.Q<Label>("pcv4-risk-level");
@@ -229,17 +268,22 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _plantGlyphLabel = _document.rootVisualElement.Q<Label>("pcv4-plant-glyph");
             _hydrationBar = _document.rootVisualElement.Q<VisualElement>("pcv4-hydration-bar");
             _riskBar = _document.rootVisualElement.Q<VisualElement>("pcv4-risk-bar");
+            _riskCalmBlock = _document.rootVisualElement.Q<VisualElement>("pcv4-risk-calm-block");
+            _riskDetailBlock = _document.rootVisualElement.Q<VisualElement>("pcv4-risk-detail-block");
             _closeButton = _document.rootVisualElement.Q<Button>("pcv4-close");
             _repeatVoButton = _document.rootVisualElement.Q<Button>("pcv4-repeat-vo");
             _waterButton = _document.rootVisualElement.Q<Button>("pcv4-action-water");
-            _lightButton = _document.rootVisualElement.Q<Button>("pcv4-action-light");
+            _lightRedButton = _document.rootVisualElement.Q<Button>("pcv4-action-light-red");
+            _lightBlueButton = _document.rootVisualElement.Q<Button>("pcv4-action-light-blue");
             _additiveButton = _document.rootVisualElement.Q<Button>("pcv4-action-additive");
             _pruneButton = _document.rootVisualElement.Q<Button>("pcv4-action-prune");
             _fertilizeButton = _document.rootVisualElement.Q<Button>("pcv4-action-fertilize");
             _waterActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-water-title");
             _waterActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-water-subtitle");
-            _lightActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-title");
-            _lightActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-subtitle");
+            _lightRedActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-red-title");
+            _lightRedActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-red-subtitle");
+            _lightBlueActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-blue-title");
+            _lightBlueActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-blue-subtitle");
             _additiveActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-additive-title");
             _additiveActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-additive-subtitle");
             _pruneActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-prune-title");
@@ -253,8 +297,10 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 _repeatVoButton.clicked += () => PlayVo(force: true);
             if (_waterButton != null)
                 _waterButton.clicked += () => ExecuteAction(PlantCard4vActionKind.Water);
-            if (_lightButton != null)
-                _lightButton.clicked += ExecuteLightAction;
+            if (_lightRedButton != null)
+                _lightRedButton.clicked += ExecuteRedLightAction;
+            if (_lightBlueButton != null)
+                _lightBlueButton.clicked += ExecuteBlueLightAction;
             if (_additiveButton != null)
                 _additiveButton.clicked += () => ExecuteAction(PlantCard4vActionKind.Additive);
             if (_pruneButton != null)
@@ -271,7 +317,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PlantData plantData = state != null ? state.GetPlantData() : null;
             _lastModel = PlantCard4vCareViewModel.Build(pot, state, plantData, _potSystemConfig, _phSystem);
             BindModel(_lastModel);
-            if (playVo)
+            if (playVo && _isVisible)
                 PlayVo(force: false);
         }
 
@@ -280,6 +326,13 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (model == null)
                 return;
 
+            if (model.IsEmpty && _isVisible)
+            {
+                ShowEmptyPotToast(model.PotId);
+                Hide();
+                return;
+            }
+
             if (_potIdLabel != null) _potIdLabel.text = model.PotId;
             if (_plantNameLabel != null) _plantNameLabel.text = model.PlantName;
             if (_plantSubtitleLabel != null) _plantSubtitleLabel.text = model.PlantSubtitle;
@@ -287,15 +340,22 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (_lifeStateLabel != null) _lifeStateLabel.text = model.LifeState;
             if (_stageDetailLabel != null) _stageDetailLabel.text = model.StageDetail;
             if (_mainNeedLabel != null) _mainNeedLabel.text = model.MainNeed;
+            if (_mainNeedSubtitleLabel != null) _mainNeedSubtitleLabel.text = model.MainNeedSubtitle;
             if (_hydrationLabel != null) _hydrationLabel.text = model.HydrationText;
-            if (_phValueLabel != null) _phValueLabel.text = model.PhValue;
-            if (_phAffinityLabel != null) _phAffinityLabel.text = model.PhAffinity;
+            if (_phValueLabel != null) _phValueLabel.text = model.PhDomeDriftText;
+            if (_phAffinityLabel != null) _phAffinityLabel.text = model.PhDomeBandShort;
             if (_fertilizerLabel != null) _fertilizerLabel.text = model.FertilizerText;
-            if (_conditionLabel != null) _conditionLabel.text = model.ConditionText;
-            if (_moldLabel != null) _moldLabel.text = $"Muffa: {model.MoldText}";
-            if (_conditionSummaryLabel != null) _conditionSummaryLabel.text = model.ConditionText;
-            if (_conditionPhAffinitySummaryLabel != null) _conditionPhAffinitySummaryLabel.text = model.PhAffinity;
-            if (_conditionMoldSummaryLabel != null) _conditionMoldSummaryLabel.text = model.MoldText;
+            if (_conditionLabel != null)
+            {
+                _conditionLabel.text = model.ConditionText;
+                _conditionLabel.RemoveFromClassList("pcv4-need-subtitle--risk");
+                if (ShouldHighlightCondition(model))
+                    _conditionLabel.AddToClassList("pcv4-need-subtitle--risk");
+            }
+            if (_conditionSummaryLabel != null) _conditionSummaryLabel.text = model.LightStressPercentLine;
+            if (_conditionPhAffinitySummaryLabel != null) _conditionPhAffinitySummaryLabel.text = model.PlantPhPreferenceLabel;
+            if (_conditionMoldSummaryLabel != null) _conditionMoldSummaryLabel.text = model.MoldLevelLine;
+            if (_preferredLightLabel != null) _preferredLightLabel.text = model.PreferredLightLine;
             if (_mainRiskLabel != null) _mainRiskLabel.text = model.MainRisk;
             if (_riskCauseLabel != null) _riskCauseLabel.text = model.RiskCause;
             if (_riskLevelLabel != null) _riskLevelLabel.text = model.RiskLevelText;
@@ -306,28 +366,64 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             FillSegments(_hydrationBar, Mathf.RoundToInt(model.HydrationPercent / 12.5f), "pcv4-segment--on");
             FillSegments(_riskBar, model.RiskSegments, "pcv4-segment--risk-on");
+            BindRiskPanelVisibility(model);
             BindSecondaryRisk(model);
             BindActionButtons(model);
-
-            if (_isVisible && model.IsEmpty && !_emptyToastShownThisOpen)
-            {
-                ShowEmptyPotToast(model.PotId);
-                _emptyToastShownThisOpen = true;
-            }
         }
 
         private void ShowEmptyPotToast(string potId)
         {
             string safePotId = string.IsNullOrWhiteSpace(potId) ? "POT" : potId;
+            if (TryPostEmptyPotToast(safePotId))
+                return;
 
+            if (_emptyPotToastRetryRoutine != null)
+                StopCoroutine(_emptyPotToastRetryRoutine);
+            _emptyPotToastRetryRoutine = StartCoroutine(RetryEmptyPotToastRoutine(safePotId));
+        }
+
+        private bool TryPostEmptyPotToast(string safePotId)
+        {
             var foundation = FoundationNotificationServiceAccessor.Get(suppressWarning: true);
-            if (foundation != null && foundation.Enabled)
+            if (foundation == null || !foundation.Enabled)
+                return false;
+
+            foundation.PostToastImmediate(
+                "POT-EMPTY",
+                new NotificationPayload().With("potId", safePotId),
+                NotificationSeverity.Warning);
+            return true;
+        }
+
+        private IEnumerator RetryEmptyPotToastRoutine(string safePotId)
+        {
+            for (int i = 0; i < 45; i++)
             {
-                foundation.PostToastImmediate(
-                    "POT-EMPTY",
-                    new NotificationPayload().With("potId", safePotId),
-                    NotificationSeverity.Warning);
+                yield return null;
+                if (TryPostEmptyPotToast(safePotId))
+                    break;
             }
+
+            _emptyPotToastRetryRoutine = null;
+        }
+
+        private void BindRiskPanelVisibility(PlantCard4vCareViewModel model)
+        {
+            if (_riskDetailBlock != null)
+                _riskDetailBlock.style.display = model.ShowRiskDetailPanel ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_riskCalmBlock != null)
+                _riskCalmBlock.style.display = model.ShowRiskDetailPanel ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        private static bool ShouldHighlightCondition(PlantCard4vCareViewModel model)
+        {
+            if (model == null)
+                return false;
+            return model.ConditionText switch
+            {
+                "STRESSATA" or "CRITICA" or "DEBOLE" or "MORTA" => true,
+                _ => false
+            };
         }
 
         private void BindActionButtons(PlantCard4vCareViewModel model)
@@ -338,7 +434,13 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 : GetFirstActionSlotText(firstSlotAction);
 
             SetActionButton(_waterButton, _waterActionTitleLabel, _waterActionSubtitleLabel, firstSlotAction, firstSlotLabel, model);
-            SetActionButton(_lightButton, _lightActionTitleLabel, _lightActionSubtitleLabel, ResolveVisibleLightAction(model), GetLightButtonText(model), model);
+
+            PlantCard4vActionKind redKind = ResolveRedButtonAction(model);
+            SetActionButton(_lightRedButton, _lightRedActionTitleLabel, _lightRedActionSubtitleLabel, redKind, GetRedLightButtonTitle(model), model);
+
+            PlantCard4vActionKind blueKind = ResolveBlueButtonAction(model);
+            SetActionButton(_lightBlueButton, _lightBlueActionTitleLabel, _lightBlueActionSubtitleLabel, blueKind, GetBlueLightButtonTitle(model), model);
+
             SetActionButton(_additiveButton, _additiveActionTitleLabel, _additiveActionSubtitleLabel, PlantCard4vActionKind.Additive, "ADDITIVO pH", model);
             SetActionButton(_pruneButton, _pruneActionTitleLabel, _pruneActionSubtitleLabel, PlantCard4vActionKind.Prune, "POTARE", model);
             SetActionButton(_fertilizeButton, _fertilizeActionTitleLabel, _fertilizeActionSubtitleLabel, PlantCard4vActionKind.Fertilize, "FERTILIZZARE", model);
@@ -420,7 +522,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             {
                 PlantCard4vActionKind.Additive => "Gestione acidita'",
                 PlantCard4vActionKind.Prune => "Cura tessuti",
-                PlantCard4vActionKind.Fertilize => "Nutrimento",
+                PlantCard4vActionKind.Fertilize => "Fertilizzante",
                 PlantCard4vActionKind.Observe => "Ispezione ravvicinata",
                 PlantCard4vActionKind.LightBlue => "Controllo LED",
                 PlantCard4vActionKind.LightRed => "Controllo LED",
@@ -460,41 +562,46 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             return model != null && model.IsWateringActive ? "SPEGNI IRRIGAZIONE" : "IRRIGARE";
         }
 
-        private PlantCard4vActionKind ResolveVisibleLightAction(PlantCard4vCareViewModel model)
+        private static PlantCard4vActionKind ResolveRedButtonAction(PlantCard4vCareViewModel model)
         {
             if (model == null)
-                return PlantCard4vActionKind.None;
-            if (model.PrimaryAction == PlantCard4vActionKind.LightBlue || model.SecondaryAction == PlantCard4vActionKind.LightBlue)
-                return PlantCard4vActionKind.LightBlue;
-            if (model.PrimaryAction == PlantCard4vActionKind.LightRed || model.SecondaryAction == PlantCard4vActionKind.LightRed)
                 return PlantCard4vActionKind.LightRed;
-            if (model.PrimaryAction == PlantCard4vActionKind.LightOff || model.SecondaryAction == PlantCard4vActionKind.LightOff)
-                return PlantCard4vActionKind.LightOff;
-            return model.LedState != LedSystemState.Off ? PlantCard4vActionKind.LightOff : PlantCard4vActionKind.None;
+            return model.LedState == LedSystemState.Red ? PlantCard4vActionKind.LightOff : PlantCard4vActionKind.LightRed;
         }
 
-        private string GetLightButtonText(PlantCard4vCareViewModel model)
+        private static PlantCard4vActionKind ResolveBlueButtonAction(PlantCard4vCareViewModel model)
         {
-            var action = ResolveVisibleLightAction(model);
-            return action switch
-            {
-                PlantCard4vActionKind.LightBlue => "ACCENDI LUCE BLU",
-                PlantCard4vActionKind.LightRed => "ACCENDI LUCE ROSSA",
-                PlantCard4vActionKind.LightOff => "SPEGNI LUCE",
-                _ => "LUCE STABILE"
-            };
+            if (model == null)
+                return PlantCard4vActionKind.LightBlue;
+            return model.LedState == LedSystemState.Blue ? PlantCard4vActionKind.LightOff : PlantCard4vActionKind.LightBlue;
         }
 
-        private void ExecuteLightAction()
+        private static string GetRedLightButtonTitle(PlantCard4vCareViewModel model)
+        {
+            if (model == null)
+                return "LUCE ROSSA";
+            return model.LedState == LedSystemState.Red ? "SPEGNI LUCE ROSSA" : "ACCENDI LUCE ROSSA";
+        }
+
+        private static string GetBlueLightButtonTitle(PlantCard4vCareViewModel model)
+        {
+            if (model == null)
+                return "LUCE BLU";
+            return model.LedState == LedSystemState.Blue ? "SPEGNI LUCE BLU" : "ACCENDI LUCE BLU";
+        }
+
+        private void ExecuteRedLightAction()
         {
             if (_lastModel == null)
                 Refresh(playVo: false);
+            ExecuteAction(ResolveRedButtonAction(_lastModel));
+        }
 
-            PlantCard4vActionKind action = ResolveVisibleLightAction(_lastModel);
-            if (action == PlantCard4vActionKind.None)
-                return;
-
-            ExecuteAction(action);
+        private void ExecuteBlueLightAction()
+        {
+            if (_lastModel == null)
+                Refresh(playVo: false);
+            ExecuteAction(ResolveBlueButtonAction(_lastModel));
         }
 
         private void ExecuteAction(PlantCard4vActionKind action)
@@ -692,9 +799,10 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
         private void HandlePotSelected(PotSlot pot)
         {
-            if (!_openOnOwnPotSelected || !IsOwnPot(pot))
+            if (!_openOnOwnPotSelected || pot == null || !IsOwnPot(pot))
                 return;
 
+            // Apri la card solo se c'è una pianta da curare; altrimenti solo toast (gestito in SetVisible).
             Show();
         }
     }

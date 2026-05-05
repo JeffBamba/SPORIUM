@@ -1,3 +1,4 @@
+using System.Globalization;
 using _Project;
 using _Project.Sporae.Core;
 using Sporae.Dome.PotSystem.Condition;
@@ -24,6 +25,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
     public sealed class PlantCard4vCareViewModel
     {
+        private static readonly CultureInfo ItCulture = CultureInfo.GetCultureInfo("it-IT");
+
         public string PotId { get; private set; }
         public string ShortPotId { get; private set; }
         public string PlantName { get; private set; }
@@ -32,6 +35,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string LifeState { get; private set; }
         public string StageDetail { get; private set; }
         public string MainNeed { get; private set; }
+        public string MainNeedSubtitle { get; private set; }
         public string MainRisk { get; private set; }
         public string RiskCause { get; private set; }
         public string RiskLevelText { get; private set; }
@@ -41,8 +45,20 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string HydrationText { get; private set; }
         public int HydrationPercent { get; private set; }
         public int LightStressPercent { get; private set; }
-        public string PhValue { get; private set; }
-        public string PhAffinity { get; private set; }
+        /// <summary>Drift giornaliero accodato della cupola (PhSystem).</summary>
+        public string PhDomeDriftText { get; private set; }
+        /// <summary>Banda pH ambiente (Acido/Neutro/Basico) da EvaluateState.</summary>
+        public string PhDomeBandShort { get; private set; }
+        /// <summary>Preferenza chimica della pianta (range ottimale) — Acido/Basico/Neutro.</summary>
+        public string PlantPhPreferenceLabel { get; private set; }
+        /// <summary>Stress luce cumulativo per la card "Condizione generale".</summary>
+        public string LightStressPercentLine { get; private set; }
+        /// <summary>Testo livello muffa: "Lvl 0" …</summary>
+        public string MoldLevelLine { get; private set; }
+        /// <summary>LED richiesto in questa fase, se noto.</summary>
+        public string PreferredLightLine { get; private set; }
+        /// <summary>True quando mostrare blocco rischi dettagliato (non stato "tutto stabile").</summary>
+        public bool ShowRiskDetailPanel { get; private set; }
         public string FertilizerText { get; private set; }
         public string ConditionText { get; private set; }
         public string MoldText { get; private set; }
@@ -81,7 +97,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             if (IsEmpty)
             {
-                BuildEmpty();
+                BuildEmpty(phSystem);
                 return;
             }
 
@@ -96,12 +112,15 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             HydrationPercent = Mathf.Clamp(Mathf.RoundToInt((float)state.Hydration / maxHydration * 100f), 0, 100);
             HydrationText = $"IDRATAZIONE {HydrationPercent}%";
             LightStressPercent = CalculateLightStressPercent(state, config);
+            LightStressPercentLine = $"{LightStressPercent.ToString(ItCulture)}%";
 
             StageRequirements stageReq = plantData != null ? plantData.GetStageRequirements((PlantStage)state.Stage) : null;
             float currentPh = phSystem != null ? phSystem.CurrentPh : 0f;
 
-            PhValue = phSystem != null ? currentPh.ToString("+0.0;-0.0;0.0") : "---";
-            PhAffinity = ResolvePhAffinity(plantData, currentPh);
+            ResolveDomePhRow(phSystem);
+            PlantPhPreferenceLabel = ResolvePlantPhPreferenceLabel(plantData);
+            PreferredLightLine = ResolvePreferredLightLine(stageReq);
+            MoldLevelLine = $"Lvl {Mathf.Clamp(state.MoldRiskLevel, 0, 99)}";
             FertilizerText = ResolveFertilizerText(state, stageReq);
             ConditionText = ResolveConditionText(state);
             MoldText = ResolveMoldText(state);
@@ -110,7 +129,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             FooterStateLine = $"{FormatLifeState((PlantStage)state.Stage, IsDead)} - {BuildFooterForStage((PlantStage)state.Stage, IsDead)}";
         }
 
-        private void BuildEmpty()
+        private void BuildEmpty(PhSystem phSystem)
         {
             PlantName = "VASO VUOTO";
             PlantSubtitle = "PROCEDURA PLANT ASSENTE";
@@ -118,6 +137,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             LifeState = "VUOTO";
             StageDetail = "NESSUNA ATTIVITA' RILEVATA";
             MainNeed = "Attende un seme";
+            MainNeedSubtitle = "Serve una procedura d'impianto al Terminale POT per iniziare un ciclo vitale.";
             MainRisk = "Nessuna vita da proteggere";
             RiskCause = "Procedura PLANT richiesta dal Terminale POT";
             RiskLevelText = "RISCHIO N/D";
@@ -127,8 +147,11 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             HydrationText = "IDRATAZIONE 0%";
             HydrationPercent = 0;
             LightStressPercent = 0;
-            PhValue = "---";
-            PhAffinity = "---";
+            LightStressPercentLine = "0%";
+            ResolveDomePhRow(phSystem);
+            PlantPhPreferenceLabel = "---";
+            PreferredLightLine = "---";
+            MoldLevelLine = "Lvl 0";
             FertilizerText = "---";
             ConditionText = "---";
             MoldText = "---";
@@ -138,6 +161,56 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             PrimaryAction = PlantCard4vActionKind.TerminalPlant;
             SecondaryAction = PlantCard4vActionKind.None;
             RiskSegments = 0;
+            ShowRiskDetailPanel = true;
+        }
+
+        private void ResolveDomePhRow(PhSystem phSystem)
+        {
+            if (phSystem == null)
+            {
+                PhDomeDriftText = "---";
+                PhDomeBandShort = "---";
+                return;
+            }
+
+            float drift = phSystem.GetTotalDailyDrift();
+            PhDomeDriftText = drift.ToString("+0.0;-0.0;0.0", ItCulture);
+            PhDomeBandShort = FormatPhBandShort(phSystem.EvaluateState());
+        }
+
+        private static string FormatPhBandShort(PhSystem.PhBand band)
+        {
+            return band switch
+            {
+                PhSystem.PhBand.UltraAcid => "Acido",
+                PhSystem.PhBand.StableAcid => "Acido",
+                PhSystem.PhBand.Neutral => "Neutro",
+                PhSystem.PhBand.StableBasic => "Basico",
+                PhSystem.PhBand.UltraBasic => "Basico",
+                _ => "---"
+            };
+        }
+
+        private static string ResolvePlantPhPreferenceLabel(PlantData plantData)
+        {
+            if (plantData == null)
+                return "---";
+
+            float mid = (plantData.OptimalPhMin + plantData.OptimalPhMax) * 0.5f;
+            if (mid < -8f)
+                return "Acido";
+            if (mid > 8f)
+                return "Basico";
+            return "Neutro";
+        }
+
+        private static string ResolvePreferredLightLine(StageRequirements stageReq)
+        {
+            LedType? req = stageReq != null ? stageReq.GetRequiredLed() : null;
+            if (!req.HasValue)
+                return "NESSUNA";
+
+            return req.Value == LedType.Blue ? "BLU" : "ROSSA";
         }
 
         private void ResolveNeedRiskAndActions(
@@ -158,6 +231,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (IsDead)
             {
                 MainNeed = "Non risponde";
+                MainNeedSubtitle = "La biomassa non e' piu' recuperabile: serve la procedura di estirpazione al Terminale POT.";
                 MainRisk = "La vita non e' infinita";
                 RiskCause = "Pianta morta - rimozione via Terminale POT";
                 RiskLevelText = "STATO FINALE";
@@ -166,12 +240,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.TerminalUproot;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 8;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             if (state.IsInfested)
             {
                 MainNeed = "Va ripulita";
+                MainNeedSubtitle = "Muffa attiva nel substrato: servono potatura e stabilizzazione chimica.";
                 MainRisk = "Infestazione attiva";
                 RiskCause = "Muffa materializzata nel Pot";
                 RiskLevelText = "RISCHIO CRITICO";
@@ -180,12 +256,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.Prune;
                 SecondaryAction = PlantCard4vActionKind.Additive;
                 RiskSegments = 8;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             if (state.MoldRiskLevel >= 3)
             {
                 MainNeed = "Va stabilizzata";
+                MainNeedSubtitle = "Umidita' cronicamente alta: il rischio muffa richiede intervento immediato.";
                 MainRisk = "Muffa critica";
                 RiskCause = "Overwatering prolungato";
                 RiskLevelText = "RISCHIO ALTO";
@@ -194,12 +272,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.Prune;
                 SecondaryAction = PlantCard4vActionKind.Additive;
                 RiskSegments = 7;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             if (IsHarvestReady)
             {
                 MainNeed = "Ha completato il ciclo";
+                MainNeedSubtitle = "La coltura e' pronta per la raccolta meccanica autorizzata al Terminale POT.";
                 MainRisk = "Frutto maturo in attesa";
                 RiskCause = "Raccolta manuale non autorizzata";
                 RiskLevelText = "PROCEDURA TERMINALE";
@@ -208,6 +288,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.TerminalHarvest;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 3;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
@@ -216,6 +297,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 if (state.WateringSystemOn)
                 {
                     MainNeed = "Irrigazione in corso";
+                    MainNeedSubtitle = "Il sistema a goccia e' attivo: attendi che l'idratazione raggiunga il minimo previsto per questa fase.";
                     MainRisk = "Assorbimento in attesa";
                     RiskCause = "Sistema a goccia attivo";
                     RiskLevelText = "PROCEDURA ATTIVA";
@@ -224,10 +306,12 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     PrimaryAction = ResolveNextCareAction(state, plantData, stageReq, phSystem, currentPh);
                     SecondaryAction = PlantCard4vActionKind.None;
                     RiskSegments = 2;
+                    ShowRiskDetailPanel = true;
                     return;
                 }
 
                 MainNeed = "Sta cercando acqua";
+                MainNeedSubtitle = $"Substrato sotto soglia ({stageReq.hydrationMin}%): priorizza reintegro idrico controllato.";
                 MainRisk = "Disidratazione lenta";
                 RiskCause = $"Idratazione sotto range ({stageReq.hydrationMin}%)";
                 RiskLevelText = "STRESS MEDIO";
@@ -237,12 +321,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 SecondaryAction = ResolveLightSecondary(state, plantData, stageReq);
                 SetSecondaryLightRiskIfActive(state, plantData);
                 RiskSegments = 4;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             if (stageReq != null && HydrationPercent > stageReq.hydrationMax)
             {
                 MainNeed = "Ha troppa acqua";
+                MainNeedSubtitle = $"Idratazione sopra il massimo ({stageReq.hydrationMax}%): rischio anaerobiosi e muffa in aumento.";
                 MainRisk = "Muffa in preparazione";
                 RiskCause = $"Idratazione sopra range ({stageReq.hydrationMax}%)";
                 RiskLevelText = "STRESS MEDIO";
@@ -251,6 +337,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = state.WateringSystemOn ? PlantCard4vActionKind.Water : PlantCard4vActionKind.Prune;
                 SecondaryAction = state.WateringSystemOn ? PlantCard4vActionKind.Prune : PlantCard4vActionKind.Additive;
                 RiskSegments = 4;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
@@ -264,6 +351,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskCause = lightCause;
                     RiskLevelText = "RISCHIO LUCE";
                     RiskSegments = lightRiskSegments;
+                    MainNeedSubtitle = lightCause;
                     VoHintLine = "La luce sta lasciando tracce. Il Pot non e' ancora in zona burn, ma ci si sta avvicinando.";
                 }
                 else
@@ -272,11 +360,13 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                     RiskCause = $"Stress luce {LightStressPercent}%";
                     RiskLevelText = "NESSUN RISCHIO LUCE";
                     RiskSegments = 0;
+                    MainNeedSubtitle = "Spettro o durata LED non allineati alla fase: regola l'illuminazione o spegni per ridurre stress.";
                     VoHintLine = "Non e' stress. Sta solo cercando orientamento.";
                 }
                 VoHintId = "light_need";
                 PrimaryAction = lightAction;
                 SecondaryAction = PlantCard4vActionKind.None;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
@@ -284,6 +374,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             {
                 bool tooLow = currentPh < plantData.OptimalPhMin;
                 MainNeed = "Vuole un ambiente diverso";
+                MainNeedSubtitle = tooLow
+                    ? $"pH cupola sotto l'ottimale della specie ({plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0}). Usa additivo per rialzo."
+                    : $"pH cupola sopra l'ottimale della specie ({plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0}). Usa additivo per correzione.";
                 MainRisk = tooLow ? "pH troppo acido" : "pH troppo basico";
                 RiskCause = $"Affinita' {plantData.OptimalPhMin:0}-{plantData.OptimalPhMax:0}";
                 RiskLevelText = "SQUILIBRIO pH";
@@ -294,12 +387,14 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.Additive;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 5;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             if (stageReq != null && state.Stage > (int)PlantStage.Sprout && state.FertilizerLevel < stageReq.fertilizerMin)
             {
                 MainNeed = "Ha bisogno di nutrienti";
+                MainNeedSubtitle = $"Fertilizzazione sotto il minimo ({stageReq.fertilizerMin}%): la fase corrente richiede piu' input nutritivo.";
                 MainRisk = "Crescita rallentata";
                 RiskCause = $"Fertilizzante sotto range ({stageReq.fertilizerMin}%)";
                 RiskLevelText = "RISCHIO BASSO";
@@ -308,10 +403,12 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PrimaryAction = PlantCard4vActionKind.Fertilize;
                 SecondaryAction = PlantCard4vActionKind.None;
                 RiskSegments = 3;
+                ShowRiskDetailPanel = true;
                 return;
             }
 
             MainNeed = "Parametri stabili";
+            MainNeedSubtitle = "Idratazione, luce, pH e nutrimento risultano coerenti con i requisiti della fase: nessuna misura urgente.";
             MainRisk = "Nessuna anomalia critica";
             RiskCause = "Contenimento nei limiti";
             RiskLevelText = "RISCHIO BASSO";
@@ -319,7 +416,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             VoHintId = "stable";
             PrimaryAction = PlantCard4vActionKind.None;
             SecondaryAction = PlantCard4vActionKind.None;
-            RiskSegments = 1;
+            RiskSegments = 0;
+            ShowRiskDetailPanel = false;
         }
 
         private PlantCard4vActionKind ResolveNextCareAction(
@@ -465,17 +563,6 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 species = string.IsNullOrWhiteSpace(state.PlantCode) ? "non identificata" : state.PlantCode;
 
             return $"Specie: {species}";
-        }
-
-        private static string ResolvePhAffinity(PlantData plantData, float currentPh)
-        {
-            if (plantData == null)
-                return "---";
-
-            if (plantData.IsPhInOptimalRange(currentPh))
-                return "STABILE";
-
-            return currentPh < plantData.OptimalPhMin ? "BASSA" : "ALTA";
         }
 
         private static string ResolveFertilizerText(PotStateModel state, StageRequirements stageReq)

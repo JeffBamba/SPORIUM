@@ -11,7 +11,7 @@
                             <ui:Label class="pcv4-large-icon pcv4-large-icon--water pcv4-large-icon--drop" />
                             <ui:VisualElement class="pcv4-need-copy">
                                 <ui:Label name="pcv4-main-need" text="Sta cercando acqua." class="pcv4-need-title pcv4-need-title--primary" />
-                                <ui:Label text="Il substrato e&apos; troppo secco." class="pcv4-need-subtitle" />
+                                <ui:Label name="pcv4-main-need-subtitle" text="Il substrato e&apos; troppo secco." class="pcv4-need-subtitle" />
                                 <ui:VisualElement class="pcv4-meter-block pcv4-meter-block--tight">
                                     <ui:Label name="pcv4-hydration-label" text="IDRATAZIONE 28%" class="pcv4-meter-label" />
                                     <ui:VisualElement name="pcv4-hydration-bar" class="pcv4-segment-bar pcv4-segment-bar--wide">
@@ -32,26 +32,23 @@
                             <ui:VisualElement class="pcv4-need-copy">
                                 <ui:Label text="Ambiente pH" class="pcv4-need-title" />
                                 <ui:VisualElement class="pcv4-inline-stat-row pcv4-inline-stat-row--tight">
-                                    <ui:Label name="pcv4-ph-value" text="-1.2" class="pcv4-inline-stat-value" />
-                                    <ui:Label name="pcv4-ph-affinity" text="BASICA" class="pcv4-inline-stat-note" />
+                                    <ui:Label name="pcv4-ph-value" text="-0,2" class="pcv4-inline-stat-value" />
+                                    <ui:Label name="pcv4-ph-affinity" text="Basico" class="pcv4-inline-stat-note" />
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
                         <ui:VisualElement class="pcv4-need-item">
                             <ui:Label text="FRT" class="pcv4-large-icon pcv4-large-icon--fert" />
                             <ui:VisualElement class="pcv4-need-copy">
-                                <ui:Label text="Nutrimento" class="pcv4-need-title" />
+                                <ui:Label text="Fertilizzante" class="pcv4-need-title" />
                                 <ui:Label name="pcv4-fertilizer-value" text="BASSO" class="pcv4-need-subtitle" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                         <ui:VisualElement class="pcv4-need-item">
                             <ui:Label text="CND" class="pcv4-large-icon pcv4-large-icon--leaf" />
                             <ui:VisualElement class="pcv4-need-copy">
-                                <ui:Label text="Condizione tessuti" class="pcv4-need-title" />
-                                <ui:VisualElement class="pcv4-inline-stat-row">
-                                    <ui:Label name="pcv4-condition-value" text="STRESSATA" class="pcv4-inline-stat-value pcv4-inline-stat-value--risk" />
-                                    <ui:Label name="pcv4-mold-value" text="Muffa: BASSO" class="pcv4-inline-stat-note" />
-                                </ui:VisualElement>
+                                <ui:Label text="Condizioni" class="pcv4-need-title" />
+                                <ui:Label name="pcv4-condition-value" text="STABILE" class="pcv4-need-subtitle" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
@@ -59,16 +56,20 @@
                         <ui:Label text="CONDIZIONE GENERALE" class="pcv4-section-title" />
                         <ui:VisualElement class="pcv4-divider" />
                         <ui:VisualElement class="pcv4-kv-row">
-                            <ui:Label text="STRESS" class="pcv4-kv-label" />
-                            <ui:Label name="pcv4-condition-summary-value" text="STRESSATA" class="pcv4-kv-value pcv4-kv-value--risk" />
+                            <ui:Label text="STRESS DA LUCE" class="pcv4-kv-label" />
+                            <ui:Label name="pcv4-condition-summary-value" text="0%" class="pcv4-kv-value" />
                         </ui:VisualElement>
                         <ui:VisualElement class="pcv4-kv-row">
-                            <ui:Label text="AFFINITA&apos; pH" class="pcv4-kv-label" />
-                            <ui:Label name="pcv4-condition-ph-affinity" text="BASICA" class="pcv4-kv-value" />
+                            <ui:Label text="Affinita' pH" class="pcv4-kv-label" />
+                            <ui:Label name="pcv4-condition-ph-affinity" text="Basico" class="pcv4-kv-value" />
                         </ui:VisualElement>
                         <ui:VisualElement class="pcv4-kv-row">
-                            <ui:Label text="RISCHIO MUFFA" class="pcv4-kv-label" />
-                            <ui:Label name="pcv4-condition-mold-risk" text="MEDIO" class="pcv4-kv-value" />
+                            <ui:Label text="Lvl Muffa" class="pcv4-kv-label" />
+                            <ui:Label name="pcv4-condition-mold-risk" text="Lvl 0" class="pcv4-kv-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="pcv4-kv-row">
+                            <ui:Label text="Luce preferita" class="pcv4-kv-label" />
+                            <ui:Label name="pcv4-preferred-light" text="ROSSA" class="pcv4-kv-value" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -92,6 +93,10 @@
                     <ui:VisualElement name="pcv4-risk-card" class="pcv4-panel pcv4-risk-card">
                         <ui:Label text="RISCHI ATTIVI" class="pcv4-section-title pcv4-section-title--risk" />
                         <ui:VisualElement class="pcv4-divider pcv4-divider--risk" />
+                        <ui:VisualElement name="pcv4-risk-calm-block" class="pcv4-risk-calm-block">
+                            <ui:Label name="pcv4-risk-calm-text" text="Nessun rischio attivo sui parametri vitali." class="pcv4-risk-calm-text" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="pcv4-risk-detail-block" class="pcv4-risk-detail-block">
                         <ui:VisualElement class="pcv4-risk-item pcv4-risk-item--primary">
                             <ui:Label text="R1" class="pcv4-large-icon pcv4-large-icon--risk" />
                             <ui:VisualElement class="pcv4-risk-copy">
@@ -119,10 +124,12 @@
                                 <ui:Label name="pcv4-secondary-risk-cause" text="Le foglie cercano ombra." class="pcv4-risk-subtitle" />
                             </ui:VisualElement>
                         </ui:VisualElement>
+                        </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement name="pcv4-actions-wrap" class="pcv4-panel pcv4-actions-wrap">
                         <ui:Label text="INTERVENTI DISPONIBILI" class="pcv4-section-title" />
                         <ui:VisualElement class="pcv4-divider" />
+                        <ui:VisualElement name="pcv4-actions-scroll" class="pcv4-actions-scroll">
                         <ui:Button name="pcv4-action-water" class="pcv4-action pcv4-action--primary">
                             <ui:Label text="H2O" class="pcv4-action-icon pcv4-action-icon--water" />
                             <ui:VisualElement class="pcv4-action-copy">
@@ -131,11 +138,19 @@
                             </ui:VisualElement>
                             <ui:Label text="&gt;" class="pcv4-action-arrow" />
                         </ui:Button>
-                        <ui:Button name="pcv4-action-light" class="pcv4-action pcv4-action--muted">
-                            <ui:Label text="LED" class="pcv4-action-icon pcv4-action-icon--light" />
+                        <ui:Button name="pcv4-action-light-red" class="pcv4-action pcv4-action--muted">
+                            <ui:Label text="RED" class="pcv4-action-icon pcv4-action-icon--light-red" />
                             <ui:VisualElement class="pcv4-action-copy">
-                                <ui:Label name="pcv4-action-light-title" text="SPEGNI LUCE ROSSA" class="pcv4-action-title" />
-                                <ui:Label name="pcv4-action-light-subtitle" text="Controllo LED" class="pcv4-action-subtitle" />
+                                <ui:Label name="pcv4-action-light-red-title" text="ACCENDI LUCE ROSSA" class="pcv4-action-title" />
+                                <ui:Label name="pcv4-action-light-red-subtitle" text="Controllo LED" class="pcv4-action-subtitle" />
+                            </ui:VisualElement>
+                            <ui:Label text="&gt;" class="pcv4-action-arrow" />
+                        </ui:Button>
+                        <ui:Button name="pcv4-action-light-blue" class="pcv4-action pcv4-action--muted">
+                            <ui:Label text="BLU" class="pcv4-action-icon pcv4-action-icon--light-blue" />
+                            <ui:VisualElement class="pcv4-action-copy">
+                                <ui:Label name="pcv4-action-light-blue-title" text="ACCENDI LUCE BLU" class="pcv4-action-title" />
+                                <ui:Label name="pcv4-action-light-blue-subtitle" text="Controllo LED" class="pcv4-action-subtitle" />
                             </ui:VisualElement>
                             <ui:Label text="&gt;" class="pcv4-action-arrow" />
                         </ui:Button>
@@ -159,10 +174,11 @@
                             <ui:Label text="FRT" class="pcv4-action-icon pcv4-action-icon--fert" />
                             <ui:VisualElement class="pcv4-action-copy">
                                 <ui:Label name="pcv4-action-fertilize-title" text="FERTILIZZARE" class="pcv4-action-title" />
-                                <ui:Label name="pcv4-action-fertilize-subtitle" text="Nutrimento" class="pcv4-action-subtitle" />
+                                <ui:Label name="pcv4-action-fertilize-subtitle" text="Fertilizzante" class="pcv4-action-subtitle" />
                             </ui:VisualElement>
                             <ui:Label text="&gt;" class="pcv4-action-arrow" />
                         </ui:Button>
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

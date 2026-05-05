@@ -221,6 +221,7 @@
     min-width: 320px;
     flex-direction: column;
     flex-shrink: 0;
+    min-height: 0;
     padding-top: 132px;
     margin-right: 18px;
     margin-bottom: 44px;
@@ -246,7 +247,7 @@
 }
 
 .pcv4-condition-card {
-    height: 158px;
+    min-height: 188px;
     margin-top: 16px;
     padding-top: 14px;
     padding-right: 16px;
@@ -256,24 +257,53 @@
 }
 
 .pcv4-risk-card {
-    top: -23px;
-    height: 238px;
+    margin-top: 0;
+    margin-bottom: 12px;
+    min-height: 140px;
+    max-height: 280px;
     padding-top: 14px;
     padding-right: 14px;
     padding-bottom: 12px;
     padding-left: 14px;
     flex-shrink: 0;
+    flex-direction: column;
+}
+
+.pcv4-risk-detail-block {
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.pcv4-risk-calm-block {
+    flex-grow: 1;
+    padding-top: 6px;
+    padding-bottom: 10px;
+}
+
+.pcv4-risk-calm-text {
+    font-size: 13px;
+    color: rgb(152, 196, 176);
+    white-space: normal;
 }
 
 .pcv4-actions-wrap {
     flex-grow: 1;
+    flex-shrink: 1;
     min-height: 0;
-    top: -34px;
-    margin-top: 18px;
+    margin-top: 0;
     padding-top: 15px;
     padding-right: 12px;
     padding-bottom: 12px;
     padding-left: 12px;
+    flex-direction: column;
+}
+
+.pcv4-actions-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    overflow: auto;
+    flex-direction: column;
 }
 
 .pcv4-section-title {
@@ -437,11 +467,8 @@
     color: rgb(234, 210, 137);
 }
 
-.pcv4-need-subtitle {
-    font-size: 13px;
-    color: rgb(161, 176, 170);
-    margin-top: 4px;
-    white-space: normal;
+.pcv4-need-subtitle--risk {
+    color: rgb(226, 95, 70);
 }
 
 .pcv4-inline-stat-row {
@@ -731,24 +758,22 @@
 .pcv4-risk-item {
     flex-direction: row;
     align-items: flex-start;
-    min-height: 70px;
-    padding-top: 7px;
-    padding-bottom: 7px;
+    min-height: 64px;
+    padding-top: 6px;
+    padding-bottom: 6px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(226, 95, 70, 0.18);
 }
 
 .pcv4-risk-item--primary {
-    top: -25px;
-    min-height: 112px;
-    padding-bottom: 10px;
+    min-height: 96px;
+    padding-bottom: 8px;
 }
 
 .pcv4-risk-item--secondary {
-    top: -17px;
-    min-height: 62px;
+    min-height: 56px;
     border-bottom-width: 0;
-    padding-top: 9px;
+    padding-top: 6px;
 }
 
 .pcv4-risk-item .pcv4-large-icon {
@@ -783,11 +808,12 @@
 }
 
 .pcv4-action {
-    height: 58px;
-    margin-bottom: 9px;
-    padding-top: 7px;
+    flex-shrink: 0;
+    height: 54px;
+    margin-bottom: 6px;
+    padding-top: 6px;
     padding-right: 9px;
-    padding-bottom: 7px;
+    padding-bottom: 6px;
     padding-left: 9px;
     flex-direction: row;
     align-items: center;
@@ -883,6 +909,16 @@
 .pcv4-action-icon--water {
     color: rgb(91, 215, 232);
     border-color: rgba(91, 215, 232, 0.64);
+}
+
+.pcv4-action-icon--light-red {
+    color: rgb(226, 95, 70);
+    border-color: rgba(226, 95, 70, 0.64);
+}
+
+.pcv4-action-icon--light-blue {
+    color: rgb(91, 192, 217);
+    border-color: rgba(91, 192, 217, 0.64);
 }
 
 .pcv4-action-icon--light {
