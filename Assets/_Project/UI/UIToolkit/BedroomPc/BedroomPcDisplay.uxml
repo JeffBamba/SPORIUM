@@ -3,7 +3,7 @@
     <ui:VisualElement name="bedroom-pc-display-root" class="bedroom-pc-display-root">
         <ui:VisualElement name="bedroom-pc-window" class="bedroom-pc-window">
             <ui:VisualElement name="bedroom-pc-frame-stack" class="bedroom-pc-frame-stack">
-                <ui:VisualElement name="bedroom-pc-frame" picking-mode="Ignore" class="bedroom-pc-frame" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/PC-bedroom.png?fileID=2800000&amp;guid=8d521efefc29b3a4e92a2a06d1259cd5&amp;type=3#PC-bedroom&quot;);" />
+                <ui:VisualElement name="bedroom-pc-frame" picking-mode="Ignore" class="bedroom-pc-frame" style="background-image: url(&quot;project://database/Assets/_Project/Art/UI/PC-bedroom.png?fileID=2800000&amp;guid=8d521efefc29b3a4e92a2a06d1259cd5&amp;type=3#PC-bedroom&quot;); -unity-background-scale-mode: scale-to-fit;" />
                 <ui:VisualElement name="bedroom-pc-inner" class="bedroom-pc-inner" style="left: 324px; right: 328px; top: 98px; bottom: 133px;">
                     <ui:VisualElement name="bedroom-pc-screen" class="bedroom-pc-screen" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
                         <ui:VisualElement picking-mode="Ignore" class="bedroom-pc-scanlines" />

@@ -19,7 +19,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="zone-location" picking-mode="Ignore" class="cbb-zone cbb-zone-location">
                 <ui:VisualElement name="location-layout-fill" picking-mode="Ignore" class="cbb-location-layout-fill" />
-                <ui:Label name="location-label" picking-mode="Ignore" class="cbb-location-label" style="color: rgb(210, 230, 241);" />
+                <ui:Label name="location-label" picking-mode="Ignore" class="cbb-location-label" style="color: rgb(127, 255, 122); font-size: 14px;" />
             </ui:VisualElement>
             <ui:VisualElement name="zone-center" class="cbb-zone cbb-zone-center hud-tooltip-host">
                 <ui:VisualElement name="room-btn-dome" class="cbb-room-btn room-available hud-tooltip-host">
