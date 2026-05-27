@@ -16,6 +16,7 @@ using Sporae.Dome;
 using Sporae.UI.Icons;
 using Sporae.UI.UIToolkit;
 using Sporae.Core.Localization;
+using _Project.Sporae.Core.Knowledge;
 
 namespace Sporae.UI.UIToolkit.HUD
 {
@@ -40,6 +41,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private float _mutationDesignerBase;
         [SerializeField] private int _cryBalance = 1245;
         [SerializeField] private int _grateValue = 12;
+
+        private KnowledgeProgressionService _knowledgeProgression;
         
         [Header("Configuration")]
         [SerializeField] private bool _enableDebugLogs = false;
@@ -253,6 +256,13 @@ namespace Sporae.UI.UIToolkit.HUD
                     ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
                 }
 
+                _knowledgeProgression = ServiceContainer.Instance?.Get<KnowledgeProgressionService>(suppressWarning: true);
+                if (_knowledgeProgression != null)
+                {
+                    _knowledgeProgression.OnKnowledgeChanged += OnKnowledgeChanged;
+                    RefreshKnowledgeTierLabel();
+                }
+
                 if (_dayCycleSystem != null)
                     _dayCycleSystem.OnDayChanged += OnDayChangedRefreshBotanicalMutation;
                 PotEvents.OnPotStateChanged += OnPotStateChangedRefreshBotanicalMutation;
@@ -309,6 +319,12 @@ namespace Sporae.UI.UIToolkit.HUD
             else if (service is DayCycleController dayCycleController && _dayCycleController == null)
             {
                 _dayCycleController = dayCycleController;
+            }
+            else if (service is KnowledgeProgressionService knowledge && _knowledgeProgression == null)
+            {
+                _knowledgeProgression = knowledge;
+                _knowledgeProgression.OnKnowledgeChanged += OnKnowledgeChanged;
+                RefreshKnowledgeTierLabel();
             }
         }
         
@@ -446,6 +462,13 @@ namespace Sporae.UI.UIToolkit.HUD
             var condMetric = _root.Q<Label>("metric-label-condensation");
             if (condMetric != null)
                 condMetric.text = LocalizationManager.GetString("topbar.metric.condensation");
+            var grateDisplay = _root.Q<VisualElement>("grate-display");
+            if (grateDisplay != null)
+            {
+                var knowledgeMetric = grateDisplay.Q<Label>(className: "metric-label");
+                if (knowledgeMetric != null)
+                    knowledgeMetric.text = LocalizationManager.GetString("topbar.metric.knowledge");
+            }
 
             if (_phTooltip != null)
             {
@@ -1242,6 +1265,23 @@ namespace Sporae.UI.UIToolkit.HUD
                 UpdateMutationTooltipContent();
             if (_condensationTooltip != null && _condensationTooltip.style.display == DisplayStyle.Flex)
                 UpdateCondensationTooltipContent();
+            RefreshKnowledgeTierLabel();
+        }
+
+        private void OnKnowledgeChanged(KnowledgeChangeEventArgs _)
+        {
+            RefreshKnowledgeTierLabel();
+        }
+
+        private void RefreshKnowledgeTierLabel()
+        {
+            if (_knowledgeProgression == null)
+                _knowledgeProgression = ServiceContainer.Instance?.Get<KnowledgeProgressionService>(suppressWarning: true);
+
+            string label = _knowledgeProgression != null
+                ? _knowledgeProgression.GetTierLabelLocalized()
+                : LocalizationManager.GetString("knowledge.tier.neofita");
+            UpdateKnowledgeTierLabel(label);
         }
         
         private void InitializeComponents()
@@ -1258,7 +1298,7 @@ namespace Sporae.UI.UIToolkit.HUD
             UpdateCondensation(_condensation);
             UpdateMutation(_mutationIndex); // primo avvio: serializzato → designer base + bonus
             UpdateCryBalance(_cryBalance);
-            UpdateGrate(_grateValue);
+            RefreshKnowledgeTierLabel();
         }
         
         /// <summary>
@@ -1736,24 +1776,30 @@ namespace Sporae.UI.UIToolkit.HUD
             _cryBalance = value;
         }
         
-        /// <summary>
-        /// Aggiorna il valore GRATE.
-        /// </summary>
+        /// <summary>Mostra la label tier Conoscenza (TopBar CONOSCENZA).</summary>
+        public void UpdateKnowledgeTierLabel(string localizedLabel)
+        {
+            if (_grateValueLabel != null)
+                _grateValueLabel.text = string.IsNullOrEmpty(localizedLabel) ? "—" : localizedLabel;
+        }
+
+        /// <summary>Legacy: non usare per Conoscenza. Mantenuto per compatibilita scene serializzate.</summary>
+        [Obsolete("Usare KnowledgeProgressionService + UpdateKnowledgeTierLabel.")]
         public void UpdateGrate(int value)
         {
             _grateValue = value;
-            
-            if (_grateValueLabel != null)
-            {
-                _grateValueLabel.text = $"+{value}";
-            }
         }
 
         /// <summary>Usato da EndOfDay Dawn Summary per mostrare l'indice di mutazione corrente.</summary>
         public float GetMutationIndex() => _mutationIndex;
 
-        /// <summary>Usato da EndOfDay Dawn Summary per mostrare il G-rate corrente.</summary>
-        public int GetGrateValue() => _grateValue;
+        /// <summary>Budget base progetto Lab dal tier corrente (ex G-rate numerico).</summary>
+        public int GetGrateValue()
+        {
+            var knowledge = _knowledgeProgression
+                ?? ServiceContainer.Instance?.Get<KnowledgeProgressionService>(suppressWarning: true);
+            return knowledge != null ? knowledge.GetProjectBudgetBase() : _grateValue;
+        }
         
         private void OnDestroy()
         {
@@ -1781,6 +1827,9 @@ namespace Sporae.UI.UIToolkit.HUD
             {
                 _phSystem.OnPhChanged -= OnPhChanged;
             }
+
+            if (_knowledgeProgression != null)
+                _knowledgeProgression.OnKnowledgeChanged -= OnKnowledgeChanged;
 
             if (_dayCycleSystem != null)
                 _dayCycleSystem.OnDayChanged -= OnDayChangedRefreshBotanicalMutation;
@@ -1883,6 +1932,14 @@ namespace Sporae.UI.UIToolkit.HUD
             if (ServiceContainer.Instance != null)
             {
                 ServiceContainer.Instance.OnServiceRegistered += OnServiceRegistered;
+            }
+
+            _knowledgeProgression = ServiceContainer.Instance?.Get<KnowledgeProgressionService>(suppressWarning: true);
+            if (_knowledgeProgression != null)
+            {
+                _knowledgeProgression.OnKnowledgeChanged -= OnKnowledgeChanged;
+                _knowledgeProgression.OnKnowledgeChanged += OnKnowledgeChanged;
+                RefreshKnowledgeTierLabel();
             }
             
             // Try to reconnect PhSystem

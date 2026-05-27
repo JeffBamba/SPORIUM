@@ -1784,7 +1784,10 @@ namespace _Project
                 mutation = mutSvc.DisplayNormalized;
             else if (topBar != null)
                 mutation = topBar.GetMutationIndex();
-            int grate = topBar != null ? topBar.GetGrateValue() : 0;
+            var knowledge = ServiceContainer.Instance?.Get<_Project.Sporae.Core.Knowledge.KnowledgeProgressionService>(suppressWarning: true);
+            string knowledgeTierLabel = knowledge != null
+                ? knowledge.GetTierLabelLocalized()
+                : (topBar != null ? topBar.GetGrateValue().ToString() : "—");
 
             string phDriftStr = float.IsNaN(phDrift) ? "—" : phDrift.ToString("+#0.00;-#0.00;0", System.Globalization.CultureInfo.InvariantCulture);
             string phTrend = float.IsNaN(phDrift)
@@ -1837,7 +1840,11 @@ namespace _Project
                 SetDawnRow("eod-dawn-text-grate", $"PIANO AVVIO TURNO: <color={ColorGood}><b>{string.Join(" ", actionPlan.Take(3).Select((x, i) => $"{i + 1}) {x}"))}</b></color>");
             }
 
-            SetDawnRow("eod-dawn-text-cry", $"ECONOMIA: baseline CRY stimata <color={ColorInfo}><b>{cryForecast}</b></color> (costi fissi). G-rate <color={ColorGood}><b>+{grate}</b></color>.");
+            SetDawnRow("eod-dawn-text-cry", LocalizationManager.GetString("eod.dawn_cry_knowledge", new Dictionary<string, string>
+            {
+                ["cry"] = cryForecast.ToString(),
+                ["tier"] = knowledgeTierLabel
+            }));
 
             var press = _root.Q<Label>("eod-dawn-press-key");
             if (press != null)

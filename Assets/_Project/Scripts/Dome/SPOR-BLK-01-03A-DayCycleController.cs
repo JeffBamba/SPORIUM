@@ -674,6 +674,8 @@ public class DayCycleController : MonoBehaviour
         {
             SporiumLogger.LogDebug(LogCategory.Pot, $"{pot.PotId}: Punti giornalieri - Water: {pointsResult.WaterPoint}, Light: {pointsResult.LightPoint}, Fertilizer: {pointsResult.FertilizerPoint}, Total: {pointsResult.TotalPoints}, DaysOptimal: {pot.DaysConsecutiveOptimal}");
         }
+
+        _Project.Sporae.Core.Knowledge.PotCareKnowledgeWatcher.CheckMilestonesForPot(pot);
         
         // FASE 1.2: Applica modificatore crescita basato sulla condizione
         // Il moltiplicatore viene applicato ai punti accumulati per accelerare la crescita

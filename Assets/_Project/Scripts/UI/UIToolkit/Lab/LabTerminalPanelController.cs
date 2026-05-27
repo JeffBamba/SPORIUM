@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using _Project;
 using _Project.Sporae.Core;
+using _Project.Sporae.Core.Knowledge;
 using _Project.Systems.SeedStorage;
 using Sporae.Core;
 using Sporae.Core.Localization;
@@ -82,6 +83,8 @@ namespace Sporae.UI.UIToolkit.Lab
         private SeedProjectType _initialProjectType;
         private ProjectTypeAnalysis _projectTypeAnalysis;
         private string _projectDirectionChangedMessage;
+        private string _activeLabProjectKey;
+        private bool _labKnowledgeCompletionHandled;
 
         private enum ProjectStep
         {
@@ -450,6 +453,8 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 _btnCancelProject.clicked += () =>
                 {
+                    if (_projectActive && !string.IsNullOrEmpty(_activeLabProjectKey))
+                        SeedProjectKnowledgeHooks.NotifyProjectAbandoned(_activeLabProjectKey);
                     _projectActive = false;
                     _analysisRunning = false;
                     _analysisCompleted = false;
@@ -661,6 +666,7 @@ namespace Sporae.UI.UIToolkit.Lab
         {
             EnsureGameManager();
             CaptureProjectBaselineCounts();
+            _labKnowledgeCompletionHandled = false;
             _projectActive = true;
             _projectCompletedSinceLastOpen = false;
             _machinesAutoCollapsedForCurrentProject = false;
@@ -736,6 +742,13 @@ namespace Sporae.UI.UIToolkit.Lab
 
             if (_projectActive && IsProjectFlowCompleted(snapshot))
             {
+                if (!_labKnowledgeCompletionHandled && !string.IsNullOrEmpty(_activeLabProjectKey))
+                {
+                    _labKnowledgeCompletionHandled = true;
+                    var seed = GetLatestPlayerSeed();
+                    SeedProjectKnowledgeHooks.NotifyProjectCompleted(_activeLabProjectKey, seed?.GeneticTypeValue);
+                }
+
                 _projectActive = false;
                 _projectCompletedSinceLastOpen = true;
                 _analysisRunning = false;
@@ -1073,6 +1086,10 @@ namespace Sporae.UI.UIToolkit.Lab
             _projectBaseMaturedSporeCount = CountPlayerSporeStage(SporeStage.Matured);
             _projectBasePreSeedCount = CountPlayerType(Items.PreSeed);
             _projectBaseSeedCount = CountPlayerAllSeeds();
+
+            var dayCycle = ServiceContainer.Instance?.Get<DayCycleSystem>(suppressWarning: true);
+            int day = dayCycle?.CurrentDay ?? 1;
+            _activeLabProjectKey = $"d{day}_s{_projectBaseSeedCount}";
         }
 
         private ProjectRuntimeSnapshot BuildProjectRuntimeSnapshot()

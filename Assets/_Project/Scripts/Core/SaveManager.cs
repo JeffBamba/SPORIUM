@@ -415,6 +415,14 @@ namespace Sporae.Core
             {
                 saveData.wikiUnlockedIds = wikiUnlockService.ExportUnlockedIds();
             }
+
+            var knowledgeService = ServiceContainer.Instance?.Get<_Project.Sporae.Core.Knowledge.KnowledgeProgressionService>(suppressWarning: true);
+            if (knowledgeService != null)
+            {
+                var snap = knowledgeService.ExportSaveSnapshot();
+                saveData.knowledgeTotalScore = snap.TotalScore;
+                saveData.knowledgeGrantedEventKeys = snap.GrantedEventKeys;
+            }
             
             saveData.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             saveData.gameVersion = Application.version;
@@ -573,6 +581,15 @@ namespace Sporae.Core
             if (wikiUnlockService != null && saveData.wikiUnlockedIds != null)
             {
                 wikiUnlockService.ImportUnlockedIds(saveData.wikiUnlockedIds);
+            }
+
+            var knowledgeService = ServiceContainer.Instance?.Get<_Project.Sporae.Core.Knowledge.KnowledgeProgressionService>(suppressWarning: true);
+            if (knowledgeService != null)
+            {
+                knowledgeService.LoadFromSave(
+                    saveData.knowledgeTotalScore,
+                    saveData.knowledgeGrantedEventKeys,
+                    suppressNotifications: true);
             }
 
             // Note diario piante
@@ -1211,6 +1228,8 @@ namespace Sporae.Core
             public SeedStorageSaveData seedStorageData;
             public List<string> discoveredPlantCodes;
             public List<string> wikiUnlockedIds;
+            public int knowledgeTotalScore;
+            public List<string> knowledgeGrantedEventKeys;
             /// <summary>Indice outfit selezionato dall'armadio (-1 = non impostato, usa default).</summary>
             public int playerOutfitIndex = -1;
         }

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using _Project.Sporae.Core;
+using _Project.Sporae.Core.Knowledge;
 
 namespace _Project
 {
@@ -14,16 +16,34 @@ namespace _Project
         private readonly HashSet<string> _unlockedIds = new();
         private readonly Dictionary<int, string> _nightResearchByDay = new();
 
+        /// <summary>id sbloccato; isCategory true se chiave cat:branch.</summary>
+        public event Action<string, bool> OnEntryUnlocked;
+
         public void Unlock(string id)
         {
             if (string.IsNullOrEmpty(id)) return;
-            _unlockedIds.Add(id);
+            if (_unlockedIds.Add(id))
+            {
+                OnEntryUnlocked?.Invoke(id, false);
+                WikiResearchKnowledgeBridge.OnWikiUnlockServiceEntry(id, false);
+            }
         }
 
         public void UnlockCategory(string categoryId)
         {
             if (string.IsNullOrEmpty(categoryId)) return;
-            _unlockedIds.Add("cat:" + categoryId);
+            string key = "cat:" + categoryId;
+            if (_unlockedIds.Add(key))
+            {
+                OnEntryUnlocked?.Invoke(key, true);
+                WikiResearchKnowledgeBridge.OnWikiUnlockServiceEntry(key, true);
+            }
+        }
+
+        /// <summary>Sblocca nodo wiki e accredita Conoscenza se configurato (idempotente).</summary>
+        public void UnlockResearchNode(string nodeId)
+        {
+            Unlock(nodeId);
         }
 
         public bool IsUnlocked(string id)

@@ -9,6 +9,7 @@ using Sporae.DevTools;
 using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project.UI.UIToolkit.VoOverlay;
 using Sporae.UI.UIToolkit.HUD;
+using _Project.Sporae.Core.Knowledge;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -57,6 +58,13 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new DiaryStatistics());
             ServiceContainer.Instance.Register(new DayActivityLog());
             ServiceContainer.Instance.Register(new WikiUnlockService());
+            if (!ServiceContainer.Instance.Contains(typeof(KnowledgeProgressionService)))
+            {
+                var knowledgeCfg = Resources.Load<KnowledgeProgressionConfig>(KnowledgeProgressionConfig.DefaultResourcePath);
+                if (knowledgeCfg == null)
+                    knowledgeCfg = KnowledgeProgressionConfig.CreateRuntimeDefaults();
+                ServiceContainer.Instance.Register(new KnowledgeProgressionService(knowledgeCfg));
+            }
             ServiceContainer.Instance.Register(new NightEventsGenerator());
             ServiceContainer.Instance.Register(new PotNotifications());
             ServiceContainer.Instance.Register(new DomePotRegistry());
@@ -143,6 +151,9 @@ namespace _Project.Sporae.Core.Installers
 
             var playerStatToasts = new GameObject("PlayerStatToastBridge");
             playerStatToasts.AddComponent<PlayerStatToastBridge>();
+
+            var knowledgeToasts = new GameObject("KnowledgeToastBridge");
+            knowledgeToasts.AddComponent<KnowledgeToastBridge>();
             
             // Registra AssetManager e precarica asset critici
             // DEBUG_SAFE_FIX: Verifica se è già registrato prima di registrarlo di nuovo
