@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using _Project;
 using _Project.Sporae.Core;
+using _Project.Sporae.Core.LabBlueprint;
 using _Project.Systems.FoodRoom;
 using _Project.Systems.SeedStorage;
 using Sporae.Dome.PotSystem.Growth;
@@ -423,6 +424,10 @@ namespace Sporae.Core
                 saveData.knowledgeTotalScore = snap.TotalScore;
                 saveData.knowledgeGrantedEventKeys = snap.GrantedEventKeys;
             }
+
+            var labBlueprintService = ServiceContainer.Instance?.Get<LabBlueprintService>(suppressWarning: true);
+            if (labBlueprintService != null)
+                saveData.labBlueprintState = labBlueprintService.ExportState();
             
             saveData.saveTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             saveData.gameVersion = Application.version;
@@ -591,6 +596,10 @@ namespace Sporae.Core
                     saveData.knowledgeGrantedEventKeys,
                     suppressNotifications: true);
             }
+
+            var labBlueprintService = ServiceContainer.Instance?.Get<LabBlueprintService>(suppressWarning: true);
+            if (labBlueprintService != null)
+                labBlueprintService.LoadState(saveData.labBlueprintState);
 
             // Note diario piante
             if (saveData.diaryNotes != null && saveData.diaryNotes.Count > 0)
@@ -1230,6 +1239,7 @@ namespace Sporae.Core
             public List<string> wikiUnlockedIds;
             public int knowledgeTotalScore;
             public List<string> knowledgeGrantedEventKeys;
+            public LabBlueprintState labBlueprintState;
             /// <summary>Indice outfit selezionato dall'armadio (-1 = non impostato, usa default).</summary>
             public int playerOutfitIndex = -1;
         }

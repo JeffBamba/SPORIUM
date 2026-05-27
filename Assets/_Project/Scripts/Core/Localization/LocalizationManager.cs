@@ -502,6 +502,19 @@ namespace Sporae.Core.Localization
             { "lab_incubator.profile_base", ("Ritira l'output dall'Incubatore per aggiungere i semi all'inventario.", "Collect the Incubator output to add seeds to your inventory.") },
             { "lab_incubator.profile_hybrid_detail", ("Profilo Lab: famiglia {fam}, tratti: {traits}, reagente: {reag}.\n{base}", "Lab profile: family {fam}, traits: {traits}, reagent: {reag}.\n{base}") },
 
+            // LAB 4.0 — blueprint readiness / gate inventario
+            { "lab_blueprint.picker_title", ("Seleziona frutto o spora per il protocollo", "Select a fruit or spore for the protocol") },
+            { "lab_blueprint.readiness.no_material", ("Nessun frutto o spora idonea in inventario. Servono materiali per avviare il protocollo.", "No eligible fruit or spore in inventory. Materials are required to start the protocol.") },
+            { "lab_blueprint.readiness.project_active", ("Hai già un protocollo blueprint in corso. Completa o abbandona prima di scegliere nuovo materiale.", "You already have an active blueprint protocol. Complete or abandon it before choosing new material.") },
+            { "lab_blueprint.readiness.no_inventory", ("Inventario non disponibile.", "Inventory unavailable.") },
+
+            // LAB 4.0 — Schermata 1 (Genoscrittore)
+            { "lab40.s1.btn_cta", ("APRI GENOSCRITTORE", "OPEN GENOSCRITTORE") },
+            { "lab40.s1.btn_back", ("← INDIETRO", "← BACK") },
+            { "lab40.s1.vo_text", ("Il protocollo definisce pressioni. Il seme tenterà di seguirle.", "The protocol defines pressures. The seed will try to follow them.") },
+            { "lab40.s1.registry_active", ("ATTIVO ●", "ACTIVE ●") },
+            { "lab40.s1.registry_idle", ("NESSUN PROGETTO ○", "NO PROJECT ○") },
+
             // Lab terminal — Kitchen / seed project UI
             { "lab_terminal.machine.idle", ("Idle", "Idle") },
             { "lab_terminal.machine.extractor_progress", ("In corso ({pct}%)", "In progress ({pct}%)") },

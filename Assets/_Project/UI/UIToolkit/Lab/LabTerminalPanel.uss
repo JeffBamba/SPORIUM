@@ -475,3 +475,926 @@
     margin-bottom: 2px;
     -unity-font-style: bold;
 }
+
+/* ================================================================
+   LAB 4.0 — SCHERMATA 1: PROTOCOLLO / GENOSCRITTORE
+   ================================================================ */
+
+.lab40-s1-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    background-color: rgba(4, 10, 12, 0.97);
+    border-width: 2px;
+    border-color: rgba(127, 255, 122, 0.82);
+    /* Visibile in UI Builder; il controller lo nasconde all'avvio */
+    display: flex;
+}
+
+/* === HEADER BAR === */
+.lab40-s1-header-bar {
+    flex-direction: row;
+    align-items: center;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(127, 255, 122, 0.35);
+    background-color: rgba(6, 16, 8, 0.85);
+    padding: 8px 16px;
+    min-height: 46px;
+}
+
+.lab40-s1-header-icon-box {
+    width: 28px;
+    height: 28px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.6);
+    justify-content: center;
+    align-items: center;
+    margin-right: 12px;
+    background-color: rgba(12, 28, 14, 0.8);
+}
+
+.lab40-s1-header-icon {
+    font-size: 14px;
+    color: rgba(127, 255, 122, 0.9);
+}
+
+.lab40-s1-header-text-col {
+    flex-direction: column;
+}
+
+.lab40-s1-header-title {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    margin-bottom: 1px;
+}
+
+.lab40-s1-header-sub {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(168, 200, 172, 0.65);
+}
+
+/* BODY: left | center | right */
+.lab40-s1-body {
+    flex-direction: row;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* === LEFT SIDEBAR === */
+.lab40-s1-left {
+    width: 192px;
+    min-width: 192px;
+    flex-direction: column;
+    padding: 14px 12px;
+    border-right-width: 1px;
+    border-right-color: rgba(127, 255, 122, 0.22);
+    background-color: rgba(6, 13, 8, 0.6);
+}
+
+.lab40-s1-module-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(127, 255, 122, 0.7);
+    margin-bottom: 2px;
+}
+
+.lab40-s1-module-title {
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: rgb(127, 255, 122);
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.lab40-s1-seed-icon-box {
+    width: 80px;
+    height: 80px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.45);
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 6px;
+    background-color: rgba(10, 20, 12, 0.7);
+}
+
+.lab40-s1-seed-icon-placeholder {
+    font-size: 36px;
+    color: rgba(127, 255, 122, 0.7);
+}
+
+.lab40-s1-seed-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(168, 217, 160, 0.9);
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.lab40-s1-knowledge-block {
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.lab40-s1-know-caption {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(168, 200, 172, 0.75);
+    margin-bottom: 2px;
+}
+
+.lab40-s1-know-bar-track {
+    height: 8px;
+    border-width: 1px;
+    border-color: rgba(104, 148, 108, 0.7);
+    background-color: rgba(15, 28, 16, 0.8);
+    margin-bottom: 3px;
+}
+
+.lab40-s1-know-bar-fill {
+    height: 100%;
+    width: 70%;
+    background-color: rgba(127, 255, 122, 0.9);
+}
+
+.lab40-s1-know-score {
+    font-size: 13px;
+    color: rgba(127, 255, 122, 0.95);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.lab40-s1-dna-placeholder {
+    font-size: 30px;
+    color: rgba(127, 255, 122, 0.5);
+    margin-top: 8px;
+    margin-bottom: 8px;
+    -unity-text-align: middle-left;
+}
+
+.lab40-s1-registry-block {
+    flex-direction: column;
+    margin-top: auto;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 255, 122, 0.18);
+    padding-top: 8px;
+}
+
+.lab40-s1-registry-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(168, 195, 172, 0.7);
+}
+
+.lab40-s1-registry-status {
+    font-size: 11px;
+    color: rgba(127, 255, 122, 0.95);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+/* === CENTER === */
+.lab40-s1-center {
+    flex-grow: 1;
+    flex-direction: column;
+    padding: 12px 14px;
+    border-right-width: 1px;
+    border-right-color: rgba(127, 255, 122, 0.18);
+    background-color: rgba(7, 16, 9, 0.35);
+}
+
+.lab40-s1-concept-row {
+    flex-direction: row;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(100, 140, 104, 0.28);
+    background-color: rgba(10, 22, 12, 0.55);
+    padding: 8px;
+    align-items: flex-start;
+}
+
+.lab40-s1-concept-icon-box {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.4);
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    background-color: rgba(8, 18, 10, 0.7);
+}
+
+.lab40-s1-concept-icon {
+    font-size: 18px;
+    color: rgba(127, 255, 122, 0.85);
+}
+
+.lab40-s1-concept-body {
+    flex-grow: 1;
+    flex-direction: column;
+    margin-right: 8px;
+}
+
+.lab40-s1-concept-title {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(180, 225, 175, 0.98);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.lab40-s1-concept-desc {
+    font-size: 11px;
+    color: rgba(190, 210, 192, 0.88);
+    white-space: normal;
+    -unity-font-style: normal;
+}
+
+.lab40-s1-concept-quote-box {
+    width: 140px;
+    min-width: 140px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.3);
+    background-color: rgba(12, 25, 14, 0.8);
+    padding: 6px;
+    justify-content: center;
+}
+
+.lab40-s1-concept-quote {
+    font-size: 10px;
+    color: rgba(168, 210, 164, 0.85);
+    white-space: normal;
+    -unity-font-style: italic;
+}
+
+.lab40-s1-bottom-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.lab40-s1-legend-row {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-wrap: wrap;
+    border-width: 1px;
+    border-color: rgba(100, 140, 104, 0.28);
+    background-color: rgba(8, 18, 10, 0.5);
+    padding: 6px 8px;
+}
+
+.lab40-s1-legend-item {
+    font-size: 10px;
+    color: rgba(148, 186, 152, 0.9);
+    margin-right: 12px;
+}
+
+.lab40-s1-stamp-box {
+    min-width: 130px;
+    border-width: 2px;
+    border-color: rgba(127, 255, 122, 0.55);
+    padding: 6px 8px;
+    background-color: rgba(8, 18, 10, 0.6);
+    justify-content: center;
+    align-items: center;
+    margin-left: 8px;
+    rotate: -4deg;
+}
+
+.lab40-s1-stamp-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(127, 255, 122, 0.8);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* === RIGHT SIDEBAR === */
+.lab40-s1-right {
+    width: 180px;
+    min-width: 180px;
+    flex-direction: column;
+    padding: 14px 12px;
+    background-color: rgba(6, 13, 8, 0.55);
+}
+
+.lab40-s1-seq-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(127, 255, 122, 0.7);
+    -unity-font-style: bold;
+    margin-bottom: 14px;
+}
+
+.lab40-s1-seq-step {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.lab40-s1-seq-step-active {
+    background-color: rgba(20, 40, 22, 0.6);
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.45);
+    padding: 4px 6px;
+}
+
+.lab40-s1-seq-icon-box {
+    width: 32px;
+    height: 32px;
+    border-width: 1px;
+    border-color: rgba(127, 255, 122, 0.55);
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
+    background-color: rgba(8, 20, 10, 0.8);
+}
+
+.lab40-s1-seq-icon-box-dim {
+    border-color: rgba(100, 130, 104, 0.35);
+    background-color: rgba(8, 15, 9, 0.5);
+}
+
+.lab40-s1-seq-icon {
+    font-size: 16px;
+    color: rgba(127, 255, 122, 0.9);
+}
+
+.lab40-s1-seq-icon-dim {
+    color: rgba(100, 130, 104, 0.6);
+}
+
+.lab40-s1-seq-label {
+    font-size: 11px;
+    color: rgba(168, 200, 172, 0.75);
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.lab40-s1-seq-label-active {
+    color: rgba(127, 255, 122, 0.98);
+    -unity-font-style: bold;
+}
+
+.lab40-s1-seq-arrow {
+    font-size: 14px;
+    color: rgba(127, 255, 122, 0.45);
+    margin-left: 14px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* === FOOTER === */
+.lab40-s1-footer {
+    flex-direction: row;
+    align-items: center;
+    border-top-width: 2px;
+    border-top-color: rgba(127, 255, 122, 0.5);
+    background-color: rgba(4, 12, 6, 0.9);
+    padding: 10px 14px;
+    min-height: 60px;
+}
+
+.lab40-s1-vo-block {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.lab40-s1-vo-avatar-box {
+    width: 40px;
+    height: 40px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.6);
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    background-color: rgba(8, 16, 22, 0.8);
+}
+
+.lab40-s1-vo-avatar-icon {
+    font-size: 18px;
+    color: rgba(93, 182, 227, 0.8);
+}
+
+.lab40-s1-vo-text-block {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.lab40-s1-vo-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(93, 182, 227, 0.65);
+    margin-bottom: 2px;
+}
+
+.lab40-s1-vo-text {
+    font-size: 13px;
+    color: rgba(186, 220, 255, 0.92);
+    white-space: normal;
+    -unity-font-style: italic;
+}
+
+.lab40-s1-footer-actions {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 16px;
+}
+
+.lab40-s1-btn-back {
+    margin-right: 8px;
+    min-width: 120px;
+}
+
+.lab40-s1-btn-cta {
+    min-width: 220px;
+    height: 44px;
+    border-width: 2px;
+    border-color: rgba(127, 255, 122, 0.95);
+    background-color: rgba(127, 255, 122, 0.18);
+    color: rgb(127, 255, 122);
+    font-size: 14px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+/* ================================================================
+   LAB 4.0 — RUNTIME PANEL 1480x900
+   ================================================================ */
+
+.lab-terminal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.16);
+}
+
+.lab40-s1-panel {
+    width: 1480px;
+    height: 900px;
+    flex-direction: column;
+    background-color: rgba(2, 15, 8, 0.97);
+    border-width: 3px;
+    border-color: rgba(93, 220, 91, 0.82);
+    padding: 28px 36px 24px 36px;
+    display: flex;
+}
+
+.lab40-s1-header-bar {
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: 74px;
+    padding: 0;
+    margin-bottom: 10px;
+    border-bottom-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.lab40-s1-header-icon-box {
+    width: 28px;
+    height: 28px;
+    margin-top: 2px;
+    margin-right: 18px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.lab40-s1-header-icon {
+    font-size: 22px;
+    color: rgba(103, 216, 95, 0.72);
+}
+
+.lab40-s1-header-title {
+    font-size: 30px;
+    letter-spacing: 4px;
+    color: rgba(117, 231, 94, 0.86);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.lab40-s1-header-sub {
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgba(132, 188, 121, 0.74);
+}
+
+.lab40-s1-body {
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 650px;
+    margin-bottom: 18px;
+}
+
+.lab40-s1-left {
+    width: 235px;
+    min-width: 235px;
+    flex-direction: column;
+    padding: 26px 26px 22px 26px;
+    margin-right: 18px;
+    border-width: 2px;
+    border-color: rgba(90, 190, 84, 0.42);
+    background-color: rgba(2, 24, 11, 0.62);
+}
+
+.lab40-s1-module-tag {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(132, 190, 121, 0.68);
+    margin-bottom: 8px;
+}
+
+.lab40-s1-module-title {
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: rgba(128, 236, 100, 0.88);
+    -unity-font-style: bold;
+    margin-bottom: 26px;
+}
+
+.lab40-s1-seed-icon-box {
+    width: 118px;
+    height: 118px;
+    align-self: center;
+    border-width: 2px;
+    border-color: rgba(103, 216, 95, 0.52);
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 18px;
+    background-color: rgba(4, 34, 14, 0.62);
+}
+
+.lab40-s1-seed-icon-placeholder {
+    font-size: 72px;
+    color: rgba(117, 231, 94, 0.78);
+}
+
+.lab40-s1-seed-label {
+    -unity-text-align: middle-center;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(141, 197, 124, 0.82);
+    -unity-font-style: bold;
+    margin-bottom: 30px;
+}
+
+.lab40-s1-knowledge-block {
+    flex-direction: column;
+    margin-bottom: 34px;
+}
+
+.lab40-s1-know-caption {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(132, 190, 121, 0.68);
+    margin-bottom: 4px;
+}
+
+.lab40-s1-know-bar-track {
+    height: 12px;
+    border-width: 1px;
+    border-color: rgba(103, 216, 95, 0.48);
+    background-color: rgba(9, 29, 13, 0.9);
+    margin-top: 7px;
+    margin-bottom: 6px;
+}
+
+.lab40-s1-know-bar-fill {
+    height: 100%;
+    width: 70%;
+    background-color: rgba(117, 231, 94, 0.95);
+}
+
+.lab40-s1-know-score {
+    font-size: 14px;
+    color: rgba(117, 231, 94, 0.95);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.lab40-s1-dna-placeholder {
+    align-self: center;
+    font-size: 62px;
+    color: rgba(103, 216, 95, 0.58);
+    margin-top: 8px;
+    margin-bottom: 30px;
+}
+
+.lab40-s1-registry-block {
+    flex-direction: column;
+    margin-top: auto;
+    border-top-width: 1px;
+    border-top-color: rgba(103, 216, 95, 0.25);
+    padding-top: 18px;
+}
+
+.lab40-s1-registry-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(132, 190, 121, 0.68);
+}
+
+.lab40-s1-registry-status {
+    font-size: 13px;
+    color: rgba(117, 231, 94, 0.95);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-top: 5px;
+}
+
+.lab40-s1-center {
+    flex-grow: 1;
+    width: 860px;
+    flex-direction: column;
+    padding: 0;
+    margin-right: 18px;
+    border-width: 2px;
+    border-color: rgba(90, 190, 84, 0.42);
+    background-color: rgba(185, 197, 142, 0.76);
+}
+
+.lab40-s1-concept-row {
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 137px;
+    margin-bottom: 0;
+    border-width: 0 0 1px 0;
+    border-color: rgba(38, 70, 32, 0.58);
+    background-color: rgba(186, 199, 147, 0.18);
+    padding: 24px 30px 20px 30px;
+    align-items: flex-start;
+}
+
+.lab40-s1-concept-icon-box {
+    width: 72px;
+    min-width: 72px;
+    height: 72px;
+    border-width: 2px;
+    border-color: rgba(17, 45, 24, 0.86);
+    justify-content: center;
+    align-items: center;
+    margin-right: 28px;
+    background-color: rgba(4, 18, 9, 0.9);
+}
+
+.lab40-s1-concept-icon {
+    font-size: 32px;
+    color: rgba(103, 216, 95, 0.9);
+}
+
+.lab40-s1-concept-body {
+    flex-grow: 1;
+    flex-direction: column;
+    margin-right: 28px;
+}
+
+.lab40-s1-concept-title {
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: rgba(19, 48, 22, 0.96);
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.lab40-s1-concept-desc {
+    font-size: 13px;
+    color: rgba(13, 35, 18, 0.92);
+    white-space: normal;
+    line-height: 17px;
+}
+
+.lab40-s1-concept-quote-box {
+    width: 245px;
+    min-width: 245px;
+    min-height: 66px;
+    border-width: 1px;
+    border-color: rgba(31, 64, 31, 0.5);
+    background-color: rgba(192, 204, 156, 0.35);
+    padding: 14px 16px;
+    justify-content: center;
+}
+
+.lab40-s1-concept-quote {
+    font-size: 12px;
+    color: rgba(12, 34, 15, 0.88);
+    white-space: normal;
+    -unity-font-style: italic;
+}
+
+.lab40-s1-bottom-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 70px;
+    margin-top: 0;
+    padding: 12px 24px;
+}
+
+.lab40-s1-legend-row {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-wrap: wrap;
+    border-width: 1px;
+    border-color: rgba(31, 64, 31, 0.58);
+    background-color: rgba(192, 204, 156, 0.25);
+    padding: 13px 18px;
+}
+
+.lab40-s1-legend-item {
+    font-size: 12px;
+    color: rgba(13, 35, 18, 0.86);
+    margin-right: 36px;
+}
+
+.lab40-s1-stamp-box {
+    width: 245px;
+    min-width: 245px;
+    min-height: 58px;
+    border-width: 2px;
+    border-color: rgba(112, 45, 43, 0.62);
+    padding: 8px 12px;
+    background-color: rgba(192, 204, 156, 0.22);
+    justify-content: center;
+    align-items: center;
+    margin-left: 18px;
+    rotate: -3deg;
+}
+
+.lab40-s1-stamp-label {
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: rgba(107, 44, 42, 0.76);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.lab40-s1-right {
+    width: 230px;
+    min-width: 230px;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px;
+    border-width: 2px;
+    border-color: rgba(90, 190, 84, 0.42);
+    background-color: rgba(2, 24, 11, 0.62);
+}
+
+.lab40-s1-seq-title {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(132, 190, 121, 0.7);
+    -unity-font-style: bold;
+    margin-bottom: 40px;
+}
+
+.lab40-s1-seq-step {
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0;
+    width: 190px;
+}
+
+.lab40-s1-seq-step-active {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 0;
+}
+
+.lab40-s1-seq-icon-box {
+    width: 88px;
+    height: 88px;
+    border-width: 2px;
+    border-color: rgba(103, 216, 95, 0.66);
+    justify-content: center;
+    align-items: center;
+    margin-right: 0;
+    margin-bottom: 14px;
+    background-color: rgba(4, 34, 14, 0.62);
+}
+
+.lab40-s1-seq-icon-box-dim {
+    border-color: rgba(103, 216, 95, 0.28);
+    background-color: rgba(5, 20, 9, 0.5);
+}
+
+.lab40-s1-seq-icon {
+    font-size: 34px;
+    color: rgba(117, 231, 94, 0.9);
+}
+
+.lab40-s1-seq-icon-dim {
+    color: rgba(117, 231, 94, 0.34);
+}
+
+.lab40-s1-seq-label {
+    font-size: 14px;
+    color: rgba(132, 190, 121, 0.55);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.lab40-s1-seq-label-active {
+    color: rgba(117, 231, 94, 0.95);
+    -unity-font-style: bold;
+}
+
+.lab40-s1-seq-arrow {
+    font-size: 24px;
+    color: rgba(117, 231, 94, 0.48);
+    margin-left: 0;
+    margin-top: 18px;
+    margin-bottom: 18px;
+}
+
+.lab40-s1-footer {
+    flex-direction: row;
+    align-items: center;
+    min-height: 92px;
+    border-top-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
+}
+
+.lab40-s1-vo-block {
+    flex-direction: row;
+    align-items: center;
+    width: 855px;
+    min-height: 76px;
+    border-width: 2px;
+    border-color: rgba(90, 190, 84, 0.32);
+    background-color: rgba(2, 24, 11, 0.56);
+    padding: 10px 18px;
+}
+
+.lab40-s1-vo-avatar-box {
+    width: 62px;
+    height: 62px;
+    border-width: 1px;
+    border-color: rgba(103, 216, 95, 0.45);
+    justify-content: center;
+    align-items: center;
+    margin-right: 18px;
+    background-color: rgba(6, 30, 13, 0.82);
+}
+
+.lab40-s1-vo-avatar-icon {
+    font-size: 24px;
+    color: rgba(93, 182, 227, 0.82);
+}
+
+.lab40-s1-vo-tag {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgba(117, 231, 94, 0.62);
+    margin-bottom: 6px;
+}
+
+.lab40-s1-vo-text {
+    font-size: 15px;
+    color: rgba(175, 216, 170, 0.9);
+    white-space: normal;
+    -unity-font-style: italic;
+}
+
+.lab40-s1-footer-actions {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: flex-end;
+    margin-left: 26px;
+}
+
+.lab40-s1-btn-back {
+    min-width: 134px;
+    height: 42px;
+    margin-right: 14px;
+    border-width: 1px;
+    border-color: rgba(93, 182, 227, 0.68);
+    background-color: rgba(8, 26, 34, 0.82);
+    color: rgba(180, 224, 255, 0.95);
+    font-size: 13px;
+}
+
+.lab40-s1-btn-cta {
+    width: 405px;
+    min-width: 405px;
+    height: 68px;
+    border-width: 3px;
+    border-color: rgba(117, 231, 94, 0.92);
+    background-color: rgba(18, 52, 21, 0.7);
+    color: rgba(117, 231, 94, 0.98);
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+}

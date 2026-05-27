@@ -4856,6 +4856,7 @@ MonoBehaviour:
   _catalizzatorePanel: {fileID: 1723587289}
   _fusionPanel: {fileID: 1958179133}
   _incubatorPanel: {fileID: 660453880}
+  _lab40MaterialGate: {fileID: 0}
   _analysisDurationSeconds: 1.8
 --- !u!114 &228297617
 MonoBehaviour:
@@ -5551,7 +5552,7 @@ Transform:
   m_GameObject: {fileID: 254711216}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.56, y: -6.79, z: 0}
+  m_LocalPosition: {x: 6.65, y: 3.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -34336,6 +34337,7 @@ GameObject:
   - component: {fileID: 1497233366}
   - component: {fileID: 1497233365}
   - component: {fileID: 1497233364}
+  - component: {fileID: 1497233368}
   m_Layer: 0
   m_Name: LabTerminal
   m_TagString: Untagged
@@ -34486,6 +34488,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1497233368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1497233362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bffbe906485bc5c43bcf715fb9c045fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerInventoryPanel: {fileID: 617360273}
 --- !u!1 &1500704882
 GameObject:
   m_ObjectHideFlags: 0
@@ -48962,11 +48977,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8898451486356320718, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.58
+      value: 5.409
       objectReference: {fileID: 0}
     - target: {fileID: 8898451486356320718, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -7.07
+      value: -7.104
       objectReference: {fileID: 0}
     - target: {fileID: 8898451486356320718, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_LocalPosition.z

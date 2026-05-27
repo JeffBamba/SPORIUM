@@ -10,6 +10,7 @@ using Sporae.UI.UIToolkit.NotificationsFoundation;
 using _Project.UI.UIToolkit.VoOverlay;
 using Sporae.UI.UIToolkit.HUD;
 using _Project.Sporae.Core.Knowledge;
+using _Project.Sporae.Core.LabBlueprint;
 
 namespace _Project.Sporae.Core.Installers
 {
@@ -58,6 +59,8 @@ namespace _Project.Sporae.Core.Installers
             ServiceContainer.Instance.Register(new DiaryStatistics());
             ServiceContainer.Instance.Register(new DayActivityLog());
             ServiceContainer.Instance.Register(new WikiUnlockService());
+            ServiceContainer.Instance.Register(new LabBlueprintService());
+            ServiceContainer.Instance.Register(new LabBlueprintReadinessService());
             if (!ServiceContainer.Instance.Contains(typeof(KnowledgeProgressionService)))
             {
                 var knowledgeCfg = Resources.Load<KnowledgeProgressionConfig>(KnowledgeProgressionConfig.DefaultResourcePath);

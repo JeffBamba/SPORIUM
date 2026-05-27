@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using _Project;
 using _Project.Sporae.Core;
 using _Project.Sporae.Core.Knowledge;
+using _Project.Sporae.Core.LabBlueprint;
 using _Project.Systems.SeedStorage;
 using Sporae.Core;
 using Sporae.Core.Localization;
+using Sporae.DevTools;
 using Sporae.UI.UIToolkit.PlayerInventory;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,6 +25,7 @@ namespace Sporae.UI.UIToolkit.Lab
         [SerializeField] private LabCatalizzatorePanelController _catalizzatorePanel;
         [SerializeField] private LabFusionPanelController _fusionPanel;
         [SerializeField] private LabIncubatorPanelController _incubatorPanel;
+        [SerializeField] private LabBlueprintMaterialGateController _lab40MaterialGate;
         [SerializeField] private float _analysisDurationSeconds = 1.8f;
 
         private VisualElement _root;
@@ -64,6 +67,17 @@ namespace Sporae.UI.UIToolkit.Lab
         private Button _btnProjectTypeReplica;
         private Button _btnProjectTypeHybrid;
         private Button _btnProjectTypeNewProfile;
+
+        // LAB 4.0 — Schermata 1
+        private VisualElement _lab40Screen1;
+        private VisualElement _lab40KnowledgeBarFill;
+        private Label _lab40KnowledgeScoreLabel;
+        private Label _lab40RegistryStatusLabel;
+        private Label _lab40VoTextLabel;
+        private Button _btnLab40CtaGenoscrittore;
+        private Button _btnLab40Screen1Back;
+        private bool _lab40Screen1Open;
+
         private bool _uiBound;
         private bool _projectActive;
         private bool _projectCompletedSinceLastOpen;
@@ -245,6 +259,13 @@ namespace Sporae.UI.UIToolkit.Lab
             if (_uiDocument != null)
                 _uiDocument.sortingOrder = 430;
 
+            // LAB 4.0: auto-risoluzione gate se non assegnato via Inspector.
+            // FindObjectOfType è accettabile qui (UI init, non gameplay loop) —
+            // LabBlueprintMaterialGateController si trova su LabTerminal in ROOM_Dome,
+            // ramo separato rispetto a questo pannello UI.
+            if (_lab40MaterialGate == null)
+                _lab40MaterialGate = FindObjectOfType<LabBlueprintMaterialGateController>(includeInactive: true);
+
             _root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
             if (_root != null)
                 TryBindUI();
@@ -269,6 +290,12 @@ namespace Sporae.UI.UIToolkit.Lab
         private void OnDestroy()
         {
             GameLanguageSettings.OnLanguageChanged -= OnLanguageChanged;
+
+            if (_lab40MaterialGate != null)
+            {
+                _lab40MaterialGate.DraftStarted -= OnLab40DraftStarted;
+                _lab40MaterialGate.MaterialSelectionCancelled -= OnLab40MaterialCancelled;
+            }
         }
 
         private void Update()
@@ -296,21 +323,39 @@ namespace Sporae.UI.UIToolkit.Lab
             RefreshDisplay();
         }
 
+        /// <summary>
+        /// Gate LAB 4.0 post-scansione: readiness inventario → picker frutto XOR spora → draft blueprint.
+        /// Chiamata dalla Schermata 1 (Task 3) o da test/debug.
+        /// </summary>
+        public void BeginLab40MaterialGate()
+        {
+            if (_lab40MaterialGate == null)
+            {
+                SporiumLogger.LogError(LogCategory.UI, "[LabTerminal] LabBlueprintMaterialGateController non assegnato.");
+                return;
+            }
+
+            _lab40MaterialGate.BeginMaterialSelection();
+        }
+
         public void Show()
         {
             gameObject.SetActive(true);
             GameplayUiModalLock.SetMachineModalState(true);
             TryBindUI();
+
+            if (_root != null)
+                _root.pickingMode = PickingMode.Position;
+
+            // LAB 4.0: il terminale apre sempre Schermata 1.
+            // L'overlay è solo il wrapper modale che centra il pannello 1480x900.
             if (_overlay != null)
             {
                 _overlay.style.display = DisplayStyle.Flex;
                 _overlay.pickingMode = PickingMode.Position;
             }
 
-            if (_root != null)
-                _root.pickingMode = PickingMode.Position;
-
-            RefreshDisplay();
+            ShowLab40Screen1();
         }
 
         public void Hide()
@@ -320,6 +365,13 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 _overlay.style.display = DisplayStyle.None;
                 _overlay.pickingMode = PickingMode.Ignore;
+            }
+
+            // Nasconde anche Schermata 1 se aperta
+            if (_lab40Screen1 != null)
+            {
+                _lab40Screen1.style.display = DisplayStyle.None;
+                _lab40Screen1Open = false;
             }
 
             if (_root != null)
@@ -334,6 +386,13 @@ namespace Sporae.UI.UIToolkit.Lab
         /// </summary>
         private bool TryConsumeLabTerminalEscape()
         {
+            // Esc sulla Schermata 1 chiude il terminale
+            if (_lab40Screen1Open)
+            {
+                HideLab40Screen1();
+                return true;
+            }
+
             if (_overlay == null || _overlay.style.display != DisplayStyle.Flex)
                 return false;
 
@@ -445,7 +504,7 @@ namespace Sporae.UI.UIToolkit.Lab
             {
                 _btnCreateProject.clicked += () =>
                 {
-                    StartProjectWithAnalysis();
+                    ShowLab40Screen1();
                 };
             }
 
@@ -477,6 +536,31 @@ namespace Sporae.UI.UIToolkit.Lab
                 _btnProjectTypeHybrid.clicked += () => SelectProjectType(SeedProjectType.Hybrid);
             if (_btnProjectTypeNewProfile != null)
                 _btnProjectTypeNewProfile.clicked += () => SelectProjectType(SeedProjectType.NewProfile);
+            // LAB 4.0 — Schermata 1
+            _lab40Screen1 = _root.Q<VisualElement>("lab40-screen1");
+            _lab40KnowledgeBarFill = _root.Q<VisualElement>("lab40-s1-know-bar-fill");
+            _lab40KnowledgeScoreLabel = _root.Q<Label>("lab40-s1-know-score");
+            _lab40RegistryStatusLabel = _root.Q<Label>("lab40-s1-registry-status");
+            _lab40VoTextLabel = _root.Q<Label>("lab40-s1-vo-text");
+            _btnLab40CtaGenoscrittore = _root.Q<Button>("btn-lab40-cta-genoscrittore");
+            _btnLab40Screen1Back = _root.Q<Button>("btn-lab40-screen1-back");
+
+            if (_btnLab40Screen1Back != null)
+                _btnLab40Screen1Back.clicked += HideLab40Screen1;
+            if (_btnLab40CtaGenoscrittore != null)
+                _btnLab40CtaGenoscrittore.clicked += OnLab40CtaClicked;
+
+            // Nasconde la Schermata 1 all'avvio (builder la mostra per authoring)
+            if (_lab40Screen1 != null)
+                _lab40Screen1.style.display = DisplayStyle.None;
+
+            // Subscribe agli eventi del gate (se assegnato)
+            if (_lab40MaterialGate != null)
+            {
+                _lab40MaterialGate.DraftStarted += OnLab40DraftStarted;
+                _lab40MaterialGate.MaterialSelectionCancelled += OnLab40MaterialCancelled;
+            }
+
             if (_btnAnalysisOpenCurrentStep != null)
                 _btnAnalysisOpenCurrentStep.clicked += OpenCurrentStepFromAnalysis;
             if (_btnAnalysisCancelSelection != null)
@@ -680,6 +764,82 @@ namespace Sporae.UI.UIToolkit.Lab
             _projectDirectionChangedMessage = string.Empty;
             _projectTypeAnalysis = default;
             RefreshDisplay();
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // LAB 4.0 — Schermata 1 (Genoscrittore onboarding)
+        // ──────────────────────────────────────────────────────────────
+
+        private void ShowLab40Screen1()
+        {
+            if (_lab40Screen1 == null)
+                return;
+
+            RefreshLab40Screen1Data();
+            _lab40Screen1.style.display = DisplayStyle.Flex;
+            _lab40Screen1Open = true;
+        }
+
+        private void HideLab40Screen1()
+        {
+            if (_lab40Screen1 == null)
+                return;
+
+            _lab40Screen1.style.display = DisplayStyle.None;
+            _lab40Screen1Open = false;
+            // INDIETRO dalla Schermata 1 chiude il terminale
+            Hide();
+        }
+
+        private void RefreshLab40Screen1Data()
+        {
+            var knowledge = ServiceContainer.Instance?.Get<KnowledgeProgressionService>(suppressWarning: true);
+            if (knowledge != null)
+            {
+                var tier = knowledge.CurrentTier;
+                int score = knowledge.TotalScore;
+                // Rank va da 0 (Neofita) a 5 (Maestro): usa (rank+1)/6 come fill visuale
+                const int maxRank = 5;
+                float pct = Mathf.Clamp01((tier.Rank + 1) / (float)(maxRank + 1));
+
+                if (_lab40KnowledgeBarFill != null)
+                    _lab40KnowledgeBarFill.style.width = Length.Percent(Mathf.RoundToInt(pct * 100f));
+                if (_lab40KnowledgeScoreLabel != null)
+                    _lab40KnowledgeScoreLabel.text = $"{score}  [{knowledge.GetTierLabelLocalized()}]";
+            }
+
+            var blueprint = ServiceContainer.Instance?.Get<LabBlueprintService>(suppressWarning: true);
+            bool hasActive = blueprint != null && blueprint.HasDraftOrActiveProject;
+            if (_lab40RegistryStatusLabel != null)
+                _lab40RegistryStatusLabel.text = hasActive
+                    ? LocalizationManager.GetString("lab40.s1.registry_active")
+                    : LocalizationManager.GetString("lab40.s1.registry_idle");
+
+            if (_lab40VoTextLabel != null)
+                _lab40VoTextLabel.text = LocalizationManager.GetString("lab40.s1.vo_text");
+
+            if (_btnLab40CtaGenoscrittore != null)
+                _btnLab40CtaGenoscrittore.text = LocalizationManager.GetString("lab40.s1.btn_cta");
+            if (_btnLab40Screen1Back != null)
+                _btnLab40Screen1Back.text = LocalizationManager.GetString("lab40.s1.btn_back");
+        }
+
+        private void OnLab40CtaClicked()
+        {
+            HideLab40Screen1();
+            BeginLab40MaterialGate();
+        }
+
+        private void OnLab40DraftStarted(LabBlueprintState state)
+        {
+            // Bozza avviata: il picker ha già chiuso, ora aggiorna il board.
+            // Task 4 aprirà la Schermata 2 qui.
+            RefreshDisplay();
+        }
+
+        private void OnLab40MaterialCancelled()
+        {
+            // Il giocatore ha chiuso il picker senza scegliere: nessun avanzamento.
         }
 
         private void SelectProjectType(SeedProjectType type)
