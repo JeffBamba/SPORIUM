@@ -314,44 +314,47 @@ namespace _Project.Sporae.Core
                 if (vo == null)
                     yield break;
 
-            var config = Resources.Load<DemoAlphaNarrativeConfig>(NarrativeConfigResourcePath);
+                var config = Resources.Load<DemoAlphaNarrativeConfig>(NarrativeConfigResourcePath);
 
-            string kitchenLine = config != null && !string.IsNullOrWhiteSpace(config.Beat2KitchenLine)
-                ? config.Beat2KitchenLine
-                : DemoAlphaNarrativeDefaults.Beat2KitchenLine;
-            VoRegister kitchenReg = config != null
-                ? config.Beat2KitchenRegister
-                : DemoAlphaNarrativeDefaults.Beat2KitchenRegister;
-            var kitchenAdvance = config != null
-                ? config.Beat2KitchenSentenceAdvance
-                : DemoAlphaNarrativeDefaults.Beat2KitchenSentenceAdvance;
-            var kitchenHighlightWords = config != null && config.Beat2MissionHighlightWords != null && config.Beat2MissionHighlightWords.Count > 0
-                ? (System.Collections.Generic.IReadOnlyList<string>)config.Beat2MissionHighlightWords
-                : DemoAlphaNarrativeDefaults.Beat2MissionHighlightWords;
-            string kitchenHighlightHex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
-                ? config.MissionHighlightColorHex
-                : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
+                string kitchenLine = config != null && !string.IsNullOrWhiteSpace(config.Beat2KitchenLine)
+                    ? config.Beat2KitchenLine
+                    : DemoAlphaNarrativeDefaults.Beat2KitchenLine;
+                VoRegister kitchenReg = config != null
+                    ? config.Beat2KitchenRegister
+                    : DemoAlphaNarrativeDefaults.Beat2KitchenRegister;
+                var kitchenAdvance = config != null
+                    ? config.Beat2KitchenSentenceAdvance
+                    : DemoAlphaNarrativeDefaults.Beat2KitchenSentenceAdvance;
+                var kitchenHighlightWords = config != null && config.Beat2MissionHighlightWords != null && config.Beat2MissionHighlightWords.Count > 0
+                    ? (System.Collections.Generic.IReadOnlyList<string>)config.Beat2MissionHighlightWords
+                    : DemoAlphaNarrativeDefaults.Beat2MissionHighlightWords;
+                string kitchenHighlightHex = config != null && !string.IsNullOrWhiteSpace(config.MissionHighlightColorHex)
+                    ? config.MissionHighlightColorHex
+                    : DemoAlphaNarrativeDefaults.MissionHighlightColorHex;
 
-            var presentation = new VoLinePresentationOptions(
-                useMultiSentenceWhenSplit: false,
-                advanceMode: kitchenAdvance,
-                minReadSeconds: 0.55f,
-                readSecondsPerChar: 0.042f,
-                continueHintText: "Clicca o Spazio per continuare",
-                highlightWords: kitchenHighlightWords,
-                highlightColorHex: kitchenHighlightHex,
-                forceContinueAtEnd: true,
-                lockWorldInputWhileVisible: true,
-                enableCameraFocus: false,
-                cameraFocusOrthographicSize: 0f,
-                highlightColorHexes: null);
+                var presentation = new VoLinePresentationOptions(
+                    useMultiSentenceWhenSplit: false,
+                    advanceMode: kitchenAdvance,
+                    minReadSeconds: 0.55f,
+                    readSecondsPerChar: 0.042f,
+                    continueHintText: "Clicca o Spazio per continuare",
+                    highlightWords: kitchenHighlightWords,
+                    highlightColorHex: kitchenHighlightHex,
+                    forceContinueAtEnd: true,
+                    lockWorldInputWhileVisible: true,
+                    enableCameraFocus: false,
+                    cameraFocusOrthographicSize: 0f,
+                    highlightColorHexes: null);
 
-            bool voCompleted = false;
-            vo.ShowLine(kitchenLine, kitchenReg, null, () => voCompleted = true, false, presentation);
-            while (!voCompleted)
-                yield return null;
+                bool voCompleted = false;
 
+                // Activate breakfast mission/tracking as soon as the kitchen VO starts,
+                // so Mission Recap and consumption progress are aligned with what player hears.
                 AppendDemoBreakfastMissionIfPossible();
+                vo.ShowLine(kitchenLine, kitchenReg, null, () => voCompleted = true, false, presentation);
+                while (!voCompleted)
+                    yield return null;
+
                 _session.SetBeat(2);
             }
             finally
@@ -366,13 +369,13 @@ namespace _Project.Sporae.Core
             var cfg = LoadMissionConfigFromResources(BreakfastMissionResourcePath);
             if (mm == null || cfg == null)
                 return;
-
             mm.AppendIfMissing(cfg);
 
             var gm = ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
             var panel = ServiceContainer.Instance?.Get<PlayerInventoryPanelController>(suppressWarning: true);
             if (gm?.PlayerInventory == null || panel == null)
                 return;
+            
 
             DemoBreakfastMission.BeginTracking(gm.PlayerInventory, panel);
         }

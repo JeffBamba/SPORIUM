@@ -112,6 +112,7 @@ namespace _Project.Sporae.Core
                 _ateFood = true;
             if (IsDrink(typeId))
                 _drankWater = true;
+
             if (_ateFood != prevAte || _drankWater != prevDrank)
                 ProgressChanged?.Invoke();
         }
