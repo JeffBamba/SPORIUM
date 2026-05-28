@@ -43,6 +43,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private Label _speciesLabel;
         private Label _lifeStateLabel;
         private Label _stageDetailLabel;
+        private Label _conditionLineLabel;
         private Label _mainNeedLabel;
         private Label _hydrationLabel;
         private Label _phValueLabel;
@@ -67,6 +68,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private VisualElement _riskBar;
         private Label _fertilizerMeterLabel;
         private VisualElement _fertilizerBar;
+        private Label _lightStressMeterLabel;
+        private VisualElement _lightStressBar;
+        private VisualElement _needCard;
         private VisualElement _needRowSummary;
         private VisualElement _needRowHydration;
         private VisualElement _needRowPh;
@@ -89,6 +93,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private Button _additiveButton;
         private Button _pruneButton;
         private Button _fertilizeButton;
+        private VisualElement _actionsScroll;
         private Label _waterActionTitleLabel;
         private Label _waterActionSubtitleLabel;
         private Label _lightRedActionTitleLabel;
@@ -282,6 +287,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _speciesLabel = _document.rootVisualElement.Q<Label>("pcv4-species-text");
             _lifeStateLabel = _document.rootVisualElement.Q<Label>("pcv4-life-state");
             _stageDetailLabel = _document.rootVisualElement.Q<Label>("pcv4-stage-detail");
+            _conditionLineLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-line");
             _mainNeedLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need");
             _mainNeedSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-main-need-subtitle");
             _hydrationLabel = _document.rootVisualElement.Q<Label>("pcv4-hydration-label");
@@ -306,6 +312,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _hydrationBar = _document.rootVisualElement.Q<VisualElement>("pcv4-hydration-bar");
             _fertilizerMeterLabel = _document.rootVisualElement.Q<Label>("pcv4-fertilizer-label");
             _fertilizerBar = _document.rootVisualElement.Q<VisualElement>("pcv4-fertilizer-bar");
+            _lightStressMeterLabel = _document.rootVisualElement.Q<Label>("pcv4-light-stress-label");
+            _lightStressBar = _document.rootVisualElement.Q<VisualElement>("pcv4-light-stress-bar");
+            _needCard = _document.rootVisualElement.Q<VisualElement>("pcv4-need-card");
             _needRowSummary = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-summary");
             _needRowHydration = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-hydration");
             _needRowPh = _document.rootVisualElement.Q<VisualElement>("pcv4-need-row-ph");
@@ -326,6 +335,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _additiveButton = _document.rootVisualElement.Q<Button>("pcv4-action-additive");
             _pruneButton = _document.rootVisualElement.Q<Button>("pcv4-action-prune");
             _fertilizeButton = _document.rootVisualElement.Q<Button>("pcv4-action-fertilize");
+            _actionsScroll = _document.rootVisualElement.Q<VisualElement>("pcv4-actions-scroll");
             _waterActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-water-title");
             _waterActionSubtitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-water-subtitle");
             _lightRedActionTitleLabel = _document.rootVisualElement.Q<Label>("pcv4-action-light-red-title");
@@ -409,28 +419,36 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (_speciesLabel != null) _speciesLabel.text = model.SpeciesLine;
             if (_lifeStateLabel != null) _lifeStateLabel.text = model.LifeState;
             if (_stageDetailLabel != null) _stageDetailLabel.text = model.StageDetail;
-            if (_mainNeedLabel != null) _mainNeedLabel.text = model.MainNeed;
+            if (_conditionLineLabel != null) _conditionLineLabel.text = model.ConditionLine;
+            if (_mainNeedLabel != null) _mainNeedLabel.text = "PRIORITA OPERATIVE:";
             if (_mainNeedSubtitleLabel != null)
             {
-                _mainNeedSubtitleLabel.text = model.MainNeedSubtitle ?? string.Empty;
-                _mainNeedSubtitleLabel.style.display = string.IsNullOrWhiteSpace(model.MainNeedSubtitle)
+                string priorityText = BuildPriorityText(model);
+                _mainNeedSubtitleLabel.text = priorityText;
+                _mainNeedSubtitleLabel.style.display = string.IsNullOrWhiteSpace(priorityText)
                     ? DisplayStyle.None
                     : DisplayStyle.Flex;
             }
 
-            ApplyNeedTitleSignal(_mainNeedLabel, WorstNeedSignal(
-                model.HydrationNeedSignal, model.PhNeedSignal, model.FertilizerNeedSignal, model.ConditionNeedSignal));
             ApplyNeedTitleSignal(_needTitleHydration, model.HydrationNeedSignal);
             ApplyNeedTitleSignal(_needTitlePh, model.PhNeedSignal);
             ApplyNeedTitleSignal(_needTitleFert, model.FertilizerNeedSignal);
             ApplyNeedTitleSignal(_needTitleCond, model.ConditionNeedSignal);
+            ApplySignalTextClass(_lifeStateLabel, model.ConditionStatusSignal);
+            ApplySignalTextClass(_conditionLineLabel, model.ConditionStatusSignal);
+            ApplyNeedRowSignal(_needRowHydration, model.HydrationNeedSignal);
+            ApplyNeedRowSignal(_needRowPh, model.PhNeedSignal);
+            ApplyNeedRowSignal(_needRowFert, model.FertilizerNeedSignal);
+            ApplyNeedRowSignal(_needRowCond, model.ConditionNeedSignal);
+            ReorderNeedRowsBySignal(model);
 
             BindNeedRowTooltipData(model);
 
             if (_hydrationLabel != null) _hydrationLabel.text = model.HydrationText;
             if (_fertilizerMeterLabel != null) _fertilizerMeterLabel.text = model.FertilizerMeterLabel;
+            if (_lightStressMeterLabel != null) _lightStressMeterLabel.text = $"STRESS DA LUCE {model.LightStressPercentLine}";
             if (_phValueLabel != null) _phValueLabel.text = model.PhDomeAmbientValueText;
-            if (_phAffinityLabel != null) _phAffinityLabel.text = model.PhDomeBandShort;
+            if (_phAffinityLabel != null) _phAffinityLabel.text = $"pH preferito tra 50 e 80+ - Attuale {model.PhDomeDriftText}";
             if (_conditionSummaryLabel != null) _conditionSummaryLabel.text = model.LightStressPercentLine;
             if (_conditionPhAffinitySummaryLabel != null) _conditionPhAffinitySummaryLabel.text = model.PlantPhPreferenceLabel;
             if (_conditionMoldSummaryLabel != null) _conditionMoldSummaryLabel.text = model.MoldLevelLine;
@@ -447,13 +465,25 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (_shortIdLabel != null) _shortIdLabel.text = model.ShortPotId;
             if (_plantGlyphLabel != null) _plantGlyphLabel.text = model.IsEmpty ? "EMPTY" : model.LifeState;
 
-            FillSegments(_hydrationBar, Mathf.RoundToInt(model.HydrationPercent / 12.5f), "pcv4-segment--on");
-            FillSegments(_fertilizerBar, Mathf.RoundToInt(model.FertilizerPercent / 12.5f), "pcv4-segment--on");
+            FillSegments(_hydrationBar, Mathf.RoundToInt(model.HydrationPercent / 12.5f), SegmentClassForSignal(model.HydrationNeedSignal));
+            FillSegments(_fertilizerBar, Mathf.RoundToInt(model.FertilizerPercent / 12.5f), SegmentClassForSignal(model.FertilizerNeedSignal));
+            FillSegments(_lightStressBar, Mathf.RoundToInt(model.LightStressPercent / 12.5f), SegmentClassForSignal(model.ConditionNeedSignal));
             FillSegments(_riskBar, model.RiskSegments, "pcv4-segment--risk-on");
             BindRiskPanelVisibility(model);
             BindSecondaryRisk(model);
             BindActionButtons(model);
             ApplyLivePhDisplay();
+        }
+
+        private static string BuildPriorityText(PlantCard4vCareViewModel model)
+        {
+            if (model == null)
+                return string.Empty;
+            if (string.IsNullOrWhiteSpace(model.MainNeedSubtitle))
+                return model.MainNeed ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(model.MainNeed))
+                return model.MainNeedSubtitle;
+            return $"{model.MainNeed}: {model.MainNeedSubtitle}";
         }
 
         private static PlantCard4vNeedSignal WorstNeedSignal(
@@ -543,6 +573,102 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PlantCard4vNeedSignal.Warning => "pcv4-need-title--signal-warning",
                 _ => "pcv4-need-title--signal-ok"
             });
+        }
+
+        private static void ApplySignalTextClass(VisualElement element, PlantCard4vNeedSignal signal)
+        {
+            if (element == null)
+                return;
+
+            element.RemoveFromClassList("pcv4-signal-text--ok");
+            element.RemoveFromClassList("pcv4-signal-text--attention");
+            element.RemoveFromClassList("pcv4-signal-text--warning");
+            element.AddToClassList(signal switch
+            {
+                PlantCard4vNeedSignal.Attention => "pcv4-signal-text--attention",
+                PlantCard4vNeedSignal.Warning => "pcv4-signal-text--warning",
+                _ => "pcv4-signal-text--ok"
+            });
+        }
+
+        private static void ApplyNeedRowSignal(VisualElement row, PlantCard4vNeedSignal signal)
+        {
+            if (row == null)
+                return;
+
+            row.RemoveFromClassList("pcv4-need-item--signal-ok");
+            row.RemoveFromClassList("pcv4-need-item--signal-attention");
+            row.RemoveFromClassList("pcv4-need-item--signal-warning");
+            row.AddToClassList(signal switch
+            {
+                PlantCard4vNeedSignal.Attention => "pcv4-need-item--signal-attention",
+                PlantCard4vNeedSignal.Warning => "pcv4-need-item--signal-warning",
+                _ => "pcv4-need-item--signal-ok"
+            });
+        }
+
+        private static string SegmentClassForSignal(PlantCard4vNeedSignal signal)
+        {
+            return signal switch
+            {
+                PlantCard4vNeedSignal.Attention => "pcv4-segment--attention",
+                PlantCard4vNeedSignal.Warning => "pcv4-segment--warning",
+                _ => "pcv4-segment--ok"
+            };
+        }
+
+        private void ReorderNeedRowsBySignal(PlantCard4vCareViewModel model)
+        {
+            if (_needCard == null || model == null)
+                return;
+
+            var rows = new[]
+            {
+                new NeedRowOrder(_needRowHydration, model.HydrationNeedSignal, 0),
+                new NeedRowOrder(_needRowPh, model.PhNeedSignal, 1),
+                new NeedRowOrder(_needRowFert, model.FertilizerNeedSignal, 2),
+                new NeedRowOrder(_needRowCond, model.ConditionNeedSignal, 3),
+            };
+
+            Array.Sort(rows, (a, b) =>
+            {
+                int rank = RankNeedSignal(b.Signal).CompareTo(RankNeedSignal(a.Signal));
+                return rank != 0 ? rank : a.DefaultOrder.CompareTo(b.DefaultOrder);
+            });
+
+            for (int i = 0; i < rows.Length; i++)
+            {
+                VisualElement row = rows[i].Row;
+                if (row == null)
+                    continue;
+                if (row.parent == _needCard)
+                    row.RemoveFromHierarchy();
+                _needCard.Add(row);
+            }
+        }
+
+        private static int RankNeedSignal(PlantCard4vNeedSignal signal)
+        {
+            return signal switch
+            {
+                PlantCard4vNeedSignal.Warning => 2,
+                PlantCard4vNeedSignal.Attention => 1,
+                _ => 0
+            };
+        }
+
+        private readonly struct NeedRowOrder
+        {
+            public readonly VisualElement Row;
+            public readonly PlantCard4vNeedSignal Signal;
+            public readonly int DefaultOrder;
+
+            public NeedRowOrder(VisualElement row, PlantCard4vNeedSignal signal, int defaultOrder)
+            {
+                Row = row;
+                Signal = signal;
+                DefaultOrder = defaultOrder;
+            }
         }
 
         private void BindNeedRowTooltipData(PlantCard4vCareViewModel model)
@@ -702,6 +828,70 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             SetActionButton(_additiveButton, _additiveActionTitleLabel, _additiveActionSubtitleLabel, PlantCard4vActionKind.Additive, "ADDITIVO pH", model);
             SetActionButton(_pruneButton, _pruneActionTitleLabel, _pruneActionSubtitleLabel, PlantCard4vActionKind.Prune, "POTARE", model);
             SetActionButton(_fertilizeButton, _fertilizeActionTitleLabel, _fertilizeActionSubtitleLabel, PlantCard4vActionKind.Fertilize, "FERTILIZZARE", model);
+            RestoreDefaultActionOrder();
+            MovePrimaryActionToTop(firstSlotAction, redKind, blueKind, model.PrimaryAction);
+        }
+
+        private void RestoreDefaultActionOrder()
+        {
+            if (_actionsScroll == null)
+                return;
+
+            InsertActionAtEnd(_waterButton);
+            InsertActionAtEnd(_lightRedButton);
+            InsertActionAtEnd(_lightBlueButton);
+            InsertActionAtEnd(_additiveButton);
+            InsertActionAtEnd(_pruneButton);
+            InsertActionAtEnd(_fertilizeButton);
+        }
+
+        private void InsertActionAtEnd(Button button)
+        {
+            if (button == null)
+                return;
+
+            if (button.parent == _actionsScroll)
+                button.RemoveFromHierarchy();
+            _actionsScroll.Add(button);
+        }
+
+        private void MovePrimaryActionToTop(
+            PlantCard4vActionKind firstSlotAction,
+            PlantCard4vActionKind redKind,
+            PlantCard4vActionKind blueKind,
+            PlantCard4vActionKind primaryAction)
+        {
+            if (_actionsScroll == null || primaryAction == PlantCard4vActionKind.None)
+                return;
+
+            Button primaryButton = ResolveActionButtonForKind(firstSlotAction, redKind, blueKind, primaryAction);
+            if (primaryButton == null || primaryButton.parent != _actionsScroll)
+                return;
+
+            primaryButton.RemoveFromHierarchy();
+            _actionsScroll.Insert(0, primaryButton);
+        }
+
+        private Button ResolveActionButtonForKind(
+            PlantCard4vActionKind firstSlotAction,
+            PlantCard4vActionKind redKind,
+            PlantCard4vActionKind blueKind,
+            PlantCard4vActionKind action)
+        {
+            if (firstSlotAction == action)
+                return _waterButton;
+            if (redKind == action)
+                return _lightRedButton;
+            if (blueKind == action)
+                return _lightBlueButton;
+
+            return action switch
+            {
+                PlantCard4vActionKind.Additive => _additiveButton,
+                PlantCard4vActionKind.Prune => _pruneButton,
+                PlantCard4vActionKind.Fertilize => _fertilizeButton,
+                _ => null
+            };
         }
 
         private void BindSecondaryRisk(PlantCard4vCareViewModel model)
@@ -1111,7 +1301,11 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             for (int i = 0; i < segments.Count; i++)
             {
                 segments[i].RemoveFromClassList("pcv4-segment--on");
+                segments[i].RemoveFromClassList("pcv4-segment--ok");
+                segments[i].RemoveFromClassList("pcv4-segment--attention");
+                segments[i].RemoveFromClassList("pcv4-segment--warning");
                 segments[i].RemoveFromClassList("pcv4-segment--risk-on");
+                segments[i].RemoveFromClassList("pcv4-segment--light-on");
                 if (i < clamped)
                     segments[i].AddToClassList(fillClass);
             }

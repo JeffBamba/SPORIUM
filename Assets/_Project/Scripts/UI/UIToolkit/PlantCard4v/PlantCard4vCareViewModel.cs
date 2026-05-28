@@ -54,6 +54,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string SpeciesLine { get; private set; }
         public string LifeState { get; private set; }
         public string StageDetail { get; private set; }
+        public string ConditionLine { get; private set; }
+        public PlantCard4vNeedSignal ConditionStatusSignal { get; private set; }
         public string MainNeed { get; private set; }
         public string MainNeedSubtitle { get; private set; }
         public string MainRisk { get; private set; }
@@ -161,6 +163,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             SpeciesLine = ResolveSpeciesLine(state, plantData);
             LifeState = FormatLifeState((PlantStage)state.Stage, IsDead);
             StageDetail = $"FASE {Mathf.Max(0, state.Stage)} - {FormatStageDetail((PlantStage)state.Stage, _phraseVariantSalt)}";
+            ConditionLine = $"Condizione: {FormatConditionDisplayName((PlantCondition)state.ConditionLabel, state.ConditionScore)}";
+            ConditionStatusSignal = ResolveConditionStatusSignal((PlantCondition)state.ConditionLabel, state.ConditionScore);
             IsHarvestReady = state.Stage == (int)PlantStage.HarvestReady && state.AmountFruits > 0f;
 
             int maxHydration = config != null ? Mathf.Max(1, config.MaxHydration) : 10;
@@ -211,6 +215,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             SpeciesLine = "Specie: nessuna";
             LifeState = "VUOTO";
             StageDetail = "NESSUNA ATTIVITA' RILEVATA";
+            ConditionLine = "Condizione: N/D";
+            ConditionStatusSignal = PlantCard4vNeedSignal.Ok;
             MainNeed = "Attende un seme";
             MainNeedSubtitle = "Serve una procedura d'impianto al Terminale POT per iniziare un ciclo vitale.";
             MainRisk = "Nessuna vita da proteggere";
@@ -341,22 +347,20 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (!string.IsNullOrWhiteSpace(FertilizerText) && FertilizerText != "---")
                 FertilizerRowTooltip += $" Indicatore: {FertilizerText}.";
 
-            switch (ConditionText)
+            if (LightStressPercent >= 80)
             {
-                case "CRITICA":
-                case "MORTA":
-                    ConditionNeedSignal = PlantCard4vNeedSignal.Warning;
-                    break;
-                case "STRESSATA":
-                case "DEBOLE":
-                    ConditionNeedSignal = PlantCard4vNeedSignal.Attention;
-                    break;
-                default:
-                    ConditionNeedSignal = PlantCard4vNeedSignal.Ok;
-                    break;
+                ConditionNeedSignal = PlantCard4vNeedSignal.Warning;
+            }
+            else if (LightStressPercent >= 40)
+            {
+                ConditionNeedSignal = PlantCard4vNeedSignal.Attention;
+            }
+            else
+            {
+                ConditionNeedSignal = PlantCard4vNeedSignal.Ok;
             }
 
-            ConditionRowTooltip = $"Condizione tessuti: {ConditionText}. Rischio muffa: {MoldText}.";
+            ConditionRowTooltip = $"Stress da luce {LightStressPercent}%. LED preferito: {PreferredLightLine}.";
 
             if (ShouldPreserveNarrativeMainNeed(state))
             {
@@ -424,7 +428,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             Add(HydrationNeedSignal, "idratazione");
             Add(PhNeedSignal, "pH cupola");
             Add(FertilizerNeedSignal, "nutrimento");
-            Add(ConditionNeedSignal, "condizioni");
+            Add(ConditionNeedSignal, "luce");
 
             if (urgent.Count == 0 && watch.Count == 0)
             {
@@ -984,6 +988,38 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 PlantCondition.Critica => "CRITICA",
                 PlantCondition.Morta => "MORTA",
                 _ => state.ConditionScore >= 70 ? "STABILE" : state.ConditionScore >= 40 ? "STRESSATA" : "CRITICA"
+            };
+        }
+
+        private static string FormatConditionDisplayName(PlantCondition condition, int conditionScore)
+        {
+            return condition switch
+            {
+                PlantCondition.Rigogliosa => "Rigogliosa",
+                PlantCondition.Sana => "Sana",
+                PlantCondition.Stressata => "Stressata",
+                PlantCondition.Appassita => "Appassita",
+                PlantCondition.Critica => "Critica",
+                PlantCondition.Morta => "Morta",
+                _ => conditionScore >= 70 ? "Sana" : conditionScore >= 40 ? "Stressata" : "Critica"
+            };
+        }
+
+        private static PlantCard4vNeedSignal ResolveConditionStatusSignal(PlantCondition condition, int conditionScore)
+        {
+            return condition switch
+            {
+                PlantCondition.Rigogliosa => PlantCard4vNeedSignal.Ok,
+                PlantCondition.Sana => PlantCard4vNeedSignal.Ok,
+                PlantCondition.Stressata => PlantCard4vNeedSignal.Attention,
+                PlantCondition.Appassita => PlantCard4vNeedSignal.Attention,
+                PlantCondition.Critica => PlantCard4vNeedSignal.Warning,
+                PlantCondition.Morta => PlantCard4vNeedSignal.Warning,
+                _ => conditionScore >= 70
+                    ? PlantCard4vNeedSignal.Ok
+                    : conditionScore >= 40
+                        ? PlantCard4vNeedSignal.Attention
+                        : PlantCard4vNeedSignal.Warning
             };
         }
 
