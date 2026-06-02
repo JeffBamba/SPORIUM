@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/_Project/UI/UIToolkit/HUD/TopBar.uss?fileID=7433441132597879392&amp;guid=b96806e35b5e7084e80a6d7636562790&amp;type=3#TopBar" />
-    <ui:VisualElement name="top-bar" class="top-bar" style="border-bottom-width: 4px; height: 80px;">
+    <ui:VisualElement name="top-bar" class="top-bar" style="border-bottom-width: 2.5px; height: 80px; border-bottom-color: rgb(93, 182, 227);">
         <ui:VisualElement name="corner-top-left" class="pixel-corner corner-top-left" />
         <ui:VisualElement name="corner-top-right" class="pixel-corner corner-top-right" />
         <ui:VisualElement name="corner-bottom-left" class="pixel-corner corner-bottom-left" />

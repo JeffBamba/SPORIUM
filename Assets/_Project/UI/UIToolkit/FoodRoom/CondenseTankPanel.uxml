@@ -8,78 +8,118 @@
         <ui:VisualElement name="condense-tank-overlay" class="condense-tank-overlay">
             <ui:VisualElement name="condense-tank-panel" class="sp-panel condense-tank-panel">
                 <ui:VisualElement name="condense-header" class="sp-panel__header sp-header condense-header">
-                    <ui:VisualElement class="condense-header-left">
+                    <ui:VisualElement class="condense-status-row">
                         <ui:Label name="condense-status" text="KTCH-COND-001 • SERBATOIO ONLINE" class="sp-label condense-status" />
-                        <ui:VisualElement name="condense-title-row" class="condense-title-row">
-                            <ui:Label text="💧" class="condense-title-icon" />
-                            <ui:Label name="condense-title" text="SERBATOIO DI CONDENSA" class="sp-header__title condense-title" />
-                        </ui:VisualElement>
-                        <ui:Label name="condense-subtitle" text="Raccolta e potabilizzazione acqua grezza • Linea separata dalla sintesi alimentare." class="sp-header__subtitle condense-subtitle" />
+                        <ui:Button name="btn-close" text="X" class="sp-header__right sp-button sp-button--danger condense-close" />
                     </ui:VisualElement>
-                    <ui:Button name="btn-close" text="✕" class="sp-header__right sp-button sp-button--danger condense-close" />
+                    <ui:VisualElement class="condense-hero-card">
+                        <ui:Label text="H2O" class="condense-title-icon" />
+                        <ui:VisualElement class="condense-hero-copy">
+                            <ui:Label name="condense-title" text="SERBATOIO DI CONDENSA" class="sp-header__title condense-title" />
+                            <ui:Label name="condense-subtitle" text="Raccolta e potabilizzazione acqua grezza • Linea separata dalla sintesi alimentare." class="sp-header__subtitle condense-subtitle" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="condense-content" class="sp-panel__content condense-content">
                     <ui:VisualElement name="hydration-section" class="section-hydration">
                         <ui:VisualElement name="hydration-title-row" class="section-title-row teal">
-                            <ui:Label text="💧" class="section-icon" />
                             <ui:Label text="LINEA IDRATAZIONE" class="sp-title section-title" />
                         </ui:VisualElement>
                         <ui:VisualElement name="hydration-line-box" class="hydration-line-box">
-                            <ui:VisualElement name="hydration-text-block" class="hydration-text-block">
-                                <ui:Label name="hydration-label" text="GREZZA → ACQUA POTABILE" class="hydration-label" />
-                                <ui:Label name="hydration-flavor" text="Ogni goccia riciclata, nessuna ricordata." class="hydration-flavor" />
-                            </ui:VisualElement>
-                            <ui:Label text="💧" class="hydration-drop-icon" />
-                            <ui:VisualElement name="hydration-units-row" class="hydration-units-row">
-                                <ui:Label text="Unità" class="hydration-units-label" />
-                                <ui:Button name="btn-purify-minus" text="-" class="sp-button hydration-units-btn" />
-                                <ui:Label name="hydration-units-value" text="0" class="hydration-units-value" />
-                                <ui:Button name="btn-purify-plus" text="+" class="sp-button hydration-units-btn" />
+                            <ui:VisualElement class="hydration-main-row">
+                                <ui:VisualElement class="hydration-flow-row">
+                                    <ui:VisualElement class="hydration-stage hydration-stage--raw">
+                                        <ui:Label text="GREZZA" class="hydration-stage-title" />
+                                        <ui:Label text="ACQUA NON POTABILE" class="hydration-stage-caption" />
+                                        <ui:VisualElement class="condense-image-placeholder condense-image-placeholder--drop">
+                                            <ui:Label text="RAW" class="condense-image-placeholder__text" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:Label text=">>>" class="hydration-flow-arrow" />
+                                    <ui:VisualElement class="hydration-stage hydration-stage--filter">
+                                        <ui:VisualElement class="condense-image-placeholder condense-image-placeholder--filter">
+                                            <ui:Label text="FILTER" class="condense-image-placeholder__text" />
+                                        </ui:VisualElement>
+                                        <ui:Label text="FILTRAZIONE" class="hydration-stage-title hydration-stage-title--bottom" />
+                                    </ui:VisualElement>
+                                    <ui:Label text=">>>" class="hydration-flow-arrow" />
+                                    <ui:VisualElement name="hydration-text-block" class="hydration-text-block hydration-stage hydration-stage--potable">
+                                        <ui:Label name="hydration-label" text="ACQUA POTABILE" class="hydration-stage-title hydration-label" />
+                                        <ui:Label name="hydration-flavor" text="PRONTA ALL&apos;USO" class="hydration-stage-caption hydration-flavor" />
+                                        <ui:VisualElement class="condense-image-placeholder condense-image-placeholder--drop condense-image-placeholder--potable">
+                                            <ui:Label text="H2O" class="condense-image-placeholder__text" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                                <ui:VisualElement class="hydration-controls-divider" />
+                                <ui:VisualElement name="hydration-units-row" class="hydration-units-row">
+                                    <ui:Label text="H2O" class="hydration-drop-icon" />
+                                    <ui:Label text="Unità" class="hydration-units-label" />
+                                    <ui:Button name="btn-purify-minus" text="-" class="sp-button hydration-units-btn" />
+                                    <ui:Label name="hydration-units-value" text="0" class="hydration-units-value" />
+                                    <ui:Button name="btn-purify-plus" text="+" class="sp-button hydration-units-btn" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                             <ui:VisualElement name="hydration-status-row" class="hydration-status-row">
+                                <ui:Label text="i" class="status-line-icon status-line-icon--blue" />
                                 <ui:Label name="hydration-status-text" text="In attesa di acqua grezza." class="hydration-status-text" />
                             </ui:VisualElement>
                         </ui:VisualElement>
-                    </ui:VisualElement>
-
-                    <ui:VisualElement name="water-progress-block" class="water-progress-block">
-                        <ui:Label name="water-progress-label" text="Potabilizzazione in corso" class="water-progress-label" />
-                        <ui:VisualElement name="water-progress-track" class="water-progress-track">
-                            <ui:VisualElement name="water-progress-fill" class="water-progress-fill" />
-                            <ui:VisualElement name="water-progress-shine" class="water-progress-shine" />
+                        <ui:VisualElement name="water-progress-block" class="water-progress-block">
+                            <ui:Label name="water-progress-label" text="Potabilizzazione in corso" class="water-progress-label" />
+                            <ui:VisualElement name="water-progress-track" class="water-progress-track">
+                                <ui:VisualElement name="water-progress-fill" class="water-progress-fill" />
+                                <ui:VisualElement name="water-progress-shine" class="water-progress-shine" />
+                            </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
 
                     <ui:VisualElement name="condensation-collect-section" class="condensation-collect-section">
                         <ui:VisualElement name="condensation-title-row" class="section-title-row condensation">
-                            <ui:Label text="☔" class="section-icon" />
                             <ui:Label name="condensation-section-title" text="RACCOLTA CONDENSA DOME" class="sp-title section-title" />
                         </ui:VisualElement>
                         <ui:VisualElement name="condensation-collect-box" class="condensation-collect-box">
-                            <ui:VisualElement name="condensation-info-row" class="condensation-info-row">
-                                <ui:VisualElement name="condensation-text-block" class="condensation-text-block">
-                                    <ui:Label name="condensation-label" text="ACCUMULO CONDENSA" class="condensation-label" />
-                                    <ui:Label name="condensation-flavor" text="Condensa generata dalla Dome, pronta per diventare acqua grezza." class="condensation-flavor" />
+                            <ui:VisualElement class="condensation-visual-column">
+                                <ui:VisualElement class="condense-image-placeholder condense-image-placeholder--tank">
+                                    <ui:Label text="TANK" class="condense-image-placeholder__text" />
                                 </ui:VisualElement>
-                                <ui:Label name="condensation-value" text="0%" class="condensation-value" />
                             </ui:VisualElement>
-                            <ui:VisualElement name="condensation-progress-track" class="condensation-progress-track">
-                                <ui:VisualElement name="condensation-progress-fill" class="condensation-progress-fill" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="condensation-status-row" class="condensation-status-row">
-                                <ui:VisualElement name="condensation-status-text-col" class="condensation-status-text-col">
-                                    <ui:Label name="condensation-status-text" text="Accumulo insufficiente." class="condensation-status-text" />
-                                    <ui:Label name="condensation-forecast" text="Previsione raccolta: —" class="condensation-forecast" />
+                            <ui:VisualElement class="condensation-divider" />
+                            <ui:VisualElement class="condensation-data-column">
+                                <ui:VisualElement name="condensation-info-row" class="condensation-info-row">
+                                    <ui:VisualElement name="condensation-text-block" class="condensation-text-block">
+                                        <ui:Label name="condensation-label" text="ACCUMULO CONDENSA" class="condensation-label" />
+                                        <ui:Label name="condensation-flavor" text="Condensa generata dalla Dome, pronta per diventare acqua grezza." class="condensation-flavor" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="condensation-value" text="0%" class="condensation-value" />
                                 </ui:VisualElement>
-                                <ui:Button name="btn-collect-dirty-water" text="RACCOGLI ACQUA SPORCA" class="sp-button sp-button--secondary condensation-collect-button" />
+                                <ui:VisualElement name="condensation-progress-track" class="condensation-progress-track">
+                                    <ui:VisualElement name="condensation-progress-fill" class="condensation-progress-fill" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="condensation-progress-markers">
+                                    <ui:Label text="0%" class="condensation-progress-marker" />
+                                    <ui:Label text="50%" class="condensation-progress-marker condensation-progress-marker--center" />
+                                    <ui:Label text="100%" class="condensation-progress-marker condensation-progress-marker--right" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="condensation-status-row" class="condensation-status-row">
+                                    <ui:Label text="!" class="status-line-icon status-line-icon--green" />
+                                    <ui:VisualElement name="condensation-status-text-col" class="condensation-status-text-col">
+                                        <ui:Label name="condensation-status-text" text="Accumulo insufficiente." class="condensation-status-text" />
+                                        <ui:Label name="condensation-forecast" text="Previsione raccolta: —" class="condensation-forecast" />
+                                    </ui:VisualElement>
+                                    <ui:Button name="btn-collect-dirty-water" text="RACCOGLI ACQUA SPORCA" class="sp-button sp-button--secondary condensation-collect-button" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="condense-bottom-bar" class="sp-panel__footer condense-bottom-bar">
-                    <ui:Label name="condense-bottom-hint" text="Seleziona unità di acqua grezza da potabilizzare" class="sp-text--dim condense-bottom-hint" />
+                    <ui:VisualElement class="condense-bottom-hint-wrap">
+                        <ui:Label text="i" class="status-line-icon status-line-icon--blue" />
+                        <ui:Label name="condense-bottom-hint" text="Seleziona unità di acqua grezza da potabilizzare" class="sp-text--dim condense-bottom-hint" />
+                    </ui:VisualElement>
                     <ui:Button name="btn-purify-bottom" text="💧 POTABILIZZA ACQUA" class="sp-button sp-button--secondary condense-action-button btn-purify" />
                 </ui:VisualElement>
             </ui:VisualElement>

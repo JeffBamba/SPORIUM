@@ -278,6 +278,7 @@
 }
 
 .pcv4-right-panel .pcv4-condition-card {
+    min-height: 236px;
     margin-top: 0;
     margin-bottom: 12px;
 }
@@ -767,6 +768,34 @@
     font-size: 13px;
     color: rgb(192, 215, 200);
     -unity-text-align: middle-right;
+}
+
+.pcv4-kv-value--wide {
+    min-width: 190px;
+    font-size: 11px;
+}
+
+.pcv3-a9-suggestions {
+    display: flex;
+    flex-shrink: 0;
+    min-height: 78px;
+    margin-top: 10px;
+    padding-top: 8px;
+    padding-right: 8px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    border-width: 1px;
+    border-top-width: 1px;
+    border-color: rgba(127, 255, 122, 0.34);
+    border-radius: 5px;
+    background-color: rgba(10, 28, 18, 0.42);
+    font-size: 12px;
+    color: rgb(245, 247, 250);
+    white-space: normal;
+}
+
+.pcv4-a9-suggestions {
+    width: 100%;
 }
 
 .pcv4-chamber {

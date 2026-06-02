@@ -85,6 +85,10 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         public string MoldLevelLine { get; private set; }
         /// <summary>LED richiesto in questa fase, se noto.</summary>
         public string PreferredLightLine { get; private set; }
+        /// <summary>Wiring del sistema esistente DaysConsecutiveOptimal / durationDays per il prossimo stadio.</summary>
+        public string StageDaysLine { get; private set; }
+        /// <summary>Sintesi stile A9 del Terminal POT, mostrata nella card tecnica.</summary>
+        public string A9SuggestionLine { get; private set; }
         /// <summary>True quando mostrare blocco rischi dettagliato (non stato "tutto stabile").</summary>
         public bool ShowRiskDetailPanel { get; private set; }
         public string FertilizerText { get; private set; }
@@ -163,7 +167,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             SpeciesLine = ResolveSpeciesLine(state, plantData);
             LifeState = FormatLifeState((PlantStage)state.Stage, IsDead);
             StageDetail = $"FASE {Mathf.Max(0, state.Stage)} - {FormatStageDetail((PlantStage)state.Stage, _phraseVariantSalt)}";
-            ConditionLine = $"Condizione: {FormatConditionDisplayName((PlantCondition)state.ConditionLabel, state.ConditionScore)}";
+            ConditionLine = $"Condizione: {FormatConditionDisplayName((PlantCondition)state.ConditionLabel, state.ConditionScore)} | Trend: {FormatTrendSymbol((ForecastDirection)state.ForecastDirection)}";
             ConditionStatusSignal = ResolveConditionStatusSignal((PlantCondition)state.ConditionLabel, state.ConditionScore);
             IsHarvestReady = state.Stage == (int)PlantStage.HarvestReady && state.AmountFruits > 0f;
 
@@ -179,6 +183,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             ResolveDomePhRow(phSystem);
             PlantPhPreferenceLabel = ResolvePlantPhPreferenceLabel(plantData);
             PreferredLightLine = ResolvePreferredLightLine(stageReq);
+            StageDaysLine = ResolveStageDaysLine(state, stageReq);
             MoldLevelLine = $"Lvl {Mathf.Clamp(state.MoldRiskLevel, 0, 99)}";
             FertilizerText = ResolveFertilizerText(state, stageReq);
             FertilizerPercent = Mathf.Clamp(state.FertilizerLevel, 0, 100);
@@ -188,6 +193,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
 
             ResolveNeedRiskAndActions(state, plantData, stageReq, config, phSystem, currentPh);
             ResolveNeedRowSignalsAndTooltips(state, plantData, stageReq, phSystem, currentPh);
+            A9SuggestionLine = ResolveA9SuggestionLine(state, plantData, stageReq, phSystem, currentPh);
             ResolveFooterHardwareStatus(state);
             FooterStateLine = $"{FormatLifeState((PlantStage)state.Stage, IsDead)} - {BuildFooterForStage((PlantStage)state.Stage, IsDead, _phraseVariantSalt)}";
 
@@ -232,6 +238,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             ResolveDomePhRow(phSystem);
             PlantPhPreferenceLabel = "---";
             PreferredLightLine = "---";
+            StageDaysLine = "---";
+            A9SuggestionLine = "<color=#C0C8C5>Nessuna pianta nel vaso. Usa il Terminal POT per una procedura di impianto.</color>";
             MoldLevelLine = "Lvl 0";
             FertilizerText = "---";
             FertilizerPercent = 0;
@@ -520,6 +528,72 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 return "NESSUNA";
 
             return req.Value == LedType.Blue ? "BLU" : "ROSSA";
+        }
+
+        private static string ResolveStageDaysLine(PotStateModel state, StageRequirements stageReq)
+        {
+            if (state == null || stageReq == null)
+                return "---";
+
+            PlantStage stage = (PlantStage)state.Stage;
+            if (stage == PlantStage.HarvestReady || stage == PlantStage.Resting || stage == PlantStage.Empty)
+                return "---";
+
+            int requiredOptimalDays = stage == PlantStage.Seed ? 1 : Mathf.Max(1, stageReq.durationDays);
+            int currentOptimalDays = Mathf.Clamp(state.DaysConsecutiveOptimal, 0, requiredOptimalDays);
+            return $"{currentOptimalDays}/{requiredOptimalDays} (Necessari per prossimo stadio)";
+        }
+
+        private string ResolveA9SuggestionLine(PotStateModel state, PlantData plantData, StageRequirements stageReq, PhSystem phSystem, float currentPh)
+        {
+            const string colGreen = "#7FFF7A";
+            const string colYellow = "#E6C96F";
+            const string colRed = "#D35F5F";
+            const string colBlue = "#5DB6E3";
+            const string colDim = "#C0C8C5";
+
+            if (state == null)
+                return $"<color={colDim}>Dati pianta non disponibili.</color>";
+            if (plantData == null)
+                return $"<color={colDim}>Dati specie non disponibili. Usa STATUS nel Terminal POT.</color>";
+
+            PlantCondition condition = (PlantCondition)state.ConditionLabel;
+            string conditionColor = ResolveConditionStatusSignal(condition, state.ConditionScore) switch
+            {
+                PlantCard4vNeedSignal.Warning => colRed,
+                PlantCard4vNeedSignal.Attention => colYellow,
+                _ => colGreen
+            };
+            string conditionName = FormatConditionDisplayName(condition, state.ConditionScore).ToUpperInvariant();
+            string primaryDriver = ResolveA9PrimaryDriver();
+            string phLine = phSystem != null && plantData != null && !plantData.IsPhInOptimalRange(currentPh)
+                ? $" <color={colYellow}>pH fuori target.</color>"
+                : string.Empty;
+
+            return $"<color={colDim}>STATO:</color> <color={conditionColor}>{conditionName} ({state.ConditionScore}%)</color>\n" +
+                   $"<color={colDim}>FATTORI:</color> {primaryDriver}{phLine}\n" +
+                   $"<color={colBlue}>></color> <color={colDim}>Digita</color> <color={colGreen}>STATUS</color> <color={colDim}>nel Terminal POT per analisi completa.</color>";
+        }
+
+        private string ResolveA9PrimaryDriver()
+        {
+            if (HydrationNeedSignal == PlantCard4vNeedSignal.Warning)
+                return "<color=#D35F5F>idratazione</color>";
+            if (PhNeedSignal == PlantCard4vNeedSignal.Warning)
+                return "<color=#D35F5F>pH</color>";
+            if (FertilizerNeedSignal == PlantCard4vNeedSignal.Warning)
+                return "<color=#D35F5F>nutrimento</color>";
+            if (ConditionNeedSignal == PlantCard4vNeedSignal.Warning)
+                return "<color=#D35F5F>luce</color>";
+            if (HydrationNeedSignal == PlantCard4vNeedSignal.Attention)
+                return "<color=#E6C96F>idratazione</color>";
+            if (PhNeedSignal == PlantCard4vNeedSignal.Attention)
+                return "<color=#E6C96F>pH</color>";
+            if (FertilizerNeedSignal == PlantCard4vNeedSignal.Attention)
+                return "<color=#E6C96F>nutrimento</color>";
+            if (ConditionNeedSignal == PlantCard4vNeedSignal.Attention)
+                return "<color=#E6C96F>luce</color>";
+            return "<color=#7FFF7A>parametri principali in range</color>";
         }
 
         private void ResolveNeedRiskAndActions(
@@ -1005,6 +1079,16 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             };
         }
 
+        private static string FormatTrendSymbol(ForecastDirection trend)
+        {
+            return trend switch
+            {
+                ForecastDirection.Up => "↑",
+                ForecastDirection.Down => "↓",
+                _ => "-"
+            };
+        }
+
         private static PlantCard4vNeedSignal ResolveConditionStatusSignal(PlantCondition condition, int conditionScore)
         {
             return condition switch
@@ -1153,9 +1237,19 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         {
             string secondary = PickSecondaryVoSentence(primaryTopic, state, plantData, stageReq, phSystem, currentPh, out VoParamTopic secTopic);
             string trend = FormatVoTrendSentence(state);
-            VoHintLine = JoinVoSentences(primarySentence, secondary, trend);
+            string statusHint = ShouldAppendTerminalStatusVoHint(state)
+                ? "Per un'analisi dettagliata, usa il comando Status nel Terminal POT."
+                : null;
+            VoHintLine = JoinVoSentences(primarySentence, secondary, trend, statusHint);
             int fd = state != null ? state.ForecastDirection : 1;
             VoHintId = $"{voIdBase}|{(int)secTopic}|{fd}";
+        }
+
+        private bool ShouldAppendTerminalStatusVoHint(PotStateModel state)
+        {
+            if (state == null || state.IsEmpty || !state.HasPlant)
+                return false;
+            return PhraseRot(_phraseVariantSalt) % 4 == 0;
         }
 
         private string PickSecondaryVoSentence(
@@ -1268,7 +1362,7 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             };
         }
 
-        private static string JoinVoSentences(string primary, string secondary, string trend)
+        private static string JoinVoSentences(string primary, string secondary, string trend, string extra = null)
         {
             static string Norm(string s)
             {
@@ -1280,7 +1374,9 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
                 return s;
             }
 
-            return $"{Norm(primary)}\n{Norm(secondary)}\n{Norm(trend)}".Trim();
+            string baseText = $"{Norm(primary)}\n{Norm(secondary)}\n{Norm(trend)}".Trim();
+            string extraText = Norm(extra);
+            return string.IsNullOrWhiteSpace(extraText) ? baseText : $"{baseText}\n{extraText}".Trim();
         }
 
         private static string BuildShortPotId(string potId)

@@ -52,6 +52,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
         private Label _conditionPhAffinitySummaryLabel;
         private Label _conditionMoldSummaryLabel;
         private Label _preferredLightLabel;
+        private Label _stageDaysLabel;
+        private Label _a9SuggestionsLabel;
         private Label _mainRiskLabel;
         private Label _riskCauseLabel;
         private Label _riskLevelLabel;
@@ -297,6 +299,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             _conditionPhAffinitySummaryLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-ph-affinity");
             _conditionMoldSummaryLabel = _document.rootVisualElement.Q<Label>("pcv4-condition-mold-risk");
             _preferredLightLabel = _document.rootVisualElement.Q<Label>("pcv4-preferred-light");
+            _stageDaysLabel = _document.rootVisualElement.Q<Label>("pcv4-stage-days");
+            _a9SuggestionsLabel = _document.rootVisualElement.Q<Label>("pcv3-a9-suggestions");
             _mainRiskLabel = _document.rootVisualElement.Q<Label>("pcv4-main-risk");
             _riskCauseLabel = _document.rootVisualElement.Q<Label>("pcv4-risk-cause");
             _riskLevelLabel = _document.rootVisualElement.Q<Label>("pcv4-risk-level");
@@ -453,6 +457,12 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (_conditionPhAffinitySummaryLabel != null) _conditionPhAffinitySummaryLabel.text = model.PlantPhPreferenceLabel;
             if (_conditionMoldSummaryLabel != null) _conditionMoldSummaryLabel.text = model.MoldLevelLine;
             if (_preferredLightLabel != null) _preferredLightLabel.text = model.PreferredLightLine;
+            if (_stageDaysLabel != null) _stageDaysLabel.text = model.StageDaysLine;
+            if (_a9SuggestionsLabel != null)
+            {
+                _a9SuggestionsLabel.enableRichText = true;
+                _a9SuggestionsLabel.text = model.A9SuggestionLine;
+            }
             if (_mainRiskLabel != null) _mainRiskLabel.text = model.MainRisk;
             if (_riskCauseLabel != null) _riskCauseLabel.text = model.RiskCause;
             if (_riskLevelLabel != null) _riskLevelLabel.text = model.RiskLevelText;
@@ -480,10 +490,8 @@ namespace Sporae.UI.UIToolkit.PlantCard4v
             if (model == null)
                 return string.Empty;
             if (string.IsNullOrWhiteSpace(model.MainNeedSubtitle))
-                return model.MainNeed ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(model.MainNeed))
-                return model.MainNeedSubtitle;
-            return $"{model.MainNeed}: {model.MainNeedSubtitle}";
+                return string.Empty;
+            return model.MainNeedSubtitle;
         }
 
         private static PlantCard4vNeedSignal WorstNeedSignal(

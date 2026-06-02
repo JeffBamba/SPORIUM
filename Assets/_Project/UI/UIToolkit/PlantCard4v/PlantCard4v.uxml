@@ -136,6 +136,11 @@
                             <ui:Label text="Luce preferita" class="pcv4-kv-label" />
                             <ui:Label name="pcv4-preferred-light" text="BLU" class="pcv4-kv-value" />
                         </ui:VisualElement>
+                        <ui:VisualElement class="pcv4-kv-row">
+                            <ui:Label text="Giorni Stadio" class="pcv4-kv-label" />
+                            <ui:Label name="pcv4-stage-days" text="0/2 (Necessari per prossimo stadio)" class="pcv4-kv-value pcv4-kv-value--wide" />
+                        </ui:VisualElement>
+                        <ui:Label name="pcv3-a9-suggestions" text="A9: usa STATUS nel Terminal POT per analisi completa." class="pcv3-a9-suggestions pcv4-a9-suggestions" />
                     </ui:VisualElement>
                     <ui:VisualElement name="pcv4-actions-wrap" class="pcv4-panel pcv4-actions-wrap">
                         <ui:Label text="INTERVENTI DISPONIBILI" class="pcv4-section-title" />

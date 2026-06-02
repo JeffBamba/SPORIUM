@@ -136,8 +136,6 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (_btnCollectDirtyWater != null) _btnCollectDirtyWater.clicked += OnCollectDirtyWater;
 
             _uiBound = true;
-            if (_waterProgressBlock != null)
-                _waterProgressBlock.style.display = DisplayStyle.None;
             ApplyLocalizedCondenseStaticChrome();
         }
 
@@ -157,9 +155,9 @@ namespace Sporae.UI.UIToolkit.FoodRoom
             if (hydrationSectionTitle != null) hydrationSectionTitle.text = LocalizationManager.GetString("food_room.chrome.section_hydration");
 
             var hydrationLabel = _root.Q<Label>("hydration-label");
-            if (hydrationLabel != null) hydrationLabel.text = LocalizationManager.GetString("food_room.chrome.hydration_label");
+            if (hydrationLabel != null) hydrationLabel.text = "ACQUA POTABILE";
             var hydrationFlavor = _root.Q<Label>("hydration-flavor");
-            if (hydrationFlavor != null) hydrationFlavor.text = LocalizationManager.GetString("food_room.chrome.hydration_flavor");
+            if (hydrationFlavor != null) hydrationFlavor.text = "PRONTA ALL'USO";
 
             var unitsRow = _root.Q<VisualElement>("hydration-units-row");
             var unitsCaption = unitsRow?.Q<Label>(className: "hydration-units-label");
@@ -367,10 +365,9 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
         private void RefreshWaterProgress(bool waterProcessActive, bool waterReadyToCollect)
         {
-            bool showWaterProgressBlock = waterProcessActive || waterReadyToCollect;
             if (_waterProgressBlock != null)
-                _waterProgressBlock.style.display = showWaterProgressBlock ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!showWaterProgressBlock || _waterProgressFill == null)
+                _waterProgressBlock.style.display = DisplayStyle.Flex;
+            if (_waterProgressFill == null)
                 return;
 
             var ws = _foodRoom.WaterSlot;
@@ -381,9 +378,14 @@ namespace Sporae.UI.UIToolkit.FoodRoom
 
             var label = _waterProgressBlock?.Q<Label>("water-progress-label");
             if (label != null)
-                label.text = waterReadyToCollect && !waterProcessActive
-                    ? LocalizationManager.GetString("food_room.bar_water_ready")
-                    : LocalizationManager.GetString("food_room.bar_water_progress");
+            {
+                if (waterReadyToCollect && !waterProcessActive)
+                    label.text = LocalizationManager.GetString("food_room.bar_water_ready");
+                else if (waterProcessActive)
+                    label.text = LocalizationManager.GetString("food_room.bar_water_progress");
+                else
+                    label.text = LocalizationManager.GetString("food_room.bar_water_progress");
+            }
         }
 
         private void Update()
