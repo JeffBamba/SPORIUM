@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using _Project;
 using _Project.Sporae.Core;
 using UnityEngine;
-using UnityEngine.UI;
 using Sporae.DevTools;
+
+/// <summary>Direzione mostrata sui display dell'ascensore.</summary>
+public enum ElevatorDirection
+{
+    None,
+    Up,
+    Down
+}
 
 public class ElevatorSystem : MonoBehaviour
 {
@@ -13,28 +19,30 @@ public class ElevatorSystem : MonoBehaviour
     [SerializeField] private float elevatorSpeed = 1f;
     [SerializeField] private int startingLevelIndex;
     [SerializeField] private Transform[] levels;
-    [SerializeField] private List<Button> levelsButtons;
-    [SerializeField] private GameObject uiPanel;
-    [SerializeField] private int cryCost = 5;
     [SerializeField] private float teleportDelay = 0.1f;
     [SerializeField] private GameObject elevatorSection;
-    
+
+    [Header("Doors (Fase 2 — una coppia per piano, stesso ordine di levels[])")]
+    [Tooltip("Coppia di ante per ogni piano. L'indice DEVE combaciare con levels[] (0=+1, 1=0, 2=-1, 3=-2).")]
+    [SerializeField] private ElevatorDoorPair[] floorDoors;
+
+    [Header("Displays (Fase 3 — etichette piano)")]
+    [Tooltip("Etichette mostrate sui display, stesso ordine di levels[] (0=+1, 1=0, 2=-1, 3=-2). Se vuoto, usa i default di progetto.")]
+    [SerializeField] private string[] floorLabels;
+
+    [Header("Chiamata da display (Fase 4)")]
+    [Tooltip("Secondi tra animazione direzione sui display e arrivo cabina (apertura porte).")]
+    [SerializeField] private float callTravelDuration = 1.5f;
+
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
 
-    [Header("Behavior")]
-    [Tooltip("DEBUG_SAFE_FIX: If false, the elevator menu will NOT auto-open when the player enters the trigger. The player must press the open key while inside the trigger.")]
-    [SerializeField] private bool openMenuOnTriggerEnter = true; // DEBUG_SAFE_FIX
-    [SerializeField] private KeyCode openMenuKey = KeyCode.E; // DEBUG_SAFE_FIX
-    [Tooltip("DEBUG_SAFE_FIX: If true, shows the existing PlayerInteractAdvice (\"Press E\") prompt while inside the elevator trigger and the menu is closed.")]
-    [SerializeField] private bool showInteractAdviceWhileInside = true; // DEBUG_SAFE_FIX
-
     [Header("Teleport Placement")]
-    [Tooltip("DEBUG_SAFE_FIX: If true, teleport uses the target level Transform X as well as Y. This prevents landing inside walls when floors are not perfectly aligned in X.")]
-    [SerializeField] private bool useTargetLevelXForTeleport = true; // DEBUG_SAFE_FIX
+    [Tooltip("If true, teleport uses the target level Transform X as well as Y. This prevents landing inside walls when floors are not perfectly aligned in X.")]
+    [SerializeField] private bool useTargetLevelXForTeleport = true;
 
-    [Tooltip("DEBUG_SAFE_FIX: Max allowed horizontal correction when using target-level X. If exceeded, we keep the starting X to avoid teleports into other rooms.")]
-    [SerializeField] private float maxTeleportXCorrection = 1.25f; // DEBUG_SAFE_FIX
+    [Tooltip("Max allowed horizontal correction when using target-level X. If exceeded, we keep the starting X to avoid teleports into other rooms.")]
+    [SerializeField] private float maxTeleportXCorrection = 1.25f;
 
     private static int WrapIndex(int i, int len)
     {
@@ -43,20 +51,26 @@ public class ElevatorSystem : MonoBehaviour
         return m < 0 ? m + len : m;
     }
 
-    private static string Bool01(bool v) => v ? "1" : "0";
-
-    private bool playerInside = false; // inside trigger (not UI open)
-    private bool uiOpen = false;
+    private bool playerInside = false; // inside ELEV_UseZone trigger
     private Transform player;
     private bool isTeleporting = false;
-    private Coroutine _teleportCoroutine; // DEBUG_SAFE_FIX: Traccia la coroutine per poterla fermare
-    private GameManager gameManager;
+    private Coroutine _teleportCoroutine;
     private int currentLevelIndex;
-    private PlayerClickMover2D playerMover;
     private UINotification uiNotification;
-    private PlayerInteractAdvice interactAdvice; // DEBUG_SAFE_FIX: prompt "Press E"
-    private Camera _mainCamera;
     private bool _waitingForRuntimeServices;
+
+    private readonly List<ElevatorFloorDisplay> _displays = new List<ElevatorFloorDisplay>();
+    private Coroutine _outOfServiceCoroutine;
+    private Coroutine _callToFloorCoroutine;
+
+    // Etichette di default (mappa di progetto). Usate se floorLabels non è compilato in Inspector.
+    private static readonly string[] DefaultFloorLabels =
+    {
+        "Floor +1 \u00B7 Visitor Room & Seed Storage",
+        "Floor 0 \u00B7 Serra & Lab",
+        "Floor -1 \u00B7 BedRoom & Kitchen",
+        "Floor -2 \u00B7 Out of Service",
+    };
 
     void Start()
     {
@@ -64,14 +78,10 @@ public class ElevatorSystem : MonoBehaviour
 
         ResolveRuntimeDependencies();
         SubscribeToRuntimeServicesIfNeeded();
-        _mainCamera = Camera.main;
-        
-        if (uiPanel != null)
-        {
-            uiPanel.SetActive(false);
-        }
 
-        currentLevelIndex = startingLevelIndex; 
+        currentLevelIndex = startingLevelIndex;
+
+        ResetDisplaysToOwnFloors();
     }
 
     private void ValidateConfiguration()
@@ -97,62 +107,6 @@ public class ElevatorSystem : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        // DEBUG_SAFE_FIX: Show "Press E" advice while we're inside the trigger and the elevator menu is closed.
-        if (showInteractAdviceWhileInside && playerInside && !uiOpen && interactAdvice != null)
-        {
-            interactAdvice.AddInteractable();
-        }
-
-        // DEBUG_SAFE_FIX: If we don't auto-open, allow explicit open while inside trigger.
-        if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetKeyDown(openMenuKey))
-        {
-            ShowFloorOptions(true);
-        }
-        // Click come alternativa a E per aprire il menu quando si è dentro il trigger
-        if (!openMenuOnTriggerEnter && playerInside && !uiOpen && Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
-        {
-            Camera cam = _mainCamera != null ? _mainCamera : Camera.main;
-            if (cam == null)
-            {
-                cam = UnityEngine.Object.FindObjectOfType<Camera>();
-                _mainCamera = cam;
-            }
-            Vector2 worldPoint = cam != null ? (Vector2)cam.ScreenToWorldPoint(Input.mousePosition) : (Vector2)transform.position;
-            Collider2D[] hits = Physics2D.OverlapCircleAll(worldPoint, 0.35f);
-            for (int i = 0; i < hits.Length; i++)
-            {
-                if (hits[i].transform.IsChildOf(transform) || hits[i].transform == transform)
-                {
-                    ShowFloorOptions(true);
-                    break;
-                }
-            }
-        }
-
-        // DEBUG_SAFE_FIX: Up/Down (and W/S) floor selection must ONLY work when the elevator UI is open.
-        bool upPressed = Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow);
-        bool downPressed = Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow);
-        if (upPressed || downPressed)
-        {
-            bool canUseKeys = uiOpen && playerInside;
-
-            if (canUseKeys)
-            {
-                int len = levels != null ? levels.Length : 0;
-                if (len <= 0) return;
-
-                int baseIdx = currentLevelIndex;
-                if (baseIdx < 0 || baseIdx >= len)
-                    baseIdx = WrapIndex(baseIdx, len);
-
-                int next = upPressed ? WrapIndex(baseIdx + 1, len) : WrapIndex(baseIdx - 1, len);
-                GoToLevel(next);
-            }
-        }
-    }
-
     void OnTriggerEnter2D(Collider2D other)
     {
         if (!enabled) return;
@@ -161,11 +115,6 @@ public class ElevatorSystem : MonoBehaviour
         {
             player = other.transform;
             playerInside = true;
-
-            if (openMenuOnTriggerEnter)
-                ShowFloorOptions(true);
-            else
-                ShowFloorOptions(false);
         }
     }
 
@@ -177,76 +126,20 @@ public class ElevatorSystem : MonoBehaviour
         {
             player = null;
             playerInside = false;
-            ShowFloorOptions(false);
         }
-    }
-    
-    void ShowFloorOptions(bool state)
-    {
-        uiOpen = state;
-        
-        if (uiPanel != null)
-        {
-            // DEBUG_SAFE_FIX: Verifica e abilita il Canvas padre quando si mostra la HUD
-            Canvas parentCanvas = uiPanel.GetComponentInParent<Canvas>();
-            if (parentCanvas != null)
-            {
-                if (!parentCanvas.enabled)
-                {
-                    SporiumLogger.LogWarning(LogCategory.UI, $"Canvas dell'ascensore era disabilitato! Abilitazione...");
-                    parentCanvas.enabled = true;
-                }
-                
-                // Verifica sorting order
-                if (state)
-                {
-                    SporiumLogger.LogDebug(LogCategory.UI, $"Elevator HUD: Canvas enabled={parentCanvas.enabled}, sortingOrder={parentCanvas.sortingOrder}, renderMode={parentCanvas.renderMode}");
-                }
-            }
-            else
-            {
-                SporiumLogger.LogWarning(LogCategory.UI, "Canvas padre non trovato per UI_ElevatorPanel!");
-            }
-            
-            uiPanel.SetActive(state);
-            
-            if (state)
-            {
-                SporiumLogger.LogDebug(LogCategory.UI, $"Elevator HUD mostrata: uiPanel.activeSelf={uiPanel.activeSelf}, activeInHierarchy={uiPanel.activeInHierarchy}");
-            }
-        }
-
-        if (state)
-            UpdateAvailablesFloorOptions();
-    }
-
-    private void UpdateAvailablesFloorOptions()
-    {
-        for (int i = 0; i < levelsButtons.Count; ++i)
-            levelsButtons[i].interactable = i != currentLevelIndex;
-    }
-
-    private void DisableAllFloorOptions()
-    {
-        foreach (var item in levelsButtons)
-            item.interactable = false;
     }
 
     public void SetLevel(int levelIndex)
     {
-        // DEBUG_SAFE_FIX: Ferma qualsiasi coroutine TeleportPlayer in corso e ripristina il movimento
+        // Stop any running TeleportPlayer coroutine and restore world input.
         if (_teleportCoroutine != null)
         {
             StopCoroutine(_teleportCoroutine);
             _teleportCoroutine = null;
-            // Assicurati che il movimento sia ripristinato se la coroutine è stata interrotta
-            if (playerMover != null)
-            {
-                playerMover.SuspendMovement(false);
-            }
+            GameplayUiModalLock.SetBlockWorldInput(false);
             isTeleporting = false;
         }
-        
+
         if (levels == null || levels.Length == 0)
             return;
 
@@ -256,8 +149,10 @@ public class ElevatorSystem : MonoBehaviour
             elevatorSection.transform.position.x,
             levels[idx].position.y,
             elevatorSection.transform.position.z);
+
+        ResetDisplaysToOwnFloors();
     }
-    
+
     public void GoToLevel(int levelIndex)
     {
         if (!CanTeleportToLevel(levelIndex))
@@ -267,30 +162,15 @@ public class ElevatorSystem : MonoBehaviour
 
         if (!IsLevelUnlocked(levelIndex))
         {
-            if (uiNotification != null)
+            var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
+            if (toastManager != null)
             {
-                var toastManager = ServiceContainer.Instance?.Get<ToastNotificationManager>(suppressWarning: true);
-                if (toastManager != null)
-                {
-                    toastManager.ShowError("Sorry, out of order", "ELEVATOR-001");
-                }
-                else if (uiNotification != null)
-                {
-                    uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
-                }
+                toastManager.ShowError("Sorry, out of order", "ELEVATOR-001");
             }
-            return;
-        }
-        
-        // Prova a ottenere GameManager se non ancora disponibile
-        if (gameManager == null)
-        {
-            gameManager = ServiceContainer.Instance?.Get<GameManager>();
-        }
-        
-        if (gameManager == null)
-        {
-            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer!");
+            else if (uiNotification != null)
+            {
+                uiNotification.ShowNotification("Sorry, out of order", 3, Color.red);
+            }
             return;
         }
 
@@ -300,26 +180,15 @@ public class ElevatorSystem : MonoBehaviour
             return;
         }
 
-        if (!gameManager.TrySpendCry(cryCost))
-        {
-            SporiumLogger.LogWarning(LogCategory.Core, $"Non hai abbastanza azioni o CRY per usare l'ascensore! (Costo: {cryCost})");
-            return;
-        }
-
-        // DEBUG_SAFE_FIX: Ferma qualsiasi coroutine in corso prima di iniziare una nuova
+        // Stop any running coroutine before starting a new one and restore input.
         if (_teleportCoroutine != null)
         {
             StopCoroutine(_teleportCoroutine);
             _teleportCoroutine = null;
-            // Assicurati che il movimento sia ripristinato se la coroutine precedente è stata interrotta
-            if (playerMover != null)
-            {
-                playerMover.SuspendMovement(false);
-            }
+            GameplayUiModalLock.SetBlockWorldInput(false);
             isTeleporting = false;
         }
-        
-        // Teleport con delay per evitare problemi di fisica
+
         _teleportCoroutine = StartCoroutine(TeleportPlayer(levelIndex));
     }
 
@@ -327,7 +196,7 @@ public class ElevatorSystem : MonoBehaviour
     {
         return levelIndex < 3;
     }
-    
+
     private bool CanTeleportToLevel(int levelIndex)
     {
         if (isTeleporting) return false;
@@ -335,7 +204,7 @@ public class ElevatorSystem : MonoBehaviour
         if (levelIndex == currentLevelIndex) return false;
         if (levels[levelIndex] == null) return false;
         if (player == null) return false;
-        
+
         return true;
     }
 
@@ -344,41 +213,33 @@ public class ElevatorSystem : MonoBehaviour
         if (player != null && levels[levelIndex] != null)
         {
             isTeleporting = true;
-            
-            DisableAllFloorOptions();
-            
-            //Prevent player transition to clicked position when quick floor(level) selection on elevator
-            if (playerMover != null)
-            {
-                playerMover.StopMovement();
-            }
-            
-            //and suspend further movement 
-            if (playerMover != null)
-            {
-                playerMover.SuspendMovement(true);
-            }
+
+            // Block world movement/interaction for the duration of the travel.
+            // NOTE: PlayerPerspectiveMover2D (the active mover in VaultMap) respects GameplayUiModalLock,
+            // whereas PlayerClickMover2D is already suspended by PlayerMoverRouter2D and is NOT the active mover.
+            GameplayUiModalLock.SetBlockWorldInput(true);
 
             // Delay per stabilizzare la fisica
             yield return new WaitForSeconds(teleportDelay);
-            
-            // Check null dopo yield (il player o levels potrebbero essere stati distrutti durante il delay)
+
             if (player == null)
             {
                 SporiumLogger.LogError(LogCategory.Core, "Player è diventato null dopo WaitForSeconds!");
                 isTeleporting = false;
-                ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
+                _teleportCoroutine = null;
+                GameplayUiModalLock.SetBlockWorldInput(false);
                 yield break;
             }
-            
+
             if (levels == null || levelIndex < 0 || levelIndex >= levels.Length || levels[levelIndex] == null)
             {
                 SporiumLogger.LogError(LogCategory.Core, $"levels[{levelIndex}] è null dopo WaitForSeconds!");
                 isTeleporting = false;
-                ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
+                _teleportCoroutine = null;
+                GameplayUiModalLock.SetBlockWorldInput(false);
                 yield break;
             }
-            
+
             float startX = player.position.x;
             float requestedFinalX = useTargetLevelXForTeleport ? levels[levelIndex].position.x : startX;
             float xDelta = Mathf.Abs(requestedFinalX - startX);
@@ -400,36 +261,36 @@ public class ElevatorSystem : MonoBehaviour
 
             while (Vector3.Distance(player.position, animTargetPosition) > 0.05f)
             {
-                // Check null durante il loop (il player potrebbe essere stato distrutto)
                 if (player == null)
                 {
                     SporiumLogger.LogError(LogCategory.Core, "Player è diventato null durante il loop!");
                     isTeleporting = false;
-                    ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
+                    _teleportCoroutine = null;
+                    GameplayUiModalLock.SetBlockWorldInput(false);
                     yield break;
                 }
-                
+
                 if (elevatorSection == null)
                 {
                     SporiumLogger.LogError(LogCategory.Core, "elevatorSection è null!");
                     isTeleporting = false;
-                    ShowFloorOptions(false); // DEBUG_SAFE_FIX: Ensure elevator menu is closed on failure
+                    _teleportCoroutine = null;
+                    GameplayUiModalLock.SetBlockWorldInput(false);
                     yield break;
                 }
-                
+
                 player.position = Vector3.Lerp(player.position, animTargetPosition, Time.deltaTime * elevatorSpeed);
                 elevatorSection.transform.position = new Vector3(
                     elevatorSection.transform.position.x,
                     player.position.y,
                     elevatorSection.transform.position.z);
-                
+
                 yield return null;
             }
-            
+
             if (player != null)
             {
-                // DEBUG_SAFE_FIX: Use the perspective mover's teleport API so internal UV and Rigidbody2D state stay consistent.
-                // This prevents the first post-elevator input from "snapping" the player back to an old UV-projected location.
+                // Use the perspective mover's teleport API so internal UV and Rigidbody2D state stay consistent.
                 var perspectiveMover = player.GetComponent<_Project.Player.PlayerPerspectiveMover2D>();
                 if (perspectiveMover != null)
                 {
@@ -446,37 +307,194 @@ public class ElevatorSystem : MonoBehaviour
                     }
                 }
             }
-        
+
             isTeleporting = false;
-            _teleportCoroutine = null; // DEBUG_SAFE_FIX: Pulisci il riferimento alla coroutine
-            if (playerMover != null)
-            {
-                playerMover.SuspendMovement(false);
-            }
+            _teleportCoroutine = null;
+            GameplayUiModalLock.SetBlockWorldInput(false);
 
             currentLevelIndex = levelIndex;
-            UpdateAvailablesFloorOptions();
-
-            // DEBUG_SAFE_FIX: Close the elevator UI when we arrive at the destination floor.
-            ShowFloorOptions(false);
         }
     }
 
     public bool IsPlayerInside => playerInside;
     public int AvailableLevels => levels != null ? levels.Length : 0;
-    public int CurrentCryCost => cryCost;
 
-    // Metodo per cambiare il costo dinamicamente
-    public void SetCryCost(int newCost)
+    /// <summary>Apre le porte del piano indicato (no-op se indice/riferimento non validi).</summary>
+    public void OpenDoors(int floorIndex)
     {
-        cryCost = Mathf.Max(0, newCost);
+        ElevatorDoorPair pair = GetFloorDoors(floorIndex);
+        if (pair != null) pair.Open();
+    }
+
+    /// <summary>Chiude le porte del piano indicato (no-op se indice/riferimento non validi).</summary>
+    public void CloseDoors(int floorIndex)
+    {
+        ElevatorDoorPair pair = GetFloorDoors(floorIndex);
+        if (pair != null) pair.Close();
+    }
+
+    /// <summary>Chiude immediatamente tutte le porte bindate (utile per stato iniziale/reset).</summary>
+    public void CloseAllDoorsInstant()
+    {
+        if (floorDoors == null) return;
+        for (int i = 0; i < floorDoors.Length; i++)
+        {
+            if (floorDoors[i] != null) floorDoors[i].SetInstant(false);
+        }
+    }
+
+    private ElevatorDoorPair GetFloorDoors(int floorIndex)
+    {
+        if (floorDoors == null) return null;
+        if (floorIndex < 0 || floorIndex >= floorDoors.Length) return null;
+        return floorDoors[floorIndex];
+    }
+
+    // ── Display (Fase 3) ───────────────────────────────────────────────
+
+    /// <summary>Registra un display (auto-registrazione dal componente, niente array manuale).</summary>
+    public void RegisterDisplay(ElevatorFloorDisplay display)
+    {
+        if (display == null || _displays.Contains(display)) return;
+        _displays.Add(display);
+        // Stato a riposo: ogni display mostra l'etichetta del PROPRIO piano.
+        display.SetContent(GetFloorLabel(display.FloorIndex), ElevatorDirection.None);
+    }
+
+    /// <summary>Annulla la registrazione di un display.</summary>
+    public void UnregisterDisplay(ElevatorFloorDisplay display)
+    {
+        if (display == null) return;
+        _displays.Remove(display);
+    }
+
+    /// <summary>Etichetta del piano: usa floorLabels (Inspector) se valida, altrimenti i default di progetto.</summary>
+    public string GetFloorLabel(int floorIndex)
+    {
+        if (floorLabels != null && floorIndex >= 0 && floorIndex < floorLabels.Length
+            && !string.IsNullOrEmpty(floorLabels[floorIndex]))
+            return floorLabels[floorIndex];
+
+        if (floorIndex >= 0 && floorIndex < DefaultFloorLabels.Length)
+            return DefaultFloorLabels[floorIndex];
+
+        return $"Floor {floorIndex}";
+    }
+
+    /// <summary>Stato a riposo: ogni display mostra l'etichetta del proprio piano, nessuna freccia.</summary>
+    public void ResetDisplaysToOwnFloors()
+    {
+        for (int i = 0; i < _displays.Count; i++)
+        {
+            if (_displays[i] != null)
+                _displays[i].SetContent(GetFloorLabel(_displays[i].FloorIndex), ElevatorDirection.None);
+        }
+    }
+
+    /// <summary>Durante chiamata/viaggio: tutti i display mostrano lo stesso contenuto (Fase 4+).</summary>
+    public void UpdateAllFloorDisplays(int shownFloorIndex, ElevatorDirection direction)
+    {
+        string label = GetFloorLabel(shownFloorIndex);
+        for (int i = 0; i < _displays.Count; i++)
+        {
+            if (_displays[i] != null)
+                _displays[i].SetContent(label, direction);
+        }
+    }
+
+    /// <summary>
+    /// Chiamata dell'ascensore dal display di un piano: il player resta fermo;
+    /// i display mostrano direzione, la cabina logica si sposta e le porte del piano si aprono.
+    /// </summary>
+    public void CallToFloor(int floorIndex)
+    {
+        if (!enabled || levels == null || floorIndex < 0 || floorIndex >= levels.Length)
+            return;
+
+        if (!IsLevelUnlocked(floorIndex))
+        {
+            ShowOutOfServiceTemporarily(floorIndex);
+            return;
+        }
+
+        if (floorIndex == currentLevelIndex)
+        {
+            OpenDoors(floorIndex);
+            UpdateAllFloorDisplays(floorIndex, ElevatorDirection.None);
+            return;
+        }
+
+        if (_callToFloorCoroutine != null)
+            StopCoroutine(_callToFloorCoroutine);
+
+        _callToFloorCoroutine = StartCoroutine(CallToFloorRoutine(floorIndex));
+    }
+
+    private System.Collections.IEnumerator CallToFloorRoutine(int floorIndex)
+    {
+        int fromIndex = currentLevelIndex;
+        ElevatorDirection direction = GetDirectionToward(fromIndex, floorIndex);
+
+        CloseDoors(fromIndex);
+        UpdateAllFloorDisplays(floorIndex, direction);
+
+        float wait = Mathf.Max(0f, callTravelDuration);
+        if (wait > 0f)
+            yield return new WaitForSeconds(wait);
+
+        RepositionCabina(floorIndex);
+        OpenDoors(floorIndex);
+        UpdateAllFloorDisplays(floorIndex, ElevatorDirection.None);
+
+        _callToFloorCoroutine = null;
+    }
+
+    /// <summary>Riposiziona la cabina logica senza resettare i display (EndDay usa SetLevel).</summary>
+    private void RepositionCabina(int levelIndex)
+    {
+        if (levels == null || levels.Length == 0 || levels[levelIndex] == null || elevatorSection == null)
+            return;
+
+        currentLevelIndex = levelIndex;
+        elevatorSection.transform.position = new Vector3(
+            elevatorSection.transform.position.x,
+            levels[levelIndex].position.y,
+            elevatorSection.transform.position.z);
+    }
+
+    /// <summary>Indice crescente = piano fisicamente più basso (+1 → 0 → -1 → -2).</summary>
+    private static ElevatorDirection GetDirectionToward(int fromIndex, int toIndex)
+    {
+        if (toIndex == fromIndex) return ElevatorDirection.None;
+        return toIndex > fromIndex ? ElevatorDirection.Down : ElevatorDirection.Up;
+    }
+
+    private void ShowOutOfServiceTemporarily(int floorIndex)
+    {
+        if (_callToFloorCoroutine != null)
+        {
+            StopCoroutine(_callToFloorCoroutine);
+            _callToFloorCoroutine = null;
+        }
+
+        if (_outOfServiceCoroutine != null)
+            StopCoroutine(_outOfServiceCoroutine);
+        _outOfServiceCoroutine = StartCoroutine(OutOfServiceRoutine(floorIndex));
+    }
+
+    private System.Collections.IEnumerator OutOfServiceRoutine(int floorIndex)
+    {
+        UpdateAllFloorDisplays(floorIndex, ElevatorDirection.None);
+        yield return new WaitForSeconds(2f);
+        _outOfServiceCoroutine = null;
+        ResetDisplaysToOwnFloors();
     }
 
     // Metodo per aggiungere livelli dinamicamente
     public void AddLevel(Transform newLevel)
     {
         if (newLevel == null) return;
-        
+
         System.Array.Resize(ref levels, levels.Length + 1);
         levels[levels.Length - 1] = newLevel;
     }
@@ -485,30 +503,18 @@ public class ElevatorSystem : MonoBehaviour
     public bool RemoveLevel(int levelIndex)
     {
         if (levelIndex < 0 || levelIndex >= levels.Length) return false;
-        
+
         for (int i = levelIndex; i < levels.Length - 1; i++)
         {
             levels[i] = levels[i + 1];
         }
-        
+
         System.Array.Resize(ref levels, levels.Length - 1);
         return true;
     }
 
     /// <summary>
-    /// Late binding per GameManager quando viene registrato
-    /// </summary>
-    private void OnGameManagerRegistered(object service)
-    {
-        if (service is GameManager gm && gameManager == null)
-        {
-            gameManager = gm;
-            TryUnsubscribeFromRuntimeServices();
-        }
-    }
-    
-    /// <summary>
-    /// Late binding per UINotification quando viene registrato
+    /// Late binding per UINotification quando viene registrato (fallback toast "out of order").
     /// </summary>
     private void OnUINotificationRegistered(object service)
     {
@@ -519,42 +525,17 @@ public class ElevatorSystem : MonoBehaviour
         }
     }
 
-    private void OnPlayerMoverRegistered(object service)
-    {
-        if (service is PlayerClickMover2D mover && playerMover == null)
-        {
-            playerMover = mover;
-            TryUnsubscribeFromRuntimeServices();
-        }
-    }
-
-    private void OnInteractAdviceRegistered(object service)
-    {
-        if (service is PlayerInteractAdvice advice && interactAdvice == null)
-        {
-            interactAdvice = advice;
-            TryUnsubscribeFromRuntimeServices();
-        }
-    }
-    
-    // Metodo per aggiornare il riferimento al GameManager
-    public void RefreshGameManagerReference()
-    {
-        ResolveRuntimeDependencies();
-        SubscribeToRuntimeServicesIfNeeded();
-    }
-    
     private void OnDestroy()
     {
-        // Cleanup ServiceContainer subscriptions
+        if (_callToFloorCoroutine != null)
+            StopCoroutine(_callToFloorCoroutine);
+        if (_outOfServiceCoroutine != null)
+            StopCoroutine(_outOfServiceCoroutine);
         UnsubscribeFromRuntimeServices();
     }
 
     private void ResolveRuntimeDependencies()
     {
-        gameManager = gameManager ?? ServiceContainer.Instance?.Get<GameManager>(suppressWarning: true);
-        playerMover = playerMover ?? ServiceContainer.Instance?.Get<PlayerClickMover2D>(suppressWarning: true);
-        interactAdvice = interactAdvice ?? ServiceContainer.Instance?.Get<PlayerInteractAdvice>(suppressWarning: true);
         uiNotification = uiNotification ?? ServiceContainer.Instance?.Get<UINotification>(suppressWarning: true);
     }
 
@@ -563,25 +544,16 @@ public class ElevatorSystem : MonoBehaviour
         if (ServiceContainer.Instance == null)
             return;
 
-        bool needsLateBinding = gameManager == null || playerMover == null || interactAdvice == null || uiNotification == null;
-        if (!needsLateBinding || _waitingForRuntimeServices)
+        if (uiNotification != null || _waitingForRuntimeServices)
             return;
 
-        if (gameManager == null)
-            SporiumLogger.LogWarning(LogCategory.Core, "GameManager non disponibile via ServiceContainer. Tentativo late binding...");
-        if (uiNotification == null)
-            SporiumLogger.LogWarning(LogCategory.UI, "UINotification non disponibile via ServiceContainer. Tentativo late binding...");
-
-        ServiceContainer.Instance.OnServiceRegistered += OnGameManagerRegistered;
         ServiceContainer.Instance.OnServiceRegistered += OnUINotificationRegistered;
-        ServiceContainer.Instance.OnServiceRegistered += OnPlayerMoverRegistered;
-        ServiceContainer.Instance.OnServiceRegistered += OnInteractAdviceRegistered;
         _waitingForRuntimeServices = true;
     }
 
     private void TryUnsubscribeFromRuntimeServices()
     {
-        if (gameManager != null && playerMover != null && interactAdvice != null && uiNotification != null)
+        if (uiNotification != null)
             UnsubscribeFromRuntimeServices();
     }
 
@@ -590,10 +562,7 @@ public class ElevatorSystem : MonoBehaviour
         if (!_waitingForRuntimeServices || ServiceContainer.Instance == null)
             return;
 
-        ServiceContainer.Instance.OnServiceRegistered -= OnGameManagerRegistered;
         ServiceContainer.Instance.OnServiceRegistered -= OnUINotificationRegistered;
-        ServiceContainer.Instance.OnServiceRegistered -= OnPlayerMoverRegistered;
-        ServiceContainer.Instance.OnServiceRegistered -= OnInteractAdviceRegistered;
         _waitingForRuntimeServices = false;
     }
 
@@ -601,7 +570,7 @@ public class ElevatorSystem : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         if (levels == null) return;
-        
+
         Gizmos.color = Color.blue;
         for (int i = 0; i < levels.Length; i++)
         {
@@ -609,7 +578,7 @@ public class ElevatorSystem : MonoBehaviour
             {
                 Gizmos.DrawWireSphere(levels[i].position, 0.5f);
                 Gizmos.DrawLine(transform.position, levels[i].position);
-                
+
                 // Label del livello
                 #if UNITY_EDITOR
                 UnityEditor.Handles.Label(levels[i].position + Vector3.up * 0.7f, $"Level {i}");

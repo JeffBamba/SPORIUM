@@ -2187,6 +2187,78 @@
   - ElevatorRoom
     [Component] Transform
     [Component] SpriteRenderer
+  - ELEV_Doors_LVL_+1
+    [Component] Transform
+    [Component] ElevatorDoorPair
+    - PortelloneSx
+      [Component] Transform
+      [Component] SpriteRenderer
+    - PortelloneDx
+      [Component] Transform
+      [Component] SpriteRenderer
+  - ELEV_Display_LVL_+1
+    [Component] Transform
+    [Component] Interactable
+    [Component] ElevatorFloorDisplay
+    [Component] BoxCollider2D
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+    - Label Text
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+  - ELEV_Doors_LVL_0
+    [Component] Transform
+    [Component] ElevatorDoorPair
+    - PortelloneSx
+      [Component] Transform
+      [Component] SpriteRenderer
+    - PortelloneDx
+      [Component] Transform
+      [Component] SpriteRenderer
+  - ELEV_Display_LVL_0
+    [Component] Transform
+    [Component] Interactable
+    [Component] ElevatorFloorDisplay
+    [Component] BoxCollider2D
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+    - Label Text
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+  - ELEV_Doors_LVL_-1
+    [Component] Transform
+    [Component] ElevatorDoorPair
+    - PortelloneSx
+      [Component] Transform
+      [Component] SpriteRenderer
+    - PortelloneDx
+      [Component] Transform
+      [Component] SpriteRenderer
+  - ELEV_Display_LVL_-1
+    [Component] Transform
+    [Component] Interactable
+    [Component] ElevatorFloorDisplay
+    [Component] BoxCollider2D
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+    - Label Text
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
 - Room_Dome_Placeholder
   [Component] Transform
   [Component] SpriteRenderer
