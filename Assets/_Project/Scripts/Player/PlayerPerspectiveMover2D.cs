@@ -12,8 +12,6 @@ namespace _Project.Player
     [DisallowMultipleComponent]
     public class PlayerPerspectiveMover2D : MonoBehaviour
     {
-        private float _debugNextLogTime = 0f;
-
         private static ContactFilter2D MakeBlockerFilter(LayerMask mask)
         {
             // Use layer mask, but allow triggers and filter them manually (some projects use trigger-walls).
@@ -160,6 +158,12 @@ namespace _Project.Player
         /// </summary>
         public void TeleportToWorld(Vector2 worldPosition, bool pickAreaByPoint = true)
         {
+            TeleportToWorld(worldPosition, pickAreaByPoint, areaOverride: null);
+        }
+
+        /// <param name="areaOverride">Se non null, usa questa walk area invece della ricerca automatica (es. uscita ascensore).</param>
+        public void TeleportToWorld(Vector2 worldPosition, bool pickAreaByPoint, PerspectiveWalkArea2D areaOverride)
+        {
             _hasTarget = false;
 
             // Set the rigidbody position directly (kinematic body)
@@ -173,7 +177,9 @@ namespace _Project.Player
                 transform.position = worldPosition;
             }
 
-            if (pickAreaByPoint)
+            if (areaOverride != null)
+                currentWalkArea = areaOverride;
+            else if (pickAreaByPoint)
             {
                 PerspectiveWalkArea2D area = FindAreaByWorldPoint(worldPosition);
                 if (area != null)
@@ -319,14 +325,6 @@ namespace _Project.Player
                 Vector2 newPos = ResolveCollisionsWithSlide(from, desired);
                 _rb.MovePosition(newPos);
 
-                // If we are trying to move but remain stuck, capture a minimal snapshot.
-                float desiredDist = Vector2.Distance(from, desired);
-                float movedDist = Vector2.Distance(from, newPos);
-                if (desiredDist > 0.05f && movedDist < 0.001f && Time.time >= _debugNextLogTime)
-                {
-                    _debugNextLogTime = Time.time + 0.5f;
-                }
-
                 // Re-project after slide so UV stays consistent with actual position
                 if (currentWalkArea.TryProjectWorldToUV(newPos, out Vector2 uv))
                     _currentUV = uv;
@@ -441,6 +439,88 @@ namespace _Project.Player
             }
         }
 
+        /// <summary>Walk area che contiene il punto mondo (es. anchor uscita ascensore).</summary>
+        public static PerspectiveWalkArea2D FindWalkAreaForWorldPoint(Vector2 world)
+        {
+            CacheAllAreas();
+            return FindAreaByWorldPoint(world);
+        }
+
+        /// <summary>
+        /// Come FindWalkAreaForWorldPoint ma preferisce l'area il cui piano verticale è più vicino a preferredLevelY
+        /// (evita di selezionare Bed/Kitchen quando il player atterra al pianerottolo di un altro livello).
+        /// </summary>
+        public static PerspectiveWalkArea2D FindWalkAreaForWorldPointAtLevel(Vector2 world, float preferredLevelY,
+            float maxLevelBand = 3.5f)
+        {
+            CacheAllAreas();
+
+            PerspectiveWalkArea2D bestInBand = null;
+            float bestInBandScore = float.PositiveInfinity;
+            PerspectiveWalkArea2D bestContaining = null;
+            float bestContainingScore = float.PositiveInfinity;
+            PerspectiveWalkArea2D bestByLevel = null;
+            float bestLevelDy = float.PositiveInfinity;
+
+            for (int i = 0; i < s_Areas.Count; i++)
+            {
+                PerspectiveWalkArea2D a = s_Areas[i];
+                if (a == null || !a.HasValidCorners)
+                    continue;
+
+                float areaY = EstimateAreaLevelY(a);
+                float levelDy = Mathf.Abs(areaY - preferredLevelY);
+
+                if (levelDy < bestLevelDy)
+                {
+                    bestLevelDy = levelDy;
+                    bestByLevel = a;
+                }
+
+                if (!a.ContainsWorldPoint(world))
+                    continue;
+
+                if (!a.TryProjectWorldToUV(world, out Vector2 uv))
+                    continue;
+
+                Vector2 mapped = a.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+                float err = Vector2.Distance(world, mapped);
+                float score = err + levelDy * 1.5f;
+
+                if (score < bestContainingScore)
+                {
+                    bestContainingScore = score;
+                    bestContaining = a;
+                }
+
+                if (levelDy <= maxLevelBand && score < bestInBandScore)
+                {
+                    bestInBandScore = score;
+                    bestInBand = a;
+                }
+            }
+
+            if (bestInBand != null)
+                return bestInBand;
+            if (bestContaining != null)
+                return bestContaining;
+            return bestByLevel;
+        }
+
+        private static float EstimateAreaLevelY(PerspectiveWalkArea2D area)
+        {
+            if (area.AreaBounds != null)
+                return area.AreaBounds.bounds.center.y;
+
+            if (area.HasValidCorners)
+            {
+                // near edge ≈ corridoio / pianerottolo
+                return (area.MapToWorld(0.5f, 0f).y + area.MapToWorld(0.5f, 1f).y) * 0.5f;
+            }
+
+            return area.transform.position.y;
+        }
+
         private static void CacheAllAreas()
         {
             s_Areas.Clear();
@@ -510,7 +590,6 @@ namespace _Project.Player
                     pos += remaining;
                     break;
                 }
-
 
                 // DEBUG_SAFE_FIX: When the cast reports distance ~0 while moving tangentially (dot >= 0),
                 // treat it as a "touching" contact and allow motion along the tangent, otherwise we can get stuck on corners.
