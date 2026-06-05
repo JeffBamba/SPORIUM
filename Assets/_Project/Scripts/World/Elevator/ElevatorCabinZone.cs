@@ -23,14 +23,29 @@ public class ElevatorCabinZone : MonoBehaviour
 
     private readonly HashSet<Collider2D> _playerContacts = new HashSet<Collider2D>();
 
+    /// <summary>Collegamento controllato da ElevatorSystem (gerarchia ELEV_Elevator).</summary>
+    public void BindElevator(ElevatorSystem system)
+    {
+        if (system == null)
+            return;
+
+        if (elevator == system)
+            return;
+
+        if (elevator != null && isActiveAndEnabled)
+            elevator.UnregisterCabinZone(this);
+
+        elevator = system;
+
+        if (isActiveAndEnabled)
+            elevator.RegisterCabinZone(this);
+    }
+
     private void Awake()
     {
         var col = GetComponent<Collider2D>();
         if (col != null)
             col.isTrigger = true;
-
-        if (elevator == null)
-            elevator = FindObjectOfType<ElevatorSystem>();
     }
 
     private void OnEnable()

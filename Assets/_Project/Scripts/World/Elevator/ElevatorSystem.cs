@@ -136,6 +136,7 @@ public class ElevatorSystem : MonoBehaviour
     void Start()
     {
         ValidateConfiguration();
+        BindElevatorSceneComponents();
 
         ResolveRuntimeDependencies();
         SubscribeToRuntimeServicesIfNeeded();
@@ -144,6 +145,28 @@ public class ElevatorSystem : MonoBehaviour
         _targetIndex = startingLevelIndex;
 
         ResetDisplaysToOwnFloors();
+    }
+
+    /// <summary>
+    /// Late binding controllato sui figli di ELEV_Elevator (niente scan globale scena).
+    /// </summary>
+    private void BindElevatorSceneComponents()
+    {
+        Transform root = transform.parent != null ? transform.parent : transform;
+
+        var displays = root.GetComponentsInChildren<ElevatorFloorDisplay>(true);
+        for (int i = 0; i < displays.Length; i++)
+        {
+            if (displays[i] != null)
+                displays[i].BindElevator(this);
+        }
+
+        var zones = root.GetComponentsInChildren<ElevatorCabinZone>(true);
+        for (int i = 0; i < zones.Length; i++)
+        {
+            if (zones[i] != null)
+                zones[i].BindElevator(this);
+        }
     }
 
     private void ValidateConfiguration()
@@ -243,6 +266,7 @@ public class ElevatorSystem : MonoBehaviour
             levels[idx].position.y,
             elevatorSection.transform.position.z);
 
+        CloseAllDoorsInstant();
         ResetDisplaysToOwnFloors();
     }
 

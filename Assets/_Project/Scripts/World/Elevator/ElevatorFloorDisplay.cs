@@ -35,14 +35,29 @@ public class ElevatorFloorDisplay : MonoBehaviour
 
     public int FloorIndex => floorIndex;
 
+    /// <summary>Collegamento controllato da ElevatorSystem (gerarchia ELEV_Elevator).</summary>
+    public void BindElevator(ElevatorSystem system)
+    {
+        if (system == null)
+            return;
+
+        if (elevator == system)
+            return;
+
+        if (elevator != null && isActiveAndEnabled)
+            elevator.UnregisterDisplay(this);
+
+        elevator = system;
+
+        if (isActiveAndEnabled)
+            elevator.RegisterDisplay(this);
+    }
+
     private void Awake()
     {
         _interactable = GetComponent<Interactable>();
         if (_interactable != null)
             _interactable.SetRepeatInteractionWhileInRange(true);
-
-        if (elevator == null)
-            elevator = FindObjectOfType<ElevatorSystem>();
     }
 
     private void OnEnable()

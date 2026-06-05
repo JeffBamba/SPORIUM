@@ -630,49 +630,6 @@
         [Component] RectTransform
         [Component] CanvasRenderer
         [Component] TextMeshProUGUI
-  - UI_ElevatorPanel
-    [Component] RectTransform
-    [Component] CanvasRenderer
-    [Component] Image
-    - Button Group
-      [Component] RectTransform
-      [Component] VerticalLayoutGroup
-      - BTN_LVL_+1
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - BTN_LVL_0
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - BTN_LVL_-1
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
-      - BTN_LVL_-2
-        [Component] RectTransform
-        [Component] CanvasRenderer
-        [Component] Image
-        [Component] Button
-        - Text (TMP)
-          [Component] RectTransform
-          [Component] CanvasRenderer
-          [Component] TextMeshProUGUI
   - UI_LabMinigame
     [Component] RectTransform
     [Component] LabMinigameExtractor
@@ -2196,21 +2153,28 @@
     - PortelloneDx
       [Component] Transform
       [Component] SpriteRenderer
+    - BLK_DoorThreshold
+      [Component] Transform
+      [Component] BoxCollider2D
   - ELEV_Display_LVL_+1
     [Component] Transform
     [Component] Interactable
     [Component] ElevatorFloorDisplay
     [Component] BoxCollider2D
-    - Arrow
-      [Component] RectTransform
-      [Component] MeshRenderer
-      [Component] TextMeshPro
-      [Component] MeshFilter
     - Label Text
       [Component] RectTransform
       [Component] MeshRenderer
       [Component] TextMeshPro
       [Component] MeshFilter
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+  - ELEV_CabinZone_LVL_+1
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinZone
   - ELEV_Doors_LVL_0
     [Component] Transform
     [Component] ElevatorDoorPair
@@ -2220,21 +2184,28 @@
     - PortelloneDx
       [Component] Transform
       [Component] SpriteRenderer
+    - BLK_DoorThreshold
+      [Component] Transform
+      [Component] BoxCollider2D
   - ELEV_Display_LVL_0
     [Component] Transform
     [Component] Interactable
     [Component] ElevatorFloorDisplay
     [Component] BoxCollider2D
-    - Arrow
-      [Component] RectTransform
-      [Component] MeshRenderer
-      [Component] TextMeshPro
-      [Component] MeshFilter
     - Label Text
       [Component] RectTransform
       [Component] MeshRenderer
       [Component] TextMeshPro
       [Component] MeshFilter
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+  - ELEV_CabinZone_LVL_0
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinZone
   - ELEV_Doors_LVL_-1
     [Component] Transform
     [Component] ElevatorDoorPair
@@ -2244,21 +2215,36 @@
     - PortelloneDx
       [Component] Transform
       [Component] SpriteRenderer
+    - BLK_DoorThreshold
+      [Component] Transform
+      [Component] BoxCollider2D
   - ELEV_Display_LVL_-1
     [Component] Transform
     [Component] Interactable
     [Component] ElevatorFloorDisplay
     [Component] BoxCollider2D
-    - Arrow
-      [Component] RectTransform
-      [Component] MeshRenderer
-      [Component] TextMeshPro
-      [Component] MeshFilter
     - Label Text
       [Component] RectTransform
       [Component] MeshRenderer
       [Component] TextMeshPro
       [Component] MeshFilter
+    - Arrow
+      [Component] RectTransform
+      [Component] MeshRenderer
+      [Component] TextMeshPro
+      [Component] MeshFilter
+  - ELEV_CabinZone_LVL_-1
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinZone
+  - ELEV_ExitAnchor_LVL_+1
+    [Component] Transform
+  - ELEV_ExitAnchor_LVL_0
+    [Component] Transform
+  - ELEV_ExitAnchor_LVL_-1
+    [Component] Transform
+  - ELEV_ExitAnchor_LVL_-2
+    [Component] Transform
 - Room_Dome_Placeholder
   [Component] Transform
   [Component] SpriteRenderer
