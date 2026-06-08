@@ -4,8 +4,8 @@ using _Project.World.VaultMap;
 using UnityEngine;
 
 /// <summary>
-/// Trigger "dentro cabina" per un singolo piano (Fase 5).
-/// Profondità corridoio/cabina letta dal <see cref="PerspectiveWalkArea2D"/> (UV v), non da Y mondo.
+/// Legacy (Elevator 3.x): trigger UV per piani senza <see cref="ElevatorCabinInteriorZone"/>.
+/// Disinnescato a runtime quando esiste interior zone sullo stesso floorIndex.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider2D))]
