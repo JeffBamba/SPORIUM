@@ -18,7 +18,17 @@ namespace _Project.World.VaultMap
         [Tooltip("Optional Collider2D used to pick this area by point overlap / triggers. Should usually be IsTrigger=ON.")]
         [SerializeField] private Collider2D areaBounds;
 
+        [Header("Optional lateral clamp (cabin shaft)")]
+        [Tooltip("When enabled, narrows walkable u as v increases so the player cannot leave the visual cabin width.")]
+        [SerializeField] private bool limitLateralUWhenDeep;
+        [SerializeField] [Range(0f, 1f)] private float lateralClampStartV = 0.35f;
+        [SerializeField] [Range(0f, 1f)] private float lateralUMinAtNear = 0.14f;
+        [SerializeField] [Range(0f, 1f)] private float lateralUMaxAtNear = 0.44f;
+        [SerializeField] [Range(0f, 1f)] private float lateralUMinAtFar = 0.08f;
+        [SerializeField] [Range(0f, 1f)] private float lateralUMaxAtFar = 0.49f;
+
         public Collider2D AreaBounds => areaBounds;
+        public bool HasLateralDepthClamp => limitLateralUWhenDeep;
 
         public bool HasValidCorners =>
             nearLeft != null && nearRight != null && farLeft != null && farRight != null;
@@ -105,6 +115,23 @@ namespace _Project.World.VaultMap
                 return false;
 
             return uv.x >= 0f && uv.x <= 1f && uv.y >= 0f && uv.y <= 1f;
+        }
+
+        /// <summary>
+        /// Optionally clamps u when the player is deep enough (v) inside a narrow cabin shaft.
+        /// Returns true if u was modified.
+        /// </summary>
+        public bool TryClampUVAtDepth(ref Vector2 uv)
+        {
+            if (!limitLateralUWhenDeep || uv.y < lateralClampStartV)
+                return false;
+
+            float t = Mathf.InverseLerp(lateralClampStartV, 1f, uv.y);
+            float uMin = Mathf.Lerp(lateralUMinAtNear, lateralUMinAtFar, t);
+            float uMax = Mathf.Lerp(lateralUMaxAtNear, lateralUMaxAtFar, t);
+            float before = uv.x;
+            uv.x = Mathf.Clamp(uv.x, uMin, uMax);
+            return Mathf.Abs(uv.x - before) > 0.0001f;
         }
 
         private static Vector2 Bilinear(Vector2 p00, Vector2 p10, Vector2 p01, Vector2 p11, float u, float v)

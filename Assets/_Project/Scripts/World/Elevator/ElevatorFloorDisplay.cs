@@ -106,11 +106,36 @@ public class ElevatorFloorDisplay : MonoBehaviour
         SetLegacyTmpVisible(true);
         if (mode == ElevatorDisplayMode.CallRemote)
         {
-            SetContent(LocalizationManager.Pick("Ascensore", "Elevator"), ElevatorDirection.None);
+            string floorLabel = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+            string busy = LocalizationManager.Pick("Occupato", "Busy");
+            SetContent($"{busy}\n{floorLabel}", ElevatorDirection.None);
+            return;
+        }
+
+        if (mode == ElevatorDisplayMode.CabinAtFloor)
+        {
+            string floorLabel = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+            string youAreAt = LocalizationManager.Pick("Ti trovi al", "You are at");
+            SetContent($"{youAreAt}\n{floorLabel}", ElevatorDirection.None);
+            return;
+        }
+
+        if (mode == ElevatorDisplayMode.CabinSelectingTarget)
+        {
+            string floorLabel = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+            string goingTo = LocalizationManager.Pick("Stai andando a", "You are going to");
+            SetContent($"{goingTo}\n{floorLabel}", ElevatorDirection.None);
             return;
         }
 
         string label = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+        if (mode == ElevatorDisplayMode.Normal && direction == ElevatorDirection.None)
+        {
+            string youAreAt = LocalizationManager.Pick("Ti trovi al", "You are at");
+            SetContent($"{youAreAt}\n{label}", ElevatorDirection.None);
+            return;
+        }
+
         SetContent(label, direction);
     }
 
@@ -118,7 +143,7 @@ public class ElevatorFloorDisplay : MonoBehaviour
     public void SetContent(string label, ElevatorDirection direction)
     {
         if (labelText != null)
-            labelText.text = label;
+            labelText.text = string.IsNullOrEmpty(label) ? label : label.ToUpperInvariant();
 
         if (arrowText != null)
         {

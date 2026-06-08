@@ -181,6 +181,9 @@ public class ElevatorCabinZone : MonoBehaviour
         if (!other.CompareTag("Player") || elevator == null)
             return;
 
+        if (elevator.HasPhysicalInteriorZone(floorIndex))
+            return;
+
         _playerContacts.Add(other);
         elevator.HandleCabinZoneContact(floorIndex, other.transform, GetComponent<Collider2D>());
     }
@@ -188,6 +191,9 @@ public class ElevatorCabinZone : MonoBehaviour
     private void OnTriggerStay2D(Collider2D other)
     {
         if (!other.CompareTag("Player") || elevator == null)
+            return;
+
+        if (elevator.HasPhysicalInteriorZone(floorIndex))
             return;
 
         _playerContacts.Add(other);
@@ -200,11 +206,10 @@ public class ElevatorCabinZone : MonoBehaviour
         if (!other.CompareTag("Player") || elevator == null)
             return;
 
+        if (elevator.HasPhysicalInteriorZone(floorIndex))
+            return;
+
         _playerContacts.Remove(other);
-        // #region agent log
-        DebugSessionLog_d2269f.Write("L", "ElevatorCabinZone.OnTriggerExit2D", "trigger exit",
-            "{\"floor\":" + floorIndex + ",\"remainingContacts\":" + _playerContacts.Count + "}");
-        // #endregion
         if (_playerContacts.Count > 0)
             return;
 

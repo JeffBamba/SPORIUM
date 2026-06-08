@@ -73,6 +73,9 @@ public class ElevatorDoorPair : MonoBehaviour
 
     [SerializeField] private Collider2D[] walkBlockers;
 
+    [Tooltip("Collider laterali cabina (BLK_CabinSide_*): attivi solo a porte aperte; disattivi a porte chiuse (come complemento di BLK_DoorThreshold).")]
+    [SerializeField] private Collider2D[] cabinSideWalkBlockers;
+
 
 
     [Header("Maschera muro (elevator_mask)")]
@@ -149,6 +152,8 @@ public class ElevatorDoorPair : MonoBehaviour
 
         CacheWalkBlockers();
 
+        CacheCabinSideWalkBlockers();
+
         CacheElevatorMask();
 
         CaptureClosedPositions();
@@ -158,6 +163,8 @@ public class ElevatorDoorPair : MonoBehaviour
             ApplyInstant(false);
 
         ApplyElevatorMaskIdle();
+
+        ApplyCabinSideWalkBlockers(false);
 
     }
 
@@ -174,6 +181,8 @@ public class ElevatorDoorPair : MonoBehaviour
         SetDoorRenderersVisible(true);
 
         ApplyElevatorMaskIdle();
+
+        ApplyCabinSideWalkBlockers(false);
 
     }
 
@@ -217,6 +226,88 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
         walkBlockers = found.ToArray();
+
+    }
+
+
+
+    private void CacheCabinSideWalkBlockers()
+
+    {
+
+        if (cabinSideWalkBlockers != null && cabinSideWalkBlockers.Length > 0)
+
+            return;
+
+
+
+        var found = new List<Collider2D>();
+
+        for (int i = 0; i < transform.childCount; i++)
+
+        {
+
+            Transform child = transform.GetChild(i);
+
+            if (IsIgnoredRootChild(child))
+
+                continue;
+
+
+
+            if (!child.name.StartsWith("BLK_CabinSide", System.StringComparison.OrdinalIgnoreCase))
+
+                continue;
+
+
+
+            Collider2D col = child.GetComponent<Collider2D>();
+
+            if (col != null)
+
+                found.Add(col);
+
+        }
+
+
+
+        cabinSideWalkBlockers = found.ToArray();
+
+    }
+
+
+
+    private void ApplyCabinSideWalkBlockers(bool doorsOpen)
+
+    {
+
+        if (cabinSideWalkBlockers == null)
+
+            return;
+
+
+
+        for (int i = 0; i < cabinSideWalkBlockers.Length; i++)
+
+        {
+
+            if (cabinSideWalkBlockers[i] != null)
+
+                cabinSideWalkBlockers[i].enabled = doorsOpen;
+
+        }
+
+    }
+
+
+
+    private void SyncDoorWalkBlockers(bool doorsOpen)
+
+    {
+
+        ApplyWalkBlockers(!doorsOpen);
+
+        ApplyCabinSideWalkBlockers(doorsOpen);
 
     }
 
@@ -465,7 +556,7 @@ public class ElevatorDoorPair : MonoBehaviour
         if (!open)
         {
             SetDoorRenderersVisible(true);
-            ApplyWalkBlockers(true);
+            SyncDoorWalkBlockers(false);
         }
 
 
@@ -476,9 +567,8 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
-        // Il blocco muro (BLK_DoorThreshold) resta ATTIVO per tutta l'animazione di apertura:
-        // il player non può entrare finché i portelloni non sono completamente aperti.
-        ApplyWalkBlockers(true);
+        // BLK_DoorThreshold attivo per tutta l'animazione; BLK_CabinSide solo a porte completamente aperte.
+        SyncDoorWalkBlockers(false);
 
 
 
@@ -524,8 +614,8 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
-        // Solo a fine animazione: se aperte, sblocca il passaggio; se chiuse, mantieni il muro.
-        ApplyWalkBlockers(!open);
+        // Solo a fine animazione: soglia frontale ↔ laterali cabina in base allo stato finale porte.
+        SyncDoorWalkBlockers(open);
 
 
 
@@ -564,7 +654,7 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
-        ApplyWalkBlockers(!open);
+        SyncDoorWalkBlockers(open);
 
         ApplyElevatorMaskIdle();
 

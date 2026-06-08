@@ -2244,7 +2244,7 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] ElevatorCabinZone
-  - ElevatorFrontWalkArea_LVL_-1 
+  - ElevatorFrontWalkArea_LVL_-1
     [Component] Transform
     [Component] PerspectiveWalkArea2D
     [Component] BoxCollider2D
@@ -2265,6 +2265,18 @@
     [Component] Transform
   - ELEV_ExitAnchor_LVL_-2
     [Component] Transform
+  - ElevatorCabinInteriorZone_LVL_-1
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinInteriorZone
+  - ElevatorCabinInteriorZone_LVL_0
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinInteriorZone
+  - ElevatorCabinInteriorZone_LVL_+1
+    [Component] Transform
+    [Component] BoxCollider2D
+    [Component] ElevatorCabinInteriorZone
 - Room_Dome_Placeholder
   [Component] Transform
   [Component] SpriteRenderer

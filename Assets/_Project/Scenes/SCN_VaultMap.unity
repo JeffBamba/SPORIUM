@@ -148,7 +148,7 @@ Transform:
   m_GameObject: {fileID: 962693}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7146156, w: 0.69951737}
-  m_LocalPosition: {x: 2.107, y: 0.147, z: -0.082351245}
+  m_LocalPosition: {x: 2.107, y: -0.25, z: -0.082351245}
   m_LocalScale: {x: 1, y: 0.47500002, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5802,7 +5802,7 @@ Transform:
   m_GameObject: {fileID: 279243964}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -20.13867, y: -0.27, z: 0}
+  m_LocalPosition: {x: -20.13867, y: -0.188, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5983,8 +5983,8 @@ Transform:
   m_GameObject: {fileID: 281962329}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.305, y: 2.23, z: -0.015}
-  m_LocalScale: {x: 0.0057560196, y: 0.0057560196, z: 0.0057560196}
+  m_LocalPosition: {x: -1.329, y: 2.23, z: -0.015}
+  m_LocalScale: {x: 0.0051080883, y: 0.0051080883, z: 0.0051080883}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 281962324}
@@ -7554,8 +7554,6 @@ Transform:
   - {fileID: 1449004945}
   - {fileID: 962694}
   - {fileID: 1355124666}
-  - {fileID: 1463169283}
-  - {fileID: 1561573044}
   - {fileID: 1268535595}
   - {fileID: 1664086550}
   - {fileID: 373846165}
@@ -9065,13 +9063,21 @@ MonoBehaviour:
   selectionDebounceSeconds: 1.2
   cabinLevelVerticalTolerance: 1.75
   cabinSelectionHint: "Usa \u2191 \u2193 o W S per scegliere il piano"
+  cabinConfirmHint: Premi E per confermare il piano
+  cabinLobbyDeepV: 0.92
+  minDoorsOpenBeforeCabinEntrySeconds: 0.45
+  cabinDoorCloseDelaySeconds: 0.75
   validateLevelsOnStart: 1
   exitAnchors:
   - {fileID: 2105551002}
   - {fileID: 2105551004}
   - {fileID: 2105551006}
   - {fileID: 2105551008}
-  floorLobbyWalkAreas: []
+  floorLobbyWalkAreas:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 528087517}
+  - {fileID: 0}
   travelVirtualCamera: {fileID: 228800910}
   cabinTravelSpeed: 6
   hideElevatorRoomDuringTravel: 1
@@ -10568,6 +10574,12 @@ MonoBehaviour:
   farLeft: {fileID: 1032139436}
   farRight: {fileID: 462205356}
   areaBounds: {fileID: 460519660}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!1 &462205355
 GameObject:
   m_ObjectHideFlags: 0
@@ -11676,6 +11688,12 @@ MonoBehaviour:
   farLeft: {fileID: 1658449315}
   farRight: {fileID: 230181862}
   areaBounds: {fileID: 482114317}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!1 &487210095
 GameObject:
   m_ObjectHideFlags: 0
@@ -12581,6 +12599,7 @@ MonoBehaviour:
   farLeft: {fileID: 279243965}
   farRight: {fileID: 1706918344}
   areaBounds: {fileID: 528087516}
+  limitLateralUWhenDeep: 0
 --- !u!1 &529086817
 GameObject:
   m_ObjectHideFlags: 0
@@ -19255,6 +19274,12 @@ MonoBehaviour:
   farLeft: {fileID: 115739648}
   farRight: {fileID: 886156423}
   areaBounds: {fileID: 763620890}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!1001 &767488488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19802,6 +19827,12 @@ MonoBehaviour:
   farLeft: {fileID: 1130791761}
   farRight: {fileID: 110712490}
   areaBounds: {fileID: 778557142}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!114 &778557144
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24685,6 +24716,12 @@ MonoBehaviour:
   farLeft: {fileID: 1126272912}
   farRight: {fileID: 30315601}
   areaBounds: {fileID: 998312270}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!1 &1003878492
 GameObject:
   m_ObjectHideFlags: 0
@@ -26068,7 +26105,7 @@ Transform:
   m_GameObject: {fileID: 1081004979}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.282, y: -9.651, z: 0}
+  m_LocalPosition: {x: 4.31, y: -10.425, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -26127,7 +26164,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.27580982, y: 0.6149092}
+  m_Offset: {x: 0.26187307, y: 0.76821375}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -26138,7 +26175,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.9253949, y: 1.3998051}
+  m_Size: {x: 1.12051, y: 1.0931959}
   m_EdgeRadius: 0
 --- !u!1 &1085339612
 GameObject:
@@ -28981,6 +29018,12 @@ MonoBehaviour:
   farLeft: {fileID: 27874511}
   farRight: {fileID: 1486119462}
   areaBounds: {fileID: 1242216190}
+  limitLateralUWhenDeep: 0
+  lateralClampStartV: 0.35
+  lateralUMinAtNear: 0.14
+  lateralUMaxAtNear: 0.44
+  lateralUMinAtFar: 0.08
+  lateralUMaxAtFar: 0.49
 --- !u!1 &1246054826
 GameObject:
   m_ObjectHideFlags: 0
@@ -34075,6 +34118,7 @@ MonoBehaviour:
   animationSortingOrder: 200
   walkBlockers:
   - {fileID: 2155000022}
+  cabinSideWalkBlockers: []
   elevatorMask: {fileID: 0}
   wallMaskActiveSortingOrder: 12
 --- !u!1 &1427639575
@@ -34388,6 +34432,8 @@ Transform:
   - {fileID: 293108941}
   - {fileID: 2155000031}
   - {fileID: 968135688}
+  - {fileID: 2155000041}
+  - {fileID: 2155000051}
   m_Father: {fileID: 1809145779}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1439779230
@@ -34411,6 +34457,7 @@ MonoBehaviour:
   animationSortingOrder: 200
   walkBlockers:
   - {fileID: 2155000032}
+  cabinSideWalkBlockers: []
   elevatorMask: {fileID: 968135689}
   wallMaskActiveSortingOrder: 12
 --- !u!1 &1446995590
@@ -34818,79 +34865,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1462388920}
   m_CullTransparentMesh: 1
---- !u!1 &1463169282
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1463169283}
-  - component: {fileID: 1463169284}
-  m_Layer: 7
-  m_Name: Wall_bed (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1463169283
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1463169282}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16, y: -12.98, z: -0.082351245}
-  m_LocalScale: {x: 1, y: 0.47500002, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 348340776}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!68 &1463169284
-EdgeCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1463169282}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_EdgeRadius: 0
-  m_Points:
-  - {x: 1.2911196, y: 26.425064}
-  - {x: -0.09509669, y: 21.92996}
-  m_AdjacentStartPoint: {x: 0, y: 0}
-  m_AdjacentEndPoint: {x: 0, y: 0}
-  m_UseAdjacentStartPoint: 0
-  m_UseAdjacentEndPoint: 0
 --- !u!1 &1464640418
 GameObject:
   m_ObjectHideFlags: 0
@@ -36801,79 +36775,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cb96e2828e54e5990803388acdaa8e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1561573043
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1561573044}
-  - component: {fileID: 1561573045}
-  m_Layer: 7
-  m_Name: Wall_bed (7)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1561573044
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1561573043}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16, y: -3.4449997, z: -0.082351245}
-  m_LocalScale: {x: 1, y: 0.47500002, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 348340776}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!68 &1561573045
-EdgeCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1561573043}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_EdgeRadius: 0
-  m_Points:
-  - {x: 1.2911196, y: 26.425064}
-  - {x: -0.09509669, y: 21.92996}
-  m_AdjacentStartPoint: {x: 0, y: 0}
-  m_AdjacentEndPoint: {x: 0, y: 0}
-  m_UseAdjacentStartPoint: 0
-  m_UseAdjacentEndPoint: 0
 --- !u!1 &1570074982
 GameObject:
   m_ObjectHideFlags: 0
@@ -38061,6 +37962,7 @@ MonoBehaviour:
   animationSortingOrder: 200
   walkBlockers:
   - {fileID: 2155000012}
+  cabinSideWalkBlockers: []
   elevatorMask: {fileID: 0}
   wallMaskActiveSortingOrder: 12
 --- !u!1 &1606671001
@@ -40321,7 +40223,7 @@ Transform:
   m_GameObject: {fileID: 1706918343}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -17.19867, y: -0.5, z: 0}
+  m_LocalPosition: {x: -17.19867, y: -0.18799953, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -42489,6 +42391,9 @@ Transform:
   - {fileID: 2105551004}
   - {fileID: 2105551006}
   - {fileID: 2105551008}
+  - {fileID: 2991001002}
+  - {fileID: 2991001012}
+  - {fileID: 2991001022}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1809594425
@@ -49286,7 +49191,7 @@ Transform:
   m_GameObject: {fileID: 2105551005}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.59, y: -10.12, z: 0}
+  m_LocalPosition: {x: 4.59, y: -9.765, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -50478,7 +50383,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.22534537, y: 1.8567579}
+  m_Offset: {x: -0.064332604, y: 1.7784517}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -50489,7 +50394,440 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 3.4156394, y: 1.9887586}
+  m_Size: {x: 1.4863427, y: 2.145371}
+  m_EdgeRadius: 0
+--- !u!1 &2155000040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2155000041}
+  - component: {fileID: 2155000042}
+  m_Layer: 7
+  m_Name: BLK_CabinSide_L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2155000041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2155000040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.56, y: 0.08, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1439779229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &2155000042
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2155000040}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.15, y: 2.5}
+  m_EdgeRadius: 0
+--- !u!1 &2155000050
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2155000051}
+  - component: {fileID: 2155000052}
+  m_Layer: 7
+  m_Name: BLK_CabinSide_R
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2155000051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2155000050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.26, y: 0.08000028, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1439779229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &2155000052
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2155000050}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.15, y: 2.5}
+  m_EdgeRadius: 0
+--- !u!1 &2991001001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2991001002}
+  - component: {fileID: 2991001004}
+  - component: {fileID: 2991001003}
+  m_Layer: 0
+  m_Name: ElevatorCabinInteriorZone_LVL_-1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2991001002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.903, y: -9.651, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1809145779}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2991001003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a91b2d3f4856a9b0c1d2e3f4a5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floorIndex: 2
+  elevator: {fileID: 401336199}
+  landingPoint: {fileID: 0}
+--- !u!61 &2991001004
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001001}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.70380974, y: 0.19491673}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.2177172, y: 2.3153954}
+  m_EdgeRadius: 0
+--- !u!1 &2991001011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2991001012}
+  - component: {fileID: 2991001014}
+  - component: {fileID: 2991001013}
+  m_Layer: 0
+  m_Name: ElevatorCabinInteriorZone_LVL_0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2991001012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.282, y: 0.85, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1809145779}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2991001013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a91b2d3f4856a9b0c1d2e3f4a5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floorIndex: 1
+  elevator: {fileID: 401336199}
+  landingPoint: {fileID: 0}
+--- !u!61 &2991001014
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001011}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.52, y: 0.35}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.55, y: 1.1}
+  m_EdgeRadius: 0
+--- !u!1 &2991001021
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2991001022}
+  - component: {fileID: 2991001024}
+  - component: {fileID: 2991001023}
+  m_Layer: 0
+  m_Name: ElevatorCabinInteriorZone_LVL_+1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2991001022
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001021}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.282, y: 7.196, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1809145779}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2991001023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a91b2d3f4856a9b0c1d2e3f4a5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floorIndex: 0
+  elevator: {fileID: 401336199}
+  landingPoint: {fileID: 0}
+--- !u!61 &2991001024
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2991001021}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.52, y: 0.4}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.55, y: 1.1}
   m_EdgeRadius: 0
 --- !u!1001 &3092545759540734000
 PrefabInstance:

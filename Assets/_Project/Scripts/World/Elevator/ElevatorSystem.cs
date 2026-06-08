@@ -24,7 +24,20 @@ public enum ElevatorDisplayMode
     CallRemote,
     Enter,
     CabinAtFloor,
+    CabinSelectingTarget,
     OutOfService
+}
+
+/// <summary>Stato esplicito del flusso ascensore (Elevator 4.0).</summary>
+public enum ElevatorFlowState
+{
+    IdleAtFloor,
+    CallingToFloor,
+    DoorsOpenWaitingEntry,
+    CabinReadyForSelection,
+    Departing,
+    Traveling,
+    ArrivalWaitingExit
 }
 
 public class ElevatorSystem : MonoBehaviour
@@ -57,6 +70,18 @@ public class ElevatorSystem : MonoBehaviour
 
     [Tooltip("Testo sui display quando il player entra in cabina (prima di premere Su/Giù o W/S).")]
     [SerializeField] private string cabinSelectionHint = "Usa \u2191 \u2193 o W S per scegliere il piano";
+
+    [Tooltip("Hint bottom bar dopo la selezione piano: conferma viaggio con E.")]
+    [SerializeField] private string cabinConfirmHint = "Premi E per confermare il piano";
+
+    [Tooltip("UV v minimo sul pianerottolo (floorLobbyWalkAreas / ElevatorFrontWalkArea) per attivare logica cabina. Alto = più tempo per entrare visivamente in deep prima della chiusura porte.")]
+    [SerializeField] [Range(0.5f, 1f)] private float cabinLobbyDeepV = 0.92f;
+
+    [Tooltip("Grace solo in soglia: se il player è già abbastanza deep, la cabina può attivarsi subito. Altrimenti attesa minima dopo apertura porte.")]
+    [SerializeField] private float minDoorsOpenBeforeCabinEntrySeconds = 0.45f;
+
+    [Tooltip("Ritardo dopo attivazione cabina prima di richiudere le porte.")]
+    [SerializeField] private float cabinDoorCloseDelaySeconds = 0.75f;
 
     [Header("Validation")]
     [SerializeField] private bool validateLevelsOnStart = true;
@@ -101,6 +126,9 @@ public class ElevatorSystem : MonoBehaviour
 
     private readonly List<ElevatorFloorDisplay> _displays = new List<ElevatorFloorDisplay>();
     private readonly List<ElevatorCabinZone> _cabinZones = new List<ElevatorCabinZone>();
+    private readonly List<ElevatorCabinInteriorZone> _interiorZones = new List<ElevatorCabinInteriorZone>();
+    private ElevatorFlowState _flowState = ElevatorFlowState.IdleAtFloor;
+    private int _interiorZoneOverlapCount;
     private Coroutine _outOfServiceCoroutine;
     private Coroutine _callToFloorCoroutine;
     private Coroutine _departCoroutine;
@@ -109,6 +137,7 @@ public class ElevatorSystem : MonoBehaviour
     private Coroutine _closeDoorsForCabinCoroutine;
     // Ingresso cabina armato SOLO quando le porte si aprono da una chiamata (player provabilmente fuori).
     private bool _entryArmedByDoorsOpen;
+    private float _doorsFullyOpenAtTime = -1f;
 
     // Fase 5 — selezione piano in cabina
     private bool _playerInsideCabinZone;
@@ -182,6 +211,13 @@ public class ElevatorSystem : MonoBehaviour
             if (zones[i] != null)
                 zones[i].BindElevator(this);
         }
+
+        var interiorZones = root.GetComponentsInChildren<ElevatorCabinInteriorZone>(true);
+        for (int i = 0; i < interiorZones.Length; i++)
+        {
+            if (interiorZones[i] != null)
+                interiorZones[i].BindElevator(this);
+        }
     }
 
     private void ValidateConfiguration()
@@ -243,6 +279,10 @@ public class ElevatorSystem : MonoBehaviour
         if (!_playerInsideCabinZone || _postTravelArrival || isTeleporting || levels == null || levels.Length == 0)
             return;
 
+        // Ingresso visivo: finché i portelloni sono aperti, W/S muovono il player (non selezionano piano).
+        if (AreDoorsOpenAtFloor(currentLevelIndex))
+            return;
+
         int cabinDelta = 0;
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
             cabinDelta = -1;
@@ -252,12 +292,8 @@ public class ElevatorSystem : MonoBehaviour
         if (cabinDelta != 0)
             BeginOrAdjustCabinSelection(cabinDelta);
 
-        if (_cabinArrowSelectionActive && _selectionDebounceRemaining >= 0f)
-        {
-            _selectionDebounceRemaining -= Time.deltaTime;
-            if (_selectionDebounceRemaining <= 0f)
-                TryDepartToTarget();
-        }
+        if (_cabinArrowSelectionActive && (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space)))
+            TryDepartToTarget();
     }
 
     private void RefreshIdleDisplayIfNeeded()
@@ -317,8 +353,8 @@ public class ElevatorSystem : MonoBehaviour
         if (_playerInsideCabinZone && !_cabinArrowSelectionActive)
             return ElevatorDisplayMode.CabinAtFloor;
 
-        if (_cabinArrowSelectionActive)
-            return ElevatorDisplayMode.Normal;
+        if (_cabinArrowSelectionActive && _flowState == ElevatorFlowState.CabinReadyForSelection)
+            return ElevatorDisplayMode.CabinSelectingTarget;
 
         int playerFloor = ResolvePlayerLevelIndex();
         if (playerFloor >= 0 && playerFloor != currentLevelIndex)
@@ -426,6 +462,7 @@ public class ElevatorSystem : MonoBehaviour
 
         _travelPlayer = travelPlayer;
         isTeleporting = true;
+        SetFlowState(ElevatorFlowState.Traveling);
         GameplayUiModalLock.SetBlockWorldInput(true);
 
         if (teleportDelay > 0f)
@@ -578,6 +615,7 @@ public class ElevatorSystem : MonoBehaviour
         CancelCabinArrowSelection(restoreDisplays: false);
 
         _postTravelArrival = true;
+        SetFlowState(ElevatorFlowState.ArrivalWaitingExit);
         _postTravelReentryArmed = false;
         _suppressCabinActivationUntilExitFloor = -1;
         _cabinFloorIndex = floorIndex;
@@ -840,24 +878,12 @@ public class ElevatorSystem : MonoBehaviour
             return;
 
         ElevatorCabinZone zone = FindCabinZone(floorIndex);
+        if (HasPhysicalInteriorZone(floorIndex))
+            return;
+
         bool deepInCabina = zone != null
             ? zone.IsPlayerDeepInCabina(playerTransform.position, zoneCol)
             : IsPlayerDeepInCabinaLegacy(zoneCol, playerTransform.position, 0.45f);
-
-        // #region agent log
-        float dbgV = -1f;
-        if (zone != null) zone.TryGetPlayerDepthV(playerTransform.position, out dbgV);
-        ElevatorDoorPair dbgDoors = GetFloorDoors(floorIndex);
-        DebugSessionLog_d2269f.Write("J", "ElevatorSystem.HandleCabinZoneContact", "contact",
-            "{\"floor\":" + floorIndex + ",\"deep\":" + (deepInCabina ? "true" : "false") +
-            ",\"v\":" + dbgV.ToString("F3") + ",\"inside\":" + (_playerInsideCabinZone ? "true" : "false") +
-            ",\"hidden\":" + (_playerHiddenForCabin ? "true" : "false") +
-            ",\"open\":" + (dbgDoors != null && dbgDoors.IsOpen ? "true" : "false") +
-            ",\"anim\":" + (dbgDoors != null && dbgDoors.IsAnimating ? "true" : "false") +
-            ",\"opening\":" + (dbgDoors != null && dbgDoors.IsOpening ? "true" : "false") +
-            ",\"arrival\":" + (_postTravelArrival ? "true" : "false") +
-            ",\"suppress\":" + _suppressCabinActivationUntilExitFloor + "}");
-        // #endregion
 
         if (_postTravelArrival)
         {
@@ -911,16 +937,194 @@ public class ElevatorSystem : MonoBehaviour
         }
 
         string blockReason = GetCabinActivationBlockReason(floorIndex, playerTransform);
-        // #region agent log
-        DebugSessionLog_d2269f.Write("K", "ElevatorSystem.HandleCabinZoneContact", "deep+armed gate",
-            "{\"floor\":" + floorIndex + ",\"block\":\"" + (blockReason ?? "none") + "\"," +
-            "\"open\":" + (dbgDoors != null && dbgDoors.IsOpen ? "true" : "false") +
-            ",\"anim\":" + (dbgDoors != null && dbgDoors.IsAnimating ? "true" : "false") + "}");
-        // #endregion
         if (blockReason != null)
             return;
 
         ActivateCabinInterior(floorIndex, playerTransform);
+    }
+
+    public bool HasPhysicalInteriorZone(int floorIndex) => FindInteriorZone(floorIndex) != null;
+
+    public bool IsCabAtFloor(int floorIndex) =>
+        IsValidLevelIndex(floorIndex) && floorIndex == currentLevelIndex;
+
+    public bool IsPlayerInsideCabinOnFloor(int floorIndex) =>
+        _playerInsideCabinZone && _cabinFloorIndex == floorIndex;
+
+    public void RegisterInteriorZone(ElevatorCabinInteriorZone zone)
+    {
+        if (zone == null || _interiorZones.Contains(zone))
+            return;
+
+        _interiorZones.Add(zone);
+    }
+
+    public void UnregisterInteriorZone(ElevatorCabinInteriorZone zone)
+    {
+        if (zone == null)
+            return;
+
+        _interiorZones.Remove(zone);
+    }
+
+    public void NotifyInteriorZoneEnter(int floorIndex, Transform playerTransform)
+    {
+        if (!enabled || playerTransform == null || !IsValidLevelIndex(floorIndex))
+            return;
+
+        if (!IsCabAtFloor(floorIndex))
+            return;
+
+        _interiorZoneOverlapCount++;
+        if (_interiorZoneOverlapCount > 1)
+            return;
+
+        HandlePhysicalInteriorEnter(floorIndex, playerTransform);
+    }
+
+    public void NotifyInteriorZoneStay(int floorIndex, Transform playerTransform)
+    {
+        if (!enabled || playerTransform == null || !IsValidLevelIndex(floorIndex) || !IsCabAtFloor(floorIndex))
+            return;
+
+        HandlePhysicalInteriorEnter(floorIndex, playerTransform);
+    }
+
+    public void NotifyInteriorZoneExit(int floorIndex)
+    {
+        if (!IsValidLevelIndex(floorIndex))
+            return;
+
+        _interiorZoneOverlapCount = Mathf.Max(0, _interiorZoneOverlapCount - 1);
+        if (_interiorZoneOverlapCount > 0)
+            return;
+
+        HandlePhysicalInteriorExit(floorIndex);
+    }
+
+    private void HandlePhysicalInteriorEnter(int floorIndex, Transform playerTransform)
+    {
+        if (floorIndex != currentLevelIndex)
+            return;
+
+        if (_postTravelArrival)
+        {
+            bool sameArrivalFloor = floorIndex == _cabinFloorIndex || floorIndex == currentLevelIndex;
+            if (!sameArrivalFloor)
+                return;
+
+            player = playerTransform;
+            return;
+        }
+
+        if (_playerInsideCabinZone && _cabinFloorIndex == floorIndex)
+            return;
+
+        if (_suppressCabinActivationUntilExitFloor == floorIndex)
+        {
+            player = playerTransform;
+            ResetDisplaysToOwnFloors();
+            return;
+        }
+
+        string blockReason = GetCabinActivationBlockReason(floorIndex, playerTransform);
+
+        bool deepInCabina = IsPlayerDeepEnoughOnLobbyWalkArea(floorIndex, playerTransform.position);
+
+        if (blockReason != null)
+            return;
+
+        if (!deepInCabina)
+            return;
+
+        ActivateCabinInterior(floorIndex, playerTransform);
+    }
+
+    private void HandlePhysicalInteriorExit(int floorIndex)
+    {
+        if (_suppressCabinActivationUntilExitFloor == floorIndex)
+        {
+            _suppressCabinActivationUntilExitFloor = -1;
+            _playerInsideCabinZone = false;
+            _cabinFloorIndex = -1;
+            _cabinZoneOverlapCount = 0;
+            _postTravelReentryArmed = false;
+            CancelCabinArrowSelection(restoreDisplays: true);
+            _holdDoorsOpenForCabinEntry = false;
+            _entryArmedByDoorsOpen = false;
+            CloseDoors(floorIndex, force: true);
+            if (_playerHiddenForCabin)
+                ForceShowPlayer();
+            SetFlowState(ElevatorFlowState.IdleAtFloor);
+            return;
+        }
+
+        if (isTeleporting)
+            return;
+
+        if (_postTravelArrival)
+        {
+            if (floorIndex == _cabinFloorIndex || floorIndex == currentLevelIndex)
+            {
+                CloseDoors(floorIndex, force: true);
+                _postTravelArrival = false;
+                _postTravelReentryArmed = false;
+                _cabinFloorIndex = -1;
+                ResetDisplaysToOwnFloors();
+                SetFlowState(ElevatorFlowState.IdleAtFloor);
+            }
+
+            if (_playerHiddenForCabin)
+                ForceShowPlayer();
+
+            return;
+        }
+
+        if (!_playerInsideCabinZone)
+        {
+            if (floorIndex != currentLevelIndex)
+                return;
+
+            _entryArmedByDoorsOpen = false;
+
+            if (AreDoorsOpenAtFloor(floorIndex) && !isTeleporting)
+            {
+                if (_holdDoorsOpenForCabinEntry)
+                    _holdDoorsOpenForCabinEntry = false;
+
+                CloseDoors(floorIndex);
+            }
+
+            if (_playerHiddenForCabin)
+                ForceShowPlayer();
+
+            CancelCabinArrowSelection(restoreDisplays: true);
+            SetFlowState(ElevatorFlowState.IdleAtFloor);
+            return;
+        }
+
+        // In cabina: ignora uscita laterale dal trigger se il player è ancora deep sulla walk area lobby.
+        Transform exitPlayer = player;
+        if (exitPlayer != null && IsPlayerDeepEnoughOnLobbyWalkArea(floorIndex, exitPlayer.position))
+            return;
+
+        LeaveCabinZone(restoreDisplays: true);
+    }
+
+    private ElevatorCabinInteriorZone FindInteriorZone(int floorIndex)
+    {
+        for (int i = 0; i < _interiorZones.Count; i++)
+        {
+            if (_interiorZones[i] != null && _interiorZones[i].FloorIndex == floorIndex)
+                return _interiorZones[i];
+        }
+
+        return null;
+    }
+
+    private void SetFlowState(ElevatorFlowState state)
+    {
+        _flowState = state;
     }
 
     private void ActivateCabinInterior(int floorIndex, Transform playerTransform)
@@ -943,6 +1147,7 @@ public class ElevatorSystem : MonoBehaviour
         _selectionDebounceRemaining = -1f;
         _cabinArrowSelectionActive = false;
         _entryArmedByDoorsOpen = false;
+        SetFlowState(ElevatorFlowState.CabinReadyForSelection);
 
         ShowCabinHintOnBottomBar();
         _playerHiddenForCabin = true;
@@ -965,7 +1170,13 @@ public class ElevatorSystem : MonoBehaviour
         }
 
         if (_playerInsideCabinZone && _playerHiddenForCabin && _cabinFloorIndex == floorIndex)
+        {
+            SetCabinWorldInputBlocked(true);
+            EnsurePlayerVisualCache();
+            if (_playerRigidbody != null)
+                _playerRigidbody.velocity = Vector2.zero;
             SetPlayerHidden(true);
+        }
 
         _hideAfterCabinDoorsCoroutine = null;
     }
@@ -979,7 +1190,11 @@ public class ElevatorSystem : MonoBehaviour
                 yield return null;
         }
 
+        if (cabinDoorCloseDelaySeconds > 0f)
+            yield return new WaitForSeconds(cabinDoorCloseDelaySeconds);
+
         _holdDoorsOpenForCabinEntry = false;
+        _doorsFullyOpenAtTime = -1f;
         CloseDoors(floorIndex, force: true, bypassHold: true);
         _closeDoorsForCabinCoroutine = null;
     }
@@ -1010,13 +1225,8 @@ public class ElevatorSystem : MonoBehaviour
         if (!IsValidLevelIndex(floorIndex))
             return;
 
-        // #region agent log
-        DebugSessionLog_d2269f.Write("L", "ElevatorSystem.NotifyPlayerExitedCabinZone", "exit notify",
-            "{\"floor\":" + floorIndex + ",\"inside\":" + (_playerInsideCabinZone ? "true" : "false") +
-            ",\"overlap\":" + _cabinZoneOverlapCount + ",\"hidden\":" + (_playerHiddenForCabin ? "true" : "false") +
-            ",\"arrival\":" + (_postTravelArrival ? "true" : "false") +
-            ",\"suppress\":" + _suppressCabinActivationUntilExitFloor + "}");
-        // #endregion
+        if (HasPhysicalInteriorZone(floorIndex))
+            return;
 
         if (_suppressCabinActivationUntilExitFloor == floorIndex)
         {
@@ -1116,7 +1326,37 @@ public class ElevatorSystem : MonoBehaviour
         if (!_entryArmedByDoorsOpen && !_postTravelArrival && !_postTravelReentryArmed)
             return "not_called";
 
+        SyncDoorsFullyOpenTimestamp(doors);
+        if (_entryArmedByDoorsOpen && _doorsFullyOpenAtTime >= 0f
+            && !IsPlayerDeepEnoughOnLobbyWalkArea(floorIndex, playerTransform.position)
+            && Time.time < _doorsFullyOpenAtTime + minDoorsOpenBeforeCabinEntrySeconds)
+            return "doors_open_grace";
+
         return null;
+    }
+
+    private void SyncDoorsFullyOpenTimestamp(ElevatorDoorPair doors)
+    {
+        if (doors != null && doors.IsOpen && !doors.IsAnimating)
+        {
+            if (_doorsFullyOpenAtTime < 0f)
+                _doorsFullyOpenAtTime = Time.time;
+        }
+        else
+            _doorsFullyOpenAtTime = -1f;
+    }
+
+    private bool IsPlayerDeepEnoughOnLobbyWalkArea(int floorIndex, Vector3 playerPos)
+    {
+        PerspectiveWalkArea2D lobby = ResolveFloorLobbyWalkArea(floorIndex, playerPos);
+        if (lobby != null && lobby.HasValidCorners && lobby.TryProjectWorldToUV(playerPos, out Vector2 uv))
+            return uv.y >= cabinLobbyDeepV;
+
+        ElevatorCabinZone zone = FindCabinZone(floorIndex);
+        Collider2D zoneCol = zone != null ? zone.GetComponent<Collider2D>() : null;
+        return zone != null
+            ? zone.IsPlayerDeepInCabina(playerPos, zoneCol)
+            : IsPlayerDeepInCabinaLegacy(zoneCol, playerPos, 0.45f);
     }
 
     private int LastUnlockedLevelIndex =>
@@ -1174,6 +1414,9 @@ public class ElevatorSystem : MonoBehaviour
 
         if (wasInside && _playerHiddenForCabin)
             ForceShowPlayer();
+
+        if (wasInside)
+            SetFlowState(ElevatorFlowState.IdleAtFloor);
     }
 
     private void AdjustTargetIndex(int delta)
@@ -1182,8 +1425,10 @@ public class ElevatorSystem : MonoBehaviour
             return;
 
         _targetIndex = Mathf.Clamp(_targetIndex + delta, 0, LastUnlockedLevelIndex);
-        _selectionDebounceRemaining = Mathf.Max(0f, selectionDebounceSeconds);
+        _selectionDebounceRemaining = -1f;
+        SetFlowState(ElevatorFlowState.CabinReadyForSelection);
         RefreshSelectionDisplay();
+        ShowCabinConfirmHintOnBottomBar();
     }
 
     private void RefreshSelectionDisplay()
@@ -1224,6 +1469,7 @@ public class ElevatorSystem : MonoBehaviour
             StopCoroutine(_departCoroutine);
 
         int capturedTarget = _targetIndex;
+        SetFlowState(ElevatorFlowState.Departing);
         _departCoroutine = StartCoroutine(DepartToTargetRoutine(capturedTarget));
     }
 
@@ -1311,6 +1557,7 @@ public class ElevatorSystem : MonoBehaviour
             CancelPendingCabinHide();
             _playerHiddenForCabin = false;
             _entryArmedByDoorsOpen = false;
+            _doorsFullyOpenAtTime = -1f;
             if (_closeDoorsForCabinCoroutine != null)
             {
                 StopCoroutine(_closeDoorsForCabinCoroutine);
@@ -1479,6 +1726,16 @@ public class ElevatorSystem : MonoBehaviour
         PushDisplayState(currentLevelIndex, ElevatorDirection.None, keepCabinHint: true);
     }
 
+    private void ShowCabinConfirmHintOnBottomBar()
+    {
+        string hint = string.IsNullOrWhiteSpace(cabinConfirmHint)
+            ? "Premi E per confermare il piano"
+            : cabinConfirmHint;
+
+        var bottomBar = ServiceContainer.Instance?.Get<CompactBottomBarController>(suppressWarning: true);
+        bottomBar?.SetElevatorHint(hint);
+    }
+
     private void ClearCabinHintOnBottomBar()
     {
         var bottomBar = ServiceContainer.Instance?.Get<CompactBottomBarController>(suppressWarning: true);
@@ -1506,6 +1763,7 @@ public class ElevatorSystem : MonoBehaviour
         if (floorIndex == currentLevelIndex)
         {
             OpenDoors(floorIndex);
+            SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
             // Chiamata al piano corrente: arma l'ingresso (porte erano chiuse, player provabilmente fuori).
             if (!_playerInsideCabinZone)
                 _entryArmedByDoorsOpen = true;
@@ -1519,6 +1777,7 @@ public class ElevatorSystem : MonoBehaviour
         if (_callToFloorCoroutine != null)
             StopCoroutine(_callToFloorCoroutine);
 
+        SetFlowState(ElevatorFlowState.CallingToFloor);
         _callToFloorCoroutine = StartCoroutine(CallToFloorRoutine(floorIndex));
     }
 
@@ -1536,6 +1795,7 @@ public class ElevatorSystem : MonoBehaviour
 
         RepositionCabina(floorIndex);
         OpenDoors(floorIndex);
+        SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
         // Cabina arrivata dopo chiamata remota: arma l'ingresso (player fuori, deve camminare dentro).
         if (!_playerInsideCabinZone)
             _entryArmedByDoorsOpen = true;

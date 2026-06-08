@@ -62,6 +62,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _cryLabel;
         private Label _locationLabel;
         private Label _elevatorHintLabel;
+        private readonly UiToolkitOpacityBlinker _elevatorHintBlinker = new();
+        private const string ElevatorHintBlinkClass = "cbb-elevator-hint-label--blink";
         private Coroutine _locationTypewriterRoutine;
         private VisualElement _cryTooltip;
         private Label _cryBalanceValue;
@@ -139,6 +141,8 @@ namespace Sporae.UI.UIToolkit.HUD
 
         private void OnDestroy()
         {
+            _elevatorHintBlinker.Stop(ElevatorHintBlinkClass);
+
             if (_locationTypewriterRoutine != null)
             {
                 StopCoroutine(_locationTypewriterRoutine);
@@ -200,7 +204,10 @@ namespace Sporae.UI.UIToolkit.HUD
             _locationLabel = _root.Q<Label>("location-label");
             _elevatorHintLabel = _root.Q<Label>("elevator-hint-label");
             if (_elevatorHintLabel != null)
+            {
                 _elevatorHintLabel.style.display = DisplayStyle.None;
+                _elevatorHintBlinker.Bind(_elevatorHintLabel);
+            }
 
             // CRY tooltip — figlio di uiRoot (dopo TopBar) così il draw order è sopra il Player Box HUD
             _cryTooltip     = uiRoot.Q<VisualElement>("cry-tooltip");
@@ -454,6 +461,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _elevatorHintLabel.text = text;
             _elevatorHintLabel.style.display = DisplayStyle.Flex;
+            _elevatorHintBlinker.SetActive(true, ElevatorHintBlinkClass);
         }
 
         /// <summary>Nasconde l'hint ascensore in zone-post-center.</summary>
@@ -464,6 +472,7 @@ namespace Sporae.UI.UIToolkit.HUD
 
             _elevatorHintLabel.text = string.Empty;
             _elevatorHintLabel.style.display = DisplayStyle.None;
+            _elevatorHintBlinker.Stop(ElevatorHintBlinkClass);
         }
 
         private void OnRoomTrackerChanged(string roomId)

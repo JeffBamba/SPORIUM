@@ -156,6 +156,11 @@
     text-overflow: ellipsis;
 }
 
+/* Opacità lampeggiante applicata a runtime quando l'hint ascensore è visibile. */
+.cbb-elevator-hint-label--blink {
+    opacity: 1;
+}
+
 .cbb-zone-collectors {
     flex-shrink: 0;
     flex-grow: 0;

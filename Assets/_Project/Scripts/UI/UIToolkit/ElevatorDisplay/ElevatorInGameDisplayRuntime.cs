@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Sporae.Core.Localization;
+using Sporae.UI.UIToolkit;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
@@ -59,6 +60,8 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
         private Label _directionLabel;
         private Label _floorDisplayLabel;
         private VisualElement _floorMarqueeClip;
+        private readonly UiToolkitOpacityBlinker _directionLabelBlinker = new();
+        private const string DirectionLabelBlinkClass = "elevd-direction-label--blink";
 
         private int _pendingHighlightIndex;
         private ElevatorDirection _pendingDirection = ElevatorDirection.None;
@@ -113,6 +116,8 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
 
         private void OnDestroy()
         {
+            _directionLabelBlinker.Stop(DirectionLabelBlinkClass);
+
             if (_renderTexture != null)
             {
                 _renderTexture.Release();
@@ -157,14 +162,15 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             _root.EnableInClassList("elevd-state-call", mode == ElevatorDisplayMode.CallRemote);
             _root.EnableInClassList("elevd-state-enter", mode == ElevatorDisplayMode.Enter);
             _root.EnableInClassList("elevd-state-cabin", mode == ElevatorDisplayMode.CabinAtFloor);
+            _root.EnableInClassList("elevd-state-select", mode == ElevatorDisplayMode.CabinSelectingTarget);
             _root.EnableInClassList("elevd-state-denied", mode == ElevatorDisplayMode.OutOfService);
 
             string nextMarqueeBaseText;
             switch (mode)
             {
                 case ElevatorDisplayMode.CallRemote:
-                    SetDirectionRow(showArrow: false, text: CallLabel);
-                    nextMarqueeBaseText = ElevatorLabel;
+                    SetDirectionRow(showArrow: false, text: BusyLabel);
+                    nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
                     break;
 
                 case ElevatorDisplayMode.Enter:
@@ -173,7 +179,12 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
                     break;
 
                 case ElevatorDisplayMode.CabinAtFloor:
-                    SetDirectionRow(showArrow: false, text: CurrentLocationLabel);
+                    SetDirectionRow(showArrow: false, text: YouAreAtLabel);
+                    nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
+                    break;
+
+                case ElevatorDisplayMode.CabinSelectingTarget:
+                    SetDirectionRow(showArrow: false, text: GoingToLabel);
                     nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
                     break;
 
@@ -192,22 +203,23 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
                     }
                     else
                     {
-                        SetDirectionRow(showArrow: false, text: string.Empty);
+                        SetDirectionRow(showArrow: false, text: YouAreAtLabel);
                     }
 
                     nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
                     break;
             }
 
-            if (!string.Equals(_appliedMarqueeBaseText, nextMarqueeBaseText, System.StringComparison.Ordinal))
+            string displayMarquee = ToDisplayUpper(nextMarqueeBaseText);
+            if (!string.Equals(_appliedMarqueeBaseText, displayMarquee, System.StringComparison.Ordinal))
             {
-                _appliedMarqueeBaseText = nextMarqueeBaseText;
+                _appliedMarqueeBaseText = displayMarquee;
                 _floorMarqueeOffset = 0;
                 _floorMarqueeScrollPx = 0f;
                 _floorMarqueeLoopWidthPx = 0f;
             }
 
-            _floorMarqueeBaseText = nextMarqueeBaseText;
+            _floorMarqueeBaseText = displayMarquee;
             ApplyFloorMarquee();
         }
 
@@ -221,8 +233,16 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             }
 
             if (_directionLabel != null)
-                _directionLabel.text = text;
+            {
+                string display = ToDisplayUpper(text);
+                _directionLabel.text = display;
+                _directionLabelBlinker.SetActive(!string.IsNullOrWhiteSpace(display), DirectionLabelBlinkClass);
+            }
         }
+
+        /// <summary>UITK non applica sempre -unity-text-transform sul render texture: forziamo maiuscolo a runtime.</summary>
+        private static string ToDisplayUpper(string value) =>
+            string.IsNullOrEmpty(value) ? value : value.ToUpperInvariant();
 
         private void ApplyFloorMarquee()
         {
@@ -333,17 +353,17 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             return loop.Substring(offset, windowChars);
         }
 
-        private static string CallLabel =>
-            LocalizationManager.Pick("CHIAMA", "CALL");
+        private static string YouAreAtLabel =>
+            LocalizationManager.Pick("Ti trovi al", "You are at");
+
+        private static string BusyLabel =>
+            LocalizationManager.Pick("Occupato", "Busy");
 
         private static string EnterLabel =>
             LocalizationManager.Pick("ENTRA", "ENTER");
 
-        private static string CurrentLocationLabel =>
-            LocalizationManager.Pick("LOCATION ATTUALE", "CURRENT LOCATION");
-
-        private static string ElevatorLabel =>
-            LocalizationManager.Pick("ASCENSORE", "ELEVATOR");
+        private static string GoingToLabel =>
+            LocalizationManager.Pick("Stai andando a", "You are going to");
 
         private static string DeniedLabel =>
             LocalizationManager.Pick("ACCESSO NEGATO", "ACCESS DENIED");
@@ -626,6 +646,7 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             _directionArrow = _root.Q<Label>("elevd-direction-arrow");
             _directionLabel = _root.Q<Label>("elevd-direction-label");
             _floorDisplayLabel = _root.Q<Label>("elevd-floor-label");
+            _directionLabelBlinker.Bind(_directionLabel);
 
             SetupFloorMarqueeClip();
 

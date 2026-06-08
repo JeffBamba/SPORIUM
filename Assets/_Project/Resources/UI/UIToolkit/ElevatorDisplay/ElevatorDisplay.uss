@@ -57,6 +57,12 @@
     letter-spacing: 1.2px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+    -unity-text-transform: uppercase;
+}
+
+/* Opacità lampeggiante applicata a runtime (UiToolkitOpacityBlinker). */
+.elevd-direction-label--blink {
+    opacity: 1;
 }
 
 .elevd-divider {
@@ -72,6 +78,7 @@
     letter-spacing: 1.6px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+    -unity-text-transform: uppercase;
     min-height: 48px;
     flex-shrink: 0;
 }
@@ -97,6 +104,14 @@
     color: rgb(127, 255, 122);
 }
 
+.elevd-state-call .elevd-direction-label {
+    color: rgb(255, 120, 120);
+}
+
+.elevd-state-call .elevd-divider {
+    background-color: rgba(255, 120, 120, 0.72);
+}
+
 .elevd-state-call .elevd-floor-display {
     color: rgb(127, 255, 122);
 }
@@ -106,6 +121,10 @@
 }
 
 .elevd-state-cabin .elevd-floor-display {
+    color: rgb(127, 255, 122);
+}
+
+.elevd-state-select .elevd-floor-display {
     color: rgb(127, 255, 122);
 }
 
