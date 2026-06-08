@@ -205,6 +205,13 @@ namespace _Project.Player
             _targetUV = _currentUV;
         }
 
+        /// <summary>Imposta UV lobby senza riproiettare dalla posizione mondo (es. atterraggio cabina fisica).</summary>
+        public void SetCurrentUV(Vector2 uv)
+        {
+            _currentUV = new Vector2(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+            _targetUV = _currentUV;
+        }
+
         /// <summary>
         /// Reprojects the internal UV coordinates from the current world position.
         /// Useful after external teleports (e.g. EndDay spawn).

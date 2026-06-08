@@ -44,6 +44,10 @@ public class ElevatorCabinZone : MonoBehaviour
     public float CabinaShallowV => cabinaShallowV;
     public float CabinaDeepV => cabinaDeepV;
 
+    /// <summary>v lobby per atterraggio viaggio con cabina fisica; 0 = cabinaDeepV + 0.17.</summary>
+    public float InteriorLandingV =>
+        interiorLandingV > 0f ? interiorLandingV : Mathf.Clamp01(cabinaDeepV + 0.17f);
+
     private readonly HashSet<Collider2D> _playerContacts = new HashSet<Collider2D>();
 
     /// <summary>Collegamento controllato da ElevatorSystem (gerarchia ELEV_Elevator).</summary>

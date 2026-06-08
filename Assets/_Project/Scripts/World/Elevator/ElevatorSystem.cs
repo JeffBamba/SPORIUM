@@ -162,6 +162,7 @@ public class ElevatorSystem : MonoBehaviour
     private int _playerHideDepth;
     private bool _postTravelArrival;
     private bool _postTravelReentryArmed;
+    private bool _travelDepartedFromInsideCabin;
     private int _suppressCabinActivationUntilExitFloor = -1;
 
     // Etichette di default (mappa di progetto). Usate se floorLabels non è compilato in Inspector.
@@ -266,8 +267,20 @@ public class ElevatorSystem : MonoBehaviour
 
     private void Update()
     {
+        SyncCabinInputWithDoorState();
         UpdateCabinSelectionInput();
         RefreshIdleDisplayIfNeeded();
+    }
+
+    /// <summary>Porte aperte in cabina → movimento; porte chiuse → W/S selezionano piano (R3/R4).</summary>
+    private void SyncCabinInputWithDoorState()
+    {
+        if (!_playerInsideCabinZone || isTeleporting || _postTravelArrival)
+            return;
+
+        ElevatorDoorPair doors = GetFloorDoors(currentLevelIndex);
+        bool doorsOpenForMovement = doors != null && doors.IsOpen && !doors.IsClosing;
+        SetCabinWorldInputBlocked(!doorsOpenForMovement);
     }
 
     private void UpdateCabinSelectionInput()
@@ -275,8 +288,10 @@ public class ElevatorSystem : MonoBehaviour
         if (!_playerInsideCabinZone || _postTravelArrival || isTeleporting || levels == null || levels.Length == 0)
             return;
 
-        // Ingresso visivo: finché i portelloni sono aperti, W/S muovono il player (non selezionano piano).
-        if (AreDoorsOpenAtFloor(currentLevelIndex))
+        // Ingresso visivo: con porte aperte W/S muovono il player; in chiusura o chiuse → selezione piano.
+        ElevatorDoorPair cabinDoors = GetFloorDoors(currentLevelIndex);
+        bool doorsOpenForMovement = cabinDoors != null && cabinDoors.IsOpen && !cabinDoors.IsClosing;
+        if (doorsOpenForMovement)
             return;
 
         int cabinDelta = 0;
@@ -498,12 +513,44 @@ public class ElevatorSystem : MonoBehaviour
         RepositionCabina(toIndex);
 
         float landingPlayerX = _travelPlayer.position.x;
+        bool inCabinTransfer = _travelDepartedFromInsideCabin && HasPhysicalInteriorZone(toIndex);
         ElevatorCabinZone landingZone = FindCabinZone(toIndex);
         Vector2 landingAnchor = landingZone != null
-            ? landingZone.GetInteriorLandingWorldPosition()
+            ? (HasPhysicalInteriorZone(toIndex)
+                ? landingZone.GetInteriorLandingWorldPosition()
+                : landingZone.GetExitApproachWorldPosition())
             : GetExitAnchorWorldPosition(toIndex, landingPlayerX);
         PerspectiveWalkArea2D landingArea = ResolveFloorLobbyWalkArea(toIndex, landingAnchor);
-        Vector2 landingPosition = ResolveElevatorCabinArrivalLanding(toIndex, landingArea);
+        Vector2 landingPosition;
+        Vector2? forcedLobbyUv = null;
+
+        // Teleport salta OnTriggerExit sul piano di partenza: azzera overlap stale prima dell'atterraggio.
+        _interiorZoneOverlapCount = 0;
+
+        if (inCabinTransfer)
+        {
+            // Lobby walk UV è la superficie di movimento (griglia gialla); il trigger interior è solo logica.
+            // Benchmark ingresso floor 0: deep cabina = lobbyUv v≈1.0, non il centro del collider interior.
+            Vector2 interiorProbe = GetCabinInteriorLandingPosition(toIndex);
+            landingArea = ResolveFloorLobbyWalkArea(toIndex, interiorProbe);
+            float landingU = 0.5f;
+            const float landingV = 1f;
+            if (landingArea != null && landingArea.HasValidCorners)
+            {
+                if (landingArea.TryProjectWorldToUV(interiorProbe, out Vector2 uv))
+                    landingU = Mathf.Clamp01(uv.x);
+                landingPosition = landingArea.MapToWorld(landingU, landingV);
+                forcedLobbyUv = new Vector2(landingU, landingV);
+            }
+            else
+                landingPosition = interiorProbe;
+        }
+        else
+        {
+            landingPosition = HasPhysicalInteriorZone(toIndex)
+                ? ResolveElevatorCabinArrivalLanding(toIndex, landingArea)
+                : ResolveElevatorArrivalLanding(toIndex, landingPlayerX, landingArea);
+        }
 
         player = _travelPlayer;
         EnsurePlayerVisualCache();
@@ -514,7 +561,10 @@ public class ElevatorSystem : MonoBehaviour
         if (perspectiveMover != null)
         {
             perspectiveMover.TeleportToWorld(landingPosition, pickAreaByPoint: landingArea == null, landingArea);
-            perspectiveMover.ReprojectUVFromCurrentPosition();
+            if (forcedLobbyUv.HasValue)
+                perspectiveMover.SetCurrentUV(forcedLobbyUv.Value);
+            else
+                perspectiveMover.ReprojectUVFromCurrentPosition();
         }
         else
         {
@@ -531,7 +581,22 @@ public class ElevatorSystem : MonoBehaviour
 
         ForceShowPlayer();
         SetElevatorRoomVisible(true);
-        EnterArrivalCabinState(toIndex);
+        if (inCabinTransfer)
+            FinishInCabinTravelArrival(toIndex, landingPosition);
+        else
+        {
+            EnterArrivalCabinState(toIndex);
+            if (!HasPhysicalInteriorZone(toIndex))
+            {
+                ElevatorCabinZone arrivalZone = FindCabinZone(toIndex);
+                Collider2D arrivalCol = arrivalZone != null ? arrivalZone.GetComponent<Collider2D>() : null;
+                if (arrivalCol == null || !arrivalCol.bounds.Contains(landingPosition))
+                {
+                    _postTravelArrival = false;
+                    SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
+                }
+            }
+        }
         RestoreCameraFollow();
 
         yield return null;
@@ -539,12 +604,16 @@ public class ElevatorSystem : MonoBehaviour
         if (_playerRigidbody != null)
             _playerRigidbody.simulated = true;
 
-        GameplayUiModalLock.SetBlockWorldInput(false);
-        _cabinInputBlocked = false;
+        if (!_playerInsideCabinZone)
+        {
+            GameplayUiModalLock.SetBlockWorldInput(false);
+            _cabinInputBlocked = false;
+        }
 
         isTeleporting = false;
         _teleportCoroutine = null;
         _travelPlayer = null;
+        _travelDepartedFromInsideCabin = false;
     }
 
     private void AbortTravel()
@@ -557,7 +626,9 @@ public class ElevatorSystem : MonoBehaviour
         isTeleporting = false;
         _teleportCoroutine = null;
         _travelPlayer = null;
+        _travelDepartedFromInsideCabin = false;
         _suppressCabinActivationUntilExitFloor = -1;
+        _interiorZoneOverlapCount = 0;
         GameplayUiModalLock.SetBlockWorldInput(false);
     }
 
@@ -612,6 +683,27 @@ public class ElevatorSystem : MonoBehaviour
             return area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
 
         return interior;
+    }
+
+    /// <summary>Viaggio cabina→cabina: atterraggio dentro interior fisico, focus selezione preservato.</summary>
+    private void FinishInCabinTravelArrival(int floorIndex, Vector2 landingPosition)
+    {
+        CancelCabinArrowSelection(restoreDisplays: false);
+
+        _postTravelArrival = false;
+        _postTravelReentryArmed = false;
+        _suppressCabinActivationUntilExitFloor = -1;
+        _playerInsideCabinZone = true;
+        _cabinFloorIndex = floorIndex;
+        _cabinZoneOverlapCount = 0;
+        _interiorZoneOverlapCount = 0;
+        _cabinArrowSelectionActive = false;
+        _targetIndex = currentLevelIndex;
+        _entryArmedByDoorsOpen = false;
+        _playerHiddenForCabin = false;
+        _playerHideDepth = 0;
+        SetFlowState(ElevatorFlowState.CabinReadyForSelection);
+        ShowCabinHintOnBottomBar();
     }
 
     private void EnterArrivalCabinState(int floorIndex)
@@ -673,11 +765,19 @@ public class ElevatorSystem : MonoBehaviour
     /// <summary>Arrivo viaggio: dentro cabina, ma sulla walk area del piano per mantenere UV/collisioni coerenti.</summary>
     private Vector2 ResolveElevatorCabinArrivalLanding(int toIndex, PerspectiveWalkArea2D area)
     {
-        Vector2 interior = GetCabinInteriorLandingPosition(toIndex);
-        if (area != null && area.HasValidCorners && area.TryProjectWorldToUV(interior, out Vector2 uv))
-            return area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+        Vector2 interiorProbe = GetCabinInteriorLandingPosition(toIndex);
+        if (area == null || !area.HasValidCorners || !area.TryProjectWorldToUV(interiorProbe, out Vector2 uv))
+            return interiorProbe;
 
-        return interior;
+        // Cabina fisica: il centro del trigger interior è sotto il trapezio lobby — Clamp01(v)→1 spawna al bordo far (regressione 0→-1).
+        if (HasPhysicalInteriorZone(toIndex))
+        {
+            ElevatorCabinZone zone = FindCabinZone(toIndex);
+            float landingV = zone != null ? zone.InteriorLandingV : Mathf.Clamp01(0.55f + 0.17f);
+            return area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(landingV));
+        }
+
+        return area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
     }
 
     private void BeginCameraTravelFollow()
@@ -895,16 +995,8 @@ public class ElevatorSystem : MonoBehaviour
                 return;
 
             player = playerTransform;
-
             if (!deepInCabina)
-            {
-                CloseDoors(floorIndex, force: true);
-                _postTravelArrival = false;
-                _postTravelReentryArmed = false;
-                _cabinFloorIndex = -1;
-                _suppressCabinActivationUntilExitFloor = floorIndex;
-                ResetDisplaysToOwnFloors();
-            }
+                return;
 
             return;
         }
@@ -1008,6 +1100,19 @@ public class ElevatorSystem : MonoBehaviour
         if (!enabled || playerTransform == null || !IsValidLevelIndex(floorIndex) || !IsCabAtFloor(floorIndex))
             return;
 
+        if (_playerInsideCabinZone && _cabinFloorIndex == floorIndex && !isTeleporting)
+        {
+            PerspectiveWalkArea2D lobby = ResolveFloorLobbyWalkArea(floorIndex, playerTransform.position);
+            ElevatorCabinZone zone = FindCabinZone(floorIndex);
+            if (lobby != null && zone != null && lobby.TryProjectWorldToUV(playerTransform.position, out Vector2 uv)
+                && uv.y <= zone.CabinaShallowV)
+            {
+                _interiorZoneOverlapCount = 0;
+                LeaveCabinZone(restoreDisplays: true, closeDoorsOnExit: true);
+                return;
+            }
+        }
+
         HandlePhysicalInteriorEnter(floorIndex, playerTransform);
     }
 
@@ -1080,12 +1185,11 @@ public class ElevatorSystem : MonoBehaviour
         {
             if (floorIndex == _cabinFloorIndex || floorIndex == currentLevelIndex)
             {
-                CloseDoors(floorIndex, force: true);
                 _postTravelArrival = false;
                 _postTravelReentryArmed = false;
                 _cabinFloorIndex = -1;
                 ResetDisplaysToOwnFloors();
-                SetFlowState(ElevatorFlowState.IdleAtFloor);
+                SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
             }
 
             if (_playerHiddenForCabin)
@@ -1155,7 +1259,10 @@ public class ElevatorSystem : MonoBehaviour
         _targetIndex = currentLevelIndex;
         _cabinArrowSelectionActive = false;
         _entryArmedByDoorsOpen = false;
+        _postTravelArrival = false;
+        _postTravelReentryArmed = false;
         SetFlowState(ElevatorFlowState.CabinReadyForSelection);
+        SetCabinWorldInputBlocked(true);
 
         ShowCabinHintOnBottomBar();
         _playerHiddenForCabin = true;
@@ -1259,11 +1366,11 @@ public class ElevatorSystem : MonoBehaviour
         {
             if (floorIndex == _cabinFloorIndex || floorIndex == currentLevelIndex)
             {
-                CloseDoors(floorIndex, force: true);
                 _postTravelArrival = false;
                 _postTravelReentryArmed = false;
                 _cabinFloorIndex = -1;
                 ResetDisplaysToOwnFloors();
+                SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
             }
 
             if (_playerHiddenForCabin)
@@ -1326,7 +1433,11 @@ public class ElevatorSystem : MonoBehaviour
             return "doors_opening";
 
         if (!_entryArmedByDoorsOpen && !_postTravelArrival && !_postTravelReentryArmed)
-            return "not_called";
+        {
+            // Porte tenute aperte dopo viaggio o chiamata: ingresso a piedi senza nuova chiamata al display.
+            if (!_holdDoorsOpenForCabinEntry)
+                return "not_called";
+        }
 
         SyncDoorsFullyOpenTimestamp(doors);
         if (_entryArmedByDoorsOpen && _doorsFullyOpenAtTime >= 0f
@@ -1452,9 +1563,8 @@ public class ElevatorSystem : MonoBehaviour
     {
         if (_targetIndex == currentLevelIndex)
         {
-            _suppressCabinActivationUntilExitFloor = currentLevelIndex;
-
             LeaveCabinZone(restoreDisplays: true, closeDoorsOnExit: false);
+            _suppressCabinActivationUntilExitFloor = -1;
             OpenDoors(currentLevelIndex, deferCabinCheck: false);
             return;
         }
@@ -1472,6 +1582,7 @@ public class ElevatorSystem : MonoBehaviour
             StopCoroutine(_departCoroutine);
 
         int capturedTarget = _targetIndex;
+        _travelDepartedFromInsideCabin = _playerInsideCabinZone;
         SetFlowState(ElevatorFlowState.Departing);
         _departCoroutine = StartCoroutine(DepartToTargetRoutine(capturedTarget));
     }
@@ -1495,7 +1606,22 @@ public class ElevatorSystem : MonoBehaviour
 
         yield return TravelToFloorRoutine(fromIndex, targetIndex);
 
-        OpenDoors(targetIndex, deferCabinCheck: false);
+        if (_playerInsideCabinZone)
+        {
+            // Porte aperte all'arrivo: exit a piedi; SyncCabinInputWithDoorState sblocca WASD (R4).
+            OpenDoors(targetIndex, deferCabinCheck: false);
+            _holdDoorsOpenForCabinEntry = true;
+            SyncCabinInputWithDoorState();
+        }
+        else
+        {
+            OpenDoors(targetIndex, deferCabinCheck: false);
+            if (!_postTravelArrival)
+            {
+                SetFlowState(ElevatorFlowState.DoorsOpenWaitingEntry);
+                _entryArmedByDoorsOpen = true;
+            }
+        }
         UpdateAllFloorDisplays(targetIndex, ElevatorDirection.None);
         _targetIndex = currentLevelIndex;
         _departCoroutine = null;
@@ -1756,6 +1882,7 @@ public class ElevatorSystem : MonoBehaviour
 
         // Chiamata dal display esterno: annulla selezione freccia e sblocca input (evita freeze su [E]).
         CancelCabinArrowSelection(restoreDisplays: false);
+        SetCabinWorldInputBlocked(false);
 
         if (!IsLevelUnlocked(floorIndex))
         {
