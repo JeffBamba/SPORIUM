@@ -2244,6 +2244,19 @@
     [Component] Transform
     [Component] BoxCollider2D
     [Component] ElevatorCabinZone
+  - ElevatorFrontWalkArea_LVL_-1 
+    [Component] Transform
+    [Component] PerspectiveWalkArea2D
+    [Component] BoxCollider2D
+    [Component] RoomAreaTag
+    - NearLeft
+      [Component] Transform
+    - NearRight
+      [Component] Transform
+    - FarLeft
+      [Component] Transform
+    - FarRight
+      [Component] Transform
   - ELEV_ExitAnchor_LVL_+1
     [Component] Transform
   - ELEV_ExitAnchor_LVL_0
@@ -2663,9 +2676,6 @@
   - Light_abajour (3)
     [Component] Transform
     [Component] Light2D
-  - Mask_KitchenRoom_Floor
-    [Component] Transform
-    [Component] SpriteMask
   - WalkColliders
     [Component] Transform
     - WALL_railing_esterno
@@ -2886,9 +2896,6 @@
   [Component] Transform
   [Component] SpriteRenderer
 - VaultMap_BG_LitReceiver
-  [Component] Transform
-  [Component] SpriteRenderer
-- railing_left
   [Component] Transform
   [Component] SpriteRenderer
 - Mask_elevator_floor_Z
