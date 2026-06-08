@@ -116,6 +116,14 @@
     color: rgb(127, 255, 122);
 }
 
+.elevd-state-arriving .elevd-direction-label {
+    color: rgb(255, 214, 74);
+}
+
+.elevd-state-arriving .elevd-floor-display {
+    color: rgb(127, 255, 122);
+}
+
 .elevd-state-enter .elevd-floor-display {
     color: rgb(127, 255, 122);
 }

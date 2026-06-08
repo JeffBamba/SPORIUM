@@ -23,6 +23,7 @@ public enum ElevatorDisplayMode
     Normal,
     CallRemote,
     Enter,
+    Arriving,
     CabinAtFloor,
     CabinSelectingTarget,
     OutOfService
@@ -391,6 +392,9 @@ public class ElevatorSystem : MonoBehaviour
     {
         if (_outOfServiceCoroutine != null && highlightFloorIndex == 3)
             return ElevatorDisplayMode.OutOfService;
+
+        if (_flowState == ElevatorFlowState.CallingToFloor)
+            return ElevatorDisplayMode.Arriving;
 
         if (direction != ElevatorDirection.None)
             return ElevatorDisplayMode.Normal;

@@ -120,6 +120,14 @@ public class ElevatorFloorDisplay : MonoBehaviour
             return;
         }
 
+        if (mode == ElevatorDisplayMode.Arriving)
+        {
+            string floorLabel = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+            string arriving = LocalizationManager.Pick("In arrivo", "Arriving");
+            SetContent($"{arriving}\n{floorLabel}", ElevatorDirection.None);
+            return;
+        }
+
         if (mode == ElevatorDisplayMode.CabinAtFloor)
         {
             string floorLabel = ResolveHighlightLabel(highlightFloorIndex, floorLabels);

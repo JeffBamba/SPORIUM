@@ -160,6 +160,7 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             _root.EnableInClassList("elevd-state-moving", moving);
             _root.EnableInClassList("elevd-state-idle", mode == ElevatorDisplayMode.Normal && !moving);
             _root.EnableInClassList("elevd-state-call", mode == ElevatorDisplayMode.CallRemote);
+            _root.EnableInClassList("elevd-state-arriving", mode == ElevatorDisplayMode.Arriving);
             _root.EnableInClassList("elevd-state-enter", mode == ElevatorDisplayMode.Enter);
             _root.EnableInClassList("elevd-state-cabin", mode == ElevatorDisplayMode.CabinAtFloor);
             _root.EnableInClassList("elevd-state-select", mode == ElevatorDisplayMode.CabinSelectingTarget);
@@ -170,6 +171,11 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
             {
                 case ElevatorDisplayMode.CallRemote:
                     SetDirectionRow(showArrow: false, text: BusyLabel);
+                    nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
+                    break;
+
+                case ElevatorDisplayMode.Arriving:
+                    SetDirectionRow(showArrow: false, text: ArrivingLabel);
                     nextMarqueeBaseText = FormatFloorDisplay(floorIndex, _pendingFloorLabels);
                     break;
 
@@ -358,6 +364,9 @@ namespace Sporae.UI.UIToolkit.ElevatorDisplay
 
         private static string BusyLabel =>
             LocalizationManager.Pick("Occupato", "Busy");
+
+        private static string ArrivingLabel =>
+            LocalizationManager.Pick("In arrivo", "Arriving");
 
         private static string EnterLabel =>
             LocalizationManager.Pick("ENTRA", "ENTER");
