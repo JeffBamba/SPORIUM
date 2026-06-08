@@ -110,6 +110,12 @@ namespace _Project.Player
 
         [SerializeField] private float maxAreaSwitchProjectionError = 0.6f;
 
+        [Tooltip("If true, while moving we also probe nearby AreaBounds instead of relying only on OnTriggerEnter2D.")]
+        [SerializeField] private bool enableContinuousAreaSwitch = true;
+
+        [Tooltip("World-space probe distance used to detect the next walk area before UV clamping traps the player at an edge.")]
+        [SerializeField] private float areaSwitchProbeDistance = 0.35f;
+
         private Rigidbody2D _rb;
         private Collider2D _selfCollider;
 
@@ -252,6 +258,8 @@ namespace _Project.Player
 
                 Vector2 from = _rb.position;
                 Vector2 desired;
+                Vector2 areaSwitchProbe = from;
+                Vector2 uvBeforeMove = _currentUV;
 
                 float metersPerU_dbg = 0f;
                 float metersPerV_dbg = 0f;
@@ -294,6 +302,7 @@ namespace _Project.Player
                         _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvEff * dt);
                         _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvEff * dt);
                         desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                        areaSwitchProbe = BuildAreaSwitchProbe(from, wasd);
                     }
                     else
                     {
@@ -311,6 +320,7 @@ namespace _Project.Player
                         _currentUV.y = Mathf.Clamp01(_currentUV.y + dvStep);
 
                         desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                        areaSwitchProbe = BuildAreaSwitchProbe(from, input);
                     }
                 }
                 else
@@ -320,10 +330,13 @@ namespace _Project.Player
                     _currentUV.x = Mathf.Clamp01(_currentUV.x + wasd.x * uvEff * dt);
                     _currentUV.y = Mathf.Clamp01(_currentUV.y + wasd.y * uvEff * dt);
                     desired = currentWalkArea.MapToWorld(_currentUV.x, _currentUV.y);
+                    areaSwitchProbe = BuildAreaSwitchProbe(from, wasd);
                 }
 
                 Vector2 newPos = ResolveCollisionsWithSlide(from, desired);
                 _rb.MovePosition(newPos);
+
+                TrySwitchAreaForMovement(newPos, areaSwitchProbe, wasd, uvBeforeMove);
 
                 // Re-project after slide so UV stays consistent with actual position
                 if (currentWalkArea.TryProjectWorldToUV(newPos, out Vector2 uv))
@@ -346,6 +359,8 @@ namespace _Project.Player
                 Vector2 step = Vector2.MoveTowards(_rb.position, targetWorld, effMove * Time.fixedDeltaTime);
                 Vector2 newPos = ResolveCollisionsWithSlide(_rb.position, step);
                 _rb.MovePosition(newPos);
+
+                TrySwitchAreaForMovement(newPos, newPos, Vector2.zero, _currentUV);
 
                 if (currentWalkArea.TryProjectWorldToUV(newPos, out Vector2 uv))
                     _currentUV = uv;
@@ -416,17 +431,30 @@ namespace _Project.Player
             if (area == null)
                 return;
 
+            SetCurrentArea(area, _rb != null ? _rb.position : (Vector2)transform.position);
+        }
+
+        private void SetCurrentArea(PerspectiveWalkArea2D area, Vector2 worldPosition)
+        {
+            if (area == null)
+                return;
+
             currentWalkArea = area;
             OnAreaChanged?.Invoke(area);
-            TryInitUVFromCurrentPosition();
+            TryInitUVFromWorldPosition(worldPosition);
         }
 
         private void TryInitUVFromCurrentPosition()
         {
+            TryInitUVFromWorldPosition(_rb != null ? _rb.position : (Vector2)transform.position);
+        }
+
+        private void TryInitUVFromWorldPosition(Vector2 worldPosition)
+        {
             if (currentWalkArea == null)
                 return;
 
-            if (currentWalkArea.TryProjectWorldToUV(_rb.position, out Vector2 uv))
+            if (currentWalkArea.TryProjectWorldToUV(worldPosition, out Vector2 uv))
             {
                 _currentUV = new Vector2(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
                 if (_hasTarget)
@@ -561,6 +589,142 @@ namespace _Project.Player
             }
 
             return bestArea;
+        }
+
+        private static PerspectiveWalkArea2D FindAreaByWorldPointExcluding(Vector2 world, PerspectiveWalkArea2D excluded)
+        {
+            CacheAllAreas();
+
+            PerspectiveWalkArea2D bestArea = null;
+            float bestErr = float.PositiveInfinity;
+
+            for (int i = 0; i < s_Areas.Count; i++)
+            {
+                PerspectiveWalkArea2D a = s_Areas[i];
+                if (a == null || a == excluded)
+                    continue;
+
+                if (!a.ContainsWorldPoint(world))
+                    continue;
+
+                if (!a.HasValidCorners)
+                    continue;
+
+                if (!a.TryProjectWorldToUV(world, out Vector2 uv))
+                    continue;
+
+                Vector2 mapped = a.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+                float err = Vector2.Distance(world, mapped);
+
+                if (err < bestErr)
+                {
+                    bestErr = err;
+                    bestArea = a;
+                }
+            }
+
+            return bestArea;
+        }
+
+        private Vector2 BuildAreaSwitchProbe(Vector2 from, Vector2 input)
+        {
+            if (!enableContinuousAreaSwitch || currentWalkArea == null || !currentWalkArea.HasValidCorners)
+                return from;
+
+            if (input.sqrMagnitude <= 0.000001f)
+                return from;
+
+            Vector2 uAxis = currentWalkArea.MapToWorld(1f, _currentUV.y) - currentWalkArea.MapToWorld(0f, _currentUV.y);
+            Vector2 vAxis = currentWalkArea.MapToWorld(_currentUV.x, 1f) - currentWalkArea.MapToWorld(_currentUV.x, 0f);
+            Vector2 worldDir = uAxis.normalized * input.x + vAxis.normalized * input.y;
+
+            if (worldDir.sqrMagnitude <= 0.000001f)
+                return from;
+
+            return from + worldDir.normalized * Mathf.Max(0.01f, areaSwitchProbeDistance);
+        }
+
+        private void TrySwitchAreaForMovement(Vector2 newWorldPosition, Vector2 probeWorldPosition, Vector2 input, Vector2 uvBeforeMove)
+        {
+            if (!enableContinuousAreaSwitch)
+                return;
+
+            PerspectiveWalkArea2D areaAtPosition = FindAreaByWorldPoint(newWorldPosition);
+            PerspectiveWalkArea2D area = areaAtPosition;
+            string source = "position";
+
+            if (area == null || area == currentWalkArea)
+            {
+                area = FindTransitionAreaWhenPushingOutward(probeWorldPosition, input, uvBeforeMove);
+                source = "outward-probe";
+            }
+
+            if (area == null || area == currentWalkArea)
+                return;
+
+            Vector2 validationPoint = source == "outward-probe" ? probeWorldPosition : newWorldPosition;
+            TryCommitAreaSwitch(area, newWorldPosition, validationPoint, source);
+        }
+
+        private bool TryCommitAreaSwitch(PerspectiveWalkArea2D area, Vector2 worldPosition, Vector2 validationPoint, string source)
+        {
+            if (area == null || area == currentWalkArea)
+                return false;
+
+            if (!IsAreaSwitchProjectionAcceptable(area, validationPoint))
+                return false;
+
+            if (source == "trigger")
+            {
+                float projectionError = GetAreaProjectionError(area, validationPoint);
+                float currentError = currentWalkArea != null
+                    ? GetAreaProjectionError(currentWalkArea, worldPosition)
+                    : float.PositiveInfinity;
+                const float fitMargin = 0.05f;
+                if (projectionError > currentError + fitMargin)
+                    return false;
+            }
+
+            SetCurrentArea(area, worldPosition);
+            return true;
+        }
+
+        private PerspectiveWalkArea2D FindTransitionAreaWhenPushingOutward(Vector2 probeWorldPosition, Vector2 input, Vector2 uvBeforeMove)
+        {
+            if (currentWalkArea == null || input.sqrMagnitude <= 0.000001f)
+                return null;
+
+            const float edge = 0.04f;
+            bool pushingLeft = uvBeforeMove.x <= edge && input.x < -0.01f;
+            bool pushingRight = uvBeforeMove.x >= 1f - edge && input.x > 0.01f;
+            bool pushingNear = uvBeforeMove.y <= edge && input.y < -0.01f;
+            bool pushingFar = uvBeforeMove.y >= 1f - edge && input.y > 0.01f;
+            if (!pushingLeft && !pushingRight && !pushingNear && !pushingFar)
+                return null;
+
+            return FindAreaByWorldPointExcluding(probeWorldPosition, currentWalkArea);
+        }
+
+        private bool IsAreaSwitchProjectionAcceptable(PerspectiveWalkArea2D area, Vector2 worldPosition)
+        {
+            if (!guardAreaSwitchByProjectionError || area == null || !area.HasValidCorners)
+                return true;
+
+            if (!area.TryProjectWorldToUV(worldPosition, out Vector2 uv))
+                return false;
+
+            Vector2 mapped = area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+            float err = Vector2.Distance(worldPosition, mapped);
+            return err <= Mathf.Max(0.001f, maxAreaSwitchProjectionError);
+        }
+
+        private float GetAreaProjectionError(PerspectiveWalkArea2D area, Vector2 worldPosition)
+        {
+            if (area == null || !area.HasValidCorners || !area.TryProjectWorldToUV(worldPosition, out Vector2 uv))
+                return float.PositiveInfinity;
+
+            Vector2 mapped = area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+            return Vector2.Distance(worldPosition, mapped);
         }
 
         private Vector2 ResolveCollisionsWithSlide(Vector2 from, Vector2 desired)
@@ -790,20 +954,8 @@ namespace _Project.Player
             PerspectiveWalkArea2D area = other.GetComponentInParent<PerspectiveWalkArea2D>();
             if (area != null && area.AreaBounds == other)
             {
-                if (guardAreaSwitchByProjectionError && _rb != null && area.HasValidCorners)
-                {
-                    Vector2 w = _rb.position;
-                    if (area.TryProjectWorldToUV(w, out Vector2 uv))
-                    {
-                        Vector2 mapped = area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
-                        float err = Vector2.Distance(w, mapped);
-                        if (err > Mathf.Max(0.001f, maxAreaSwitchProjectionError))
-                        {
-                            return;
-                        }
-                    }
-                }
-                SetCurrentArea(area);
+                Vector2 worldPosition = _rb != null ? _rb.position : (Vector2)transform.position;
+                TryCommitAreaSwitch(area, worldPosition, worldPosition, "trigger");
             }
         }
     }
