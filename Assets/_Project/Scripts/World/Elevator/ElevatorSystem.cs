@@ -107,6 +107,15 @@ public class ElevatorSystem : MonoBehaviour
     [Tooltip("Velocità verticale dello scroll camera lungo lo shaft (unità mondo/sec).")]
     [SerializeField] private float cabinTravelSpeed = 6f;
 
+    [Tooltip("Curva ease-in/out sul progresso 0→1 del viaggio verticale (evita partenza/arrivo a velocità costante).")]
+    [SerializeField] private AnimationCurve cabinTravelEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Tooltip("Breve pausa a fine corsa prima del teleport player (secondi). 0 = nessuna.")]
+    [SerializeField] private float cabinTravelEndSettleSeconds = 0.12f;
+
+    [Tooltip("FramingTransposer Y damping durante il viaggio (più basso = camera più aderente allo shaft). -1 = non modificare.")]
+    [SerializeField] private float cabinTravelCameraYDamping = 0.05f;
+
     [Tooltip("Nascondi lo sprite legacy ElevatorRoom durante il viaggio.")]
     [SerializeField] private bool hideElevatorRoomDuringTravel = true;
 
@@ -157,6 +166,12 @@ public class ElevatorSystem : MonoBehaviour
 
     // Fase 6 — viaggio camera / hide player
     private Transform _savedCameraFollow;
+    private CinemachineFramingTransposer _travelFramingTransposer;
+    private float _savedTravelYDamping = -1f;
+    private bool _savedTravelFramingEnabled = true;
+    private bool _travelCameraLockActive;
+    private float _travelCameraYOffset;
+    private float _travelShaftYForCamera;
     private SpriteRenderer _elevatorRoomRenderer;
     private SpriteRenderer[] _playerSpriteRenderers;
     private bool[] _playerSpriteStates;
@@ -281,6 +296,14 @@ public class ElevatorSystem : MonoBehaviour
         SyncCabinInputWithDoorState();
         UpdateCabinSelectionInput();
         RefreshIdleDisplayIfNeeded();
+    }
+
+    private void LateUpdate()
+    {
+        if (!_travelCameraLockActive)
+            return;
+
+        ApplyTravelCameraLock(_travelShaftYForCamera);
     }
 
     /// <summary>Porte aperte in cabina → movimento; porte chiuse → W/S selezionano piano (R3/R4).</summary>
@@ -505,10 +528,13 @@ public class ElevatorSystem : MonoBehaviour
         SetElevatorRoomVisible(false);
 
         shaftTarget.position = new Vector3(shaftX, startY, shaftTarget.position.z);
-        BeginCameraTravelFollow();
+        BeginCameraTravelFollow(startY);
 
         float speed = Mathf.Max(0.5f, cabinTravelSpeed > 0f ? cabinTravelSpeed : elevatorSpeed);
-        while (Mathf.Abs(shaftTarget.position.y - endY) > 0.05f)
+        float travelDistance = Mathf.Abs(endY - startY);
+        float travelDuration = travelDistance > 0.001f ? travelDistance / speed : 0f;
+        float elapsed = 0f;
+        while (travelDuration > 0f && elapsed < travelDuration)
         {
             if (_travelPlayer == null || elevatorSection == null)
             {
@@ -516,10 +542,21 @@ public class ElevatorSystem : MonoBehaviour
                 yield break;
             }
 
-            float nextY = Mathf.MoveTowards(shaftTarget.position.y, endY, speed * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / travelDuration);
+            float eased = EvaluateTravelEase(t);
+            float nextY = Mathf.Lerp(startY, endY, eased);
             shaftTarget.position = new Vector3(shaftX, nextY, shaftTarget.position.z);
+            _travelShaftYForCamera = nextY;
+
             yield return null;
         }
+
+        shaftTarget.position = new Vector3(shaftX, endY, shaftTarget.position.z);
+        _travelShaftYForCamera = endY;
+
+        if (cabinTravelEndSettleSeconds > 0f)
+            yield return new WaitForSeconds(cabinTravelEndSettleSeconds);
 
         RepositionCabina(toIndex);
 
@@ -534,6 +571,7 @@ public class ElevatorSystem : MonoBehaviour
         PerspectiveWalkArea2D landingArea = ResolveFloorLobbyWalkArea(toIndex, landingAnchor);
         Vector2 landingPosition;
         Vector2? forcedLobbyUv = null;
+        Vector3 preTeleportPlayerPos = _travelPlayer.position;
 
         // Teleport salta OnTriggerExit sul piano di partenza: azzera overlap stale prima dell'atterraggio.
         _interiorZoneOverlapCount = 0;
@@ -589,6 +627,10 @@ public class ElevatorSystem : MonoBehaviour
         }
 
         _travelPlayer.position = new Vector3(landingPosition.x, landingPosition.y, _travelPlayer.position.z);
+
+        Vector3 playerWarpDelta = _travelPlayer.position - preTeleportPlayerPos;
+        if (playerWarpDelta.sqrMagnitude > 0.0001f && CinemachineCore.Instance != null)
+            CinemachineCore.Instance.OnTargetObjectWarped(_travelPlayer, playerWarpDelta);
 
         ForceShowPlayer();
         SetElevatorRoomVisible(true);
@@ -791,27 +833,85 @@ public class ElevatorSystem : MonoBehaviour
         return area.MapToWorld(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
     }
 
-    private void BeginCameraTravelFollow()
+    private float EvaluateTravelEase(float t)
+    {
+        if (cabinTravelEase != null && cabinTravelEase.length > 0)
+            return Mathf.Clamp01(cabinTravelEase.Evaluate(Mathf.Clamp01(t)));
+
+        return t * t * (3f - 2f * t);
+    }
+
+    private static float GetMainCameraWorldY()
+    {
+        Camera cam = Camera.main;
+        return cam != null ? cam.transform.position.y : 0f;
+    }
+
+    private void BeginCameraTravelFollow(float shaftStartY)
     {
         if (travelVirtualCamera == null || elevatorSection == null)
             return;
 
         _savedCameraFollow = travelVirtualCamera.Follow;
+
+        _travelFramingTransposer = travelVirtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
+        if (_travelFramingTransposer != null)
+        {
+            _savedTravelFramingEnabled = _travelFramingTransposer.enabled;
+            if (cabinTravelCameraYDamping >= 0f)
+            {
+                _savedTravelYDamping = _travelFramingTransposer.m_YDamping;
+                _travelFramingTransposer.m_YDamping = cabinTravelCameraYDamping;
+            }
+
+            _travelFramingTransposer.enabled = false;
+        }
+
         travelVirtualCamera.Follow = elevatorSection.transform;
-        travelVirtualCamera.PreviousStateIsValid = false;
+
+        _travelCameraYOffset = GetMainCameraWorldY() - shaftStartY;
+        _travelShaftYForCamera = shaftStartY;
+        _travelCameraLockActive = true;
+        ApplyTravelCameraLock(shaftStartY);
+    }
+
+    private void ApplyTravelCameraLock(float shaftWorldY)
+    {
+        if (!_travelCameraLockActive || travelVirtualCamera == null)
+            return;
+
+        Camera cam = Camera.main;
+        if (cam == null)
+            return;
+
+        Vector3 camPos = cam.transform.position;
+        travelVirtualCamera.ForceCameraPosition(
+            new Vector3(camPos.x, shaftWorldY + _travelCameraYOffset, camPos.z),
+            cam.transform.rotation);
     }
 
     private void RestoreCameraFollow()
     {
+        _travelCameraLockActive = false;
+
         if (travelVirtualCamera == null)
             return;
+
+        if (_travelFramingTransposer != null)
+        {
+            if (_savedTravelYDamping >= 0f)
+                _travelFramingTransposer.m_YDamping = _savedTravelYDamping;
+
+            _travelFramingTransposer.enabled = _savedTravelFramingEnabled;
+        }
 
         Transform restore = _savedCameraFollow != null ? _savedCameraFollow : player;
         if (restore != null)
             travelVirtualCamera.Follow = restore;
 
-        travelVirtualCamera.PreviousStateIsValid = false;
         _savedCameraFollow = null;
+        _travelFramingTransposer = null;
+        _savedTravelYDamping = -1f;
     }
 
     private void EnsurePlayerVisualCache()
