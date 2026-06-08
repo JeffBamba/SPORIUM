@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using _Project;
+using Sporae.Core.Localization;
+using Sporae.UI.UIToolkit.ElevatorDisplay;
 using TMPro;
 using UnityEngine;
 
@@ -6,9 +9,8 @@ using UnityEngine;
 /// Display laterale di un piano dell'ascensore (Fase 3).
 /// È SIA indicatore (testo piano + freccia direzione) SIA oggetto interagibile:
 /// premendo E / cliccando (via <see cref="Interactable"/>) chiama l'ascensore a questo piano.
-/// A riposo mostra l'etichetta del proprio piano; durante chiamata/viaggio l'ElevatorSystem
-/// può forzare tutti i display allo stesso contenuto.
-/// Riferimenti opzionali: se un campo non è assegnato, i metodi degradano senza bloccare.
+/// Con <see cref="ElevatorInGameDisplayRuntime"/> attivo usa il pannello UITK sincronizzato;
+/// altrimenti degrada sui TMP legacy.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Interactable))]
@@ -21,11 +23,15 @@ public class ElevatorFloorDisplay : MonoBehaviour
     [Tooltip("Riferimento all'ElevatorSystem. Se vuoto, viene risolto a runtime.")]
     [SerializeField] private ElevatorSystem elevator;
 
-    [Header("UI (placeholder)")]
-    [Tooltip("Testo principale: 'Floor X · ambienti'.")]
+    [Header("UI Toolkit (benchmark)")]
+    [Tooltip("Pannello world-space UITK. Se assente, viene cercato sullo stesso GameObject.")]
+    [SerializeField] private ElevatorInGameDisplayRuntime uiDisplayRuntime;
+
+    [Header("UI legacy (TMP)")]
+    [Tooltip("Testo principale: 'Floor X · ambienti'. Nascosto quando uiDisplayRuntime è attivo.")]
     [SerializeField] private TMP_Text labelText;
 
-    [Tooltip("Testo freccia direzione (placeholder). Lasciare vuoto se non usato.")]
+    [Tooltip("Testo freccia direzione. Nascosto quando uiDisplayRuntime è attivo.")]
     [SerializeField] private TMP_Text arrowText;
 
     [SerializeField] private string upGlyph = "\u25B2";   // ▲
@@ -58,6 +64,9 @@ public class ElevatorFloorDisplay : MonoBehaviour
         _interactable = GetComponent<Interactable>();
         if (_interactable != null)
             _interactable.SetRepeatInteractionWhileInRange(true);
+
+        if (uiDisplayRuntime == null)
+            uiDisplayRuntime = GetComponent<ElevatorInGameDisplayRuntime>();
     }
 
     private void OnEnable()
@@ -66,6 +75,8 @@ public class ElevatorFloorDisplay : MonoBehaviour
             _interactable.OnInteract += HandleInteract;
         if (elevator != null)
             elevator.RegisterDisplay(this);
+
+        RefreshLegacyTmpVisibility();
     }
 
     private void OnDisable()
@@ -82,7 +93,28 @@ public class ElevatorFloorDisplay : MonoBehaviour
             elevator.CallToFloor(floorIndex);
     }
 
-    /// <summary>Aggiorna testo piano e freccia direzione. Chiamato dall'ElevatorSystem.</summary>
+    /// <summary>Aggiorna pannello UITK o fallback TMP. Chiamato dall'ElevatorSystem.</summary>
+    public void SetPanelState(int highlightFloorIndex, ElevatorDirection direction, IReadOnlyList<string> floorLabels, ElevatorDisplayMode mode = ElevatorDisplayMode.Normal)
+    {
+        if (UsesUiToolkitDisplay())
+        {
+            SetLegacyTmpVisible(false);
+            uiDisplayRuntime.SetState(highlightFloorIndex, direction, floorLabels, mode);
+            return;
+        }
+
+        SetLegacyTmpVisible(true);
+        if (mode == ElevatorDisplayMode.CallRemote)
+        {
+            SetContent(LocalizationManager.Pick("Ascensore", "Elevator"), ElevatorDirection.None);
+            return;
+        }
+
+        string label = ResolveHighlightLabel(highlightFloorIndex, floorLabels);
+        SetContent(label, direction);
+    }
+
+    /// <summary>Fallback TMP — testo piano e freccia direzione.</summary>
     public void SetContent(string label, ElevatorDirection direction)
     {
         if (labelText != null)
@@ -94,5 +126,32 @@ public class ElevatorFloorDisplay : MonoBehaviour
                            : direction == ElevatorDirection.Down ? downGlyph
                            : string.Empty;
         }
+    }
+
+    private bool UsesUiToolkitDisplay() =>
+        uiDisplayRuntime != null && uiDisplayRuntime.isActiveAndEnabled;
+
+    private void RefreshLegacyTmpVisibility()
+    {
+        SetLegacyTmpVisible(!UsesUiToolkitDisplay());
+    }
+
+    private void SetLegacyTmpVisible(bool visible)
+    {
+        if (labelText != null)
+            labelText.gameObject.SetActive(visible);
+        if (arrowText != null)
+            arrowText.gameObject.SetActive(visible);
+    }
+
+    private string ResolveHighlightLabel(int highlightFloorIndex, IReadOnlyList<string> floorLabels)
+    {
+        if (floorLabels != null && highlightFloorIndex >= 0 && highlightFloorIndex < floorLabels.Count)
+            return floorLabels[highlightFloorIndex];
+
+        if (elevator != null && highlightFloorIndex >= 0)
+            return elevator.GetFloorLabel(highlightFloorIndex);
+
+        return string.Empty;
     }
 }

@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/_Project/Resources/UI/UIToolkit/ElevatorDisplay/ElevatorDisplay.uss?fileID=7433441132597879392&amp;guid=a7f3e9c2b1d48e6051728394a5b6c7d8&amp;type=3#ElevatorDisplay" />
+    <ui:VisualElement name="elevd-root" picking-mode="Ignore" class="elevd-root elevd-state-call">
+        <ui:VisualElement name="elevd-frame" picking-mode="Ignore" class="elevd-frame" style="border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;">
+            <ui:VisualElement name="elevd-stack" picking-mode="Ignore" class="elevd-stack">
+                <ui:VisualElement name="elevd-direction-row" picking-mode="Ignore" class="elevd-direction-row">
+                    <ui:Label name="elevd-direction-arrow" picking-mode="Ignore" text="▲" class="elevd-direction-arrow" style="display: none; font-size: 200px;" />
+                    <ui:Label name="elevd-direction-label" picking-mode="Ignore" text="CHIAMA" class="elevd-direction-label" style="font-size: 185px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="elevd-divider" picking-mode="Ignore" class="elevd-divider" style="height: 15px; background-color: rgb(255, 214, 74);" />
+                <ui:Label name="elevd-floor-label" picking-mode="Ignore" text="ASCENSORE" class="elevd-floor-display" style="font-size: 220px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

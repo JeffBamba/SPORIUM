@@ -47,7 +47,10 @@
                     <ui:VisualElement name="room-icon-restricted2" picking-mode="Ignore" class="cbb-room-icon" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="zone-post-center" picking-mode="Ignore" class="cbb-zone-post-center" />
+            <ui:VisualElement name="zone-post-center" picking-mode="Ignore" class="cbb-zone-post-center">
+                <ui:VisualElement name="elevator-hint-layout-fill" picking-mode="Ignore" class="cbb-elevator-hint-layout-fill" />
+                <ui:Label name="elevator-hint-label" picking-mode="Ignore" class="cbb-elevator-hint-label" style="display: none;" />
+            </ui:VisualElement>
             <ui:VisualElement name="zone-collectors" class="cbb-zone cbb-zone-collectors" style="border-right-width: 2px; border-left-width: 2px; border-right-color: rgb(56, 76, 82); border-left-color: rgb(56, 76, 82); border-top-color: rgb(56, 76, 82); border-bottom-color: rgb(56, 76, 82);">
                 <ui:VisualElement name="collection-box-stack" class="cbb-collection-stack" />
             </ui:VisualElement>

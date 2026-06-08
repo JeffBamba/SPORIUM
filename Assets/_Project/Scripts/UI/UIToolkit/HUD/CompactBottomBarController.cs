@@ -61,6 +61,7 @@ namespace Sporae.UI.UIToolkit.HUD
         private VisualElement _cryBadge;
         private Label _cryLabel;
         private Label _locationLabel;
+        private Label _elevatorHintLabel;
         private Coroutine _locationTypewriterRoutine;
         private VisualElement _cryTooltip;
         private Label _cryBalanceValue;
@@ -197,6 +198,9 @@ namespace Sporae.UI.UIToolkit.HUD
             _cryBadge = _root.Q<VisualElement>("cry-badge");
             _cryLabel = _root.Q<Label>("cry-label");
             _locationLabel = _root.Q<Label>("location-label");
+            _elevatorHintLabel = _root.Q<Label>("elevator-hint-label");
+            if (_elevatorHintLabel != null)
+                _elevatorHintLabel.style.display = DisplayStyle.None;
 
             // CRY tooltip — figlio di uiRoot (dopo TopBar) così il draw order è sopra il Player Box HUD
             _cryTooltip     = uiRoot.Q<VisualElement>("cry-tooltip");
@@ -435,6 +439,32 @@ namespace Sporae.UI.UIToolkit.HUD
         }
 
         // ── Location label (RoomTracker + RoomAreaTag.DisplayName) ──
+
+        /// <summary>Hint ascensore in cabina — centrato in zone-post-center, testo bianco.</summary>
+        public void SetElevatorHint(string text)
+        {
+            if (_elevatorHintLabel == null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                ClearElevatorHint();
+                return;
+            }
+
+            _elevatorHintLabel.text = text;
+            _elevatorHintLabel.style.display = DisplayStyle.Flex;
+        }
+
+        /// <summary>Nasconde l'hint ascensore in zone-post-center.</summary>
+        public void ClearElevatorHint()
+        {
+            if (_elevatorHintLabel == null)
+                return;
+
+            _elevatorHintLabel.text = string.Empty;
+            _elevatorHintLabel.style.display = DisplayStyle.None;
+        }
 
         private void OnRoomTrackerChanged(string roomId)
         {

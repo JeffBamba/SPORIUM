@@ -124,10 +124,36 @@
 }
 
 .cbb-zone-post-center {
+    position: relative;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
     height: 100%;
+}
+
+.cbb-elevator-hint-layout-fill {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    height: 100%;
+    width: 0;
+}
+
+.cbb-elevator-hint-label {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 0;
+    bottom: 0;
+    color: rgb(255, 255, 255);
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cbb-zone-collectors {
