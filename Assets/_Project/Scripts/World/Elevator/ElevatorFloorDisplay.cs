@@ -62,8 +62,6 @@ public class ElevatorFloorDisplay : MonoBehaviour
     private void Awake()
     {
         _interactable = GetComponent<Interactable>();
-        if (_interactable != null)
-            _interactable.SetRepeatInteractionWhileInRange(true);
 
         if (uiDisplayRuntime == null)
             uiDisplayRuntime = GetComponent<ElevatorInGameDisplayRuntime>();
@@ -87,10 +85,20 @@ public class ElevatorFloorDisplay : MonoBehaviour
             elevator.UnregisterDisplay(this);
     }
 
+    private void LateUpdate()
+    {
+        if (_interactable == null || elevator == null)
+            return;
+
+        _interactable.SetInteractionAvailable(elevator.CanCallFromFloorDisplay());
+    }
+
     private void HandleInteract()
     {
-        if (elevator != null)
-            elevator.CallToFloor(floorIndex);
+        if (elevator == null || !elevator.CanCallFromFloorDisplay())
+            return;
+
+        elevator.CallToFloor(floorIndex);
     }
 
     /// <summary>Aggiorna pannello UITK o fallback TMP. Chiamato dall'ElevatorSystem.</summary>

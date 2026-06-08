@@ -3531,6 +3531,7 @@ RectTransform:
   - {fileID: 1873807289}
   - {fileID: 228297615}
   - {fileID: 1534000234}
+  - {fileID: 779921189}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -7681,7 +7682,7 @@ Transform:
   m_GameObject: {fileID: 352385549}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.33, y: 11.34, z: 0}
+  m_LocalPosition: {x: 1.419, y: 11.542, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7704,7 +7705,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.549
   m_Color: {r: 0.8509804, g: 0.8192332, b: 0.627451, a: 1}
-  m_Intensity: 1.88
+  m_Intensity: 2.38
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
   m_ApplyToSortingLayers: 000000007fe5e60d
@@ -9064,6 +9065,9 @@ MonoBehaviour:
   cabinLevelVerticalTolerance: 1.75
   cabinSelectionHint: "Usa \u2191 \u2193 o W S per scegliere il piano"
   cabinConfirmHint: Premi E per confermare il piano
+  enableCabinAutoDepartAfterSelection: 1
+  cabinAutoDepartDelaySeconds: 2
+  cabinAutoDepartConfirmHint: 
   cabinLobbyDeepV: 0.92
   minDoorsOpenBeforeCabinEntrySeconds: 0.45
   cabinDoorCloseDelaySeconds: 0.75
@@ -19855,6 +19859,143 @@ MonoBehaviour:
   FloorName: Floor -1
   TooltipText: "Biological heart of the Vault. The plants obey\u2014or betray\u2014you."
   IsLocked: 0
+--- !u!1 &779921188
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 779921189}
+  - component: {fileID: 779921191}
+  - component: {fileID: 779921190}
+  m_Layer: 5
+  m_Name: Bottone_Elevator (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &779921189
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779921188}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.059896007, y: 0.059896007, z: 0.059896007}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 170435553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -958.21906, y: -490.595}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &779921190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779921188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039676c9d6d76e04380320d469cd2af2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 0
+  baseIntensity: 2
+  minIntensity: 0.2
+  maxIntensity: 6
+  noiseSpeed: 8
+  noiseAmount: 0.25
+  noiseSeed: 0.123
+  dropoutChancePerSecond: 0.9
+  dropoutDuration: {x: 0.03, y: 0.18}
+  dropoutIntensity: 0.02
+  burstChancePerSecond: 0.35
+  burstDuration: {x: 0.06, y: 0.22}
+  burstMultiplier: 1.8
+  randomEnableStablePauses: 0
+  randomStablePauseChancePerSecond: 0.05
+  randomStablePauseDuration: {x: 7, y: 7}
+  randomStablePauseIntensityOverride: 0
+  flickerRadius: 0
+  radiusNoiseAmount: 0.15
+  response: 25
+  potNoiseSpeed: 3
+  potNoiseAmount: 0.2
+  potMicroDipChancePerSecond: 0.25
+  potMicroDipDuration: {x: 0.1, y: 0.25}
+  potMicroDipMultiplier: 0.85
+  potMicroBoostChancePerSecond: 0.2
+  potMicroBoostDuration: {x: 0.1, y: 0.22}
+  potMicroBoostMultiplier: 1.12
+  bootFlickerDuration: {x: 0.9, y: 1.6}
+  bootStableChunks: {x: 0.08, y: 0.22}
+  bootNoiseSpeed: 18
+  bootNoiseAmount: 1
+  warmStableDuration: {x: 0.5, y: 1.1}
+  adjustFlickerCount: {x: 2, y: 5}
+  stableLowIntensity: 1.6
+  stableLowDuration: {x: 0.7, y: 1.5}
+  stableHighIntensity: 4.8
+  rampUpDuration: 1.2
+--- !u!114 &779921191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779921188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 1
+  m_LightType: 3
+  m_BlendStyleIndex: 1
+  m_FalloffIntensity: 0.402
+  m_Color: {r: 0.23928677, g: 1, b: 0.18396229, a: 1}
+  m_Intensity: 0.24
+  m_LightVolumeIntensity: 1
+  m_LightVolumeIntensityEnabled: 0
+  m_ApplyToSortingLayers: 000000007fe5e60d
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowIntensityEnabled: 0
+  m_ShadowIntensity: 0.75
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0, y: -0.00000011920929, z: 0}
+    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
+  m_PointLightInnerAngle: 359.99997
+  m_PointLightOuterAngle: 359.99997
+  m_PointLightInnerRadius: 0
+  m_PointLightOuterRadius: 0.07
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
 --- !u!1 &788038664
 GameObject:
   m_ObjectHideFlags: 0
@@ -36137,7 +36278,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -958.3089, y: -500.43082}
+  m_AnchoredPosition: {x: -957.9845, y: -500.45398}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1534000235

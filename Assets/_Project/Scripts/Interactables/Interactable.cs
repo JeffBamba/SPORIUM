@@ -34,6 +34,9 @@ namespace _Project
         public event Action OnInteract;
 
         private bool _interacted = false;
+        private bool _interactionAvailable = true;
+
+        public bool IsInteractionAvailable => _interactionAvailable;
 
         private float EffectiveInteractDistance => _interactDistance > 0f ? _interactDistance : 2f;
         private float EffectivePromptDistance => _promptDistance > 0f ? Mathf.Min(_promptDistance, EffectiveInteractDistance) : EffectiveInteractDistance;
@@ -59,6 +62,9 @@ namespace _Project
         }
 
         public void SetRepeatInteractionWhileInRange(bool value) => _repeatInteractionWhileInRange = value;
+
+        /// <summary>Gate runtime per prompt e input (es. display ascensore durante viaggio).</summary>
+        public void SetInteractionAvailable(bool available) => _interactionAvailable = available;
 
         public void SetInteractDistance(float meters) => _interactDistance = Mathf.Max(0.25f, meters);
 
@@ -149,6 +155,8 @@ namespace _Project
             worldPoint = GetMouseWorld2D(cam);
             float r = 0.35f;
             focused = ResolveInteractableUnderPointer(worldPoint, r);
+            if (focused != null && !focused.IsInteractionAvailable)
+                focused = null;
             nearest = null;
             cameraName = cam != null ? cam.gameObject.name : "<null>";
 
@@ -172,6 +180,9 @@ namespace _Project
         /// <summary>Click sinistro: stessa risoluzione “focus” usata in precedenza.</summary>
         private bool TryResolveMouseClickInteract()
         {
+            if (!_interactionAvailable)
+                return false;
+
             Camera cam = Camera.main != null ? Camera.main : UnityEngine.Object.FindObjectOfType<Camera>();
             Vector2 worldPoint = GetMouseWorld2D(cam);
             float r = _clickRadius > 0f ? _clickRadius : 0.35f;
@@ -229,7 +240,7 @@ namespace _Project
             for (int i = 0; i < Registry.Count; i++)
             {
                 Interactable it = Registry[i];
-                if (it == null || !it.PlayerInRange)
+                if (it == null || !it.PlayerInRange || !it.IsInteractionAvailable)
                     continue;
                 float d = it.GetDistanceToPlayer(pp);
                 if (d < bestDist)
@@ -278,41 +289,45 @@ namespace _Project
                 return;
 
             bool currentlyInRange = PlayerInRange;
-            if (currentlyInRange)
+            if (!currentlyInRange)
             {
-                if (_playerInteractAdvice != null && (!_interacted || _repeatInteractionWhileInRange))
-                {
-                    Interactable promptTarget = ResolveKeyboardTargetForCurrentState(out _, out _, out _, out _, out _);
-                    if (promptTarget == this && PlayerInPromptRange)
-                        _playerInteractAdvice.AddInteractable(GetInteractionDisplayName());
-                }
+                _interacted = false;
+                return;
+            }
 
-                // [E]: stessa logica di “focus” del click (puntatore) oppure, se il mouse non è su nessun collider Interactable,
-                // un solo oggetto vince: il più vicino al player tra quelli in range (evita che tutti gli E in Update sparino insieme).
-                if (Input.GetKeyDown(KeyCode.E) && !UIBlocker.IsPointerOverUI())
-                {
-                    if (TryResolveKeyboardInteract())
-                    {
-                        if (!_repeatInteractionWhileInRange)
-                            _interacted = true;
-                        OnInteract?.Invoke();
-                        return;
-                    }
-                }
+            if (!_interactionAvailable)
+                return;
 
-                // Click: un solo Interactable “vincente” sotto il cursore (evita che un oggetto con raggio grande / fallback rubi il click).
-                if (Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
+            if (_playerInteractAdvice != null && (!_interacted || _repeatInteractionWhileInRange))
+            {
+                Interactable promptTarget = ResolveKeyboardTargetForCurrentState(out _, out _, out _, out _, out _);
+                if (promptTarget == this && PlayerInPromptRange)
+                    _playerInteractAdvice.AddInteractable(GetInteractionDisplayName());
+            }
+
+            // [E]: stessa logica di “focus” del click (puntatore) oppure, se il mouse non è su nessun collider Interactable,
+            // un solo oggetto vince: il più vicino al player tra quelli in range (evita che tutti gli E in Update sparino insieme).
+            if (Input.GetKeyDown(KeyCode.E) && !UIBlocker.IsPointerOverUI())
+            {
+                if (TryResolveKeyboardInteract())
                 {
-                    if (TryResolveMouseClickInteract())
-                    {
-                        if (!_repeatInteractionWhileInRange)
-                            _interacted = true;
-                        OnInteract?.Invoke();
-                    }
+                    if (!_repeatInteractionWhileInRange)
+                        _interacted = true;
+                    OnInteract?.Invoke();
+                    return;
                 }
             }
-            else
-                _interacted = false;
+
+            // Click: un solo Interactable “vincente” sotto il cursore (evita che un oggetto con raggio grande / fallback rubi il click).
+            if (Input.GetMouseButtonDown(0) && !UIBlocker.IsPointerOverUI())
+            {
+                if (TryResolveMouseClickInteract())
+                {
+                    if (!_repeatInteractionWhileInRange)
+                        _interacted = true;
+                    OnInteract?.Invoke();
+                }
+            }
         }
 
         private float GetDistanceToPlayer(Vector2 playerPosition)
@@ -345,7 +360,7 @@ namespace _Project
             if (isOverUI)
                 return;
 
-            if (!PlayerInRange)
+            if (!PlayerInRange || !_interactionAvailable)
                 return;
 
             if (!TryResolveMouseClickInteract())

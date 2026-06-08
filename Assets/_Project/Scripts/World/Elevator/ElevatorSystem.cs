@@ -71,6 +71,16 @@ public class ElevatorSystem : MonoBehaviour
     [Tooltip("Hint bottom bar dopo la selezione piano: conferma viaggio con E.")]
     [SerializeField] private string cabinConfirmHint = "Premi E per confermare il piano";
 
+    [Header("Conferma cabina — auto-partenza (opzionale)")]
+    [Tooltip("Se true, dopo la selezione W/S la cabina parte da sola se il player non preme E entro il delay (solo piano diverso e sbloccato).")]
+    [SerializeField] private bool enableCabinAutoDepartAfterSelection = true;
+
+    [Tooltip("Secondi di attesa dopo l'ultima selezione piano prima della partenza automatica.")]
+    [SerializeField] private float cabinAutoDepartDelaySeconds = 2f;
+
+    [Tooltip("Hint con {0} = secondi rimanenti al timeout. Se vuoto, si appende un suffisso al cabinConfirmHint.")]
+    [SerializeField] private string cabinAutoDepartConfirmHint = "";
+
     [Tooltip("Soglia UV v sul pianerottolo (solo piani senza ElevatorCabinInteriorZone). Con interior zone fisica, l'ingresso è deciso dal trigger.")]
     [SerializeField] [Range(0.5f, 1f)] private float cabinLobbyDeepV = 0.92f;
 
@@ -129,6 +139,7 @@ public class ElevatorSystem : MonoBehaviour
     private Coroutine _outOfServiceCoroutine;
     private Coroutine _callToFloorCoroutine;
     private Coroutine _departCoroutine;
+    private Coroutine _cabinAutoDepartCoroutine;
     private Coroutine _hideAfterCabinDoorsCoroutine;
     private bool _holdDoorsOpenForCabinEntry;
     private Coroutine _closeDoorsForCabinCoroutine;
@@ -1240,6 +1251,20 @@ public class ElevatorSystem : MonoBehaviour
         _flowState = state;
     }
 
+    /// <summary>
+    /// Display esterni: chiamata solo a riposo fuori cabina. In cabina si usa W/S + E; durante viaggio/arrivo niente [E] sul pannello.
+    /// </summary>
+    public bool CanCallFromFloorDisplay()
+    {
+        if (!enabled || isTeleporting || _playerInsideCabinZone)
+            return false;
+
+        if (_callToFloorCoroutine != null || _departCoroutine != null)
+            return false;
+
+        return _flowState == ElevatorFlowState.IdleAtFloor;
+    }
+
     private void ActivateCabinInterior(int floorIndex, Transform playerTransform)
     {
         if (_playerInsideCabinZone && _cabinFloorIndex == floorIndex)
@@ -1495,6 +1520,7 @@ public class ElevatorSystem : MonoBehaviour
 
     private void CancelCabinArrowSelection(bool restoreDisplays)
     {
+        CancelCabinAutoDepart();
         _cabinArrowSelectionActive = false;
         _targetIndex = currentLevelIndex;
 
@@ -1545,6 +1571,53 @@ public class ElevatorSystem : MonoBehaviour
         SetFlowState(ElevatorFlowState.CabinReadyForSelection);
         RefreshSelectionDisplay();
         ShowCabinConfirmHintOnBottomBar();
+        ScheduleCabinAutoDepart();
+    }
+
+    private void CancelCabinAutoDepart()
+    {
+        if (_cabinAutoDepartCoroutine == null)
+            return;
+
+        StopCoroutine(_cabinAutoDepartCoroutine);
+        _cabinAutoDepartCoroutine = null;
+    }
+
+    private bool CanAutoDepartFromCabinSelection()
+    {
+        if (!enableCabinAutoDepartAfterSelection)
+            return false;
+        if (!_playerInsideCabinZone || !_cabinArrowSelectionActive || isTeleporting)
+            return false;
+        if (_targetIndex == currentLevelIndex)
+            return false;
+        if (!IsLevelUnlocked(_targetIndex))
+            return false;
+        if (_departCoroutine != null || _callToFloorCoroutine != null)
+            return false;
+
+        return true;
+    }
+
+    private void ScheduleCabinAutoDepart()
+    {
+        CancelCabinAutoDepart();
+        if (!CanAutoDepartFromCabinSelection())
+            return;
+
+        _cabinAutoDepartCoroutine = StartCoroutine(CabinAutoDepartRoutine());
+    }
+
+    private System.Collections.IEnumerator CabinAutoDepartRoutine()
+    {
+        float delay = Mathf.Max(0.1f, cabinAutoDepartDelaySeconds);
+        yield return new WaitForSeconds(delay);
+        _cabinAutoDepartCoroutine = null;
+
+        if (!CanAutoDepartFromCabinSelection())
+            yield break;
+
+        TryDepartToTarget();
     }
 
     private void RefreshSelectionDisplay()
@@ -1561,6 +1634,8 @@ public class ElevatorSystem : MonoBehaviour
 
     private void TryDepartToTarget()
     {
+        CancelCabinAutoDepart();
+
         if (_targetIndex == currentLevelIndex)
         {
             LeaveCabinZone(restoreDisplays: true, closeDoorsOnExit: false);
@@ -1666,6 +1741,7 @@ public class ElevatorSystem : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelCabinAutoDepart();
         _suppressCabinActivationUntilExitFloor = -1;
         LeaveCabinZone(restoreDisplays: false);
         if (_cabinInputBlocked)
@@ -1857,9 +1933,19 @@ public class ElevatorSystem : MonoBehaviour
 
     private void ShowCabinConfirmHintOnBottomBar()
     {
-        string hint = string.IsNullOrWhiteSpace(cabinConfirmHint)
+        string baseHint = string.IsNullOrWhiteSpace(cabinConfirmHint)
             ? "Premi E per confermare il piano"
             : cabinConfirmHint;
+
+        string hint = baseHint;
+        if (CanAutoDepartFromCabinSelection())
+        {
+            float sec = Mathf.Max(0.1f, cabinAutoDepartDelaySeconds);
+            if (!string.IsNullOrWhiteSpace(cabinAutoDepartConfirmHint))
+                hint = string.Format(System.Globalization.CultureInfo.InvariantCulture, cabinAutoDepartConfirmHint, sec);
+            else
+                hint = $"{baseHint} — partenza automatica tra {sec:0.#} s";
+        }
 
         var bottomBar = ServiceContainer.Instance?.Get<CompactBottomBarController>(suppressWarning: true);
         bottomBar?.SetElevatorHint(hint);
@@ -1878,6 +1964,9 @@ public class ElevatorSystem : MonoBehaviour
     public void CallToFloor(int floorIndex)
     {
         if (!enabled || !IsValidLevelIndex(floorIndex))
+            return;
+
+        if (!CanCallFromFloorDisplay())
             return;
 
         // Chiamata dal display esterno: annulla selezione freccia e sblocca input (evita freeze su [E]).
