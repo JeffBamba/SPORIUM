@@ -9478,7 +9478,7 @@ Transform:
   m_GameObject: {fileID: 426608517}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.65, y: -2.16, z: 0}
+  m_LocalPosition: {x: 2.65, y: -2, z: 0}
   m_LocalScale: {x: 1.425, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -41316,14 +41316,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentWalkArea: {fileID: 0}
-  moveSpeed: 4
+  moveSpeed: 3
   stopDistance: 0.06
   enableClickToMove: 1
   enableWASD: 1
   wasdDeadzone: 0.01
   uvSpeed: 0.6
   useConstantWorldSpeedForWASD: 1
-  wasdWorldSpeed: 4
+  wasdWorldSpeed: 3
   uvDerivativeStep: 0.03
   requireWalkableForClick: 0
   walkableMask:
@@ -51756,9 +51756,25 @@ PrefabInstance:
       value: PLY_Player
       objectReference: {fileID: 0}
     - target: {fileID: 4358391709167396956, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
+      propertyPath: m_Size.x
+      value: 0.47
+      objectReference: {fileID: 0}
+    - target: {fileID: 4358391709167396956, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
+      propertyPath: m_Size.y
+      value: 0.47
+      objectReference: {fileID: 0}
+    - target: {fileID: 4358391709167396956, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4358391709167396956, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.26
+      objectReference: {fileID: 0}
+    - target: {fileID: 7370341786064052431, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: d20d1add4a1393244a83cd37a1c6c08e, type: 3}
     - target: {fileID: 7370341786064052431, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_SortingOrder
       value: 10

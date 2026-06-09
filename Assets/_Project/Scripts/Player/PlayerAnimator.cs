@@ -26,6 +26,9 @@ namespace _Project
         [SerializeField] private bool useWalkHoldTime = true; // DEBUG_SAFE_FIX
 
         [SerializeField] private float walkHoldSeconds = 0.15f;
+
+        [Header("Animation Blending")]
+        [SerializeField] private float crossFadeDuration = 0.12f;
         
         private Animator _animator;
         private Rigidbody2D _rigidbody;
@@ -53,7 +56,7 @@ namespace _Project
             _lastPos = _rigidbody != null ? _rigidbody.position : (Vector2)transform.position;
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             Vector2 pos = _rigidbody != null ? _rigidbody.position : (Vector2)transform.position;
             Vector2 delta = pos - _lastPos;
@@ -107,7 +110,7 @@ namespace _Project
                 if (movingNow)
                     _walkHoldRemaining = Mathf.Max(_walkHoldRemaining, walkHoldSeconds);
                 else
-                    _walkHoldRemaining = Mathf.Max(0f, _walkHoldRemaining - Time.deltaTime);
+                    _walkHoldRemaining = Mathf.Max(0f, _walkHoldRemaining - Time.fixedDeltaTime);
 
                 if (_walkHoldRemaining > 0f)
                     updatedAnimation = _facingBack ? k_walkingBackAnimation : k_walkingAnimation;
@@ -115,8 +118,13 @@ namespace _Project
 
             if (_currentAnimation == updatedAnimation)
                 return;
-            
-            _animator.Play(updatedAnimation);
+
+            float fade = Mathf.Max(0f, crossFadeDuration);
+            if (fade > 0f)
+                _animator.CrossFade(updatedAnimation, fade, 0, 0f);
+            else
+                _animator.Play(updatedAnimation, 0, 0f);
+
             _currentAnimation = updatedAnimation;
         }
     }

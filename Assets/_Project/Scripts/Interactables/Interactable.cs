@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _Project.Sporae.Core;
+using Sporae.Core.Localization;
 using UnityEngine;
 
 namespace _Project
@@ -21,6 +22,9 @@ namespace _Project
 
         [Tooltip("Se true, il prompt [E] resta attivo e si può riaprire l'interazione senza uscire dalla zona (es. Armadio).")]
         [SerializeField] private bool _repeatInteractionWhileInRange;
+
+        [Tooltip("Chiave LocalizationManager per il nome mostrato al player (es. gameplay.interact.target.elevator). Se vuota, risoluzione automatica dal componente sullo stesso GO.")]
+        [SerializeField] private string _interactionTargetLocKey;
 
         [SerializeField] private Color _normalColor;
         [SerializeField] private Color _highlightColor;
@@ -70,10 +74,14 @@ namespace _Project
 
         public string GetInteractionDisplayName()
         {
-            string fallback = gameObject.name ?? string.Empty;
-            if (fallback.EndsWith("(Clone)", StringComparison.Ordinal))
-                fallback = fallback.Replace("(Clone)", string.Empty).Trim();
-            return fallback;
+            string key = InteractionPromptTargetResolver.ResolveLocKey(this, _interactionTargetLocKey);
+            if (string.IsNullOrWhiteSpace(key))
+                return string.Empty;
+
+            string localized = LocalizationManager.GetString(key);
+            return string.IsNullOrWhiteSpace(localized)
+                ? string.Empty
+                : localized.Trim().ToUpperInvariant();
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using _Project.World.VaultMap;
 using UnityEngine;
 
 namespace _Project.Player
@@ -38,7 +39,17 @@ namespace _Project.Player
             transform.localScale = new Vector3(s, s, 1f);
 
             if (spriteRenderer != null)
-                spriteRenderer.sortingOrder = baseOrder + Mathf.RoundToInt(Mathf.Clamp01(v) * range);
+            {
+                int order = baseOrder + Mathf.RoundToInt(Mathf.Clamp01(v) * range);
+                int minOrder = PerspectiveWalkArea2D.GetMaxMinPlayerSortingOrderAt(transform.position);
+                PerspectiveWalkArea2D walkArea = mover != null ? mover.CurrentWalkArea : null;
+                if (walkArea != null && walkArea.MinPlayerSortingOrder > minOrder)
+                    minOrder = walkArea.MinPlayerSortingOrder;
+                if (minOrder > 0)
+                    order = Mathf.Max(order, minOrder);
+
+                spriteRenderer.sortingOrder = order;
+            }
         }
 
         private bool TryGetDepthV(out float v)
@@ -52,4 +63,3 @@ namespace _Project.Player
         }
     }
 }
-

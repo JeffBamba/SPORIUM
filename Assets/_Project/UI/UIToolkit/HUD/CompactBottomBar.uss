@@ -146,7 +146,7 @@
     right: 8px;
     top: 0;
     bottom: 0;
-    color: rgb(255, 255, 255);
+    color: rgb(255, 220, 72);
     font-size: 13px;
     letter-spacing: 0.6px;
     -unity-font-style: bold;
@@ -156,7 +156,7 @@
     text-overflow: ellipsis;
 }
 
-/* Opacità lampeggiante applicata a runtime quando l'hint ascensore è visibile. */
+/* Opacità lampeggiante a runtime: hint ascensore e hint interazione [E] in zone-post-center. */
 .cbb-elevator-hint-label--blink {
     opacity: 1;
 }

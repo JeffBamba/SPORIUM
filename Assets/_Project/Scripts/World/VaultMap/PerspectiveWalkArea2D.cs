@@ -27,8 +27,50 @@ namespace _Project.World.VaultMap
         [SerializeField] [Range(0f, 1f)] private float lateralUMinAtFar = 0.08f;
         [SerializeField] [Range(0f, 1f)] private float lateralUMaxAtFar = 0.49f;
 
+        [Header("Player sorting (lobby davanti ascensore)")]
+        [Tooltip("Se > 0, il player non scende sotto questo order mentre cammina in questa area (evita occlusione da cornice ascensore).")]
+        [SerializeField] private int minPlayerSortingOrder;
+
         public Collider2D AreaBounds => areaBounds;
+        public int MinPlayerSortingOrder => minPlayerSortingOrder;
         public bool HasLateralDepthClamp => limitLateralUWhenDeep;
+
+        private static readonly System.Collections.Generic.List<PerspectiveWalkArea2D> s_ActiveAreas =
+            new System.Collections.Generic.List<PerspectiveWalkArea2D>();
+
+        private void OnEnable()
+        {
+            if (!s_ActiveAreas.Contains(this))
+                s_ActiveAreas.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            s_ActiveAreas.Remove(this);
+        }
+
+        /// <summary>Max minPlayerSortingOrder tra le walk area il cui bounds contiene il punto.</summary>
+        public static int GetMaxMinPlayerSortingOrderAt(Vector2 world)
+        {
+            int max = 0;
+            for (int i = s_ActiveAreas.Count - 1; i >= 0; i--)
+            {
+                PerspectiveWalkArea2D area = s_ActiveAreas[i];
+                if (area == null)
+                {
+                    s_ActiveAreas.RemoveAt(i);
+                    continue;
+                }
+
+                if (area.MinPlayerSortingOrder <= max)
+                    continue;
+
+                if (area.AreaBounds != null && area.AreaBounds.enabled && area.AreaBounds.OverlapPoint(world))
+                    max = area.MinPlayerSortingOrder;
+            }
+
+            return max;
+        }
 
         public bool HasValidCorners =>
             nearLeft != null && nearRight != null && farLeft != null && farRight != null;

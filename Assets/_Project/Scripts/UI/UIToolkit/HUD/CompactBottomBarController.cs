@@ -64,6 +64,8 @@ namespace Sporae.UI.UIToolkit.HUD
         private Label _elevatorHintLabel;
         private readonly UiToolkitOpacityBlinker _elevatorHintBlinker = new();
         private const string ElevatorHintBlinkClass = "cbb-elevator-hint-label--blink";
+        private string _elevatorHintText = string.Empty;
+        private string _interactionHintText = string.Empty;
         private Coroutine _locationTypewriterRoutine;
         private VisualElement _cryTooltip;
         private Label _cryBalanceValue;
@@ -445,34 +447,56 @@ namespace Sporae.UI.UIToolkit.HUD
                 _cryValueForecast.text = $"{forecastBalance:N0} CRY";
         }
 
-        // ── Location label (RoomTracker + RoomAreaTag.DisplayName) ──
+        // ── zone-post-center (hint ascensore + interazione [E]) ──
 
-        /// <summary>Hint ascensore in cabina — centrato in zone-post-center, testo bianco.</summary>
+        /// <summary>Hint ascensore in cabina — centrato in zone-post-center; ha priorità sull'hint interazione.</summary>
         public void SetElevatorHint(string text)
         {
-            if (_elevatorHintLabel == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                ClearElevatorHint();
-                return;
-            }
-
-            _elevatorHintLabel.text = text;
-            _elevatorHintLabel.style.display = DisplayStyle.Flex;
-            _elevatorHintBlinker.SetActive(true, ElevatorHintBlinkClass);
+            _elevatorHintText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            RefreshPostCenterHint();
         }
 
         /// <summary>Nasconde l'hint ascensore in zone-post-center.</summary>
         public void ClearElevatorHint()
         {
+            _elevatorHintText = string.Empty;
+            RefreshPostCenterHint();
+        }
+
+        /// <summary>Hint interazione [E] — stessa label dell'ascensore, lampeggiante; nascosto se c'è hint ascensore.</summary>
+        public void SetInteractionHint(string text)
+        {
+            _interactionHintText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            RefreshPostCenterHint();
+        }
+
+        /// <summary>Nasconde l'hint interazione in zone-post-center.</summary>
+        public void ClearInteractionHint()
+        {
+            _interactionHintText = string.Empty;
+            RefreshPostCenterHint();
+        }
+
+        private void RefreshPostCenterHint()
+        {
             if (_elevatorHintLabel == null)
                 return;
 
-            _elevatorHintLabel.text = string.Empty;
-            _elevatorHintLabel.style.display = DisplayStyle.None;
-            _elevatorHintBlinker.Stop(ElevatorHintBlinkClass);
+            string display = !string.IsNullOrEmpty(_elevatorHintText)
+                ? _elevatorHintText
+                : _interactionHintText;
+
+            if (string.IsNullOrEmpty(display))
+            {
+                _elevatorHintLabel.text = string.Empty;
+                _elevatorHintLabel.style.display = DisplayStyle.None;
+                _elevatorHintBlinker.Stop(ElevatorHintBlinkClass);
+                return;
+            }
+
+            _elevatorHintLabel.text = display;
+            _elevatorHintLabel.style.display = DisplayStyle.Flex;
+            _elevatorHintBlinker.SetActive(true, ElevatorHintBlinkClass);
         }
 
         private void OnRoomTrackerChanged(string roomId)

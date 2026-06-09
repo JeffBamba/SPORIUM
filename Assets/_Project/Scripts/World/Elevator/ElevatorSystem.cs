@@ -242,6 +242,15 @@ public class ElevatorSystem : MonoBehaviour
             if (interiorZones[i] != null)
                 interiorZones[i].BindElevator(this);
         }
+
+        if (floorDoors != null)
+        {
+            for (int i = 0; i < floorDoors.Length; i++)
+            {
+                if (floorDoors[i] != null)
+                    floorDoors[i].BindFloor(i, this);
+            }
+        }
     }
 
     private void ValidateConfiguration()
@@ -1937,7 +1946,8 @@ public class ElevatorSystem : MonoBehaviour
             _holdDoorsOpenForCabinEntry = false;
 
         ElevatorDoorPair pair = GetFloorDoors(floorIndex);
-        if (pair != null) pair.Close();
+        if (pair != null)
+            pair.Close(IsPlayerInsideCabinOnFloor(floorIndex));
     }
 
     /// <summary>Chiude immediatamente tutte le porte bindate (utile per stato iniziale/reset).</summary>

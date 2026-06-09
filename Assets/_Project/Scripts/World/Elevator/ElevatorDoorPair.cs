@@ -55,7 +55,7 @@ public class ElevatorDoorPair : MonoBehaviour
 
     [Header("Occlusione player")]
 
-    [Tooltip("Durante apertura/chiusura alza le ante sopra al player. Ignorato se elevator_mask è assegnata (le ante restano sotto la mask).")]
+    [Tooltip("Durante l'animazione alza le ante sopra al player. Con elevator_mask alza le ante solo in chiusura se occludePlayer=true (player in cabina).")]
 
     [SerializeField] private bool raiseSortingDuringAnimation = true;
 
@@ -92,6 +92,12 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
+    [Tooltip("Sorting order portelloni a porte chiuse quando il player è fuori cabina (deve restare sotto il player).")]
+
+    [SerializeField] private int closedSortingOrderWhenPlayerOutside = 5;
+
+
+
     private Vector3 _leftClosedLocalPos;
 
     private Vector3 _rightClosedLocalPos;
@@ -108,7 +114,15 @@ public class ElevatorDoorPair : MonoBehaviour
 
     private bool _sortingRaised;
 
+    private bool _occludePlayerDuringAnimation;
+
     private bool _pendingCloseAfterOpen;
+
+    private bool _idleSortingLoweredForPlayerOutside;
+
+    private int _floorIndex = -1;
+
+    private ElevatorSystem _elevatorSystem;
 
     private Coroutine _anim;
 
@@ -123,6 +137,22 @@ public class ElevatorDoorPair : MonoBehaviour
     public bool IsClosing => IsAnimating && !IsOpen;
 
     public float AnimationDuration => Mathf.Max(0.0001f, animDuration);
+
+
+
+    /// <summary>Registrato da <see cref="ElevatorSystem"/> (indice allineato a levels[] / floorDoors[]).</summary>
+
+    public void BindFloor(int floorIndex, ElevatorSystem elevatorSystem)
+
+    {
+
+        _floorIndex = floorIndex;
+
+        _elevatorSystem = elevatorSystem;
+
+        RefreshIdleClosedSorting();
+
+    }
 
 
 
@@ -178,11 +208,23 @@ public class ElevatorDoorPair : MonoBehaviour
 
         RestoreSortingAfterAnimation();
 
+        RestoreIdleSortingToSceneOriginal();
+
         SetDoorRenderersVisible(true);
 
         ApplyElevatorMaskIdle();
 
         ApplyCabinSideWalkBlockers(false);
+
+    }
+
+
+
+    private void LateUpdate()
+
+    {
+
+        RefreshIdleClosedSorting();
 
     }
 
@@ -508,8 +550,12 @@ public class ElevatorDoorPair : MonoBehaviour
         StartAnim(true);
     }
 
-    /// <summary>Chiude le ante (animazione se attivo, istantaneo se l'oggetto è disattivo).</summary>
-    public void Close()
+    /// <summary>
+    /// Chiude le ante (animazione se attivo, istantaneo se l'oggetto è disattivo).
+    /// Con <paramref name="occludePlayer"/> true alza sorting portelloni/maschera sopra il player
+    /// anche se elevator_mask è assegnata (es. chiusura con player in cabina).
+    /// </summary>
+    public void Close(bool occludePlayer = false)
     {
         if (!isActiveAndEnabled) { _pendingCloseAfterOpen = false; ApplyInstant(false); return; }
         if (_anim != null)
@@ -517,6 +563,7 @@ public class ElevatorDoorPair : MonoBehaviour
             if (IsOpen)
             {
                 _pendingCloseAfterOpen = true;
+                _occludePlayerDuringAnimation = occludePlayer;
                 return;
             }
 
@@ -524,6 +571,7 @@ public class ElevatorDoorPair : MonoBehaviour
         }
 
         _pendingCloseAfterOpen = false;
+        _occludePlayerDuringAnimation = occludePlayer;
         StartAnim(false);
     }
 
@@ -552,6 +600,9 @@ public class ElevatorDoorPair : MonoBehaviour
     private IEnumerator AnimRoutine(bool open)
 
     {
+
+        if (open)
+            _occludePlayerDuringAnimation = false;
 
         if (!open)
         {
@@ -633,6 +684,9 @@ public class ElevatorDoorPair : MonoBehaviour
         }
 
         _anim = null;
+
+        if (!open)
+            RefreshIdleClosedSorting();
     }
 
 
@@ -660,6 +714,9 @@ public class ElevatorDoorPair : MonoBehaviour
 
         SetDoorRenderersVisible(!open || !HasElevatorMask);
 
+        if (!open)
+            RefreshIdleClosedSorting();
+
     }
 
 
@@ -668,7 +725,14 @@ public class ElevatorDoorPair : MonoBehaviour
 
     {
 
-        if (!raiseSortingDuringAnimation || HasElevatorMask)
+        if (!raiseSortingDuringAnimation)
+
+            return;
+
+
+
+        // Con elevator_mask le ante restano al sorting di scena salvo chiusura con player in cabina.
+        if (HasElevatorMask && !_occludePlayerDuringAnimation)
 
             return;
 
@@ -699,6 +763,74 @@ public class ElevatorDoorPair : MonoBehaviour
         RestoreDoorRenderers(_rightDoorRenderers, _rightOriginalSortingOrders);
 
         _sortingRaised = false;
+
+    }
+
+
+
+    /// <summary>
+    /// A porte chiuse e ferme: sorting di scena se il player è in cabina su questo piano,
+    /// altrimenti order basso così il player resta davanti ai portelloni nel pianerottolo.
+    /// </summary>
+    private void RefreshIdleClosedSorting()
+
+    {
+
+        if (IsAnimating || _sortingRaised || IsOpen || _elevatorSystem == null || _floorIndex < 0)
+
+            return;
+
+
+
+        CaptureClosedPositions();
+
+
+
+        bool playerInsideOnFloor = _elevatorSystem.IsPlayerInsideCabinOnFloor(_floorIndex);
+
+
+
+        if (playerInsideOnFloor)
+
+        {
+
+            if (_idleSortingLoweredForPlayerOutside)
+
+                RestoreIdleSortingToSceneOriginal();
+
+            return;
+
+        }
+
+
+
+        RaiseDoorRenderers(_leftDoorRenderers, closedSortingOrderWhenPlayerOutside);
+
+        RaiseDoorRenderers(_rightDoorRenderers, closedSortingOrderWhenPlayerOutside);
+
+        _idleSortingLoweredForPlayerOutside = true;
+
+    }
+
+
+
+    private void RestoreIdleSortingToSceneOriginal()
+
+    {
+
+        if (!_idleSortingLoweredForPlayerOutside)
+
+            return;
+
+
+
+        CaptureClosedPositions();
+
+        RestoreDoorRenderers(_leftDoorRenderers, _leftOriginalSortingOrders);
+
+        RestoreDoorRenderers(_rightDoorRenderers, _rightOriginalSortingOrders);
+
+        _idleSortingLoweredForPlayerOutside = false;
 
     }
 
@@ -764,7 +896,10 @@ public class ElevatorDoorPair : MonoBehaviour
 
         elevatorMask.enabled = true;
 
-        elevatorMask.sortingOrder = Mathf.Max(wallMaskActiveSortingOrder, GetMaxDoorSortingOrder() + 1);
+        if (_sortingRaised)
+            elevatorMask.sortingOrder = animationSortingOrder + 1;
+        else
+            elevatorMask.sortingOrder = Mathf.Max(wallMaskActiveSortingOrder, GetMaxDoorSortingOrder() + 1);
 
     }
 
