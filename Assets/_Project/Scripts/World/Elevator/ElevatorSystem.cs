@@ -1883,7 +1883,8 @@ public class ElevatorSystem : MonoBehaviour
         }
 
         ElevatorDoorPair pair = GetFloorDoors(floorIndex);
-        if (pair != null) pair.Open();
+        if (pair != null)
+            pair.Open(IsPlayerInsideCabinOnFloor(floorIndex));
 
         if (floorIndex == currentLevelIndex && !isTeleporting)
             _holdDoorsOpenForCabinEntry = true;

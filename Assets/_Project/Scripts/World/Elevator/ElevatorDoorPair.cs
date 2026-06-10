@@ -55,13 +55,13 @@ public class ElevatorDoorPair : MonoBehaviour
 
     [Header("Occlusione player")]
 
-    [Tooltip("Durante l'animazione alza le ante sopra al player. Con elevator_mask alza le ante solo in chiusura se occludePlayer=true (player in cabina).")]
+    [Tooltip("Durante l'animazione alza le ante sopra al player solo quando occludePlayer=true (player in cabina).")]
 
     [SerializeField] private bool raiseSortingDuringAnimation = true;
 
 
 
-    [Tooltip("Sorting order temporaneo usato mentre le ante si muovono (solo senza elevator_mask).")]
+    [Tooltip("Sorting order temporaneo usato quando l'animazione deve occludere il player in cabina.")]
 
     [SerializeField] private int animationSortingOrder = 200;
 
@@ -538,22 +538,30 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
-    /// <summary>Apre le ante (animazione se attivo, istantaneo se l'oggetto è disattivo).</summary>
+    /// <summary>
+    /// Apre le ante (animazione se attivo, istantaneo se l'oggetto è disattivo).
+    /// Con <paramref name="occludePlayer"/> true alza sorting portelloni/maschera sopra il player
+    /// solo per l'apertura con player già dentro la cabina.
+    /// </summary>
 
-    public void Open()
+    public void Open(bool occludePlayer = false)
     {
         if (!isActiveAndEnabled) { ApplyInstant(true); return; }
         if (_anim != null && IsOpen)
+        {
+            _occludePlayerDuringAnimation |= occludePlayer;
             return;
+        }
 
         _pendingCloseAfterOpen = false;
+        _occludePlayerDuringAnimation = occludePlayer;
         StartAnim(true);
     }
 
     /// <summary>
     /// Chiude le ante (animazione se attivo, istantaneo se l'oggetto è disattivo).
     /// Con <paramref name="occludePlayer"/> true alza sorting portelloni/maschera sopra il player
-    /// anche se elevator_mask è assegnata (es. chiusura con player in cabina).
+    /// durante la chiusura da cabina.
     /// </summary>
     public void Close(bool occludePlayer = false)
     {
@@ -600,9 +608,6 @@ public class ElevatorDoorPair : MonoBehaviour
     private IEnumerator AnimRoutine(bool open)
 
     {
-
-        if (open)
-            _occludePlayerDuringAnimation = false;
 
         if (!open)
         {
@@ -731,8 +736,8 @@ public class ElevatorDoorPair : MonoBehaviour
 
 
 
-        // Con elevator_mask le ante restano al sorting di scena salvo chiusura con player in cabina.
-        if (HasElevatorMask && !_occludePlayerDuringAnimation)
+        // Normalmente il player resta davanti; i portelloni salgono solo nelle transizioni da cabina.
+        if (!_occludePlayerDuringAnimation)
 
             return;
 
@@ -968,5 +973,3 @@ public class ElevatorDoorPair : MonoBehaviour
     private void TestClose() => Close();
 
 }
-
-

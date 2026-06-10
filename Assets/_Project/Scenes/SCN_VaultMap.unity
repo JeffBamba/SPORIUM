@@ -5505,7 +5505,7 @@ Transform:
   m_GameObject: {fileID: 254711216}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.96, y: 3.28, z: 0}
+  m_LocalPosition: {x: 5.69, y: -7.05, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5928,6 +5928,7 @@ MonoBehaviour:
   _clickRadius: 0.5
   _promptDistance: 1.2
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!114 &281962328
@@ -10610,6 +10611,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!1 &462205355
 GameObject:
   m_ObjectHideFlags: 0
@@ -11724,6 +11726,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!1 &487210095
 GameObject:
   m_ObjectHideFlags: 0
@@ -12320,6 +12323,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &523949746
@@ -12635,6 +12639,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 13
 --- !u!1 &529086817
 GameObject:
   m_ObjectHideFlags: 0
@@ -13361,6 +13366,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &566181789
@@ -19315,6 +19321,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!1001 &767488488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19868,6 +19875,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!114 &778557144
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22187,6 +22195,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!65 &889239078
@@ -24894,6 +24903,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!1 &1003878492
 GameObject:
   m_ObjectHideFlags: 0
@@ -25628,6 +25638,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.2
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1001 &1038077586
@@ -29196,6 +29207,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 0
 --- !u!1 &1246054826
 GameObject:
   m_ObjectHideFlags: 0
@@ -29664,6 +29676,7 @@ MonoBehaviour:
   _clickRadius: 0.98
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1268535597
@@ -31371,6 +31384,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!114 &1310622943
@@ -31805,6 +31819,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!1 &1325863094
@@ -32373,6 +32388,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1339397446
@@ -34293,6 +34309,7 @@ MonoBehaviour:
   cabinSideWalkBlockers: []
   elevatorMask: {fileID: 0}
   wallMaskActiveSortingOrder: 12
+  closedSortingOrderWhenPlayerOutside: 5
 --- !u!1 &1427639575
 GameObject:
   m_ObjectHideFlags: 0
@@ -34632,6 +34649,7 @@ MonoBehaviour:
   cabinSideWalkBlockers: []
   elevatorMask: {fileID: 968135689}
   wallMaskActiveSortingOrder: 12
+  closedSortingOrderWhenPlayerOutside: 5
 --- !u!1 &1446995590
 GameObject:
   m_ObjectHideFlags: 0
@@ -35189,6 +35207,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0.84705883, g: 0.8980392, b: 0.26666668, a: 1}
   _highlightColor: {r: 0.9267135, g: 0.9622642, b: 0.52198297, a: 1}
 --- !u!61 &1465652623
@@ -35816,6 +35835,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!61 &1497233366
@@ -36806,6 +36826,7 @@ MonoBehaviour:
   _clickRadius: 0.18
   _promptDistance: 1
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!61 &1556791179
@@ -36928,6 +36949,7 @@ MonoBehaviour:
   _clickRadius: 0.18
   _promptDistance: 1
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!61 &1556791289
@@ -38192,6 +38214,7 @@ MonoBehaviour:
   cabinSideWalkBlockers: []
   elevatorMask: {fileID: 0}
   wallMaskActiveSortingOrder: 12
+  closedSortingOrderWhenPlayerOutside: 5
 --- !u!1 &1606671001
 GameObject:
   m_ObjectHideFlags: 0
@@ -39744,6 +39767,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _highlightColor: {r: 0.9339623, g: 0.7100141, b: 0.374466, a: 1}
 --- !u!61 &1664086553
@@ -40672,6 +40696,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 1
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!114 &1720375625
@@ -42107,6 +42132,7 @@ MonoBehaviour:
   _clickRadius: 0.35
   _promptDistance: 2
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!65 &1789348877
@@ -42687,6 +42713,7 @@ MonoBehaviour:
   _clickRadius: 0.2
   _promptDistance: 1.5
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!61 &1809594429
@@ -45433,6 +45460,7 @@ MonoBehaviour:
   _clickRadius: 0.5
   _promptDistance: 1.2
   _repeatInteractionWhileInRange: 0
+  _interactionTargetLocKey: 
   _normalColor: {r: 0, g: 0, b: 0, a: 0}
   _highlightColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &1935198915 stripped
@@ -51334,6 +51362,7 @@ MonoBehaviour:
   lateralUMaxAtNear: 0.44
   lateralUMinAtFar: 0.08
   lateralUMaxAtFar: 0.49
+  minPlayerSortingOrder: 13
 --- !u!1 &3198001010
 GameObject:
   m_ObjectHideFlags: 0
@@ -51770,6 +51799,10 @@ PrefabInstance:
     - target: {fileID: 4358391709167396956, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_Offset.y
       value: 0.26
+      objectReference: {fileID: 0}
+    - target: {fileID: 7273876632926775774, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7370341786064052431, guid: a95eb4096ccf94d46b8fc1b032cf59fd, type: 3}
       propertyPath: m_Sprite
